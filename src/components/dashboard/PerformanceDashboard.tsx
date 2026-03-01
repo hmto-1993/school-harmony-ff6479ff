@@ -50,6 +50,7 @@ export default function PerformanceDashboard() {
   const [grades, setGrades] = useState<GradeRecord[]>([]);
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
+  const [levelsClassFilter, setLevelsClassFilter] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -74,7 +75,7 @@ export default function PerformanceDashboard() {
     return { dailyCats: daily, examCats: exams };
   }, [categories]);
 
-  const computeData = (catFilter: CategoryInfo[]) => {
+  const computeData = (catFilter: CategoryInfo[], levelsFilter: string) => {
     const catIds = new Set(catFilter.map(c => c.id));
     const catMax: Record<string, number> = {};
     catFilter.forEach(c => { catMax[c.id] = c.max_score; });
@@ -100,29 +101,32 @@ export default function PerformanceDashboard() {
       return { className: cls.name, classId: cls.id, average: avg, studentCount: classStudents.length };
     }).filter(c => c.studentCount > 0);
 
-    // Student details for selected class
-    let studentRows: StudentRow[] = [];
-    let classAvg = 0;
-    let scatter: { name: string; score: number; index: number }[] = [];
-
-    const targetStudents = selectedClass === "all" ? students : students.filter(s => s.class_id === selectedClass);
-    
-    studentRows = targetStudents.map(s => {
+    // Scatter uses global selectedClass
+    const scatterStudents = selectedClass === "all" ? students : students.filter(s => s.class_id === selectedClass);
+    const scatterRows = scatterStudents.map(s => {
       const t = studentTotals[s.id];
       const score = t ? (t.maxTotal > 0 ? Math.round((t.total / t.maxTotal) * 100 * 10) / 10 : 0) : 0;
       return { name: s.full_name, score, diff: 0 };
     });
+    const scatterAvg = scatterRows.length > 0 ? Math.round(scatterRows.reduce((a, b) => a + b.score, 0) / scatterRows.length * 10) / 10 : 0;
+    const scatter = scatterRows.map((r, i) => ({ name: r.name, score: r.score, index: i + 1 }));
 
-    classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.score, 0) / studentRows.length * 10) / 10 : 0;
+    // Levels uses levelsFilter
+    const levelsStudents = levelsFilter === "all" ? students : students.filter(s => s.class_id === levelsFilter);
+    let studentRows = levelsStudents.map(s => {
+      const t = studentTotals[s.id];
+      const score = t ? (t.maxTotal > 0 ? Math.round((t.total / t.maxTotal) * 100 * 10) / 10 : 0) : 0;
+      return { name: s.full_name, score, diff: 0 };
+    });
+    const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.score, 0) / studentRows.length * 10) / 10 : 0;
     studentRows.forEach(r => { r.diff = Math.round((r.score - classAvg) * 10) / 10; });
     studentRows.sort((a, b) => b.score - a.score);
-    scatter = studentRows.map((r, i) => ({ name: r.name, score: r.score, index: i + 1 }));
 
-    return { classAverages, studentRows, classAvg, scatter };
+    return { classAverages, studentRows, classAvg, scatter, scatterAvg };
   };
 
-  const dailyData = useMemo(() => computeData(dailyCats), [dailyCats, grades, students, classes, selectedClass]);
-  const examData = useMemo(() => computeData(examCats), [examCats, grades, students, classes, selectedClass]);
+  const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter]);
+  const examData = useMemo(() => computeData(examCats, levelsClassFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter]);
 
   const renderSection = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
     <div className="space-y-4">
@@ -201,9 +205,22 @@ export default function PerformanceDashboard() {
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  مستويات الطلاب {selectedClass !== "all" && `— ${classes.find(c => c.id === selectedClass)?.name}`}
+                  مستويات الطلاب
                 </CardTitle>
-                <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{data.classAvg}%</span></span>
+                <div className="flex items-center gap-2">
+                  <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                      <SelectValue placeholder="اختر الشعبة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع الشُعب</SelectItem>
+                      {classes.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{data.classAvg}%</span></span>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -258,7 +275,7 @@ export default function PerformanceDashboard() {
                 }} />
                 <Scatter data={data.scatter}>
                   {data.scatter.map((s, i) => (
-                    <Cell key={i} fill={getScatterColor(s.score, data.classAvg)} />
+                    <Cell key={i} fill={getScatterColor(s.score, data.scatterAvg)} />
                   ))}
                 </Scatter>
               </ScatterChart>
