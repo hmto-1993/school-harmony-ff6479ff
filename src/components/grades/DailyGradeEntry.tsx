@@ -7,8 +7,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format, subDays, addDays, isToday } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface GradeCategory {
   id: string;
@@ -66,6 +68,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
+  const goToNextDay = () => {
+    if (!isToday(selectedDate)) setSelectedDate(prev => addDays(prev, 1));
+  };
+  const goToToday = () => setSelectedDate(new Date());
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
@@ -75,7 +84,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
     if (!selectedClass) return;
     setSelectedCategory("");
     loadData();
-  }, [selectedClass]);
+  }, [selectedClass, selectedDate]);
 
   const loadData = async () => {
     const { data: cats } = await supabase
@@ -217,23 +226,41 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   return (
     <Card className="shadow-card">
       <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Select value={selectedClass} onValueChange={onClassChange}>
-              <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الشعبة..." /></SelectTrigger>
-              <SelectContent>
-                {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            {categories.length > 0 && (
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+            <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Select value={selectedClass} onValueChange={onClassChange}>
+                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الشعبة..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الفئات</SelectItem>
-                  {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                  {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
+              {categories.length > 0 && (
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الفئات</SelectItem>
+                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+          </div>
+          {/* Date Navigation */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm font-medium min-w-[160px] justify-center">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              {format(selectedDate, "EEEE yyyy/MM/dd", { locale: ar })}
+            </div>
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {!isToday(selectedDate) && (
+              <Button variant="ghost" size="sm" className="text-xs" onClick={goToToday}>اليوم</Button>
             )}
           </div>
         </div>

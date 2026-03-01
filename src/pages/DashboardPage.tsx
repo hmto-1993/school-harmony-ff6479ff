@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
-import ClassGradesComparison from "@/components/dashboard/ClassGradesComparison";
+// ClassGradesComparison removed - merged into PerformanceDashboard
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 
 interface ClassStats {
@@ -222,10 +222,7 @@ export default function DashboardPage() {
       {/* Weekly & Monthly Comparison (tabbed) */}
       <PeriodComparison />
 
-      {/* Class Grades Comparison */}
-      <ClassGradesComparison />
-
-      {/* Performance Dashboard */}
+      {/* Performance Dashboard - includes class comparison + student details */}
       <PerformanceDashboard />
     </div>
   );
