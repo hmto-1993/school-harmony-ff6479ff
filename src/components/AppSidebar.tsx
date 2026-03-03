@@ -17,6 +17,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -36,9 +37,14 @@ const teacherLinks = [
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
-export default function AppSidebar() {
+interface AppSidebarProps {
+  onNavigate?: () => void;
+}
+
+export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut } = useAuth();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام الإدارة");
@@ -53,24 +59,26 @@ export default function AppSidebar() {
   }, []);
 
   const links = role === "admin" ? adminLinks : teacherLinks;
+  const isCollapsed = !isMobile && collapsed;
 
   return (
     <aside
       className={cn(
-        "gradient-sidebar flex flex-col text-sidebar-foreground transition-all duration-300 min-h-screen sticky top-0",
-        collapsed ? "w-[72px]" : "w-64"
+        "gradient-sidebar flex flex-col text-sidebar-foreground transition-all duration-300 min-h-screen",
+        isMobile ? "w-64" : (isCollapsed ? "w-[72px]" : "w-64"),
+        isMobile && "sticky top-0"
       )}
     >
       {/* Logo */}
       <div className={cn(
         "flex items-center gap-3 p-4 border-b border-sidebar-border/50",
-        collapsed && "justify-center"
+        isCollapsed && "justify-center"
       )}>
         <div className="relative">
           <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain bg-sidebar-accent p-1 ring-1 ring-sidebar-border/30" />
           <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
         </div>
-        {!collapsed && (
+        {!isCollapsed && (
           <div className="min-w-0">
             <h2 className="text-sm font-bold truncate">{schoolName}</h2>
             <p className="text-[11px] text-sidebar-foreground/50 font-light">{schoolSubtitle}</p>
@@ -86,16 +94,17 @@ export default function AppSidebar() {
             <Link
               key={link.to}
               to={link.to}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
-                collapsed && "justify-center px-2",
+                isCollapsed && "justify-center px-2",
                 isActive
                   ? "bg-sidebar-primary/15 text-sidebar-primary font-semibold shadow-glow"
                   : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
               <link.icon className={cn("h-[18px] w-[18px] shrink-0", isActive && "drop-shadow-sm")} />
-              {!collapsed && <span>{link.label}</span>}
+              {!isCollapsed && <span>{link.label}</span>}
             </Link>
           );
         })}
@@ -107,20 +116,22 @@ export default function AppSidebar() {
           onClick={signOut}
           className={cn(
             "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground/60 hover:bg-destructive/15 hover:text-destructive transition-all duration-200",
-            collapsed && "justify-center px-2"
+            isCollapsed && "justify-center px-2"
           )}
         >
           <LogOut className="h-[18px] w-[18px] shrink-0" />
-          {!collapsed && <span>تسجيل الخروج</span>}
+          {!isCollapsed && <span>تسجيل الخروج</span>}
         </button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full justify-center text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-xl"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+        {!isMobile && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full justify-center text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent rounded-xl"
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
     </aside>
   );
