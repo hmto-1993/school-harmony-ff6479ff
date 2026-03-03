@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import schoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
@@ -43,7 +43,6 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      // Look up email by national_id
       const { data, error: lookupError } = await supabase.functions.invoke("lookup-staff-email", {
         body: { national_id: nationalId },
       });
@@ -99,12 +98,17 @@ export default function LoginPage() {
     <div className="relative flex min-h-screen items-center justify-center px-4">
       <div
         className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(4px) brightness(0.7)" }}
+        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(6px) brightness(0.55)" }}
       />
+      {/* Overlay gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10" />
+
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <Card className="shadow-card border-border/50 bg-background/90 backdrop-blur-sm">
+        <Card className="glass border-border/30 shadow-2xl">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
-            <img src={schoolLogo} alt="شعار المدرسة" className="h-24 w-auto" />
+            <div className="rounded-2xl bg-card/80 p-2 shadow-card ring-1 ring-border/20">
+              <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
+            </div>
             <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">{schoolName}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{schoolSubtitle}</p>
@@ -112,12 +116,12 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="staff" className="gap-2">
+              <TabsList className="grid w-full grid-cols-2 mb-5 h-11 rounded-xl bg-muted/80">
+                <TabsTrigger value="staff" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
                   <Shield className="h-4 w-4" />
                   معلم / مدير
                 </TabsTrigger>
-                <TabsTrigger value="student" className="gap-2">
+                <TabsTrigger value="student" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
                   <GraduationCap className="h-4 w-4" />
                   طالب
                 </TabsTrigger>
@@ -135,7 +139,7 @@ export default function LoginPage() {
                       value={nationalId}
                       onChange={(e) => setNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right"
+                      className="text-right h-11 rounded-xl"
                       required
                     />
                   </div>
@@ -148,11 +152,17 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       dir="ltr"
+                      className="h-11 rounded-xl"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "جارٍ الدخول..." : "تسجيل الدخول"}
+                  <Button type="submit" className="w-full h-11 rounded-xl gradient-primary hover:opacity-90 transition-opacity text-primary-foreground font-semibold" disabled={loading}>
+                    {loading ? "جارٍ الدخول..." : (
+                      <span className="flex items-center gap-2">
+                        تسجيل الدخول
+                        <ArrowLeft className="h-4 w-4" />
+                      </span>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -169,12 +179,17 @@ export default function LoginPage() {
                       value={studentNationalId}
                       onChange={(e) => setStudentNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right"
+                      className="text-right h-11 rounded-xl"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "جارٍ الدخول..." : "دخول الطالب"}
+                  <Button type="submit" className="w-full h-11 rounded-xl gradient-primary hover:opacity-90 transition-opacity text-primary-foreground font-semibold" disabled={loading}>
+                    {loading ? "جارٍ الدخول..." : (
+                      <span className="flex items-center gap-2">
+                        دخول الطالب
+                        <ArrowLeft className="h-4 w-4" />
+                      </span>
+                    )}
                   </Button>
                 </form>
               </TabsContent>
