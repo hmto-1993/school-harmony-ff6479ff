@@ -51,6 +51,7 @@ export default function PerformanceDashboard() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
+  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"daily" | "exams">("daily");
 
   useEffect(() => {
     fetchData();
@@ -127,8 +128,9 @@ export default function PerformanceDashboard() {
 
   const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter]);
   const examData = useMemo(() => computeData(examCats, levelsClassFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter]);
+  const levelsData = levelsTypeFilter === "daily" ? dailyData : examData;
 
-  const renderSection = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
+  const renderCharts = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
     <div className="space-y-4">
       {/* Bar chart */}
       <Card className="shadow-card">
@@ -158,94 +160,6 @@ export default function PerformanceDashboard() {
           )}
         </CardContent>
       </Card>
-
-      {/* Student levels - Top 5 & Bottom 5 */}
-      {data.studentRows.length > 0 && (() => {
-        const top5 = data.studentRows.slice(0, 5);
-        const bottom5 = data.studentRows.length > 5 ? data.studentRows.slice(-5).reverse() : [];
-        
-        const renderLevelTable = (rows: StudentRow[], startRank: number, isBottom?: boolean) => (
-          <div className="overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0">
-                <tr className="border-b bg-muted/60">
-                  <th className="text-right p-2 font-medium">#</th>
-                  <th className="text-right p-2 font-medium">الطالب</th>
-                  <th className="text-center p-2 font-medium">النسبة %</th>
-                  <th className="text-center p-2 font-medium">الفرق</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row, i) => (
-                  <tr key={row.name + i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="p-2 text-muted-foreground">{isBottom ? data.studentRows.length - (rows.length - 1 - i) : i + 1}</td>
-                    <td className="p-2 font-medium flex items-center gap-1.5">
-                      {!isBottom && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />}
-                      {isBottom && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
-                      {row.name}
-                    </td>
-                    <td className="p-2 text-center font-bold">{row.score}%</td>
-                    <td className="p-2 text-center">
-                      <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
-                        {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
-                        {row.diff < 0 && <TrendingDown className="h-3 w-3" />}
-                        {row.diff > 0 ? "+" : ""}{row.diff}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        );
-
-        return (
-          <Card className="shadow-card">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
-                  مستويات الطلاب
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
-                    <SelectTrigger className="w-[160px] h-8 text-xs">
-                      <SelectValue placeholder="اختر الشعبة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">جميع الشُعب</SelectItem>
-                      {classes.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{data.classAvg}%</span></span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5 mb-2">
-                    <Trophy className="h-4 w-4" />
-                    أفضل 5 طلاب
-                  </h4>
-                  {renderLevelTable(top5, 1)}
-                </div>
-                {bottom5.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-destructive flex items-center gap-1.5 mb-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      أقل 5 طلاب
-                    </h4>
-                    {renderLevelTable(bottom5, data.studentRows.length - 4, true)}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })()}
 
       {/* Scatter */}
       {data.scatter.length > 0 && (
@@ -291,6 +205,103 @@ export default function PerformanceDashboard() {
     </div>
   );
 
+  const renderLevelTable = (rows: StudentRow[], isBottom?: boolean) => (
+    <div className="overflow-auto">
+      <table className="w-full text-sm">
+        <thead className="sticky top-0">
+          <tr className="border-b bg-muted/60">
+            <th className="text-right p-2 font-medium">#</th>
+            <th className="text-right p-2 font-medium">الطالب</th>
+            <th className="text-center p-2 font-medium">النسبة %</th>
+            <th className="text-center p-2 font-medium">الفرق</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={row.name + i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+              <td className="p-2 text-muted-foreground">{isBottom ? levelsData.studentRows.length - (rows.length - 1 - i) : i + 1}</td>
+              <td className="p-2 font-medium flex items-center gap-1.5">
+                {!isBottom && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />}
+                {isBottom && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                {row.name}
+              </td>
+              <td className="p-2 text-center font-bold">{row.score}%</td>
+              <td className="p-2 text-center">
+                <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
+                  {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
+                  {row.diff < 0 && <TrendingDown className="h-3 w-3" />}
+                  {row.diff > 0 ? "+" : ""}{row.diff}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderLevelsSection = () => {
+    if (levelsData.studentRows.length === 0) return null;
+    const top5 = levelsData.studentRows.slice(0, 5);
+    const bottom5 = levelsData.studentRows.length > 5 ? levelsData.studentRows.slice(-5).reverse() : [];
+
+    return (
+      <Card className="shadow-card">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              مستويات الطلاب
+            </CardTitle>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={levelsTypeFilter} onValueChange={(v) => setLevelsTypeFilter(v as "daily" | "exams")}>
+                <SelectTrigger className="w-[160px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="daily">المشاركة والواجبات</SelectItem>
+                  <SelectItem value="exams">الاختبارات</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
+                <SelectTrigger className="w-[160px] h-8 text-xs">
+                  <SelectValue placeholder="اختر الشعبة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الشُعب</SelectItem>
+                  {classes.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{levelsData.classAvg}%</span></span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-semibold text-emerald-600 flex items-center gap-1.5 mb-2">
+                <Trophy className="h-4 w-4" />
+                أفضل 5 طلاب
+              </h4>
+              {renderLevelTable(top5)}
+            </div>
+            {bottom5.length > 0 && (
+              <div>
+                <h4 className="text-sm font-semibold text-destructive flex items-center gap-1.5 mb-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  أقل 5 طلاب
+                </h4>
+                {renderLevelTable(bottom5, true)}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -323,12 +334,14 @@ export default function PerformanceDashboard() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="daily">
-          {renderSection(dailyData, "لا توجد بيانات للمشاركة والواجبات")}
+          {renderCharts(dailyData, "لا توجد بيانات للمشاركة والواجبات")}
         </TabsContent>
         <TabsContent value="exams">
-          {renderSection(examData, "لا توجد بيانات اختبارات")}
+          {renderCharts(examData, "لا توجد بيانات اختبارات")}
         </TabsContent>
       </Tabs>
+
+      {renderLevelsSection()}
     </div>
   );
 }
