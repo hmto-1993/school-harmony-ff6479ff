@@ -269,7 +269,6 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
                       <tr
                         key={sg.student_id}
                         className={cn(
-                          "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                           !isLast && "border-b border-border/20"
                         )}
