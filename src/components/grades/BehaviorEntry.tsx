@@ -200,23 +200,33 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                 </div>
               </div>
 
-              <div className="rounded-lg border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="text-right w-10">#</TableHead>
-                      <TableHead className="text-right min-w-[180px]">الطالب</TableHead>
-                      <TableHead className="text-center w-24">السلوك</TableHead>
-                      <TableHead className="text-center w-20">ملاحظة</TableHead>
-                      <TableHead className="text-center w-24">إشعار</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((s, i) => (
-                      <TableRow key={s.student_id}>
-                        <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                        <TableCell className="font-medium">{s.full_name}</TableCell>
-                        <TableCell className="text-center">
+              <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+                <table className="w-full text-sm border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-10 first:rounded-tr-xl">#</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-24">السلوك</th>
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-20">ملاحظة</th>
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-24 last:rounded-tl-xl">إشعار</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {students.map((s, i) => {
+                      const isEven = i % 2 === 0;
+                      const isLast = i === students.length - 1;
+                      return (
+                      <tr
+                        key={s.student_id}
+                        className={cn(
+                          "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                          !isLast && "border-b border-border/20"
+                        )}
+                      >
+                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                        <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
+                        <td className="p-3 text-center border-l border-border/10">
                           <button
                             type="button"
                             onClick={() => cycleType(s.student_id)}
@@ -225,8 +235,8 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                           >
                             <BehaviorIcon type={s.type} />
                           </button>
-                        </TableCell>
-                        <TableCell className="text-center">
+                        </td>
+                        <td className="p-3 text-center border-l border-border/10">
                           <button
                             type="button"
                             onClick={() => setNoteDialog({ open: true, studentId: s.student_id, name: s.full_name })}
@@ -238,8 +248,8 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                           >
                             <MessageSquare className="h-5 w-5" />
                           </button>
-                        </TableCell>
-                        <TableCell className="text-center">
+                        </td>
+                        <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -257,11 +267,12 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                               <Send className="h-4 w-4" />
                             )}
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </td>
+                      </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
               <div className="flex justify-end mt-4">
                 <Button onClick={handleSave} disabled={saving}>

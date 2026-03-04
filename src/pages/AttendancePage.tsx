@@ -220,22 +220,33 @@ export default function AttendancePage() {
                   </Select>
                 </div>
               </div>
-              <div className="rounded-lg border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50">
-                      <TableHead className="text-right w-12">#</TableHead>
-                      <TableHead className="text-right">الطالب</TableHead>
-                      <TableHead className="text-right">الحالة</TableHead>
-                      <TableHead className="text-right">ملاحظات</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRecords.map((record, i) => (
-                      <TableRow key={record.student_id}>
-                        <TableCell className="text-muted-foreground">{records.indexOf(record) + 1}</TableCell>
-                        <TableCell className="font-medium">{record.full_name}</TableCell>
-                        <TableCell>
+              <div className="overflow-hidden rounded-xl border border-border/40 shadow-sm">
+                <table className="w-full text-sm border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl w-12">#</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الحالة</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">ملاحظات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.map((record, i) => {
+                      const idx = records.indexOf(record);
+                      const isEven = i % 2 === 0;
+                      const isLast = i === filteredRecords.length - 1;
+                      return (
+                      <tr
+                        key={record.student_id}
+                        className={cn(
+                          "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                          !isLast && "border-b border-border/20"
+                        )}
+                      >
+                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
+                        <td className="p-3 font-semibold border-l border-border/10">{record.full_name}</td>
+                        <td className="p-3 border-l border-border/10">
                           <div className="flex flex-wrap gap-1">
                             {statusOptions.map((opt) => (
                               <button
@@ -251,19 +262,20 @@ export default function AttendancePage() {
                               </button>
                             ))}
                           </div>
-                        </TableCell>
-                        <TableCell>
+                        </td>
+                        <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
                           <Textarea
                             value={record.notes}
                             onChange={(e) => updateNotes(record.student_id, e.target.value)}
                             placeholder="ملاحظات..."
                             className="min-h-[36px] h-9 resize-none text-xs"
                           />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                        </td>
+                      </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
               <div className="flex justify-end mt-4">
                 <Button onClick={handleSave} disabled={saving}>

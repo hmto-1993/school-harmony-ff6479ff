@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Pencil, X, Search } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 interface ClassInfo {
   id: string;
@@ -241,33 +242,42 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
             </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="text-right">#</TableHead>
-                    <TableHead className="text-right min-w-[180px]">الطالب</TableHead>
+            <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+              <table className="w-full text-sm border-separate border-spacing-0">
+                <thead>
+                  <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
                     {group.categories.map((cat) => (
-                      <TableHead key={cat.id} className="text-center min-w-[100px]">
+                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
                         <div>{cat.name}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
+                        <div className="text-[10px] text-muted-foreground font-normal">
                           ({Number(cat.weight)}%) من {Number(cat.max_score)}
                         </div>
-                      </TableHead>
+                      </th>
                     ))}
-                    <TableHead className="text-center min-w-[80px]">المجموع %</TableHead>
-                    <TableHead className="text-center w-[80px]">تعديل</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">المجموع %</th>
+                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-[80px] last:rounded-tl-xl">تعديل</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {group.students.map((sg, i) => {
                     const isEditing = editingStudent === sg.student_id;
+                    const isEven = i % 2 === 0;
+                    const isLast = i === group.students.length - 1;
                     return (
-                      <TableRow key={sg.student_id}>
-                        <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                        <TableCell className="font-medium">{sg.full_name}</TableCell>
+                      <tr
+                        key={sg.student_id}
+                        className={cn(
+                          "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                          !isLast && "border-b border-border/20"
+                        )}
+                      >
+                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                        <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
                         {group.categories.map((cat) => (
-                          <TableCell key={cat.id} className="text-center">
+                          <td key={cat.id} className="p-3 text-center border-l border-border/10">
                             {isEditing ? (
                               <Input
                                 type="number"
@@ -283,12 +293,12 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
                                 {sg.grades[cat.id] ?? "—"}
                               </span>
                             )}
-                          </TableCell>
+                          </td>
                         ))}
-                        <TableCell className="text-center font-bold">
+                        <td className="p-3 text-center font-bold border-l border-border/10">
                           {isEditing ? "..." : sg.total}
-                        </TableCell>
-                        <TableCell className="text-center">
+                        </td>
+                        <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
                           {isEditing ? (
                             <div className="flex gap-1 justify-center">
                               <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
@@ -308,12 +318,12 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     );
                   })}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           </CardContent>
         </Card>
