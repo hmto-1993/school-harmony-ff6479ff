@@ -138,8 +138,10 @@
 @media print {
   body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
   body * { visibility: hidden; }
-  .print-area, .print-area * { visibility: visible; }
-  .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 1rem; }
-  .print\\:hidden { display: none !important; }
-  .print\\:shadow-none { box-shadow: none !important; }
+  .print-area, .print-area * { visibility: visible !important; display: revert; }
+  .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px 28px; }
+  .print\:hidden { display: none !important; }
+  .print\:shadow-none { box-shadow: none !important; }
+  .print\:block { display: block !important; }
+  @page { size: A4; margin: 12mm; }
 }

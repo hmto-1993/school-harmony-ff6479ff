@@ -1,7 +1,12 @@
 import { format } from "date-fns";
-import { LayoutDashboard, Sparkles } from "lucide-react";
+import { LayoutDashboard, Sparkles, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export default function DashboardHeader() {
+interface Props {
+  onPrint?: () => void;
+}
+
+export default function DashboardHeader({ onPrint }: Props) {
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
 
@@ -25,10 +30,23 @@ export default function DashboardHeader() {
             </div>
           </div>
         </div>
-        <div className="hidden sm:flex flex-col items-end gap-1 text-left">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
-            <Sparkles className="h-3.5 w-3.5 text-white/70" />
-            <span className="text-sm font-medium">{dayName}</span>
+        <div className="hidden sm:flex flex-col items-end gap-2 text-left">
+          <div className="flex items-center gap-2">
+            {onPrint && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onPrint}
+                className="text-white/80 hover:text-white hover:bg-white/15 gap-1.5 print:hidden"
+              >
+                <Printer className="h-4 w-4" />
+                <span className="text-xs font-medium">طباعة التقرير</span>
+              </Button>
+            )}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
+              <Sparkles className="h-3.5 w-3.5 text-white/70" />
+              <span className="text-sm font-medium">{dayName}</span>
+            </div>
           </div>
           <span className="text-xs text-white/60 mt-1">{today}</span>
         </div>

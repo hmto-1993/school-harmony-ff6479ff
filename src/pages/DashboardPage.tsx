@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -8,6 +8,7 @@ import AttendancePieChart from "@/components/dashboard/AttendancePieChart";
 import ClassSummaryTable from "@/components/dashboard/ClassSummaryTable";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
+import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
 
 interface ClassStats {
   name: string;
@@ -84,9 +85,13 @@ export default function DashboardPage() {
     setLoading(false);
   };
 
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <div className="space-y-8">
-      <DashboardHeader />
+      <DashboardHeader onPrint={handlePrint} />
 
       <DashboardStatCards
         totalStudents={totalStudents}
@@ -114,6 +119,18 @@ export default function DashboardPage() {
 
       <PeriodComparison />
       <PerformanceDashboard />
+
+      {/* Print-only view */}
+      <DashboardPrintView
+        totalStudents={totalStudents}
+        totalClasses={totalClasses}
+        todayPresent={todayPresent}
+        todayAbsent={todayAbsent}
+        todayLate={todayLate}
+        todayNotRecorded={todayNotRecorded}
+        attendanceRate={attendanceRate}
+        classStats={classStats}
+      />
     </div>
   );
 }
