@@ -9,6 +9,7 @@ import {
   BarChart3,
   Bell,
   Settings,
+  Library,
   LogOut,
   ChevronLeft,
   ChevronRight,
@@ -28,6 +29,7 @@ const adminLinks = [
   { to: "/attendance", label: "الحضور والغياب", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
+  { to: "/resources", label: "مكتبة الموارد", icon: Library },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
@@ -36,6 +38,7 @@ const teacherLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/attendance", label: "الحضور والغياب", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
+  { to: "/resources", label: "مكتبة الموارد", icon: Library },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
