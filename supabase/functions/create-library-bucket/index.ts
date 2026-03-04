@@ -10,37 +10,38 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseAdmin = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  );
+  try {
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
 
-  // Create the bucket if it doesn't exist
-  const { error } = await supabaseAdmin.storage.createBucket("library", {
-    public: true,
-    allowedMimeTypes: [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "application/vnd.ms-powerpoint",
-      "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-      "image/png",
-      "image/jpeg",
-      "image/webp",
-    ],
-    fileSizeLimit: 20 * 1024 * 1024, // 20MB
-  });
+    // Check if bucket exists first
+    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+    const exists = buckets?.some((b: any) => b.id === "library");
 
-  if (error && !error.message.includes("already exists")) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    if (!exists) {
+      const { error } = await supabaseAdmin.storage.createBucket("library", {
+        public: true,
+        fileSizeLimit: 20 * 1024 * 1024,
+      });
+
+      if (error) {
+        // Fallback: try creating without options
+        const { error: error2 } = await supabaseAdmin.storage.createBucket("library");
+        if (error2 && !error2.message?.includes("already exists")) {
+          throw error2;
+        }
+      }
+    }
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
 });
