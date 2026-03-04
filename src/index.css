@@ -44,13 +44,13 @@
     --info-foreground: 0 0% 100%;
 
     --report-tab-attendance: 210 60% 95%;
-    --report-tab-attendance-active: 210 70% 88%;
+    --report-tab-attendance-active: 210 80% 45%;
     --report-tab-attendance-text: 210 50% 35%;
     --report-tab-grades: 150 50% 94%;
-    --report-tab-grades-active: 150 55% 85%;
+    --report-tab-grades-active: 155 65% 40%;
     --report-tab-grades-text: 150 45% 30%;
     --report-tab-behavior: 340 45% 95%;
-    --report-tab-behavior-active: 340 50% 88%;
+    --report-tab-behavior-active: 340 60% 50%;
     --report-tab-behavior-text: 340 40% 35%;
     --report-btn-send: 160 65% 42%;
     --report-btn-send-hover: 160 65% 36%;
@@ -89,13 +89,13 @@
     --ring: 217 91% 60%;
 
     --report-tab-attendance: 210 40% 22%;
-    --report-tab-attendance-active: 210 50% 30%;
+    --report-tab-attendance-active: 210 70% 42%;
     --report-tab-attendance-text: 210 60% 75%;
     --report-tab-grades: 150 35% 18%;
-    --report-tab-grades-active: 150 40% 26%;
+    --report-tab-grades-active: 155 55% 38%;
     --report-tab-grades-text: 150 50% 70%;
     --report-tab-behavior: 340 30% 20%;
-    --report-tab-behavior-active: 340 40% 28%;
+    --report-tab-behavior-active: 340 55% 45%;
     --report-tab-behavior-text: 340 45% 72%;
     --report-btn-send: 160 65% 42%;
     --report-btn-send-hover: 160 65% 36%;
@@ -170,8 +170,8 @@
 }
 .report-tab--attendance[data-state="active"] {
   background: hsl(var(--report-tab-attendance-active)) !important;
-  color: hsl(var(--report-tab-attendance-text));
-  box-shadow: 0 2px 8px hsl(var(--report-tab-attendance-active) / 0.4);
+  color: white !important;
+  box-shadow: 0 2px 10px hsl(var(--report-tab-attendance-active) / 0.5);
 }
 .report-tab--grades {
   background: hsl(var(--report-tab-grades));
@@ -179,8 +179,8 @@
 }
 .report-tab--grades[data-state="active"] {
   background: hsl(var(--report-tab-grades-active)) !important;
-  color: hsl(var(--report-tab-grades-text));
-  box-shadow: 0 2px 8px hsl(var(--report-tab-grades-active) / 0.4);
+  color: white !important;
+  box-shadow: 0 2px 10px hsl(var(--report-tab-grades-active) / 0.5);
 }
 .report-tab--behavior {
   background: hsl(var(--report-tab-behavior));
@@ -188,8 +188,8 @@
 }
 .report-tab--behavior[data-state="active"] {
   background: hsl(var(--report-tab-behavior-active)) !important;
-  color: hsl(var(--report-tab-behavior-text));
-  box-shadow: 0 2px 8px hsl(var(--report-tab-behavior-active) / 0.4);
+  color: white !important;
+  box-shadow: 0 2px 10px hsl(var(--report-tab-behavior-active) / 0.5);
 }
 
 @media print {
