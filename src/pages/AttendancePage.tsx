@@ -7,12 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, CalendarIcon, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AttendanceStats from "@/components/attendance/AttendanceStats";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -162,6 +162,15 @@ export default function AttendancePage() {
           </Popover>
         </div>
       </div>
+
+      <AttendanceStats
+        total={records.length}
+        present={records.filter((r) => r.status === "present").length}
+        absent={records.filter((r) => r.status === "absent").length}
+        late={records.filter((r) => r.status === "late").length}
+        earlyLeave={records.filter((r) => r.status === "early_leave").length}
+        sickLeave={records.filter((r) => r.status === "sick_leave").length}
+      />
 
       <Card className="shadow-card">
         <CardHeader className="pb-3">
