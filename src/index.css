@@ -127,6 +127,9 @@
   .lucide {
     color: hsl(210 29% 24%);
   }
+  .dark .lucide {
+    color: hsl(210 20% 78%);
+  }
 
   /* Allow icons to inherit color inside these contexts */
   [data-state="active"] .lucide,
