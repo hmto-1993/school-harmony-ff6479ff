@@ -16,7 +16,7 @@ import ReportsPage from "@/pages/ReportsPage";
 import NotificationsPage from "@/pages/NotificationsPage";
 import SettingsPage from "@/pages/SettingsPage";
 import StudentDashboard from "@/pages/StudentDashboard";
-import ResourceLibraryPage from "@/pages/ResourceLibraryPage";
+
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,7 +47,7 @@ const App = () => (
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/library" element={<ResourceLibraryPage />} />
+                
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>
