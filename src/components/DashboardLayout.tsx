@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
+import schoolLogo from "@/assets/school-logo.jpg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -33,10 +34,11 @@ export default function DashboardLayout() {
         {isMobile && (
           <button
             onClick={() => setMobileOpen(true)}
-            className="sticky top-0 z-30 w-full flex items-center justify-end gap-2 px-4 py-3 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent border-b border-primary/15 text-foreground backdrop-blur-sm"
+            className="sticky top-0 z-30 w-full flex items-center gap-2.5 px-4 py-3 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent border-b border-primary/15 text-foreground backdrop-blur-sm"
           >
-            <span className="text-sm font-semibold text-primary">القائمة</span>
             <Menu className="h-5 w-5 text-primary" />
+            <span className="text-sm font-semibold text-primary">القائمة</span>
+            <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-contain mr-auto" />
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
