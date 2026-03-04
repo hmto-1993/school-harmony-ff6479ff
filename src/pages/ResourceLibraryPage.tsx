@@ -228,36 +228,70 @@ export default function ResourceLibraryPage() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {resources.map((resource) => {
             const config = categoryConfig[resource.category] || categoryConfig["عام"];
             const IconComponent = config.icon;
             return (
-              <Card key={resource.id} className="shadow-card border-border/60">
-                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                  <div className={`${config.bg} rounded-2xl p-4`}>
-                    <IconComponent className={`h-8 w-8 ${config.color}`} />
+              <Card
+                key={resource.id}
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-[0_2px_16px_-4px_hsl(var(--foreground)/0.08)] hover:shadow-[0_8px_30px_-8px_hsl(var(--foreground)/0.15)] transition-all duration-300"
+              >
+                {/* Decorative gradient stripe */}
+                <div className={`absolute top-0 left-0 right-0 h-1 ${config.bg} opacity-80`} />
+
+                <CardContent className="p-6 pt-7 flex flex-col items-center text-center gap-4">
+                  {/* Large icon container */}
+                  <div className={`${config.bg} rounded-3xl p-5 ring-1 ring-inset ring-border/20 group-hover:scale-105 transition-transform duration-300`}>
+                    <IconComponent className={`h-10 w-10 ${config.color}`} strokeWidth={1.8} />
                   </div>
-                  <h3 className="font-semibold text-foreground">{resource.title}</h3>
+
+                  {/* Title */}
+                  <h3 className="font-bold text-foreground text-base leading-snug line-clamp-2">{resource.title}</h3>
+
+                  {/* Description */}
                   {resource.description && (
-                    <p className="text-xs text-muted-foreground leading-relaxed">{resource.description}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 -mt-1">{resource.description}</p>
                   )}
-                  <span className="text-[11px] text-muted-foreground/70">
-                    {resource.category} {resource.file_size ? `• ${formatFileSize(resource.file_size)}` : ""}
-                  </span>
-                  <div className="flex gap-2 mt-1">
+
+                  {/* Meta info badge */}
+                  <div className="flex items-center gap-1.5">
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full ${config.bg} ${config.color}`}>
+                      {resource.category}
+                    </span>
+                    {resource.file_size ? (
+                      <span className="text-[11px] text-muted-foreground/60">{formatFileSize(resource.file_size)}</span>
+                    ) : null}
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center gap-2 mt-1 w-full justify-center">
                     {isPreviewable(resource.file_name) && (
-                      <Button variant="outline" size="sm" className="gap-2" onClick={() => setPreviewResource(resource)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5 rounded-xl border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                        onClick={() => setPreviewResource(resource)}
+                      >
                         <Eye className="h-4 w-4" />
                         معاينة
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" className="gap-2" onClick={() => handleDownload(resource)}>
+                    <Button
+                      size="sm"
+                      className="gap-1.5 rounded-xl shadow-sm"
+                      onClick={() => handleDownload(resource)}
+                    >
                       <Download className="h-4 w-4" />
                       تحميل
                     </Button>
                     {isAdmin && (
-                      <Button variant="outline" size="sm" className="gap-2 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(resource)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-xl text-destructive/70 hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDelete(resource)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     )}
