@@ -100,13 +100,13 @@ export default function LoginPage() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${loginBg})`, filter: "blur(6px) brightness(0.55)" }}
       />
-      {/* Overlay gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10" />
+      {/* Overlay gradient — darker in dark mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <Card className="glass border-border/30 shadow-2xl">
+        <Card className="glass border-border/30 shadow-2xl dark:bg-card/85 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
-            <div className="rounded-2xl bg-card/80 p-2 shadow-card ring-1 ring-border/20">
+            <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
               <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
             </div>
             <div className="text-center">
@@ -116,7 +116,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-2 mb-5 h-11 rounded-xl bg-muted/80">
+              <TabsList className="grid w-full grid-cols-2 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
                 <TabsTrigger value="staff" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
                   <Shield className="h-4 w-4" />
                   معلم / مدير
@@ -139,7 +139,7 @@ export default function LoginPage() {
                       value={nationalId}
                       onChange={(e) => setNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right h-11 rounded-xl"
+                      className="text-right h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
@@ -152,7 +152,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       dir="ltr"
-                      className="h-11 rounded-xl"
+                      className="h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
@@ -179,7 +179,7 @@ export default function LoginPage() {
                       value={studentNationalId}
                       onChange={(e) => setStudentNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right h-11 rounded-xl"
+                      className="text-right h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
