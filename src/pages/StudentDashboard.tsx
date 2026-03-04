@@ -1,5 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -130,26 +131,39 @@ export default function StudentDashboard() {
                 {student.grades.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">لا توجد درجات مسجلة</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">المعيار</TableHead>
-                        <TableHead className="text-center">الدرجة</TableHead>
-                        <TableHead className="text-center">من</TableHead>
-                        <TableHead className="text-center">الوزن</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {student.grades.map((g, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-right font-medium">{g.grade_categories?.name || "-"}</TableCell>
-                          <TableCell className="text-center">{g.score ?? "-"}</TableCell>
-                          <TableCell className="text-center">{g.grade_categories?.max_score || "-"}</TableCell>
-                          <TableCell className="text-center">{g.grade_categories?.weight || "-"}%</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
+                    <table className="w-full text-sm border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                          <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">المعيار</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">من</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">الوزن</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {student.grades.map((g, i) => {
+                          const isEven = i % 2 === 0;
+                          const isLast = i === student.grades.length - 1;
+                          return (
+                            <tr
+                              key={i}
+                              className={cn(
+                                "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                                isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                                !isLast && "border-b border-border/20"
+                              )}
+                            >
+                              <td className={cn("p-3 text-right font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{g.grade_categories?.name || "-"}</td>
+                              <td className="p-3 text-center border-l border-border/10">{g.score ?? "-"}</td>
+                              <td className="p-3 text-center border-l border-border/10">{g.grade_categories?.max_score || "-"}</td>
+                              <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>{g.grade_categories?.weight || "-"}%</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -164,29 +178,40 @@ export default function StudentDashboard() {
                 {student.attendance.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">لا توجد سجلات حضور</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">التاريخ</TableHead>
-                        <TableHead className="text-center">الحالة</TableHead>
-                        <TableHead className="text-right">ملاحظات</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {student.attendance.map((a, i) => {
-                        const s = statusLabels[a.status] || { label: a.status, variant: "outline" as const };
-                        return (
-                          <TableRow key={i}>
-                            <TableCell className="text-right">{a.date}</TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant={s.variant}>{s.label}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right text-muted-foreground">{a.notes || "-"}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
+                    <table className="w-full text-sm border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                          <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">التاريخ</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الحالة</th>
+                          <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">ملاحظات</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {student.attendance.map((a, i) => {
+                          const s = statusLabels[a.status] || { label: a.status, variant: "outline" as const };
+                          const isEven = i % 2 === 0;
+                          const isLast = i === student.attendance.length - 1;
+                          return (
+                            <tr
+                              key={i}
+                              className={cn(
+                                "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                                isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                                !isLast && "border-b border-border/20"
+                              )}
+                            >
+                              <td className={cn("p-3 text-right border-l border-border/10", isLast && "first:rounded-br-xl")}>{a.date}</td>
+                              <td className="p-3 text-center border-l border-border/10">
+                                <Badge variant={s.variant}>{s.label}</Badge>
+                              </td>
+                              <td className={cn("p-3 text-right text-muted-foreground", isLast && "last:rounded-bl-xl")}>{a.notes || "-"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -201,28 +226,41 @@ export default function StudentDashboard() {
                 {student.behaviors.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">لا توجد تقييمات</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">التاريخ</TableHead>
-                        <TableHead className="text-center">النوع</TableHead>
-                        <TableHead className="text-right">الملاحظة</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {student.behaviors.map((b, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-right">{b.date}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={b.type === "إيجابي" ? "default" : "destructive"}>
-                              {b.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right text-muted-foreground">{b.note || "-"}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
+                    <table className="w-full text-sm border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                          <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">التاريخ</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النوع</th>
+                          <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">الملاحظة</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {student.behaviors.map((b, i) => {
+                          const isEven = i % 2 === 0;
+                          const isLast = i === student.behaviors.length - 1;
+                          return (
+                            <tr
+                              key={i}
+                              className={cn(
+                                "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                                isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                                !isLast && "border-b border-border/20"
+                              )}
+                            >
+                              <td className={cn("p-3 text-right border-l border-border/10", isLast && "first:rounded-br-xl")}>{b.date}</td>
+                              <td className="p-3 text-center border-l border-border/10">
+                                <Badge variant={b.type === "إيجابي" ? "default" : "destructive"}>
+                                  {b.type}
+                                </Badge>
+                              </td>
+                              <td className={cn("p-3 text-right text-muted-foreground", isLast && "last:rounded-bl-xl")}>{b.note || "-"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
