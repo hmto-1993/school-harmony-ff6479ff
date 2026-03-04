@@ -12,12 +12,15 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/hooks/use-theme";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -45,6 +48,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut } = useAuth();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
   const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام الإدارة");
@@ -112,6 +116,21 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border/50 space-y-1">
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200",
+            isCollapsed && "justify-center px-2"
+          )}
+        >
+          {theme === "dark" ? (
+            <Sun className="h-[18px] w-[18px] shrink-0" />
+          ) : (
+            <Moon className="h-[18px] w-[18px] shrink-0" />
+          )}
+          {!isCollapsed && <span>{theme === "dark" ? "الوضع الفاتح" : "الوضع الداكن"}</span>}
+        </button>
         <button
           onClick={signOut}
           className={cn(
