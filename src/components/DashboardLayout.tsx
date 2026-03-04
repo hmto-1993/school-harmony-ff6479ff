@@ -33,10 +33,10 @@ export default function DashboardLayout() {
         {isMobile && (
           <button
             onClick={() => setMobileOpen(true)}
-            className="sticky top-0 z-30 w-full flex items-center gap-2 px-4 py-3 bg-card border-b border-border/50 text-foreground"
+            className="sticky top-0 z-30 w-full flex items-center justify-end gap-2 px-4 py-3 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent border-b border-primary/15 text-foreground backdrop-blur-sm"
           >
-            <Menu className="h-5 w-5" />
-            <span className="text-sm font-medium">القائمة</span>
+            <span className="text-sm font-semibold text-primary">القائمة</span>
+            <Menu className="h-5 w-5 text-primary" />
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
