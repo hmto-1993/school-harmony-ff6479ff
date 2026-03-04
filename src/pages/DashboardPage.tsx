@@ -29,9 +29,13 @@ export default function DashboardPage() {
   const [classStats, setClassStats] = useState<ClassStats[]>([]);
   const [attendanceRate, setAttendanceRate] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [schoolName, setSchoolName] = useState("نظام إدارة المدرسة");
 
   useEffect(() => {
     fetchAll();
+    supabase.from("site_settings").select("value").eq("id", "school_name").single().then(({ data }) => {
+      if (data?.value) setSchoolName(data.value);
+    });
   }, []);
 
   const fetchAll = async () => {
@@ -130,6 +134,7 @@ export default function DashboardPage() {
         todayNotRecorded={todayNotRecorded}
         attendanceRate={attendanceRate}
         classStats={classStats}
+        schoolName={schoolName}
       />
     </div>
   );
