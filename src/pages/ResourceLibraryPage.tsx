@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FileText, Download, Trash2, Upload, Plus, File, Loader2 } from "lucide-react";
+import { FileText, Download, Trash2, Upload, Plus, File, Loader2, Eye, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,20 @@ function formatFileSize(bytes: number | null) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function getFileUrl(filePath: string) {
+  return supabase.storage.from("library").getPublicUrl(filePath).data.publicUrl;
+}
+
+function isPreviewable(fileName: string) {
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+  return ["pdf", "png", "jpg", "jpeg", "webp"].includes(ext);
+}
+
+function isImage(fileName: string) {
+  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+  return ["png", "jpg", "jpeg", "webp"].includes(ext);
+}
+
 export default function ResourceLibraryPage() {
   const { role } = useAuth();
   const { toast } = useToast();
@@ -50,6 +64,7 @@ export default function ResourceLibraryPage() {
   const [uploading, setUploading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bucketReady, setBucketReady] = useState(false);
+  const [previewResource, setPreviewResource] = useState<LibraryResource | null>(null);
 
   // Upload form state
   const [title, setTitle] = useState("");
@@ -230,6 +245,12 @@ export default function ResourceLibraryPage() {
                     {resource.category} {resource.file_size ? `• ${formatFileSize(resource.file_size)}` : ""}
                   </span>
                   <div className="flex gap-2 mt-1">
+                    {isPreviewable(resource.file_name) && (
+                      <Button variant="outline" size="sm" className="gap-2" onClick={() => setPreviewResource(resource)}>
+                        <Eye className="h-4 w-4" />
+                        معاينة
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm" className="gap-2" onClick={() => handleDownload(resource)}>
                       <Download className="h-4 w-4" />
                       تحميل
@@ -245,6 +266,33 @@ export default function ResourceLibraryPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Preview Dialog */}
+      {previewResource && (
+        <Dialog open={!!previewResource} onOpenChange={(v) => !v && setPreviewResource(null)}>
+          <DialogContent className="sm:max-w-4xl max-h-[90vh] p-0 overflow-hidden" dir="rtl">
+            <DialogHeader className="p-4 pb-2 flex flex-row items-center justify-between">
+              <DialogTitle className="text-base">{previewResource.title}</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto px-4 pb-4" style={{ maxHeight: "calc(90vh - 80px)" }}>
+              {isImage(previewResource.file_name) ? (
+                <img
+                  src={getFileUrl(previewResource.file_path)}
+                  alt={previewResource.title}
+                  className="w-full h-auto rounded-lg object-contain max-h-[75vh]"
+                />
+              ) : (
+                <iframe
+                  src={getFileUrl(previewResource.file_path)}
+                  className="w-full rounded-lg border border-border"
+                  style={{ height: "75vh" }}
+                  title={previewResource.title}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
