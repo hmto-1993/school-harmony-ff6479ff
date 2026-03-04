@@ -8,6 +8,7 @@ import {
   ResponsiveContainer, ScatterChart, Scatter, ZAxis, Cell,
 } from "recharts";
 import { Trophy, Users, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen, ClipboardList } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
 interface StudentInfo { id: string; full_name: string; class_id: string | null; }
@@ -205,40 +206,64 @@ export default function PerformanceDashboard() {
     </div>
   );
 
-  const renderLevelTable = (rows: StudentRow[], isBottom?: boolean) => (
-    <div className="overflow-auto">
-      <table className="w-full text-sm">
-        <thead className="sticky top-0">
-          <tr className="border-b bg-muted/60">
-            <th className="text-right p-2 font-medium">#</th>
-            <th className="text-right p-2 font-medium">الطالب</th>
-            <th className="text-center p-2 font-medium">النسبة %</th>
-            <th className="text-center p-2 font-medium">الفرق</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={row.name + i} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-              <td className="p-2 text-muted-foreground">{isBottom ? levelsData.studentRows.length - (rows.length - 1 - i) : i + 1}</td>
-              <td className="p-2 font-medium flex items-center gap-1.5">
-                {!isBottom && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />}
-                {isBottom && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
-                {row.name}
-              </td>
-              <td className="p-2 text-center font-bold">{row.score}%</td>
-              <td className="p-2 text-center">
-                <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
-                  {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
-                  {row.diff < 0 && <TrendingDown className="h-3 w-3" />}
-                  {row.diff > 0 ? "+" : ""}{row.diff}
-                </span>
-              </td>
+  const renderLevelTable = (rows: StudentRow[], isBottom?: boolean) => {
+    const accentColor = isBottom ? "destructive" : "success";
+    return (
+      <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
+        <table className="w-full text-sm border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10">
+            <tr className={cn(
+              "bg-gradient-to-l",
+              isBottom
+                ? "from-destructive/8 to-destructive/4 dark:from-destructive/15 dark:to-destructive/8"
+                : "from-success/8 to-success/4 dark:from-success/15 dark:to-success/8"
+            )}>
+              <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2 first:rounded-tr-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>#</th>
+              <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الطالب</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>النسبة %</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 last:rounded-tl-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الفرق</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+          </thead>
+          <tbody>
+            {rows.map((row, i) => {
+              const isEven = i % 2 === 0;
+              const isLast = i === rows.length - 1;
+              return (
+                <tr
+                  key={row.name + i}
+                  className={cn(
+                    "transition-colors",
+                    isBottom ? "hover:bg-destructive/5 dark:hover:bg-destructive/10" : "hover:bg-success/5 dark:hover:bg-success/10",
+                    isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                    !isLast && "border-b border-border/15"
+                  )}
+                >
+                  <td className={cn("p-2.5 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>
+                    {isBottom ? levelsData.studentRows.length - (rows.length - 1 - i) : i + 1}
+                  </td>
+                  <td className="p-2.5 font-medium border-l border-border/10">
+                    <span className="flex items-center gap-1.5">
+                      {!isBottom && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
+                      {isBottom && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
+                      {row.name}
+                    </span>
+                  </td>
+                  <td className="p-2.5 text-center font-bold bg-primary/[0.02] dark:bg-primary/[0.05] border-l border-border/10">{row.score}%</td>
+                  <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
+                    <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
+                      {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
+                      {row.diff < 0 && <TrendingDown className="h-3 w-3" />}
+                      {row.diff > 0 ? "+" : ""}{row.diff}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   const renderLevelsSection = () => {
     if (levelsData.studentRows.length === 0) return null;
