@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FileText, Download, Trash2, Upload, Plus, File, Loader2, Eye, X } from "lucide-react";
+import { FileText, Download, Trash2, Upload, Plus, File, Loader2, Eye, X, Award, BookOpen, ClipboardList, Stamp, BookMarked } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,13 @@ import { useToast } from "@/hooks/use-toast";
 
 const categories = ["عام", "شهادات", "مذكرات", "أوراق عمل", "نماذج رسمية", "أدلة إرشادية"];
 
-const categoryColors: Record<string, { color: string; bg: string }> = {
-  "عام": { color: "text-primary", bg: "bg-primary/10" },
-  "شهادات": { color: "text-warning", bg: "bg-warning/10" },
-  "مذكرات": { color: "text-info", bg: "bg-info/10" },
-  "أوراق عمل": { color: "text-success", bg: "bg-success/10" },
-  "نماذج رسمية": { color: "text-accent", bg: "bg-accent/10" },
-  "أدلة إرشادية": { color: "text-primary", bg: "bg-primary/10" },
+const categoryConfig: Record<string, { color: string; bg: string; icon: any }> = {
+  "عام": { color: "text-primary", bg: "bg-primary/10", icon: FileText },
+  "شهادات": { color: "text-warning", bg: "bg-warning/10", icon: Award },
+  "مذكرات": { color: "text-info", bg: "bg-info/10", icon: BookOpen },
+  "أوراق عمل": { color: "text-success", bg: "bg-success/10", icon: ClipboardList },
+  "نماذج رسمية": { color: "text-accent", bg: "bg-accent/10", icon: Stamp },
+  "أدلة إرشادية": { color: "text-primary", bg: "bg-primary/10", icon: BookMarked },
 };
 
 interface LibraryResource {
@@ -230,12 +230,13 @@ export default function ResourceLibraryPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {resources.map((resource) => {
-            const colors = categoryColors[resource.category] || categoryColors["عام"];
+            const config = categoryConfig[resource.category] || categoryConfig["عام"];
+            const IconComponent = config.icon;
             return (
               <Card key={resource.id} className="shadow-card border-border/60">
                 <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                  <div className={`${colors.bg} rounded-2xl p-4`}>
-                    <FileText className={`h-8 w-8 ${colors.color}`} />
+                  <div className={`${config.bg} rounded-2xl p-4`}>
+                    <IconComponent className={`h-8 w-8 ${config.color}`} />
                   </div>
                   <h3 className="font-semibold text-foreground">{resource.title}</h3>
                   {resource.description && (
