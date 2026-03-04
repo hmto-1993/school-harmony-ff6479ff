@@ -150,8 +150,8 @@ export default function PeriodComparison() {
       <CardContent>
         <Tabs defaultValue="weekly" dir="rtl">
           <TabsList className="mb-4">
-            <TabsTrigger value="weekly">أسبوعية</TabsTrigger>
-            <TabsTrigger value="monthly">شهرية</TabsTrigger>
+            <TabsTrigger value="weekly" className="gap-1.5"><CalendarDays className="h-4 w-4" />أسبوعية</TabsTrigger>
+            <TabsTrigger value="monthly" className="gap-1.5"><CalendarDays className="h-4 w-4" />شهرية</TabsTrigger>
           </TabsList>
           <TabsContent value="weekly">
             <p className="text-xs text-muted-foreground mb-3">هذا الأسبوع مقابل الأسبوع الماضي</p>

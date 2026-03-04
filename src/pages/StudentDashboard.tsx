@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LogOut, GraduationCap, ClipboardCheck, AlertTriangle, CheckCircle, Clock, BookOpen } from "lucide-react";
+import { LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen } from "lucide-react";
 import schoolLogo from "@/assets/school-logo.jpg";
 
 const statusLabels: Record<string, { label: string; variant: "default" | "destructive" | "secondary" | "outline" }> = {
@@ -116,7 +116,7 @@ export default function StudentDashboard() {
               الحضور
             </TabsTrigger>
             <TabsTrigger value="behavior" className="gap-1">
-              <AlertTriangle className="h-4 w-4" />
+              <ShieldCheck className="h-4 w-4" />
               السلوك
             </TabsTrigger>
           </TabsList>
