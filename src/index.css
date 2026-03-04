@@ -123,6 +123,36 @@
     @apply bg-background text-foreground font-arabic antialiased;
   }
 
+  /* Global icon color — dark by default for readability */
+  .lucide {
+    color: hsl(210 29% 24%);
+  }
+
+  /* Allow icons to inherit color inside these contexts */
+  [data-state="active"] .lucide,
+  .gradient-primary .lucide,
+  .bg-primary .lucide,
+  .bg-destructive .lucide,
+  button[style*="backgroundColor"] .lucide,
+  .text-primary-foreground .lucide,
+  .text-white .lucide,
+  .report-tab--attendance[data-state="active"] .lucide,
+  .report-tab--grades[data-state="active"] .lucide,
+  .report-tab--behavior[data-state="active"] .lucide {
+    color: inherit;
+  }
+
+  /* Allow specific colored icons to keep their color */
+  .lucide[class*="text-green"],
+  .lucide[class*="text-red"],
+  .lucide[class*="text-blue"],
+  .lucide[class*="text-yellow"],
+  .lucide[class*="text-primary"],
+  .lucide[class*="text-muted"],
+  .lucide[class*="text-destructive"] {
+    color: unset;
+  }
+
   /* Modern scrollbar */
   ::-webkit-scrollbar {
     width: 5px;
