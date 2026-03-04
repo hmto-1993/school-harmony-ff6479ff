@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import schoolLogo from "@/assets/school-logo.jpg";
 
 interface ClassStats {
   name: string;
@@ -66,13 +67,16 @@ export default function DashboardPrintView({
           alignItems: "center",
         }}
       >
-        <div>
-          <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0, color: "#1e293b" }}>
-            {schoolName}
-          </h1>
-          <p style={{ fontSize: "14px", color: "#64748b", margin: "4px 0 0" }}>
-            تقرير لوحة التحكم اليومي
-          </p>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <img src={schoolLogo} alt="شعار المدرسة" style={{ width: "50px", height: "50px", borderRadius: "10px", objectFit: "contain" }} />
+          <div>
+            <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0, color: "#1e293b" }}>
+              {schoolName}
+            </h1>
+            <p style={{ fontSize: "14px", color: "#64748b", margin: "4px 0 0" }}>
+              تقرير لوحة التحكم اليومي
+            </p>
+          </div>
         </div>
         <div style={{ textAlign: "left" }}>
           <p style={{ fontSize: "13px", fontWeight: 600 }}>{dayName}</p>
