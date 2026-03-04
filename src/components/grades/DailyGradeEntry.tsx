@@ -290,32 +290,42 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
               </div>
             </div>
 
-            <div className="rounded-lg border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="text-right sticky right-0 bg-muted/50">#</TableHead>
-                    <TableHead className="text-right sticky right-10 bg-muted/50 min-w-[180px]">الطالب</TableHead>
+            <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+              <table className="w-full text-sm border-separate border-spacing-0">
+                <thead>
+                  <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-0 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 first:rounded-tr-xl">#</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-10 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 min-w-[180px]">الطالب</th>
                     {visibleCategories.map((cat) => (
-                      <TableHead key={cat.id} className="text-center min-w-[100px]">
+                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
                         <div>{cat.name}</div>
-                      </TableHead>
+                      </th>
                     ))}
-                    {!isSingleCategory && <TableHead className="text-center min-w-[80px]">المجموع</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {studentGrades.map((sg, i) => (
-                    <TableRow key={sg.student_id}>
-                      <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                      <TableCell className="font-medium">{sg.full_name}</TableCell>
+                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {studentGrades.map((sg, i) => {
+                    const isEven = i % 2 === 0;
+                    const isLast = i === studentGrades.length - 1;
+                    return (
+                    <tr
+                      key={sg.student_id}
+                      className={cn(
+                        "transition-colors hover:bg-primary/5 dark:hover:bg-primary/10",
+                        isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                        !isLast && "border-b border-border/20"
+                      )}
+                    >
+                      <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                      <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
 
                         if (isNumericCategory(cat.name)) {
                           return (
-                            <TableCell key={cat.id} className="text-center">
+                            <td key={cat.id} className="p-3 text-center border-l border-border/10">
                               <Input
                                 type="number" min={0} max={maxScore}
                                 value={currentScore ?? ""}
@@ -323,7 +333,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                                 className="w-20 text-center h-8 mx-auto"
                                 placeholder={`/${maxScore}`}
                               />
-                            </TableCell>
+                            </td>
                           );
                         }
 
@@ -332,7 +342,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                         const isStarred = sg.starred[cat.id] || false;
 
                         return (
-                          <TableCell key={cat.id} className="text-center">
+                          <td key={cat.id} className="p-3 text-center border-l border-border/10">
                             <div className="flex items-center justify-center gap-1">
                               {/* Cycling icons */}
                               {slotsArr.map((slotLevel, si) => (
@@ -385,16 +395,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                                 <Undo2 className="h-4 w-4 text-muted-foreground" />
                               </button>
                             </div>
-                          </TableCell>
+                          </td>
                         );
                       })}
                       {!isSingleCategory && (
-                        <TableCell className="text-center font-bold">{calcTotal(sg.grades)}</TableCell>
+                        <td className={cn("p-3 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{calcTotal(sg.grades)}</td>
                       )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
             <div className="flex justify-end mt-4">
               <Button onClick={handleSave} disabled={saving}>
