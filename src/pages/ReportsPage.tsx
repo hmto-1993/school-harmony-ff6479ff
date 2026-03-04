@@ -376,16 +376,25 @@ export default function ReportsPage() {
           <p className="text-muted-foreground">تقارير يومية وفترية للحضور والدرجات مع إمكانية التصدير</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
+          <Button
+            size="sm"
+            onClick={handlePrint}
+            className="gap-1.5 text-white"
+            style={{ backgroundColor: "hsl(var(--report-btn-print))" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-print-hover))")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-print))")}
+          >
             <Printer className="h-4 w-4" />
             طباعة
           </Button>
           <Button
-            variant="outline"
             size="sm"
             onClick={handleSendSMS}
             disabled={sendingSMS || selectedStudent === "all"}
-            className="gap-1.5"
+            className="gap-1.5 text-white"
+            style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send))")}
           >
             <Send className="h-4 w-4" />
             {sendingSMS ? "جارٍ الإرسال..." : "إرسال لولي الأمر"}
@@ -473,16 +482,16 @@ export default function ReportsPage() {
       </Card>
 
       <Tabs defaultValue="attendance" dir="rtl">
-        <TabsList className="w-full justify-start print:hidden">
-          <TabsTrigger value="attendance" className="gap-1.5">
+        <TabsList className="report-tabs-list w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
+          <TabsTrigger value="attendance" className="report-tab report-tab--attendance gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <ClipboardCheck className="h-4 w-4" />
             تقرير الحضور
           </TabsTrigger>
-          <TabsTrigger value="grades" className="gap-1.5">
+          <TabsTrigger value="grades" className="report-tab report-tab--grades gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <GraduationCap className="h-4 w-4" />
             تقرير الدرجات
           </TabsTrigger>
-          <TabsTrigger value="behavior" className="gap-1.5">
+          <TabsTrigger value="behavior" className="report-tab report-tab--behavior gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <Heart className="h-4 w-4" />
             تقرير السلوك
           </TabsTrigger>
