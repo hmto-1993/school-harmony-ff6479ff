@@ -338,6 +338,7 @@ export type Database = {
           icon: string
           id: string
           title: string
+          visible_to_students: boolean
         }
         Insert: {
           category?: string
@@ -347,6 +348,7 @@ export type Database = {
           icon?: string
           id?: string
           title: string
+          visible_to_students?: boolean
         }
         Update: {
           category?: string
@@ -356,6 +358,7 @@ export type Database = {
           icon?: string
           id?: string
           title?: string
+          visible_to_students?: boolean
         }
         Relationships: [
           {

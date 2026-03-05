@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, FileSpreadsheet, Loader2,
   BookOpen, FlaskConical, Microscope, Calculator, Atom, GraduationCap, Brain, TestTube2,
-  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus, Globe
+  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus, Globe,
+  Eye, EyeOff
 } from "lucide-react";
 
 interface ClassInfo {
@@ -30,6 +32,7 @@ interface ResourceFolder {
   created_by: string;
   created_at: string;
   category: string;
+  visible_to_students: boolean;
   classes?: ClassInfo;
   file_count?: number;
 }
@@ -319,6 +322,22 @@ export default function ResourceLibraryPage() {
     fetchFolders();
   };
 
+  const toggleVisibility = async (folderId: string, currentValue: boolean) => {
+    const { error } = await supabase
+      .from("resource_folders")
+      .update({ visible_to_students: !currentValue } as any)
+      .eq("id", folderId);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      setFolders(prev => prev.map(f => f.id === folderId ? { ...f, visible_to_students: !currentValue } : f));
+      if (selectedFolder?.id === folderId) {
+        setSelectedFolder(prev => prev ? { ...prev, visible_to_students: !currentValue } : prev);
+      }
+      toast({ title: !currentValue ? "مرئية للطلاب" : "مخفية عن الطلاب" });
+    }
+  };
+
   // Group folders by class
   const getFoldersForClass = (classId: string) => {
     return folders.filter(f => f.class_id === classId);
@@ -385,7 +404,7 @@ export default function ResourceLibraryPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -404,7 +423,7 @@ export default function ResourceLibraryPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-foreground">مكتبة مصادر الفصول</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">مكتبة مصادر الفصول</h1>
               <p className="text-sm text-muted-foreground mt-1">اختر فصلاً للوصول إلى حقائب الملفات والمصادر التعليمية</p>
             </>
           )}
@@ -561,14 +580,31 @@ export default function ResourceLibraryPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {selectedClassFolders.map(folder => {
                 const IconComp = getIconComponent(folder.icon);
+                const isHidden = folder.visible_to_students === false;
                 return (
                   <Card
                     key={folder.id}
-                    className="group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden"
+                    className={cn(
+                      "group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden relative",
+                      isHidden && "opacity-60"
+                    )}
                     onClick={() => openFolderDetail(folder)}
                   >
+                    {/* Eye toggle */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleVisibility(folder.id, folder.visible_to_students); }}
+                      className={cn(
+                        "absolute top-3 left-3 z-10 p-1.5 rounded-xl transition-all duration-200",
+                        isHidden
+                          ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 dark:bg-rose-500/20 dark:hover:bg-rose-500/30"
+                          : "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30"
+                      )}
+                      title={isHidden ? "مخفية عن الطلاب - اضغط للإظهار" : "مرئية للطلاب - اضغط للإخفاء"}
+                    >
+                      {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                     <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center group-hover:bg-primary/20 dark:group-hover:bg-primary/30 transition-colors">
                         <IconComp className="h-8 w-8 text-primary" />
                       </div>
                       <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
@@ -642,9 +678,23 @@ export default function ResourceLibraryPage() {
                         </div>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={startEditing} className="gap-1.5 text-muted-foreground hover:text-primary">
-                      <Pen className="h-3.5 w-3.5" /> تعديل
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => toggleVisibility(selectedFolder.id, selectedFolder.visible_to_students)}
+                        className={cn(
+                          "p-2 rounded-xl transition-all",
+                          selectedFolder.visible_to_students
+                            ? "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 dark:bg-emerald-500/20"
+                            : "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 dark:bg-rose-500/20"
+                        )}
+                        title={selectedFolder.visible_to_students ? "مرئية للطلاب" : "مخفية عن الطلاب"}
+                      >
+                        {selectedFolder.visible_to_students ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
+                      <Button variant="ghost" size="sm" onClick={startEditing} className="gap-1.5 text-muted-foreground hover:text-primary">
+                        <Pen className="h-3.5 w-3.5" /> تعديل
+                      </Button>
+                    </div>
                   </div>
                 )}
               </DialogHeader>
