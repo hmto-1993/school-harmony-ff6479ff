@@ -225,14 +225,14 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                     "p-4 space-y-2",
                     q.question_type === "true_false"
                       ? "bg-amber-500/10 border-b border-amber-500/20"
-                      : "bg-violet-500/10 border-b border-violet-500/20"
+                      : "bg-sky-500/10 border-b border-sky-500/20"
                   )}>
                     <div className="flex items-start gap-2">
                       <Badge variant="outline" className={cn(
                         "shrink-0 rounded-full text-xs font-bold",
                         q.question_type === "true_false"
                           ? "border-amber-500/40 text-amber-600 bg-amber-500/15"
-                          : "border-violet-500/40 text-violet-600 bg-violet-500/15"
+                          : "border-sky-500/40 text-sky-600 bg-sky-500/15"
                       )}>
                         {qi + 1}
                       </Badge>
@@ -242,7 +242,7 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                           "shrink-0 text-[10px] rounded-full",
                           q.question_type === "true_false"
                             ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
-                            : "border-violet-500/30 text-violet-500 bg-violet-500/10"
+                            : "border-sky-500/30 text-sky-500 bg-sky-500/10"
                         )}>
                           {q.question_type === "true_false" ? "صح/خطأ" : "اختياري"}
                         </Badge>
@@ -253,23 +253,26 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                   {/* Answer options */}
                   <div className="p-4 space-y-2.5 bg-background">
                     {(q.options as string[]).map((opt: string, oi: number) => {
-                      const labels = ["أ", "ب", "ج", "د"];
+                      const isTF = q.question_type === "true_false";
+                      const mcLabels = ["A", "B", "C", "D"];
                       return (
                         <button key={oi} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: oi }))}
                           className={cn(
                             "w-full text-right p-3.5 rounded-xl border-2 transition-all flex items-center gap-3",
                             quizAnswers[q.id] === oi
-                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium shadow-md shadow-emerald-500/10"
-                              : "border-border hover:border-primary/40 hover:bg-muted/30 text-foreground"
+                              ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-400 font-medium shadow-md shadow-teal-500/10"
+                              : "border-border/60 hover:border-primary/40 hover:bg-muted/30 text-foreground"
                           )}>
-                          <span className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0",
-                            quizAnswers[q.id] === oi
-                              ? "bg-emerald-500 text-white"
-                              : "bg-muted text-muted-foreground"
-                          )}>
-                            {labels[oi] || oi + 1}
-                          </span>
+                          {!isTF && (
+                            <span className={cn(
+                              "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 font-mono",
+                              quizAnswers[q.id] === oi
+                                ? "bg-teal-500 text-white"
+                                : "bg-muted text-muted-foreground"
+                            )}>
+                              {mcLabels[oi] || oi + 1}
+                            </span>
+                          )}
                           <span>{opt}</span>
                         </button>
                       );
