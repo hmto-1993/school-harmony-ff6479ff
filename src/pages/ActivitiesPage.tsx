@@ -16,8 +16,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, FileUp, ClipboardList, Eye, EyeOff, Trash2, Upload, Loader2,
-  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer
+  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer, ChevronDown
 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
 import ActivityResults from "@/components/activities/ActivityResults";
@@ -524,22 +525,7 @@ export default function ActivitiesPage() {
         </Card>
       )}
 
-      {/* Quiz Statistics */}
-      {!resultsActivity && !loading && filtered.some(a => a.type === "quiz") && (
-        <Card className="border-0 shadow-lg rounded-2xl">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                <BarChart3 className="h-4 w-4 text-violet-500" />
-              </div>
-              <h2 className="text-lg font-bold text-foreground">إحصائيات الاختبارات</h2>
-            </div>
-            <QuizStatistics />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Activities list */}
+      {/* Collapsible Sections */}
       {!resultsActivity && (
         loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -549,48 +535,107 @@ export default function ActivitiesPage() {
             <p className="text-muted-foreground">{search ? "لا توجد نتائج" : "لا توجد أنشطة بعد"}</p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Files Section */}
-            {(filterType === "all" || filterType === "file") && (() => {
-              const fileActivities = filtered.filter(a => a.type === "file");
-              if (fileActivities.length === 0) return null;
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                      <FileUp className="h-5 w-5 text-blue-500" />
+          <div className="space-y-4">
+            {/* Quiz Statistics - Collapsible */}
+            {filtered.some(a => a.type === "quiz") && (
+              <Collapsible defaultOpen>
+                <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-violet-500/5 via-card to-purple-500/5">
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center justify-between p-5 cursor-pointer hover:bg-muted/20 transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                          <BarChart3 className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="text-right">
+                          <h2 className="text-lg font-bold text-foreground">إحصائيات الاختبارات</h2>
+                          <p className="text-xs text-muted-foreground">تحليل الأداء ومعدلات النجاح</p>
+                        </div>
+                      </div>
+                      <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-foreground">الأنشطة والملفات</h2>
-                      <p className="text-xs text-muted-foreground">{fileActivities.length} نشاط</p>
-                    </div>
-                  </div>
-                  {fileActivities.map((activity, ai) => (
-                    <ActivityCard key={activity.id} activity={activity} ai={ai} />
-                  ))}
-                </div>
-              );
-            })()}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="px-5 pb-5 pt-0">
+                      <QuizStatistics />
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            )}
 
-            {/* Quizzes Section */}
+            {/* Quizzes Section - Collapsible */}
             {(filterType === "all" || filterType === "quiz") && (() => {
               const quizActivities = filtered.filter(a => a.type === "quiz");
               if (quizActivities.length === 0) return null;
               return (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                      <ClipboardList className="h-5 w-5 text-violet-500" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-foreground">الاختبارات</h2>
-                      <p className="text-xs text-muted-foreground">{quizActivities.length} اختبار</p>
-                    </div>
-                  </div>
-                  {quizActivities.map((activity, ai) => (
-                    <ActivityCard key={activity.id} activity={activity} ai={ai} />
-                  ))}
-                </div>
+                <Collapsible defaultOpen>
+                  <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-indigo-500/5 via-card to-violet-500/5">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between p-5 cursor-pointer hover:bg-muted/20 transition-colors group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                            <ClipboardList className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="text-right">
+                            <h2 className="text-lg font-bold text-foreground">الاختبارات</h2>
+                            <p className="text-xs text-muted-foreground">{quizActivities.length} اختبار</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-indigo-500/10 text-indigo-600 border-indigo-500/20 rounded-full text-xs font-bold px-3">
+                            {quizActivities.length}
+                          </Badge>
+                          <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="px-5 pb-5 pt-0 space-y-3">
+                        {quizActivities.map((activity, ai) => (
+                          <ActivityCard key={activity.id} activity={activity} ai={ai} />
+                        ))}
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
+              );
+            })()}
+
+            {/* Files Section - Collapsible */}
+            {(filterType === "all" || filterType === "file") && (() => {
+              const fileActivities = filtered.filter(a => a.type === "file");
+              if (fileActivities.length === 0) return null;
+              return (
+                <Collapsible defaultOpen>
+                  <Card className="border-0 shadow-lg rounded-2xl overflow-hidden bg-gradient-to-br from-sky-500/5 via-card to-blue-500/5">
+                    <CollapsibleTrigger className="w-full">
+                      <div className="flex items-center justify-between p-5 cursor-pointer hover:bg-muted/20 transition-colors group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+                            <FileUp className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="text-right">
+                            <h2 className="text-lg font-bold text-foreground">الأنشطة والملفات</h2>
+                            <p className="text-xs text-muted-foreground">{fileActivities.length} نشاط</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-sky-500/10 text-sky-600 border-sky-500/20 rounded-full text-xs font-bold px-3">
+                            {fileActivities.length}
+                          </Badge>
+                          <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                        </div>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="px-5 pb-5 pt-0 space-y-3">
+                        {fileActivities.map((activity, ai) => (
+                          <ActivityCard key={activity.id} activity={activity} ai={ai} />
+                        ))}
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Card>
+                </Collapsible>
               );
             })()}
           </div>
