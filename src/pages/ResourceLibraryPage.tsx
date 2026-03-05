@@ -393,7 +393,7 @@ export default function ResourceLibraryPage() {
               </button>
               <ArrowRight className="h-4 w-4 text-muted-foreground rotate-180" />
               <h1 className="text-2xl font-bold text-foreground">
-                {selectedClassInfo.name} - {selectedClassInfo.grade}/{selectedClassInfo.section}
+                {selectedClassInfo.grade}/{selectedClassInfo.section}
               </h1>
             </div>
           ) : (
@@ -433,7 +433,7 @@ export default function ResourceLibraryPage() {
                   <SelectContent>
                     <SelectItem value="__all__">جميع الشعب</SelectItem>
                     {classes.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>{c.grade}/{c.section}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -591,7 +591,7 @@ export default function ResourceLibraryPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {classes.map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
+                            <SelectItem key={c.id} value={c.id}>{c.grade}/{c.section}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
