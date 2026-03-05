@@ -14,6 +14,7 @@ import {
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, File, ArrowRight
 } from "lucide-react";
 import schoolLogo from "@/assets/school-logo.jpg";
+import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -67,6 +68,7 @@ export default function StudentDashboard() {
   const [selectedFolder, setSelectedFolder] = useState<ResourceFolder | null>(null);
   const [folderFiles, setFolderFiles] = useState<ResourceFile[]>([]);
   const [filesLoading, setFilesLoading] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
 
   useEffect(() => {
     if (student) fetchFolders();
@@ -403,23 +405,42 @@ export default function StudentDashboard() {
                       <p className="text-center text-muted-foreground py-8">لا توجد ملفات بعد</p>
                     ) : (
                       <div className="space-y-2">
-                        {folderFiles.map(file => (
-                          <div key={file.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors border border-border/20">
-                            <FileText className="h-5 w-5 text-primary shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
-                              <p className="text-[11px] text-muted-foreground">{formatFileSize(file.file_size)}</p>
-                            </div>
-                            <a
-                              href={file.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary transition-colors"
+                        {folderFiles.map(file => {
+                          const previewable = isPreviewable(file.file_name);
+                          const isImg = isImage(file.file_name);
+                          return (
+                            <div
+                              key={file.id}
+                              className={cn(
+                                "flex items-center gap-3 p-3 rounded-xl bg-muted/30 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors border border-border/20",
+                                previewable && "cursor-pointer"
+                              )}
+                              onClick={() => previewable && setPreviewFile({ url: file.file_url, name: file.file_name })}
                             >
-                              <Download className="h-4 w-4" />
-                            </a>
-                          </div>
-                        ))}
+                              {isImg ? (
+                                <img src={file.file_url} alt="" className="h-10 w-10 rounded-lg object-cover shrink-0 border border-border/30" />
+                              ) : (
+                                <FileText className="h-5 w-5 text-primary shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
+                                <p className="text-[11px] text-muted-foreground">{formatFileSize(file.file_size)}</p>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <PreviewButton fileName={file.file_name} fileUrl={file.file_url} onPreview={() => setPreviewFile({ url: file.file_url, name: file.file_name })} />
+                                <a
+                                  href={file.file_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="p-2 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary transition-colors"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -496,6 +517,14 @@ export default function StudentDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {previewFile && (
+        <FilePreviewDialog
+          fileUrl={previewFile.url}
+          fileName={previewFile.name}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   );
 }

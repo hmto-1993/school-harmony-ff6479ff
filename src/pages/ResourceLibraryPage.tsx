@@ -16,6 +16,7 @@ import {
   Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus, Globe,
   Eye, EyeOff
 } from "lucide-react";
+import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 
 interface ClassInfo {
   id: string;
@@ -129,6 +130,7 @@ export default function ResourceLibraryPage() {
   const [filesLoading, setFilesLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
 
   // Edit mode inside folder detail
   const [editing, setEditing] = useState(false);
@@ -735,32 +737,48 @@ export default function ResourceLibraryPage() {
                     ) : folderFiles.length === 0 ? (
                       <p className="text-center text-sm text-muted-foreground py-8">لا توجد ملفات بعد</p>
                     ) : (
-                      folderFiles.map(file => (
-                        <div key={file.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
-                          <FileText className="h-5 w-5 text-primary shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
-                            <p className="text-[11px] text-muted-foreground">{formatFileSize(file.file_size)}</p>
+                      folderFiles.map(file => {
+                        const previewable = isPreviewable(file.file_name);
+                        const isImg = isImage(file.file_name);
+                        return (
+                          <div
+                            key={file.id}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl bg-muted/50 dark:bg-muted/30 hover:bg-muted dark:hover:bg-muted/40 transition-colors",
+                              previewable && "cursor-pointer"
+                            )}
+                            onClick={() => previewable && setPreviewFile({ url: file.file_url, name: file.file_name })}
+                          >
+                            {isImg ? (
+                              <img src={file.file_url} alt="" className="h-10 w-10 rounded-lg object-cover shrink-0 border border-border/30" />
+                            ) : (
+                              <FileText className="h-5 w-5 text-primary shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
+                              <p className="text-[11px] text-muted-foreground">{formatFileSize(file.file_size)}</p>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <PreviewButton fileName={file.file_name} fileUrl={file.file_url} onPreview={() => setPreviewFile({ url: file.file_url, name: file.file_name })} />
+                              <a
+                                href={file.file_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={e => e.stopPropagation()}
+                                className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }}
+                                className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <a
-                              href={file.file_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={e => e.stopPropagation()}
-                              className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                            >
-                              <Download className="h-4 w-4" />
-                            </a>
-                            <button
-                              onClick={() => handleDeleteFile(file.id)}
-                              className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
 
@@ -782,6 +800,15 @@ export default function ResourceLibraryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* File Preview Dialog */}
+      {previewFile && (
+        <FilePreviewDialog
+          fileUrl={previewFile.url}
+          fileName={previewFile.name}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   );
 }
