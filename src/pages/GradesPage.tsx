@@ -13,7 +13,9 @@ export default function GradesPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold">الدرجات والتقييمات</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
+            الدرجات والتقييمات
+          </h1>
           <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
         </div>
         <NoorExportDialog />

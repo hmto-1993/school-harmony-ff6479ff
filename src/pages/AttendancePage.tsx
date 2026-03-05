@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -56,14 +55,12 @@ export default function AttendancePage() {
   }, [selectedClass, date]);
 
   const loadStudents = async () => {
-    // جلب طلاب الفصل
     const { data: students } = await supabase
       .from("students")
       .select("id, full_name")
       .eq("class_id", selectedClass)
       .order("full_name");
 
-    // جلب سجلات الحضور لليوم
     const { data: attendance } = await supabase
       .from("attendance_records")
       .select("id, student_id, status, notes")
@@ -106,7 +103,6 @@ export default function AttendancePage() {
     if (!user || !selectedClass) return;
     setSaving(true);
 
-    // تحديث السجلات الموجودة
     const toUpdate = records.filter((r) => r.existing_id);
     const toInsert = records.filter((r) => !r.existing_id);
 
@@ -132,7 +128,7 @@ export default function AttendancePage() {
 
     toast({ title: "تم الحفظ", description: "تم حفظ سجلات الحضور بنجاح" });
     setSaving(false);
-    loadStudents(); // إعادة التحميل لتحديث المعرفات
+    loadStudents();
   };
 
   const filteredRecords = statusFilter === "all" ? records : records.filter((r) => r.status === statusFilter);
@@ -140,12 +136,14 @@ export default function AttendancePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold">تسجيل الحضور والغياب</h1>
+        <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
+          تسجيل الحضور والغياب
+        </h1>
         <div className="flex items-center gap-2 mt-1">
           <span className="text-muted-foreground">التاريخ:</span>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal")}>
+              <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal backdrop-blur-sm")}>
                 <CalendarIcon className="h-4 w-4" />
                 {new Date(date).toLocaleDateString("ar-SA")}
               </Button>
@@ -172,7 +170,7 @@ export default function AttendancePage() {
         sickLeave={records.filter((r) => r.status === "sick_leave").length}
       />
 
-      <Card className="shadow-card">
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">اختر الفصل</CardTitle>
@@ -190,13 +188,18 @@ export default function AttendancePage() {
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">
-              {selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
-            </p>
+            <div className="text-center py-16">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mb-4">
+                <CalendarIcon className="h-8 w-8 text-primary/60" />
+              </div>
+              <p className="text-muted-foreground">
+                {selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
+              </p>
+            </div>
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">
-                <Button variant="outline" size="sm" onClick={markAllPresent}>
+                <Button variant="outline" size="sm" onClick={markAllPresent} className="backdrop-blur-sm">
                   <CheckCircle2 className="h-4 w-4 ml-1" />
                   تحديد الكل حاضر
                 </Button>
@@ -223,7 +226,7 @@ export default function AttendancePage() {
               <div className="overflow-hidden rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
-                    <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                    <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl w-12">#</th>
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب</th>
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الحالة</th>
@@ -253,7 +256,7 @@ export default function AttendancePage() {
                                 onClick={() => updateStatus(record.student_id, opt.value)}
                                 className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
                                   record.status === opt.value
-                                    ? opt.color + " font-medium ring-1 ring-current/20"
+                                    ? opt.color + " font-medium ring-1 ring-current/20 shadow-sm"
                                     : "bg-background text-muted-foreground border-border hover:bg-muted"
                                 }`}
                               >
@@ -277,7 +280,7 @@ export default function AttendancePage() {
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
                   {saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
                 </Button>
