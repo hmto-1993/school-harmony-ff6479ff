@@ -7,6 +7,7 @@ import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/EmptyState";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList },
