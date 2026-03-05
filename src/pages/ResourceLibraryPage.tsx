@@ -643,7 +643,7 @@ export default function ResourceLibraryPage() {
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleVisibility(folder.id, folder.visible_to_students); }}
                       className={cn(
-                        "absolute top-3 left-3 z-10 p-1.5 rounded-xl transition-all duration-200",
+                        "absolute top-3 left-14 z-10 p-1.5 rounded-xl transition-all duration-200",
                         isHidden
                           ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 dark:bg-rose-500/20 dark:hover:bg-rose-500/30"
                           : "bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 dark:bg-emerald-500/20 dark:hover:bg-emerald-500/30"
