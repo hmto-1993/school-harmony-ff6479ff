@@ -8,7 +8,7 @@ import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
+import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
@@ -107,10 +107,10 @@ export default function ExportDialog({
     setOpen(false);
   };
 
-  const exportPDF = () => {
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    doc.setFont("helvetica");
+  const exportPDF = async () => {
+    const doc = await createArabicPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const tableStyles = getArabicTableStyles();
 
     doc.setFontSize(16);
     doc.text("سجل دخول الطلاب", pageWidth / 2, 15, { align: "center" });
@@ -131,8 +131,7 @@ export default function ExportDialog({
           c.totalLogins.toString(),
           c.name,
         ]),
-        styles: { font: "helvetica", halign: "center", fontSize: 9 },
-        headStyles: { fillColor: [59, 130, 246], halign: "center" },
+        ...tableStyles,
         columnStyles: { 3: { halign: "right" } },
       });
     }
@@ -151,8 +150,7 @@ export default function ExportDialog({
           l.students?.full_name || "غير معروف",
           (i + 1).toString(),
         ]),
-        styles: { font: "helvetica", halign: "center", fontSize: 8 },
-        headStyles: { fillColor: [59, 130, 246], halign: "center" },
+        ...tableStyles,
         columnStyles: { 3: { halign: "right" } },
       });
     }
@@ -173,8 +171,7 @@ export default function ExportDialog({
             l.students?.full_name || "غير معروف",
             (i + 1).toString(),
           ]),
-          styles: { font: "helvetica", halign: "center", fontSize: 9 },
-          headStyles: { fillColor: [59, 130, 246], halign: "center" },
+          ...tableStyles,
           columnStyles: { 2: { halign: "right" } },
         });
       });

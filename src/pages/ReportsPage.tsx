@@ -281,61 +281,59 @@ export default function ReportsPage() {
   };
 
   const exportAttendancePDF = async () => {
-    const jsPDF = (await import("jspdf")).default;
-    await import("jspdf-autotable");
+    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const doc = await createArabicPDF({ orientation: "landscape" });
+    const tableStyles = getArabicTableStyles();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const doc = new jsPDF({ orientation: "landscape" });
-    // Use built-in font (no Arabic shaping in basic jsPDF, but functional)
-    doc.setFont("helvetica");
     doc.setFontSize(16);
-    doc.text("Attendance Report", 14, 20);
+    doc.text("تقرير الحضور", pageWidth / 2, 15, { align: "center" });
     doc.setFontSize(10);
-    doc.text(`From: ${dateFrom}  To: ${dateTo}`, 14, 28);
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, 24, { align: "center" });
 
     const tableData = attendanceData.map((r) => [
-      r.student_name,
-      r.date,
-      STATUS_LABELS[r.status] || r.status,
       r.notes || "",
+      STATUS_LABELS[r.status] || r.status,
+      r.date,
+      r.student_name,
     ]);
 
     (doc as any).autoTable({
-      startY: 35,
-      head: [["Student", "Date", "Status", "Notes"]],
+      startY: 32,
+      head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
       body: tableData,
-      styles: { fontSize: 9, halign: "left" },
-      headStyles: { fillColor: [30, 64, 175] },
+      ...tableStyles,
+      columnStyles: { 3: { halign: "right" } },
     });
 
-    doc.save(`attendance_${dateFrom}_${dateTo}.pdf`);
+    doc.save(`تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
   };
 
   const exportGradesPDF = async () => {
-    const jsPDF = (await import("jspdf")).default;
-    await import("jspdf-autotable");
+    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const doc = await createArabicPDF({ orientation: "landscape" });
+    const tableStyles = getArabicTableStyles();
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-    const doc = new jsPDF({ orientation: "landscape" });
-    doc.setFont("helvetica");
     doc.setFontSize(16);
-    doc.text("Grades Report", 14, 20);
+    doc.text("تقرير الدرجات", pageWidth / 2, 15, { align: "center" });
 
-    const head = ["Student", ...categoryNames, "Total"];
+    const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب"];
     const body = gradeData.map((r) => [
-      r.student_name,
-      ...categoryNames.map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
       String(r.total),
+      ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
+      r.student_name,
     ]);
 
     (doc as any).autoTable({
-      startY: 30,
+      startY: 25,
       head: [head],
       body,
-      styles: { fontSize: 9, halign: "center" },
-      headStyles: { fillColor: [30, 64, 175] },
-      columnStyles: { 0: { halign: "left" } },
+      ...tableStyles,
+      columnStyles: { [head.length - 1]: { halign: "right" } },
     });
 
-    doc.save("grades_report.pdf");
+    doc.save(`تقرير_الدرجات.pdf`);
   };
 
   // ============ Print & Send ============
