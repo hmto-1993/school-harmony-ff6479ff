@@ -229,8 +229,27 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
+            <div className="flex gap-2 items-center">
+              {selectedClass && categories.length > 0 && (
+                <GradesExportDialog
+                  title="الإدخال اليومي"
+                  fileName="الإدخال_اليومي"
+                  groups={(() => {
+                    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+                    const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
+                    const rows = studentGrades.map((sg, i) => [
+                      String(i + 1),
+                      sg.full_name,
+                      ...visibleCategories.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                      ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
+                    ]);
+                    return [{ className, headers, rows }] as ExportTableGroup[];
+                  })()}
+                />
+              )}
+            </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={selectedClass} onValueChange={onClassChange}>
                 <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
@@ -433,28 +452,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end mt-4 gap-2">
-              <GradesExportDialog
-                title="الإدخال اليومي"
-                fileName="الإدخال_اليومي"
-                groups={(() => {
-                  const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
-                  const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                  const rows = studentGrades.map((sg, i) => [
-                    String(i + 1),
-                    sg.full_name,
-                    ...visibleCategories.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
-                    ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
-                  ]);
-                  return [{ className, headers, rows }] as ExportTableGroup[];
-                })()}
-                trigger={
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    تصدير / طباعة
-                  </Button>
-                }
-              />
+            <div className="flex justify-end mt-4">
               <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                  <Save className="h-4 w-4 ml-2" />
                  {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}

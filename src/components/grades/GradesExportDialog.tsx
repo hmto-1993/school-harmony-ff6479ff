@@ -11,19 +11,25 @@ import { toast } from "sonner";
 
 export interface ExportTableGroup {
   className: string;
-  headers: string[];       // column headers (RTL order for PDF)
-  rows: string[][];        // row data matching headers
-  groupHeaders?: string[]; // optional top-level group row for PDF
+  headers: string[];
+  rows: string[][];
+  groupHeaders?: string[];
+}
+
+export interface ExportExtraSheet {
+  name: string;
+  data: Record<string, string | number>[];
 }
 
 interface GradesExportDialogProps {
   title: string;
   fileName: string;
   groups: ExportTableGroup[];
+  extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
 }
 
-export default function GradesExportDialog({ title, fileName, groups, trigger }: GradesExportDialogProps) {
+export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
 
   const exportExcel = () => {
@@ -41,6 +47,11 @@ export default function GradesExportDialog({ title, fileName, groups, trigger }:
       });
       const sheetName = group.className.substring(0, 31);
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), sheetName);
+    });
+
+    // Add extra sheets (e.g. statistics)
+    extraSheets?.forEach((sheet) => {
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet.data), sheet.name.substring(0, 31));
     });
 
     XLSX.writeFile(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
