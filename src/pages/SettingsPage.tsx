@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
   Dialog,
   DialogContent,
@@ -164,6 +166,12 @@ export default function SettingsPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
+  // Quiz color settings
+  const [quizColorMcq, setQuizColorMcq] = useState("#0ea5e9");
+  const [quizColorTf, setQuizColorTf] = useState("#f59e0b");
+  const [quizColorSelected, setQuizColorSelected] = useState("#14b8a6");
+  const [savingQuizColors, setSavingQuizColors] = useState(false);
+
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
   const [newCatName, setNewCatName] = useState("");
@@ -257,6 +265,19 @@ export default function SettingsPage() {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
         if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
+      });
+    }
+
+    // Fetch quiz color settings
+    if (isAdmin) {
+      const { data: qcData } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected"]);
+      (qcData || []).forEach((s: any) => {
+        if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
+        if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
+        if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
       });
     }
 
@@ -1455,6 +1476,115 @@ export default function SettingsPage() {
                   <KeyRound className="h-4 w-4" />
                   {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
                 </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* ===== ألوان الاختبارات ===== */}
+            <Collapsible>
+               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-full" style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }} />
+                        ألوان الاختبارات
+                      </span>
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-6 max-w-lg">
+                    {/* MCQ Color */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {QUIZ_COLOR_OPTIONS.map(opt => (
+                          <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
+                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                              quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: opt.value }}
+                            title={opt.label} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
+                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
+                      </div>
+                    </div>
+
+                    {/* True/False Color */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {QUIZ_COLOR_OPTIONS.map(opt => (
+                          <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
+                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                              quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: opt.value }}
+                            title={opt.label} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
+                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
+                      </div>
+                    </div>
+
+                    {/* Selected Answer Color */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {QUIZ_COLOR_OPTIONS.map(opt => (
+                          <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
+                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                              quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                            )}
+                            style={{ backgroundColor: opt.value }}
+                            title={opt.label} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
+                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <div className="rounded-xl border p-4 space-y-2">
+                      <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
+                      <div className="flex gap-3">
+                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
+                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
+                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
+                      </div>
+                    </div>
+
+                    <Button
+                      disabled={savingQuizColors}
+                      className="gap-1.5"
+                      onClick={async () => {
+                        setSavingQuizColors(true);
+                        const results = await Promise.all([
+                          supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
+                          supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
+                          supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
+                        ]);
+                        setSavingQuizColors(false);
+                        if (results.some(r => r.error)) {
+                          toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
+                        } else {
+                          toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
+                        }
+                      }}
+                    >
+                      <Save className="h-4 w-4" />
+                      {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
+                    </Button>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
