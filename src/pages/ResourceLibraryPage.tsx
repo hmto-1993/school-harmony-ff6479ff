@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, FileSpreadsheet, Loader2,
   BookOpen, FlaskConical, Microscope, Calculator, Atom, GraduationCap, Brain, TestTube2,
-  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag
+  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus
 } from "lucide-react";
 
 interface ClassInfo {
@@ -89,14 +89,28 @@ function formatFileSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
+// Color palette for class bags
+const CLASS_COLORS = [
+  { bg: "bg-blue-500/10", icon: "text-blue-500", border: "border-blue-500/20", hoverBg: "hover:bg-blue-500/15" },
+  { bg: "bg-emerald-500/10", icon: "text-emerald-500", border: "border-emerald-500/20", hoverBg: "hover:bg-emerald-500/15" },
+  { bg: "bg-violet-500/10", icon: "text-violet-500", border: "border-violet-500/20", hoverBg: "hover:bg-violet-500/15" },
+  { bg: "bg-amber-500/10", icon: "text-amber-500", border: "border-amber-500/20", hoverBg: "hover:bg-amber-500/15" },
+  { bg: "bg-rose-500/10", icon: "text-rose-500", border: "border-rose-500/20", hoverBg: "hover:bg-rose-500/15" },
+  { bg: "bg-cyan-500/10", icon: "text-cyan-500", border: "border-cyan-500/20", hoverBg: "hover:bg-cyan-500/15" },
+  { bg: "bg-orange-500/10", icon: "text-orange-500", border: "border-orange-500/20", hoverBg: "hover:bg-orange-500/15" },
+  { bg: "bg-pink-500/10", icon: "text-pink-500", border: "border-pink-500/20", hoverBg: "hover:bg-pink-500/15" },
+];
+
 export default function ResourceLibraryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
-  const [filterClassId, setFilterClassId] = useState<string>("all");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+
+  // Two-level navigation: null = show classes, string = show folders inside that class
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   // Create folder dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -294,16 +308,29 @@ export default function ResourceLibraryPage() {
     fetchFolders();
   };
 
-  const filteredFolders = folders.filter(f => {
-    const classMatch = filterClassId === "all" || f.class_id === filterClassId;
-    const categoryMatch = filterCategory === "all" || (f as any).category === filterCategory;
-    return classMatch && categoryMatch;
-  });
-
-  const getClassLabel = (folder: ResourceFolder) => {
-    const c = folder.classes;
-    return c ? `${c.grade}/${c.section}` : "";
+  // Group folders by class
+  const getFoldersForClass = (classId: string) => {
+    return folders.filter(f => f.class_id === classId);
   };
+
+  const getFolderCountForClass = (classId: string) => {
+    return folders.filter(f => f.class_id === classId).length;
+  };
+
+  const getFileCountForClass = (classId: string) => {
+    return folders.filter(f => f.class_id === classId).reduce((sum, f) => sum + (f.file_count || 0), 0);
+  };
+
+  // Classes that have folders
+  const classesWithFolders = classes.filter(c => getFolderCountForClass(c.id) > 0);
+  const classesWithoutFolders = classes.filter(c => getFolderCountForClass(c.id) === 0);
+
+  const selectedClassInfo = selectedClassId ? classes.find(c => c.id === selectedClassId) : null;
+  const selectedClassFolders = selectedClassId
+    ? getFoldersForClass(selectedClassId).filter(f => filterCategory === "all" || f.category === filterCategory)
+    : [];
+
+  const getClassColor = (index: number) => CLASS_COLORS[index % CLASS_COLORS.length];
 
   const IconPicker = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <div className="grid grid-cols-4 gap-2 mt-2">
@@ -346,169 +373,205 @@ export default function ResourceLibraryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">مكتبة مصادر الفصول</h1>
-          <p className="text-sm text-muted-foreground mt-1">إدارة حقائب الملفات والمصادر التعليمية لكل شعبة</p>
-        </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="gap-2 rounded-xl">
-              <FolderPlus className="h-4 w-4" />
-              حقيبة جديدة
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" dir="rtl">
-            <DialogHeader>
-              <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 mt-2">
-              <div>
-                <Label>عنوان الحقيبة</Label>
-                <Input
-                  value={newTitle}
-                  onChange={e => setNewTitle(e.target.value)}
-                  placeholder="مثال: شهادات الشهر"
-                  className="mt-1 rounded-xl"
-                />
-              </div>
-              <div>
-                <Label>الشعبة</Label>
-                <Select value={newClassId} onValueChange={setNewClassId}>
-                  <SelectTrigger className="mt-1 rounded-xl">
-                    <SelectValue placeholder="اختر الشعبة" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>التصنيف</Label>
-                <CategorySelect value={newCategory} onChange={setNewCategory} />
-              </div>
-              <div>
-                <Label>الأيقونة</Label>
-                <IconPicker value={newIcon} onChange={setNewIcon} />
-              </div>
-              <Button onClick={handleCreateFolder} disabled={creating || !newTitle.trim() || !newClassId} className="w-full rounded-xl">
-                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء"}
-              </Button>
+          {selectedClassId && selectedClassInfo ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setSelectedClassId(null); setFilterCategory("all"); }}
+                className="text-sm text-primary hover:underline font-medium"
+              >
+                المكتبة
+              </button>
+              <ArrowRight className="h-4 w-4 text-muted-foreground rotate-180" />
+              <h1 className="text-2xl font-bold text-foreground">
+                {selectedClassInfo.name} - {selectedClassInfo.grade}/{selectedClassInfo.section}
+              </h1>
             </div>
-          </DialogContent>
-        </Dialog>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-foreground">مكتبة مصادر الفصول</h1>
+              <p className="text-sm text-muted-foreground mt-1">اختر شعبة للوصول إلى حقائب الملفات والمصادر التعليمية</p>
+            </>
+          )}
+        </div>
+        {selectedClassId && (
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 rounded-xl" onClick={() => setNewClassId(selectedClassId)}>
+                <FolderPlus className="h-4 w-4" />
+                حقيبة جديدة
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" dir="rtl">
+              <DialogHeader>
+                <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 mt-2">
+                <div>
+                  <Label>عنوان الحقيبة</Label>
+                  <Input
+                    value={newTitle}
+                    onChange={e => setNewTitle(e.target.value)}
+                    placeholder="مثال: شهادات الشهر"
+                    className="mt-1 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label>الشعبة</Label>
+                  <Select value={newClassId} onValueChange={setNewClassId}>
+                    <SelectTrigger className="mt-1 rounded-xl">
+                      <SelectValue placeholder="اختر الشعبة" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map(c => (
+                        <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>التصنيف</Label>
+                  <CategorySelect value={newCategory} onChange={setNewCategory} />
+                </div>
+                <div>
+                  <Label>الأيقونة</Label>
+                  <IconPicker value={newIcon} onChange={setNewIcon} />
+                </div>
+                <Button onClick={handleCreateFolder} disabled={creating || !newTitle.trim() || !newClassId} className="w-full rounded-xl">
+                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
-      {/* Filter Bars */}
-      <div className="space-y-3">
-        {/* Class filter */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground">الشعبة:</span>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setFilterClassId("all")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filterClassId === "all"
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              الكل
-            </button>
-            {classes.map(c => (
-              <button
-                key={c.id}
-                onClick={() => setFilterClassId(c.id)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  filterClassId === c.id
-                    ? "bg-primary text-primary-foreground shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {c.grade}/{c.section}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Category filter */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-            <Tag className="h-3.5 w-3.5" /> التصنيف:
-          </span>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setFilterCategory("all")}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filterCategory === "all"
-                  ? "bg-accent text-accent-foreground shadow-md"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              الكل
-            </button>
-            {CATEGORY_OPTIONS.map(cat => (
-              <button
-                key={cat.value}
-                onClick={() => setFilterCategory(cat.value)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  filterCategory === cat.value
-                    ? "bg-accent text-accent-foreground shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Cards Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : filteredFolders.length === 0 ? (
-        <Card className="border-dashed border-2">
-          <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
-            <FolderOpen className="h-14 w-14 text-muted-foreground/30" />
-            <p className="text-muted-foreground">لا توجد حقائب ملفات بعد</p>
-            <p className="text-xs text-muted-foreground/60">أنشئ حقيبة جديدة لبدء تنظيم الملفات</p>
-          </CardContent>
-        </Card>
+      ) : !selectedClassId ? (
+        /* ===== LEVEL 1: Class Bags Grid ===== */
+        <>
+          {classesWithFolders.length === 0 && classesWithoutFolders.length === 0 ? (
+            <Card className="border-dashed border-2">
+              <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
+                <School className="h-14 w-14 text-muted-foreground/30" />
+                <p className="text-muted-foreground">لا توجد شعب مسجلة بعد</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              {classes.map((cls, index) => {
+                const color = getClassColor(index);
+                const folderCount = getFolderCountForClass(cls.id);
+                const fileCount = getFileCountForClass(cls.id);
+                return (
+                  <Card
+                    key={cls.id}
+                    className={`group cursor-pointer border-2 ${color.border} ${color.hoverBg} hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden`}
+                    onClick={() => setSelectedClassId(cls.id)}
+                  >
+                    <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                      {/* Bag Icon */}
+                      <div className={`w-20 h-20 rounded-2xl ${color.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <School className={`h-10 w-10 ${color.icon}`} />
+                      </div>
+                      {/* Class Name */}
+                      <div>
+                        <h3 className="font-bold text-foreground text-base leading-tight">{cls.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-0.5">{cls.grade} / {cls.section}</p>
+                      </div>
+                      {/* Stats */}
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <FolderOpen className="h-3.5 w-3.5" />
+                          {folderCount} حقيبة
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <File className="h-3.5 w-3.5" />
+                          {fileCount} ملف
+                        </span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredFolders.map(folder => {
-            const IconComp = getIconComponent(folder.icon);
-            return (
-              <Card
-                key={folder.id}
-                className="group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden"
-                onClick={() => openFolderDetail(folder)}
+        /* ===== LEVEL 2: Folders inside selected class ===== */
+        <>
+          {/* Category filter */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+              <Tag className="h-3.5 w-3.5" /> التصنيف:
+            </span>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFilterCategory("all")}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  filterCategory === "all"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
               >
-                <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <IconComp className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
-                  <div className="flex items-center gap-1.5 flex-wrap justify-center">
-                    <Badge variant="secondary" className="rounded-full text-xs">
-                      {getClassLabel(folder)}
-                    </Badge>
-                    <Badge variant="outline" className="rounded-full text-xs">
-                      {getCategoryLabel(folder.category)}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <File className="h-3.5 w-3.5" />
-                    <span>{folder.file_count || 0} ملف</span>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                الكل
+              </button>
+              {CATEGORY_OPTIONS.map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => setFilterCategory(cat.value)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    filterCategory === cat.value
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Folders Grid */}
+          {selectedClassFolders.length === 0 ? (
+            <Card className="border-dashed border-2">
+              <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
+                <FolderOpen className="h-14 w-14 text-muted-foreground/30" />
+                <p className="text-muted-foreground">لا توجد حقائب في هذه الشعبة</p>
+                <p className="text-xs text-muted-foreground/60">أنشئ حقيبة جديدة لبدء تنظيم الملفات</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {selectedClassFolders.map(folder => {
+                const IconComp = getIconComponent(folder.icon);
+                return (
+                  <Card
+                    key={folder.id}
+                    className="group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden"
+                    onClick={() => openFolderDetail(folder)}
+                  >
+                    <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <IconComp className="h-8 w-8 text-primary" />
+                      </div>
+                      <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
+                      <Badge variant="outline" className="rounded-full text-xs">
+                        {getCategoryLabel(folder.category)}
+                      </Badge>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <File className="h-3.5 w-3.5" />
+                        <span>{folder.file_count || 0} ملف</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {/* Folder Detail Dialog */}
@@ -560,7 +623,7 @@ export default function ResourceLibraryPage() {
                       <div>
                         <DialogTitle className="text-lg">{selectedFolder.title}</DialogTitle>
                         <div className="flex items-center gap-1.5 mt-1">
-                          <Badge variant="outline" className="rounded-full text-[10px]">{getClassLabel(selectedFolder)}</Badge>
+                          <Badge variant="outline" className="rounded-full text-[10px]">{selectedClassInfo ? `${selectedClassInfo.grade}/${selectedClassInfo.section}` : ""}</Badge>
                           <Badge variant="secondary" className="rounded-full text-[10px]">{getCategoryLabel(selectedFolder.category)}</Badge>
                         </div>
                       </div>
