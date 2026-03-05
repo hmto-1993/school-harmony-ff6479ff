@@ -234,7 +234,7 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد نتائج مطابقة</p>
       ) : groupedByClass.map((group) => (
-        <Card key={group.id} className="shadow-card">
+        <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">{group.name}</CardTitle>
@@ -245,7 +245,7 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
             <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
-                  <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                  <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
                     {group.categories.map((cat) => (

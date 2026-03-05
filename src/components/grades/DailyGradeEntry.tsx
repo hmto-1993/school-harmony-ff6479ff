@@ -224,7 +224,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
   return (
-    <Card className="shadow-card">
+    <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -293,7 +293,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
             <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
-                  <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
+                  <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-0 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-10 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 min-w-[180px]">الطالب</th>
                     {visibleCategories.map((cat) => (
@@ -407,9 +407,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
               </table>
             </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={handleSave} disabled={saving}>
-                <Save className="h-4 w-4 ml-2" />
-                {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
+              <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
+                 <Save className="h-4 w-4 ml-2" />
+                 {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
               </Button>
             </div>
           </>
