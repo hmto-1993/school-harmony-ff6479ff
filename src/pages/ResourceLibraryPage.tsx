@@ -10,9 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, Image, FileSpreadsheet, Loader2,
-  BookOpen, FlaskConical, Microscope, Calculator, Globe, Atom, Pencil, GraduationCap, Brain, TestTube2,
-  Ruler, Lightbulb, Pen, Save, X
+  FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, FileSpreadsheet, Loader2,
+  BookOpen, FlaskConical, Microscope, Calculator, Atom, GraduationCap, Brain, TestTube2,
+  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves
 } from "lucide-react";
 
 interface ClassInfo {
@@ -43,22 +43,22 @@ interface ResourceFile {
 }
 
 const ICON_OPTIONS = [
-  { value: "folder", label: "مجلد", icon: FolderOpen },
-  { value: "file", label: "ملفات", icon: FileText },
-  { value: "image", label: "صور", icon: Image },
-  { value: "sheet", label: "جداول", icon: FileSpreadsheet },
-  { value: "book", label: "كتاب", icon: BookOpen },
-  { value: "flask", label: "كيمياء", icon: FlaskConical },
-  { value: "microscope", label: "مختبر", icon: Microscope },
-  { value: "calculator", label: "رياضيات", icon: Calculator },
-  { value: "globe", label: "جغرافيا", icon: Globe },
   { value: "atom", label: "فيزياء", icon: Atom },
-  { value: "pencil", label: "كتابة", icon: Pencil },
-  { value: "graduation", label: "تخرج", icon: GraduationCap },
-  { value: "brain", label: "تفكير", icon: Brain },
+  { value: "book", label: "الكتاب", icon: BookOpen },
+  { value: "graduation", label: "شهادة", icon: GraduationCap },
+  { value: "file", label: "مذكرة", icon: FileText },
+  { value: "sheet", label: "أوراق عمل", icon: FileSpreadsheet },
   { value: "testtube", label: "تجارب", icon: TestTube2 },
-  { value: "ruler", label: "هندسة", icon: Ruler },
-  { value: "lightbulb", label: "أفكار", icon: Lightbulb },
+  { value: "calculator", label: "حسابات", icon: Calculator },
+  { value: "ruler", label: "قياسات", icon: Ruler },
+  { value: "lightbulb", label: "قوانين", icon: Lightbulb },
+  { value: "brain", label: "مراجعة", icon: Brain },
+  { value: "microscope", label: "مختبر", icon: Microscope },
+  { value: "clipboard", label: "اختبارات", icon: ClipboardList },
+  { value: "flask", label: "معمل", icon: FlaskConical },
+  { value: "zap", label: "كهرباء", icon: Zap },
+  { value: "magnet", label: "مغناطيسية", icon: Magnet },
+  { value: "waves", label: "موجات", icon: Waves },
 ];
 
 function getIconComponent(iconName: string) {
