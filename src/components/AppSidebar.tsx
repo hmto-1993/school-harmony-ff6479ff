@@ -30,6 +30,7 @@ const adminLinks = [
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
+  { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
@@ -38,6 +39,7 @@ const teacherLinks = [
   { to: "/attendance", label: "الحضور والغياب", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
+  { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
