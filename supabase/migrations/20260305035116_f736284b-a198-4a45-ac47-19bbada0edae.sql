@@ -1,0 +1,1 @@
+ALTER TABLE public.resource_folders ADD COLUMN visible_to_students boolean NOT NULL DEFAULT true;
