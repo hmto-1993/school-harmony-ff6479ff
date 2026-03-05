@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2 } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +57,16 @@ export default function StudentsPage() {
   const [parsingPdf, setParsingPdf] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Edit state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editForm, setEditForm] = useState({
+    full_name: "",
+    national_id: "",
+    class_id: "",
+    parent_phone: "",
+  });
+
   useEffect(() => {
     fetchStudents();
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
@@ -94,7 +104,35 @@ export default function StudentsPage() {
     fetchStudents();
   };
 
-  // ============ Import from Excel or PDF ============
+  const openEdit = (student: Student) => {
+    setEditingStudent(student);
+    setEditForm({
+      full_name: student.full_name,
+      national_id: student.national_id || "",
+      class_id: student.class_id || "",
+      parent_phone: student.parent_phone || "",
+    });
+    setEditOpen(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editingStudent || !editForm.full_name.trim()) return;
+    const { error } = await supabase.from("students").update({
+      full_name: editForm.full_name,
+      national_id: editForm.national_id || null,
+      class_id: editForm.class_id || null,
+      parent_phone: editForm.parent_phone || null,
+    }).eq("id", editingStudent.id);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم", description: "تم تحديث بيانات الطالب" });
+      setEditOpen(false);
+      setEditingStudent(null);
+      fetchStudents();
+    }
+  };
+
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -580,9 +618,14 @@ export default function StudentsPage() {
                     <td dir="ltr" className="p-3 text-muted-foreground border-l border-border/10">{s.parent_phone || "—"}</td>
                     {role === "admin" && (
                       <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openEdit(s)} className="text-primary hover:text-primary">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -593,6 +636,44 @@ export default function StudentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Student Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              تعديل بيانات الطالب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>الاسم الكامل *</Label>
+              <Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الهوية الوطنية</Label>
+              <Input value={editForm.national_id} onChange={(e) => setEditForm({ ...editForm, national_id: e.target.value })} dir="ltr" />
+            </div>
+            <div className="space-y-2">
+              <Label>الفصل</Label>
+              <Select value={editForm.class_id} onValueChange={(v) => setEditForm({ ...editForm, class_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>رقم جوال ولي الأمر</Label>
+              <Input value={editForm.parent_phone} onChange={(e) => setEditForm({ ...editForm, parent_phone: e.target.value })} dir="ltr" />
+            </div>
+            <Button onClick={handleEdit} className="w-full">حفظ التعديلات</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
