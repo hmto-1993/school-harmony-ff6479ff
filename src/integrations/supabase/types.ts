@@ -145,6 +145,7 @@ export type Database = {
       }
       grade_categories: {
         Row: {
+          category_group: string
           class_id: string | null
           created_at: string
           id: string
@@ -154,6 +155,7 @@ export type Database = {
           weight: number
         }
         Insert: {
+          category_group?: string
           class_id?: string | null
           created_at?: string
           id?: string
@@ -163,6 +165,7 @@ export type Database = {
           weight?: number
         }
         Update: {
+          category_group?: string
           class_id?: string | null
           created_at?: string
           id?: string

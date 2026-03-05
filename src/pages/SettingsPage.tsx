@@ -82,6 +82,7 @@ interface GradeCategory {
   sort_order: number;
   class_id: string | null;
   class_name?: string;
+  category_group: string;
 }
 
 export default function SettingsPage() {
@@ -142,7 +143,7 @@ export default function SettingsPage() {
   const classFileRef = useRef<HTMLInputElement>(null);
 
   // Edit category
-  const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string }>>({});
+  const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
   const [savingCats, setSavingCats] = useState(false);
 
   // SMS Provider settings
@@ -166,6 +167,7 @@ export default function SettingsPage() {
   const [newCatName, setNewCatName] = useState("");
   const [newCatWeight, setNewCatWeight] = useState(10);
   const [newCatMaxScore, setNewCatMaxScore] = useState(100);
+  const [newCatGroup, setNewCatGroup] = useState("classwork");
 
   const fetchData = async () => {
     setLoading(true);
@@ -533,6 +535,9 @@ export default function SettingsPage() {
           if (editedVals.name && editedVals.name !== originalName) {
             updateData.name = editedVals.name;
           }
+          if (editedVals.category_group) {
+            updateData.category_group = editedVals.category_group;
+          }
           const { error } = await supabase
             .from("grade_categories")
             .update(updateData)
@@ -552,6 +557,7 @@ export default function SettingsPage() {
         const edited = editingCats[cat.id];
         const updateData: Record<string, any> = { max_score: edited?.max_score ?? cat.max_score };
         if (edited?.name) updateData.name = edited.name;
+        if (edited?.category_group) updateData.category_group = edited.category_group;
         return supabase
           .from("grade_categories")
           .update(updateData)
@@ -584,6 +590,7 @@ export default function SettingsPage() {
           max_score: newCatMaxScore,
           class_id: cls.id,
           sort_order: maxOrder + 1,
+          category_group: newCatGroup,
         });
       });
       const results = await Promise.all(inserts);
@@ -602,6 +609,7 @@ export default function SettingsPage() {
         max_score: newCatMaxScore,
         class_id: newCatClassId,
         sort_order: maxOrder + 1,
+        category_group: newCatGroup,
       });
       if (error) {
         toast({ title: "خطأ", description: error.message, variant: "destructive" });
@@ -612,6 +620,7 @@ export default function SettingsPage() {
     setNewCatName("");
     setNewCatWeight(10);
     setNewCatMaxScore(100);
+    setNewCatGroup("classwork");
     fetchData();
   };
 
@@ -642,11 +651,6 @@ export default function SettingsPage() {
   // Filter categories by selected class
   const [catClassFilter, setCatClassFilter] = useState("all");
 
-  const CLASSWORK_NAMES = ["المشاركة", "الواجبات", "الأعمال"];
-  const EXAM_NAMES = ["اختبار عملي", "اختبار الفترة"];
-  const isClassworkCat = (name: string) => CLASSWORK_NAMES.includes(name);
-  const isExamCat = (name: string) => EXAM_NAMES.includes(name);
-
   // When "all", show unique categories by name (from first class as template)
   const filteredCategories = catClassFilter === "all"
     ? (() => {
@@ -655,12 +659,9 @@ export default function SettingsPage() {
       })()
     : categories.filter((c) => c.class_id === catClassFilter);
 
-  const classworkCategories = filteredCategories.filter((c) => isClassworkCat(editingCats[c.id]?.name ?? c.name));
-  const examCategories = filteredCategories.filter((c) => isExamCat(editingCats[c.id]?.name ?? c.name));
-  const otherCategories = filteredCategories.filter((c) => {
-    const name = editingCats[c.id]?.name ?? c.name;
-    return !isClassworkCat(name) && !isExamCat(name);
-  });
+  const getEffectiveGroup = (cat: GradeCategory) => editingCats[cat.id]?.category_group ?? cat.category_group;
+  const classworkCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "classwork");
+  const examCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "exams");
 
   if (loading) {
     return (
@@ -976,6 +977,18 @@ export default function SettingsPage() {
                             onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
                           />
                         </div>
+                        <div className="space-y-2">
+                          <Label>القسم</Label>
+                          <Select value={newCatGroup} onValueChange={setNewCatGroup}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="classwork">📝 أعمال السنة</SelectItem>
+                              <SelectItem value="exams">📋 الاختبارات</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <DialogFooter>
                         <DialogClose asChild>
@@ -1021,75 +1034,102 @@ export default function SettingsPage() {
 
               {/* Helper to render a category table */}
               {[
-                { label: "أعمال السنة (المشاركة، الواجبات، الأعمال)", cats: classworkCategories, icon: "📝" },
-                { label: "الاختبارات (اختبار عملي، اختبار الفترة)", cats: examCategories, icon: "📋" },
-                ...(otherCategories.length > 0 ? [{ label: "فئات أخرى", cats: otherCategories, icon: "📌" }] : []),
+                { label: "أعمال السنة", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
+                { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "أعمال السنة" },
               ].map((group) => (
-                group.cats.length > 0 && (
-                  <div key={group.label} className="space-y-2">
-                    <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
-                      <span>{group.icon}</span>
-                      {group.label}
-                    </h3>
-                    <div className="rounded-lg border border-border/50 overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="text-right">الفئة</TableHead>
-                            <TableHead className="text-right">الدرجة القصوى</TableHead>
-                            {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                <div key={group.label} className="space-y-2">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
+                    <span>{group.icon}</span>
+                    {group.label}
+                  </h3>
+                  <div className="rounded-lg border border-border/50 overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="text-right">الفئة</TableHead>
+                          <TableHead className="text-right">الدرجة القصوى</TableHead>
+                          {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {group.cats.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
+                              لا توجد فئات في هذا القسم
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {group.cats.map((cat) => (
-                            <TableRow key={cat.id}>
-                              <TableCell className="font-medium">
-                                {isAdmin ? (
-                                  <Input
-                                    value={editingCats[cat.id]?.name ?? cat.name}
-                                    onChange={(e) =>
+                        ) : group.cats.map((cat) => (
+                          <TableRow key={cat.id}>
+                            <TableCell className="font-medium">
+                              {isAdmin ? (
+                                <Input
+                                  value={editingCats[cat.id]?.name ?? cat.name}
+                                  onChange={(e) =>
+                                    setEditingCats((prev) => ({
+                                      ...prev,
+                                      [cat.id]: {
+                                        ...prev[cat.id],
+                                        max_score: prev[cat.id]?.max_score ?? cat.max_score,
+                                        weight: prev[cat.id]?.weight ?? cat.weight,
+                                        name: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  className="h-8 w-40"
+                                />
+                              ) : (
+                                <span>{cat.name}</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {isAdmin ? (
+                                <Input
+                                  type="number"
+                                  className="w-24"
+                                  value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                                  onChange={(e) =>
+                                    setEditingCats((prev) => ({
+                                      ...prev,
+                                      [cat.id]: {
+                                        ...prev[cat.id],
+                                        name: prev[cat.id]?.name ?? cat.name,
+                                        max_score: parseFloat(e.target.value) || 0,
+                                      },
+                                    }))
+                                  }
+                                />
+                              ) : (
+                                <span>{cat.max_score}</span>
+                              )}
+                            </TableCell>
+                            {isAdmin && (
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  {/* Move to other group */}
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                    onClick={() =>
                                       setEditingCats((prev) => ({
                                         ...prev,
                                         [cat.id]: {
                                           ...prev[cat.id],
                                           max_score: prev[cat.id]?.max_score ?? cat.max_score,
                                           weight: prev[cat.id]?.weight ?? cat.weight,
-                                          name: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    className="h-8 w-40"
-                                  />
-                                ) : (
-                                  <span>{cat.name}</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {isAdmin ? (
-                                  <Input
-                                    type="number"
-                                    className="w-24"
-                                    value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                                    onChange={(e) =>
-                                      setEditingCats((prev) => ({
-                                        ...prev,
-                                        [cat.id]: {
-                                          ...prev[cat.id],
                                           name: prev[cat.id]?.name ?? cat.name,
-                                          max_score: parseFloat(e.target.value) || 0,
+                                          category_group: group.otherGroupKey,
                                         },
                                       }))
                                     }
-                                  />
-                                ) : (
-                                  <span>{cat.max_score}</span>
-                                )}
-                              </TableCell>
-                              {isAdmin && (
-                                <TableCell>
+                                    title={`نقل إلى ${group.otherGroupLabel}`}
+                                  >
+                                    ← {group.otherGroupLabel}
+                                  </Button>
+                                  {/* Delete */}
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
                                         <Trash2 className="h-4 w-4" />
                                       </Button>
                                     </AlertDialogTrigger>
@@ -1111,15 +1151,15 @@ export default function SettingsPage() {
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                </div>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                )
+                </div>
               ))}
             </CardContent>
           </Card>
