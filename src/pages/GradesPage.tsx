@@ -31,7 +31,7 @@ export default function GradesPage() {
           </TabsTrigger>
           <TabsTrigger value="summary" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            خلاصة التقييمات
+            التقييم النهائي
           </TabsTrigger>
         </TabsList>
 
