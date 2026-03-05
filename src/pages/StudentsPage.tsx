@@ -173,6 +173,25 @@ export default function StudentsPage() {
     }
   };
 
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("students").delete().in("id", ids);
+    setBulkDeleting(false);
+    setBulkDeleteConfirmOpen(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الحذف", description: `تم حذف ${ids.length} طالب بنجاح` });
+      setSelectedIds(new Set());
+      fetchStudents();
+    }
+  };
+
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -603,6 +622,34 @@ export default function StudentsPage() {
               </div>
             </CardContent>
           </Card>
+          {/* Edit card - always visible for admins */}
+          {role === "admin" && (
+            <Card
+              className={cn(
+                "border-0 shadow-sm cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] bg-gradient-to-br from-orange-500/10 to-orange-600/5 dark:from-orange-500/20 dark:to-orange-600/10 animate-fade-in",
+                selectedIds.size > 0 && "ring-2 ring-orange-500 shadow-md"
+              )}
+              style={{ animationDelay: `${(classCounts.length + 1) * 50}ms` }}
+              onClick={() => {
+                // Scroll to table and show selection hint
+                if (selectedIds.size === 0) {
+                  toast({ title: "تلميح", description: "حدد الطلاب من الجدول أدناه أولاً لنقلهم أو حذفهم أو تعديلهم" });
+                }
+              }}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className="rounded-xl p-2 bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
+                  <Pencil className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">تعديل</p>
+                  <p className="text-sm font-bold">
+                    {selectedIds.size > 0 ? `${selectedIds.size} محدد` : "حدد طلاب"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -621,29 +668,68 @@ export default function StudentsPage() {
               </SelectContent>
             </Select>
           </div>
-          {/* Bulk transfer bar */}
+          {/* Bulk actions bar when students are selected */}
           {role === "admin" && selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 animate-fade-in">
+            <div className="flex flex-wrap items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 animate-fade-in">
               <Badge variant="secondary" className="gap-1">
                 <Users className="h-3 w-3" />
                 {selectedIds.size} طالب محدد
               </Badge>
-              <Select value={bulkTransferClassId} onValueChange={setBulkTransferClassId}>
-                <SelectTrigger className="w-48 h-8 text-xs">
-                  <ArrowRightLeft className="h-3 w-3 ml-1 shrink-0" />
-                  <SelectValue placeholder="نقل إلى فصل..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button size="sm" onClick={handleBulkTransfer} disabled={!bulkTransferClassId || bulkTransferring} className="h-8 text-xs">
-                {bulkTransferring ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : <ArrowRightLeft className="h-3 w-3 ml-1" />}
-                نقل
+              <div className="h-5 w-px bg-border/50" />
+              {/* Bulk Transfer */}
+              <div className="flex items-center gap-2">
+                <Select value={bulkTransferClassId} onValueChange={setBulkTransferClassId}>
+                  <SelectTrigger className="w-40 h-8 text-xs">
+                    <ArrowRightLeft className="h-3 w-3 ml-1 shrink-0" />
+                    <SelectValue placeholder="نقل إلى فصل..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button size="sm" onClick={handleBulkTransfer} disabled={!bulkTransferClassId || bulkTransferring} className="h-8 text-xs">
+                  {bulkTransferring ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : <ArrowRightLeft className="h-3 w-3 ml-1" />}
+                  نقل
+                </Button>
+              </div>
+              <div className="h-5 w-px bg-border/50" />
+              {/* Bulk Delete */}
+              <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="destructive" className="h-8 text-xs gap-1">
+                    <Trash2 className="h-3 w-3" />
+                    حذف المحددين
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>هل أنت متأكد من حذف {selectedIds.size} طالب؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم حذف جميع الطلاب المحددين نهائياً مع بياناتهم. لا يمكن التراجع عن هذا الإجراء.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="flex-row-reverse gap-2">
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90" disabled={bulkDeleting}>
+                      {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : <Trash2 className="h-3 w-3 ml-1" />}
+                      حذف {selectedIds.size} طالب
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div className="h-5 w-px bg-border/50" />
+              {/* Edit selected */}
+              <Button size="sm" variant="outline" className="h-8 text-xs gap-1" onClick={() => {
+                const firstSelected = students.find(s => selectedIds.has(s.id));
+                if (firstSelected) openEdit(firstSelected);
+              }}>
+                <Pencil className="h-3 w-3" />
+                تعديل
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="h-8 text-xs text-muted-foreground">
+              <div className="mr-auto" />
+              <Button size="sm" variant="ghost" onClick={() => { setSelectedIds(new Set()); setBulkTransferClassId(""); }} className="h-8 text-xs text-muted-foreground">
                 إلغاء التحديد
               </Button>
             </div>
