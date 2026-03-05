@@ -69,6 +69,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
   const goToNextDay = () => {
@@ -84,7 +85,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
     if (!selectedClass) return;
     setSelectedCategory("");
     loadData();
-  }, [selectedClass, selectedDate]);
+  }, [selectedClass, selectedDate, selectedPeriod]);
 
   const loadData = async () => {
     const { data: cats } = await supabase
@@ -92,8 +93,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
     const { data: students } = await supabase
       .from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
     const { data: grades } = await supabase
-      .from("grades").select("id, student_id, category_id, score")
-      .in("student_id", (students || []).map((s) => s.id));
+      .from("grades").select("id, student_id, category_id, score, period")
+      .in("student_id", (students || []).map((s) => s.id))
+      .eq("period", selectedPeriod);
 
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
     grades?.forEach((g) => {
@@ -208,7 +210,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
           if (existingId) {
             await supabase.from("grades").update({ score }).eq("id", existingId);
           } else {
-            await supabase.from("grades").insert({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id });
+            await supabase.from("grades").insert({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod });
           }
         }
       }
@@ -245,6 +247,26 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                 </Select>
               )}
             </div>
+          </div>
+          {/* Period Selector */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-foreground">الفترة</span>
+            <Button
+              variant={selectedPeriod === 1 ? "default" : "outline"}
+              size="sm"
+              className={cn("rounded-full px-5", selectedPeriod === 1 && "shadow-md")}
+              onClick={() => setSelectedPeriod(1)}
+            >
+              فترة أولى
+            </Button>
+            <Button
+              variant={selectedPeriod === 2 ? "default" : "outline"}
+              size="sm"
+              className={cn("rounded-full px-5", selectedPeriod === 2 && "shadow-md")}
+              onClick={() => setSelectedPeriod(2)}
+            >
+              فترة ثانية
+            </Button>
           </div>
           {/* Date Navigation */}
           <div className="flex items-center gap-2 flex-wrap">
