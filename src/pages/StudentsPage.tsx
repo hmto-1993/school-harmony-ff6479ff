@@ -309,7 +309,7 @@ export default function StudentsPage() {
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-1.5">
                   <Upload className="h-4 w-4" />
-                  استيراد من Excel
+                  استيراد
                 </Button>
               </DialogTrigger>
               <DialogContent dir="rtl" className="max-w-2xl">
