@@ -393,56 +393,54 @@ export default function ResourceLibraryPage() {
             </>
           )}
         </div>
-        {selectedClassId && (
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 rounded-xl" onClick={() => setNewClassId(selectedClassId)}>
-                <FolderPlus className="h-4 w-4" />
-                حقيبة جديدة
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" dir="rtl">
-              <DialogHeader>
-                <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 mt-2">
-                <div>
-                  <Label>عنوان الحقيبة</Label>
-                  <Input
-                    value={newTitle}
-                    onChange={e => setNewTitle(e.target.value)}
-                    placeholder="مثال: شهادات الشهر"
-                    className="mt-1 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <Label>الشعبة</Label>
-                  <Select value={newClassId} onValueChange={setNewClassId}>
-                    <SelectTrigger className="mt-1 rounded-xl">
-                      <SelectValue placeholder="اختر الشعبة" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>التصنيف</Label>
-                  <CategorySelect value={newCategory} onChange={setNewCategory} />
-                </div>
-                <div>
-                  <Label>الأيقونة</Label>
-                  <IconPicker value={newIcon} onChange={setNewIcon} />
-                </div>
-                <Button onClick={handleCreateFolder} disabled={creating || !newTitle.trim() || !newClassId} className="w-full rounded-xl">
-                  {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء"}
-                </Button>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 rounded-xl" onClick={() => { if (selectedClassId) setNewClassId(selectedClassId); }}>
+              <FolderPlus className="h-4 w-4" />
+              حقيبة جديدة
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" dir="rtl">
+            <DialogHeader>
+              <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label>عنوان الحقيبة</Label>
+                <Input
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  placeholder="مثال: شهادات الشهر"
+                  className="mt-1 rounded-xl"
+                />
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
+              <div>
+                <Label>الشعبة</Label>
+                <Select value={newClassId} onValueChange={setNewClassId}>
+                  <SelectTrigger className="mt-1 rounded-xl">
+                    <SelectValue placeholder="اختر الشعبة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>التصنيف</Label>
+                <CategorySelect value={newCategory} onChange={setNewCategory} />
+              </div>
+              <div>
+                <Label>الأيقونة</Label>
+                <IconPicker value={newIcon} onChange={setNewIcon} />
+              </div>
+              <Button onClick={handleCreateFolder} disabled={creating || !newTitle.trim() || !newClassId} className="w-full rounded-xl">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {loading ? (
