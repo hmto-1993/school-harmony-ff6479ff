@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
@@ -130,6 +131,44 @@ export default function StudentsPage() {
       toast({ title: "تم", description: "تم تحديث بيانات الطالب" });
       setEditOpen(false);
       setEditingStudent(null);
+      fetchStudents();
+    }
+  };
+
+  // Bulk transfer state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTransferClassId, setBulkTransferClassId] = useState("");
+  const [bulkTransferring, setBulkTransferring] = useState(false);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(s => s.id)));
+    }
+  };
+
+  const handleBulkTransfer = async () => {
+    if (!bulkTransferClassId || selectedIds.size === 0) return;
+    setBulkTransferring(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("students").update({ class_id: bulkTransferClassId }).in("id", ids);
+    setBulkTransferring(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      const className = classes.find(c => c.id === bulkTransferClassId)?.name || "";
+      toast({ title: "تم النقل", description: `تم نقل ${ids.length} طالب إلى "${className}"` });
+      setSelectedIds(new Set());
+      setBulkTransferClassId("");
       fetchStudents();
     }
   };
@@ -582,11 +621,43 @@ export default function StudentsPage() {
               </SelectContent>
             </Select>
           </div>
+          {/* Bulk transfer bar */}
+          {role === "admin" && selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-primary/5 border border-primary/20 animate-fade-in">
+              <Badge variant="secondary" className="gap-1">
+                <Users className="h-3 w-3" />
+                {selectedIds.size} طالب محدد
+              </Badge>
+              <Select value={bulkTransferClassId} onValueChange={setBulkTransferClassId}>
+                <SelectTrigger className="w-48 h-8 text-xs">
+                  <ArrowRightLeft className="h-3 w-3 ml-1 shrink-0" />
+                  <SelectValue placeholder="نقل إلى فصل..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button size="sm" onClick={handleBulkTransfer} disabled={!bulkTransferClassId || bulkTransferring} className="h-8 text-xs">
+                {bulkTransferring ? <Loader2 className="h-3 w-3 animate-spin ml-1" /> : <ArrowRightLeft className="h-3 w-3 ml-1" />}
+                نقل
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} className="h-8 text-xs text-muted-foreground">
+                إلغاء التحديد
+              </Button>
+            </div>
+          )}
           <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
                 <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                  {role === "admin" && (
+                    <th className="p-3 border-b-2 border-primary/20 first:rounded-tr-xl w-10">
+                      <Checkbox checked={filtered.length > 0 && selectedIds.size === filtered.length} onCheckedChange={toggleSelectAll} />
+                    </th>
+                  )}
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">#</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الاسم الكامل</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
@@ -596,7 +667,7 @@ export default function StudentsPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={role === "admin" ? 8 : 6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
                 ) : filtered.map((s, i) => {
                   const isEven = i % 2 === 0;
                   const isLast = i === filtered.length - 1;
@@ -608,6 +679,11 @@ export default function StudentsPage() {
                       !isLast && "border-b border-border/20"
                     )}
                   >
+                    {role === "admin" && (
+                      <td className="p-3 w-10">
+                        <Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} />
+                      </td>
+                    )}
                     <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                     <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
                     <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
