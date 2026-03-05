@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Users, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Student {
   id: string;
@@ -197,11 +198,40 @@ export default function StudentsPage() {
     return matchSearch && matchClass;
   });
 
+  // Class student counts for summary cards
+  const classCounts = useMemo(() => {
+    const counts: Record<string, { name: string; count: number }> = {};
+    students.forEach((s) => {
+      if (s.class_id && s.classes?.name) {
+        if (!counts[s.class_id]) counts[s.class_id] = { name: s.classes.name, count: 0 };
+        counts[s.class_id].count++;
+      }
+    });
+    return Object.entries(counts).sort((a, b) => a[1].name.localeCompare(b[1].name));
+  }, [students]);
+
+  const cardColors = [
+    "from-blue-500/10 to-blue-600/5 dark:from-blue-500/20 dark:to-blue-600/10",
+    "from-emerald-500/10 to-emerald-600/5 dark:from-emerald-500/20 dark:to-emerald-600/10",
+    "from-purple-500/10 to-purple-600/5 dark:from-purple-500/20 dark:to-purple-600/10",
+    "from-amber-500/10 to-amber-600/5 dark:from-amber-500/20 dark:to-amber-600/10",
+    "from-rose-500/10 to-rose-600/5 dark:from-rose-500/20 dark:to-rose-600/10",
+    "from-cyan-500/10 to-cyan-600/5 dark:from-cyan-500/20 dark:to-cyan-600/10",
+  ];
+  const iconColors = [
+    "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400",
+    "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",
+    "bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400",
+    "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400",
+    "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400",
+    "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold">إدارة الطلاب</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">إدارة الطلاب</h1>
           <p className="text-muted-foreground">عرض وإدارة بيانات الطلاب</p>
         </div>
         {role === "admin" && (
@@ -377,7 +407,54 @@ export default function StudentsPage() {
         )}
       </div>
 
-      <Card className="shadow-card">
+      {/* Class Summary Cards */}
+      {classCounts.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {classCounts.map(([classId, info], index) => (
+            <Card
+              key={classId}
+              className={cn(
+                "border-0 shadow-sm cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] bg-gradient-to-br animate-fade-in",
+                cardColors[index % cardColors.length],
+                classFilter === classId && "ring-2 ring-primary shadow-md"
+              )}
+              style={{ animationDelay: `${index * 50}ms` }}
+              onClick={() => setClassFilter(classFilter === classId ? "all" : classId)}
+            >
+              <CardContent className="p-3 flex items-center gap-3">
+                <div className={cn("rounded-xl p-2", iconColors[index % iconColors.length])}>
+                  <GraduationCap className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground truncate">{info.name}</p>
+                  <p className="text-lg font-bold">{info.count} <span className="text-xs font-normal text-muted-foreground">طالب</span></p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {/* Total card */}
+          <Card
+            className={cn(
+              "border-0 shadow-sm cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] bg-gradient-to-br from-primary/10 to-accent/5 dark:from-primary/20 dark:to-accent/10 animate-fade-in",
+              classFilter === "all" && "ring-2 ring-primary shadow-md"
+            )}
+            style={{ animationDelay: `${classCounts.length * 50}ms` }}
+            onClick={() => setClassFilter("all")}
+          >
+            <CardContent className="p-3 flex items-center gap-3">
+              <div className="rounded-xl p-2 bg-primary/10 dark:bg-primary/20 text-primary">
+                <Users className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">الإجمالي</p>
+                <p className="text-lg font-bold">{students.length} <span className="text-xs font-normal text-muted-foreground">طالب</span></p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardContent className="p-5">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
@@ -392,39 +469,53 @@ export default function StudentsPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="rounded-lg border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="text-right">#</TableHead>
-                  <TableHead className="text-right">الاسم الكامل</TableHead>
-                  <TableHead className="text-right">الرقم الأكاديمي</TableHead>
-                  <TableHead className="text-right">الفصل</TableHead>
-                  <TableHead className="text-right">جوال ولي الأمر</TableHead>
-                  {role === "admin" && <TableHead className="text-right">إجراءات</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+          <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+            <table className="w-full text-sm border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الاسم الكامل</th>
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الرقم الأكاديمي</th>
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
+                  {role === "admin" && <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">إجراءات</th>}
+                </tr>
+              </thead>
+              <tbody>
                 {filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</TableCell></TableRow>
-                ) : filtered.map((s, i) => (
-                  <TableRow key={s.id} className="hover:bg-muted/30">
-                    <TableCell className="text-muted-foreground">{i + 1}</TableCell>
-                    <TableCell className="font-medium">{s.full_name}</TableCell>
-                    <TableCell className="text-muted-foreground">{s.academic_number || "—"}</TableCell>
-                    <TableCell>{s.classes?.name || "—"}</TableCell>
-                    <TableCell dir="ltr" className="text-muted-foreground">{s.parent_phone || "—"}</TableCell>
+                  <tr><td colSpan={6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                ) : filtered.map((s, i) => {
+                  const isEven = i % 2 === 0;
+                  const isLast = i === filtered.length - 1;
+                  return (
+                  <tr
+                    key={s.id}
+                    className={cn(
+                      isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                      !isLast && "border-b border-border/20"
+                    )}
+                  >
+                    <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                    <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
+                    <td className="p-3 text-muted-foreground border-l border-border/10">{s.academic_number || "—"}</td>
+                    <td className="p-3 border-l border-border/10">
+                      {s.classes?.name ? (
+                        <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
+                      ) : "—"}
+                    </td>
+                    <td dir="ltr" className="p-3 text-muted-foreground border-l border-border/10">{s.parent_phone || "—"}</td>
                     {role === "admin" && (
-                      <TableCell>
+                      <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)} className="text-destructive hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </TableCell>
+                      </td>
                     )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                  </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

@@ -294,8 +294,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-0 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 first:rounded-tr-xl">#</th>
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 sticky right-10 bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8 min-w-[180px]">الطالب</th>
+                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
                     {visibleCategories.map((cat) => (
                       <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
                         <div>{cat.name}</div>
