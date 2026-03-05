@@ -1,0 +1,440 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  FolderOpen, Plus, FileText, Download, Trash2, Upload, FolderPlus, X, File, Image, FileSpreadsheet, Loader2
+} from "lucide-react";
+
+interface ClassInfo {
+  id: string;
+  name: string;
+  grade: string;
+  section: string;
+}
+
+interface ResourceFolder {
+  id: string;
+  title: string;
+  icon: string;
+  class_id: string;
+  created_by: string;
+  created_at: string;
+  classes?: ClassInfo;
+  file_count?: number;
+}
+
+interface ResourceFile {
+  id: string;
+  folder_id: string;
+  file_name: string;
+  file_url: string;
+  file_size: number;
+  created_at: string;
+}
+
+const ICON_OPTIONS = [
+  { value: "folder", label: "مجلد", icon: FolderOpen },
+  { value: "file", label: "ملفات", icon: FileText },
+  { value: "image", label: "صور", icon: Image },
+  { value: "sheet", label: "جداول", icon: FileSpreadsheet },
+];
+
+function getIconComponent(iconName: string) {
+  const found = ICON_OPTIONS.find(o => o.value === iconName);
+  return found ? found.icon : FolderOpen;
+}
+
+function formatFileSize(bytes: number) {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+export default function ResourceLibraryPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [folders, setFolders] = useState<ResourceFolder[]>([]);
+  const [filterClassId, setFilterClassId] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
+
+  // Create folder dialog
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newIcon, setNewIcon] = useState("folder");
+  const [newClassId, setNewClassId] = useState("");
+  const [creating, setCreating] = useState(false);
+
+  // Folder detail dialog
+  const [selectedFolder, setSelectedFolder] = useState<ResourceFolder | null>(null);
+  const [folderFiles, setFolderFiles] = useState<ResourceFile[]>([]);
+  const [filesLoading, setFilesLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  const fetchClasses = useCallback(async () => {
+    const { data } = await supabase.from("classes").select("id, name, grade, section").order("grade");
+    if (data) setClasses(data);
+  }, []);
+
+  const fetchFolders = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("resource_folders")
+      .select("*, classes(id, name, grade, section)")
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      // Get file counts
+      const { data: fileCounts } = await supabase
+        .from("resource_files")
+        .select("folder_id");
+
+      const countMap: Record<string, number> = {};
+      fileCounts?.forEach((f: any) => {
+        countMap[f.folder_id] = (countMap[f.folder_id] || 0) + 1;
+      });
+
+      setFolders(data.map((f: any) => ({ ...f, file_count: countMap[f.id] || 0 })));
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchClasses();
+    fetchFolders();
+  }, [fetchClasses, fetchFolders]);
+
+  const handleCreateFolder = async () => {
+    if (!newTitle.trim() || !newClassId || !user) return;
+    setCreating(true);
+    const { error } = await supabase.from("resource_folders").insert({
+      title: newTitle.trim(),
+      icon: newIcon,
+      class_id: newClassId,
+      created_by: user.id,
+    });
+    setCreating(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم إنشاء الحقيبة بنجاح" });
+      setCreateOpen(false);
+      setNewTitle("");
+      setNewIcon("folder");
+      setNewClassId("");
+      fetchFolders();
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string) => {
+    const { error } = await supabase.from("resource_folders").delete().eq("id", folderId);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم حذف الحقيبة" });
+      setSelectedFolder(null);
+      fetchFolders();
+    }
+  };
+
+  const openFolderDetail = async (folder: ResourceFolder) => {
+    setSelectedFolder(folder);
+    setFilesLoading(true);
+    const { data } = await supabase
+      .from("resource_files")
+      .select("*")
+      .eq("folder_id", folder.id)
+      .order("created_at", { ascending: false });
+    setFolderFiles(data || []);
+    setFilesLoading(false);
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length || !selectedFolder) return;
+    setUploading(true);
+
+    const files = Array.from(e.target.files);
+    for (const file of files) {
+      const filePath = `${selectedFolder.id}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("library").upload(filePath, file);
+      if (uploadError) {
+        toast({ title: "خطأ في رفع الملف", description: uploadError.message, variant: "destructive" });
+        continue;
+      }
+      const { data: urlData } = supabase.storage.from("library").getPublicUrl(filePath);
+      await supabase.from("resource_files").insert({
+        folder_id: selectedFolder.id,
+        file_name: file.name,
+        file_url: urlData.publicUrl,
+        file_size: file.size,
+      });
+    }
+
+    setUploading(false);
+    toast({ title: `تم رفع ${files.length} ملف بنجاح` });
+    // Refresh
+    openFolderDetail(selectedFolder);
+    fetchFolders();
+    e.target.value = "";
+  };
+
+  const handleDeleteFile = async (fileId: string) => {
+    await supabase.from("resource_files").delete().eq("id", fileId);
+    if (selectedFolder) openFolderDetail(selectedFolder);
+    fetchFolders();
+  };
+
+  const filteredFolders = filterClassId === "all"
+    ? folders
+    : folders.filter(f => f.class_id === filterClassId);
+
+  const getClassLabel = (folder: ResourceFolder) => {
+    const c = folder.classes;
+    return c ? `${c.grade}/${c.section}` : "";
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">مكتبة مصادر الفصول</h1>
+          <p className="text-sm text-muted-foreground mt-1">إدارة حقائب الملفات والمصادر التعليمية لكل شعبة</p>
+        </div>
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogTrigger asChild>
+            <Button className="gap-2 rounded-xl">
+              <FolderPlus className="h-4 w-4" />
+              حقيبة جديدة
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md" dir="rtl">
+            <DialogHeader>
+              <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label>عنوان الحقيبة</Label>
+                <Input
+                  value={newTitle}
+                  onChange={e => setNewTitle(e.target.value)}
+                  placeholder="مثال: شهادات الشهر"
+                  className="mt-1 rounded-xl"
+                />
+              </div>
+              <div>
+                <Label>الشعبة</Label>
+                <Select value={newClassId} onValueChange={setNewClassId}>
+                  <SelectTrigger className="mt-1 rounded-xl">
+                    <SelectValue placeholder="اختر الشعبة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {classes.map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>الأيقونة</Label>
+                <div className="flex gap-2 mt-2">
+                  {ICON_OPTIONS.map(opt => {
+                    const Icon = opt.icon;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setNewIcon(opt.value)}
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${
+                          newIcon === opt.value
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="text-[10px]">{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <Button onClick={handleCreateFolder} disabled={creating || !newTitle.trim() || !newClassId} className="w-full rounded-xl">
+                {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : "إنشاء"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Filter Bar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-sm font-medium text-muted-foreground">تصفية حسب الشعبة:</span>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setFilterClassId("all")}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              filterClassId === "all"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            الكل
+          </button>
+          {classes.map(c => (
+            <button
+              key={c.id}
+              onClick={() => setFilterClassId(c.id)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                filterClassId === c.id
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {c.grade}/{c.section}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Cards Grid */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : filteredFolders.length === 0 ? (
+        <Card className="border-dashed border-2">
+          <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
+            <FolderOpen className="h-14 w-14 text-muted-foreground/30" />
+            <p className="text-muted-foreground">لا توجد حقائب ملفات بعد</p>
+            <p className="text-xs text-muted-foreground/60">أنشئ حقيبة جديدة لبدء تنظيم الملفات</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredFolders.map(folder => {
+            const IconComp = getIconComponent(folder.icon);
+            return (
+              <Card
+                key={folder.id}
+                className="group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden"
+                onClick={() => openFolderDetail(folder)}
+              >
+                <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                    <IconComp className="h-8 w-8 text-primary" />
+                  </div>
+                  <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
+                  <Badge variant="secondary" className="rounded-full text-xs">
+                    {getClassLabel(folder)}
+                  </Badge>
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <File className="h-3.5 w-3.5" />
+                    <span>{folder.file_count || 0} ملف</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Folder Detail Dialog */}
+      <Dialog open={!!selectedFolder} onOpenChange={open => !open && setSelectedFolder(null)}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto" dir="rtl">
+          {selectedFolder && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {(() => { const IC = getIconComponent(selectedFolder.icon); return <IC className="h-6 w-6 text-primary" />; })()}
+                    <div>
+                      <DialogTitle className="text-lg">{selectedFolder.title}</DialogTitle>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        <Badge variant="outline" className="rounded-full text-[10px]">{getClassLabel(selectedFolder)}</Badge>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              {/* Upload */}
+              <div className="mt-4">
+                <label className="flex items-center justify-center gap-2 border-2 border-dashed border-primary/30 rounded-xl p-4 cursor-pointer hover:bg-primary/5 transition-colors">
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-primary" />
+                  )}
+                  <span className="text-sm font-medium text-primary">
+                    {uploading ? "جاري الرفع..." : "رفع ملفات"}
+                  </span>
+                  <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                </label>
+              </div>
+
+              {/* File List */}
+              <div className="mt-4 space-y-2">
+                {filesLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : folderFiles.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">لا توجد ملفات بعد</p>
+                ) : (
+                  folderFiles.map(file => (
+                    <div key={file.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted transition-colors">
+                      <FileText className="h-5 w-5 text-primary shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{file.file_name}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatFileSize(file.file_size)}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <a
+                          href={file.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
+                        >
+                          <Download className="h-4 w-4" />
+                        </a>
+                        <button
+                          onClick={() => handleDeleteFile(file.id)}
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Delete folder */}
+              <div className="mt-6 pt-4 border-t border-border">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="w-full rounded-xl gap-2"
+                  onClick={() => handleDeleteFolder(selectedFolder.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  حذف الحقيبة
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
