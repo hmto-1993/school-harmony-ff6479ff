@@ -302,7 +302,10 @@ export default function ResourceLibraryPage() {
     setUploading(true);
 
     for (const file of files) {
-      const filePath = `${selectedFolder.id}/${Date.now()}_${file.name}`;
+      // Sanitize filename: replace non-ASCII chars with transliterated safe name, keep extension
+      const ext = file.name.substring(file.name.lastIndexOf('.'));
+      const safeName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
+      const filePath = `${selectedFolder.id}/${safeName}`;
       const { error: uploadError } = await supabase.storage.from("library").upload(filePath, file);
       if (uploadError) {
         toast({ title: "خطأ في رفع الملف", description: uploadError.message, variant: "destructive" });
