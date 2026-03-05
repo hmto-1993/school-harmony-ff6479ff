@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useQuizColors, colorStyles } from "@/hooks/use-quiz-colors";
 import {
   ClipboardList, FileUp, Download, Loader2, Upload,
   CheckCircle2, ArrowRight, AlertCircle, Send, Timer
@@ -56,6 +57,7 @@ function CountdownTimer({ totalSeconds, onExpire }: { totalSeconds: number; onEx
 
 export default function StudentActivitiesTab({ studentId, classId }: StudentActivitiesTabProps) {
   const { toast } = useToast();
+  const { colors: quizColors } = useQuizColors();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedQuiz, setSelectedQuiz] = useState<Activity | null>(null);
@@ -221,59 +223,53 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
               {selectedQuiz.questions?.map((q, qi) => (
                 <div key={q.id} className="rounded-2xl border border-border/20 overflow-hidden space-y-0">
                   {/* Question header */}
-                  <div className={cn(
-                    "p-4 space-y-2",
-                    q.question_type === "true_false"
-                      ? "bg-amber-500/10 border-b border-amber-500/20"
-                      : "bg-sky-500/10 border-b border-sky-500/20"
-                  )}>
-                    <div className="flex items-start gap-2">
-                      <Badge variant="outline" className={cn(
-                        "shrink-0 rounded-full text-xs font-bold",
-                        q.question_type === "true_false"
-                          ? "border-amber-500/40 text-amber-600 bg-amber-500/15"
-                          : "border-sky-500/40 text-sky-600 bg-sky-500/15"
-                      )}>
-                        {qi + 1}
-                      </Badge>
-                      <div className="flex items-center gap-2 flex-1">
-                        <p className="font-semibold text-foreground text-base">{q.question_text}</p>
-                        <Badge variant="outline" className={cn(
-                          "shrink-0 text-[10px] rounded-full",
-                          q.question_type === "true_false"
-                            ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
-                            : "border-sky-500/30 text-sky-500 bg-sky-500/10"
-                        )}>
-                          {q.question_type === "true_false" ? "صح/خطأ" : "اختياري"}
-                        </Badge>
+                  {(() => {
+                    const qColor = q.question_type === "true_false" ? quizColors.trueFalse : quizColors.mcq;
+                    const cs = colorStyles(qColor);
+                    return (
+                      <div className="p-4 space-y-2 border-b" style={{ ...cs.bg10, ...cs.border20 }}>
+                        <div className="flex items-start gap-2">
+                          <Badge variant="outline" className="shrink-0 rounded-full text-xs font-bold"
+                            style={{ ...cs.bgBorderText }}>
+                            {qi + 1}
+                          </Badge>
+                          <div className="flex items-center gap-2 flex-1">
+                            <p className="font-semibold text-foreground text-base">{q.question_text}</p>
+                            <Badge variant="outline" className="shrink-0 text-[10px] rounded-full"
+                              style={{ ...cs.bgBorder, ...cs.text }}>
+                              {q.question_type === "true_false" ? "صح/خطأ" : "اختياري"}
+                            </Badge>
+                          </div>
+                        </div>
+                        {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
                       </div>
-                    </div>
-                    {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
-                  </div>
+                    );
+                  })()}
                   {/* Answer options */}
                   <div className="p-4 space-y-2.5 bg-background">
                     {(q.options as string[]).map((opt: string, oi: number) => {
                       const isTF = q.question_type === "true_false";
                       const mcLabels = ["A", "B", "C", "D"];
+                      const isSelected = quizAnswers[q.id] === oi;
+                      const selCs = colorStyles(quizColors.selected);
                       return (
                         <button key={oi} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: oi }))}
                           className={cn(
                             "w-full text-right p-3.5 rounded-xl border-2 transition-all flex items-center gap-3",
-                            quizAnswers[q.id] === oi
-                              ? "border-teal-500 bg-teal-500/10 text-teal-700 dark:text-teal-400 font-medium shadow-md shadow-teal-500/10"
-                              : "border-border/60 hover:border-primary/40 hover:bg-muted/30 text-foreground"
-                          )}>
+                            isSelected ? "font-medium" : "border-border/60 hover:border-primary/40 hover:bg-muted/30 text-foreground"
+                          )}
+                          style={isSelected ? { ...selCs.borderSolid, ...selCs.bg10, color: quizColors.selected, ...selCs.shadow } : undefined}>
                           {!isTF && (
-                            <span className={cn(
-                              "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 font-mono",
-                              quizAnswers[q.id] === oi
-                                ? "bg-teal-500 text-white"
-                                : "bg-muted text-muted-foreground"
-                            )}>
+                            <span
+                              className={cn(
+                                "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 font-mono",
+                                !isSelected && "bg-muted text-muted-foreground"
+                              )}
+                              style={isSelected ? { ...selCs.bgSolid, color: '#fff' } : undefined}>
                               {mcLabels[oi] || oi + 1}
                             </span>
                           )}
-                          <span>{opt}</span>
+                          <span className={!isSelected ? "text-foreground" : undefined}>{opt}</span>
                         </button>
                       );
                     })}
