@@ -231,7 +231,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
             <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={selectedClass} onValueChange={onClassChange}>
-                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الشعبة..." /></SelectTrigger>
+                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
                 <SelectContent>
                   {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
@@ -267,9 +267,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
       </CardHeader>
       <CardContent>
         {!selectedClass ? (
-          <p className="text-center py-12 text-muted-foreground">اختر شعبة لعرض الدرجات</p>
-        ) : categories.length === 0 ? (
-          <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذه الشعبة بعد</p>
+           <p className="text-center py-12 text-muted-foreground">اختر فصلاً لعرض الدرجات</p>
+         ) : categories.length === 0 ? (
+           <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
             <div className="flex gap-4 mb-4 text-sm flex-wrap">

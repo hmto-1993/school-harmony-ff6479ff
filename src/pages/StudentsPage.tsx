@@ -144,7 +144,7 @@ export default function StudentsPage() {
 
   const handleImport = async () => {
     if (!importClassId) {
-      toast({ title: "تنبيه", description: "اختر الشعبة أولاً", variant: "destructive" });
+      toast({ title: "تنبيه", description: "اختر الفصل أولاً", variant: "destructive" });
       return;
     }
     const validRows = importRows.filter((r) => r.valid);
@@ -227,9 +227,9 @@ export default function StudentsPage() {
                     <p className="font-medium">كيفية الاستيراد من منصة نور أو مدرستي:</p>
                     <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                       <li>سجّل الدخول في منصة <strong>نور</strong> أو <strong>مدرستي</strong></li>
-                      <li>انتقل إلى قائمة الطلاب واختر الشعبة المطلوبة</li>
-                      <li>صدّر البيانات كملف Excel (أيقونة التصدير)</li>
-                      <li>ارفع الملف هنا واختر الشعبة المستهدفة</li>
+                       <li>انتقل إلى قائمة الطلاب واختر الفصل المطلوب</li>
+                       <li>صدّر البيانات كملف Excel (أيقونة التصدير)</li>
+                       <li>ارفع الملف هنا واختر الفصل المستهدف</li>
                     </ol>
                     <p className="text-xs text-muted-foreground mt-2">
                       الأعمدة المدعومة: <strong>اسم الطالب</strong> (مطلوب)، الرقم الأكاديمي، رقم الهوية، جوال ولي الأمر
@@ -237,10 +237,10 @@ export default function StudentsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>الشعبة المستهدفة</Label>
+                    <Label>الفصل المستهدف</Label>
                     <Select value={importClassId} onValueChange={setImportClassId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر الشعبة" />
+                         <SelectValue placeholder="اختر الفصل" />
                       </SelectTrigger>
                       <SelectContent>
                         {classes.map((c) => (
@@ -355,9 +355,9 @@ export default function StudentsPage() {
                     <Input value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} dir="ltr" />
                   </div>
                   <div className="space-y-2">
-                    <Label>الشعبة</Label>
+                    <Label>الفصل</Label>
                     <Select value={form.class_id} onValueChange={(v) => setForm({ ...form, class_id: v })}>
-                      <SelectTrigger><SelectValue placeholder="اختر الشعبة" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
                       <SelectContent>
                         {classes.map((c) => (
                           <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -385,9 +385,9 @@ export default function StudentsPage() {
               <Input placeholder="بحث بالاسم أو الرقم الأكاديمي..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
             </div>
             <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="جميع الشُعب" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">جميع الشُعب</SelectItem>
+               <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="جميع الفصول" /></SelectTrigger>
+               <SelectContent>
+                 <SelectItem value="all">جميع الفصول</SelectItem>
                 {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -399,7 +399,7 @@ export default function StudentsPage() {
                   <TableHead className="text-right">#</TableHead>
                   <TableHead className="text-right">الاسم الكامل</TableHead>
                   <TableHead className="text-right">الرقم الأكاديمي</TableHead>
-                  <TableHead className="text-right">الشعبة</TableHead>
+                  <TableHead className="text-right">الفصل</TableHead>
                   <TableHead className="text-right">جوال ولي الأمر</TableHead>
                   {role === "admin" && <TableHead className="text-right">إجراءات</TableHead>}
                 </TableRow>

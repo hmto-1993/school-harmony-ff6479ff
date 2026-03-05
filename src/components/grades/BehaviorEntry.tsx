@@ -174,7 +174,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">سجل السلوك اليومي</CardTitle>
             <Select value={selectedClass} onValueChange={onClassChange}>
-              <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الشعبة..." /></SelectTrigger>
+              <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
               <SelectContent>
                 {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
@@ -183,9 +183,9 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
         </CardHeader>
         <CardContent>
           {!selectedClass ? (
-            <p className="text-center py-12 text-muted-foreground">اختر شعبة لعرض سجل السلوك</p>
-          ) : students.length === 0 ? (
-            <p className="text-center py-12 text-muted-foreground">لا يوجد طلاب في هذه الشعبة</p>
+             <p className="text-center py-12 text-muted-foreground">اختر فصلاً لعرض سجل السلوك</p>
+           ) : students.length === 0 ? (
+             <p className="text-center py-12 text-muted-foreground">لا يوجد طلاب في هذا الفصل</p>
           ) : (
             <>
               <div className="flex gap-4 mb-4 text-sm flex-wrap">

@@ -220,10 +220,10 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
         </div>
         <Select value={selectedClass || "all"} onValueChange={(v) => onClassChange(v === "all" ? "" : v)}>
           <SelectTrigger className="w-full sm:w-56">
-            <SelectValue placeholder="جميع الشعب" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">جميع الشعب</SelectItem>
+             <SelectValue placeholder="جميع الفصول" />
+           </SelectTrigger>
+           <SelectContent>
+             <SelectItem value="all">جميع الفصول</SelectItem>
             {classes.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}

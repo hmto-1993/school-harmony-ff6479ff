@@ -14,7 +14,7 @@ interface Props {
 
 const stats = [
   { key: "totalStudents", label: "إجمالي الطلاب", icon: Users, gradient: "from-primary/15 via-primary/5 to-transparent", iconBg: "bg-primary/15", iconColor: "text-primary", ring: "ring-primary/10" },
-  { key: "totalClasses", label: "عدد الشُعب", icon: BookOpen, gradient: "from-accent/15 via-accent/5 to-transparent", iconBg: "bg-accent/15", iconColor: "text-accent", ring: "ring-accent/10" },
+  { key: "totalClasses", label: "عدد الفصول", icon: BookOpen, gradient: "from-accent/15 via-accent/5 to-transparent", iconBg: "bg-accent/15", iconColor: "text-accent", ring: "ring-accent/10" },
   { key: "todayPresent", label: "الحضور اليوم", icon: UserCheck, gradient: "from-success/15 via-success/5 to-transparent", iconBg: "bg-success/15", iconColor: "text-success", ring: "ring-success/10" },
   { key: "todayAbsent", label: "الغياب اليوم", icon: UserX, gradient: "from-destructive/15 via-destructive/5 to-transparent", iconBg: "bg-destructive/15", iconColor: "text-destructive", ring: "ring-destructive/10" },
   { key: "todayLate", label: "المتأخرون", icon: Clock, gradient: "from-warning/15 via-warning/5 to-transparent", iconBg: "bg-warning/15", iconColor: "text-warning", ring: "ring-warning/10" },

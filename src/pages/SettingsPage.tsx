@@ -411,7 +411,7 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "تمت الإضافة", description: `تمت إضافة الشعبة ${newClassName}` });
+      toast({ title: "تمت الإضافة", description: `تمت إضافة الفصل ${newClassName}` });
       setNewClassName("");
       setNewSection("");
       fetchData();
@@ -429,7 +429,7 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "تم التعديل", description: "تم تعديل بيانات الشعبة" });
+      toast({ title: "تم التعديل", description: "تم تعديل بيانات الفصل" });
       setEditingClassId(null);
       fetchData();
     }
@@ -453,9 +453,9 @@ export default function SettingsPage() {
     const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
 
     const columnMap: Record<string, string[]> = {
-      name: ["الشعبة", "اسم الشعبة", "اسم الفصل", "الفصل", "Class", "Name", "name"],
-      grade: ["الصف", "المرحلة", "Grade", "grade"],
-      section: ["رقم الشعبة", "الشعبة رقم", "رقم الفصل", "Section", "section"],
+       name: ["الفصل", "اسم الفصل", "اسم الفصل", "الفصل", "Class", "Name", "name"],
+       grade: ["الصف", "المرحلة", "Grade", "grade"],
+       section: ["رقم الفصل", "الفصل رقم", "رقم الفصل", "Section", "section"],
     };
 
     const find = (row: Record<string, any>, keys: string[]): string => {
@@ -493,7 +493,7 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "تمت الإضافة", description: `تم استيراد ${inserts.length} شعبة` });
+      toast({ title: "تمت الإضافة", description: `تم استيراد ${inserts.length} فصل` });
       setImportedClasses([]);
       setImportClassesOpen(false);
       fetchData();
@@ -535,7 +535,7 @@ export default function SettingsPage() {
       if (hasError) {
         toast({ title: "خطأ في الحفظ", variant: "destructive" });
       } else {
-        toast({ title: "تم الحفظ", description: "تم تعميم أوزان التقييم على جميع الشعب" });
+        toast({ title: "تم الحفظ", description: "تم تعميم أوزان التقييم على جميع الفصول" });
         fetchData();
       }
     } else {
@@ -578,9 +578,9 @@ export default function SettingsPage() {
       const results = await Promise.all(inserts);
       const hasError = results.some((r) => r.error);
       if (hasError) {
-        toast({ title: "خطأ", description: "فشل في الإضافة لبعض الشعب", variant: "destructive" });
-      } else {
-        toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}" لجميع الشعب` });
+         toast({ title: "خطأ", description: "فشل في الإضافة لبعض الفصول", variant: "destructive" });
+       } else {
+         toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}" لجميع الفصول` });
       }
     } else {
       const classCats = categories.filter((c) => c.class_id === newCatClassId);
@@ -615,7 +615,7 @@ export default function SettingsPage() {
       if (hasError) {
         toast({ title: "خطأ", description: "فشل حذف بعض الفئات", variant: "destructive" });
       } else {
-        toast({ title: "تم الحذف", description: `تم حذف "${cat.name}" من جميع الشعب` });
+        toast({ title: "تم الحذف", description: `تم حذف "${cat.name}" من جميع الفصول` });
       }
     } else {
       const { error } = await supabase.from("grade_categories").delete().eq("id", id);
@@ -652,7 +652,7 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-2xl font-bold">الإعدادات</h1>
           <p className="text-muted-foreground">
-            {isAdmin ? "إدارة الشعب وفئات التقييم" : "عرض إحصائيات الشعب والتقييمات"}
+            {isAdmin ? "إدارة الفصول وفئات التقييم" : "عرض إحصائيات الفصول والتقييمات"}
           </p>
         </div>
         {!isAdmin && (
@@ -667,7 +667,7 @@ export default function SettingsPage() {
         <TabsList className="w-full justify-start">
           <TabsTrigger value="classes" className="gap-1.5">
             <Users className="h-4 w-4" />
-            الشعب الدراسية
+             الفصول الدراسية
           </TabsTrigger>
           <TabsTrigger value="categories" className="gap-1.5">
             <GraduationCap className="h-4 w-4" />
@@ -687,11 +687,11 @@ export default function SettingsPage() {
           )}
         </TabsList>
 
-        {/* ===== الشعب ===== */}
+        {/* ===== الفصول ===== */}
         <TabsContent value="classes">
           <Card className="shadow-card">
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-lg">الشعب الدراسية ({classes.length})</CardTitle>
+              <CardTitle className="text-lg">الفصول الدراسية ({classes.length})</CardTitle>
               {isAdmin && (
                 <div className="flex gap-2">
                   {/* Import from Excel */}
@@ -706,12 +706,12 @@ export default function SettingsPage() {
                       <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                           <FileSpreadsheet className="h-5 w-5" />
-                          استيراد الشعب من ملف Excel
+                          استيراد الفصول من ملف Excel
                         </DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 py-2">
                         <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
-                          الأعمدة المدعومة: <strong>اسم الشعبة</strong> (مطلوب)، الصف، رقم الشعبة
+                          الأعمدة المدعومة: <strong>اسم الفصل</strong> (مطلوب)، الصف، رقم الفصل
                         </div>
                         <div className="space-y-1.5">
                           <Label>ملف Excel أو CSV</Label>
@@ -719,14 +719,14 @@ export default function SettingsPage() {
                         </div>
                         {importedClasses.length > 0 && (
                           <div className="space-y-2">
-                            <Label>معاينة ({importedClasses.length} شعبة)</Label>
+                            <Label>معاينة ({importedClasses.length} فصل)</Label>
                             <div className="max-h-[200px] overflow-auto rounded-lg border">
                               <Table>
                                 <TableHeader>
                                   <TableRow>
-                                    <TableHead className="text-right">الشعبة</TableHead>
-                                    <TableHead className="text-right">الصف</TableHead>
-                                    <TableHead className="text-right">رقم الشعبة</TableHead>
+                                     <TableHead className="text-right">الفصل</TableHead>
+                                     <TableHead className="text-right">الصف</TableHead>
+                                     <TableHead className="text-right">رقم الفصل</TableHead>
                                   </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -760,7 +760,7 @@ export default function SettingsPage() {
                         {importedClasses.length > 0 && (
                           <Button onClick={handleImportClasses} disabled={importingClasses}>
                             <Upload className="h-4 w-4 ml-1.5" />
-                            {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} شعبة`}
+                            {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
                           </Button>
                         )}
                       </DialogFooter>
@@ -771,20 +771,20 @@ export default function SettingsPage() {
                     <DialogTrigger asChild>
                       <Button size="sm" className="gap-1.5">
                         <Plus className="h-4 w-4" />
-                        إضافة شعبة
+                         إضافة فصل
                       </Button>
                     </DialogTrigger>
                     <DialogContent dir="rtl">
                       <DialogHeader>
-                        <DialogTitle>إضافة شعبة جديدة</DialogTitle>
+                        <DialogTitle>إضافة فصل جديد</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4 py-2">
                         <div className="space-y-2">
-                          <Label>اسم الشعبة</Label>
+                          <Label>اسم الفصل</Label>
                           <Input placeholder="مثال: أول/6" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} />
                         </div>
                         <div className="space-y-2">
-                          <Label>رقم الشعبة</Label>
+                          <Label>رقم الفصل</Label>
                           <Input placeholder="مثال: 6" value={newSection} onChange={(e) => setNewSection(e.target.value)} />
                         </div>
                         <div className="space-y-2">
@@ -813,9 +813,9 @@ export default function SettingsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">الشعبة</TableHead>
-                    <TableHead className="text-right">الصف</TableHead>
-                    <TableHead className="text-right">رقم الشعبة</TableHead>
+                     <TableHead className="text-right">الفصل</TableHead>
+                     <TableHead className="text-right">الصف</TableHead>
+                     <TableHead className="text-right">رقم الفصل</TableHead>
                     <TableHead className="text-right">العام الدراسي</TableHead>
                     <TableHead className="text-right">عدد الطلاب</TableHead>
                     {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
@@ -874,9 +874,9 @@ export default function SettingsPage() {
                               </AlertDialogTrigger>
                               <AlertDialogContent dir="rtl">
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>حذف الشعبة {cls.name}؟</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    سيتم حذف الشعبة وجميع البيانات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                   <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
+                                   <AlertDialogDescription>
+                                     سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -921,13 +921,13 @@ export default function SettingsPage() {
                       </DialogHeader>
                       <div className="space-y-4 py-2">
                         <div className="space-y-2">
-                          <Label>الشعبة</Label>
+                          <Label>الفصل</Label>
                           <Select value={newCatClassId} onValueChange={setNewCatClassId}>
                             <SelectTrigger>
-                              <SelectValue placeholder="اختر الشعبة" />
+                              <SelectValue placeholder="اختر الفصل" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="all">جميع الشعب</SelectItem>
+                              <SelectItem value="all">جميع الفصول</SelectItem>
                               {classes.map((cls) => (
                                 <SelectItem key={cls.id} value={cls.id}>
                                   {cls.name}
@@ -989,7 +989,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-2">
-                <Label className="whitespace-nowrap">الشعبة:</Label>
+                <Label className="whitespace-nowrap">الفصل:</Label>
                 <Select value={catClassFilter} onValueChange={setCatClassFilter}>
                   <SelectTrigger className="w-48">
                     <SelectValue />

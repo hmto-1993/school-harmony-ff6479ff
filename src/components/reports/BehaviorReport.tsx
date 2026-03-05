@@ -289,7 +289,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         <Card className="print:hidden">
           <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <Heart className="h-12 w-12 mb-3 opacity-30" />
-            <p className="text-sm">اختر الشعبة والتواريخ ثم اضغط "عرض التقرير"</p>
+            <p className="text-sm">اختر الفصل والتواريخ ثم اضغط "عرض التقرير"</p>
           </CardContent>
         </Card>
       )}

@@ -38,7 +38,7 @@ export default function DashboardPrintView({
 
   const statItems = [
     { label: "إجمالي الطلاب", value: totalStudents, color: "#3b82f6" },
-    { label: "عدد الشُعب", value: totalClasses, color: "#8b5cf6" },
+    { label: "عدد الفصول", value: totalClasses, color: "#8b5cf6" },
     { label: "الحضور", value: todayPresent, color: "#10b981" },
     { label: "الغياب", value: todayAbsent, color: "#ef4444" },
     { label: "المتأخرون", value: todayLate, color: "#f59e0b" },
@@ -199,7 +199,7 @@ export default function DashboardPrintView({
         >
           <div style={{ padding: "12px 16px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
             <h2 style={{ fontSize: "14px", fontWeight: 700, margin: 0, color: "#1e293b" }}>
-              📋 ملخص الشُعب
+              📋 ملخص الفصول
             </h2>
           </div>
           <table
@@ -211,7 +211,7 @@ export default function DashboardPrintView({
           >
             <thead>
               <tr style={{ background: "#f1f5f9" }}>
-                <th style={{ padding: "10px 12px", textAlign: "right", fontWeight: 600, color: "#64748b" }}>الشُعبة</th>
+                <th style={{ padding: "10px 12px", textAlign: "right", fontWeight: 600, color: "#64748b" }}>الفصل</th>
                 <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, color: "#64748b" }}>الطلاب</th>
                 <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, color: "#10b981" }}>حاضر</th>
                 <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 600, color: "#ef4444" }}>غائب</th>

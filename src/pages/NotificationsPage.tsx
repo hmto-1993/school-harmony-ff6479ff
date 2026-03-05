@@ -266,10 +266,10 @@ export default function NotificationsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs">الشعبة</Label>
-                  <Select value={selectedClass} onValueChange={setSelectedClass}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر الشعبة" />
+                   <Label className="text-xs">الفصل</Label>
+                   <Select value={selectedClass} onValueChange={setSelectedClass}>
+                     <SelectTrigger>
+                       <SelectValue placeholder="اختر الفصل" />
                     </SelectTrigger>
                     <SelectContent>
                       {classes.map((cls) => (
