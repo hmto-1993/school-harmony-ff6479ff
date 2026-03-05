@@ -42,7 +42,6 @@ export default function StudentsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
-    academic_number: "",
     national_id: "",
     class_id: "",
     parent_phone: "",
@@ -75,7 +74,6 @@ export default function StudentsPage() {
     if (!form.full_name.trim()) return;
     const { error } = await supabase.from("students").insert({
       full_name: form.full_name,
-      academic_number: form.academic_number || null,
       national_id: form.national_id || null,
       class_id: form.class_id || null,
       parent_phone: form.parent_phone || null,
@@ -85,7 +83,7 @@ export default function StudentsPage() {
     } else {
       toast({ title: "تم", description: "تمت إضافة الطالب بنجاح" });
       setDialogOpen(false);
-      setForm({ full_name: "", academic_number: "", national_id: "", class_id: "", parent_phone: "" });
+      setForm({ full_name: "", national_id: "", class_id: "", parent_phone: "" });
       fetchStudents();
     }
   };
@@ -261,7 +259,7 @@ export default function StudentsPage() {
   };
 
   const filtered = students.filter((s) => {
-    const matchSearch = !search.trim() || s.full_name.includes(search) || s.academic_number?.includes(search);
+    const matchSearch = !search.trim() || s.full_name.includes(search) || s.national_id?.includes(search);
     const matchClass = classFilter === "all" || s.class_id === classFilter;
     return matchSearch && matchClass;
   });
@@ -393,21 +391,19 @@ export default function StudentsPage() {
                       <div className="max-h-[250px] overflow-auto rounded-lg border">
                         <Table>
                           <TableHeader>
-                            <TableRow>
+                             <TableRow>
                               <TableHead className="text-right">الاسم</TableHead>
-                              <TableHead className="text-right">الرقم الأكاديمي</TableHead>
                               <TableHead className="text-right">رقم الهوية</TableHead>
                               <TableHead className="text-right">جوال ولي الأمر</TableHead>
                               <TableHead className="text-right">الحالة</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {importRows.slice(0, 50).map((row, i) => (
-                              <TableRow key={i} className={!row.valid ? "bg-destructive/5" : ""}>
-                                <TableCell className="font-medium">{row.full_name || "—"}</TableCell>
-                                <TableCell className="text-muted-foreground">{row.academic_number || "—"}</TableCell>
-                                <TableCell className="text-muted-foreground">{row.national_id || "—"}</TableCell>
-                                <TableCell dir="ltr" className="text-muted-foreground">{row.parent_phone || "—"}</TableCell>
+                             </TableRow>
+                           </TableHeader>
+                           <TableBody>
+                             {importRows.slice(0, 50).map((row, i) => (
+                               <TableRow key={i} className={!row.valid ? "bg-destructive/5" : ""}>
+                                 <TableCell className="font-medium">{row.full_name || "—"}</TableCell>
+                                 <TableCell className="text-muted-foreground">{row.national_id || "—"}</TableCell>
+                                 <TableCell dir="ltr" className="text-muted-foreground">{row.parent_phone || "—"}</TableCell>
                                 <TableCell>
                                   {row.valid ? (
                                     <Badge variant="secondary" className="text-xs">صالح</Badge>
@@ -459,11 +455,7 @@ export default function StudentsPage() {
                     <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
                   </div>
                   <div className="space-y-2">
-                    <Label>الرقم الأكاديمي</Label>
-                    <Input value={form.academic_number} onChange={(e) => setForm({ ...form, academic_number: e.target.value })} dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>الرقم الوطني</Label>
+                    <Label>رقم الهوية الوطنية</Label>
                     <Input value={form.national_id} onChange={(e) => setForm({ ...form, national_id: e.target.value })} dir="ltr" />
                   </div>
                   <div className="space-y-2">
@@ -541,7 +533,7 @@ export default function StudentsPage() {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="بحث بالاسم أو الرقم الأكاديمي..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
+              <Input placeholder="بحث بالاسم أو رقم الهوية..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
             </div>
             <Select value={classFilter} onValueChange={setClassFilter}>
                <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="جميع الفصول" /></SelectTrigger>
@@ -557,7 +549,7 @@ export default function StudentsPage() {
                 <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الاسم الكامل</th>
-                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الرقم الأكاديمي</th>
+                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
                   {role === "admin" && <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">إجراءات</th>}
@@ -579,7 +571,7 @@ export default function StudentsPage() {
                   >
                     <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                     <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
-                    <td className="p-3 text-muted-foreground border-l border-border/10">{s.academic_number || "—"}</td>
+                    <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
                     <td className="p-3 border-l border-border/10">
                       {s.classes?.name ? (
                         <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
