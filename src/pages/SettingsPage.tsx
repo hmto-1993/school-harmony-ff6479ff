@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +34,7 @@ import {
   ChevronDown,
   ArrowUp,
   ArrowDown,
+  Palette,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -739,687 +739,643 @@ export default function SettingsPage() {
         )}
       </div>
 
-      <Tabs defaultValue="classes" dir="rtl">
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-none">
-          <TabsTrigger value="classes" className="gap-1.5">
-            <Users className="h-4 w-4" />
-             الفصول الدراسية
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-1.5">
-            <GraduationCap className="h-4 w-4" />
-            فئات التقييم
-          </TabsTrigger>
-          {isAdmin && (
-            <>
-              <TabsTrigger value="new-teacher" className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                إضافة معلم
-              </TabsTrigger>
-              <TabsTrigger value="letterhead" className="gap-1.5">
-                <Printer className="h-4 w-4" />
-                ورقة الطباعة
-              </TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      {/* ===== All Collapsible Sections ===== */}
+      <div className="space-y-4">
 
-        {/* ===== الفصول ===== */}
-        <TabsContent value="classes">
-           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-lg">الفصول الدراسية ({classes.length})</CardTitle>
-              {isAdmin && (
-                <div className="flex gap-2">
-                  {/* Import from Excel */}
-                  <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-1.5">
-                        <Upload className="h-4 w-4" />
-                        استيراد من Excel
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent dir="rtl" className="max-w-xl">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                          <FileSpreadsheet className="h-5 w-5" />
-                          استيراد الفصول من ملف Excel
-                        </DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-2">
-                        <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
-                          الأعمدة المدعومة: <strong>اسم الفصل</strong> (مطلوب)، الصف، رقم الفصل
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label>ملف Excel أو CSV</Label>
-                          <Input ref={classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleClassFileSelect} className="cursor-pointer" />
-                        </div>
-                        {importedClasses.length > 0 && (
-                          <div className="space-y-2">
-                            <Label>معاينة ({importedClasses.length} فصل)</Label>
-                            <div className="max-h-[200px] overflow-auto rounded-lg border">
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                     <TableHead className="text-right">الفصل</TableHead>
-                                     <TableHead className="text-right">الصف</TableHead>
-                                     <TableHead className="text-right">رقم الفصل</TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {importedClasses.map((c, i) => (
-                                    <TableRow key={i}>
-                                      <TableCell>
-                                        <Input
-                                          value={c.name}
-                                          onChange={(e) => {
-                                            const updated = [...importedClasses];
-                                            updated[i] = { ...updated[i], name: e.target.value };
-                                            setImportedClasses(updated);
-                                          }}
-                                          className="h-8"
-                                        />
-                                      </TableCell>
-                                      <TableCell>{c.grade}</TableCell>
-                                      <TableCell>{c.section || "—"}</TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">إلغاء</Button>
-                        </DialogClose>
-                        {importedClasses.length > 0 && (
-                          <Button onClick={handleImportClasses} disabled={importingClasses}>
-                            <Upload className="h-4 w-4 ml-1.5" />
-                            {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
-                          </Button>
-                        )}
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  {/* Add single class */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-1.5">
-                        <Plus className="h-4 w-4" />
-                         إضافة فصل
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent dir="rtl">
-                      <DialogHeader>
-                        <DialogTitle>إضافة فصل جديد</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                          <Label>اسم الفصل</Label>
-                          <Input placeholder="مثال: أول/6" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>رقم الفصل</Label>
-                          <Input placeholder="مثال: 6" value={newSection} onChange={(e) => setNewSection(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>الصف</Label>
-                          <Input value={newGrade} onChange={(e) => setNewGrade(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>العام الدراسي</Label>
-                          <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} />
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">إلغاء</Button>
-                        </DialogClose>
-                        <DialogClose asChild>
-                          <Button onClick={handleAddClass}>إضافة</Button>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+        {/* ===== الفصول الدراسية ===== */}
+        <Collapsible>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+            <CollapsibleTrigger className="w-full group">
+              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/20 text-white">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-bold text-foreground">الفصول الدراسية</h3>
+                    <p className="text-xs text-muted-foreground">{classes.length} فصل دراسي</p>
+                  </div>
                 </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                     <TableHead className="text-right">الفصل</TableHead>
-                     <TableHead className="text-right">الصف</TableHead>
-                     <TableHead className="text-right">رقم الفصل</TableHead>
-                    <TableHead className="text-right">العام الدراسي</TableHead>
-                    <TableHead className="text-right">عدد الطلاب</TableHead>
-                    {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {classes.map((cls) => (
-                    <TableRow key={cls.id}>
-                      <TableCell className="font-medium">
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} className="h-8 w-32"
-                            autoFocus onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                        ) : (
-                          <span className={isAdmin ? "cursor-pointer hover:underline" : ""} onClick={() => isAdmin && startEditingClass(cls)}>
-                            {cls.name}
-                            {isAdmin && <Pencil className="inline h-3 w-3 mr-1 text-muted-foreground" />}
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassGrade} onChange={(e) => setEditingClassGrade(e.target.value)} className="h-8 w-28"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                        ) : cls.grade}
-                      </TableCell>
-                      <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassSection} onChange={(e) => setEditingClassSection(e.target.value)} className="h-8 w-16"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                        ) : cls.section}
-                      </TableCell>
-                      <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassYear} onChange={(e) => setEditingClassYear(e.target.value)} className="h-8 w-24"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                        ) : cls.academic_year}
-                      </TableCell>
-                      <TableCell>{cls.studentCount}</TableCell>
-                      {isAdmin && (
-                        <TableCell className="flex items-center gap-1">
-                          {editingClassId === cls.id ? (
-                            <>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveClassEdit(cls.id)}>
-                                <Check className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingClassId(null)}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="px-5 pb-5 pt-0">
+                {isAdmin && (
+                  <div className="flex gap-2 mb-4 flex-wrap">
+                    {/* Import from Excel */}
+                    <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="gap-1.5">
+                          <Upload className="h-4 w-4" />
+                          استيراد من Excel
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent dir="rtl" className="max-w-xl">
+                        <DialogHeader>
+                          <DialogTitle className="flex items-center gap-2">
+                            <FileSpreadsheet className="h-5 w-5" />
+                            استيراد الفصول من ملف Excel
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                          <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+                            الأعمدة المدعومة: <strong>اسم الفصل</strong> (مطلوب)، الصف، رقم الفصل
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>ملف Excel أو CSV</Label>
+                            <Input ref={classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleClassFileSelect} className="cursor-pointer" />
+                          </div>
+                          {importedClasses.length > 0 && (
+                            <div className="space-y-2">
+                              <Label>معاينة ({importedClasses.length} فصل)</Label>
+                              <div className="max-h-[200px] overflow-auto rounded-lg border">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                       <TableHead className="text-right">الفصل</TableHead>
+                                       <TableHead className="text-right">الصف</TableHead>
+                                       <TableHead className="text-right">رقم الفصل</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {importedClasses.map((c, i) => (
+                                      <TableRow key={i}>
+                                        <TableCell>
+                                          <Input
+                                            value={c.name}
+                                            onChange={(e) => {
+                                              const updated = [...importedClasses];
+                                              updated[i] = { ...updated[i], name: e.target.value };
+                                              setImportedClasses(updated);
+                                            }}
+                                            className="h-8"
+                                          />
+                                        </TableCell>
+                                        <TableCell>{c.grade}</TableCell>
+                                        <TableCell>{c.section || "—"}</TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">إلغاء</Button>
+                          </DialogClose>
+                          {importedClasses.length > 0 && (
+                            <Button onClick={handleImportClasses} disabled={importingClasses}>
+                              <Upload className="h-4 w-4 ml-1.5" />
+                              {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
+                            </Button>
+                          )}
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    {/* Add single class */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="gap-1.5">
+                          <Plus className="h-4 w-4" />
+                           إضافة فصل
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent dir="rtl">
+                        <DialogHeader>
+                          <DialogTitle>إضافة فصل جديد</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                          <div className="space-y-2">
+                            <Label>اسم الفصل</Label>
+                            <Input placeholder="مثال: أول/6" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>رقم الفصل</Label>
+                            <Input placeholder="مثال: 6" value={newSection} onChange={(e) => setNewSection(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>الصف</Label>
+                            <Input value={newGrade} onChange={(e) => setNewGrade(e.target.value)} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>العام الدراسي</Label>
+                            <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} />
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">إلغاء</Button>
+                          </DialogClose>
+                          <DialogClose asChild>
+                            <Button onClick={handleAddClass}>إضافة</Button>
+                          </DialogClose>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                       <TableHead className="text-right">الفصل</TableHead>
+                       <TableHead className="text-right">الصف</TableHead>
+                       <TableHead className="text-right">رقم الفصل</TableHead>
+                      <TableHead className="text-right">العام الدراسي</TableHead>
+                      <TableHead className="text-right">عدد الطلاب</TableHead>
+                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {classes.map((cls) => (
+                      <TableRow key={cls.id}>
+                        <TableCell className="font-medium">
+                          {isAdmin && editingClassId === cls.id ? (
+                            <Input value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} className="h-8 w-32"
+                              autoFocus onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
                           ) : (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent dir="rtl">
-                                <AlertDialogHeader>
-                                   <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
-                                   <AlertDialogDescription>
-                                     سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => handleDeleteClass(cls.id)}
-                                  >
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <span className={isAdmin ? "cursor-pointer hover:underline" : ""} onClick={() => isAdmin && startEditingClass(cls)}>
+                              {cls.name}
+                              {isAdmin && <Pencil className="inline h-3 w-3 mr-1 text-muted-foreground" />}
+                            </span>
                           )}
                         </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
+                        <TableCell>
+                          {isAdmin && editingClassId === cls.id ? (
+                            <Input value={editingClassGrade} onChange={(e) => setEditingClassGrade(e.target.value)} className="h-8 w-28"
+                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                          ) : cls.grade}
+                        </TableCell>
+                        <TableCell>
+                          {isAdmin && editingClassId === cls.id ? (
+                            <Input value={editingClassSection} onChange={(e) => setEditingClassSection(e.target.value)} className="h-8 w-16"
+                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                          ) : cls.section}
+                        </TableCell>
+                        <TableCell>
+                          {isAdmin && editingClassId === cls.id ? (
+                            <Input value={editingClassYear} onChange={(e) => setEditingClassYear(e.target.value)} className="h-8 w-24"
+                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                          ) : cls.academic_year}
+                        </TableCell>
+                        <TableCell>{cls.studentCount}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="flex items-center gap-1">
+                            {editingClassId === cls.id ? (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveClassEdit(cls.id)}>
+                                  <Check className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingClassId(null)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            ) : (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                     <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
+                                     <AlertDialogDescription>
+                                       سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      onClick={() => handleDeleteClass(cls.id)}
+                                    >
+                                      حذف
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </CollapsibleContent>
           </Card>
-        </TabsContent>
+        </Collapsible>
 
         {/* ===== فئات التقييم ===== */}
-        <TabsContent value="categories">
-           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-              <CardTitle className="text-lg">فئات التقييم</CardTitle>
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-1.5">
-                        <Plus className="h-4 w-4" />
-                        إضافة فئة تقييم
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent dir="rtl">
-                      <DialogHeader>
-                        <DialogTitle>إضافة فئة تقييم جديدة</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4 py-2">
-                        <div className="space-y-2">
-                          <Label>الفصل</Label>
-                          <Select value={newCatClassId} onValueChange={setNewCatClassId}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر الفصل" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">جميع الفصول</SelectItem>
-                              {classes.map((cls) => (
-                                <SelectItem key={cls.id} value={cls.id}>
-                                  {cls.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>اسم الفئة</Label>
-                          <Input
-                            placeholder="مثال: اختبار نهائي"
-                            value={newCatName}
-                            onChange={(e) => setNewCatName(e.target.value)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>الدرجة القصوى</Label>
-                          <Input
-                            type="number"
-                            value={newCatMaxScore}
-                            onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>القسم</Label>
-                          <Select value={newCatGroup} onValueChange={setNewCatGroup}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="classwork">📝 المهام الادائية والمشاركة والتفاعل</SelectItem>
-                              <SelectItem value="exams">📋 الاختبارات</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">إلغاء</Button>
-                        </DialogClose>
-                        <DialogClose asChild>
-                          <Button onClick={handleAddCategory} disabled={!newCatName.trim() || !newCatClassId}>
-                            إضافة
-                          </Button>
-                        </DialogClose>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                  <Button
-                    size="sm"
-                    className="gap-1.5"
-                    onClick={handleSaveCategories}
-                    disabled={savingCats}
-                  >
-                    <Save className="h-4 w-4" />
-                    {savingCats ? "جارٍ الحفظ..." : catClassFilter === "all" ? "تعميم على الكل" : "حفظ التغييرات"}
-                  </Button>
+        <Collapsible>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+            <CollapsibleTrigger className="w-full group">
+              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 text-white">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-bold text-foreground">فئات التقييم</h3>
+                    <p className="text-xs text-muted-foreground">{categories.length} فئة تقييم</p>
+                  </div>
                 </div>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Label className="whitespace-nowrap">الفصل:</Label>
-                <Select value={catClassFilter} onValueChange={setCatClassFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">تعميم على الكل</SelectItem>
-                    {classes.map((cls) => (
-                      <SelectItem key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
               </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="px-5 pb-5 pt-0 space-y-4">
+                {isAdmin && (
+                  <div className="flex gap-2 flex-wrap">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="gap-1.5">
+                          <Plus className="h-4 w-4" />
+                          إضافة فئة تقييم
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent dir="rtl">
+                        <DialogHeader>
+                          <DialogTitle>إضافة فئة تقييم جديدة</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-2">
+                          <div className="space-y-2">
+                            <Label>الفصل</Label>
+                            <Select value={newCatClassId} onValueChange={setNewCatClassId}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="اختر الفصل" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="all">جميع الفصول</SelectItem>
+                                {classes.map((cls) => (
+                                  <SelectItem key={cls.id} value={cls.id}>
+                                    {cls.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>اسم الفئة</Label>
+                            <Input
+                              placeholder="مثال: اختبار نهائي"
+                              value={newCatName}
+                              onChange={(e) => setNewCatName(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>الدرجة القصوى</Label>
+                            <Input
+                              type="number"
+                              value={newCatMaxScore}
+                              onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>القسم</Label>
+                            <Select value={newCatGroup} onValueChange={setNewCatGroup}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="classwork">📝 المهام الادائية والمشاركة والتفاعل</SelectItem>
+                                <SelectItem value="exams">📋 الاختبارات</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">إلغاء</Button>
+                          </DialogClose>
+                          <DialogClose asChild>
+                            <Button onClick={handleAddCategory} disabled={!newCatName.trim() || !newCatClassId}>
+                              إضافة
+                            </Button>
+                          </DialogClose>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={handleSaveCategories}
+                      disabled={savingCats}
+                    >
+                      <Save className="h-4 w-4" />
+                      {savingCats ? "جارٍ الحفظ..." : catClassFilter === "all" ? "تعميم على الكل" : "حفظ التغييرات"}
+                    </Button>
+                  </div>
+                )}
 
-              {/* Helper to render a category table */}
-              {[
-                { label: "المهام الادائية والمشاركة والتفاعل", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
-                { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "المهام الادائية والمشاركة والتفاعل" },
-              ].map((group) => (
-                <div key={group.label} className="space-y-2">
-                  <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
-                    <span>{group.icon}</span>
-                    {group.label}
-                  </h3>
-                  <div className="rounded-lg border border-border/50 overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="text-right">الفئة</TableHead>
-                          <TableHead className="text-right">الدرجة القصوى</TableHead>
-                          {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {group.cats.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
-                              لا توجد فئات في هذا القسم
-                            </TableCell>
+                <div className="flex items-center gap-2">
+                  <Label className="whitespace-nowrap">الفصل:</Label>
+                  <Select value={catClassFilter} onValueChange={setCatClassFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">تعميم على الكل</SelectItem>
+                      {classes.map((cls) => (
+                        <SelectItem key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {[
+                  { label: "المهام الادائية والمشاركة والتفاعل", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
+                  { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "المهام الادائية والمشاركة والتفاعل" },
+                ].map((group) => (
+                  <div key={group.label} className="space-y-2">
+                    <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
+                      <span>{group.icon}</span>
+                      {group.label}
+                    </h3>
+                    <div className="rounded-lg border border-border/50 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="text-right">الفئة</TableHead>
+                            <TableHead className="text-right">الدرجة القصوى</TableHead>
+                            {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
                           </TableRow>
-                        ) : group.cats.map((cat) => (
-                          <TableRow key={cat.id}>
-                            <TableCell className="font-medium">
-                              {isAdmin ? (
-                                <Input
-                                  value={editingCats[cat.id]?.name ?? cat.name}
-                                  onChange={(e) =>
-                                    setEditingCats((prev) => ({
-                                      ...prev,
-                                      [cat.id]: {
-                                        ...prev[cat.id],
-                                        max_score: prev[cat.id]?.max_score ?? cat.max_score,
-                                        weight: prev[cat.id]?.weight ?? cat.weight,
-                                        name: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  className="h-8 w-40"
-                                />
-                              ) : (
-                                <span>{cat.name}</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {isAdmin ? (
-                                <Input
-                                  type="number"
-                                  className="w-24"
-                                  value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                                  onChange={(e) =>
-                                    setEditingCats((prev) => ({
-                                      ...prev,
-                                      [cat.id]: {
-                                        ...prev[cat.id],
-                                        name: prev[cat.id]?.name ?? cat.name,
-                                        max_score: parseFloat(e.target.value) || 0,
-                                      },
-                                    }))
-                                  }
-                                />
-                              ) : (
-                                <span>{cat.max_score}</span>
-                              )}
-                            </TableCell>
-                            {isAdmin && (
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  {/* Reorder buttons */}
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                    onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
-                                    disabled={group.cats.indexOf(cat) === 0}
-                                    title="تحريك لأعلى"
-                                  >
-                                    <ArrowUp className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                    onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
-                                    disabled={group.cats.indexOf(cat) === group.cats.length - 1}
-                                    title="تحريك لأسفل"
-                                  >
-                                    <ArrowDown className="h-3.5 w-3.5" />
-                                  </Button>
-                                  {/* Move to other group */}
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
-                                    onClick={() =>
+                        </TableHeader>
+                        <TableBody>
+                          {group.cats.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
+                                لا توجد فئات في هذا القسم
+                              </TableCell>
+                            </TableRow>
+                          ) : group.cats.map((cat) => (
+                            <TableRow key={cat.id}>
+                              <TableCell className="font-medium">
+                                {isAdmin ? (
+                                  <Input
+                                    value={editingCats[cat.id]?.name ?? cat.name}
+                                    onChange={(e) =>
                                       setEditingCats((prev) => ({
                                         ...prev,
                                         [cat.id]: {
                                           ...prev[cat.id],
                                           max_score: prev[cat.id]?.max_score ?? cat.max_score,
                                           weight: prev[cat.id]?.weight ?? cat.weight,
-                                          name: prev[cat.id]?.name ?? cat.name,
-                                          category_group: group.otherGroupKey,
+                                          name: e.target.value,
                                         },
                                       }))
                                     }
-                                    title={`نقل إلى ${group.otherGroupLabel}`}
-                                  >
-                                    ← {group.otherGroupLabel}
-                                  </Button>
-                                  {/* Delete */}
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent dir="rtl">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>حذف فئة "{cat.name}"؟</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          سيتم حذف هذه الفئة وجميع الدرجات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                        <AlertDialogAction
-                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                          onClick={() => handleDeleteCategory(cat.id)}
-                                        >
-                                          حذف
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
+                                    className="h-8 w-40"
+                                  />
+                                ) : (
+                                  <span>{cat.name}</span>
+                                )}
                               </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                              <TableCell>
+                                {isAdmin ? (
+                                  <Input
+                                    type="number"
+                                    className="w-24"
+                                    value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                                    onChange={(e) =>
+                                      setEditingCats((prev) => ({
+                                        ...prev,
+                                        [cat.id]: {
+                                          ...prev[cat.id],
+                                          name: prev[cat.id]?.name ?? cat.name,
+                                          max_score: parseFloat(e.target.value) || 0,
+                                        },
+                                      }))
+                                    }
+                                  />
+                                ) : (
+                                  <span>{cat.max_score}</span>
+                                )}
+                              </TableCell>
+                              {isAdmin && (
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                      onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
+                                      disabled={group.cats.indexOf(cat) === 0} title="تحريك لأعلى">
+                                      <ArrowUp className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                      onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
+                                      disabled={group.cats.indexOf(cat) === group.cats.length - 1} title="تحريك لأسفل">
+                                      <ArrowDown className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                      onClick={() =>
+                                        setEditingCats((prev) => ({
+                                          ...prev,
+                                          [cat.id]: {
+                                            ...prev[cat.id],
+                                            max_score: prev[cat.id]?.max_score ?? cat.max_score,
+                                            weight: prev[cat.id]?.weight ?? cat.weight,
+                                            name: prev[cat.id]?.name ?? cat.name,
+                                            category_group: group.otherGroupKey,
+                                          },
+                                        }))
+                                      }
+                                      title={`نقل إلى ${group.otherGroupLabel}`}>
+                                      ← {group.otherGroupLabel}
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent dir="rtl">
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>حذف فئة "{cat.name}"؟</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            سيتم حذف هذه الفئة وجميع الدرجات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                          <AlertDialogAction
+                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            onClick={() => handleDeleteCategory(cat.id)}
+                                          >
+                                            حذف
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
+                ))}
+              </CardContent>
+            </CollapsibleContent>
           </Card>
-        </TabsContent>
+        </Collapsible>
+
         {/* ===== إضافة معلم ===== */}
         {isAdmin && (
-          <TabsContent value="new-teacher">
-             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-              <CardHeader>
-                <CardTitle className="text-lg">إضافة معلم جديد</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>الاسم الكامل</Label>
-                  <Input
-                    value={newTeacherName}
-                    onChange={(e) => setNewTeacherName(e.target.value)}
-                    placeholder="اسم المعلم"
-                  />
+          <Collapsible>
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+              <CollapsibleTrigger className="w-full group">
+                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
+                      <Plus className="h-5 w-5" />
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-base font-bold text-foreground">إضافة معلم</h3>
+                      <p className="text-xs text-muted-foreground">إنشاء حساب جديد للمعلمين</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
                 </div>
-                <div className="space-y-2">
-                  <Label>البريد الإلكتروني</Label>
-                  <Input
-                    type="email"
-                    value={newTeacherEmail}
-                    onChange={(e) => setNewTeacherEmail(e.target.value)}
-                    placeholder="teacher@school.edu.sa"
-                    dir="ltr"
-                    className="text-right"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الهوية الوطنية</Label>
-                  <Input
-                    value={newTeacherNationalId}
-                    onChange={(e) => setNewTeacherNationalId(e.target.value)}
-                    placeholder="1XXXXXXXXX"
-                    dir="ltr"
-                    className="text-right"
-                    inputMode="numeric"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>كلمة المرور</Label>
-                  <Input
-                    type="password"
-                    value={newTeacherPassword}
-                    onChange={(e) => setNewTeacherPassword(e.target.value)}
-                    placeholder="كلمة مرور قوية"
-                    dir="ltr"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>الصلاحية</Label>
-                  <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="teacher">معلم</SelectItem>
-                      <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  onClick={handleCreateTeacher}
-                  disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
-                  className="gap-1.5"
-                >
-                  <Plus className="h-4 w-4" />
-                  {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-                </Button>
-              </CardContent>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                  <div className="space-y-2">
+                    <Label>الاسم الكامل</Label>
+                    <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>البريد الإلكتروني</Label>
+                    <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                      placeholder="teacher@school.edu.sa" dir="ltr" className="text-right" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>رقم الهوية الوطنية</Label>
+                    <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
+                      placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>كلمة المرور</Label>
+                    <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
+                      placeholder="كلمة مرور قوية" dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>الصلاحية</Label>
+                    <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="teacher">معلم</SelectItem>
+                        <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={handleCreateTeacher}
+                    disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
+                    className="gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+                  </Button>
+                </CardContent>
+              </CollapsibleContent>
             </Card>
-          </TabsContent>
+          </Collapsible>
         )}
 
         {/* ===== ورقة الطباعة ===== */}
         {isAdmin && (
-          <TabsContent value="letterhead">
-             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-              <CardHeader>
-                <CardTitle className="text-lg">ورقة الطباعة (الترويسة)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PrintHeaderEditor />
-              </CardContent>
+          <Collapsible>
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+              <CollapsibleTrigger className="w-full group">
+                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 text-white">
+                      <Printer className="h-5 w-5" />
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-base font-bold text-foreground">ورقة الطباعة</h3>
+                      <p className="text-xs text-muted-foreground">تخصيص ترويسة التقارير المطبوعة</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-5 pb-5 pt-0">
+                  <PrintHeaderEditor />
+                </CardContent>
+              </CollapsibleContent>
             </Card>
-          </TabsContent>
+          </Collapsible>
         )}
-      </Tabs>
 
-      {/* ===== أقسام مستقلة ===== */}
-      <div className="space-y-6 mt-8">
         {/* ===== الملف الشخصي ===== */}
-        <Collapsible defaultOpen>
-           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <span className="flex items-center gap-2">
+        <Collapsible>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+            <CollapsibleTrigger className="w-full group">
+              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/20 text-white">
                     <UserCircle className="h-5 w-5" />
-                    الملف الشخصي
-                  </span>
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
-                </CardTitle>
-              </CardHeader>
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-bold text-foreground">الملف الشخصي</h3>
+                    <p className="text-xs text-muted-foreground">تعديل بياناتك الشخصية وكلمة المرور</p>
+                  </div>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <Label>الاسم الكامل</Label>
-              <Input
-                value={profileName}
-                onChange={(e) => setProfileName(e.target.value)}
-                placeholder="الاسم الكامل"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>رقم الجوال</Label>
-              <Input
-                value={profilePhone}
-                onChange={(e) => setProfilePhone(e.target.value)}
-                placeholder="05XXXXXXXX"
-                dir="ltr"
-                className="text-right"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>رقم الهوية الوطنية</Label>
-              <Input
-                value={profileNationalId}
-                onChange={(e) => setProfileNationalId(e.target.value)}
-                placeholder="1XXXXXXXXX"
-                dir="ltr"
-                className="text-right"
-                inputMode="numeric"
-              />
-              <p className="text-xs text-muted-foreground">
-                يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني
-              </p>
-            </div>
-            <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
-              <Save className="h-4 w-4" />
-              {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-            </Button>
+              <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>الاسم الكامل</Label>
+                  <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
+                </div>
+                <div className="space-y-2">
+                  <Label>رقم الجوال</Label>
+                  <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
+                    placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
+                </div>
+                <div className="space-y-2">
+                  <Label>رقم الهوية الوطنية</Label>
+                  <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
+                    placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+                  <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
+                </div>
+                <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
+                  <Save className="h-4 w-4" />
+                  {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+                </Button>
 
-            <div className="border-t pt-4 mt-4 space-y-4">
-              <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
-              <div className="space-y-2">
-                <Label>كلمة المرور الحالية</Label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الحالية"
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>كلمة المرور الجديدة</Label>
-                <Input
-                  type="password"
-                  value={newOwnPassword}
-                  onChange={(e) => setNewOwnPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الجديدة"
-                  dir="ltr"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>تأكيد كلمة المرور الجديدة</Label>
-                <Input
-                  type="password"
-                  value={confirmOwnPassword}
-                  onChange={(e) => setConfirmOwnPassword(e.target.value)}
-                  placeholder="أعد إدخال كلمة المرور الجديدة"
-                  dir="ltr"
-                />
-              </div>
-              <Button
-                onClick={handleChangeOwnPassword}
-                disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
-                className="gap-1.5"
-              >
-                <KeyRound className="h-4 w-4" />
-                {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-              </Button>
-            </div>
+                <div className="border-t pt-4 mt-4 space-y-4">
+                  <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
+                  <div className="space-y-2">
+                    <Label>كلمة المرور الحالية</Label>
+                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>كلمة المرور الجديدة</Label>
+                    <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
+                      placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>تأكيد كلمة المرور الجديدة</Label>
+                    <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
+                      placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
+                  </div>
+                  <Button onClick={handleChangeOwnPassword}
+                    disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
+                    className="gap-1.5">
+                    <KeyRound className="h-4 w-4" />
+                    {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+                  </Button>
+                </div>
               </CardContent>
             </CollapsibleContent>
           </Card>
@@ -1429,53 +1385,44 @@ export default function SettingsPage() {
           <>
             {/* ===== كلمات المرور ===== */}
             <Collapsible>
-               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span className="flex items-center gap-2">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/20 text-white">
                         <KeyRound className="h-5 w-5" />
-                        تغيير كلمة مرور المعلم
-                      </span>
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                    </CardTitle>
-                  </CardHeader>
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">تغيير كلمة مرور المعلم</h3>
+                        <p className="text-xs text-muted-foreground">إعادة تعيين كلمات مرور المعلمين</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>اختر المعلم</Label>
-                  <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر المعلم" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers.map((t) => (
-                        <SelectItem key={t.user_id} value={t.user_id}>
-                          {t.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>كلمة المرور الجديدة</Label>
-                  <Input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="أدخل كلمة المرور الجديدة"
-                    dir="ltr"
-                  />
-                </div>
-                <Button
-                  onClick={handleChangePassword}
-                  disabled={changingPassword || !selectedTeacher || !newPassword.trim()}
-                  className="gap-1.5"
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-                </Button>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                    <div className="space-y-2">
+                      <Label>اختر المعلم</Label>
+                      <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
+                        <SelectTrigger><SelectValue placeholder="اختر المعلم" /></SelectTrigger>
+                        <SelectContent>
+                          {teachers.map((t) => (
+                            <SelectItem key={t.user_id} value={t.user_id}>{t.full_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>كلمة المرور الجديدة</Label>
+                      <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
+                    </div>
+                    <Button onClick={handleChangePassword}
+                      disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5">
+                      <KeyRound className="h-4 w-4" />
+                      {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+                    </Button>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
@@ -1483,20 +1430,24 @@ export default function SettingsPage() {
 
             {/* ===== ألوان الاختبارات ===== */}
             <Collapsible>
-               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <span className="h-5 w-5 rounded-full" style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }} />
-                        ألوان الاختبارات
-                      </span>
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                    </CardTitle>
-                  </CardHeader>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl shadow-lg text-white"
+                        style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }}>
+                        <Palette className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">ألوان الاختبارات</h3>
+                        <p className="text-xs text-muted-foreground">تخصيص ألوان واجهة الاختبارات</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="space-y-6 max-w-lg">
+                  <CardContent className="px-5 pb-5 pt-0 space-y-6 max-w-lg">
                     {/* MCQ Color */}
                     <div className="space-y-2">
                       <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
@@ -1564,9 +1515,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <Button
-                      disabled={savingQuizColors}
-                      className="gap-1.5"
+                    <Button disabled={savingQuizColors} className="gap-1.5"
                       onClick={async () => {
                         setSavingQuizColors(true);
                         const results = await Promise.all([
@@ -1580,8 +1529,7 @@ export default function SettingsPage() {
                         } else {
                           toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
                         }
-                      }}
-                    >
+                      }}>
                       <Save className="h-4 w-4" />
                       {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
                     </Button>
@@ -1592,104 +1540,88 @@ export default function SettingsPage() {
 
             {/* ===== مزود SMS ===== */}
             <Collapsible>
-               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span className="flex items-center gap-2">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white">
                         <MessageSquare className="h-5 w-5" />
-                        إعدادات مزود خدمة SMS
-                      </span>
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                    </CardTitle>
-                  </CardHeader>
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">إعدادات مزود خدمة SMS</h3>
+                        <p className="text-xs text-muted-foreground">ربط مزود الرسائل النصية</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>المزود</Label>
-                  <Select value={smsProvider} onValueChange={setSmsProvider}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="msegat">MSEGAT</SelectItem>
-                      <SelectItem value="unifonic">Unifonic</SelectItem>
-                      <SelectItem value="taqnyat">Taqnyat (تقنيات)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                    <div className="space-y-2">
+                      <Label>المزود</Label>
+                      <Select value={smsProvider} onValueChange={setSmsProvider}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="msegat">MSEGAT</SelectItem>
+                          <SelectItem value="unifonic">Unifonic</SelectItem>
+                          <SelectItem value="taqnyat">Taqnyat (تقنيات)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {smsProvider === "msegat" && (
-                  <div className="space-y-2">
-                    <Label>اسم المستخدم</Label>
-                    <Input
-                      value={providerUsername}
-                      onChange={(e) => setProviderUsername(e.target.value)}
-                      placeholder="اسم مستخدم MSEGAT"
-                      dir="ltr"
-                    />
-                  </div>
-                )}
+                    {smsProvider === "msegat" && (
+                      <div className="space-y-2">
+                        <Label>اسم المستخدم</Label>
+                        <Input value={providerUsername} onChange={(e) => setProviderUsername(e.target.value)}
+                          placeholder="اسم مستخدم MSEGAT" dir="ltr" />
+                      </div>
+                    )}
 
-                <div className="space-y-2">
-                  <Label>
-                    {smsProvider === "msegat" ? "مفتاح API" : smsProvider === "unifonic" ? "App SID" : "Bearer Token"}
-                  </Label>
-                  <Input
-                    type="password"
-                    value={providerApiKey}
-                    onChange={(e) => setProviderApiKey(e.target.value)}
-                    placeholder={smsProvider === "unifonic" ? "App SID" : smsProvider === "taqnyat" ? "Bearer Token" : "API Key"}
-                    dir="ltr"
-                  />
-                </div>
+                    <div className="space-y-2">
+                      <Label>
+                        {smsProvider === "msegat" ? "مفتاح API" : smsProvider === "unifonic" ? "App SID" : "Bearer Token"}
+                      </Label>
+                      <Input type="password" value={providerApiKey} onChange={(e) => setProviderApiKey(e.target.value)}
+                        placeholder={smsProvider === "unifonic" ? "App SID" : smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label>اسم المرسل (Sender ID)</Label>
-                  <Input
-                    value={providerSender}
-                    onChange={(e) => setProviderSender(e.target.value)}
-                    placeholder="Sender Name"
-                    dir="ltr"
-                  />
-                  {smsProvider === "unifonic" && (
-                    <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <Label>اسم المرسل (Sender ID)</Label>
+                      <Input value={providerSender} onChange={(e) => setProviderSender(e.target.value)}
+                        placeholder="Sender Name" dir="ltr" />
+                      {smsProvider === "unifonic" && (
+                        <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>
+                      )}
+                    </div>
 
-                <div className="flex items-center gap-3">
-                  <Button onClick={handleSaveProvider} disabled={savingProvider} className="gap-1.5">
-                    <Save className="h-4 w-4" />
-                    {savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={testingSms || !providerApiKey || !providerSender}
-                    className="gap-1.5"
-                    onClick={async () => {
-                      setTestingSms(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke("send-sms", {
-                          body: { phone: providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
-                        });
-                        if (error) {
-                          toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
-                        } else if (data?.success) {
-                          toast({ title: "نجح الاختبار ✅", description: "تم إرسال الرسالة الاختبارية بنجاح" });
-                        } else {
-                          toast({ title: "فشل الاختبار", description: data?.error || "لم يتم الإرسال", variant: "destructive" });
-                        }
-                      } catch (err: any) {
-                        toast({ title: "خطأ", description: err.message, variant: "destructive" });
-                      }
-                      setTestingSms(false);
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
-                  </Button>
-                </div>
+                    <div className="flex items-center gap-3">
+                      <Button onClick={handleSaveProvider} disabled={savingProvider} className="gap-1.5">
+                        <Save className="h-4 w-4" />
+                        {savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+                      </Button>
+                      <Button variant="outline" disabled={testingSms || !providerApiKey || !providerSender} className="gap-1.5"
+                        onClick={async () => {
+                          setTestingSms(true);
+                          try {
+                            const { data, error } = await supabase.functions.invoke("send-sms", {
+                              body: { phone: providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
+                            });
+                            if (error) {
+                              toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
+                            } else if (data?.success) {
+                              toast({ title: "نجح الاختبار ✅", description: "تم إرسال الرسالة الاختبارية بنجاح" });
+                            } else {
+                              toast({ title: "فشل الاختبار", description: data?.error || "لم يتم الإرسال", variant: "destructive" });
+                            }
+                          } catch (err: any) {
+                            toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                          }
+                          setTestingSms(false);
+                        }}>
+                        <MessageSquare className="h-4 w-4" />
+                        {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
+                      </Button>
+                    </div>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
@@ -1697,125 +1629,104 @@ export default function SettingsPage() {
 
             {/* ===== صفحة الدخول ===== */}
             <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span className="flex items-center gap-2">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20 text-white">
                         <SettingsIcon className="h-5 w-5" />
-                        إعدادات صفحة تسجيل الدخول
-                      </span>
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
-                    </CardTitle>
-                  </CardHeader>
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">إعدادات صفحة تسجيل الدخول</h3>
+                        <p className="text-xs text-muted-foreground">تخصيص شعار واسم المدرسة</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="space-y-4 max-w-md">
-                {/* School Logo Upload */}
-                <div className="space-y-2">
-                  <Label>شعار المدرسة</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-                      {schoolLogoUrl ? (
-                        <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
-                      ) : (
-                        <Upload className="h-6 w-6 text-muted-foreground" />
-                      )}
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                    {/* School Logo Upload */}
+                    <div className="space-y-2">
+                      <Label>شعار المدرسة</Label>
+                      <div className="flex items-center gap-4">
+                        <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
+                          {schoolLogoUrl ? (
+                            <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                          ) : (
+                            <Upload className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              setUploadingLogo(true);
+                              const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
+                              const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
+                              if (uploadError) {
+                                toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
+                                setUploadingLogo(false);
+                                return;
+                              }
+                              const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
+                              const logoUrl = urlData.publicUrl;
+                              await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
+                              setSchoolLogoUrl(logoUrl);
+                              setUploadingLogo(false);
+                              toast({ title: "تم رفع الشعار بنجاح" });
+                              e.target.value = "";
+                            }} />
+                          <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
+                            onClick={() => logoInputRef.current?.click()} className="gap-1.5">
+                            <Upload className="h-4 w-4" />
+                            {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
+                          </Button>
+                          {schoolLogoUrl && (
+                            <Button type="button" variant="ghost" size="sm"
+                              className="gap-1.5 text-destructive hover:text-destructive"
+                              onClick={async () => {
+                                await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
+                                setSchoolLogoUrl("");
+                                toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
+                              }}>
+                              <Trash2 className="h-4 w-4" />
+                              إزالة
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        ref={logoInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          setUploadingLogo(true);
-                          const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
-                          const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
-                          if (uploadError) {
-                            toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
-                            setUploadingLogo(false);
-                            return;
-                          }
-                          const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
-                          const logoUrl = urlData.publicUrl;
-                          await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
-                          setSchoolLogoUrl(logoUrl);
-                          setUploadingLogo(false);
-                          toast({ title: "تم رفع الشعار بنجاح" });
-                          e.target.value = "";
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={uploadingLogo}
-                        onClick={() => logoInputRef.current?.click()}
-                        className="gap-1.5"
-                      >
-                        <Upload className="h-4 w-4" />
-                        {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
-                      </Button>
-                      {schoolLogoUrl && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="gap-1.5 text-destructive hover:text-destructive"
-                          onClick={async () => {
-                            await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
-                            setSchoolLogoUrl("");
-                            toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          إزالة
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label>اسم المدرسة</Label>
-                  <Input
-                    value={loginSchoolName}
-                    onChange={(e) => setLoginSchoolName(e.target.value)}
-                    placeholder="مثال: ثانوية الفيصلية"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>الوصف الفرعي</Label>
-                  <Input
-                    value={loginSubtitle}
-                    onChange={(e) => setLoginSubtitle(e.target.value)}
-                    placeholder="مثال: نظام إدارة المدرسة"
-                  />
-                </div>
-                <Button
-                  disabled={savingLogin}
-                  className="gap-1.5"
-                  onClick={async () => {
-                    setSavingLogin(true);
-                    const updates = [
-                      supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
-                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
-                    ];
-                    const results = await Promise.all(updates);
-                    setSavingLogin(false);
-                    if (results.some((r) => r.error)) {
-                      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
-                    } else {
-                      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
-                    }
-                  }}
-                >
-                  <Save className="h-4 w-4" />
-                  {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
-                </Button>
+                    <div className="space-y-2">
+                      <Label>اسم المدرسة</Label>
+                      <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
+                        placeholder="مثال: ثانوية الفيصلية" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>الوصف الفرعي</Label>
+                      <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
+                        placeholder="مثال: نظام إدارة المدرسة" />
+                    </div>
+                    <Button disabled={savingLogin} className="gap-1.5"
+                      onClick={async () => {
+                        setSavingLogin(true);
+                        const updates = [
+                          supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
+                          supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
+                        ];
+                        const results = await Promise.all(updates);
+                        setSavingLogin(false);
+                        if (results.some((r) => r.error)) {
+                          toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+                        } else {
+                          toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
+                        }
+                      }}>
+                      <Save className="h-4 w-4" />
+                      {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
+                    </Button>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
