@@ -96,12 +96,24 @@ export default function StudentsPage() {
     fetchStudents();
   };
 
-  // ============ Import from Excel ============
+  // ============ Import from Excel or PDF ============
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const isPdf = file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+      await handlePdfFile(file);
+    } else {
+      await handleExcelFile(file);
+    }
+
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleExcelFile = async (file: File) => {
     const XLSX = await import("xlsx");
     const buffer = await file.arrayBuffer();
     const wb = XLSX.read(buffer, { type: "array" });
@@ -141,7 +153,62 @@ export default function StudentsPage() {
     setImportRows(rows);
     setImportDone(false);
     setImportStats({ success: 0, failed: 0 });
-    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handlePdfFile = async (file: File) => {
+    setParsingPdf(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+
+      const { data, error } = await supabase.functions.invoke("parse-pdf-students", {
+        body: { pdfBase64: base64 },
+      });
+
+      if (error || !data?.students) {
+        toast({
+          title: "خطأ في تحليل PDF",
+          description: data?.error || error?.message || "لم يتم التعرف على بيانات الطلاب",
+          variant: "destructive",
+        });
+        setParsingPdf(false);
+        return;
+      }
+
+      const rows: ImportRow[] = data.students.map((s: any) => {
+        if (!s.full_name?.trim()) {
+          return { full_name: "", valid: false, error: "اسم الطالب مطلوب" };
+        }
+        return {
+          full_name: s.full_name.trim(),
+          academic_number: s.academic_number?.toString()?.trim() || undefined,
+          national_id: s.national_id?.toString()?.trim() || undefined,
+          parent_phone: s.parent_phone?.toString()?.trim() || undefined,
+          valid: true,
+        };
+      }).filter((r: ImportRow) => r.full_name || !r.valid);
+
+      setImportRows(rows);
+      setImportDone(false);
+      setImportStats({ success: 0, failed: 0 });
+
+      if (rows.length === 0) {
+        toast({
+          title: "لا توجد بيانات",
+          description: "لم يتم العثور على بيانات طلاب في ملف PDF",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "خطأ",
+        description: err.message || "فشل تحليل ملف PDF",
+        variant: "destructive",
+      });
+    }
+    setParsingPdf(false);
   };
 
   const handleImport = async () => {
