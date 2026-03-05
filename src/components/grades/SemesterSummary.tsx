@@ -9,18 +9,21 @@ import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 
 interface ClassInfo { id: string; name: string; }
-interface CategoryInfo { id: string; name: string; max_score: number; class_id: string; }
+interface CategoryInfo { id: string; name: string; max_score: number; class_id: string; category_group: string; }
 
 interface SemesterRow {
   student_id: string;
   full_name: string;
   class_id: string;
   class_name: string;
-  period1: Record<string, number | null>;
-  period2: Record<string, number | null>;
-  total1: number;
-  total2: number;
-  maxTotal: number;
+  classworkTotal1: number;
+  classworkTotal2: number;
+  classworkMax: number;
+  examTotal1: number;
+  examTotal2: number;
+  examMax: number;
+  grandTotal: number;
+  grandMax: number;
 }
 
 interface SemesterSummaryProps {
@@ -31,7 +34,6 @@ interface SemesterSummaryProps {
 export default function SemesterSummary({ selectedClass, onClassChange }: SemesterSummaryProps) {
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [rows, setRows] = useState<SemesterRow[]>([]);
   const [searchName, setSearchName] = useState("");
 
@@ -59,7 +61,6 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       allGrades = data || [];
     }
 
-    // Map: student_id -> period -> category_id -> score
     const gradesMap = new Map<string, Map<number, Map<string, number | null>>>();
     allGrades.forEach(g => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
@@ -72,35 +73,42 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
 
     const result: SemesterRow[] = students.filter(s => s.class_id).map(s => {
       const classCats = cats.filter(c => c.class_id === s.class_id);
+      const classworkCats = classCats.filter(c => c.category_group === 'classwork');
+      const examCats = classCats.filter(c => c.category_group === 'exams');
       const studentPeriods = gradesMap.get(s.id) || new Map();
       const p1Map = studentPeriods.get(1) || new Map();
       const p2Map = studentPeriods.get(2) || new Map();
 
-      const period1: Record<string, number | null> = {};
-      const period2: Record<string, number | null> = {};
-      let total1 = 0, total2 = 0, maxTotal = 0;
+      const sumCats = (catList: CategoryInfo[], pMap: Map<string, number | null>) => {
+        let total = 0;
+        catList.forEach(cat => {
+          const sc = pMap.get(cat.id);
+          if (sc != null) total += sc;
+        });
+        return total;
+      };
+      const maxCats = (catList: CategoryInfo[]) => catList.reduce((s, c) => s + Number(c.max_score), 0);
 
-      classCats.forEach(cat => {
-        const s1 = p1Map.get(cat.id) ?? null;
-        const s2 = p2Map.get(cat.id) ?? null;
-        period1[cat.id] = s1;
-        period2[cat.id] = s2;
-        maxTotal += Number(cat.max_score);
-        if (s1 != null) total1 += s1;
-        if (s2 != null) total2 += s2;
-      });
+      const classworkMax = maxCats(classworkCats);
+      const examMax = maxCats(examCats);
+      const cw1 = sumCats(classworkCats, p1Map);
+      const cw2 = sumCats(classworkCats, p2Map);
+      const ex1 = sumCats(examCats, p1Map);
+      const ex2 = sumCats(examCats, p2Map);
 
       return {
         student_id: s.id,
         full_name: s.full_name,
         class_id: s.class_id!,
         class_name: classMap.get(s.class_id!) || "",
-        period1, period2, total1, total2, maxTotal,
+        classworkTotal1: cw1, classworkTotal2: cw2, classworkMax,
+        examTotal1: ex1, examTotal2: ex2, examMax,
+        grandTotal: cw1 + cw2 + ex1 + ex2,
+        grandMax: (classworkMax + examMax) * 2,
       };
     });
 
     setClasses(cls);
-    setAllCategories(cats);
     setRows(result);
     setLoading(false);
   };
@@ -115,15 +123,8 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     .map(cls => ({
       ...cls,
       students: filtered.filter(r => r.class_id === cls.id),
-      categories: allCategories.filter(c => c.class_id === cls.id),
     }))
     .filter(g => g.students.length > 0);
-
-  const getTrend = (t1: number, t2: number) => {
-    if (t2 > t1) return "up";
-    if (t2 < t1) return "down";
-    return "same";
-  };
 
   const getPercentage = (score: number, max: number) => max > 0 ? Math.round((score / max) * 100) : 0;
 
@@ -135,11 +136,16 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     return { label: "ضعيف", color: "text-rose-600 dark:text-rose-400" };
   };
 
+  const getTrend = (t1: number, t2: number) => {
+    if (t2 > t1) return "up";
+    if (t2 < t1) return "down";
+    return "same";
+  };
+
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل ملخص الفصل...</p>;
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -172,10 +178,10 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                     <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
-                    <th colSpan={group.categories.length + 1} className="text-center p-2 font-semibold text-primary text-xs border-b border-primary/20 bg-primary/5">
+                    <th colSpan={2} className="text-center p-2 font-semibold text-primary text-xs border-b border-primary/20 bg-primary/5">
                       الفترة الأولى
                     </th>
-                    <th colSpan={group.categories.length + 1} className="text-center p-2 font-semibold text-primary text-xs border-b border-primary/20 bg-accent/5">
+                    <th colSpan={2} className="text-center p-2 font-semibold text-primary text-xs border-b border-primary/20 bg-accent/5">
                       الفترة الثانية
                     </th>
                     <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[90px]">الإجمالي</th>
@@ -183,29 +189,21 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                     <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[70px] last:rounded-tl-xl">التقدير</th>
                   </tr>
                   <tr className="bg-muted/30">
-                    {group.categories.map(cat => (
-                      <th key={`p1-${cat.id}`} className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[70px]">
-                        {cat.name}
-                      </th>
-                    ))}
-                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-primary min-w-[60px]">المجموع</th>
-                    {group.categories.map(cat => (
-                      <th key={`p2-${cat.id}`} className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[70px]">
-                        {cat.name}
-                      </th>
-                    ))}
-                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-primary min-w-[60px]">المجموع</th>
+                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[90px]">المهام والمشاركة</th>
+                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[90px]">الاختبارات</th>
+                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[90px]">المهام والمشاركة</th>
+                    <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[90px]">الاختبارات</th>
                   </tr>
                 </thead>
                 <tbody>
                   {group.students.map((sg, i) => {
                     const isEven = i % 2 === 0;
                     const isLast = i === group.students.length - 1;
-                    const grandTotal = sg.total1 + sg.total2;
-                    const grandMax = sg.maxTotal * 2;
-                    const pct = getPercentage(grandTotal, grandMax);
+                    const pct = getPercentage(sg.grandTotal, sg.grandMax);
                     const grade = getGradeLabel(pct);
-                    const trend = getTrend(sg.total1, sg.total2);
+                    const totalP1 = sg.classworkTotal1 + sg.examTotal1;
+                    const totalP2 = sg.classworkTotal2 + sg.examTotal2;
+                    const trend = getTrend(totalP1, totalP2);
 
                     return (
                       <tr key={sg.student_id} className={cn(
@@ -214,36 +212,28 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                       )}>
                         <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                         <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
-                        
-                        {/* Period 1 scores */}
-                        {group.categories.map(cat => (
-                          <td key={`p1-${cat.id}`} className="p-2 text-center border-l border-border/10">
-                            <span className={sg.period1[cat.id] == null ? "text-muted-foreground" : ""}>
-                              {sg.period1[cat.id] ?? "—"}
-                            </span>
-                          </td>
-                        ))}
+
+                        {/* Period 1 */}
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.total1} / {sg.maxTotal}
+                          {sg.classworkTotal1} / {sg.classworkMax}
+                        </td>
+                        <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
+                          {sg.examTotal1} / {sg.examMax}
                         </td>
 
-                        {/* Period 2 scores */}
-                        {group.categories.map(cat => (
-                          <td key={`p2-${cat.id}`} className="p-2 text-center border-l border-border/10">
-                            <span className={sg.period2[cat.id] == null ? "text-muted-foreground" : ""}>
-                              {sg.period2[cat.id] ?? "—"}
-                            </span>
-                          </td>
-                        ))}
+                        {/* Period 2 */}
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.total2} / {sg.maxTotal}
+                          {sg.classworkTotal2} / {sg.classworkMax}
+                        </td>
+                        <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
+                          {sg.examTotal2} / {sg.examMax}
                         </td>
 
                         {/* Grand total */}
                         <td className="p-2 text-center border-l border-border/10">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-bold">{grandTotal}</span>
-                            <span className="text-muted-foreground text-xs">/ {grandMax}</span>
+                            <span className="font-bold">{sg.grandTotal}</span>
+                            <span className="text-muted-foreground text-xs">/ {sg.grandMax}</span>
                             {trend === "up" && <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />}
                             {trend === "down" && <TrendingDown className="h-3.5 w-3.5 text-rose-500" />}
                             {trend === "same" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}

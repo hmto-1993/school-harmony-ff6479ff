@@ -224,7 +224,7 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
                       {hasClasswork && (
                         <th colSpan={classworkCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
-                          أعمال السنة
+                          المهام الادائية والمشاركة والتفاعل
                         </th>
                       )}
                       {hasExams && (

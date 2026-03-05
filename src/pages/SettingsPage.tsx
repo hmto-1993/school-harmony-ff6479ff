@@ -32,6 +32,8 @@ import {
   X,
   MessageSquare,
   ChevronDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -648,6 +650,34 @@ export default function SettingsPage() {
     fetchData();
   };
 
+  const handleReorderCategory = async (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => {
+    const idx = groupCats.findIndex(c => c.id === catId);
+    if (idx < 0) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= groupCats.length) return;
+
+    const catA = groupCats[idx];
+    const catB = groupCats[swapIdx];
+
+    // Swap sort_order values
+    if (catClassFilter === "all") {
+      // Apply to all classes by matching name
+      const allCatsA = categories.filter(c => c.name === catA.name);
+      const allCatsB = categories.filter(c => c.name === catB.name);
+      const updates = [
+        ...allCatsA.map(c => supabase.from("grade_categories").update({ sort_order: catB.sort_order }).eq("id", c.id)),
+        ...allCatsB.map(c => supabase.from("grade_categories").update({ sort_order: catA.sort_order }).eq("id", c.id)),
+      ];
+      await Promise.all(updates);
+    } else {
+      await Promise.all([
+        supabase.from("grade_categories").update({ sort_order: catB.sort_order }).eq("id", catA.id),
+        supabase.from("grade_categories").update({ sort_order: catA.sort_order }).eq("id", catB.id),
+      ]);
+    }
+    fetchData();
+  };
+
   // Filter categories by selected class
   const [catClassFilter, setCatClassFilter] = useState("all");
 
@@ -984,7 +1014,7 @@ export default function SettingsPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="classwork">📝 أعمال السنة</SelectItem>
+                              <SelectItem value="classwork">📝 المهام الادائية والمشاركة والتفاعل</SelectItem>
                               <SelectItem value="exams">📋 الاختبارات</SelectItem>
                             </SelectContent>
                           </Select>
@@ -1034,8 +1064,8 @@ export default function SettingsPage() {
 
               {/* Helper to render a category table */}
               {[
-                { label: "أعمال السنة", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
-                { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "أعمال السنة" },
+                { label: "المهام الادائية والمشاركة والتفاعل", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
+                { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "المهام الادائية والمشاركة والتفاعل" },
               ].map((group) => (
                 <div key={group.label} className="space-y-2">
                   <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
@@ -1105,6 +1135,27 @@ export default function SettingsPage() {
                             {isAdmin && (
                               <TableCell>
                                 <div className="flex items-center gap-1">
+                                  {/* Reorder buttons */}
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
+                                    disabled={group.cats.indexOf(cat) === 0}
+                                    title="تحريك لأعلى"
+                                  >
+                                    <ArrowUp className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
+                                    disabled={group.cats.indexOf(cat) === group.cats.length - 1}
+                                    title="تحريك لأسفل"
+                                  >
+                                    <ArrowDown className="h-3.5 w-3.5" />
+                                  </Button>
                                   {/* Move to other group */}
                                   <Button
                                     variant="ghost"
