@@ -170,18 +170,28 @@ export default function ResourceLibraryPage() {
   const handleCreateFolder = async () => {
     if (!newTitle.trim() || !newClassId || !user) return;
     setCreating(true);
-    const { error } = await supabase.from("resource_folders").insert({
-      title: newTitle.trim(),
-      icon: newIcon,
-      class_id: newClassId,
-      created_by: user.id,
-      category: newCategory,
-    } as any);
+
+    const targetClassIds = newClassId === "__all__" ? classes.map(c => c.id) : [newClassId];
+
+    let hasError = false;
+    for (const classId of targetClassIds) {
+      const { error } = await supabase.from("resource_folders").insert({
+        title: newTitle.trim(),
+        icon: newIcon,
+        class_id: classId,
+        created_by: user.id,
+        category: newCategory,
+      } as any);
+      if (error) {
+        hasError = true;
+        toast({ title: "خطأ", description: error.message, variant: "destructive" });
+        break;
+      }
+    }
+
     setCreating(false);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم إنشاء الحقيبة بنجاح" });
+    if (!hasError) {
+      toast({ title: targetClassIds.length > 1 ? `تم إنشاء الحقيبة في ${targetClassIds.length} شعبة` : "تم إنشاء الحقيبة بنجاح" });
       setCreateOpen(false);
       setNewTitle("");
       setNewIcon("atom");
@@ -421,6 +431,7 @@ export default function ResourceLibraryPage() {
                     <SelectValue placeholder="اختر الشعبة" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__all__">جميع الشعب</SelectItem>
                     {classes.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}/{c.section}</SelectItem>
                     ))}
