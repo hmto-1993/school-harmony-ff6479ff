@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download } from "lucide-react";
 import { format } from "date-fns";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
@@ -448,14 +449,23 @@ export default function StudentsPage() {
         {role === "admin" && (
           <div className="flex gap-2">
             {/* Export Dropdown */}
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير Excel" onClick={exportExcel}>
-                <FileSpreadsheet className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير PDF" onClick={exportPDF}>
-                <FileText className="h-4 w-4" />
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير">
+                  <Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportExcel} className="gap-2 cursor-pointer">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  تصدير Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer">
+                  <FileText className="h-4 w-4" />
+                  تصدير PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {/* Import Button */}
             <Dialog open={importOpen} onOpenChange={(v) => { setImportOpen(v); if (!v) resetImport(); }}>
               <DialogTrigger asChild>
