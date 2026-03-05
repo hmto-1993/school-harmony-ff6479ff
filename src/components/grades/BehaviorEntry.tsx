@@ -171,15 +171,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     <>
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardHeader className="pb-3">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <CardTitle className="text-lg">سجل السلوك اليومي</CardTitle>
-            <Select value={selectedClass} onValueChange={onClassChange}>
-              <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
-              <SelectContent>
-                {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <CardTitle className="text-lg">سجل السلوك اليومي</CardTitle>
         </CardHeader>
         <CardContent>
           {!selectedClass ? (

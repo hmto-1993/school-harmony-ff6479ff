@@ -152,13 +152,6 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="بحث باسم الطالب..." value={searchName} onChange={e => setSearchName(e.target.value)} className="pr-9" />
         </div>
-        <Select value={selectedClass || "all"} onValueChange={v => onClassChange(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفصول" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">جميع الفصول</SelectItem>
-            {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
       </div>
 
       {grouped.length > 0 && (
