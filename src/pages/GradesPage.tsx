@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileUp } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
+import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
@@ -14,6 +15,7 @@ const ENTRY_TYPES = [
   { id: "behavior", label: "السلوك", icon: UserCheck },
   { id: "summary", label: "التقييم النهائي", icon: BarChart3 },
   { id: "semester", label: "ملخص الفصل", icon: BookOpen },
+  { id: "import", label: "استيراد من ملف", icon: FileUp },
 ] as const;
 
 const PERIODS = [
