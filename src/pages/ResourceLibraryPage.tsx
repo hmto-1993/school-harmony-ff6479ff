@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, FileSpreadsheet, Loader2,
   BookOpen, FlaskConical, Microscope, Calculator, Atom, GraduationCap, Brain, TestTube2,
-  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus
+  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus, Globe
 } from "lucide-react";
 
 interface ClassInfo {
@@ -171,7 +171,8 @@ export default function ResourceLibraryPage() {
     if (!newTitle.trim() || !newClassId || !user) return;
     setCreating(true);
 
-    const targetClassIds = newClassId === "__all__" ? classes.map(c => c.id) : [newClassId];
+    const isPublic = newClassId === "__public__";
+    const targetClassIds = newClassId === "__all__" ? classes.map(c => c.id) : isPublic ? [null] : [newClassId];
 
     let hasError = false;
     for (const classId of targetClassIds) {
@@ -323,6 +324,8 @@ export default function ResourceLibraryPage() {
     return folders.filter(f => f.class_id === classId);
   };
 
+  const getPublicFolders = () => folders.filter(f => !f.class_id);
+
   const getFolderCountForClass = (classId: string) => {
     return folders.filter(f => f.class_id === classId).length;
   };
@@ -334,10 +337,13 @@ export default function ResourceLibraryPage() {
   // Classes that have folders
   const classesWithFolders = classes.filter(c => getFolderCountForClass(c.id) > 0);
   const classesWithoutFolders = classes.filter(c => getFolderCountForClass(c.id) === 0);
+  const publicFolders = getPublicFolders();
 
-  const selectedClassInfo = selectedClassId ? classes.find(c => c.id === selectedClassId) : null;
+  const selectedClassInfo = selectedClassId && selectedClassId !== "__public__" ? classes.find(c => c.id === selectedClassId) : null;
   const selectedClassFolders = selectedClassId
-    ? getFoldersForClass(selectedClassId).filter(f => filterCategory === "all" || f.category === filterCategory)
+    ? (selectedClassId === "__public__"
+      ? publicFolders.filter(f => filterCategory === "all" || f.category === filterCategory)
+      : getFoldersForClass(selectedClassId).filter(f => filterCategory === "all" || f.category === filterCategory))
     : [];
 
   const getClassColor = (index: number) => CLASS_COLORS[index % CLASS_COLORS.length];
@@ -383,7 +389,7 @@ export default function ResourceLibraryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          {selectedClassId && selectedClassInfo ? (
+          {selectedClassId ? (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { setSelectedClassId(null); setFilterCategory("all"); }}
@@ -393,7 +399,7 @@ export default function ResourceLibraryPage() {
               </button>
               <ArrowRight className="h-4 w-4 text-muted-foreground rotate-180" />
               <h1 className="text-2xl font-bold text-foreground">
-                {selectedClassInfo.grade}/{selectedClassInfo.section}
+                {selectedClassId === "__public__" ? "عام" : selectedClassInfo ? `${selectedClassInfo.grade}/${selectedClassInfo.section}` : ""}
               </h1>
             </div>
           ) : (
@@ -431,6 +437,7 @@ export default function ResourceLibraryPage() {
                     <SelectValue placeholder="اختر الشعبة" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="__public__">عام (للجميع)</SelectItem>
                     <SelectItem value="__all__">جميع الشعب</SelectItem>
                     {classes.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.grade}/{c.section}</SelectItem>
@@ -470,10 +477,22 @@ export default function ResourceLibraryPage() {
             </Card>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              {/* Public/General Card */}
+              <Card
+                className="group cursor-pointer border-2 border-amber-500/20 hover:bg-amber-500/15 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden"
+                onClick={() => setSelectedClassId("__public__")}
+              >
+                <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
+                  <div className="w-20 h-20 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Globe className="h-10 w-10 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground text-sm leading-tight">عام</h3>
+                  </div>
+                </CardContent>
+              </Card>
               {classes.map((cls, index) => {
                 const color = getClassColor(index);
-                const folderCount = getFolderCountForClass(cls.id);
-                const fileCount = getFileCountForClass(cls.id);
                 return (
                   <Card
                     key={cls.id}
@@ -481,11 +500,9 @@ export default function ResourceLibraryPage() {
                     onClick={() => setSelectedClassId(cls.id)}
                   >
                     <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                      {/* Bag Icon */}
                       <div className={`w-20 h-20 rounded-2xl ${color.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                         <School className={`h-10 w-10 ${color.icon}`} />
                       </div>
-                      {/* Class Name */}
                       <div>
                         <h3 className="font-bold text-foreground text-sm leading-tight">{cls.grade} / {cls.section}</h3>
                       </div>
