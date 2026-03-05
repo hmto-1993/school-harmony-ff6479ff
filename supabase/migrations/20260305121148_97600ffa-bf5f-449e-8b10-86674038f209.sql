@@ -1,0 +1,1 @@
+ALTER TABLE public.teacher_activities ADD COLUMN duration_minutes int DEFAULT 0;

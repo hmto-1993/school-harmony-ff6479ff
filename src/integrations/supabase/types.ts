@@ -660,6 +660,7 @@ export type Database = {
           created_at: string
           created_by: string
           description: string | null
+          duration_minutes: number | null
           file_name: string | null
           file_url: string | null
           id: string
@@ -673,6 +674,7 @@ export type Database = {
           created_at?: string
           created_by: string
           description?: string | null
+          duration_minutes?: number | null
           file_name?: string | null
           file_url?: string | null
           id?: string
@@ -686,6 +688,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           description?: string | null
+          duration_minutes?: number | null
           file_name?: string | null
           file_url?: string | null
           id?: string

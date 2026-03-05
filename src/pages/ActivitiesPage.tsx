@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, FileUp, ClipboardList, Eye, EyeOff, Trash2, Upload, Loader2,
-  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen
+  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer
 } from "lucide-react";
 import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
@@ -26,6 +26,7 @@ interface Activity {
   id: string; title: string; description: string | null; type: string;
   file_url: string | null; file_name: string | null; is_visible: boolean;
   allow_student_uploads: boolean; created_at: string; created_by: string;
+  duration_minutes: number;
   targets: { class_id: string; allow_student_uploads: boolean; classes?: ClassInfo }[];
   question_count?: number;
 }
@@ -44,10 +45,21 @@ export default function ActivitiesPage() {
   const [createType, setCreateType] = useState<"file" | "quiz">("file");
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [newDuration, setNewDuration] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+
+  // Edit dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editActivity, setEditActivity] = useState<Activity | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDesc, setEditDesc] = useState("");
+  const [editDuration, setEditDuration] = useState(0);
+  const [editQuestions, setEditQuestions] = useState<QuizQuestion[]>([]);
+  const [editClasses, setEditClasses] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   // Results view
   const [resultsActivity, setResultsActivity] = useState<Activity | null>(null);
@@ -66,28 +78,20 @@ export default function ActivitiesPage() {
       .order("created_at", { ascending: false });
 
     if (data) {
-      // Fetch targets for all activities
       const ids = data.map((a: any) => a.id);
-      const { data: targets } = await supabase
-        .from("activity_class_targets")
-        .select("*, classes(id, name, grade, section)")
-        .in("activity_id", ids.length ? ids : ["__none__"]);
-
-      // Fetch question counts
-      const { data: qCounts } = await supabase
-        .from("quiz_questions")
-        .select("activity_id")
-        .in("activity_id", ids.length ? ids : ["__none__"]);
+      const [{ data: targets }, { data: qCounts }] = await Promise.all([
+        supabase.from("activity_class_targets").select("*, classes(id, name, grade, section)").in("activity_id", ids.length ? ids : ["__none__"]),
+        supabase.from("quiz_questions").select("activity_id").in("activity_id", ids.length ? ids : ["__none__"]),
+      ]);
 
       const qCountMap: Record<string, number> = {};
       qCounts?.forEach((q: any) => { qCountMap[q.activity_id] = (qCountMap[q.activity_id] || 0) + 1; });
 
-      const mapped: Activity[] = data.map((a: any) => ({
+      setActivities(data.map((a: any) => ({
         ...a,
         targets: (targets || []).filter((t: any) => t.activity_id === a.id),
         question_count: qCountMap[a.id] || 0,
-      }));
-      setActivities(mapped);
+      })));
     }
     setLoading(false);
   }, []);
@@ -122,8 +126,7 @@ export default function ActivitiesPage() {
       fileName = selectedFile.name;
     }
 
-    // Determine target class IDs
-    let targetIds = selectedClasses.includes("__all__") ? classes.map(c => c.id) : selectedClasses;
+    const targetIds = selectedClasses.includes("__all__") ? classes.map(c => c.id) : selectedClasses;
 
     const { data: activity, error } = await supabase.from("teacher_activities").insert({
       title: newTitle.trim(),
@@ -132,6 +135,7 @@ export default function ActivitiesPage() {
       file_url: fileUrl,
       file_name: fileName,
       created_by: user.id,
+      duration_minutes: createType === "quiz" ? newDuration : 0,
     } as any).select().single();
 
     if (error || !activity) {
@@ -140,25 +144,13 @@ export default function ActivitiesPage() {
       return;
     }
 
-    // Insert targets
-    const targetRows = targetIds.map(cid => ({
-      activity_id: activity.id,
-      class_id: cid,
-    }));
-    await supabase.from("activity_class_targets").insert(targetRows as any);
+    await supabase.from("activity_class_targets").insert(targetIds.map(cid => ({ activity_id: activity.id, class_id: cid })) as any);
 
-    // Insert quiz questions
     if (createType === "quiz" && quizQuestions.length > 0) {
-      const questionRows = quizQuestions.map((q, i) => ({
-        activity_id: activity.id,
-        question_text: q.question_text,
-        question_type: q.question_type,
-        image_url: q.image_url || null,
-        options: q.options,
-        correct_answer: q.correct_answer,
-        sort_order: i,
-      }));
-      await supabase.from("quiz_questions").insert(questionRows as any);
+      await supabase.from("quiz_questions").insert(quizQuestions.map((q, i) => ({
+        activity_id: activity.id, question_text: q.question_text, question_type: q.question_type,
+        image_url: q.image_url || null, options: q.options, correct_answer: q.correct_answer, sort_order: i,
+      })) as any);
     }
 
     toast({ title: `تم إنشاء ${createType === "quiz" ? "الاختبار" : "النشاط"} ونشره في ${targetIds.length} فصل` });
@@ -167,14 +159,74 @@ export default function ActivitiesPage() {
   };
 
   const resetCreate = () => {
-    setCreateOpen(false);
-    setNewTitle("");
-    setNewDesc("");
-    setSelectedFile(null);
-    setSelectedClasses([]);
-    setQuizQuestions([]);
-    setCreateType("file");
-    setCreating(false);
+    setCreateOpen(false); setNewTitle(""); setNewDesc(""); setNewDuration(0);
+    setSelectedFile(null); setSelectedClasses([]); setQuizQuestions([]); setCreateType("file"); setCreating(false);
+  };
+
+  // ===== Edit =====
+  const openEdit = async (activity: Activity) => {
+    setEditActivity(activity);
+    setEditTitle(activity.title);
+    setEditDesc(activity.description || "");
+    setEditDuration(activity.duration_minutes || 0);
+    setEditClasses(activity.targets.map(t => t.class_id));
+
+    if (activity.type === "quiz") {
+      const { data } = await supabase.from("quiz_questions").select("*").eq("activity_id", activity.id).order("sort_order");
+      setEditQuestions((data || []).map((q: any) => ({
+        id: q.id, question_text: q.question_text, question_type: q.question_type,
+        image_url: q.image_url, options: q.options, correct_answer: q.correct_answer, sort_order: q.sort_order,
+      })));
+    } else {
+      setEditQuestions([]);
+    }
+    setEditOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editActivity || !editTitle.trim()) return;
+    setSaving(true);
+
+    await supabase.from("teacher_activities").update({
+      title: editTitle.trim(),
+      description: editDesc.trim() || null,
+      duration_minutes: editActivity.type === "quiz" ? editDuration : 0,
+    } as any).eq("id", editActivity.id);
+
+    // Update class targets: delete old, insert new
+    await supabase.from("activity_class_targets").delete().eq("activity_id", editActivity.id);
+    const targetIds = editClasses.includes("__all__") ? classes.map(c => c.id) : editClasses;
+    if (targetIds.length) {
+      await supabase.from("activity_class_targets").insert(targetIds.map(cid => ({ activity_id: editActivity.id, class_id: cid })) as any);
+    }
+
+    // Update quiz questions if quiz
+    if (editActivity.type === "quiz") {
+      await supabase.from("quiz_questions").delete().eq("activity_id", editActivity.id);
+      if (editQuestions.length) {
+        await supabase.from("quiz_questions").insert(editQuestions.map((q, i) => ({
+          activity_id: editActivity.id, question_text: q.question_text, question_type: q.question_type,
+          image_url: q.image_url || null, options: q.options, correct_answer: q.correct_answer, sort_order: i,
+        })) as any);
+      }
+    }
+
+    toast({ title: "تم تحديث النشاط بنجاح" });
+    setSaving(false);
+    setEditOpen(false);
+    setEditActivity(null);
+    fetchActivities();
+  };
+
+  const toggleEditClass = (classId: string) => {
+    if (classId === "__all__") {
+      setEditClasses(prev => prev.includes("__all__") ? [] : ["__all__"]);
+      return;
+    }
+    setEditClasses(prev => {
+      const filtered = prev.filter(c => c !== "__all__");
+      return filtered.includes(classId) ? filtered.filter(c => c !== classId) : [...filtered, classId];
+    });
   };
 
   const toggleVisibility = async (activityId: string, current: boolean) => {
@@ -184,10 +236,7 @@ export default function ActivitiesPage() {
   };
 
   const toggleStudentUploads = async (activityId: string, classId: string, current: boolean) => {
-    await supabase.from("activity_class_targets")
-      .update({ allow_student_uploads: !current } as any)
-      .eq("activity_id", activityId)
-      .eq("class_id", classId);
+    await supabase.from("activity_class_targets").update({ allow_student_uploads: !current } as any).eq("activity_id", activityId).eq("class_id", classId);
     setActivities(prev => prev.map(a => {
       if (a.id !== activityId) return a;
       return { ...a, targets: a.targets.map(t => t.class_id === classId ? { ...t, allow_student_uploads: !current } : t) };
@@ -218,6 +267,32 @@ export default function ActivitiesPage() {
     return true;
   });
 
+  // Shared class selector component
+  const ClassSelector = ({ selected, onToggle }: { selected: string[]; onToggle: (id: string) => void }) => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
+      <div
+        className={cn("flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all",
+          selected.includes("__all__") ? "border-primary bg-primary/10 text-primary" : "border-border/30 hover:border-primary/40"
+        )}
+        onClick={() => onToggle("__all__")}
+      >
+        <Checkbox checked={selected.includes("__all__")} />
+        <span className="text-sm font-medium">جميع الفصول</span>
+      </div>
+      {classes.map(cls => (
+        <div key={cls.id}
+          className={cn("flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all",
+            selected.includes(cls.id) ? "border-primary bg-primary/10 text-primary" : "border-border/30 hover:border-primary/40"
+          )}
+          onClick={() => onToggle(cls.id)}
+        >
+          <Checkbox checked={selected.includes(cls.id) || selected.includes("__all__")} />
+          <span className="text-sm">{cls.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* Header */}
@@ -231,16 +306,11 @@ export default function ActivitiesPage() {
         </div>
         <Dialog open={createOpen} onOpenChange={v => { if (!v) resetCreate(); else setCreateOpen(true); }}>
           <DialogTrigger asChild>
-            <Button className="gap-2 rounded-xl shadow-lg">
-              <Plus className="h-4 w-4" /> نشاط جديد
-            </Button>
+            <Button className="gap-2 rounded-xl shadow-lg"><Plus className="h-4 w-4" /> نشاط جديد</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
-            <DialogHeader>
-              <DialogTitle className="text-xl">إنشاء نشاط جديد</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle className="text-xl">إنشاء نشاط جديد</DialogTitle></DialogHeader>
             <div className="space-y-5 pt-2">
-              {/* Type selection */}
               <Tabs value={createType} onValueChange={v => setCreateType(v as any)} dir="rtl">
                 <TabsList className="grid grid-cols-2">
                   <TabsTrigger value="file" className="gap-1.5"><FileUp className="h-4 w-4" /> ملف</TabsTrigger>
@@ -256,6 +326,14 @@ export default function ActivitiesPage() {
                 <Label>الوصف</Label>
                 <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="وصف مختصر (اختياري)..." className="mt-1 rounded-xl" />
               </div>
+
+              {createType === "quiz" && (
+                <div>
+                  <Label className="flex items-center gap-1.5"><Timer className="h-4 w-4" /> المدة الزمنية (بالدقائق)</Label>
+                  <Input type="number" min={0} value={newDuration || ""} onChange={e => setNewDuration(parseInt(e.target.value) || 0)} placeholder="0 = بدون مؤقت" className="mt-1 rounded-xl w-48" />
+                  <p className="text-xs text-muted-foreground mt-1">اترك 0 لعدم تحديد وقت</p>
+                </div>
+              )}
 
               {createType === "file" && (
                 <div>
@@ -277,38 +355,9 @@ export default function ActivitiesPage() {
                 </div>
               )}
 
-              {/* Class selection */}
               <div>
                 <Label className="mb-2 block">النشر في الفصول *</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1">
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all",
-                      selectedClasses.includes("__all__")
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border/30 hover:border-primary/40"
-                    )}
-                    onClick={() => toggleClassSelection("__all__")}
-                  >
-                    <Checkbox checked={selectedClasses.includes("__all__")} />
-                    <span className="text-sm font-medium">جميع الفصول</span>
-                  </div>
-                  {classes.map(cls => (
-                    <div
-                      key={cls.id}
-                      className={cn(
-                        "flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all",
-                        selectedClasses.includes(cls.id)
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border/30 hover:border-primary/40"
-                      )}
-                      onClick={() => toggleClassSelection(cls.id)}
-                    >
-                      <Checkbox checked={selectedClasses.includes(cls.id) || selectedClasses.includes("__all__")} />
-                      <span className="text-sm">{cls.name}</span>
-                    </div>
-                  ))}
-                </div>
+                <ClassSelector selected={selectedClasses} onToggle={toggleClassSelection} />
               </div>
 
               <Button onClick={handleCreate} disabled={creating} className="w-full gap-2 rounded-xl h-11">
@@ -320,6 +369,48 @@ export default function ActivitiesPage() {
         </Dialog>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={v => { if (!v) { setEditOpen(false); setEditActivity(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto" dir="rtl">
+          <DialogHeader><DialogTitle className="text-xl">تعديل النشاط</DialogTitle></DialogHeader>
+          {editActivity && (
+            <div className="space-y-5 pt-2">
+              <div>
+                <Label>العنوان *</Label>
+                <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="mt-1 rounded-xl" />
+              </div>
+              <div>
+                <Label>الوصف</Label>
+                <Input value={editDesc} onChange={e => setEditDesc(e.target.value)} className="mt-1 rounded-xl" />
+              </div>
+
+              {editActivity.type === "quiz" && (
+                <>
+                  <div>
+                    <Label className="flex items-center gap-1.5"><Timer className="h-4 w-4" /> المدة الزمنية (بالدقائق)</Label>
+                    <Input type="number" min={0} value={editDuration || ""} onChange={e => setEditDuration(parseInt(e.target.value) || 0)} placeholder="0 = بدون مؤقت" className="mt-1 rounded-xl w-48" />
+                  </div>
+                  <div>
+                    <Label className="mb-2 block">أسئلة الاختبار</Label>
+                    <QuizBuilder questions={editQuestions} onChange={setEditQuestions} />
+                  </div>
+                </>
+              )}
+
+              <div>
+                <Label className="mb-2 block">الفصول المنشورة</Label>
+                <ClassSelector selected={editClasses} onToggle={toggleEditClass} />
+              </div>
+
+              <Button onClick={handleSaveEdit} disabled={saving} className="w-full gap-2 rounded-xl h-11">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Pencil className="h-4 w-4" />}
+                {saving ? "جاري الحفظ..." : "حفظ التعديلات"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -327,9 +418,7 @@ export default function ActivitiesPage() {
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث..." className="pr-10 rounded-xl" />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-40 rounded-xl">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">الكل</SelectItem>
             <SelectItem value="file">ملفات</SelectItem>
@@ -342,17 +431,11 @@ export default function ActivitiesPage() {
       {resultsActivity && resultsClassId && (
         <Card className="border-0 shadow-lg rounded-2xl">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <Button variant="ghost" size="sm" onClick={() => { setResultsActivity(null); setResultsClassId(null); }} className="gap-1.5">
-                <ArrowRight className="h-4 w-4 rotate-180" /> العودة
-              </Button>
-            </div>
-            <ActivityResults
-              activityId={resultsActivity.id}
-              activityType={resultsActivity.type}
-              classId={resultsClassId}
-              className={resultsActivity.targets.find(t => t.class_id === resultsClassId)?.classes?.name || ""}
-            />
+            <Button variant="ghost" size="sm" onClick={() => { setResultsActivity(null); setResultsClassId(null); }} className="gap-1.5 mb-4">
+              <ArrowRight className="h-4 w-4 rotate-180" /> العودة
+            </Button>
+            <ActivityResults activityId={resultsActivity.id} activityType={resultsActivity.type} classId={resultsClassId}
+              className={resultsActivity.targets.find(t => t.class_id === resultsClassId)?.classes?.name || ""} />
           </CardContent>
         </Card>
       )}
@@ -369,37 +452,29 @@ export default function ActivitiesPage() {
         ) : (
           <div className="space-y-4">
             {filtered.map((activity, ai) => (
-              <Card
-                key={activity.id}
-                className={cn(
-                  "border-0 shadow-md rounded-2xl overflow-hidden transition-all hover:shadow-lg",
-                  !activity.is_visible && "opacity-60"
-                )}
-                style={{ animationDelay: `${ai * 50}ms` }}
-              >
+              <Card key={activity.id} className={cn("border-0 shadow-md rounded-2xl overflow-hidden transition-all hover:shadow-lg", !activity.is_visible && "opacity-60")}
+                style={{ animationDelay: `${ai * 50}ms` }}>
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
-                      <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
-                        activity.type === "quiz"
-                          ? "bg-violet-500/10 text-violet-500"
-                          : "bg-blue-500/10 text-blue-500"
+                      <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0",
+                        activity.type === "quiz" ? "bg-violet-500/10 text-violet-500" : "bg-blue-500/10 text-blue-500"
                       )}>
                         {activity.type === "quiz" ? <ClipboardList className="h-6 w-6" /> : <FileUp className="h-6 w-6" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-foreground truncate">{activity.title}</h3>
-                        {activity.description && (
-                          <p className="text-sm text-muted-foreground mt-0.5 truncate">{activity.description}</p>
-                        )}
+                        {activity.description && <p className="text-sm text-muted-foreground mt-0.5 truncate">{activity.description}</p>}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
                           <Badge variant="outline" className="text-xs rounded-full">
                             {activity.type === "quiz" ? `اختبار • ${activity.question_count} سؤال` : "ملف"}
                           </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(activity.created_at), "yyyy/MM/dd")}
-                          </span>
+                          {activity.type === "quiz" && activity.duration_minutes > 0 && (
+                            <Badge variant="outline" className="text-xs rounded-full gap-1">
+                              <Timer className="h-3 w-3" /> {activity.duration_minutes} دقيقة
+                            </Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">{format(new Date(activity.created_at), "yyyy/MM/dd")}</span>
                           {activity.file_name && (
                             <a href={activity.file_url!} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
                               <FileText className="h-3 w-3" /> {activity.file_name}
@@ -409,18 +484,15 @@ export default function ActivitiesPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button
-                        variant="ghost" size="icon" className="h-9 w-9 rounded-xl"
-                        onClick={() => toggleVisibility(activity.id, activity.is_visible)}
-                        title={activity.is_visible ? "مرئي" : "مخفي"}
-                      >
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => openEdit(activity)} title="تعديل">
+                        <Pencil className="h-4 w-4 text-primary" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => toggleVisibility(activity.id, activity.is_visible)}
+                        title={activity.is_visible ? "مرئي" : "مخفي"}>
                         {activity.is_visible ? <Eye className="h-4 w-4 text-emerald-500" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
                       </Button>
-                      <Button
-                        variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10"
-                        onClick={() => deleteActivity(activity.id)}
-                      >
+                      <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => deleteActivity(activity.id)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -438,17 +510,12 @@ export default function ActivitiesPage() {
                           <span className="text-sm font-medium">{target.classes?.name || "—"}</span>
                           <div className="flex items-center gap-1 mr-2">
                             <span className="text-[10px] text-muted-foreground">رفع ملفات</span>
-                            <Switch
-                              checked={target.allow_student_uploads}
+                            <Switch checked={target.allow_student_uploads}
                               onCheckedChange={() => toggleStudentUploads(activity.id, target.class_id, target.allow_student_uploads)}
-                              className="scale-75"
-                            />
+                              className="scale-75" />
                           </div>
-                          <Button
-                            variant="ghost" size="sm"
-                            className="h-7 px-2 text-xs gap-1 text-primary hover:bg-primary/10 rounded-lg"
-                            onClick={() => { setResultsActivity(activity); setResultsClassId(target.class_id); }}
-                          >
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:bg-primary/10 rounded-lg"
+                            onClick={() => { setResultsActivity(activity); setResultsClassId(target.class_id); }}>
                             <BarChart3 className="h-3 w-3" /> النتائج
                           </Button>
                         </div>
