@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Calendar, Download } from "lucide-react";
+import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { format, subDays, addDays, isToday } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -432,7 +433,28 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-4 gap-2">
+              <GradesExportDialog
+                title="الإدخال اليومي"
+                fileName="الإدخال_اليومي"
+                groups={(() => {
+                  const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+                  const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
+                  const rows = studentGrades.map((sg, i) => [
+                    String(i + 1),
+                    sg.full_name,
+                    ...visibleCategories.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                    ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
+                  ]);
+                  return [{ className, headers, rows }] as ExportTableGroup[];
+                })()}
+                trigger={
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    تصدير / طباعة
+                  </Button>
+                }
+              />
               <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                  <Save className="h-4 w-4 ml-2" />
                  {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
