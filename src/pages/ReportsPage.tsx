@@ -282,14 +282,14 @@ export default function ReportsPage() {
 
   const exportAttendancePDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-    const doc = await createArabicPDF({ orientation: "landscape" });
+    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(16);
-    doc.text("تقرير الحضور", pageWidth / 2, 15, { align: "center" });
+    doc.text("تقرير الحضور", pageWidth / 2, startY, { align: "center" });
     doc.setFontSize(10);
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, 24, { align: "center" });
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
 
     const tableData = attendanceData.map((r) => [
       r.notes || "",
@@ -299,7 +299,7 @@ export default function ReportsPage() {
     ]);
 
     (doc as any).autoTable({
-      startY: 32,
+      startY: startY + 12,
       head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
       body: tableData,
       ...tableStyles,
@@ -311,12 +311,12 @@ export default function ReportsPage() {
 
   const exportGradesPDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-    const doc = await createArabicPDF({ orientation: "landscape" });
+    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(16);
-    doc.text("تقرير الدرجات", pageWidth / 2, 15, { align: "center" });
+    doc.text("تقرير الدرجات", pageWidth / 2, startY, { align: "center" });
 
     const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب"];
     const body = gradeData.map((r) => [
@@ -326,7 +326,7 @@ export default function ReportsPage() {
     ]);
 
     (doc as any).autoTable({
-      startY: 25,
+      startY: startY + 6,
       head: [head],
       body,
       ...tableStyles,

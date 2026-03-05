@@ -121,17 +121,17 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
   const exportPDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-    const doc = await createArabicPDF({ orientation: "landscape" });
+    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "behavior", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(16);
-    doc.text("تقرير السلوك", pageWidth / 2, 15, { align: "center" });
+    doc.text("تقرير السلوك", pageWidth / 2, startY, { align: "center" });
     doc.setFontSize(10);
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, 24, { align: "center" });
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
 
     (doc as any).autoTable({
-      startY: 32,
+      startY: startY + 12,
       head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب"]],
       body: data.map((r) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name]),
       ...tableStyles,
