@@ -376,7 +376,7 @@ export default function ReportsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
         <div>
-          <h1 className="text-2xl font-bold">التقارير والإحصائيات</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">التقارير والإحصائيات</h1>
           <p className="text-muted-foreground">تقارير يومية وفترية للحضور والدرجات مع إمكانية التصدير</p>
         </div>
         <div className="flex items-center gap-2">
@@ -407,11 +407,11 @@ export default function ReportsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="shadow-card print:hidden">
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 print:hidden">
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1.5 min-w-[180px]">
-              <Label className="text-xs">الفصل</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">الفصل</Label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger>
                   <SelectValue placeholder="اختر الفصل" />
@@ -426,7 +426,7 @@ export default function ReportsPage() {
               </Select>
             </div>
             <div className="space-y-1.5 min-w-[180px]">
-              <Label className="text-xs">الطالب</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">الطالب</Label>
               <Select value={selectedStudent} onValueChange={setSelectedStudent}>
                 <SelectTrigger>
                   <SelectValue placeholder="جميع الطلاب" />
@@ -442,7 +442,7 @@ export default function ReportsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">نوع التقرير</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">نوع التقرير</Label>
               <Select value={reportType} onValueChange={(v: "daily" | "periodic") => {
                 setReportType(v);
                 if (v === "daily") {
@@ -459,7 +459,7 @@ export default function ReportsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
               <Input
                 type="date"
                 value={dateFrom}
@@ -472,7 +472,7 @@ export default function ReportsPage() {
             </div>
             {reportType === "periodic" && (
               <div className="space-y-1.5">
-                <Label className="text-xs">إلى تاريخ</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">إلى تاريخ</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -528,27 +528,39 @@ export default function ReportsPage() {
               <ReportPrintHeader reportType="attendance" />
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <Card>
+                <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold">{attendanceSummary.total}</p>
+                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">
+                      <UserCircle className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <p className="text-2xl font-bold text-foreground">{attendanceSummary.total}</p>
                     <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 shadow-md bg-gradient-to-br from-success/5 via-card to-success/10 dark:from-success/10 dark:via-card dark:to-success/5">
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-green-600">{attendanceSummary.present}</p>
+                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.7))", boxShadow: "0 4px 12px hsl(var(--success) / 0.2)" }}>
+                      <ClipboardCheck className="h-5 w-5 text-success-foreground" />
+                    </div>
+                    <p className="text-2xl font-bold" style={{ color: "hsl(var(--success))" }}>{attendanceSummary.present}</p>
                     <p className="text-xs text-muted-foreground">حاضر</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 shadow-md bg-gradient-to-br from-destructive/5 via-card to-destructive/10 dark:from-destructive/10 dark:via-card dark:to-destructive/5">
                   <CardContent className="p-4 text-center">
+                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl bg-gradient-to-br from-destructive to-destructive/70 flex items-center justify-center shadow-md shadow-destructive/20">
+                      <Users className="h-5 w-5 text-destructive-foreground" />
+                    </div>
                     <p className="text-2xl font-bold text-destructive">{attendanceSummary.absent}</p>
                     <p className="text-xs text-muted-foreground">غائب</p>
                   </CardContent>
                 </Card>
-                <Card>
+                <Card className="border-0 shadow-md bg-gradient-to-br from-warning/5 via-card to-warning/10 dark:from-warning/10 dark:via-card dark:to-warning/5">
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-yellow-600">{attendanceSummary.late}</p>
+                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--warning)), hsl(var(--warning) / 0.7))", boxShadow: "0 4px 12px hsl(var(--warning) / 0.2)" }}>
+                      <Calendar className="h-5 w-5 text-warning-foreground" />
+                    </div>
+                    <p className="text-2xl font-bold" style={{ color: "hsl(var(--warning))" }}>{attendanceSummary.late}</p>
                     <p className="text-xs text-muted-foreground">متأخر</p>
                   </CardContent>
                 </Card>
@@ -558,32 +570,33 @@ export default function ReportsPage() {
               <AttendanceChart data={attendanceData} />
 
               {/* Data Table */}
-              <Card className="shadow-card">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
                 <CardContent className="pt-4">
-                  <div className="max-h-[400px] overflow-auto">
+                  <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
                     <Table>
                       <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-right">اسم الطالب</TableHead>
-                          <TableHead className="text-right">التاريخ</TableHead>
-                          <TableHead className="text-right">الحالة</TableHead>
-                          <TableHead className="text-right">ملاحظات</TableHead>
+                        <TableRow className="bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
+                          <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
+                          <TableHead className="text-right font-semibold">التاريخ</TableHead>
+                          <TableHead className="text-right font-semibold">الحالة</TableHead>
+                          <TableHead className="text-right font-semibold">ملاحظات</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {attendanceData.map((row, i) => (
-                          <TableRow key={i}>
+                          <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
                             <TableCell className="font-medium">{row.student_name}</TableCell>
-                            <TableCell>{row.date}</TableCell>
+                            <TableCell className="text-muted-foreground">{row.date}</TableCell>
                             <TableCell>
                               <Badge
-                                variant={
+                                className={
                                   row.status === "present"
-                                    ? "default"
+                                    ? "bg-success/15 text-success hover:bg-success/20 border-0"
                                     : row.status === "absent"
-                                    ? "destructive"
-                                    : "secondary"
+                                    ? "bg-destructive/15 text-destructive hover:bg-destructive/20 border-0"
+                                    : "bg-warning/15 hover:bg-warning/20 border-0"
                                 }
+                                style={row.status !== "present" && row.status !== "absent" ? { color: "hsl(var(--warning))" } : undefined}
                               >
                                 {STATUS_LABELS[row.status] || row.status}
                               </Badge>
@@ -602,9 +615,11 @@ export default function ReportsPage() {
           )}
 
           {!loadingAttendance && attendanceData.length === 0 && (
-            <Card className="print:hidden">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Calendar className="h-12 w-12 mb-3 opacity-30" />
+            <Card className="print:hidden border-0 shadow-lg bg-card/80">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 p-4 mb-4">
+                  <Calendar className="h-10 w-10 text-primary/40" />
+                </div>
                 <p className="text-sm">اختر الفصل والتواريخ ثم اضغط "عرض التقرير"</p>
               </CardContent>
             </Card>
@@ -639,31 +654,35 @@ export default function ReportsPage() {
               {/* Grades Chart */}
               <GradesChart data={gradeData} categoryNames={categoryNames} />
 
-              <Card className="shadow-card">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardContent className="pt-4">
-                <div className="max-h-[400px] overflow-auto">
+                <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-right">اسم الطالب</TableHead>
+                      <TableRow className="bg-gradient-to-l from-success/5 to-primary/5 dark:from-success/10 dark:to-primary/10">
+                        <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
                         {categoryNames.map((name) => (
-                          <TableHead key={name} className="text-center">
+                          <TableHead key={name} className="text-center font-semibold">
                             {name}
                           </TableHead>
                         ))}
-                        <TableHead className="text-center">المجموع</TableHead>
+                        <TableHead className="text-center font-semibold">المجموع</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {gradeData.map((row, i) => (
-                        <TableRow key={i}>
+                        <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
                           <TableCell className="font-medium">{row.student_name}</TableCell>
                           {categoryNames.map((name) => (
-                            <TableCell key={name} className="text-center">
+                            <TableCell key={name} className="text-center text-muted-foreground">
                               {row.categories[name] !== null ? row.categories[name] : "—"}
                             </TableCell>
                           ))}
-                          <TableCell className="text-center font-bold">{row.total}</TableCell>
+                          <TableCell className="text-center">
+                            <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-0 font-bold">
+                              {row.total}
+                            </Badge>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -675,9 +694,11 @@ export default function ReportsPage() {
           )}
 
           {!loadingGrades && gradeData.length === 0 && (
-            <Card className="print:hidden">
-              <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                <Users className="h-12 w-12 mb-3 opacity-30" />
+            <Card className="print:hidden border-0 shadow-lg bg-card/80">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <div className="rounded-2xl bg-gradient-to-br from-success/10 to-primary/10 p-4 mb-4">
+                  <Users className="h-10 w-10 text-success/40" />
+                </div>
                 <p className="text-sm">اختر الفصل ثم اضغط "عرض التقرير"</p>
               </CardContent>
             </Card>
@@ -700,39 +721,39 @@ export default function ReportsPage() {
         {previewType === "attendance" && attendanceData.length > 0 && (
           <>
             <div className="grid grid-cols-4 gap-3">
-              <div className="border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold">{attendanceSummary.total}</p>
-                <p className="text-xs text-gray-500">إجمالي السجلات</p>
+              <div className="border border-border/30 rounded-xl p-3 text-center bg-muted/20">
+                <p className="text-xl font-bold text-foreground">{attendanceSummary.total}</p>
+                <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
               </div>
-              <div className="border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold" style={{ color: "#16a34a" }}>{attendanceSummary.present}</p>
-                <p className="text-xs text-gray-500">حاضر</p>
+              <div className="border border-border/30 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--success) / 0.08)" }}>
+                <p className="text-xl font-bold" style={{ color: "hsl(var(--success))" }}>{attendanceSummary.present}</p>
+                <p className="text-xs text-muted-foreground">حاضر</p>
               </div>
-              <div className="border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold" style={{ color: "#dc2626" }}>{attendanceSummary.absent}</p>
-                <p className="text-xs text-gray-500">غائب</p>
+              <div className="border border-border/30 rounded-xl p-3 text-center bg-destructive/5">
+                <p className="text-xl font-bold text-destructive">{attendanceSummary.absent}</p>
+                <p className="text-xs text-muted-foreground">غائب</p>
               </div>
-              <div className="border rounded-lg p-3 text-center">
-                <p className="text-xl font-bold" style={{ color: "#ca8a04" }}>{attendanceSummary.late}</p>
-                <p className="text-xs text-gray-500">متأخر</p>
+              <div className="border border-border/30 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--warning) / 0.08)" }}>
+                <p className="text-xl font-bold" style={{ color: "hsl(var(--warning))" }}>{attendanceSummary.late}</p>
+                <p className="text-xs text-muted-foreground">متأخر</p>
               </div>
             </div>
             <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
               <thead>
-                <tr className="border-b">
-                  <th className="text-right p-2">اسم الطالب</th>
-                  <th className="text-right p-2">التاريخ</th>
-                  <th className="text-right p-2">الحالة</th>
-                  <th className="text-right p-2">ملاحظات</th>
+                <tr className="border-b border-border">
+                  <th className="text-right p-2 font-semibold text-foreground">اسم الطالب</th>
+                  <th className="text-right p-2 font-semibold text-foreground">التاريخ</th>
+                  <th className="text-right p-2 font-semibold text-foreground">الحالة</th>
+                  <th className="text-right p-2 font-semibold text-foreground">ملاحظات</th>
                 </tr>
               </thead>
               <tbody>
                 {attendanceData.map((row, i) => (
-                  <tr key={i} className="border-b">
-                    <td className="p-2 font-medium">{row.student_name}</td>
-                    <td className="p-2">{row.date}</td>
-                    <td className="p-2">{STATUS_LABELS[row.status] || row.status}</td>
-                    <td className="p-2 text-gray-500">{row.notes || "—"}</td>
+                  <tr key={i} className="border-b border-border/50">
+                    <td className="p-2 font-medium text-foreground">{row.student_name}</td>
+                    <td className="p-2 text-muted-foreground">{row.date}</td>
+                    <td className="p-2 text-foreground">{STATUS_LABELS[row.status] || row.status}</td>
+                    <td className="p-2 text-muted-foreground">{row.notes || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -743,22 +764,22 @@ export default function ReportsPage() {
         {previewType === "grades" && gradeData.length > 0 && (
           <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
             <thead>
-              <tr className="border-b">
-                <th className="text-right p-2">اسم الطالب</th>
+              <tr className="border-b border-border">
+                <th className="text-right p-2 font-semibold text-foreground">اسم الطالب</th>
                 {categoryNames.map((name) => (
-                  <th key={name} className="text-center p-2">{name}</th>
+                  <th key={name} className="text-center p-2 font-semibold text-foreground">{name}</th>
                 ))}
-                <th className="text-center p-2">المجموع</th>
+                <th className="text-center p-2 font-semibold text-foreground">المجموع</th>
               </tr>
             </thead>
             <tbody>
               {gradeData.map((row, i) => (
-                <tr key={i} className="border-b">
-                  <td className="p-2 font-medium">{row.student_name}</td>
+                <tr key={i} className="border-b border-border/50">
+                  <td className="p-2 font-medium text-foreground">{row.student_name}</td>
                   {categoryNames.map((name) => (
-                    <td key={name} className="text-center p-2">{row.categories[name] ?? "—"}</td>
+                    <td key={name} className="text-center p-2 text-muted-foreground">{row.categories[name] ?? "—"}</td>
                   ))}
-                  <td className="text-center p-2 font-bold">{row.total}</td>
+                  <td className="text-center p-2 font-bold text-primary">{row.total}</td>
                 </tr>
               ))}
             </tbody>
