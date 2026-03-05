@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
-import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
+import GradesExportDialog, { ExportTableGroup, ExportExtraSheet } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 
@@ -184,6 +184,48 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
               });
               return { className: group.name, headers, rows } as ExportTableGroup;
             })}
+            extraSheets={(() => {
+              const sheets: ExportExtraSheet[] = [];
+              // Grade distribution stats per class
+              const statsData: Record<string, string | number>[] = [];
+              grouped.forEach((group) => {
+                const counts = { "ممتاز": 0, "جيد جداً": 0, "جيد": 0, "مقبول": 0, "ضعيف": 0 };
+                group.students.forEach((sg) => {
+                  const pct = getPercentage(sg.grandTotal, sg.grandMax);
+                  const grade = getGradeLabel(pct);
+                  counts[grade.label as keyof typeof counts]++;
+                });
+                statsData.push({
+                  "الفصل": group.name,
+                  "عدد الطلاب": group.students.length,
+                  "ممتاز": counts["ممتاز"],
+                  "جيد جداً": counts["جيد جداً"],
+                  "جيد": counts["جيد"],
+                  "مقبول": counts["مقبول"],
+                  "ضعيف": counts["ضعيف"],
+                  "نسبة الممتاز %": group.students.length > 0 ? Math.round((counts["ممتاز"] / group.students.length) * 100) : 0,
+                  "نسبة النجاح %": group.students.length > 0 ? Math.round(((group.students.length - counts["ضعيف"]) / group.students.length) * 100) : 0,
+                });
+              });
+              sheets.push({ name: "إحصائيات التقديرات", data: statsData });
+
+              // Per-student percentages for charting
+              const chartData: Record<string, string | number>[] = [];
+              grouped.forEach((group) => {
+                group.students.forEach((sg) => {
+                  const pct = getPercentage(sg.grandTotal, sg.grandMax);
+                  chartData.push({
+                    "الفصل": group.name,
+                    "الطالب": sg.full_name,
+                    "النسبة المئوية": pct,
+                    "التقدير": getGradeLabel(pct).label,
+                  });
+                });
+              });
+              sheets.push({ name: "بيانات الرسم البياني", data: chartData });
+
+              return sheets;
+            })()}
           />
         </div>
       )}
