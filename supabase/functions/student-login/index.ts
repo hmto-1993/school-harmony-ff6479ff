@@ -38,6 +38,12 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Log student login
+    await supabase.from("student_logins").insert({
+      student_id: student.id,
+      class_id: student.class_id,
+    });
+
     // Fetch student's class info
     let className = null;
     if (student.class_id) {
