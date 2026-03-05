@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
 // ============ Types ============
 
@@ -520,6 +521,7 @@ export default function ReportsPage() {
 
           {attendanceData.length > 0 && (
             <div className="print-area space-y-4">
+              <ReportPrintHeader reportType="attendance" />
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Card>
@@ -628,6 +630,7 @@ export default function ReportsPage() {
 
           {gradeData.length > 0 && (
             <div className="print-area space-y-4">
+              <ReportPrintHeader reportType="grades" />
               {/* Grades Chart */}
               <GradesChart data={gradeData} categoryNames={categoryNames} />
 

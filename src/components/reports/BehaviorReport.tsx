@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -158,6 +159,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
       {data.length > 0 && (
         <div className="print-area space-y-4">
+          <ReportPrintHeader reportType="behavior" />
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card>

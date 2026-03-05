@@ -68,10 +68,18 @@ const defaultConfig: PrintHeaderConfig = {
   },
 };
 
-interface ClassOption {
+interface ReportTypeOption {
   id: string;
-  name: string;
+  label: string;
+  icon: string;
 }
+
+const reportTypes: ReportTypeOption[] = [
+  { id: "__default__", label: "الترويسة الافتراضية (عامة)", icon: "📄" },
+  { id: "attendance", label: "تقرير الحضور والغياب", icon: "📋" },
+  { id: "grades", label: "تقرير الدرجات", icon: "📊" },
+  { id: "behavior", label: "تقرير السلوك", icon: "⭐" },
+];
 
 export default function PrintHeaderEditor() {
   const [config, setConfig] = useState<PrintHeaderConfig>(defaultConfig);
@@ -81,30 +89,21 @@ export default function PrintHeaderEditor() {
   const previewRef = useRef<HTMLDivElement>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
-  // Class-specific headers
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string>("__default__");
+  // Report-type headers
+  const [selectedReportType, setSelectedReportType] = useState<string>("__default__");
   const [loadingConfig, setLoadingConfig] = useState(false);
 
-  // Fetch classes on mount
+  // Load config when selectedReportType changes
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("classes").select("id, name").order("name");
-      setClasses(data || []);
-    })();
-  }, []);
+    loadConfig(selectedReportType);
+  }, [selectedReportType]);
 
-  // Load config when selectedClassId changes
-  useEffect(() => {
-    loadConfig(selectedClassId);
-  }, [selectedClassId]);
+  const getSettingKey = (reportType: string) =>
+    reportType === "__default__" ? "print_header_config" : `print_header_config_${reportType}`;
 
-  const getSettingKey = (classId: string) =>
-    classId === "__default__" ? "print_header_config" : `print_header_config_${classId}`;
-
-  const loadConfig = async (classId: string) => {
+  const loadConfig = async (reportType: string) => {
     setLoadingConfig(true);
-    const key = getSettingKey(classId);
+    const key = getSettingKey(reportType);
     const { data } = await supabase
       .from("site_settings")
       .select("value")
@@ -121,7 +120,7 @@ export default function PrintHeaderEditor() {
       } catch {
         setConfig(defaultConfig);
       }
-    } else if (classId !== "__default__") {
+    } else if (reportType !== "__default__") {
       // If no class-specific config, load default as base
       const { data: defData } = await supabase
         .from("site_settings")
@@ -148,7 +147,7 @@ export default function PrintHeaderEditor() {
 
   const handleSave = async () => {
     setSaving(true);
-    const key = getSettingKey(selectedClassId);
+    const key = getSettingKey(selectedReportType);
     const value = JSON.stringify(config);
 
     // Upsert: try update first, if no rows affected, insert
@@ -169,8 +168,8 @@ export default function PrintHeaderEditor() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      const label = selectedClassId === "__default__" ? "الافتراضية" : classes.find(c => c.id === selectedClassId)?.name || "";
-      toast({ title: "تم الحفظ", description: `تم حفظ ترويسة ${label}` });
+      const rt = reportTypes.find(r => r.id === selectedReportType);
+      toast({ title: "تم الحفظ", description: `تم حفظ ترويسة ${rt?.label || ""}` });
     }
   };
 
@@ -197,7 +196,7 @@ export default function PrintHeaderEditor() {
     try {
       const dataUrl = await toPng(previewRef.current, { backgroundColor: "#ffffff", pixelRatio: 3 });
       const link = document.createElement("a");
-      link.download = `print-header${selectedClassId !== "__default__" ? `-${selectedClassId.slice(0, 8)}` : ""}.png`;
+      link.download = `print-header${selectedReportType !== "__default__" ? `-${selectedReportType}` : ""}.png`;
       link.href = dataUrl;
       link.click();
       toast({ title: "تم التصدير", description: "تم تحميل صورة الترويسة بنجاح" });
@@ -398,21 +397,22 @@ export default function PrintHeaderEditor() {
 
   return (
     <div className="space-y-6">
-      {/* Class selector */}
+      {/* Report type selector */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Label className="text-sm font-semibold whitespace-nowrap">ترويسة الفصل:</Label>
-        <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-          <SelectTrigger className="w-56">
-            <SelectValue placeholder="اختر الفصل" />
+        <Label className="text-sm font-semibold whitespace-nowrap">نوع التقرير:</Label>
+        <Select value={selectedReportType} onValueChange={setSelectedReportType}>
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="اختر نوع التقرير" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__default__">الترويسة الافتراضية (لجميع الفصول)</SelectItem>
-            {classes.map((cls) => (
-              <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+            {reportTypes.map((rt) => (
+              <SelectItem key={rt.id} value={rt.id}>
+                <span className="flex items-center gap-2">{rt.icon} {rt.label}</span>
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
-        {selectedClassId !== "__default__" && (
+        {selectedReportType !== "__default__" && (
           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleCopyFromDefault}>
             <Copy className="h-3.5 w-3.5" />
             نسخ من الافتراضية
