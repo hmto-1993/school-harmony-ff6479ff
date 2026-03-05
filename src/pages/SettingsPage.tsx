@@ -651,7 +651,7 @@ export default function SettingsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">الإعدادات</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">الإعدادات</h1>
           <p className="text-muted-foreground">
             {isAdmin ? "إدارة الفصول وفئات التقييم" : "عرض إحصائيات الفصول والتقييمات"}
           </p>
@@ -690,7 +690,7 @@ export default function SettingsPage() {
 
         {/* ===== الفصول ===== */}
         <TabsContent value="classes">
-          <Card className="shadow-card">
+           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-lg">الفصول الدراسية ({classes.length})</CardTitle>
               {isAdmin && (
@@ -904,7 +904,7 @@ export default function SettingsPage() {
 
         {/* ===== فئات التقييم ===== */}
         <TabsContent value="categories">
-          <Card className="shadow-card">
+           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
             <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
               <CardTitle className="text-lg">فئات التقييم</CardTitle>
               {isAdmin && (
@@ -1114,7 +1114,7 @@ export default function SettingsPage() {
         {/* ===== إضافة معلم ===== */}
         {isAdmin && (
           <TabsContent value="new-teacher">
-            <Card className="shadow-card">
+             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader>
                 <CardTitle className="text-lg">إضافة معلم جديد</CardTitle>
               </CardHeader>
@@ -1187,7 +1187,7 @@ export default function SettingsPage() {
         {/* ===== ورقة الطباعة ===== */}
         {isAdmin && (
           <TabsContent value="letterhead">
-            <Card className="shadow-card">
+             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader>
                 <CardTitle className="text-lg">ورقة الطباعة (الترويسة)</CardTitle>
               </CardHeader>
@@ -1203,7 +1203,7 @@ export default function SettingsPage() {
       <div className="space-y-6 mt-8">
         {/* ===== الملف الشخصي ===== */}
         <Collapsible defaultOpen>
-          <Card className="shadow-card">
+           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
                 <CardTitle className="text-lg flex items-center justify-between">
@@ -1304,7 +1304,7 @@ export default function SettingsPage() {
           <>
             {/* ===== كلمات المرور ===== */}
             <Collapsible>
-              <Card className="shadow-card">
+               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
                     <CardTitle className="text-lg flex items-center justify-between">
@@ -1358,7 +1358,7 @@ export default function SettingsPage() {
 
             {/* ===== مزود SMS ===== */}
             <Collapsible>
-              <Card className="shadow-card">
+               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
                     <CardTitle className="text-lg flex items-center justify-between">
@@ -1463,7 +1463,7 @@ export default function SettingsPage() {
 
             {/* ===== صفحة الدخول ===== */}
             <Collapsible>
-              <Card className="shadow-card">
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
                 <CollapsibleTrigger asChild>
                   <CardHeader className="cursor-pointer select-none hover:bg-muted/50 transition-colors rounded-t-lg">
                     <CardTitle className="text-lg flex items-center justify-between">
