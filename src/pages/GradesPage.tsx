@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import BehaviorEntry from "@/components/grades/BehaviorEntry";
@@ -8,26 +8,52 @@ import SemesterSummary from "@/components/grades/SemesterSummary";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
 
+const CLASS_COLORS = [
+  "from-blue-500 to-cyan-400",
+  "from-violet-500 to-purple-400",
+  "from-emerald-500 to-teal-400",
+  "from-rose-500 to-pink-400",
+  "from-amber-500 to-orange-400",
+  "from-indigo-500 to-blue-400",
+  "from-fuchsia-500 to-pink-400",
+  "from-sky-500 to-cyan-400",
+  "from-lime-500 to-green-400",
+  "from-red-500 to-rose-400",
+];
+
 const ENTRY_TYPES = [
-  { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "from-blue-500 to-blue-600" },
-  { id: "behavior", label: "السلوك", icon: UserCheck, color: "from-emerald-500 to-emerald-600" },
-  { id: "summary", label: "التقييم النهائي", icon: BarChart3, color: "from-violet-500 to-violet-600" },
-  { id: "semester", label: "ملخص الفصل", icon: BookOpen, color: "from-amber-500 to-amber-600" },
+  { id: "daily", label: "إدخال يومي", icon: ClipboardList, gradient: "from-blue-500 to-indigo-500", bgActive: "bg-blue-50 dark:bg-blue-500/15", borderActive: "border-blue-400 dark:border-blue-500/50" },
+  { id: "behavior", label: "السلوك", icon: UserCheck, gradient: "from-emerald-500 to-teal-500", bgActive: "bg-emerald-50 dark:bg-emerald-500/15", borderActive: "border-emerald-400 dark:border-emerald-500/50" },
+  { id: "summary", label: "التقييم النهائي", icon: BarChart3, gradient: "from-violet-500 to-purple-500", bgActive: "bg-violet-50 dark:bg-violet-500/15", borderActive: "border-violet-400 dark:border-violet-500/50" },
+  { id: "semester", label: "ملخص الفصل", icon: BookOpen, gradient: "from-amber-500 to-orange-500", bgActive: "bg-amber-50 dark:bg-amber-500/15", borderActive: "border-amber-400 dark:border-amber-500/50" },
 ] as const;
 
 const PERIODS = [
-  { id: 1, label: "الفترة الأولى" },
-  { id: 2, label: "الفترة الثانية" },
+  { id: 1, label: "الفترة الأولى", gradient: "from-sky-500 to-blue-500", bgActive: "bg-sky-50 dark:bg-sky-500/15", borderActive: "border-sky-400 dark:border-sky-500/50" },
+  { id: 2, label: "الفترة الثانية", gradient: "from-orange-500 to-red-500", bgActive: "bg-orange-50 dark:bg-orange-500/15", borderActive: "border-orange-400 dark:border-orange-500/50" },
 ];
 
 export default function GradesPage() {
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
   useEffect(() => {
-    supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    const load = async () => {
+      const [{ data: cls }, { data: students }] = await Promise.all([
+        supabase.from("classes").select("id, name").order("name"),
+        supabase.from("students").select("id, class_id"),
+      ]);
+      setClasses(cls || []);
+      const counts: Record<string, number> = {};
+      (students || []).forEach((s) => {
+        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
+      });
+      setClassCounts(counts);
+    };
+    load();
   }, []);
 
   const showPeriodSelector = activeType === "daily" || activeType === "summary";
@@ -47,35 +73,61 @@ export default function GradesPage() {
 
       {/* Class Cards */}
       <div>
-        <h3 className="text-sm font-semibold text-muted-foreground mb-2">اختر الفصل</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-          {classes.map((cls) => (
-            <button
-              key={cls.id}
-              onClick={() => setSelectedClass(cls.id)}
-              className={cn(
-                "relative p-3 rounded-xl border-2 text-center transition-all duration-200 hover:scale-[1.02]",
-                selectedClass === cls.id
-                  ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-md shadow-primary/20"
-                  : "border-border/50 bg-card hover:border-primary/40 hover:shadow-sm"
-              )}
-            >
-              <span className={cn(
-                "text-sm font-bold",
-                selectedClass === cls.id ? "text-primary" : "text-foreground"
-              )}>
-                {cls.name}
-              </span>
-            </button>
-          ))}
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3">اختر الفصل</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+          {classes.map((cls, i) => {
+            const isActive = selectedClass === cls.id;
+            const colorIdx = i % CLASS_COLORS.length;
+            const count = classCounts[cls.id] || 0;
+            return (
+              <button
+                key={cls.id}
+                onClick={() => setSelectedClass(cls.id)}
+                className={cn(
+                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-200 hover:scale-[1.03] hover:shadow-lg group",
+                  isActive
+                    ? "border-transparent shadow-lg"
+                    : "border-border/40 bg-card hover:border-border"
+                )}
+              >
+                {/* Gradient background when active */}
+                {isActive && (
+                  <div className={cn("absolute inset-0 rounded-2xl bg-gradient-to-br opacity-10 dark:opacity-20", CLASS_COLORS[colorIdx])} />
+                )}
+                {/* Top accent bar */}
+                <div className={cn(
+                  "absolute top-0 left-1/2 -translate-x-1/2 h-1 rounded-b-full transition-all duration-300",
+                  isActive ? "w-2/3 bg-gradient-to-r" : "w-0 bg-gradient-to-r",
+                  CLASS_COLORS[colorIdx]
+                )} />
+                <div className="relative">
+                  <span className={cn(
+                    "text-base font-bold block",
+                    isActive
+                      ? "bg-gradient-to-r bg-clip-text text-transparent " + CLASS_COLORS[colorIdx]
+                      : "text-foreground"
+                  )}>
+                    {cls.name}
+                  </span>
+                  <div className={cn(
+                    "flex items-center justify-center gap-1 mt-1.5",
+                    isActive ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    <Users className="h-3 w-3" />
+                    <span className="text-[11px] font-medium">{count} طالب</span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Entry Type Cards */}
       {selectedClass && (
         <div className="animate-fade-in">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-2">نوع الإدخال</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {ENTRY_TYPES.map((type) => {
               const Icon = type.icon;
               const isActive = activeType === type.id;
@@ -84,21 +136,23 @@ export default function GradesPage() {
                   key={type.id}
                   onClick={() => setActiveType(type.id)}
                   className={cn(
-                    "relative flex items-center gap-2.5 p-3 rounded-xl border-2 transition-all duration-200 hover:scale-[1.02]",
+                    "relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-200 hover:scale-[1.03] hover:shadow-lg",
                     isActive
-                      ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-md shadow-primary/20"
-                      : "border-border/50 bg-card hover:border-primary/40 hover:shadow-sm"
+                      ? cn(type.bgActive, type.borderActive, "shadow-md")
+                      : "border-border/40 bg-card hover:border-border"
                   )}
                 >
                   <div className={cn(
-                    "flex items-center justify-center h-9 w-9 rounded-lg text-white bg-gradient-to-br",
-                    type.color
+                    "flex items-center justify-center h-11 w-11 rounded-xl text-white bg-gradient-to-br shadow-md",
+                    type.gradient
                   )}>
-                    <Icon className="h-4.5 w-4.5" />
+                    <Icon className="h-5 w-5" />
                   </div>
                   <span className={cn(
                     "text-sm font-bold",
-                    isActive ? "text-primary" : "text-foreground"
+                    isActive
+                      ? "bg-gradient-to-r bg-clip-text text-transparent " + type.gradient
+                      : "text-foreground"
                   )}>
                     {type.label}
                   </span>
@@ -112,8 +166,8 @@ export default function GradesPage() {
       {/* Period Cards */}
       {selectedClass && showPeriodSelector && (
         <div className="animate-fade-in">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-2">الفترة</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-md">
+          <h3 className="text-sm font-semibold text-muted-foreground mb-3">الفترة</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg">
             {PERIODS.map((period) => {
               const isActive = selectedPeriod === period.id;
               return (
@@ -121,15 +175,20 @@ export default function GradesPage() {
                   key={period.id}
                   onClick={() => setSelectedPeriod(period.id)}
                   className={cn(
-                    "p-3 rounded-xl border-2 text-center transition-all duration-200 hover:scale-[1.02]",
+                    "relative p-4 rounded-2xl border-2 text-center transition-all duration-200 hover:scale-[1.03] hover:shadow-lg",
                     isActive
-                      ? "border-primary bg-primary/10 dark:bg-primary/20 shadow-md shadow-primary/20"
-                      : "border-border/50 bg-card hover:border-primary/40 hover:shadow-sm"
+                      ? cn(period.bgActive, period.borderActive, "shadow-md")
+                      : "border-border/40 bg-card hover:border-border"
                   )}
                 >
+                  {isActive && (
+                    <div className={cn("absolute inset-0 rounded-2xl bg-gradient-to-br opacity-10 dark:opacity-15", period.gradient)} />
+                  )}
                   <span className={cn(
-                    "text-sm font-bold",
-                    isActive ? "text-primary" : "text-foreground"
+                    "relative text-sm font-bold",
+                    isActive
+                      ? "bg-gradient-to-r bg-clip-text text-transparent " + period.gradient
+                      : "text-foreground"
                   )}>
                     {period.label}
                   </span>
