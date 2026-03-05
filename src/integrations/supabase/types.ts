@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_class_targets: {
+        Row: {
+          activity_id: string
+          allow_student_uploads: boolean
+          class_id: string
+          id: string
+        }
+        Insert: {
+          activity_id: string
+          allow_student_uploads?: boolean
+          class_id: string
+          id?: string
+        }
+        Update: {
+          activity_id?: string
+          allow_student_uploads?: boolean
+          class_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_class_targets_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_class_targets_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_records: {
         Row: {
           class_id: string
@@ -300,6 +336,95 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_questions: {
+        Row: {
+          activity_id: string
+          correct_answer: number
+          created_at: string
+          id: string
+          image_url: string | null
+          options: Json
+          question_text: string
+          question_type: string
+          sort_order: number
+        }
+        Insert: {
+          activity_id: string
+          correct_answer?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          options?: Json
+          question_text: string
+          question_type?: string
+          sort_order?: number
+        }
+        Update: {
+          activity_id?: string
+          correct_answer?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          options?: Json
+          question_text?: string
+          question_type?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_submissions: {
+        Row: {
+          activity_id: string
+          answers: Json
+          id: string
+          score: number | null
+          student_id: string
+          submitted_at: string
+          total: number | null
+        }
+        Insert: {
+          activity_id: string
+          answers?: Json
+          id?: string
+          score?: number | null
+          student_id: string
+          submitted_at?: string
+          total?: number | null
+        }
+        Update: {
+          activity_id?: string
+          answers?: Json
+          id?: string
+          score?: number | null
+          student_id?: string
+          submitted_at?: string
+          total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_submissions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quiz_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resource_files: {
         Row: {
           created_at: string
@@ -394,6 +519,61 @@ export type Database = {
         }
         Relationships: []
       }
+      student_file_submissions: {
+        Row: {
+          activity_id: string
+          class_id: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          student_id: string
+          submitted_at: string
+        }
+        Insert: {
+          activity_id: string
+          class_id: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          student_id: string
+          submitted_at?: string
+        }
+        Update: {
+          activity_id?: string
+          class_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          student_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_file_submissions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_file_submissions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_file_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_logins: {
         Row: {
           class_id: string | null
@@ -473,6 +653,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_activities: {
+        Row: {
+          allow_student_uploads: boolean
+          created_at: string
+          created_by: string
+          description: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          is_visible: boolean
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          allow_student_uploads?: boolean
+          created_at?: string
+          created_by: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_visible?: boolean
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          allow_student_uploads?: boolean
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          is_visible?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       teacher_classes: {
         Row: {

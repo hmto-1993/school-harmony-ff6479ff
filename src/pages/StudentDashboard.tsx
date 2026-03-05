@@ -11,8 +11,9 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, File, ArrowRight
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers
 } from "lucide-react";
+import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 
@@ -205,7 +206,7 @@ export default function StudentDashboard() {
 
         {/* Details Tabs */}
         <Tabs defaultValue="grades" dir="rtl">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="grades" className="gap-1">
               <GraduationCap className="h-4 w-4" />
               الدرجات
@@ -217,6 +218,10 @@ export default function StudentDashboard() {
             <TabsTrigger value="behavior" className="gap-1">
               <ShieldCheck className="h-4 w-4" />
               السلوك
+            </TabsTrigger>
+            <TabsTrigger value="activities" className="gap-1">
+              <Layers className="h-4 w-4" />
+              الأنشطة
             </TabsTrigger>
             <TabsTrigger value="library" className="gap-1">
               <BookOpen className="h-4 w-4" />
@@ -361,6 +366,10 @@ export default function StudentDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="activities">
+            <StudentActivitiesTab studentId={student.id} classId={student.class_id} />
           </TabsContent>
 
           <TabsContent value="library">

@@ -16,6 +16,7 @@ import {
   Sun,
   Moon,
   UserCheck,
+  Layers,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const adminLinks = [
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
+  { to: "/activities", label: "الأنشطة", icon: Layers },
   { to: "/student-logins", label: "دخول الطلاب", icon: UserCheck },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
@@ -42,6 +44,7 @@ const teacherLinks = [
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
+  { to: "/activities", label: "الأنشطة", icon: Layers },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
