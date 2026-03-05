@@ -113,9 +113,8 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير / طباعة">
             <Download className="h-4 w-4" />
-            تصدير / طباعة
           </Button>
         )}
       </DialogTrigger>
