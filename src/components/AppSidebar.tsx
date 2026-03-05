@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  UserCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ const adminLinks = [
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
+  { to: "/student-logins", label: "دخول الطلاب", icon: UserCheck },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
