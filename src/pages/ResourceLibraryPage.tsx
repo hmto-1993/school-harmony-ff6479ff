@@ -111,6 +111,7 @@ export default function ResourceLibraryPage() {
   const [folderFiles, setFolderFiles] = useState<ResourceFile[]>([]);
   const [filesLoading, setFilesLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   // Edit mode inside folder detail
   const [editing, setEditing] = useState(false);
@@ -235,11 +236,10 @@ export default function ResourceLibraryPage() {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length || !selectedFolder) return;
+  const uploadFiles = async (files: File[]) => {
+    if (!files.length || !selectedFolder) return;
     setUploading(true);
 
-    const files = Array.from(e.target.files);
     for (const file of files) {
       const filePath = `${selectedFolder.id}/${Date.now()}_${file.name}`;
       const { error: uploadError } = await supabase.storage.from("library").upload(filePath, file);
@@ -260,7 +260,32 @@ export default function ResourceLibraryPage() {
     toast({ title: `تم رفع ${files.length} ملف بنجاح` });
     openFolderDetail(selectedFolder);
     fetchFolders();
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    await uploadFiles(Array.from(e.target.files));
     e.target.value = "";
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    if (!e.dataTransfer.files?.length) return;
+    await uploadFiles(Array.from(e.dataTransfer.files));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -549,17 +574,27 @@ export default function ResourceLibraryPage() {
 
               {!editing && (
                 <>
-                  {/* Upload */}
-                  <div className="mt-4">
-                    <label className="flex items-center justify-center gap-2 border-2 border-dashed border-primary/30 rounded-xl p-4 cursor-pointer hover:bg-primary/5 transition-colors">
+                  {/* Upload with Drag & Drop */}
+                  <div
+                    className="mt-4"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                  >
+                    <label className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all ${
+                      dragging
+                        ? "border-primary bg-primary/10 scale-[1.02]"
+                        : "border-primary/30 hover:bg-primary/5"
+                    }`}>
                       {uploading ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       ) : (
-                        <Upload className="h-5 w-5 text-primary" />
+                        <Upload className={`h-6 w-6 text-primary transition-transform ${dragging ? "scale-125" : ""}`} />
                       )}
                       <span className="text-sm font-medium text-primary">
-                        {uploading ? "جاري الرفع..." : "رفع ملفات"}
+                        {uploading ? "جاري الرفع..." : dragging ? "أفلت الملفات هنا..." : "اسحب الملفات هنا أو اضغط للرفع"}
                       </span>
+                      <span className="text-[11px] text-muted-foreground">يمكنك سحب عدة ملفات دفعة واحدة</span>
                       <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
                     </label>
                   </div>
