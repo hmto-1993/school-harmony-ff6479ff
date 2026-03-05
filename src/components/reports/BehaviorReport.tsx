@@ -12,7 +12,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { BarChart3, FileSpreadsheet, FileDown, Heart } from "lucide-react";
+import { BarChart3, Heart } from "lucide-react";
+import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
 interface BehaviorRow {
   student_name: string;
@@ -146,14 +147,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           {loading ? "جارٍ التحميل..." : "عرض التقرير"}
         </Button>
       {data.length > 0 && (
-          <>
-            <Button variant="outline" size="sm" onClick={exportExcel} className="gap-1.5">
-              <FileSpreadsheet className="h-4 w-4" /> Excel
-            </Button>
-            <Button variant="outline" size="sm" onClick={exportPDF} className="gap-1.5">
-              <FileDown className="h-4 w-4" /> PDF
-            </Button>
-          </>
+            <ReportExportDialog
+              title="تصدير تقرير السلوك"
+              onExportExcel={exportExcel}
+              onExportPDF={exportPDF}
+            />
         )}
       </div>
 
