@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,10 +49,12 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
   const [editedGrades, setEditedGrades] = useState<Record<string, number | null>>({});
   const [saving, setSaving] = useState(false);
   const [searchName, setSearchName] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
 
   useEffect(() => {
     loadAllData();
-  }, []);
+  }, [selectedPeriod]);
 
   const loadAllData = async () => {
     setLoading(true);
@@ -68,14 +69,15 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
     const students = studentsData || [];
     const cats = (catsData || []) as CategoryInfo[];
 
-    // Fetch all grades
+    // Fetch grades for selected period
     const studentIds = students.map((s) => s.id);
     let allGrades: any[] = [];
     if (studentIds.length > 0) {
       const { data: gradesData } = await supabase
         .from("grades")
-        .select("id, student_id, category_id, score")
-        .in("student_id", studentIds);
+        .select("id, student_id, category_id, score, period")
+        .in("student_id", studentIds)
+        .eq("period", selectedPeriod);
       allGrades = gradesData || [];
     }
 
@@ -170,6 +172,7 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
             category_id: cat.id,
             score,
             recorded_by: user.id,
+            period: selectedPeriod,
           });
         }
       }
@@ -189,6 +192,11 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
     return matchesName && matchesClass;
   });
 
+  const getVisibleCategories = (classCats: CategoryInfo[]) => {
+    if (selectedCategoryFilter === "all") return classCats;
+    return classCats.filter((c) => c.id === selectedCategoryFilter);
+  };
+
   const groupedByClass = classes
     .map((cls) => ({
       ...cls,
@@ -197,16 +205,71 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
     }))
     .filter((g) => g.students.length > 0);
 
+  // Get unique categories for the filter (from selected class or all)
+  const filterCategories = selectedClass && selectedClass !== "all"
+    ? allCategories.filter((c) => c.class_id === selectedClass)
+    : allCategories.filter((c, i, arr) => arr.findIndex((x) => x.name === c.name) === i);
+
   if (loading) {
     return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
   }
 
-  if (groupedByClass.length === 0) {
-    return <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>;
-  }
-
   return (
     <div className="space-y-4">
+      {/* Period Tabs - Noor Style */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm font-semibold text-foreground">الفترة</span>
+        <Button
+          variant={selectedPeriod === 1 ? "default" : "outline"}
+          size="sm"
+          className={cn(
+            "rounded-full px-5 transition-all",
+            selectedPeriod === 1 && "shadow-md"
+          )}
+          onClick={() => setSelectedPeriod(1)}
+        >
+          فترة أولى
+        </Button>
+        <Button
+          variant={selectedPeriod === 2 ? "default" : "outline"}
+          size="sm"
+          className={cn(
+            "rounded-full px-5 transition-all",
+            selectedPeriod === 2 && "shadow-md"
+          )}
+          onClick={() => setSelectedPeriod(2)}
+        >
+          فترة ثانية
+        </Button>
+      </div>
+
+      {/* Category Filter - Noor Style */}
+      {filterCategories.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-foreground">الاختبار</span>
+          <Button
+            variant={selectedCategoryFilter === "all" ? "default" : "outline"}
+            size="sm"
+            className="rounded-full px-4"
+            onClick={() => setSelectedCategoryFilter("all")}
+          >
+            -- الكل --
+          </Button>
+          {filterCategories.map((cat) => (
+            <Button
+              key={cat.id}
+              variant={selectedCategoryFilter === cat.id ? "default" : "outline"}
+              size="sm"
+              className="rounded-full px-4"
+              onClick={() => setSelectedCategoryFilter(cat.id)}
+            >
+              {cat.name}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Search and Class Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -219,10 +282,10 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
         </div>
         <Select value={selectedClass || "all"} onValueChange={(v) => onClassChange(v === "all" ? "" : v)}>
           <SelectTrigger className="w-full sm:w-56">
-             <SelectValue placeholder="جميع الفصول" />
-           </SelectTrigger>
-           <SelectContent>
-             <SelectItem value="all">جميع الفصول</SelectItem>
+            <SelectValue placeholder="جميع الفصول" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الفصول</SelectItem>
             {classes.map((c) => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}
@@ -231,101 +294,111 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
       </div>
 
       {groupedByClass.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">لا توجد نتائج مطابقة</p>
-      ) : groupedByClass.map((group) => (
-        <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">{group.name}</CardTitle>
-              <Badge variant="secondary">{group.students.length} طالب</Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
-              <table className="w-full text-sm border-separate border-spacing-0">
-                <thead>
-                  <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
-                    {group.categories.map((cat) => (
-                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
-                        <div>{cat.name}</div>
-                        <div className="text-[10px] text-muted-foreground font-normal">
-                          من {Number(cat.max_score)}
-                        </div>
-                      </th>
-                    ))}
-                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">المجموع %</th>
-                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-[80px] last:rounded-tl-xl">تعديل</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.students.map((sg, i) => {
-                    const isEditing = editingStudent === sg.student_id;
-                    const isEven = i % 2 === 0;
-                    const isLast = i === group.students.length - 1;
-                    return (
-                      <tr
-                        key={sg.student_id}
-                        className={cn(
-                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          !isLast && "border-b border-border/20"
-                        )}
-                      >
-                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
-                        {group.categories.map((cat) => (
-                          <td key={cat.id} className="p-3 text-center border-l border-border/10">
+        <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
+      ) : groupedByClass.map((group) => {
+        const visibleCats = getVisibleCategories(group.categories);
+        return (
+          <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">{group.name}</CardTitle>
+                <Badge variant="secondary">{group.students.length} طالب</Badge>
+                <Badge variant="outline" className="text-xs">
+                  {selectedPeriod === 1 ? "فترة أولى" : "فترة ثانية"}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+                <table className="w-full text-sm border-separate border-spacing-0">
+                  <thead>
+                    <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
+                      {visibleCats.map((cat) => (
+                        <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
+                          <div>{cat.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-normal">
+                            من {Number(cat.max_score)}
+                          </div>
+                        </th>
+                      ))}
+                      {selectedCategoryFilter === "all" && (
+                        <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">المجموع</th>
+                      )}
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-[80px] last:rounded-tl-xl">تعديل</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.students.map((sg, i) => {
+                      const isEditing = editingStudent === sg.student_id;
+                      const isEven = i % 2 === 0;
+                      const isLast = i === group.students.length - 1;
+                      return (
+                        <tr
+                          key={sg.student_id}
+                          className={cn(
+                            isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                            !isLast && "border-b border-border/20"
+                          )}
+                        >
+                          <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                          <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
+                          {visibleCats.map((cat) => (
+                            <td key={cat.id} className="p-3 text-center border-l border-border/10">
+                              {isEditing ? (
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={Number(cat.max_score)}
+                                  value={editedGrades[cat.id] ?? ""}
+                                  onChange={(e) => handleEditGrade(cat.id, e.target.value)}
+                                  className="w-20 mx-auto text-center h-8"
+                                  dir="ltr"
+                                />
+                              ) : (
+                                <span className={sg.grades[cat.id] == null ? "text-muted-foreground" : ""}>
+                                  {sg.grades[cat.id] ?? "—"}
+                                </span>
+                              )}
+                            </td>
+                          ))}
+                          {selectedCategoryFilter === "all" && (
+                            <td className="p-3 text-center font-bold border-l border-border/10">
+                              {isEditing ? "..." : sg.total}
+                            </td>
+                          )}
+                          <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
                             {isEditing ? (
-                              <Input
-                                type="number"
-                                min={0}
-                                max={Number(cat.max_score)}
-                                value={editedGrades[cat.id] ?? ""}
-                                onChange={(e) => handleEditGrade(cat.id, e.target.value)}
-                                className="w-20 mx-auto text-center h-8"
-                                dir="ltr"
-                              />
+                              <div className="flex gap-1 justify-center">
+                                <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
+                                  <X className="h-4 w-4" />
+                                </Button>
+                                <Button size="sm" onClick={saveEdit} disabled={saving}>
+                                  <Save className="h-4 w-4" />
+                                </Button>
+                              </div>
                             ) : (
-                              <span className={sg.grades[cat.id] == null ? "text-muted-foreground" : ""}>
-                                {sg.grades[cat.id] ?? "—"}
-                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => startEdit(sg.student_id)}
+                                disabled={!!editingStudent}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
                             )}
                           </td>
-                        ))}
-                        <td className="p-3 text-center font-bold border-l border-border/10">
-                          {isEditing ? "..." : sg.total}
-                        </td>
-                        <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
-                          {isEditing ? (
-                            <div className="flex gap-1 justify-center">
-                              <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                              <Button size="sm" onClick={saveEdit} disabled={saving}>
-                                <Save className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEdit(sg.student_id)}
-                              disabled={!!editingStudent}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

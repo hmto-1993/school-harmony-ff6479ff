@@ -186,6 +186,7 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          period: number
           recorded_by: string
           score: number | null
           student_id: string
@@ -195,6 +196,7 @@ export type Database = {
           category_id: string
           created_at?: string
           id?: string
+          period?: number
           recorded_by: string
           score?: number | null
           student_id: string
@@ -204,6 +206,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           id?: string
+          period?: number
           recorded_by?: string
           score?: number | null
           student_id?: string

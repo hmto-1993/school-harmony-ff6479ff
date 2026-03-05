@@ -1,0 +1,1 @@
+ALTER TABLE public.grades ADD COLUMN period smallint NOT NULL DEFAULT 1;
