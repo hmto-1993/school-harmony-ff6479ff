@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, TrendingUp, Users, Award, BarChart3, Target } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Loader2, TrendingUp, Users, Award, BarChart3, Target, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 interface QuizStats {
   activityId: string;
@@ -21,6 +24,7 @@ interface QuizStats {
 export default function QuizStatistics() {
   const [stats, setStats] = useState<QuizStats[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -29,7 +33,6 @@ export default function QuizStatistics() {
   const fetchStats = async () => {
     setLoading(true);
 
-    // Get all quiz activities
     const { data: quizActivities } = await supabase
       .from("teacher_activities")
       .select("id, title")
@@ -40,20 +43,17 @@ export default function QuizStatistics() {
 
     const ids = quizActivities.map(a => a.id);
 
-    // Get all submissions and targets in parallel
     const [{ data: submissions }, { data: targets }] = await Promise.all([
       supabase.from("quiz_submissions").select("activity_id, score, total, student_id").in("activity_id", ids),
       supabase.from("activity_class_targets").select("activity_id, class_id").in("activity_id", ids),
     ]);
 
-    // Get unique class IDs to count students
     const classIds = [...new Set((targets || []).map(t => t.class_id))];
     const { data: students } = await supabase
       .from("students")
       .select("id, class_id")
       .in("class_id", classIds.length ? classIds : ["__none__"]);
 
-    // Build stats per quiz
     const result: QuizStats[] = quizActivities.map(activity => {
       const actSubs = (submissions || []).filter(s => s.activity_id === activity.id);
       const actTargets = (targets || []).filter(t => t.activity_id === activity.id);
@@ -99,6 +99,108 @@ export default function QuizStatistics() {
     setLoading(false);
   };
 
+  const exportExcel = async () => {
+    setExporting(true);
+    const XLSX = await import("xlsx");
+
+    // Summary sheet
+    const totalSubmissions = stats.reduce((a, s) => a + s.submittedCount, 0);
+    const overallAvg = totalSubmissions > 0
+      ? Math.round(stats.reduce((a, s) => a + s.averagePercent * s.submittedCount, 0) / totalSubmissions)
+      : 0;
+    const overallPass = totalSubmissions > 0
+      ? Math.round(stats.reduce((a, s) => a + s.passRate * s.submittedCount, 0) / totalSubmissions)
+      : 0;
+
+    const summaryRows = [
+      { "البيان": "عدد الاختبارات", "القيمة": stats.length },
+      { "البيان": "إجمالي التسليمات", "القيمة": totalSubmissions },
+      { "البيان": "المتوسط العام", "القيمة": `${overallAvg}%` },
+      { "البيان": "معدل النجاح العام", "القيمة": `${overallPass}%` },
+    ];
+
+    // Details sheet
+    const detailRows = stats.map((q, i) => ({
+      "#": i + 1,
+      "الاختبار": q.title,
+      "عدد الأسئلة": q.totalQuestions,
+      "عدد الطلاب": q.totalStudents,
+      "عدد التسليمات": q.submittedCount,
+      "نسبة التسليم": `${q.totalStudents > 0 ? Math.round((q.submittedCount / q.totalStudents) * 100) : 0}%`,
+      "المتوسط": `${q.averagePercent}%`,
+      "معدل النجاح": `${q.passRate}%`,
+      "أعلى درجة": `${q.highestScore}/${q.totalQuestions}`,
+      "أقل درجة": `${q.lowestScore}/${q.totalQuestions}`,
+      "متوسط الدرجة": `${q.averageScore}/${q.totalQuestions}`,
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "الملخص");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), "التفاصيل");
+    XLSX.writeFile(wb, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    setExporting(false);
+  };
+
+  const exportPDF = async () => {
+    setExporting(true);
+    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTable = (await import("jspdf-autotable")).default;
+
+    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+
+    // Title
+    doc.setFont("Amiri", "bold");
+    doc.setFontSize(16);
+    doc.text("إحصائيات الاختبارات", pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(10);
+    doc.setFont("Amiri", "normal");
+    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 7, { align: "center" });
+
+    // Summary row
+    const totalSubmissions = stats.reduce((a, s) => a + s.submittedCount, 0);
+    const overallAvg = totalSubmissions > 0
+      ? Math.round(stats.reduce((a, s) => a + s.averagePercent * s.submittedCount, 0) / totalSubmissions)
+      : 0;
+    const overallPass = totalSubmissions > 0
+      ? Math.round(stats.reduce((a, s) => a + s.passRate * s.submittedCount, 0) / totalSubmissions)
+      : 0;
+
+    doc.setFontSize(10);
+    doc.text(
+      `عدد الاختبارات: ${stats.length}  |  إجمالي التسليمات: ${totalSubmissions}  |  المتوسط العام: ${overallAvg}%  |  معدل النجاح: ${overallPass}%`,
+      pageWidth / 2, startY + 14, { align: "center" }
+    );
+
+    // Table
+    const headers = [["متوسط الدرجة", "أقل درجة", "أعلى درجة", "معدل النجاح", "المتوسط", "نسبة التسليم", "التسليمات", "الطلاب", "الأسئلة", "الاختبار", "#"]];
+    const body = stats.map((q, i) => [
+      `${q.averageScore}/${q.totalQuestions}`,
+      `${q.lowestScore}/${q.totalQuestions}`,
+      `${q.highestScore}/${q.totalQuestions}`,
+      `${q.passRate}%`,
+      `${q.averagePercent}%`,
+      `${q.totalStudents > 0 ? Math.round((q.submittedCount / q.totalStudents) * 100) : 0}%`,
+      q.submittedCount,
+      q.totalStudents,
+      q.totalQuestions,
+      q.title,
+      i + 1,
+    ]);
+
+    const tableStyles = getArabicTableStyles();
+    autoTable(doc, {
+      head: headers,
+      body,
+      startY: startY + 20,
+      ...tableStyles,
+      theme: "grid",
+    });
+
+    doc.save(`إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    setExporting(false);
+  };
+
   if (loading) {
     return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
   }
@@ -113,7 +215,6 @@ export default function QuizStatistics() {
     );
   }
 
-  // Overall summary
   const totalSubmissions = stats.reduce((a, s) => a + s.submittedCount, 0);
   const overallAvgPercent = totalSubmissions > 0
     ? Math.round(stats.reduce((a, s) => a + s.averagePercent * s.submittedCount, 0) / totalSubmissions)
@@ -124,6 +225,26 @@ export default function QuizStatistics() {
 
   return (
     <div className="space-y-6">
+      {/* Export button */}
+      <div className="flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              تصدير
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={exportExcel} className="gap-2 cursor-pointer">
+              <FileSpreadsheet className="h-4 w-4 text-emerald-600" /> تصدير Excel
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportPDF} className="gap-2 cursor-pointer">
+              <FileText className="h-4 w-4 text-rose-600" /> تصدير PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard icon={<BarChart3 className="h-5 w-5" />} label="عدد الاختبارات" value={stats.length}
@@ -158,7 +279,6 @@ export default function QuizStatistics() {
                   </Badge>
                 </div>
 
-                {/* Progress bars */}
                 <div className="space-y-3">
                   <ProgressRow label="معدل النجاح" value={quiz.passRate} suffix="%"
                     color={quiz.passRate >= 60 ? "bg-emerald-500" : "bg-rose-500"} />
@@ -168,7 +288,6 @@ export default function QuizStatistics() {
                     color="bg-violet-500" />
                 </div>
 
-                {/* Score range */}
                 {quiz.submittedCount > 0 && (
                   <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/20">
                     <div className="flex items-center gap-1.5 text-xs">
