@@ -618,9 +618,14 @@ export default function StudentsPage() {
                     <td dir="ltr" className="p-3 text-muted-foreground border-l border-border/10">{s.parent_phone || "—"}</td>
                     {role === "admin" && (
                       <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => openEdit(s)} className="text-primary hover:text-primary">
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)} className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     )}
                   </tr>
