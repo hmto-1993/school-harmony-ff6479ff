@@ -113,9 +113,14 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير / طباعة">
-            <Download className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
+              <Download className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.print(); }}>
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md" dir="rtl">
