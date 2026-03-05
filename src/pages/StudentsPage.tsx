@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Users, GraduationCap } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -55,6 +55,7 @@ export default function StudentsPage() {
   const [importing, setImporting] = useState(false);
   const [importDone, setImportDone] = useState(false);
   const [importStats, setImportStats] = useState({ success: 0, failed: 0 });
+  const [parsingPdf, setParsingPdf] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -95,12 +96,24 @@ export default function StudentsPage() {
     fetchStudents();
   };
 
-  // ============ Import from Excel ============
+  // ============ Import from Excel or PDF ============
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const isPdf = file.name.toLowerCase().endsWith(".pdf");
+
+    if (isPdf) {
+      await handlePdfFile(file);
+    } else {
+      await handleExcelFile(file);
+    }
+
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleExcelFile = async (file: File) => {
     const XLSX = await import("xlsx");
     const buffer = await file.arrayBuffer();
     const wb = XLSX.read(buffer, { type: "array" });
@@ -140,7 +153,62 @@ export default function StudentsPage() {
     setImportRows(rows);
     setImportDone(false);
     setImportStats({ success: 0, failed: 0 });
-    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handlePdfFile = async (file: File) => {
+    setParsingPdf(true);
+    try {
+      const buffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), "")
+      );
+
+      const { data, error } = await supabase.functions.invoke("parse-pdf-students", {
+        body: { pdfBase64: base64 },
+      });
+
+      if (error || !data?.students) {
+        toast({
+          title: "خطأ في تحليل PDF",
+          description: data?.error || error?.message || "لم يتم التعرف على بيانات الطلاب",
+          variant: "destructive",
+        });
+        setParsingPdf(false);
+        return;
+      }
+
+      const rows: ImportRow[] = data.students.map((s: any) => {
+        if (!s.full_name?.trim()) {
+          return { full_name: "", valid: false, error: "اسم الطالب مطلوب" };
+        }
+        return {
+          full_name: s.full_name.trim(),
+          academic_number: s.academic_number?.toString()?.trim() || undefined,
+          national_id: s.national_id?.toString()?.trim() || undefined,
+          parent_phone: s.parent_phone?.toString()?.trim() || undefined,
+          valid: true,
+        };
+      }).filter((r: ImportRow) => r.full_name || !r.valid);
+
+      setImportRows(rows);
+      setImportDone(false);
+      setImportStats({ success: 0, failed: 0 });
+
+      if (rows.length === 0) {
+        toast({
+          title: "لا توجد بيانات",
+          description: "لم يتم العثور على بيانات طلاب في ملف PDF",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "خطأ",
+        description: err.message || "فشل تحليل ملف PDF",
+        variant: "destructive",
+      });
+    }
+    setParsingPdf(false);
   };
 
   const handleImport = async () => {
@@ -241,14 +309,14 @@ export default function StudentsPage() {
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-1.5">
                   <Upload className="h-4 w-4" />
-                  استيراد من Excel
+                  استيراد
                 </Button>
               </DialogTrigger>
               <DialogContent dir="rtl" className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-5 w-5" />
-                    استيراد الطلاب من ملف Excel
+                    <Upload className="h-5 w-5" />
+                    استيراد الطلاب
                   </DialogTitle>
                 </DialogHeader>
 
@@ -258,12 +326,19 @@ export default function StudentsPage() {
                     <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                       <li>سجّل الدخول في منصة <strong>نور</strong> أو <strong>مدرستي</strong></li>
                        <li>انتقل إلى قائمة الطلاب واختر الفصل المطلوب</li>
-                       <li>صدّر البيانات كملف Excel (أيقونة التصدير)</li>
+                       <li>صدّر البيانات كملف <strong>Excel</strong> أو <strong>PDF</strong></li>
                        <li>ارفع الملف هنا واختر الفصل المستهدف</li>
                     </ol>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      الأعمدة المدعومة: <strong>اسم الطالب</strong> (مطلوب)، الرقم الأكاديمي، رقم الهوية، جوال ولي الأمر
-                    </p>
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileSpreadsheet className="h-3.5 w-3.5 text-success" />
+                        <span>Excel / CSV</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileText className="h-3.5 w-3.5 text-destructive" />
+                        <span>PDF (تحليل ذكي)</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -281,14 +356,21 @@ export default function StudentsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>ملف Excel أو CSV</Label>
+                    <Label>ملف Excel أو CSV أو PDF</Label>
                     <Input
                       ref={fileRef}
                       type="file"
-                      accept=".xlsx,.xls,.csv"
+                      accept=".xlsx,.xls,.csv,.pdf"
                       onChange={handleFileSelect}
                       className="cursor-pointer"
+                      disabled={parsingPdf}
                     />
+                    {parsingPdf && (
+                      <div className="flex items-center gap-2 text-sm text-primary animate-pulse">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>جارٍ تحليل ملف PDF بالذكاء الاصطناعي...</span>
+                      </div>
+                    )}
                   </div>
 
                   {importRows.length > 0 && (
