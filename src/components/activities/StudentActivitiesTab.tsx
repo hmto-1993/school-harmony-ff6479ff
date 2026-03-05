@@ -219,45 +219,61 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
           ) : (
             <>
               {selectedQuiz.questions?.map((q, qi) => (
-                <div key={q.id} className={cn(
-                  "p-4 rounded-2xl border space-y-3",
-                  q.question_type === "true_false"
-                    ? "border-amber-500/30 bg-amber-500/5"
-                    : "border-violet-500/30 bg-violet-500/5"
-                )}>
-                  <div className="flex items-start gap-2">
-                    <Badge variant="outline" className={cn(
-                      "shrink-0 rounded-full text-xs",
-                      q.question_type === "true_false"
-                        ? "border-amber-500/40 text-amber-600 bg-amber-500/10"
-                        : "border-violet-500/40 text-violet-600 bg-violet-500/10"
-                    )}>
-                      {qi + 1}
-                    </Badge>
-                    <div className="flex items-center gap-2 flex-1">
-                      <p className="font-medium text-foreground">{q.question_text}</p>
+                <div key={q.id} className="rounded-2xl border border-border/20 overflow-hidden space-y-0">
+                  {/* Question header */}
+                  <div className={cn(
+                    "p-4 space-y-2",
+                    q.question_type === "true_false"
+                      ? "bg-amber-500/10 border-b border-amber-500/20"
+                      : "bg-violet-500/10 border-b border-violet-500/20"
+                  )}>
+                    <div className="flex items-start gap-2">
                       <Badge variant="outline" className={cn(
-                        "shrink-0 text-[10px] rounded-full",
+                        "shrink-0 rounded-full text-xs font-bold",
                         q.question_type === "true_false"
-                          ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
-                          : "border-violet-500/30 text-violet-500 bg-violet-500/10"
+                          ? "border-amber-500/40 text-amber-600 bg-amber-500/15"
+                          : "border-violet-500/40 text-violet-600 bg-violet-500/15"
                       )}>
-                        {q.question_type === "true_false" ? "صح/خطأ" : "اختياري"}
+                        {qi + 1}
                       </Badge>
-                    </div>
-                  </div>
-                  {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
-                  <div className="space-y-2">
-                    {(q.options as string[]).map((opt: string, oi: number) => (
-                      <button key={oi} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: oi }))}
-                        className={cn("w-full text-right p-3 rounded-xl border transition-all",
-                          quizAnswers[q.id] === oi
-                            ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-medium shadow-sm"
-                            : "border-border/30 hover:border-muted-foreground/30 text-foreground bg-background/50"
+                      <div className="flex items-center gap-2 flex-1">
+                        <p className="font-semibold text-foreground text-base">{q.question_text}</p>
+                        <Badge variant="outline" className={cn(
+                          "shrink-0 text-[10px] rounded-full",
+                          q.question_type === "true_false"
+                            ? "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                            : "border-violet-500/30 text-violet-500 bg-violet-500/10"
                         )}>
-                        {opt}
-                      </button>
-                    ))}
+                          {q.question_type === "true_false" ? "صح/خطأ" : "اختياري"}
+                        </Badge>
+                      </div>
+                    </div>
+                    {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
+                  </div>
+                  {/* Answer options */}
+                  <div className="p-4 space-y-2.5 bg-background">
+                    {(q.options as string[]).map((opt: string, oi: number) => {
+                      const labels = ["أ", "ب", "ج", "د"];
+                      return (
+                        <button key={oi} onClick={() => setQuizAnswers(prev => ({ ...prev, [q.id]: oi }))}
+                          className={cn(
+                            "w-full text-right p-3.5 rounded-xl border-2 transition-all flex items-center gap-3",
+                            quizAnswers[q.id] === oi
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 font-medium shadow-md shadow-emerald-500/10"
+                              : "border-border hover:border-primary/40 hover:bg-muted/30 text-foreground"
+                          )}>
+                          <span className={cn(
+                            "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0",
+                            quizAnswers[q.id] === oi
+                              ? "bg-emerald-500 text-white"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {labels[oi] || oi + 1}
+                          </span>
+                          <span>{opt}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               ))}
