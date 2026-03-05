@@ -44,9 +44,9 @@ const levelScore = (level: GradeLevel, perSlot: number): number => {
 };
 
 const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: string }) => {
-  if (level === "excellent") return <CircleCheck className={cn(size, "text-green-600")} />;
-  if (level === "average") return <CircleMinus className={cn(size, "text-yellow-500")} />;
-  if (level === "zero") return <CircleX className={cn(size, "text-red-500")} />;
+  if (level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
+  if (level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
+  if (level === "zero") return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
   return <CircleMinus className={cn(size, "text-muted-foreground opacity-30")} />;
 };
 
@@ -272,23 +272,23 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
            <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
-            <div className="flex gap-4 mb-4 text-sm flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <CircleCheck className="h-5 w-5 text-green-600" /><span>ممتاز</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CircleMinus className="h-5 w-5 text-yellow-500" /><span>متوسط</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CircleX className="h-5 w-5 text-red-500" /><span>صفر</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Star className="h-5 w-5 text-amber-500 fill-amber-500" /><span>متميز (الدرجة الكاملة)</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Undo2 className="h-4 w-4 text-muted-foreground" /><span>تراجع</span>
-              </div>
-            </div>
+            <div className="flex gap-3 mb-4 text-sm flex-wrap">
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                 <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
+               </div>
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                 <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400" /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
+               </div>
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                 <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
+               </div>
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
+                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز (الدرجة الكاملة)</span>
+               </div>
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
+                 <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
+               </div>
+             </div>
 
             <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
@@ -345,15 +345,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                             <div className="flex items-center justify-center gap-1">
                               {/* Cycling icons */}
                               {slotsArr.map((slotLevel, si) => (
-                                <button
-                                  key={si}
-                                  type="button"
-                                  onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore, cat.name)}
-                                  className="p-0.5 rounded-md transition-all hover:scale-110 cursor-pointer"
-                                  title="اضغط للتبديل"
-                                >
-                                  <LevelIcon level={slotLevel} />
-                                </button>
+                                 <button
+                                   key={si}
+                                   type="button"
+                                   onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore, cat.name)}
+                                   className={cn(
+                                     "p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
+                                     slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
+                                     slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
+                                     slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
+                                   )}
+                                   title="اضغط للتبديل"
+                                 >
+                                   <LevelIcon level={slotLevel} />
+                                 </button>
                               ))}
 
                               {/* Add slot button for participation */}
@@ -372,17 +377,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                               <span className="w-px h-5 bg-border mx-0.5" />
 
                               {/* Star - independent */}
-                              <button
-                                type="button"
-                                onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                className={cn(
-                                  "p-0.5 rounded-md transition-all hover:scale-110",
-                                  isStarred ? "opacity-100" : "opacity-40 hover:opacity-70"
-                                )}
-                                title="متميز"
-                              >
-                                <Star className={cn("h-5 w-5", isStarred ? "text-amber-500 fill-amber-500" : "text-muted-foreground")} />
-                              </button>
+                               <button
+                                 type="button"
+                                 onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
+                                 className={cn(
+                                   "p-1 rounded-lg transition-all hover:scale-110",
+                                   isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70"
+                                 )}
+                                 title="متميز"
+                               >
+                                 <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
+                               </button>
 
                               {/* Undo */}
                               <button

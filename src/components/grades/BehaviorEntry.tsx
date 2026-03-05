@@ -24,9 +24,9 @@ interface StudentBehavior {
 }
 
 const BehaviorIcon = ({ type }: { type: BehaviorType }) => {
-  if (type === "positive") return <ThumbsUp className="h-5 w-5 text-green-600" />;
-  if (type === "negative") return <ThumbsDown className="h-5 w-5 text-red-500" />;
-  if (type === "neutral") return <Minus className="h-5 w-5 text-yellow-500" />;
+  if (type === "positive") return <ThumbsUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
+  if (type === "negative") return <ThumbsDown className="h-5 w-5 text-rose-500 dark:text-rose-400" />;
+  if (type === "neutral") return <Minus className="h-5 w-5 text-amber-500 dark:text-amber-400" />;
   return <Minus className="h-5 w-5 text-muted-foreground opacity-30" />;
 };
 
@@ -188,17 +188,17 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
              <p className="text-center py-12 text-muted-foreground">لا يوجد طلاب في هذا الفصل</p>
           ) : (
             <>
-              <div className="flex gap-4 mb-4 text-sm flex-wrap">
-                <div className="flex items-center gap-1.5">
-                  <ThumbsUp className="h-5 w-5 text-green-600" /><span>إيجابي</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <Minus className="h-5 w-5 text-yellow-500" /><span>محايد</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <ThumbsDown className="h-5 w-5 text-red-500" /><span>سلبي</span>
-                </div>
-              </div>
+               <div className="flex gap-3 mb-4 text-sm flex-wrap">
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                   <ThumbsUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">إيجابي</span>
+                 </div>
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                   <Minus className="h-5 w-5 text-amber-500 dark:text-amber-400" /><span className="text-amber-700 dark:text-amber-300 font-medium">محايد</span>
+                 </div>
+                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                   <ThumbsDown className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">سلبي</span>
+                 </div>
+               </div>
 
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
@@ -226,14 +226,19 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                         <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                         <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
                         <td className="p-3 text-center border-l border-border/10">
-                          <button
-                            type="button"
-                            onClick={() => cycleType(s.student_id)}
-                            className="p-1 rounded-md transition-all hover:scale-110 cursor-pointer mx-auto"
-                            title="اضغط للتبديل"
-                          >
-                            <BehaviorIcon type={s.type} />
-                          </button>
+                           <button
+                             type="button"
+                             onClick={() => cycleType(s.student_id)}
+                             className={cn(
+                               "p-1.5 rounded-lg transition-all hover:scale-110 cursor-pointer mx-auto",
+                               s.type === "positive" && "bg-emerald-50 dark:bg-emerald-500/15",
+                               s.type === "neutral" && "bg-amber-50 dark:bg-amber-500/15",
+                               s.type === "negative" && "bg-rose-50 dark:bg-rose-500/15",
+                             )}
+                             title="اضغط للتبديل"
+                           >
+                             <BehaviorIcon type={s.type} />
+                           </button>
                         </td>
                         <td className="p-3 text-center border-l border-border/10">
                           <button
