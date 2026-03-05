@@ -46,7 +46,7 @@ export default function GradesPage() {
     load();
   }, []);
 
-  const showPeriodSelector = activeType === "daily" || activeType === "summary";
+  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "import";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -176,6 +176,9 @@ export default function GradesPage() {
           )}
           {activeType === "semester" && (
             <SemesterSummary selectedClass={selectedClass} onClassChange={setSelectedClass} />
+          )}
+          {activeType === "import" && (
+            <GradesImport selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
         </div>
       ) : (
