@@ -636,6 +636,44 @@ export default function StudentsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit Student Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              تعديل بيانات الطالب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>الاسم الكامل *</Label>
+              <Input value={editForm.full_name} onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الهوية الوطنية</Label>
+              <Input value={editForm.national_id} onChange={(e) => setEditForm({ ...editForm, national_id: e.target.value })} dir="ltr" />
+            </div>
+            <div className="space-y-2">
+              <Label>الفصل</Label>
+              <Select value={editForm.class_id} onValueChange={(v) => setEditForm({ ...editForm, class_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>رقم جوال ولي الأمر</Label>
+              <Input value={editForm.parent_phone} onChange={(e) => setEditForm({ ...editForm, parent_phone: e.target.value })} dir="ltr" />
+            </div>
+            <Button onClick={handleEdit} className="w-full">حفظ التعديلات</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
