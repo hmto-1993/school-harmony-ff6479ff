@@ -1,14 +1,29 @@
 import { format } from "date-fns";
-import { LayoutDashboard, Sparkles, Printer } from "lucide-react";
+import { LayoutDashboard, Sparkles, Printer, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 
 interface Props {
   onPrint?: () => void;
 }
 
+function toHijri(date: Date): string {
+  try {
+    const formatter = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    return formatter.format(date);
+  } catch {
+    return "";
+  }
+}
+
 export default function DashboardHeader({ onPrint }: Props) {
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
+  const hijriDate = useMemo(() => toHijri(new Date()), []);
 
   return (
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
@@ -48,7 +63,15 @@ export default function DashboardHeader({ onPrint }: Props) {
               <span className="text-sm font-medium">{dayName}</span>
             </div>
           </div>
-          <span className="text-xs text-white/60 mt-1">{today}</span>
+          <div className="flex flex-col items-end gap-0.5 mt-1">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3 w-3 text-white/50" />
+              <span className="text-xs text-white/60">{today}</span>
+            </div>
+            {hijriDate && (
+              <span className="text-[11px] text-white/45 font-medium">{hijriDate}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

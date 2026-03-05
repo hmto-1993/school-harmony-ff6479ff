@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown, Minus, CalendarDays } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, eachDayOfInterval } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface PeriodStats {
   present: number;
@@ -21,13 +23,13 @@ function TrendBadge({ current, previous, label }: { current: number; previous: n
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-muted/40">
+    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold">{current}</p>
+      <p className="text-xl font-bold tabular-nums">{current}</p>
       {previous > 0 && (
-        <div className={`flex items-center gap-1 text-xs font-medium ${
-          isUp ? "text-green-600" : isDown ? "text-destructive" : "text-muted-foreground"
-        }`}>
+        <div className={cn("flex items-center gap-1 text-xs font-medium",
+          isUp ? "text-success" : isDown ? "text-destructive" : "text-muted-foreground"
+        )}>
           {isUp ? <TrendingUp className="h-3 w-3" /> : isDown ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
           <span>{Math.abs(diff)}%</span>
         </div>
@@ -42,15 +44,17 @@ function RateBadge({ current, previous, label }: { current: number; previous: nu
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1 p-3 rounded-lg bg-muted/40">
+    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`text-xl font-bold ${current >= 80 ? "text-green-600" : current >= 50 ? "text-yellow-600" : "text-destructive"}`}>
+      <p className={cn("text-xl font-bold tabular-nums",
+        current >= 80 ? "text-success" : current >= 50 ? "text-warning" : "text-destructive"
+      )}>
         {current}%
       </p>
       {previous > 0 && (
-        <div className={`flex items-center gap-1 text-xs font-medium ${
-          isUp ? "text-green-600" : isDown ? "text-destructive" : "text-muted-foreground"
-        }`}>
+        <div className={cn("flex items-center gap-1 text-xs font-medium",
+          isUp ? "text-success" : isDown ? "text-destructive" : "text-muted-foreground"
+        )}>
           {isUp ? <TrendingUp className="h-3 w-3" /> : isDown ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
           <span>{Math.abs(diff)} نقطة</span>
         </div>
@@ -86,13 +90,43 @@ async function fetchPeriodData(from: string, to: string, totalStudents: number):
 }
 
 function ComparisonGrid({ current, previous }: { current: PeriodStats; previous: PeriodStats }) {
+  const chartData = [
+    { name: "حاضر", الحالي: current.present, السابق: previous.present },
+    { name: "غائب", الحالي: current.absent, السابق: previous.absent },
+    { name: "متأخر", الحالي: current.late, السابق: previous.late },
+  ];
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-      <RateBadge current={current.rate} previous={previous.rate} label="نسبة الحضور" />
-      <TrendBadge current={current.present} previous={previous.present} label="حاضر" />
-      <TrendBadge current={current.absent} previous={previous.absent} label="غائب" />
-      <TrendBadge current={current.late} previous={previous.late} label="متأخر" />
-      <TrendBadge current={current.behaviorNegative} previous={previous.behaviorNegative} label="سلوك سلبي" />
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <RateBadge current={current.rate} previous={previous.rate} label="نسبة الحضور" />
+        <TrendBadge current={current.present} previous={previous.present} label="حاضر" />
+        <TrendBadge current={current.absent} previous={previous.absent} label="غائب" />
+        <TrendBadge current={current.late} previous={previous.late} label="متأخر" />
+        <TrendBadge current={current.behaviorNegative} previous={previous.behaviorNegative} label="سلوك سلبي" />
+      </div>
+      {(current.present > 0 || previous.present > 0) && (
+        <div className="h-48 mt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} barGap={4} barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
+              <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+              <YAxis hide />
+              <Tooltip
+                contentStyle={{
+                  borderRadius: "12px",
+                  border: "1px solid hsl(var(--border))",
+                  background: "hsl(var(--card))",
+                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
+                  fontSize: "12px",
+                }}
+              />
+              <Bar dataKey="الحالي" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} animationDuration={800} />
+              <Bar dataKey="السابق" fill="hsl(var(--muted-foreground) / 0.3)" radius={[6, 6, 0, 0]} animationDuration={800} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }
@@ -140,10 +174,12 @@ export default function PeriodComparison() {
   if (!weekCurrent || !monthCurrent) return null;
 
   return (
-    <Card className="shadow-card">
+    <Card className="shadow-card animate-fade-in" style={{ animationDelay: "700ms", animationFillMode: "both" }}>
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4" />
+          <div className="p-1.5 rounded-lg bg-accent/10">
+            <CalendarDays className="h-4 w-4 text-accent" />
+          </div>
           مقارنة الحضور
         </CardTitle>
       </CardHeader>
