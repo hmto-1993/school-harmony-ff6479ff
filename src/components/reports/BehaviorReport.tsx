@@ -120,23 +120,24 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   };
 
   const exportPDF = async () => {
-    const jsPDF = (await import("jspdf")).default;
-    await import("jspdf-autotable");
-    const doc = new jsPDF({ orientation: "landscape" });
-    doc.setFont("helvetica");
+    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const doc = await createArabicPDF({ orientation: "landscape" });
+    const tableStyles = getArabicTableStyles();
+    const pageWidth = doc.internal.pageSize.getWidth();
+
     doc.setFontSize(16);
-    doc.text("Behavior Report", 14, 20);
+    doc.text("تقرير السلوك", pageWidth / 2, 15, { align: "center" });
     doc.setFontSize(10);
-    doc.text(`From: ${dateFrom}  To: ${dateTo}`, 14, 28);
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, 24, { align: "center" });
 
     (doc as any).autoTable({
-      startY: 35,
-      head: [["Student", "Date", "Type", "Notes"]],
-      body: data.map((r) => [r.student_name, r.date, TYPE_LABELS[r.type] || r.type, r.note || ""]),
-      styles: { fontSize: 9, halign: "left" },
-      headStyles: { fillColor: [30, 64, 175] },
+      startY: 32,
+      head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب"]],
+      body: data.map((r) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name]),
+      ...tableStyles,
+      columnStyles: { 3: { halign: "right" } },
     });
-    doc.save(`behavior_${dateFrom}_${dateTo}.pdf`);
+    doc.save(`تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
   };
 
   return (
