@@ -231,7 +231,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
         <div className="flex flex-col gap-3">
            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Select value={selectedClass} onValueChange={onClassChange}>
+                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {categories.length > 0 && (
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">جميع الفئات</SelectItem>
+                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
               {selectedClass && categories.length > 0 && (
                 <GradesExportDialog
                   title="الإدخال اليومي"
@@ -248,23 +263,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                     return [{ className, headers, rows }] as ExportTableGroup[];
                   })()}
                 />
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Select value={selectedClass} onValueChange={onClassChange}>
-                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {categories.length > 0 && (
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الفئات</SelectItem>
-                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
               )}
             </div>
           </div>
