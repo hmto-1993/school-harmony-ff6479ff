@@ -161,14 +161,14 @@ export default function ClassGradesComparison() {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
             <Trophy className="h-4 w-4" />
-            مقارنة مستويات الشُعب
+            مقارنة مستويات الفصول
           </CardTitle>
           <Select value={selectedClass} onValueChange={setSelectedClass}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="اختر الشعبة" />
+              <SelectValue placeholder="اختر الفصل" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">جميع الشُعب</SelectItem>
+              <SelectItem value="all">جميع الفصول</SelectItem>
               {classes.map(c => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}

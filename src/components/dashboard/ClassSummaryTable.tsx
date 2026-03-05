@@ -24,7 +24,7 @@ export default function ClassSummaryTable({ classStats }: Props) {
           <div className="p-1.5 rounded-lg bg-warning/10">
             <AlertTriangle className="h-4 w-4 text-warning" />
           </div>
-          ملخص الشُعب
+          ملخص الفصول
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -32,7 +32,7 @@ export default function ClassSummaryTable({ classStats }: Props) {
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead>
               <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
-                <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">الشُعبة</th>
+                <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">الفصل</th>
                 <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطلاب</th>
                 <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 bg-success/5 dark:bg-success/10">حاضر</th>
                 <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 bg-destructive/5 dark:bg-destructive/10">غائب</th>

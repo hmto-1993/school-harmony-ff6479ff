@@ -407,10 +407,10 @@ export default function ReportsPage() {
         <CardContent className="pt-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1.5 min-w-[180px]">
-              <Label className="text-xs">الشعبة</Label>
+              <Label className="text-xs">الفصل</Label>
               <Select value={selectedClass} onValueChange={setSelectedClass}>
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر الشعبة" />
+                  <SelectValue placeholder="اختر الفصل" />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
@@ -599,7 +599,7 @@ export default function ReportsPage() {
             <Card className="print:hidden">
               <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Calendar className="h-12 w-12 mb-3 opacity-30" />
-                <p className="text-sm">اختر الشعبة والتواريخ ثم اضغط "عرض التقرير"</p>
+                <p className="text-sm">اختر الفصل والتواريخ ثم اضغط "عرض التقرير"</p>
               </CardContent>
             </Card>
           )}
@@ -670,7 +670,7 @@ export default function ReportsPage() {
             <Card className="print:hidden">
               <CardContent className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Users className="h-12 w-12 mb-3 opacity-30" />
-                <p className="text-sm">اختر الشعبة ثم اضغط "عرض التقرير"</p>
+                <p className="text-sm">اختر الفصل ثم اضغط "عرض التقرير"</p>
               </CardContent>
             </Card>
           )}

@@ -192,7 +192,7 @@ export default function ResourceLibraryPage() {
 
     setCreating(false);
     if (!hasError) {
-      toast({ title: targetClassIds.length > 1 ? `تم إنشاء الحقيبة في ${targetClassIds.length} شعبة` : "تم إنشاء الحقيبة بنجاح" });
+      toast({ title: targetClassIds.length > 1 ? `تم إنشاء الحقيبة في ${targetClassIds.length} فصل` : "تم إنشاء الحقيبة بنجاح" });
       setCreateOpen(false);
       setNewTitle("");
       setNewIcon("atom");
@@ -405,7 +405,7 @@ export default function ResourceLibraryPage() {
           ) : (
             <>
               <h1 className="text-2xl font-bold text-foreground">مكتبة مصادر الفصول</h1>
-              <p className="text-sm text-muted-foreground mt-1">اختر شعبة للوصول إلى حقائب الملفات والمصادر التعليمية</p>
+              <p className="text-sm text-muted-foreground mt-1">اختر فصلاً للوصول إلى حقائب الملفات والمصادر التعليمية</p>
             </>
           )}
         </div>
@@ -431,14 +431,14 @@ export default function ResourceLibraryPage() {
                 />
               </div>
               <div>
-                <Label>الشعبة</Label>
+                 <Label>الفصل</Label>
                 <Select value={newClassId} onValueChange={setNewClassId}>
                   <SelectTrigger className="mt-1 rounded-xl">
-                    <SelectValue placeholder="اختر الشعبة" />
+                    <SelectValue placeholder="اختر الفصل" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__public__">عام (للجميع)</SelectItem>
-                    <SelectItem value="__all__">جميع الشعب</SelectItem>
+                    <SelectItem value="__all__">جميع الفصول</SelectItem>
                     {classes.map(c => (
                       <SelectItem key={c.id} value={c.id}>{c.grade}/{c.section}</SelectItem>
                     ))}
@@ -553,7 +553,7 @@ export default function ResourceLibraryPage() {
             <Card className="border-dashed border-2">
               <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
                 <FolderOpen className="h-14 w-14 text-muted-foreground/30" />
-                <p className="text-muted-foreground">لا توجد حقائب في هذه الشعبة</p>
+                <p className="text-muted-foreground">لا توجد حقائب في هذا الفصل</p>
                 <p className="text-xs text-muted-foreground/60">أنشئ حقيبة جديدة لبدء تنظيم الملفات</p>
               </CardContent>
             </Card>
@@ -601,7 +601,7 @@ export default function ResourceLibraryPage() {
                       <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="mt-1 rounded-xl" />
                     </div>
                     <div>
-                      <Label>الشعبة</Label>
+                      <Label>الفصل</Label>
                       <Select value={editClassId} onValueChange={setEditClassId}>
                         <SelectTrigger className="mt-1 rounded-xl">
                           <SelectValue />

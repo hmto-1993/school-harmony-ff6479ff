@@ -56,7 +56,7 @@ export default function AttendancePage() {
   }, [selectedClass, date]);
 
   const loadStudents = async () => {
-    // جلب طلاب الشعبة
+    // جلب طلاب الفصل
     const { data: students } = await supabase
       .from("students")
       .select("id, full_name")
@@ -175,10 +175,10 @@ export default function AttendancePage() {
       <Card className="shadow-card">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <CardTitle className="text-lg">اختر الشعبة</CardTitle>
+            <CardTitle className="text-lg">اختر الفصل</CardTitle>
             <Select value={selectedClass} onValueChange={setSelectedClass}>
               <SelectTrigger className="w-full sm:w-64">
-                <SelectValue placeholder="اختر الشعبة..." />
+                <SelectValue placeholder="اختر الفصل..." />
               </SelectTrigger>
               <SelectContent>
                 {classes.map((c) => (
@@ -191,7 +191,7 @@ export default function AttendancePage() {
         <CardContent>
           {records.length === 0 ? (
             <p className="text-center py-12 text-muted-foreground">
-              {selectedClass ? "لا يوجد طلاب في هذه الشعبة" : "اختر شعبة لبدء تسجيل الحضور"}
+              {selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
             </p>
           ) : (
             <>

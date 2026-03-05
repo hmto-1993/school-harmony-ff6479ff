@@ -138,7 +138,7 @@ export default function PerformanceDashboard() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <Users className="h-4 w-4" />
-            مقارنة متوسط الشُعب
+            مقارنة متوسط الفصول
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -289,11 +289,11 @@ export default function PerformanceDashboard() {
                 </SelectContent>
               </Select>
               <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
-                  <SelectValue placeholder="اختر الشعبة" />
+                 <SelectTrigger className="w-[160px] h-8 text-xs">
+                  <SelectValue placeholder="اختر الفصل" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الشُعب</SelectItem>
+                  <SelectItem value="all">الكل</SelectItem>
                   {classes.map(c => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -336,10 +336,10 @@ export default function PerformanceDashboard() {
         </h2>
         <Select value={selectedClass} onValueChange={setSelectedClass}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="اختر الشعبة" />
+             <SelectValue placeholder="اختر الفصل" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">جميع الشُعب</SelectItem>
+            <SelectItem value="all">الكل</SelectItem>
             {classes.map(c => (
               <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
             ))}
