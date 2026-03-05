@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import QuizStatistics from "@/components/activities/QuizStatistics";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -519,6 +520,21 @@ export default function ActivitiesPage() {
             </Button>
             <ActivityResults activityId={resultsActivity.id} activityType={resultsActivity.type} classId={resultsClassId}
               className={resultsActivity.targets.find(t => t.class_id === resultsClassId)?.classes?.name || ""} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quiz Statistics */}
+      {!resultsActivity && !loading && filtered.some(a => a.type === "quiz") && (
+        <Card className="border-0 shadow-lg rounded-2xl">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-violet-500" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground">إحصائيات الاختبارات</h2>
+            </div>
+            <QuizStatistics />
           </CardContent>
         </Card>
       )}

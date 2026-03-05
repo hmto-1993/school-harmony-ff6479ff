@@ -55,6 +55,62 @@ function CountdownTimer({ totalSeconds, onExpire }: { totalSeconds: number; onEx
   );
 }
 
+function ActivityItem({ activity, completedQuizzes, uploadingFor, onOpenQuiz, onUpload }: {
+  activity: Activity;
+  completedQuizzes: Set<string>;
+  uploadingFor: string | null;
+  onOpenQuiz: (a: Activity) => void;
+  onUpload: (id: string, file: File) => void;
+}) {
+  return (
+    <div className="p-4 rounded-2xl border border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors space-y-3">
+      <div className="flex items-start gap-3">
+        <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+          activity.type === "quiz" ? "bg-violet-500/10 text-violet-500" : "bg-blue-500/10 text-blue-500"
+        )}>
+          {activity.type === "quiz" ? <ClipboardList className="h-5 w-5" /> : <FileUp className="h-5 w-5" />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-bold text-foreground">{activity.title}</h4>
+          {activity.description && <p className="text-sm text-muted-foreground">{activity.description}</p>}
+          {activity.type === "quiz" && activity.duration_minutes > 0 && (
+            <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+              <Timer className="h-3 w-3" /> {activity.duration_minutes} دقيقة
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {activity.type === "quiz" && (
+          <Button size="sm" variant={completedQuizzes.has(activity.id) ? "outline" : "default"}
+            className="gap-1.5 rounded-xl" onClick={() => onOpenQuiz(activity)} disabled={completedQuizzes.has(activity.id)}>
+            {completedQuizzes.has(activity.id) ? <><CheckCircle2 className="h-4 w-4" /> مكتمل</> : <><ClipboardList className="h-4 w-4" /> بدء الاختبار</>}
+          </Button>
+        )}
+        {activity.file_url && (
+          <a href={activity.file_url} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" variant="outline" className="gap-1.5 rounded-xl">
+              <Download className="h-4 w-4" /> تحميل الملف
+            </Button>
+          </a>
+        )}
+        {activity.allow_student_uploads && (
+          <label className="cursor-pointer">
+            <input type="file" className="hidden" onChange={e => e.target.files?.[0] && onUpload(activity.id, e.target.files[0])} />
+            <Button size="sm" variant="outline" className="gap-1.5 rounded-xl pointer-events-none" asChild>
+              <span>
+                {uploadingFor === activity.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                رفع ملف (5MB)
+              </span>
+            </Button>
+          </label>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function StudentActivitiesTab({ studentId, classId }: StudentActivitiesTabProps) {
   const { toast } = useToast();
   const { colors: quizColors } = useQuizColors();
@@ -222,7 +278,6 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
             <>
               {selectedQuiz.questions?.map((q, qi) => (
                 <div key={q.id} className="rounded-2xl border border-border/20 overflow-hidden space-y-0">
-                  {/* Question header */}
                   {(() => {
                     const qColor = q.question_type === "true_false" ? quizColors.trueFalse : quizColors.mcq;
                     const cs = colorStyles(qColor);
@@ -245,7 +300,6 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                       </div>
                     );
                   })()}
-                  {/* Answer options */}
                   <div className="p-4 space-y-2.5 bg-background">
                     {(q.options as string[]).map((opt: string, oi: number) => {
                       const isTF = q.question_type === "true_false";
@@ -295,70 +349,64 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
     );
   }
 
-  // Activities list
-  return (
-    <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet-500 to-primary" />
-          الأنشطة الحالية
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {activities.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">لا توجد أنشطة متاحة حالياً</p>
-        ) : (
-          <div className="space-y-3">
-            {activities.map(activity => (
-              <div key={activity.id} className="p-4 rounded-2xl border border-border/30 bg-muted/10 hover:bg-muted/20 transition-colors space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                    activity.type === "quiz" ? "bg-violet-500/10 text-violet-500" : "bg-blue-500/10 text-blue-500"
-                  )}>
-                    {activity.type === "quiz" ? <ClipboardList className="h-5 w-5" /> : <FileUp className="h-5 w-5" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-foreground">{activity.title}</h4>
-                    {activity.description && <p className="text-sm text-muted-foreground">{activity.description}</p>}
-                    {activity.type === "quiz" && activity.duration_minutes > 0 && (
-                      <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                        <Timer className="h-3 w-3" /> {activity.duration_minutes} دقيقة
-                      </div>
-                    )}
-                  </div>
-                </div>
+  // Separate activities by type
+  const quizzes = activities.filter(a => a.type === "quiz");
+  const fileActivities = activities.filter(a => a.type !== "quiz");
 
-                <div className="flex flex-wrap gap-2">
-                  {activity.type === "quiz" && (
-                    <Button size="sm" variant={completedQuizzes.has(activity.id) ? "outline" : "default"}
-                      className="gap-1.5 rounded-xl" onClick={() => openQuiz(activity)} disabled={completedQuizzes.has(activity.id)}>
-                      {completedQuizzes.has(activity.id) ? <><CheckCircle2 className="h-4 w-4" /> مكتمل</> : <><ClipboardList className="h-4 w-4" /> بدء الاختبار</>}
-                    </Button>
-                  )}
-                  {activity.file_url && (
-                    <a href={activity.file_url} target="_blank" rel="noopener noreferrer">
-                      <Button size="sm" variant="outline" className="gap-1.5 rounded-xl">
-                        <Download className="h-4 w-4" /> تحميل الملف
-                      </Button>
-                    </a>
-                  )}
-                  {activity.allow_student_uploads && (
-                    <label className="cursor-pointer">
-                      <input type="file" className="hidden" onChange={e => e.target.files?.[0] && uploadStudentFile(activity.id, e.target.files[0])} />
-                      <Button size="sm" variant="outline" className="gap-1.5 rounded-xl pointer-events-none" asChild>
-                        <span>
-                          {uploadingFor === activity.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                          رفع ملف (5MB)
-                        </span>
-                      </Button>
-                    </label>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+  // Activities list - split into sections
+  return (
+    <div className="space-y-6">
+      {/* Quizzes Section */}
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-violet-500 to-purple-600" />
+            <ClipboardList className="h-5 w-5 text-violet-500" />
+            الاختبارات
+            {quizzes.length > 0 && (
+              <Badge variant="outline" className="text-xs rounded-full mr-1">{quizzes.length}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {quizzes.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6 text-sm">لا توجد اختبارات متاحة حالياً</p>
+          ) : (
+            <div className="space-y-3">
+              {quizzes.map(activity => (
+                <ActivityItem key={activity.id} activity={activity} completedQuizzes={completedQuizzes}
+                  uploadingFor={uploadingFor} onOpenQuiz={openQuiz} onUpload={uploadStudentFile} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* File Activities Section */}
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-blue-500 to-cyan-500" />
+            <FileUp className="h-5 w-5 text-blue-500" />
+            الأنشطة والملفات
+            {fileActivities.length > 0 && (
+              <Badge variant="outline" className="text-xs rounded-full mr-1">{fileActivities.length}</Badge>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {fileActivities.length === 0 ? (
+            <p className="text-center text-muted-foreground py-6 text-sm">لا توجد أنشطة متاحة حالياً</p>
+          ) : (
+            <div className="space-y-3">
+              {fileActivities.map(activity => (
+                <ActivityItem key={activity.id} activity={activity} completedQuizzes={completedQuizzes}
+                  uploadingFor={uploadingFor} onOpenQuiz={openQuiz} onUpload={uploadStudentFile} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
