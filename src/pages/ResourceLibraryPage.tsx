@@ -476,19 +476,7 @@ export default function ResourceLibraryPage() {
                       </div>
                       {/* Class Name */}
                       <div>
-                        <h3 className="font-bold text-foreground text-base leading-tight">{cls.name}</h3>
-                        <p className="text-sm text-muted-foreground mt-0.5">{cls.grade} / {cls.section}</p>
-                      </div>
-                      {/* Stats */}
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <FolderOpen className="h-3.5 w-3.5" />
-                          {folderCount} حقيبة
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <File className="h-3.5 w-3.5" />
-                          {fileCount} ملف
-                        </span>
+                        <h3 className="font-bold text-foreground text-sm leading-tight">{cls.grade} / {cls.section}</h3>
                       </div>
                     </CardContent>
                   </Card>
