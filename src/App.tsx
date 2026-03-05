@@ -18,6 +18,7 @@ import SettingsPage from "@/pages/SettingsPage";
 import StudentDashboard from "@/pages/StudentDashboard";
 import ResourceLibraryPage from "@/pages/ResourceLibraryPage";
 import StudentLoginsPage from "@/pages/StudentLoginsPage";
+import ActivitiesPage from "@/pages/ActivitiesPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -49,6 +50,7 @@ const App = () => (
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/library" element={<ResourceLibraryPage />} />
+                <Route path="/activities" element={<ActivitiesPage />} />
                 <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
               </Route>
               <Route path="*" element={<NotFound />} />
