@@ -104,7 +104,35 @@ export default function StudentsPage() {
     fetchStudents();
   };
 
-  // ============ Import from Excel or PDF ============
+  const openEdit = (student: Student) => {
+    setEditingStudent(student);
+    setEditForm({
+      full_name: student.full_name,
+      national_id: student.national_id || "",
+      class_id: student.class_id || "",
+      parent_phone: student.parent_phone || "",
+    });
+    setEditOpen(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editingStudent || !editForm.full_name.trim()) return;
+    const { error } = await supabase.from("students").update({
+      full_name: editForm.full_name,
+      national_id: editForm.national_id || null,
+      class_id: editForm.class_id || null,
+      parent_phone: editForm.parent_phone || null,
+    }).eq("id", editingStudent.id);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم", description: "تم تحديث بيانات الطالب" });
+      setEditOpen(false);
+      setEditingStudent(null);
+      fetchStudents();
+    }
+  };
+
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
