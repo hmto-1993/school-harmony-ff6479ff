@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
-interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; }
+interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
 interface SummaryRow {
   student_id: string;
@@ -27,13 +27,6 @@ interface GradesSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
 }
-
-// Category grouping logic
-const CLASSWORK_NAMES = ["المشاركة", "الواجبات", "الأعمال"];
-const EXAM_NAMES = ["اختبار عملي", "اختبار الفترة"];
-
-const isClassworkCat = (name: string) => CLASSWORK_NAMES.includes(name);
-const isExamCat = (name: string) => EXAM_NAMES.includes(name);
 
 export default function GradesSummary({ selectedClass, onClassChange }: GradesSummaryProps) {
   const { user } = useAuth();
@@ -202,9 +195,9 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : groupedByClass.map((group) => {
-        const classworkCats = group.categories.filter(c => isClassworkCat(c.name));
-        const examCats = group.categories.filter(c => isExamCat(c.name));
-        const otherCats = group.categories.filter(c => !isClassworkCat(c.name) && !isExamCat(c.name));
+        const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
+        const examCats = group.categories.filter(c => c.category_group === 'exams');
+        const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
 
         const hasClasswork = classworkCats.length > 0;
         const hasExams = examCats.length > 0;
