@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, CalendarIcon, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
+import EmptyState from "@/components/EmptyState";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
