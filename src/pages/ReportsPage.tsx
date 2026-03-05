@@ -32,6 +32,7 @@ import {
   Users,
   Heart,
   Printer,
+  Eye,
   Send,
   UserCircle,
 } from "lucide-react";
@@ -41,6 +42,7 @@ import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 
 // ============ Types ============
 
@@ -92,6 +94,10 @@ export default function ReportsPage() {
   const [gradeData, setGradeData] = useState<GradeRow[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
   const [loadingGrades, setLoadingGrades] = useState(false);
+
+  // Print preview
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewType, setPreviewType] = useState<"attendance" | "grades" | "behavior">("attendance");
 
   // Fetch classes
   useEffect(() => {
@@ -507,6 +513,10 @@ export default function ReportsPage() {
             </Button>
             {attendanceData.length > 0 && (
               <>
+                <Button variant="outline" size="sm" onClick={() => { setPreviewType("attendance"); setPreviewOpen(true); }} className="gap-1.5">
+                  <Eye className="h-4 w-4" />
+                  معاينة
+                </Button>
                 <Button variant="outline" size="sm" onClick={exportAttendanceExcel} className="gap-1.5">
                   <FileSpreadsheet className="h-4 w-4" />
                   Excel
@@ -616,6 +626,10 @@ export default function ReportsPage() {
             </Button>
             {gradeData.length > 0 && (
               <>
+                <Button variant="outline" size="sm" onClick={() => { setPreviewType("grades"); setPreviewOpen(true); }} className="gap-1.5">
+                  <Eye className="h-4 w-4" />
+                  معاينة
+                </Button>
                 <Button variant="outline" size="sm" onClick={exportGradesExcel} className="gap-1.5">
                   <FileSpreadsheet className="h-4 w-4" />
                   Excel
@@ -684,6 +698,82 @@ export default function ReportsPage() {
           <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
         </TabsContent>
       </Tabs>
+
+      {/* Print Preview Dialog */}
+      <PrintPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        reportType={previewType}
+        title={previewType === "attendance" ? "تقرير الحضور" : previewType === "grades" ? "تقرير الدرجات" : "تقرير السلوك"}
+      >
+        {previewType === "attendance" && attendanceData.length > 0 && (
+          <>
+            <div className="grid grid-cols-4 gap-3">
+              <div className="border rounded-lg p-3 text-center">
+                <p className="text-xl font-bold">{attendanceSummary.total}</p>
+                <p className="text-xs text-gray-500">إجمالي السجلات</p>
+              </div>
+              <div className="border rounded-lg p-3 text-center">
+                <p className="text-xl font-bold" style={{ color: "#16a34a" }}>{attendanceSummary.present}</p>
+                <p className="text-xs text-gray-500">حاضر</p>
+              </div>
+              <div className="border rounded-lg p-3 text-center">
+                <p className="text-xl font-bold" style={{ color: "#dc2626" }}>{attendanceSummary.absent}</p>
+                <p className="text-xs text-gray-500">غائب</p>
+              </div>
+              <div className="border rounded-lg p-3 text-center">
+                <p className="text-xl font-bold" style={{ color: "#ca8a04" }}>{attendanceSummary.late}</p>
+                <p className="text-xs text-gray-500">متأخر</p>
+              </div>
+            </div>
+            <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+              <thead>
+                <tr className="border-b">
+                  <th className="text-right p-2">اسم الطالب</th>
+                  <th className="text-right p-2">التاريخ</th>
+                  <th className="text-right p-2">الحالة</th>
+                  <th className="text-right p-2">ملاحظات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attendanceData.map((row, i) => (
+                  <tr key={i} className="border-b">
+                    <td className="p-2 font-medium">{row.student_name}</td>
+                    <td className="p-2">{row.date}</td>
+                    <td className="p-2">{STATUS_LABELS[row.status] || row.status}</td>
+                    <td className="p-2 text-gray-500">{row.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </>
+        )}
+
+        {previewType === "grades" && gradeData.length > 0 && (
+          <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+            <thead>
+              <tr className="border-b">
+                <th className="text-right p-2">اسم الطالب</th>
+                {categoryNames.map((name) => (
+                  <th key={name} className="text-center p-2">{name}</th>
+                ))}
+                <th className="text-center p-2">المجموع</th>
+              </tr>
+            </thead>
+            <tbody>
+              {gradeData.map((row, i) => (
+                <tr key={i} className="border-b">
+                  <td className="p-2 font-medium">{row.student_name}</td>
+                  {categoryNames.map((name) => (
+                    <td key={name} className="text-center p-2">{row.categories[name] ?? "—"}</td>
+                  ))}
+                  <td className="text-center p-2 font-bold">{row.total}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </PrintPreviewDialog>
     </div>
   );
 }
