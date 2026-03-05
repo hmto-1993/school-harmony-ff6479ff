@@ -108,16 +108,16 @@ export default function ExportDialog({
   };
 
   const exportPDF = async () => {
-    const doc = await createArabicPDF();
+    const { doc, startY: headerEndY } = await createArabicPDF({ reportType: "student_logins", includeHeader: true });
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
     doc.setFontSize(16);
-    doc.text("سجل دخول الطلاب", pageWidth / 2, 15, { align: "center" });
+    doc.text("سجل دخول الطلاب", pageWidth / 2, headerEndY, { align: "center" });
     doc.setFontSize(10);
-    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, 22, { align: "center" });
+    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
-    let startY = 30;
+    let startY = headerEndY + 15;
 
     if (includeSummary) {
       doc.setFontSize(12);
