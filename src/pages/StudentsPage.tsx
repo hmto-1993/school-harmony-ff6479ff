@@ -55,6 +55,7 @@ export default function StudentsPage() {
   const [importing, setImporting] = useState(false);
   const [importDone, setImportDone] = useState(false);
   const [importStats, setImportStats] = useState({ success: 0, failed: 0 });
+  const [parsingPdf, setParsingPdf] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
