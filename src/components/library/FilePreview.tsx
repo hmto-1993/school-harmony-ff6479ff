@@ -1,8 +1,5 @@
-import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Eye, Download, X, FileText, Image, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Eye, Download, FileText, Image, FileSpreadsheet } from "lucide-react";
 
 interface FilePreviewProps {
   fileUrl: string;
@@ -18,53 +15,55 @@ function isPdf(name: string) {
   return /\.pdf$/i.test(name);
 }
 
+function isOffice(name: string) {
+  return /\.(docx?|xlsx?|pptx?)$/i.test(name);
+}
+
 function isPreviewable(name: string) {
-  return isImage(name) || isPdf(name);
+  return isImage(name) || isPdf(name) || isOffice(name);
+}
+
+function getOfficeViewerUrl(fileUrl: string) {
+  return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+}
+
+function getFileIcon(name: string) {
+  if (isImage(name)) return <Image className="h-4 w-4 text-primary shrink-0" />;
+  if (/\.xlsx?$/i.test(name)) return <FileSpreadsheet className="h-4 w-4 text-emerald-500 shrink-0" />;
+  if (/\.docx?$/i.test(name)) return <FileText className="h-4 w-4 text-blue-500 shrink-0" />;
+  if (/\.pptx?$/i.test(name)) return <FileText className="h-4 w-4 text-orange-500 shrink-0" />;
+  return <FileText className="h-4 w-4 text-primary shrink-0" />;
 }
 
 function FilePreviewDialog({ fileUrl, fileName, onClose }: FilePreviewProps) {
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] p-0 overflow-hidden rounded-2xl" dir="rtl">
-        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {isImage(fileName) ? (
-              <Image className="h-4 w-4 text-primary shrink-0" />
-            ) : (
-              <FileText className="h-4 w-4 text-primary shrink-0" />
-            )}
+            {getFileIcon(fileName)}
             <span className="text-sm font-medium text-foreground truncate">{fileName}</span>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 text-primary transition-colors"
-              title="تحميل"
-            >
-              <Download className="h-4 w-4" />
-            </a>
-          </div>
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 rounded-xl hover:bg-primary/10 dark:hover:bg-primary/20 text-primary transition-colors shrink-0"
+            title="تحميل"
+          >
+            <Download className="h-4 w-4" />
+          </a>
         </div>
 
-        {/* Preview content */}
         <div className="flex-1 overflow-auto bg-muted/20 dark:bg-muted/10" style={{ height: "75vh" }}>
           {isImage(fileName) ? (
             <div className="flex items-center justify-center h-full p-4">
-              <img
-                src={fileUrl}
-                alt={fileName}
-                className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-              />
+              <img src={fileUrl} alt={fileName} className="max-w-full max-h-full object-contain rounded-lg shadow-lg" />
             </div>
           ) : isPdf(fileName) ? (
-            <iframe
-              src={fileUrl}
-              className="w-full h-full border-0"
-              title={fileName}
-            />
+            <iframe src={fileUrl} className="w-full h-full border-0" title={fileName} />
+          ) : isOffice(fileName) ? (
+            <iframe src={getOfficeViewerUrl(fileUrl)} className="w-full h-full border-0" title={fileName} />
           ) : null}
         </div>
       </DialogContent>
@@ -72,8 +71,7 @@ function FilePreviewDialog({ fileUrl, fileName, onClose }: FilePreviewProps) {
   );
 }
 
-// Preview button component for use in file lists
-function PreviewButton({ fileName, fileUrl, onPreview }: { fileName: string; fileUrl: string; onPreview: () => void }) {
+function PreviewButton({ fileName, onPreview }: { fileName: string; fileUrl: string; onPreview: () => void }) {
   if (!isPreviewable(fileName)) return null;
   return (
     <button
@@ -86,4 +84,4 @@ function PreviewButton({ fileName, fileUrl, onPreview }: { fileName: string; fil
   );
 }
 
-export { FilePreviewDialog, PreviewButton, isPreviewable, isImage, isPdf };
+export { FilePreviewDialog, PreviewButton, isPreviewable, isImage, isPdf, isOffice, getFileIcon };
