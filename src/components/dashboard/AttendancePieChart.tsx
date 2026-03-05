@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, Sector } from "recharts";
 import { ClipboardCheck } from "lucide-react";
+import { useState, useCallback } from "react";
 
 interface Props {
   todayPresent: number;
@@ -16,7 +17,44 @@ const PIE_COLORS = [
   "hsl(220, 9%, 70%)",
 ];
 
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 8} dy={0} textAnchor="middle" fill="currentColor" className="text-foreground text-sm font-bold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 14} dy={0} textAnchor="middle" fill="currentColor" className="text-muted-foreground text-xs">
+        {value} ({(percent * 100).toFixed(0)}%)
+      </text>
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius - 4}
+        outerRadius={outerRadius + 6}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        opacity={0.9}
+      />
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
 export default function AttendancePieChart({ todayPresent, todayAbsent, todayLate, todayNotRecorded }: Props) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const onPieEnter = useCallback((_: any, index: number) => {
+    setActiveIndex(index);
+  }, []);
+
   const data = [
     { name: "حاضر", value: todayPresent },
     { name: "غائب", value: todayAbsent },
@@ -39,6 +77,8 @@ export default function AttendancePieChart({ todayPresent, todayAbsent, todayLat
           <ResponsiveContainer width="100%" height={280}>
             <PieChart>
               <Pie
+                activeIndex={activeIndex}
+                activeShape={renderActiveShape}
                 data={data}
                 cx="50%"
                 cy="50%"
@@ -46,22 +86,19 @@ export default function AttendancePieChart({ todayPresent, todayAbsent, todayLat
                 outerRadius={95}
                 paddingAngle={4}
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                onMouseEnter={onPieEnter}
                 strokeWidth={0}
+                animationBegin={300}
+                animationDuration={800}
+                animationEasing="ease-out"
               >
                 {data.map((_, i) => (
-                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} className="transition-opacity duration-200" />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  borderRadius: "12px",
-                  border: "none",
-                  boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                  fontSize: "13px",
-                }}
+              <Legend
+                formatter={(value: string) => <span className="text-xs text-foreground">{value}</span>}
               />
-              <Legend />
             </PieChart>
           </ResponsiveContainer>
         ) : (
