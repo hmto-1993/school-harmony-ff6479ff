@@ -315,8 +315,8 @@ export default function StudentsPage() {
               <DialogContent dir="rtl" className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-5 w-5" />
-                    استيراد الطلاب من ملف Excel
+                    <Upload className="h-5 w-5" />
+                    استيراد الطلاب
                   </DialogTitle>
                 </DialogHeader>
 
@@ -326,12 +326,19 @@ export default function StudentsPage() {
                     <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
                       <li>سجّل الدخول في منصة <strong>نور</strong> أو <strong>مدرستي</strong></li>
                        <li>انتقل إلى قائمة الطلاب واختر الفصل المطلوب</li>
-                       <li>صدّر البيانات كملف Excel (أيقونة التصدير)</li>
+                       <li>صدّر البيانات كملف <strong>Excel</strong> أو <strong>PDF</strong></li>
                        <li>ارفع الملف هنا واختر الفصل المستهدف</li>
                     </ol>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      الأعمدة المدعومة: <strong>اسم الطالب</strong> (مطلوب)، الرقم الأكاديمي، رقم الهوية، جوال ولي الأمر
-                    </p>
+                    <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border/50">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileSpreadsheet className="h-3.5 w-3.5 text-success" />
+                        <span>Excel / CSV</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <FileText className="h-3.5 w-3.5 text-destructive" />
+                        <span>PDF (تحليل ذكي)</span>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
@@ -349,14 +356,21 @@ export default function StudentsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label>ملف Excel أو CSV</Label>
+                    <Label>ملف Excel أو CSV أو PDF</Label>
                     <Input
                       ref={fileRef}
                       type="file"
-                      accept=".xlsx,.xls,.csv"
+                      accept=".xlsx,.xls,.csv,.pdf"
                       onChange={handleFileSelect}
                       className="cursor-pointer"
+                      disabled={parsingPdf}
                     />
+                    {parsingPdf && (
+                      <div className="flex items-center gap-2 text-sm text-primary animate-pulse">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>جارٍ تحليل ملف PDF بالذكاء الاصطناعي...</span>
+                      </div>
+                    )}
                   </div>
 
                   {importRows.length > 0 && (
