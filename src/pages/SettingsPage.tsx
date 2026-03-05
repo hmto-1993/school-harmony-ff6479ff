@@ -157,6 +157,9 @@ export default function SettingsPage() {
   const [loginSchoolName, setLoginSchoolName] = useState("");
   const [loginSubtitle, setLoginSubtitle] = useState("");
   const [savingLogin, setSavingLogin] = useState(false);
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
 
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
@@ -245,10 +248,11 @@ export default function SettingsPage() {
       const { data: loginData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["school_name", "school_subtitle"]);
+        .in("id", ["school_name", "school_subtitle", "school_logo_url"]);
       (loginData || []).forEach((s: any) => {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
+        if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
       });
     }
 
@@ -1477,6 +1481,74 @@ export default function SettingsPage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="space-y-4 max-w-md">
+                {/* School Logo Upload */}
+                <div className="space-y-2">
+                  <Label>شعار المدرسة</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
+                      {schoolLogoUrl ? (
+                        <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <input
+                        ref={logoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingLogo(true);
+                          const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
+                          const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
+                          if (uploadError) {
+                            toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
+                            setUploadingLogo(false);
+                            return;
+                          }
+                          const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
+                          const logoUrl = urlData.publicUrl;
+                          await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
+                          setSchoolLogoUrl(logoUrl);
+                          setUploadingLogo(false);
+                          toast({ title: "تم رفع الشعار بنجاح" });
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={uploadingLogo}
+                        onClick={() => logoInputRef.current?.click()}
+                        className="gap-1.5"
+                      >
+                        <Upload className="h-4 w-4" />
+                        {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
+                      </Button>
+                      {schoolLogoUrl && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
+                            setSchoolLogoUrl("");
+                            toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          إزالة
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>اسم المدرسة</Label>
                   <Input

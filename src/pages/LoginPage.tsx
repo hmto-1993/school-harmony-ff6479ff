@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import schoolLogo from "@/assets/school-logo.jpg";
+import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
 import { GraduationCap, Shield, ArrowLeft } from "lucide-react";
 
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدرسة");
+  const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -28,6 +29,7 @@ export default function LoginPage() {
       data?.forEach((row) => {
         if (row.id === "school_name") setSchoolName(row.value);
         if (row.id === "school_subtitle") setSchoolSubtitle(row.value);
+        if (row.id === "school_logo_url" && row.value) setSchoolLogo(row.value);
       });
     });
   }, []);
