@@ -39,6 +39,7 @@ export default function ActivitiesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterClass, setFilterClass] = useState<string>("all");
 
   // Create dialog
   const [createOpen, setCreateOpen] = useState(false);
@@ -263,6 +264,7 @@ export default function ActivitiesPage() {
 
   const filtered = activities.filter(a => {
     if (filterType !== "all" && a.type !== filterType) return false;
+    if (filterClass !== "all" && !a.targets.some(t => t.class_id === filterClass)) return false;
     if (search && !a.title.includes(search)) return false;
     return true;
   });
@@ -495,6 +497,15 @@ export default function ActivitiesPage() {
             <SelectItem value="all">الكل</SelectItem>
             <SelectItem value="file">ملفات</SelectItem>
             <SelectItem value="quiz">اختبارات</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={filterClass} onValueChange={setFilterClass}>
+          <SelectTrigger className="w-44 rounded-xl"><SelectValue placeholder="الفصل" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">جميع الفصول</SelectItem>
+            {classes.map(cls => (
+              <SelectItem key={cls.id} value={cls.id}>{cls.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
