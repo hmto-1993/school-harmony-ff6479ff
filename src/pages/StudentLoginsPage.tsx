@@ -1,14 +1,19 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Users, Eye, TrendingUp, Calendar } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Users, Eye, TrendingUp, Calendar, FileSpreadsheet, FileText } from "lucide-react";
 import { format, subDays, isAfter } from "date-fns";
 import { ar } from "date-fns/locale";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
 
 interface LoginRecord {
   id: string;
@@ -24,8 +29,6 @@ interface ClassInfo {
   grade: string;
   section: string;
 }
-
-const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 export default function StudentLoginsPage() {
   const [logins, setLogins] = useState<LoginRecord[]>([]);
@@ -62,11 +65,9 @@ export default function StudentLoginsPage() {
     });
   }, [logins, cutoffDate, selectedClass]);
 
-  // Stats
   const uniqueStudents = useMemo(() => new Set(filteredLogins.map((l) => l.student_id)).size, [filteredLogins]);
   const totalLogins = filteredLogins.length;
 
-  // Per-student stats
   const studentStats = useMemo(() => {
     const map: Record<string, { name: string; classId: string | null; count: number; lastLogin: string }> = {};
     filteredLogins.forEach((l) => {
@@ -88,7 +89,6 @@ export default function StudentLoginsPage() {
       .sort((a, b) => b.count - a.count);
   }, [filteredLogins]);
 
-  // Per-class stats
   const classStats = useMemo(() => {
     const map: Record<string, { name: string; totalLogins: number; uniqueStudents: Set<string> }> = {};
     classes.forEach((c) => {
@@ -111,7 +111,6 @@ export default function StudentLoginsPage() {
       .sort((a, b) => b.totalLogins - a.totalLogins);
   }, [filteredLogins, classes]);
 
-  // Daily chart data
   const dailyData = useMemo(() => {
     const days = parseInt(dateRange);
     const map: Record<string, number> = {};
@@ -136,6 +135,117 @@ export default function StudentLoginsPage() {
     return classes.find((c) => c.id === classId)?.name || "-";
   };
 
+  // --- Export helpers ---
+  const getStudentsForClass = useCallback((classId: string) => {
+    return studentStats.filter((s) => s.classId === classId);
+  }, [studentStats]);
+
+  const exportExcel = useCallback(() => {
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Class summary
+    const classSummary = classStats.map((c) => ({
+      "الفصل": c.name,
+      "إجمالي الزيارات": c.totalLogins,
+      "عدد الطلاب": c.uniqueStudents,
+      "متوسط/طالب": c.uniqueStudents > 0 ? +(c.totalLogins / c.uniqueStudents).toFixed(1) : 0,
+    }));
+    const ws1 = XLSX.utils.json_to_sheet(classSummary);
+    XLSX.utils.book_append_sheet(wb, ws1, "ملخص الفصول");
+
+    // Sheet 2: All students
+    const allStudents = studentStats.map((s, i) => ({
+      "#": i + 1,
+      "اسم الطالب": s.name,
+      "الفصل": getClassName(s.classId),
+      "عدد الزيارات": s.count,
+      "آخر دخول": format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm"),
+    }));
+    const ws2 = XLSX.utils.json_to_sheet(allStudents);
+    XLSX.utils.book_append_sheet(wb, ws2, "جميع الطلاب");
+
+    // Per-class sheets
+    classStats.forEach((c) => {
+      const students = getStudentsForClass(c.id);
+      if (students.length === 0) return;
+      const data = students.map((s, i) => ({
+        "#": i + 1,
+        "اسم الطالب": s.name,
+        "عدد الزيارات": s.count,
+        "آخر دخول": format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm"),
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const sheetName = c.name.substring(0, 31); // Excel max 31 chars
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    XLSX.writeFile(wb, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast.success("تم تصدير ملف Excel بنجاح");
+  }, [classStats, studentStats, getStudentsForClass, getClassName]);
+
+  const exportPDF = useCallback(async () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+    // Load Arabic font - use built-in with RTL workaround
+    doc.setFont("helvetica");
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const title = "سجل دخول الطلاب";
+    const dateStr = format(new Date(), "yyyy/MM/dd");
+
+    // Title
+    doc.setFontSize(16);
+    doc.text(title, pageWidth / 2, 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(dateStr, pageWidth / 2, 22, { align: "center" });
+
+    // Class Summary Table
+    doc.setFontSize(12);
+    doc.text("ملخص الفصول", pageWidth - 14, 32, { align: "right" });
+
+    autoTable(doc, {
+      startY: 36,
+      head: [["متوسط/طالب", "عدد الطلاب", "إجمالي الزيارات", "الفصل"]],
+      body: classStats.map((c) => [
+        c.uniqueStudents > 0 ? (c.totalLogins / c.uniqueStudents).toFixed(1) : "0",
+        c.uniqueStudents.toString(),
+        c.totalLogins.toString(),
+        c.name,
+      ]),
+      styles: { font: "helvetica", halign: "center", fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246], halign: "center" },
+      columnStyles: { 3: { halign: "right" } },
+    });
+
+    // Student details per class
+    classStats.forEach((c) => {
+      const students = getStudentsForClass(c.id);
+      if (students.length === 0) return;
+
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.text(c.name, pageWidth / 2, 15, { align: "center" });
+
+      autoTable(doc, {
+        startY: 22,
+        head: [["آخر دخول", "عدد الزيارات", "الفصل", "اسم الطالب", "#"]],
+        body: students.map((s, i) => [
+          format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm"),
+          s.count.toString(),
+          getClassName(s.classId),
+          s.name,
+          (i + 1).toString(),
+        ]),
+        styles: { font: "helvetica", halign: "center", fontSize: 9 },
+        headStyles: { fillColor: [59, 130, 246], halign: "center" },
+        columnStyles: { 3: { halign: "right" } },
+      });
+    });
+
+    doc.save(`سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("تم تصدير ملف PDF بنجاح");
+  }, [classStats, studentStats, getStudentsForClass, getClassName]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -151,7 +261,15 @@ export default function StudentLoginsPage() {
           <h1 className="text-2xl font-bold text-foreground">سجل دخول الطلاب</h1>
           <p className="text-sm text-muted-foreground">تتبع ومراقبة دخول الطلاب على البوابة الإلكترونية</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={exportExcel} className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF} className="gap-2">
+            <FileText className="h-4 w-4" />
+            PDF
+          </Button>
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
