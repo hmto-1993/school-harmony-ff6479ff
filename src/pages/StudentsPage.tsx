@@ -12,6 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft } from "lucide-react";
+import { format } from "date-fns";
+import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -361,6 +364,51 @@ export default function StudentsPage() {
     return matchSearch && matchClass;
   });
 
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+    const sheetData = filtered.map((s, i) => ({
+      "#": i + 1,
+      "الاسم الكامل": s.full_name,
+      "رقم الهوية": s.national_id || "",
+      "الفصل": s.classes?.name || "",
+      "جوال ولي الأمر": s.parent_phone || "",
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), "الطلاب");
+    XLSX.writeFile(wb, `طلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
+  };
+
+  const exportPDF = async () => {
+    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "students", includeHeader: true });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const tableStyles = getArabicTableStyles();
+
+    doc.setFontSize(16);
+    doc.text("بيانات الطلاب", pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 7, { align: "center" });
+
+    const headers = ["جوال ولي الأمر", "الفصل", "رقم الهوية", "الاسم الكامل", "#"];
+    const rows = filtered.map((s, i) => [
+      s.parent_phone || "",
+      s.classes?.name || "",
+      s.national_id || "",
+      s.full_name,
+      String(i + 1),
+    ]);
+
+    autoTable(doc, {
+      startY: startY + 12,
+      head: [headers],
+      body: rows,
+      ...tableStyles,
+    });
+
+    doc.save(`طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
+  };
+
   // Class student counts for summary cards
   const classCounts = useMemo(() => {
     const counts: Record<string, { name: string; count: number }> = {};
@@ -399,6 +447,15 @@ export default function StudentsPage() {
         </div>
         {role === "admin" && (
           <div className="flex gap-2">
+            {/* Export Dropdown */}
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير Excel" onClick={exportExcel}>
+                <FileSpreadsheet className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير PDF" onClick={exportPDF}>
+                <FileText className="h-4 w-4" />
+              </Button>
+            </div>
             {/* Import Button */}
             <Dialog open={importOpen} onOpenChange={(v) => { setImportOpen(v); if (!v) resetImport(); }}>
               <DialogTrigger asChild>
@@ -746,14 +803,13 @@ export default function StudentsPage() {
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">#</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الاسم الكامل</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
-                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
-                  <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
-                  {role === "admin" && <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">إجراءات</th>}
+                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
+                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">جوال ولي الأمر</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={role === "admin" ? 8 : 6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={role === "admin" ? 6 : 5} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
                 ) : filtered.map((s, i) => {
                   const isEven = i % 2 === 0;
                   const isLast = i === filtered.length - 1;
@@ -773,72 +829,11 @@ export default function StudentsPage() {
                     <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                     <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
                     <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
-                    <td className="p-3 border-l border-border/10">
-                      {role === "admin" ? (
-                        <Select
-                          value={s.class_id || "none"}
-                          onValueChange={async (newClassId) => {
-                            const actualClassId = newClassId === "none" ? null : newClassId;
-                            if (actualClassId === s.class_id) return;
-                            const oldClassName = s.classes?.name || "بدون فصل";
-                            const { error } = await supabase.from("students").update({ class_id: actualClassId }).eq("id", s.id);
-                            if (error) {
-                              toast({ title: "خطأ", description: error.message, variant: "destructive" });
-                            } else {
-                              const newClassName = classes.find(c => c.id === actualClassId)?.name || "بدون فصل";
-                              toast({ title: "تم النقل", description: `تم نقل ${s.full_name} من "${oldClassName}" إلى "${newClassName}"` });
-                              fetchStudents();
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-7 text-xs w-auto min-w-[100px] gap-1 border-dashed">
-                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <SelectValue placeholder="بدون فصل" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">بدون فصل</SelectItem>
-                            {classes.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        s.classes?.name ? (
-                          <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
-                        ) : "—"
-                      )}
-                    </td>
-                    <td dir="ltr" className="p-3 text-muted-foreground border-l border-border/10">{s.parent_phone || "—"}</td>
-                    {role === "admin" && (
-                      <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
-                        <div className="flex items-center gap-1">
-                          <Button variant="ghost" size="sm" onClick={() => openEdit(s)} className="text-primary hover:text-primary">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent dir="rtl">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>هل أنت متأكد من حذف هذا الطالب؟</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  سيتم حذف الطالب <strong>{s.full_name}</strong> نهائياً مع جميع بياناته. لا يمكن التراجع عن هذا الإجراء.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter className="flex-row-reverse gap-2">
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDelete(s.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                  حذف
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </td>
-                    )}
+                     <td className="p-3 border-l border-border/10">
+                       {s.classes?.name ? (
+                         <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
+                       ) : <span className="text-muted-foreground">—</span>}
+                     </td>
                   </tr>
                   );
                 })}
