@@ -16,7 +16,7 @@ import {
   Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag, ArrowRight, School, Plus, Globe,
   Eye, EyeOff
 } from "lucide-react";
-import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
+import { FilePreviewDialog, PreviewButton, isPreviewable, isImage, getFileIcon } from "@/components/library/FilePreview";
 
 interface ClassInfo {
   id: string;
@@ -132,6 +132,9 @@ export default function ResourceLibraryPage() {
   const [dragging, setDragging] = useState(false);
   const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
 
+  // Files mapped by folder_id for inline display
+  const [allFiles, setAllFiles] = useState<Record<string, ResourceFile[]>>({});
+
   // Edit mode inside folder detail
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState("");
@@ -167,10 +170,38 @@ export default function ResourceLibraryPage() {
     setLoading(false);
   }, []);
 
+  const fetchAllFilesForFolders = useCallback(async (folderIds: string[]) => {
+    if (!folderIds.length) { setAllFiles({}); return; }
+    const { data } = await supabase
+      .from("resource_files")
+      .select("*")
+      .in("folder_id", folderIds)
+      .order("created_at", { ascending: false });
+    
+    const grouped: Record<string, ResourceFile[]> = {};
+    data?.forEach((f: any) => {
+      if (!grouped[f.folder_id]) grouped[f.folder_id] = [];
+      grouped[f.folder_id].push(f);
+    });
+    setAllFiles(grouped);
+  }, []);
+
   useEffect(() => {
     fetchClasses();
     fetchFolders();
   }, [fetchClasses, fetchFolders]);
+
+  // Fetch files for all folders in the selected class
+  useEffect(() => {
+    if (selectedClassId) {
+      const folderIds = selectedClassId === "__public__"
+        ? folders.filter(f => !f.class_id).map(f => f.id)
+        : folders.filter(f => f.class_id === selectedClassId).map(f => f.id);
+      fetchAllFilesForFolders(folderIds);
+    } else {
+      setAllFiles({});
+    }
+  }, [selectedClassId, folders, fetchAllFilesForFolders]);
 
   const handleCreateFolder = async () => {
     if (!newTitle.trim() || !newClassId || !user) return;
@@ -289,7 +320,16 @@ export default function ResourceLibraryPage() {
     setUploading(false);
     toast({ title: `تم رفع ${files.length} ملف بنجاح` });
     openFolderDetail(selectedFolder);
-    fetchFolders();
+    fetchFolders().then(() => {
+      // Refresh inline files after folders update
+      if (selectedClassId) {
+        const folderIds = selectedClassId === "__public__"
+          ? folders.filter(f => !f.class_id).map(f => f.id)
+          : folders.filter(f => f.class_id === selectedClassId).map(f => f.id);
+        if (!folderIds.includes(selectedFolder.id)) folderIds.push(selectedFolder.id);
+        fetchAllFilesForFolders(folderIds);
+      }
+    });
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -318,9 +358,16 @@ export default function ResourceLibraryPage() {
     setDragging(false);
   };
 
-  const handleDeleteFile = async (fileId: string) => {
+  const handleDeleteFile = async (fileId: string, folderId?: string) => {
     await supabase.from("resource_files").delete().eq("id", fileId);
     if (selectedFolder) openFolderDetail(selectedFolder);
+    // Also update inline files
+    if (folderId) {
+      setAllFiles(prev => ({
+        ...prev,
+        [folderId]: (prev[folderId] || []).filter(f => f.id !== fileId),
+      }));
+    }
     fetchFolders();
   };
 
@@ -579,18 +626,18 @@ export default function ResourceLibraryPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {selectedClassFolders.map(folder => {
                 const IconComp = getIconComponent(folder.icon);
                 const isHidden = folder.visible_to_students === false;
+                const folderFilesList = allFiles[folder.id] || [];
                 return (
                   <Card
                     key={folder.id}
                     className={cn(
-                      "group cursor-pointer border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden relative",
+                      "group border-border/60 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden relative",
                       isHidden && "opacity-60"
                     )}
-                    onClick={() => openFolderDetail(folder)}
                   >
                     {/* Eye toggle */}
                     <button
@@ -605,18 +652,75 @@ export default function ResourceLibraryPage() {
                     >
                       {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
-                    <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                      <div className="w-16 h-16 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center group-hover:bg-primary/20 dark:group-hover:bg-primary/30 transition-colors">
-                        <IconComp className="h-8 w-8 text-primary" />
+
+                    {/* Folder Header - clickable to open detail */}
+                    <div
+                      className="p-4 pb-2 flex items-center gap-3 cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() => openFolderDetail(folder)}
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 dark:group-hover:bg-primary/30 transition-colors">
+                        <IconComp className="h-6 w-6 text-primary" />
                       </div>
-                      <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
-                      <Badge variant="outline" className="rounded-full text-xs">
-                        {getCategoryLabel(folder.category)}
-                      </Badge>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <File className="h-3.5 w-3.5" />
-                        <span>{folder.file_count || 0} ملف</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-foreground text-sm leading-tight truncate">{folder.title}</h3>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <Badge variant="outline" className="rounded-full text-[10px]">
+                            {getCategoryLabel(folder.category)}
+                          </Badge>
+                          <span className="text-[11px] text-muted-foreground">{folder.file_count || 0} ملف</span>
+                        </div>
                       </div>
+                      <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 text-muted-foreground hover:text-primary">
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    {/* Files List inside card */}
+                    <CardContent className="px-4 pt-1 pb-3">
+                      {folderFilesList.length === 0 ? (
+                        <p className="text-[11px] text-muted-foreground/60 text-center py-3">لا توجد ملفات بعد</p>
+                      ) : (
+                        <div className="space-y-1 max-h-48 overflow-y-auto">
+                          {folderFilesList.map(file => {
+                            const previewable = isPreviewable(file.file_name);
+                            const isImg = isImage(file.file_name);
+                            return (
+                              <div
+                                key={file.id}
+                                className={cn(
+                                  "flex items-center gap-2 p-2 rounded-lg bg-muted/40 dark:bg-muted/20 hover:bg-muted/70 dark:hover:bg-muted/40 transition-colors group/file",
+                                  previewable && "cursor-pointer"
+                                )}
+                                onClick={() => previewable && setPreviewFile({ url: file.file_url, name: file.file_name })}
+                              >
+                                {isImg ? (
+                                  <img src={file.file_url} alt="" className="h-8 w-8 rounded object-cover shrink-0 border border-border/30" />
+                                ) : (
+                                  getFileIcon(file.file_name)
+                                )}
+                                <span className="text-xs text-foreground truncate flex-1 min-w-0">{file.file_name}</span>
+                                <div className="flex items-center gap-0.5 opacity-0 group-hover/file:opacity-100 transition-opacity shrink-0">
+                                  <a
+                                    href={file.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={e => e.stopPropagation()}
+                                    className="p-1 rounded hover:bg-primary/10 text-primary transition-colors"
+                                  >
+                                    <Download className="h-3.5 w-3.5" />
+                                  </a>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, folder.id); }}
+                                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
@@ -770,7 +874,7 @@ export default function ResourceLibraryPage() {
                                 <Download className="h-4 w-4" />
                               </a>
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id); }}
+                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, selectedFolder?.id); }}
                                 className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
                               >
                                 <Trash2 className="h-4 w-4" />
