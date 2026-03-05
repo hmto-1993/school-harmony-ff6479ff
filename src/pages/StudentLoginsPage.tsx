@@ -146,9 +146,12 @@ export default function StudentLoginsPage() {
 
   return (
     <div className="space-y-6" dir="rtl">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">سجل دخول الطلاب</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
+            سجل دخول الطلاب
+          </h1>
           <p className="text-sm text-muted-foreground">تتبع ومراقبة دخول الطلاب على البوابة الإلكترونية</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -186,10 +189,10 @@ export default function StudentLoginsPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-xl bg-primary/10 p-3">
-              <Eye className="h-5 w-5 text-primary" />
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-3 shadow-md shadow-primary/25">
+              <Eye className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{totalLogins}</p>
@@ -197,10 +200,10 @@ export default function StudentLoginsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-xl bg-chart-2/10 p-3">
-              <Users className="h-5 w-5 text-chart-2" />
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-accent/5 via-card to-accent/10 dark:from-accent/10 dark:via-card dark:to-accent/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl bg-gradient-to-br from-accent to-accent/70 p-3 shadow-md shadow-accent/25">
+              <Users className="h-5 w-5 text-accent-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{uniqueStudents}</p>
@@ -208,10 +211,10 @@ export default function StudentLoginsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-xl bg-chart-3/10 p-3">
-              <TrendingUp className="h-5 w-5 text-chart-3" />
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-success/5 via-card to-success/10 dark:from-success/10 dark:via-card dark:to-success/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.7))", boxShadow: "0 4px 12px hsl(var(--success) / 0.25)" }}>
+              <TrendingUp className="h-5 w-5 text-success-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
@@ -221,10 +224,10 @@ export default function StudentLoginsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 p-4">
-            <div className="rounded-xl bg-chart-4/10 p-3">
-              <Calendar className="h-5 w-5 text-chart-4" />
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-warning/5 via-card to-warning/10 dark:from-warning/10 dark:via-card dark:to-warning/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--warning)), hsl(var(--warning) / 0.7))", boxShadow: "0 4px 12px hsl(var(--warning) / 0.25)" }}>
+              <Calendar className="h-5 w-5 text-warning-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
@@ -237,26 +240,36 @@ export default function StudentLoginsPage() {
       </div>
 
       {/* Daily Chart */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">الزيارات اليومية</CardTitle>
+      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
+            الزيارات اليومية
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[250px]">
+          <div className="h-[260px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                <XAxis dataKey="date" className="text-xs" />
-                <YAxis className="text-xs" allowDecimals={false} />
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                <XAxis dataKey="date" className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis className="text-xs" allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
+                    borderRadius: "12px",
                     color: "hsl(var(--foreground))",
+                    boxShadow: "0 8px 30px hsl(var(--primary) / 0.1)",
                   }}
                 />
-                <Bar dataKey="عدد" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="عدد" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -270,9 +283,12 @@ export default function StudentLoginsPage() {
         </TabsList>
 
         <TabsContent value="classes">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">عدد الزيارات حسب الفصل</CardTitle>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
+                عدد الزيارات حسب الفصل
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {classStats.length === 0 ? (
@@ -282,45 +298,60 @@ export default function StudentLoginsPage() {
                   <div className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={classStats} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                        <XAxis type="number" allowDecimals={false} />
-                        <YAxis dataKey="name" type="category" width={120} className="text-xs" />
+                        <defs>
+                          <linearGradient id="classBarGradient" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.8} />
+                            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                          </linearGradient>
+                          <linearGradient id="classBarGradient2" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
+                            <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={1} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-border/30" />
+                        <XAxis type="number" allowDecimals={false} tick={{ fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis dataKey="name" type="category" width={120} className="text-xs" tick={{ fill: "hsl(var(--muted-foreground))" }} />
                         <Tooltip
                           contentStyle={{
                             backgroundColor: "hsl(var(--card))",
                             border: "1px solid hsl(var(--border))",
-                            borderRadius: "8px",
+                            borderRadius: "12px",
                             color: "hsl(var(--foreground))",
+                            boxShadow: "0 8px 30px hsl(var(--primary) / 0.1)",
                           }}
                           formatter={(value: number, name: string) => [
                             value,
                             name === "totalLogins" ? "الزيارات" : "الطلاب",
                           ]}
                         />
-                        <Bar dataKey="totalLogins" name="الزيارات" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                        <Bar dataKey="uniqueStudents" name="الطلاب" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="totalLogins" name="الزيارات" fill="url(#classBarGradient)" radius={[0, 6, 6, 0]} />
+                        <Bar dataKey="uniqueStudents" name="الطلاب" fill="url(#classBarGradient2)" radius={[0, 6, 6, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="overflow-auto rounded-xl border border-border/40">
+                  <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="text-right">الفصل</TableHead>
-                          <TableHead className="text-center">إجمالي الزيارات</TableHead>
-                          <TableHead className="text-center">عدد الطلاب</TableHead>
-                          <TableHead className="text-center">متوسط/طالب</TableHead>
+                        <TableRow className="bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
+                          <TableHead className="text-right font-semibold">الفصل</TableHead>
+                          <TableHead className="text-center font-semibold">إجمالي الزيارات</TableHead>
+                          <TableHead className="text-center font-semibold">عدد الطلاب</TableHead>
+                          <TableHead className="text-center font-semibold">متوسط/طالب</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {classStats.map((c) => (
-                          <TableRow key={c.id}>
+                        {classStats.map((c, i) => (
+                          <TableRow key={c.id} className={i % 2 === 0 ? "bg-muted/20" : ""}>
                             <TableCell className="font-medium">{c.name}</TableCell>
                             <TableCell className="text-center">
-                              <Badge variant="secondary">{c.totalLogins}</Badge>
+                              <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-0 font-semibold">
+                                {c.totalLogins}
+                              </Badge>
                             </TableCell>
-                            <TableCell className="text-center">{c.uniqueStudents}</TableCell>
                             <TableCell className="text-center">
+                              <span className="text-accent font-semibold">{c.uniqueStudents}</span>
+                            </TableCell>
+                            <TableCell className="text-center text-muted-foreground">
                               {c.uniqueStudents > 0 ? (c.totalLogins / c.uniqueStudents).toFixed(1) : 0}
                             </TableCell>
                           </TableRow>
@@ -335,33 +366,38 @@ export default function StudentLoginsPage() {
         </TabsContent>
 
         <TabsContent value="students">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">تفاصيل دخول الطلاب</CardTitle>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-accent to-primary" />
+                تفاصيل دخول الطلاب
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {studentStats.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>
               ) : (
-                <div className="overflow-auto rounded-xl border border-border/40">
+                <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead className="text-right">#</TableHead>
-                        <TableHead className="text-right">اسم الطالب</TableHead>
-                        <TableHead className="text-right">الفصل</TableHead>
-                        <TableHead className="text-center">عدد الزيارات</TableHead>
-                        <TableHead className="text-center">آخر دخول</TableHead>
+                      <TableRow className="bg-gradient-to-l from-accent/5 to-primary/5 dark:from-accent/10 dark:to-primary/10">
+                        <TableHead className="text-right font-semibold w-12">#</TableHead>
+                        <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
+                        <TableHead className="text-right font-semibold">الفصل</TableHead>
+                        <TableHead className="text-center font-semibold">عدد الزيارات</TableHead>
+                        <TableHead className="text-center font-semibold">آخر دخول</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {studentStats.map((s, i) => (
-                        <TableRow key={s.id}>
-                          <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                        <TableRow key={s.id} className={i % 2 === 0 ? "bg-muted/20" : ""}>
+                          <TableCell className="text-muted-foreground font-mono text-xs">{i + 1}</TableCell>
                           <TableCell className="font-medium">{s.name}</TableCell>
-                          <TableCell>{getClassName(s.classId)}</TableCell>
+                          <TableCell className="text-muted-foreground">{getClassName(s.classId)}</TableCell>
                           <TableCell className="text-center">
-                            <Badge variant="secondary">{s.count}</Badge>
+                            <Badge className="bg-accent/15 text-accent hover:bg-accent/20 border-0 font-semibold">
+                              {s.count}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">
                             {format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm", { locale: ar })}
