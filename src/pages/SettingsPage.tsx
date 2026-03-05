@@ -34,6 +34,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import {
   Dialog,
   DialogContent,
@@ -1190,35 +1191,8 @@ export default function SettingsPage() {
               <CardHeader>
                 <CardTitle className="text-lg">ورقة الطباعة (الترويسة)</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 max-w-lg">
-                <p className="text-sm text-muted-foreground">
-                  ارفع صورة الترويسة التي ستظهر أعلى التقارير والمطبوعات
-                </p>
-                <div className="space-y-2">
-                  <Label>رفع صورة الترويسة</Label>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleUploadLetterhead}
-                    disabled={uploadingLetterhead}
-                    className="cursor-pointer"
-                  />
-                  {uploadingLetterhead && (
-                    <p className="text-xs text-muted-foreground">جارٍ الرفع...</p>
-                  )}
-                </div>
-                {letterheadUrl && (
-                  <div className="space-y-2">
-                    <Label>المعاينة الحالية</Label>
-                    <div className="rounded-lg border p-2 bg-white">
-                      <img
-                        src={letterheadUrl}
-                        alt="ورقة الطباعة"
-                        className="max-h-40 w-full object-contain"
-                      />
-                    </div>
-                  </div>
-                )}
+              <CardContent>
+                <PrintHeaderEditor />
               </CardContent>
             </Card>
           </TabsContent>

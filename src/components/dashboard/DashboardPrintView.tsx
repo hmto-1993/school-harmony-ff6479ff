@@ -1,6 +1,8 @@
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import schoolLogo from "@/assets/school-logo.jpg";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface ClassStats {
   name: string;
@@ -36,6 +38,23 @@ export default function DashboardPrintView({
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
 
+  const [headerConfig, setHeaderConfig] = useState<PrintHeaderConfig | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "print_header_config")
+        .single();
+      if (data?.value) {
+        try {
+          setHeaderConfig(JSON.parse(data.value));
+        } catch {}
+      }
+    })();
+  }, []);
+
   const statItems = [
     { label: "إجمالي الطلاب", value: totalStudents, color: "#3b82f6" },
     { label: "عدد الفصول", value: totalClasses, color: "#8b5cf6" },
@@ -57,18 +76,59 @@ export default function DashboardPrintView({
       }}
     >
       {/* Header / Letterhead */}
-      <div
-        style={{
-          borderBottom: "3px solid #3b82f6",
-          paddingBottom: "16px",
-          marginBottom: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <img src={schoolLogo} alt="شعار المدرسة" style={{ width: "50px", height: "50px", borderRadius: "10px", objectFit: "contain" }} />
+      {headerConfig ? (
+        <div
+          style={{
+            borderBottom: "3px solid #3b82f6",
+            paddingBottom: "16px",
+            marginBottom: "24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: "16px",
+          }}
+        >
+          {/* Right text */}
+          <div style={{ flex: 1, textAlign: headerConfig.rightSection.align, fontSize: `${headerConfig.rightSection.fontSize}px`, lineHeight: 1.8 }}>
+            {headerConfig.rightSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
+          {/* Center images */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+            {headerConfig.centerSection.images.map((img, i) =>
+              img ? (
+                <img
+                  key={i}
+                  src={img}
+                  alt=""
+                  style={{
+                    width: `${headerConfig.centerSection.imagesSizes[i] || 60}px`,
+                    height: `${headerConfig.centerSection.imagesSizes[i] || 60}px`,
+                    objectFit: "contain",
+                  }}
+                />
+              ) : null
+            )}
+          </div>
+          {/* Left text */}
+          <div style={{ flex: 1, textAlign: headerConfig.leftSection.align, fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8 }}>
+            {headerConfig.leftSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div
+          style={{
+            borderBottom: "3px solid #3b82f6",
+            paddingBottom: "16px",
+            marginBottom: "24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <div>
             <h1 style={{ fontSize: "22px", fontWeight: 700, margin: 0, color: "#1e293b" }}>
               {schoolName}
@@ -77,12 +137,12 @@ export default function DashboardPrintView({
               تقرير لوحة التحكم اليومي
             </p>
           </div>
+          <div style={{ textAlign: "left" }}>
+            <p style={{ fontSize: "13px", fontWeight: 600 }}>{dayName}</p>
+            <p style={{ fontSize: "12px", color: "#64748b" }}>{today}</p>
+          </div>
         </div>
-        <div style={{ textAlign: "left" }}>
-          <p style={{ fontSize: "13px", fontWeight: 600 }}>{dayName}</p>
-          <p style={{ fontSize: "12px", color: "#64748b" }}>{today}</p>
-        </div>
-      </div>
+      )}
 
       {/* Stat Cards Row */}
       <div
