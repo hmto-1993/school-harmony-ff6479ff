@@ -331,6 +331,7 @@ export type Database = {
       }
       resource_folders: {
         Row: {
+          category: string
           class_id: string
           created_at: string
           created_by: string
@@ -339,6 +340,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          category?: string
           class_id: string
           created_at?: string
           created_by: string
@@ -347,6 +349,7 @@ export type Database = {
           title: string
         }
         Update: {
+          category?: string
           class_id?: string
           created_at?: string
           created_by?: string
