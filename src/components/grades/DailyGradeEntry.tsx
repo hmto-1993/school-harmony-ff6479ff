@@ -183,16 +183,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   };
 
   const calcTotal = (grades: Record<string, number | null>) => {
-    let total = 0, totalWeight = 0;
+    let total = 0, maxTotal = 0;
     categories.forEach((cat) => {
       const score = grades[cat.id];
+      maxTotal += Number(cat.max_score);
       if (score !== null && score !== undefined) {
-        const weight = Number(cat.weight);
-        total += (score / Number(cat.max_score)) * weight;
-        totalWeight += weight;
+        total += score;
       }
     });
-    return totalWeight > 0 ? ((total / totalWeight) * 100).toFixed(1) : "—";
+    return maxTotal > 0 ? `${total} / ${maxTotal}` : "—";
   };
 
   const handleSave = async () => {
