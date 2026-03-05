@@ -1,0 +1,1 @@
+ALTER TABLE public.resource_folders ALTER COLUMN class_id DROP NOT NULL;
