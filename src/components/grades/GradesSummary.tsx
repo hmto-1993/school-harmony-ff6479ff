@@ -27,9 +27,10 @@ interface SummaryRow {
 interface GradesSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
+  selectedPeriod?: number;
 }
 
-export default function GradesSummary({ selectedClass, onClassChange }: GradesSummaryProps) {
+export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -40,7 +41,6 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
   const [editedGrades, setEditedGrades] = useState<Record<string, number | null>>({});
   const [saving, setSaving] = useState(false);
   const [searchName, setSearchName] = useState("");
-  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
@@ -167,30 +167,12 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
 
   return (
     <div className="space-y-4">
-      {/* Period Tabs */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-semibold text-foreground">الفترة</span>
-        <Button variant={selectedPeriod === 1 ? "default" : "outline"} size="sm"
-          className={cn("rounded-full px-5 transition-all", selectedPeriod === 1 && "shadow-md")}
-          onClick={() => setSelectedPeriod(1)}>فترة أولى</Button>
-        <Button variant={selectedPeriod === 2 ? "default" : "outline"} size="sm"
-          className={cn("rounded-full px-5 transition-all", selectedPeriod === 2 && "shadow-md")}
-          onClick={() => setSelectedPeriod(2)}>فترة ثانية</Button>
-      </div>
-
-      {/* Search and Class Filter */}
+      {/* Search Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="بحث باسم الطالب..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="pr-9" />
         </div>
-        <Select value={selectedClass || "all"} onValueChange={(v) => onClassChange(v === "all" ? "" : v)}>
-          <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفصول" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">جميع الفصول</SelectItem>
-            {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Export button */}

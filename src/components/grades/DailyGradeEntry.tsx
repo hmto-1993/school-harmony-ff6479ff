@@ -59,9 +59,10 @@ const MAX_PARTICIPATION_SLOTS = 3;
 interface DailyGradeEntryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
+  selectedPeriod?: number;
 }
 
-export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyGradeEntryProps) {
+export default function DailyGradeEntry({ selectedClass, onClassChange, selectedPeriod = 1 }: DailyGradeEntryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
@@ -70,7 +71,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
   const goToNextDay = () => {
@@ -232,12 +232,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <Select value={selectedClass} onValueChange={onClassChange}>
-                <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="اختر الفصل..." /></SelectTrigger>
-                <SelectContent>
-                  {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
               {categories.length > 0 && (
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
@@ -265,26 +259,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange }: DailyG
                 />
               )}
             </div>
-          </div>
-          {/* Period Selector */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-semibold text-foreground">الفترة</span>
-            <Button
-              variant={selectedPeriod === 1 ? "default" : "outline"}
-              size="sm"
-              className={cn("rounded-full px-5", selectedPeriod === 1 && "shadow-md")}
-              onClick={() => setSelectedPeriod(1)}
-            >
-              فترة أولى
-            </Button>
-            <Button
-              variant={selectedPeriod === 2 ? "default" : "outline"}
-              size="sm"
-              className={cn("rounded-full px-5", selectedPeriod === 2 && "shadow-md")}
-              onClick={() => setSelectedPeriod(2)}
-            >
-              فترة ثانية
-            </Button>
           </div>
           {/* Date Navigation */}
           <div className="flex items-center gap-2 flex-wrap">
