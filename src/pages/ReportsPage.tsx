@@ -24,8 +24,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import {
   BarChart3,
-  FileDown,
-  FileSpreadsheet,
   ClipboardCheck,
   GraduationCap,
   Calendar,
@@ -43,6 +41,7 @@ import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
+import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
 // ============ Types ============
 
@@ -517,14 +516,11 @@ export default function ReportsPage() {
                   <Eye className="h-4 w-4" />
                   معاينة
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportAttendanceExcel} className="gap-1.5">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  Excel
-                </Button>
-                <Button variant="outline" size="sm" onClick={exportAttendancePDF} className="gap-1.5">
-                  <FileDown className="h-4 w-4" />
-                  PDF
-                </Button>
+                <ReportExportDialog
+                  title="تصدير تقرير الحضور"
+                  onExportExcel={exportAttendanceExcel}
+                  onExportPDF={exportAttendancePDF}
+                />
               </>
             )}
           </div>
@@ -630,14 +626,11 @@ export default function ReportsPage() {
                   <Eye className="h-4 w-4" />
                   معاينة
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportGradesExcel} className="gap-1.5">
-                  <FileSpreadsheet className="h-4 w-4" />
-                  Excel
-                </Button>
-                <Button variant="outline" size="sm" onClick={exportGradesPDF} className="gap-1.5">
-                  <FileDown className="h-4 w-4" />
-                  PDF
-                </Button>
+                <ReportExportDialog
+                  title="تصدير تقرير الدرجات"
+                  onExportExcel={exportGradesExcel}
+                  onExportPDF={exportGradesPDF}
+                />
               </>
             )}
           </div>
