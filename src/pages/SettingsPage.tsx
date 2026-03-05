@@ -142,7 +142,7 @@ export default function SettingsPage() {
   const classFileRef = useRef<HTMLInputElement>(null);
 
   // Edit category
-  const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number }>>({});
+  const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string }>>({});
   const [savingCats, setSavingCats] = useState(false);
 
   // SMS Provider settings
@@ -526,42 +526,48 @@ export default function SettingsPage() {
       for (const tpl of templateCats) {
         const editedVals = editingCats[tpl.id];
         if (!editedVals) continue;
-        const matchingIds = categories
-          .filter((c) => c.name === tpl.name)
-          .map((c) => c.id);
-        for (const id of matchingIds) {
+        const originalName = tpl.name;
+        const matchingCats = categories.filter((c) => c.name === originalName);
+        for (const mc of matchingCats) {
+          const updateData: Record<string, any> = { max_score: editedVals.max_score };
+          if (editedVals.name && editedVals.name !== originalName) {
+            updateData.name = editedVals.name;
+          }
           const { error } = await supabase
             .from("grade_categories")
-            .update({ max_score: editedVals.max_score })
-            .eq("id", id);
+            .update(updateData)
+            .eq("id", mc.id);
           if (error) hasError = true;
         }
       }
       if (hasError) {
         toast({ title: "خطأ في الحفظ", variant: "destructive" });
       } else {
-        toast({ title: "تم الحفظ", description: "تم تعميم أوزان التقييم على جميع الفصول" });
+        toast({ title: "تم الحفظ", description: "تم تعميم التغييرات على جميع الفصول" });
         fetchData();
       }
     } else {
-      // Save only the filtered class
       const filtered = categories.filter((c) => c.class_id === catClassFilter);
-      const updates = filtered.map((cat) =>
-        supabase
+      const updates = filtered.map((cat) => {
+        const edited = editingCats[cat.id];
+        const updateData: Record<string, any> = { max_score: edited?.max_score ?? cat.max_score };
+        if (edited?.name) updateData.name = edited.name;
+        return supabase
           .from("grade_categories")
-          .update({ max_score: editingCats[cat.id]?.max_score ?? cat.max_score })
-          .eq("id", cat.id)
-      );
+          .update(updateData)
+          .eq("id", cat.id);
+      });
       const results = await Promise.all(updates);
       const hasError = results.some((r) => r.error);
       if (hasError) {
         toast({ title: "خطأ في الحفظ", variant: "destructive" });
       } else {
-        toast({ title: "تم الحفظ", description: "تم تحديث أوزان التقييم بنجاح" });
+        toast({ title: "تم الحفظ", description: "تم تحديث فئات التقييم بنجاح" });
         fetchData();
       }
     }
     setSavingCats(false);
+    setEditingCats({});
   };
 
   const handleAddCategory = async () => {
@@ -635,6 +641,12 @@ export default function SettingsPage() {
 
   // Filter categories by selected class
   const [catClassFilter, setCatClassFilter] = useState("all");
+
+  const CLASSWORK_NAMES = ["المشاركة", "الواجبات", "الأعمال"];
+  const EXAM_NAMES = ["اختبار عملي", "اختبار الفترة"];
+  const isClassworkCat = (name: string) => CLASSWORK_NAMES.includes(name);
+  const isExamCat = (name: string) => EXAM_NAMES.includes(name);
+
   // When "all", show unique categories by name (from first class as template)
   const filteredCategories = catClassFilter === "all"
     ? (() => {
@@ -642,6 +654,13 @@ export default function SettingsPage() {
         return firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
       })()
     : categories.filter((c) => c.class_id === catClassFilter);
+
+  const classworkCategories = filteredCategories.filter((c) => isClassworkCat(editingCats[c.id]?.name ?? c.name));
+  const examCategories = filteredCategories.filter((c) => isExamCat(editingCats[c.id]?.name ?? c.name));
+  const otherCategories = filteredCategories.filter((c) => {
+    const name = editingCats[c.id]?.name ?? c.name;
+    return !isClassworkCat(name) && !isExamCat(name);
+  });
 
   if (loading) {
     return (
@@ -1000,71 +1019,108 @@ export default function SettingsPage() {
                 </Select>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">الفئة</TableHead>
-                    <TableHead className="text-right">الدرجة القصوى</TableHead>
-                    {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCategories.map((cat) => (
-                    <TableRow key={cat.id}>
-                      <TableCell className="font-medium">{cat.name}</TableCell>
-                      
-                      <TableCell>
-                        {isAdmin ? (
-                          <Input
-                            type="number"
-                            className="w-24"
-                            value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                            onChange={(e) =>
-                              setEditingCats((prev) => ({
-                                ...prev,
-                                [cat.id]: {
-                                  ...prev[cat.id],
-                                  max_score: parseFloat(e.target.value) || 0,
-                                },
-                              }))
-                            }
-                          />
-                        ) : (
-                          <span>{cat.max_score}</span>
-                        )}
-                      </TableCell>
-                      {isAdmin && (
-                        <TableCell>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent dir="rtl">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>حذف فئة "{cat.name}"؟</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  سيتم حذف هذه الفئة وجميع الدرجات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                <AlertDialogAction
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                  onClick={() => handleDeleteCategory(cat.id)}
-                                >
-                                  حذف
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {/* Helper to render a category table */}
+              {[
+                { label: "أعمال السنة (المشاركة، الواجبات، الأعمال)", cats: classworkCategories, icon: "📝" },
+                { label: "الاختبارات (اختبار عملي، اختبار الفترة)", cats: examCategories, icon: "📋" },
+                ...(otherCategories.length > 0 ? [{ label: "فئات أخرى", cats: otherCategories, icon: "📌" }] : []),
+              ].map((group) => (
+                group.cats.length > 0 && (
+                  <div key={group.label} className="space-y-2">
+                    <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
+                      <span>{group.icon}</span>
+                      {group.label}
+                    </h3>
+                    <div className="rounded-lg border border-border/50 overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="text-right">الفئة</TableHead>
+                            <TableHead className="text-right">الدرجة القصوى</TableHead>
+                            {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.cats.map((cat) => (
+                            <TableRow key={cat.id}>
+                              <TableCell className="font-medium">
+                                {isAdmin ? (
+                                  <Input
+                                    value={editingCats[cat.id]?.name ?? cat.name}
+                                    onChange={(e) =>
+                                      setEditingCats((prev) => ({
+                                        ...prev,
+                                        [cat.id]: {
+                                          ...prev[cat.id],
+                                          max_score: prev[cat.id]?.max_score ?? cat.max_score,
+                                          weight: prev[cat.id]?.weight ?? cat.weight,
+                                          name: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                    className="h-8 w-40"
+                                  />
+                                ) : (
+                                  <span>{cat.name}</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {isAdmin ? (
+                                  <Input
+                                    type="number"
+                                    className="w-24"
+                                    value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                                    onChange={(e) =>
+                                      setEditingCats((prev) => ({
+                                        ...prev,
+                                        [cat.id]: {
+                                          ...prev[cat.id],
+                                          name: prev[cat.id]?.name ?? cat.name,
+                                          max_score: parseFloat(e.target.value) || 0,
+                                        },
+                                      }))
+                                    }
+                                  />
+                                ) : (
+                                  <span>{cat.max_score}</span>
+                                )}
+                              </TableCell>
+                              {isAdmin && (
+                                <TableCell>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent dir="rtl">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>حذف فئة "{cat.name}"؟</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          سيتم حذف هذه الفئة وجميع الدرجات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                          onClick={() => handleDeleteCategory(cat.id)}
+                                        >
+                                          حذف
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
