@@ -1,0 +1,1 @@
+ALTER TABLE public.resource_folders ADD COLUMN category text NOT NULL DEFAULT 'general';

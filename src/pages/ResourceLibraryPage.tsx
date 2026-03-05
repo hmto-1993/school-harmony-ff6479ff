@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FolderOpen, FileText, Download, Trash2, Upload, FolderPlus, File, FileSpreadsheet, Loader2,
   BookOpen, FlaskConical, Microscope, Calculator, Atom, GraduationCap, Brain, TestTube2,
-  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves
+  Ruler, Lightbulb, Pen, Save, X, ClipboardList, Zap, Magnet, Waves, Tag
 } from "lucide-react";
 
 interface ClassInfo {
@@ -29,6 +29,7 @@ interface ResourceFolder {
   class_id: string;
   created_by: string;
   created_at: string;
+  category: string;
   classes?: ClassInfo;
   file_count?: number;
 }
@@ -40,6 +41,21 @@ interface ResourceFile {
   file_url: string;
   file_size: number;
   created_at: string;
+}
+
+const CATEGORY_OPTIONS = [
+  { value: "general", label: "عام" },
+  { value: "certificates", label: "شهادات" },
+  { value: "worksheets", label: "أوراق عمل" },
+  { value: "exams", label: "اختبارات" },
+  { value: "notes", label: "مذكرات" },
+  { value: "books", label: "كتب" },
+  { value: "experiments", label: "تجارب" },
+  { value: "reviews", label: "مراجعات" },
+];
+
+function getCategoryLabel(value: string) {
+  return CATEGORY_OPTIONS.find(c => c.value === value)?.label || "عام";
 }
 
 const ICON_OPTIONS = [
@@ -79,13 +95,15 @@ export default function ResourceLibraryPage() {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
   const [filterClassId, setFilterClassId] = useState<string>("all");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   // Create folder dialog
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newIcon, setNewIcon] = useState("folder");
+  const [newIcon, setNewIcon] = useState("atom");
   const [newClassId, setNewClassId] = useState("");
+  const [newCategory, setNewCategory] = useState("general");
   const [creating, setCreating] = useState(false);
 
   // Folder detail dialog
@@ -99,6 +117,7 @@ export default function ResourceLibraryPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editIcon, setEditIcon] = useState("");
   const [editClassId, setEditClassId] = useState("");
+  const [editCategory, setEditCategory] = useState("");
   const [saving, setSaving] = useState(false);
 
   const fetchClasses = useCallback(async () => {
@@ -141,7 +160,8 @@ export default function ResourceLibraryPage() {
       icon: newIcon,
       class_id: newClassId,
       created_by: user.id,
-    });
+      category: newCategory,
+    } as any);
     setCreating(false);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
@@ -149,8 +169,9 @@ export default function ResourceLibraryPage() {
       toast({ title: "تم إنشاء الحقيبة بنجاح" });
       setCreateOpen(false);
       setNewTitle("");
-      setNewIcon("folder");
+      setNewIcon("atom");
       setNewClassId("");
+      setNewCategory("general");
       fetchFolders();
     }
   };
@@ -185,6 +206,7 @@ export default function ResourceLibraryPage() {
     setEditTitle(selectedFolder.title);
     setEditIcon(selectedFolder.icon);
     setEditClassId(selectedFolder.class_id);
+    setEditCategory(selectedFolder.category || "general");
     setEditing(true);
   };
 
@@ -193,7 +215,7 @@ export default function ResourceLibraryPage() {
     setSaving(true);
     const { error } = await supabase
       .from("resource_folders")
-      .update({ title: editTitle.trim(), icon: editIcon, class_id: editClassId })
+      .update({ title: editTitle.trim(), icon: editIcon, class_id: editClassId, category: editCategory } as any)
       .eq("id", selectedFolder.id);
     setSaving(false);
     if (error) {
@@ -201,7 +223,6 @@ export default function ResourceLibraryPage() {
     } else {
       toast({ title: "تم تحديث الحقيبة" });
       setEditing(false);
-      // Refresh folder data
       const { data } = await supabase
         .from("resource_folders")
         .select("*, classes(id, name, grade, section)")
@@ -248,9 +269,11 @@ export default function ResourceLibraryPage() {
     fetchFolders();
   };
 
-  const filteredFolders = filterClassId === "all"
-    ? folders
-    : folders.filter(f => f.class_id === filterClassId);
+  const filteredFolders = folders.filter(f => {
+    const classMatch = filterClassId === "all" || f.class_id === filterClassId;
+    const categoryMatch = filterCategory === "all" || (f as any).category === filterCategory;
+    return classMatch && categoryMatch;
+  });
 
   const getClassLabel = (folder: ResourceFolder) => {
     const c = folder.classes;
@@ -280,6 +303,19 @@ export default function ResourceLibraryPage() {
     </div>
   );
 
+  const CategorySelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="mt-1 rounded-xl">
+        <SelectValue placeholder="اختر التصنيف" />
+      </SelectTrigger>
+      <SelectContent>
+        {CATEGORY_OPTIONS.map(c => (
+          <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -295,7 +331,7 @@ export default function ResourceLibraryPage() {
               حقيبة جديدة
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md" dir="rtl">
+          <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto" dir="rtl">
             <DialogHeader>
               <DialogTitle>إنشاء حقيبة ملفات</DialogTitle>
             </DialogHeader>
@@ -323,6 +359,10 @@ export default function ResourceLibraryPage() {
                 </Select>
               </div>
               <div>
+                <Label>التصنيف</Label>
+                <CategorySelect value={newCategory} onChange={setNewCategory} />
+              </div>
+              <div>
                 <Label>الأيقونة</Label>
                 <IconPicker value={newIcon} onChange={setNewIcon} />
               </div>
@@ -334,33 +374,68 @@ export default function ResourceLibraryPage() {
         </Dialog>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-sm font-medium text-muted-foreground">تصفية حسب الشعبة:</span>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={() => setFilterClassId("all")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-              filterClassId === "all"
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
-            }`}
-          >
-            الكل
-          </button>
-          {classes.map(c => (
+      {/* Filter Bars */}
+      <div className="space-y-3">
+        {/* Class filter */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground">الشعبة:</span>
+          <div className="flex gap-2 flex-wrap">
             <button
-              key={c.id}
-              onClick={() => setFilterClassId(c.id)}
+              onClick={() => setFilterClassId("all")}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                filterClassId === c.id
+                filterClassId === "all"
                   ? "bg-primary text-primary-foreground shadow-md"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
             >
-              {c.grade}/{c.section}
+              الكل
             </button>
-          ))}
+            {classes.map(c => (
+              <button
+                key={c.id}
+                onClick={() => setFilterClassId(c.id)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  filterClassId === c.id
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {c.grade}/{c.section}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Category filter */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-sm font-medium text-muted-foreground flex items-center gap-1">
+            <Tag className="h-3.5 w-3.5" /> التصنيف:
+          </span>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setFilterCategory("all")}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                filterCategory === "all"
+                  ? "bg-accent text-accent-foreground shadow-md"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              الكل
+            </button>
+            {CATEGORY_OPTIONS.map(cat => (
+              <button
+                key={cat.value}
+                onClick={() => setFilterCategory(cat.value)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  filterCategory === cat.value
+                    ? "bg-accent text-accent-foreground shadow-md"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -392,9 +467,14 @@ export default function ResourceLibraryPage() {
                     <IconComp className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="font-bold text-foreground text-base leading-tight">{folder.title}</h3>
-                  <Badge variant="secondary" className="rounded-full text-xs">
-                    {getClassLabel(folder)}
-                  </Badge>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                    <Badge variant="secondary" className="rounded-full text-xs">
+                      {getClassLabel(folder)}
+                    </Badge>
+                    <Badge variant="outline" className="rounded-full text-xs">
+                      {getCategoryLabel(folder.category)}
+                    </Badge>
+                  </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <File className="h-3.5 w-3.5" />
                     <span>{folder.file_count || 0} ملف</span>
@@ -432,6 +512,10 @@ export default function ResourceLibraryPage() {
                       </Select>
                     </div>
                     <div>
+                      <Label>التصنيف</Label>
+                      <CategorySelect value={editCategory} onChange={setEditCategory} />
+                    </div>
+                    <div>
                       <Label>الأيقونة</Label>
                       <IconPicker value={editIcon} onChange={setEditIcon} />
                     </div>
@@ -450,9 +534,10 @@ export default function ResourceLibraryPage() {
                       {(() => { const IC = getIconComponent(selectedFolder.icon); return <IC className="h-6 w-6 text-primary" />; })()}
                       <div>
                         <DialogTitle className="text-lg">{selectedFolder.title}</DialogTitle>
-                        <p className="text-xs text-muted-foreground mt-0.5">
+                        <div className="flex items-center gap-1.5 mt-1">
                           <Badge variant="outline" className="rounded-full text-[10px]">{getClassLabel(selectedFolder)}</Badge>
-                        </p>
+                          <Badge variant="secondary" className="rounded-full text-[10px]">{getCategoryLabel(selectedFolder.category)}</Badge>
+                        </div>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={startEditing} className="gap-1.5 text-muted-foreground hover:text-primary">
