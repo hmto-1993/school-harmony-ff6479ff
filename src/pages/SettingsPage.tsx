@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ArrowUp,
   ArrowDown,
+  Palette,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
