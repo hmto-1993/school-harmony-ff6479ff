@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -612,9 +612,39 @@ export default function StudentsPage() {
                     <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
                     <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
                     <td className="p-3 border-l border-border/10">
-                      {s.classes?.name ? (
-                        <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
-                      ) : "—"}
+                      {role === "admin" ? (
+                        <Select
+                          value={s.class_id || "none"}
+                          onValueChange={async (newClassId) => {
+                            const actualClassId = newClassId === "none" ? null : newClassId;
+                            if (actualClassId === s.class_id) return;
+                            const oldClassName = s.classes?.name || "بدون فصل";
+                            const { error } = await supabase.from("students").update({ class_id: actualClassId }).eq("id", s.id);
+                            if (error) {
+                              toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                            } else {
+                              const newClassName = classes.find(c => c.id === actualClassId)?.name || "بدون فصل";
+                              toast({ title: "تم النقل", description: `تم نقل ${s.full_name} من "${oldClassName}" إلى "${newClassName}"` });
+                              fetchStudents();
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="h-7 text-xs w-auto min-w-[100px] gap-1 border-dashed">
+                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <SelectValue placeholder="بدون فصل" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون فصل</SelectItem>
+                            {classes.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        s.classes?.name ? (
+                          <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
+                        ) : "—"
+                      )}
                     </td>
                     <td dir="ltr" className="p-3 text-muted-foreground border-l border-border/10">{s.parent_phone || "—"}</td>
                     {role === "admin" && (
