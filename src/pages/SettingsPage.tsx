@@ -532,7 +532,7 @@ export default function SettingsPage() {
         for (const id of matchingIds) {
           const { error } = await supabase
             .from("grade_categories")
-            .update({ weight: editedVals.weight, max_score: editedVals.max_score })
+            .update({ max_score: editedVals.max_score })
             .eq("id", id);
           if (error) hasError = true;
         }
@@ -549,7 +549,7 @@ export default function SettingsPage() {
       const updates = filtered.map((cat) =>
         supabase
           .from("grade_categories")
-          .update({ weight: editingCats[cat.id]?.weight ?? cat.weight, max_score: editingCats[cat.id]?.max_score ?? cat.max_score })
+          .update({ max_score: editingCats[cat.id]?.max_score ?? cat.max_score })
           .eq("id", cat.id)
       );
       const results = await Promise.all(updates);
@@ -949,23 +949,13 @@ export default function SettingsPage() {
                             onChange={(e) => setNewCatName(e.target.value)}
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>الوزن (%)</Label>
-                            <Input
-                              type="number"
-                              value={newCatWeight}
-                              onChange={(e) => setNewCatWeight(parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>الدرجة القصوى</Label>
-                            <Input
-                              type="number"
-                              value={newCatMaxScore}
-                              onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
+                        <div className="space-y-2">
+                          <Label>الدرجة القصوى</Label>
+                          <Input
+                            type="number"
+                            value={newCatMaxScore}
+                            onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
+                          />
                         </div>
                       </div>
                       <DialogFooter>
@@ -1014,8 +1004,6 @@ export default function SettingsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-right">الفئة</TableHead>
-                    
-                    <TableHead className="text-right">الوزن (%)</TableHead>
                     <TableHead className="text-right">الدرجة القصوى</TableHead>
                     {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
                   </TableRow>
@@ -1025,26 +1013,6 @@ export default function SettingsPage() {
                     <TableRow key={cat.id}>
                       <TableCell className="font-medium">{cat.name}</TableCell>
                       
-                      <TableCell>
-                        {isAdmin ? (
-                          <Input
-                            type="number"
-                            className="w-24"
-                            value={editingCats[cat.id]?.weight ?? cat.weight}
-                            onChange={(e) =>
-                              setEditingCats((prev) => ({
-                                ...prev,
-                                [cat.id]: {
-                                  ...prev[cat.id],
-                                  weight: parseFloat(e.target.value) || 0,
-                                },
-                              }))
-                            }
-                          />
-                        ) : (
-                          <span>{cat.weight}%</span>
-                        )}
-                      </TableCell>
                       <TableCell>
                         {isAdmin ? (
                           <Input
@@ -1097,21 +1065,6 @@ export default function SettingsPage() {
                   ))}
                 </TableBody>
               </Table>
-              {/* Total weight per class */}
-              {catClassFilter !== "all" && (
-                <div className="text-xs text-muted-foreground text-left">
-                  مجموع الأوزان:{" "}
-                  <span
-                    className={
-                      filteredCategories.reduce((sum, c) => sum + (editingCats[c.id]?.weight ?? c.weight), 0) === 100
-                        ? "text-green-600 font-bold"
-                        : "text-destructive font-bold"
-                    }
-                  >
-                    {filteredCategories.reduce((sum, c) => sum + (editingCats[c.id]?.weight ?? c.weight), 0)}%
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

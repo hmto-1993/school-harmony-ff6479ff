@@ -103,16 +103,15 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
 
         // calc total
         let total = 0;
-        let totalWeight = 0;
+        let maxTotal = 0;
         classCats.forEach((cat) => {
           const score = grades[cat.id];
+          maxTotal += Number(cat.max_score);
           if (score !== null && score !== undefined) {
-            const weight = Number(cat.weight);
-            total += (score / Number(cat.max_score)) * weight;
-            totalWeight += weight;
+            total += score;
           }
         });
-        const totalStr = totalWeight > 0 ? ((total / totalWeight) * 100).toFixed(1) : "—";
+        const totalStr = maxTotal > 0 ? `${total} / ${maxTotal}` : "—";
 
         return {
           student_id: s.id,
@@ -252,7 +251,7 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
                       <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
                         <div>{cat.name}</div>
                         <div className="text-[10px] text-muted-foreground font-normal">
-                          ({Number(cat.weight)}%) من {Number(cat.max_score)}
+                          من {Number(cat.max_score)}
                         </div>
                       </th>
                     ))}
