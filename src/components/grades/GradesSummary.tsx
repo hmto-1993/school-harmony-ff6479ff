@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Pencil, X, Search } from "lucide-react";
+import { Save, Pencil, X, Search, Download } from "lucide-react";
+import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
@@ -191,6 +192,42 @@ export default function GradesSummary({ selectedClass, onClassChange }: GradesSu
           </SelectContent>
         </Select>
       </div>
+
+      {/* Export button */}
+      {groupedByClass.length > 0 && (
+        <div className="flex justify-end">
+          <GradesExportDialog
+            title="التقييم النهائي"
+            fileName="التقييم_النهائي"
+            groups={groupedByClass.map((group) => {
+              const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
+              const examCats = group.categories.filter(c => c.category_group === 'exams');
+              const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
+              const headers = [
+                "#", "الطالب",
+                ...classworkCats.map(c => c.name), ...(classworkCats.length > 0 ? ["مجموع المهام"] : []),
+                ...examCats.map(c => c.name), ...(examCats.length > 0 ? ["مجموع الاختبارات"] : []),
+                ...otherCats.map(c => c.name),
+                "المجموع",
+              ];
+              const rows = group.students.map((sg, i) => {
+                const cwSub = calcSubtotal(sg.grades, classworkCats);
+                const exSub = calcSubtotal(sg.grades, examCats);
+                return [
+                  String(i + 1), sg.full_name,
+                  ...classworkCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
+                  ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
+                  ...otherCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  sg.total,
+                ];
+              });
+              return { className: group.name, headers, rows } as ExportTableGroup;
+            })}
+          />
+        </div>
+      )}
 
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>

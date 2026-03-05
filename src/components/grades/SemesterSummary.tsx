@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
+import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 
@@ -159,6 +160,33 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
           </SelectContent>
         </Select>
       </div>
+
+      {grouped.length > 0 && (
+        <div className="flex justify-end">
+          <GradesExportDialog
+            title="ملخص الفصل"
+            fileName="ملخص_الفصل"
+            groups={grouped.map((group) => {
+              const headers = ["#", "الطالب", "المهام والمشاركة (ف1)", "الاختبارات (ف1)", "المهام والمشاركة (ف2)", "الاختبارات (ف2)", "الإجمالي", "النسبة", "التقدير"];
+              const rows = group.students.map((sg, i) => {
+                const pct = getPercentage(sg.grandTotal, sg.grandMax);
+                const grade = getGradeLabel(pct);
+                return [
+                  String(i + 1), sg.full_name,
+                  `${sg.classworkTotal1} / ${sg.classworkMax}`,
+                  `${sg.examTotal1} / ${sg.examMax}`,
+                  `${sg.classworkTotal2} / ${sg.classworkMax}`,
+                  `${sg.examTotal2} / ${sg.examMax}`,
+                  `${sg.grandTotal} / ${sg.grandMax}`,
+                  `${pct}%`,
+                  grade.label,
+                ];
+              });
+              return { className: group.name, headers, rows } as ExportTableGroup;
+            })}
+          />
+        </div>
+      )}
 
       {grouped.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
