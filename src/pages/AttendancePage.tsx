@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, CalendarIcon, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
+import EmptyState from "@/components/EmptyState";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -188,14 +189,11 @@ export default function AttendancePage() {
         </CardHeader>
         <CardContent>
           {records.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 mb-4">
-                <CalendarIcon className="h-8 w-8 text-primary/60" />
-              </div>
-              <p className="text-muted-foreground">
-                {selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
-              </p>
-            </div>
+            <EmptyState
+              icon={CalendarIcon}
+              title={selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
+              description={selectedClass ? "تأكد من إضافة طلاب لهذا الفصل أولاً" : "حدد الفصل من القائمة أعلاه لعرض قائمة الطلاب وتسجيل حضورهم"}
+            />
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">

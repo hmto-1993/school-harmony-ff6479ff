@@ -719,7 +719,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="classes" dir="rtl">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap scrollbar-none">
           <TabsTrigger value="classes" className="gap-1.5">
             <Users className="h-4 w-4" />
              الفصول الدراسية

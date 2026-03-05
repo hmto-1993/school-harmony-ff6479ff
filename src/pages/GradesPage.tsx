@@ -7,6 +7,7 @@ import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
+import EmptyState from "@/components/EmptyState";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList },
@@ -159,8 +160,8 @@ export default function GradesPage() {
         </div>
       )}
 
-      {/* Content */}
-      {selectedClass && (
+      {/* Content or Empty State */}
+      {selectedClass ? (
         <div className="animate-fade-in">
           {activeType === "daily" && (
             <DailyGradeEntry selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
@@ -175,6 +176,12 @@ export default function GradesPage() {
             <SemesterSummary selectedClass={selectedClass} onClassChange={setSelectedClass} />
           )}
         </div>
+      ) : (
+        <EmptyState
+          icon={ClipboardList}
+          title="اختر فصلاً للبدء"
+          description="حدد الفصل الدراسي من الأعلى لعرض وإدخال درجات الطلاب"
+        />
       )}
     </div>
   );
