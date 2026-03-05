@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, BarChart3, UserCheck } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import BehaviorEntry from "@/components/grades/BehaviorEntry";
+import SemesterSummary from "@/components/grades/SemesterSummary";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 
 export default function GradesPage() {
@@ -35,6 +36,10 @@ export default function GradesPage() {
             <BarChart3 className="h-4 w-4" />
             التقييم النهائي
           </TabsTrigger>
+          <TabsTrigger value="semester" className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            ملخص الفصل
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="daily">
@@ -47,6 +52,10 @@ export default function GradesPage() {
 
         <TabsContent value="summary">
           <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} />
+        </TabsContent>
+
+        <TabsContent value="semester">
+          <SemesterSummary selectedClass={selectedClass} onClassChange={setSelectedClass} />
         </TabsContent>
       </Tabs>
     </div>
