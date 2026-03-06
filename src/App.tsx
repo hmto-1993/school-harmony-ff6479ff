@@ -43,6 +43,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <NotificationOptIn />
+            <PWAInstallPrompt />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
