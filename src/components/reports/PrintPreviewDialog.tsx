@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, X } from "lucide-react";
+import { Printer, Upload, X } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
 import ReportPrintHeader from "./ReportPrintHeader";
@@ -70,7 +70,7 @@ export default function PrintPreviewDialog({
                 onClick={handleExportPng}
                 disabled={exporting}
               >
-                <Download className="h-4 w-4" />
+                <Upload className="h-4 w-4" />
                 {exporting ? "جارٍ..." : "PNG"}
               </Button>
               <Button size="sm" className="gap-1.5" onClick={handlePrint}>
