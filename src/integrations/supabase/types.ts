@@ -336,6 +336,54 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          class_id: string | null
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          student_id: string | null
+          user_type: string
+        }
+        Insert: {
+          auth: string
+          class_id?: string | null
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          student_id?: string | null
+          user_type?: string
+        }
+        Update: {
+          auth?: string
+          class_id?: string | null
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          student_id?: string | null
+          user_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_subscriptions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           activity_id: string
