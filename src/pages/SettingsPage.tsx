@@ -39,6 +39,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
+import { useTheme } from "@/hooks/use-theme";
 import {
   Dialog,
   DialogContent,
