@@ -163,15 +163,6 @@ export default function AttendancePage() {
         </div>
       </div>
 
-      <AttendanceStats
-        total={records.length}
-        present={records.filter((r) => r.status === "present").length}
-        absent={records.filter((r) => r.status === "absent").length}
-        late={records.filter((r) => r.status === "late").length}
-        earlyLeave={records.filter((r) => r.status === "early_leave").length}
-        sickLeave={records.filter((r) => r.status === "sick_leave").length}
-      />
-
       {/* Class Selection Cards */}
       <div>
         <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
@@ -221,6 +212,15 @@ export default function AttendancePage() {
           })}
         </div>
       </div>
+
+      <AttendanceStats
+        total={records.length}
+        present={records.filter((r) => r.status === "present").length}
+        absent={records.filter((r) => r.status === "absent").length}
+        late={records.filter((r) => r.status === "late").length}
+        earlyLeave={records.filter((r) => r.status === "early_leave").length}
+        sickLeave={records.filter((r) => r.status === "sick_leave").length}
+      />
 
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardContent className="pt-6">
