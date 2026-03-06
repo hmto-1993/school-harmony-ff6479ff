@@ -108,10 +108,10 @@ export default function GradesPage() {
                   key={type.id}
                   onClick={() => setActiveType(type.id)}
                   className={cn(
-                    "relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:shadow-lg",
+                    "relative flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.04] hover-lift glass-card",
                     isActive
-                      ? "bg-primary/10 dark:bg-primary/20 border-primary shadow-md"
-                      : "bg-emerald-50/70 dark:bg-emerald-500/5 border-emerald-200/60 dark:border-emerald-500/15 hover:border-emerald-300 dark:hover:border-emerald-500/30"
+                      ? "!border-neon !bg-neon/10 dark:!bg-neon/15 shadow-neon"
+                      : ""
                   )}
                 >
                   <div className={cn(
