@@ -26,6 +26,7 @@ import {
   KeyRound,
   Printer,
   Upload,
+  Download,
   FileSpreadsheet,
   Pencil,
   Check,
