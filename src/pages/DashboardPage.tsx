@@ -9,6 +9,7 @@ import ClassSummaryTable from "@/components/dashboard/ClassSummaryTable";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
+import WelcomeHero from "@/components/dashboard/WelcomeHero";
 
 interface ClassStats {
   name: string;
@@ -95,6 +96,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <WelcomeHero />
       <DashboardHeader onPrint={handlePrint} />
 
       <DashboardStatCards
