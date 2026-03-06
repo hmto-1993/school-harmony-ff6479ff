@@ -117,21 +117,21 @@ export default function GradesPage() {
                   className={cn(
                     "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive
-                      ? "bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 border-accent shadow-lg shadow-accent/20 ring-2 ring-accent/25"
-                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-accent/40 hover:shadow-accent/10"
+                      ? "bg-gradient-to-br from-warning/20 via-warning/10 to-warning/5 border-warning shadow-lg shadow-warning/20 ring-2 ring-warning/25"
+                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-warning/40 hover:shadow-warning/10"
                   )}
                   style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
                 >
                   <div className={cn(
                     "flex items-center justify-center h-12 w-12 rounded-xl transition-all duration-300 group-hover:scale-110 shadow-sm",
-                    isActive ? "bg-gradient-to-br from-accent to-accent/70 shadow-md shadow-accent/30" : "bg-muted"
+                    isActive ? "bg-gradient-to-br from-warning to-warning/70 shadow-md shadow-warning/30" : "bg-muted"
                   )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-accent-foreground" : "text-muted-foreground")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-warning-foreground" : "text-muted-foreground")} />
                   </div>
-                  <span className={cn("text-xs font-bold", isActive ? "text-accent" : "text-foreground")}>
+                  <span className={cn("text-xs font-bold", isActive ? "text-warning" : "text-foreground")}>
                     {type.label}
                   </span>
-                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-accent via-accent/80 to-primary rounded-b" />}
+                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-warning via-warning/80 to-primary rounded-b" />}
                 </button>
               );
             })}
