@@ -26,6 +26,7 @@ import {
   KeyRound,
   Printer,
   Upload,
+  Download,
   FileSpreadsheet,
   Pencil,
   Check,
@@ -805,7 +806,7 @@ export default function SettingsPage() {
                 <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1.5">
-                      <Upload className="h-4 w-4" />
+                      <Download className="h-4 w-4" />
                       استيراد من Excel
                     </Button>
                   </DialogTrigger>
@@ -866,7 +867,7 @@ export default function SettingsPage() {
                       </DialogClose>
                       {importedClasses.length > 0 && (
                         <Button onClick={handleImportClasses} disabled={importingClasses}>
-                          <Upload className="h-4 w-4 ml-1.5" />
+                          <Download className="h-4 w-4 ml-1.5" />
                           {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
                         </Button>
                       )}
