@@ -126,6 +126,7 @@ export default function SettingsPage() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCard, setActiveCard] = useState<string | null>(null);
 
   // New class form
   const [newClassName, setNewClassName] = useState("");
@@ -739,639 +740,669 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* ===== البطاقات الرئيسية (شبكة في الأعلى) ===== */}
-      <div className="flex items-center gap-3 mb-2">
+      {/* ===== البطاقات الرئيسية ===== */}
+      <div className="flex items-center gap-3 mb-3">
         <div className="h-px flex-1 bg-gradient-to-l from-primary/40 to-transparent" />
         <h2 className="text-sm font-bold text-primary tracking-wide">⚙️ الإعدادات الأساسية</h2>
         <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-        {/* ===== الفصول الدراسية ===== */}
-        <Collapsible>
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-            <CollapsibleTrigger className="w-full group">
-              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/20 text-white">
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-base font-bold text-foreground">الفصول الدراسية</h3>
-                    <p className="text-xs text-muted-foreground">{classes.length} فصل دراسي</p>
-                  </div>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="px-5 pb-5 pt-0">
-                {isAdmin && (
-                  <div className="flex gap-2 mb-4 flex-wrap">
-                    {/* Import from Excel */}
-                    <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="gap-1.5">
-                          <Upload className="h-4 w-4" />
-                          استيراد من Excel
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent dir="rtl" className="max-w-xl">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
-                            <FileSpreadsheet className="h-5 w-5" />
-                            استيراد الفصول من ملف Excel
-                          </DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-2">
-                          <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
-                            الأعمدة المدعومة: <strong>اسم الفصل</strong> (مطلوب)، الصف، رقم الفصل
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label>ملف Excel أو CSV</Label>
-                            <Input ref={classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleClassFileSelect} className="cursor-pointer" />
-                          </div>
-                          {importedClasses.length > 0 && (
-                            <div className="space-y-2">
-                              <Label>معاينة ({importedClasses.length} فصل)</Label>
-                              <div className="max-h-[200px] overflow-auto rounded-lg border">
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                       <TableHead className="text-right">الفصل</TableHead>
-                                       <TableHead className="text-right">الصف</TableHead>
-                                       <TableHead className="text-right">رقم الفصل</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {importedClasses.map((c, i) => (
-                                      <TableRow key={i}>
-                                        <TableCell>
-                                          <Input
-                                            value={c.name}
-                                            onChange={(e) => {
-                                              const updated = [...importedClasses];
-                                              updated[i] = { ...updated[i], name: e.target.value };
-                                              setImportedClasses(updated);
-                                            }}
-                                            className="h-8"
-                                          />
-                                        </TableCell>
-                                        <TableCell>{c.grade}</TableCell>
-                                        <TableCell>{c.section || "—"}</TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">إلغاء</Button>
-                          </DialogClose>
-                          {importedClasses.length > 0 && (
-                            <Button onClick={handleImportClasses} disabled={importingClasses}>
-                              <Upload className="h-4 w-4 ml-1.5" />
-                              {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
-                            </Button>
-                          )}
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    {/* Add single class */}
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" className="gap-1.5">
-                          <Plus className="h-4 w-4" />
-                           إضافة فصل
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent dir="rtl">
-                        <DialogHeader>
-                          <DialogTitle>إضافة فصل جديد</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-2">
-                          <div className="space-y-2">
-                            <Label>اسم الفصل</Label>
-                            <Input placeholder="مثال: أول/6" value={newClassName} onChange={(e) => setNewClassName(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>رقم الفصل</Label>
-                            <Input placeholder="مثال: 6" value={newSection} onChange={(e) => setNewSection(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>الصف</Label>
-                            <Input value={newGrade} onChange={(e) => setNewGrade(e.target.value)} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>العام الدراسي</Label>
-                            <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} />
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">إلغاء</Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button onClick={handleAddClass}>إضافة</Button>
-                          </DialogClose>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                       <TableHead className="text-right">الفصل</TableHead>
-                       <TableHead className="text-right">الصف</TableHead>
-                       <TableHead className="text-right">رقم الفصل</TableHead>
-                      <TableHead className="text-right">العام الدراسي</TableHead>
-                      <TableHead className="text-right">عدد الطلاب</TableHead>
-                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {classes.map((cls) => (
-                      <TableRow key={cls.id}>
-                        <TableCell className="font-medium">
-                          {isAdmin && editingClassId === cls.id ? (
-                            <Input value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} className="h-8 w-32"
-                              autoFocus onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                          ) : (
-                            <span className={isAdmin ? "cursor-pointer hover:underline" : ""} onClick={() => isAdmin && startEditingClass(cls)}>
-                              {cls.name}
-                              {isAdmin && <Pencil className="inline h-3 w-3 mr-1 text-muted-foreground" />}
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin && editingClassId === cls.id ? (
-                            <Input value={editingClassGrade} onChange={(e) => setEditingClassGrade(e.target.value)} className="h-8 w-28"
-                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                          ) : cls.grade}
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin && editingClassId === cls.id ? (
-                            <Input value={editingClassSection} onChange={(e) => setEditingClassSection(e.target.value)} className="h-8 w-16"
-                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                          ) : cls.section}
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin && editingClassId === cls.id ? (
-                            <Input value={editingClassYear} onChange={(e) => setEditingClassYear(e.target.value)} className="h-8 w-24"
-                              onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
-                          ) : cls.academic_year}
-                        </TableCell>
-                        <TableCell>{cls.studentCount}</TableCell>
-                        {isAdmin && (
-                          <TableCell className="flex items-center gap-1">
-                            {editingClassId === cls.id ? (
-                              <>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveClassEdit(cls.id)}>
-                                  <Check className="h-3.5 w-3.5" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingClassId(null)}>
-                                  <X className="h-3.5 w-3.5" />
-                                </Button>
-                              </>
-                            ) : (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent dir="rtl">
-                                  <AlertDialogHeader>
-                                     <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
-                                     <AlertDialogDescription>
-                                       سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      onClick={() => handleDeleteClass(cls.id)}
-                                    >
-                                      حذف
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+      {/* Summary Cards Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { key: "classes", icon: Users, label: "الفصول الدراسية", desc: `${classes.length} فصل`, gradient: "from-sky-500 to-blue-600", shadow: "shadow-sky-500/20" },
+          { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
+          { key: "print", icon: Printer, label: "ورقة الطباعة", desc: "ترويسة التقارير", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
+          { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
+        ].filter(c => !c.adminOnly || isAdmin).map((card) => (
+          <button
+            key={card.key}
+            onClick={() => setActiveCard(activeCard === card.key ? null : card.key)}
+            className={cn(
+              "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 transition-all duration-300 text-center group",
+              activeCard === card.key
+                ? "border-primary bg-primary/5 shadow-xl scale-[1.02]"
+                : "border-border/50 bg-card/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:border-primary/30 hover:scale-[1.01]"
+            )}
+          >
+            <div
+              className={cn(
+                "flex items-center justify-center h-12 w-12 rounded-xl shadow-lg text-white transition-transform duration-300 group-hover:scale-110",
+                !card.customBg && `bg-gradient-to-br ${card.gradient} ${card.shadow}`
+              )}
+              style={card.customBg ? { background: card.customBg } : undefined}
+            >
+              <card.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-foreground">{card.label}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
+            </div>
+            {activeCard === card.key && (
+              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-card border-b-2 border-r-2 border-primary" />
+            )}
+          </button>
+        ))}
+      </div>
 
-        {/* ===== فئات التقييم ===== */}
-        <Collapsible>
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-            <CollapsibleTrigger className="w-full group">
-              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/20 text-white">
-                    <GraduationCap className="h-5 w-5" />
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-base font-bold text-foreground">فئات التقييم</h3>
-                    <p className="text-xs text-muted-foreground">{categories.length} فئة تقييم</p>
-                  </div>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="px-5 pb-5 pt-0 space-y-4">
-                {isAdmin && (
-                  <div className="flex gap-2 flex-wrap">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="gap-1.5">
-                          <Plus className="h-4 w-4" />
-                          إضافة فئة تقييم
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent dir="rtl">
-                        <DialogHeader>
-                          <DialogTitle>إضافة فئة تقييم جديدة</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-2">
-                          <div className="space-y-2">
-                            <Label>الفصل</Label>
-                            <Select value={newCatClassId} onValueChange={setNewCatClassId}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="اختر الفصل" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="all">جميع الفصول</SelectItem>
-                                {classes.map((cls) => (
-                                  <SelectItem key={cls.id} value={cls.id}>
-                                    {cls.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>اسم الفئة</Label>
-                            <Input
-                              placeholder="مثال: اختبار نهائي"
-                              value={newCatName}
-                              onChange={(e) => setNewCatName(e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>الدرجة القصوى</Label>
-                            <Input
-                              type="number"
-                              value={newCatMaxScore}
-                              onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>القسم</Label>
-                            <Select value={newCatGroup} onValueChange={setNewCatGroup}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="classwork">📝 المهام الادائية والمشاركة والتفاعل</SelectItem>
-                                <SelectItem value="exams">📋 الاختبارات</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">إلغاء</Button>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <Button onClick={handleAddCategory} disabled={!newCatName.trim() || !newCatClassId}>
-                              إضافة
-                            </Button>
-                          </DialogClose>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                    <Button
-                      size="sm"
-                      className="gap-1.5"
-                      onClick={handleSaveCategories}
-                      disabled={savingCats}
-                    >
-                      <Save className="h-4 w-4" />
-                      {savingCats ? "جارٍ الحفظ..." : catClassFilter === "all" ? "تعميم على الكل" : "حفظ التغييرات"}
+      {/* Active Card Content - Full Width */}
+      {activeCard === "classes" && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="h-5 w-5 text-primary" />
+                الفصول الدراسية
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isAdmin && (
+              <div className="flex gap-2 flex-wrap">
+                <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5">
+                      <Upload className="h-4 w-4" />
+                      استيراد من Excel
                     </Button>
-                  </div>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl" className="max-w-xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <FileSpreadsheet className="h-5 w-5" />
+                        استيراد الفصول من ملف Excel
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+                        الأعمدة المدعومة: <strong>اسم الفصل</strong> (مطلوب)، الصف، رقم الفصل
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>ملف Excel أو CSV</Label>
+                        <Input ref={classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleClassFileSelect} className="cursor-pointer" />
+                      </div>
+                      {importedClasses.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>معاينة ({importedClasses.length} فصل)</Label>
+                          <div className="max-h-[200px] overflow-auto rounded-lg border">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                   <TableHead className="text-right">الفصل</TableHead>
+                                   <TableHead className="text-right">الصف</TableHead>
+                                   <TableHead className="text-right">رقم الفصل</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {importedClasses.map((c, i) => (
+                                  <TableRow key={i}>
+                                    <TableCell>
+                                      <Input
+                                        value={c.name}
+                                        onChange={(e) => {
+                                          const updated = [...importedClasses];
+                                          updated[i] = { ...updated[i], name: e.target.value };
+                                          setImportedClasses(updated);
+                                        }}
+                                        className="h-8"
+                                      />
+                                    </TableCell>
+                                    <TableCell>{c.grade}</TableCell>
+                                    <TableCell>{c.section || "—"}</TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">إلغاء</Button>
+                      </DialogClose>
+                      {importedClasses.length > 0 && (
+                        <Button onClick={handleImportClasses} disabled={importingClasses}>
+                          <Upload className="h-4 w-4 ml-1.5" />
+                          {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
+                        </Button>
+                      )}
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                       إضافة فصل
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl" className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>إضافة فصل جديد</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2">
+                      <div className="space-y-1.5">
+                        <Label>اسم الفصل</Label>
+                        <Input value={newClassName} onChange={(e) => setNewClassName(e.target.value)} placeholder="مثال: 1/1" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>الصف</Label>
+                        <Select value={newGrade} onValueChange={setNewGrade}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي", "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي"].map(g => (
+                              <SelectItem key={g} value={g}>{g}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label>رقم الفصل</Label>
+                          <Input value={newSection} onChange={(e) => setNewSection(e.target.value)} placeholder="1" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>السنة</Label>
+                          <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">إلغاء</Button>
+                      </DialogClose>
+                      <Button onClick={handleAddClass}>
+                        <Plus className="h-4 w-4 ml-1.5" />
+                        إضافة
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+            <div className="rounded-xl border border-border/50 overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50">
+                    <TableHead className="text-right">الفصل</TableHead>
+                    <TableHead className="text-right">الصف</TableHead>
+                    <TableHead className="text-right">رقم الفصل</TableHead>
+                    <TableHead className="text-right">السنة</TableHead>
+                    <TableHead className="text-right">الطلاب</TableHead>
+                    {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {classes.map((cls) => (
+                    <TableRow key={cls.id} className="group" onDoubleClick={() => {
+                      if (!isAdmin) return;
+                      setEditingClassId(cls.id);
+                      setEditingClassName(cls.name);
+                      setEditingClassGrade(cls.grade);
+                      setEditingClassSection(cls.section);
+                      setEditingClassYear(cls.academic_year);
+                    }}>
+                      <TableCell className="font-medium">
+                        {isAdmin && editingClassId === cls.id ? (
+                          <Input value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} className="h-8 w-28"
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        ) : cls.name}
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin && editingClassId === cls.id ? (
+                          <Select value={editingClassGrade} onValueChange={setEditingClassGrade}>
+                            <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {["الأول الثانوي","الثاني الثانوي","الثالث الثانوي","الأول المتوسط","الثاني المتوسط","الثالث المتوسط","الرابع الابتدائي","الخامس الابتدائي","السادس الابتدائي"].map(g => (
+                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : cls.grade}
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin && editingClassId === cls.id ? (
+                          <Input value={editingClassSection} onChange={(e) => setEditingClassSection(e.target.value)} className="h-8 w-16"
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        ) : cls.section}
+                      </TableCell>
+                      <TableCell>
+                        {isAdmin && editingClassId === cls.id ? (
+                          <Input value={editingClassYear} onChange={(e) => setEditingClassYear(e.target.value)} className="h-8 w-24"
+                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        ) : cls.academic_year}
+                      </TableCell>
+                      <TableCell>{cls.studentCount}</TableCell>
+                      {isAdmin && (
+                        <TableCell className="flex items-center gap-1">
+                          {editingClassId === cls.id ? (
+                            <>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveClassEdit(cls.id)}>
+                                <Check className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingClassId(null)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
+                          ) : (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent dir="rtl">
+                                <AlertDialogHeader>
+                                   <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
+                                   <AlertDialogDescription>
+                                     سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    onClick={() => handleDeleteClass(cls.id)}
+                                  >
+                                    حذف
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "categories" && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                فئات التقييم
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {isAdmin && (
+              <div className="flex gap-2 flex-wrap">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      استيراد من Excel
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl" className="max-w-xl">
+                    <DialogHeader><DialogTitle>استيراد فئات التقييم</DialogTitle></DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="rounded-lg border bg-muted/50 p-3 text-sm text-muted-foreground">
+                        الأعمدة المطلوبة: <strong>اسم الفئة</strong>، <strong>الدرجة القصوى</strong>. اختياري: الترتيب، القسم
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>الفصل الدراسي</Label>
+                        <Select value={newCatClassId} onValueChange={setNewCatClassId}>
+                          <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
+                          <SelectContent>
+                            {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>ملف Excel أو CSV</Label>
+                        <Input type="file" accept=".xlsx,.xls,.csv" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !newCatClassId) return;
+                          const XLSX = await import("xlsx");
+                          const data = await file.arrayBuffer();
+                          const wb = XLSX.read(data);
+                          const ws = wb.Sheets[wb.SheetNames[0]];
+                          const json: any[] = XLSX.utils.sheet_to_json(ws);
+                          let order = categories.filter(c => c.class_id === newCatClassId).length;
+                          for (const row of json) {
+                            const name = row["اسم الفئة"] || row["name"] || row["الفئة"];
+                            const max = parseFloat(row["الدرجة القصوى"] || row["max_score"] || row["الدرجة"] || 100);
+                            if (!name) continue;
+                            order++;
+                            await supabase.from("grade_categories").insert({
+                              name, max_score: max, class_id: newCatClassId, sort_order: order, category_group: "classwork", weight: 10
+                            });
+                          }
+                          toast({ title: "تم الاستيراد", description: `تم استيراد الفئات بنجاح` });
+                          fetchData();
+                        }} className="cursor-pointer" />
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      إضافة فئة
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl" className="max-w-md">
+                    <DialogHeader><DialogTitle>إضافة فئة تقييم</DialogTitle></DialogHeader>
+                    <div className="space-y-3 py-2">
+                      <div className="space-y-1.5">
+                        <Label>الفصل الدراسي</Label>
+                        <Select value={newCatClassId} onValueChange={setNewCatClassId}>
+                          <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
+                          <SelectContent>
+                            {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>القسم</Label>
+                        <Select value={newCatGroup} onValueChange={setNewCatGroup}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="classwork">أعمال الفصل</SelectItem>
+                            <SelectItem value="exam">الاختبارات</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>اسم الفئة</Label>
+                        <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="مثال: اختبار شهري" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>الدرجة القصوى</Label>
+                        <Input type="number" value={newCatMaxScore} onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)} />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
+                      <Button onClick={handleAddCategory}><Plus className="h-4 w-4 ml-1.5" />إضافة</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                {Object.keys(editingCats).length > 0 && (
+                  <Button size="sm" variant="default" className="gap-1.5" onClick={handleSaveCategories} disabled={savingCats}>
+                    <Save className="h-4 w-4" />
+                    {savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
+                  </Button>
                 )}
+              </div>
+            )}
+            {(() => {
+              const grouped = classes.map(cls => ({
+                cls,
+                cats: categories.filter(c => c.class_id === cls.id),
+              })).filter(g => g.cats.length > 0);
 
-                <div className="flex items-center gap-2">
-                  <Label className="whitespace-nowrap">الفصل:</Label>
-                  <Select value={catClassFilter} onValueChange={setCatClassFilter}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">تعميم على الكل</SelectItem>
-                      {classes.map((cls) => (
-                        <SelectItem key={cls.id} value={cls.id}>
-                          {cls.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              const groups = grouped.flatMap(g => [
+                { label: `أعمال الفصل - ${g.cls.name}`, icon: "📝", cats: g.cats.filter(c => c.category_group === "classwork"), otherGroupKey: "exam", otherGroupLabel: "الاختبارات" },
+                { label: `الاختبارات - ${g.cls.name}`, icon: "📋", cats: g.cats.filter(c => c.category_group === "exam"), otherGroupKey: "classwork", otherGroupLabel: "أعمال الفصل" },
+              ]).filter(g => g.cats.length > 0);
 
-                {[
-                  { label: "المهام الادائية والمشاركة والتفاعل", cats: classworkCategories, icon: "📝", groupKey: "classwork", otherGroupKey: "exams", otherGroupLabel: "الاختبارات" },
-                  { label: "الاختبارات", cats: examCategories, icon: "📋", groupKey: "exams", otherGroupKey: "classwork", otherGroupLabel: "المهام الادائية والمشاركة والتفاعل" },
-                ].map((group) => (
-                  <div key={group.label} className="space-y-2">
-                    <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
-                      <span>{group.icon}</span>
-                      {group.label}
-                    </h3>
-                    <div className="rounded-lg border border-border/50 overflow-hidden">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="text-right">الفئة</TableHead>
-                            <TableHead className="text-right">الدرجة القصوى</TableHead>
-                            {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+              return groups.map((group) => (
+                <div key={group.label} className="space-y-2">
+                  <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
+                    <span>{group.icon}</span>
+                    {group.label}
+                  </h3>
+                  <div className="rounded-lg border border-border/50 overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-muted/50">
+                          <TableHead className="text-right">الفئة</TableHead>
+                          <TableHead className="text-right">الدرجة القصوى</TableHead>
+                          {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {group.cats.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
+                              لا توجد فئات في هذا القسم
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {group.cats.length === 0 ? (
-                            <TableRow>
-                              <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
-                                لا توجد فئات في هذا القسم
-                              </TableCell>
-                            </TableRow>
-                          ) : group.cats.map((cat) => (
-                            <TableRow key={cat.id}>
-                              <TableCell className="font-medium">
-                                {isAdmin ? (
-                                  <Input
-                                    value={editingCats[cat.id]?.name ?? cat.name}
-                                    onChange={(e) =>
+                        ) : group.cats.map((cat) => (
+                          <TableRow key={cat.id}>
+                            <TableCell className="font-medium">
+                              {isAdmin ? (
+                                <Input
+                                  value={editingCats[cat.id]?.name ?? cat.name}
+                                  onChange={(e) =>
+                                    setEditingCats((prev) => ({
+                                      ...prev,
+                                      [cat.id]: {
+                                        ...prev[cat.id],
+                                        max_score: prev[cat.id]?.max_score ?? cat.max_score,
+                                        weight: prev[cat.id]?.weight ?? cat.weight,
+                                        name: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                  className="h-8 w-40"
+                                />
+                              ) : (
+                                <span>{cat.name}</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {isAdmin ? (
+                                <Input
+                                  type="number"
+                                  className="w-24"
+                                  value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                                  onChange={(e) =>
+                                    setEditingCats((prev) => ({
+                                      ...prev,
+                                      [cat.id]: {
+                                        ...prev[cat.id],
+                                        name: prev[cat.id]?.name ?? cat.name,
+                                        max_score: parseFloat(e.target.value) || 0,
+                                      },
+                                    }))
+                                  }
+                                />
+                              ) : (
+                                <span>{cat.max_score}</span>
+                              )}
+                            </TableCell>
+                            {isAdmin && (
+                              <TableCell>
+                                <div className="flex items-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
+                                    disabled={group.cats.indexOf(cat) === 0} title="تحريك لأعلى">
+                                    <ArrowUp className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
+                                    disabled={group.cats.indexOf(cat) === group.cats.length - 1} title="تحريك لأسفل">
+                                    <ArrowDown className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                    onClick={() =>
                                       setEditingCats((prev) => ({
                                         ...prev,
                                         [cat.id]: {
                                           ...prev[cat.id],
                                           max_score: prev[cat.id]?.max_score ?? cat.max_score,
                                           weight: prev[cat.id]?.weight ?? cat.weight,
-                                          name: e.target.value,
-                                        },
-                                      }))
-                                    }
-                                    className="h-8 w-40"
-                                  />
-                                ) : (
-                                  <span>{cat.name}</span>
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                {isAdmin ? (
-                                  <Input
-                                    type="number"
-                                    className="w-24"
-                                    value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                                    onChange={(e) =>
-                                      setEditingCats((prev) => ({
-                                        ...prev,
-                                        [cat.id]: {
-                                          ...prev[cat.id],
                                           name: prev[cat.id]?.name ?? cat.name,
-                                          max_score: parseFloat(e.target.value) || 0,
+                                          category_group: group.otherGroupKey,
                                         },
                                       }))
                                     }
-                                  />
-                                ) : (
-                                  <span>{cat.max_score}</span>
-                                )}
+                                    title={`نقل إلى ${group.otherGroupLabel}`}>
+                                    ← {group.otherGroupLabel}
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent dir="rtl">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
+                                        <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
                               </TableCell>
-                              {isAdmin && (
-                                <TableCell>
-                                  <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                      onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
-                                      disabled={group.cats.indexOf(cat) === 0} title="تحريك لأعلى">
-                                      <ArrowUp className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                      onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
-                                      disabled={group.cats.indexOf(cat) === group.cats.length - 1} title="تحريك لأسفل">
-                                      <ArrowDown className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
-                                      onClick={() =>
-                                        setEditingCats((prev) => ({
-                                          ...prev,
-                                          [cat.id]: {
-                                            ...prev[cat.id],
-                                            max_score: prev[cat.id]?.max_score ?? cat.max_score,
-                                            weight: prev[cat.id]?.weight ?? cat.weight,
-                                            name: prev[cat.id]?.name ?? cat.name,
-                                            category_group: group.otherGroupKey,
-                                          },
-                                        }))
-                                      }
-                                      title={`نقل إلى ${group.otherGroupLabel}`}>
-                                      ← {group.otherGroupLabel}
-                                    </Button>
-                                    <AlertDialog>
-                                      <AlertDialogTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                          <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                      </AlertDialogTrigger>
-                                      <AlertDialogContent dir="rtl">
-                                        <AlertDialogHeader>
-                                          <AlertDialogTitle>حذف فئة "{cat.name}"؟</AlertDialogTitle>
-                                          <AlertDialogDescription>
-                                            سيتم حذف هذه الفئة وجميع الدرجات المرتبطة بها. هذا الإجراء لا يمكن التراجع عنه.
-                                          </AlertDialogDescription>
-                                        </AlertDialogHeader>
-                                        <AlertDialogFooter>
-                                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                          <AlertDialogAction
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                            onClick={() => handleDeleteCategory(cat.id)}
-                                          >
-                                            حذف
-                                          </AlertDialogAction>
-                                        </AlertDialogFooter>
-                                      </AlertDialogContent>
-                                    </AlertDialog>
-                                  </div>
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
-                ))}
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-
-        {/* ===== ورقة الطباعة ===== */}
-        {isAdmin && (
-          <Collapsible>
-            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-              <CollapsibleTrigger className="w-full group">
-                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 text-white">
-                      <Printer className="h-5 w-5" />
-                    </div>
-                    <div className="text-right">
-                      <h3 className="text-base font-bold text-foreground">ورقة الطباعة</h3>
-                      <p className="text-xs text-muted-foreground">تخصيص ترويسة التقارير المطبوعة</p>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
                 </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="px-5 pb-5 pt-0">
-                  <PrintHeaderEditor />
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        )}
+              ));
+            })()}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* ===== ألوان الاختبارات ===== */}
-        {isAdmin && (
-          <Collapsible>
-            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-              <CollapsibleTrigger className="w-full group">
-                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-11 w-11 rounded-xl shadow-lg text-white"
-                      style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }}>
-                      <Palette className="h-5 w-5" />
-                    </div>
-                    <div className="text-right">
-                      <h3 className="text-base font-bold text-foreground">ألوان الاختبارات</h3>
-                      <p className="text-xs text-muted-foreground">تخصيص ألوان واجهة الاختبارات</p>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+      {activeCard === "print" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Printer className="h-5 w-5 text-primary" />
+                ورقة الطباعة
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <PrintHeaderEditor />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "colors" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Palette className="h-5 w-5 text-primary" />
+                ألوان الاختبارات
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* MCQ Color */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUIZ_COLOR_OPTIONS.map(opt => (
+                    <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
+                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                        quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                      )}
+                      style={{ backgroundColor: opt.value }}
+                      title={opt.label} />
+                  ))}
                 </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="px-5 pb-5 pt-0 space-y-6 max-w-lg">
-                  {/* MCQ Color */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {QUIZ_COLOR_OPTIONS.map(opt => (
-                        <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
-                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                            quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                          )}
-                          style={{ backgroundColor: opt.value }}
-                          title={opt.label} />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
-                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
-                    </div>
-                  </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
+                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
+                </div>
+              </div>
 
-                  {/* True/False Color */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {QUIZ_COLOR_OPTIONS.map(opt => (
-                        <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
-                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                            quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                          )}
-                          style={{ backgroundColor: opt.value }}
-                          title={opt.label} />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
-                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
-                    </div>
-                  </div>
+              {/* True/False Color */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUIZ_COLOR_OPTIONS.map(opt => (
+                    <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
+                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                        quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                      )}
+                      style={{ backgroundColor: opt.value }}
+                      title={opt.label} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
+                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
+                </div>
+              </div>
 
-                  {/* Selected Answer Color */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {QUIZ_COLOR_OPTIONS.map(opt => (
-                        <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
-                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                            quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                          )}
-                          style={{ backgroundColor: opt.value }}
-                          title={opt.label} />
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
-                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
-                    </div>
-                  </div>
+              {/* Selected Answer Color */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
+                <div className="flex flex-wrap gap-2">
+                  {QUIZ_COLOR_OPTIONS.map(opt => (
+                    <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
+                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                        quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                      )}
+                      style={{ backgroundColor: opt.value }}
+                      title={opt.label} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
+                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
+                </div>
+              </div>
+            </div>
 
-                  {/* Preview */}
-                  <div className="rounded-xl border p-4 space-y-2">
-                    <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
-                    <div className="flex gap-3">
-                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
-                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
-                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
-                    </div>
-                  </div>
+            {/* Preview */}
+            <div className="rounded-xl border p-4 space-y-2">
+              <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
+              <div className="flex gap-3">
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
+              </div>
+            </div>
 
-                  <Button disabled={savingQuizColors} className="gap-1.5"
-                    onClick={async () => {
-                      setSavingQuizColors(true);
-                      const results = await Promise.all([
-                        supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
-                        supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
-                        supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
-                      ]);
-                      setSavingQuizColors(false);
-                      if (results.some(r => r.error)) {
-                        toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
-                      } else {
-                        toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
-                      }
-                    }}>
-                    <Save className="h-4 w-4" />
-                    {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
-                  </Button>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        )}
-
-      </div>
-
-      {/* ===== الإعدادات الإضافية (أسفل) ===== */}
+            <Button disabled={savingQuizColors} className="gap-1.5"
+              onClick={async () => {
+                setSavingQuizColors(true);
+                const results = await Promise.all([
+                  supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
+                  supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
+                  supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
+                ]);
+                setSavingQuizColors(false);
+                if (results.some(r => r.error)) {
+                  toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
+                } else {
+                  toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
+                }
+              }}>
+              <Save className="h-4 w-4" />
+              {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
         <h2 className="text-sm font-bold text-muted-foreground tracking-wide">🔧 إعدادات إضافية</h2>
