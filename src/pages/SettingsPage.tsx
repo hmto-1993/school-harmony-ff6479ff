@@ -1065,7 +1065,27 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label>ملف Excel أو CSV</Label>
-                        <Input type="file" accept=".xlsx,.xls,.csv" onChange={handleCatFileImport} className="cursor-pointer" />
+                        <Input type="file" accept=".xlsx,.xls,.csv" onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !newCatClassId) return;
+                          const XLSX = await import("xlsx");
+                          const data = await file.arrayBuffer();
+                          const wb = XLSX.read(data);
+                          const ws = wb.Sheets[wb.SheetNames[0]];
+                          const json: any[] = XLSX.utils.sheet_to_json(ws);
+                          let order = categories.filter(c => c.class_id === newCatClassId).length;
+                          for (const row of json) {
+                            const name = row["اسم الفئة"] || row["name"] || row["الفئة"];
+                            const max = parseFloat(row["الدرجة القصوى"] || row["max_score"] || row["الدرجة"] || 100);
+                            if (!name) continue;
+                            order++;
+                            await supabase.from("grade_categories").insert({
+                              name, max_score: max, class_id: newCatClassId, sort_order: order, category_group: "classwork", weight: 10
+                            });
+                          }
+                          toast({ title: "تم الاستيراد", description: `تم استيراد الفئات بنجاح` });
+                          fetchData();
+                        }} className="cursor-pointer" />
                       </div>
                     </div>
                   </DialogContent>
