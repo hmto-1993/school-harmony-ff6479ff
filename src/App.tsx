@@ -39,9 +39,9 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <NotificationOptIn />
         <BrowserRouter>
           <AuthProvider>
+            <NotificationOptIn />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
