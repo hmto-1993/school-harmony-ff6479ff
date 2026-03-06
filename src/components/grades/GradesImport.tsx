@@ -251,7 +251,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <Button variant="default" className="gap-2 pointer-events-none">
-                    <Upload className="h-4 w-4" />
+                    <Download className="h-4 w-4" />
                     رفع ملف Excel / CSV
                   </Button>
                 </div>
@@ -348,7 +348,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
             {/* Info when no file yet */}
             {importRows.length === 0 && !fileName && (
               <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground gap-3 rounded-xl border-2 border-dashed border-border/50">
-                <Upload className="h-10 w-10 opacity-40" />
+                <Download className="h-10 w-10 opacity-40" />
                 <div>
                   <p className="font-medium">ارفع ملف Excel أو CSV يحتوي على درجات الطلاب</p>
                   <p className="text-xs mt-1">يجب أن يحتوي الملف على عمود لاسم الطالب وعمود للدرجة</p>
