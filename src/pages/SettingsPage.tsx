@@ -40,6 +40,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import { useTheme } from "@/hooks/use-theme";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +89,42 @@ interface GradeCategory {
   class_id: string | null;
   class_name?: string;
   category_group: string;
+}
+
+function HeroToggle() {
+  const [showHero, setShowHero] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("id", "show_hero_section").single().then(({ data }) => {
+      if (data) setShowHero(data.value !== "false");
+      setLoading(false);
+    });
+  }, []);
+
+  const handleToggle = async (checked: boolean) => {
+    setShowHero(checked);
+    const { error } = await supabase
+      .from("site_settings")
+      .upsert({ id: "show_hero_section", value: checked ? "true" : "false" } as any);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: checked ? "تم تفعيل قسم الترحيب" : "تم إخفاء قسم الترحيب" });
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <div className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border/50">
+      <div>
+        <p className="text-sm font-bold text-foreground">قسم الترحيب في لوحة التحكم</p>
+        <p className="text-xs text-muted-foreground">إظهار أو إخفاء بانر الترحيب في أعلى الصفحة الرئيسية</p>
+      </div>
+      <Switch checked={showHero} onCheckedChange={handleToggle} />
+    </div>
+  );
 }
 
 function ThemeSchemePicker() {
@@ -1475,8 +1512,9 @@ export default function SettingsPage() {
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="pt-0 pb-5 px-5">
+              <CardContent className="pt-0 pb-5 px-5 space-y-5">
                 <ThemeSchemePicker />
+                <HeroToggle />
               </CardContent>
             </CollapsibleContent>
           </Card>
