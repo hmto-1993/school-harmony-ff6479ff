@@ -40,6 +40,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import { useTheme } from "@/hooks/use-theme";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -1475,8 +1476,9 @@ export default function SettingsPage() {
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="pt-0 pb-5 px-5">
+              <CardContent className="pt-0 pb-5 px-5 space-y-5">
                 <ThemeSchemePicker />
+                <HeroToggle />
               </CardContent>
             </CollapsibleContent>
           </Card>
