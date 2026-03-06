@@ -30,7 +30,7 @@ export async function subscribeToPush(studentId?: string, classId?: string): Pro
     
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
-        userVisuallyIndicatesPermission: true,
+        userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       });
     }
