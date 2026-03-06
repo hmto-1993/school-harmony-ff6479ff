@@ -739,8 +739,8 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* ===== All Collapsible Sections ===== */}
-      <div className="space-y-4">
+      {/* ===== البطاقات الرئيسية (شبكة في الأعلى) ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* ===== الفصول الدراسية ===== */}
         <Collapsible>
