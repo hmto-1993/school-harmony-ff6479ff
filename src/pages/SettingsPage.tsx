@@ -126,6 +126,7 @@ export default function SettingsPage() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCard, setActiveCard] = useState<string | null>(null);
 
   // New class form
   const [newClassName, setNewClassName] = useState("");
