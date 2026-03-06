@@ -58,8 +58,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
-  const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام الإدارة");
+  const [schoolName, setSchoolName] = useState("Alpha Physics");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("منصة الفيزياء");
 
   useEffect(() => {
     supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle"]).then(({ data }) => {
@@ -87,13 +87,13 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         isCollapsed && "justify-center"
       )}>
         <div className="relative">
-          <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain bg-sidebar-accent p-1 ring-1 ring-sidebar-border/30" />
-          <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
+          <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain bg-sidebar-accent p-0.5 ring-1 ring-neon/25 shadow-neon" />
+          <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-neon border-2 border-sidebar-background animate-glow-pulse" />
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
-            <h2 className="text-sm font-bold truncate">{schoolName}</h2>
-            <p className="text-[11px] text-sidebar-foreground/50 font-light">{schoolSubtitle}</p>
+            <h2 className="text-sm font-bold font-display text-gold truncate tracking-wide">{schoolName}</h2>
+            <p className="text-[11px] text-neon/60 font-light">{schoolSubtitle}</p>
           </div>
         )}
       </div>
@@ -108,10 +108,10 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
               to={link.to}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 hover-lift",
                 isCollapsed && "justify-center px-2",
                 isActive
-                  ? "bg-sidebar-primary/15 text-sidebar-primary font-semibold shadow-glow"
+                  ? "bg-neon/15 text-neon font-semibold shadow-neon border border-neon/20"
                   : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
