@@ -14,7 +14,7 @@ import {
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers
 } from "lucide-react";
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
 

@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
