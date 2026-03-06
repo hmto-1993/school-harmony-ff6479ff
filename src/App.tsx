@@ -20,6 +20,7 @@ import ResourceLibraryPage from "@/pages/ResourceLibraryPage";
 import StudentLoginsPage from "@/pages/StudentLoginsPage";
 import ActivitiesPage from "@/pages/ActivitiesPage";
 import NotFound from "@/pages/NotFound";
+import NotificationOptIn from "@/components/NotificationOptIn";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <NotificationOptIn />
         <BrowserRouter>
           <AuthProvider>
             <Routes>
