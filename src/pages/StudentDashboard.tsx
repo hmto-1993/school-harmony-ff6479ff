@@ -64,6 +64,7 @@ function formatFileSize(bytes: number) {
 export default function StudentDashboard() {
   const { student, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   // Resource library state
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
