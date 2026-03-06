@@ -182,10 +182,10 @@
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(217 91% 60%), hsl(262 83% 58%));
+    background: linear-gradient(135deg, hsl(195 100% 42%), hsl(270 75% 55%));
   }
   .gradient-sidebar {
-    background: linear-gradient(180deg, hsl(222 47% 11%), hsl(222 50% 7%));
+    background: linear-gradient(180deg, hsl(228 45% 10%), hsl(228 55% 5%));
   }
   .shadow-card {
     box-shadow: 0 1px 3px hsl(var(--foreground) / 0.04), 0 1px 2px hsl(var(--foreground) / 0.02);
@@ -194,7 +194,7 @@
     box-shadow: 0 8px 25px hsl(var(--foreground) / 0.06), 0 4px 10px hsl(var(--foreground) / 0.03);
   }
   .shadow-glow {
-    box-shadow: 0 0 20px hsl(217 91% 60% / 0.15);
+    box-shadow: 0 0 20px hsl(195 100% 42% / 0.2);
   }
   .glass {
     background: hsl(var(--card) / 0.7);
