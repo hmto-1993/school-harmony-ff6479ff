@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter } from "lucide-react";
+import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
@@ -137,8 +137,9 @@ export default function AttendancePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
-          تسجيل الحضور والغياب
+        <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
+          <ClipboardCheck className="h-7 w-7 text-primary" />
+          التحضير
         </h1>
         <div className="flex items-center gap-2 mt-1">
           <span className="text-muted-foreground">التاريخ:</span>
