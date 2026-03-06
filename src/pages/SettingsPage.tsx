@@ -1410,6 +1410,31 @@ export default function SettingsPage() {
       </div>
       <div className="space-y-4">
 
+        {/* ===== ثيم التطبيق ===== */}
+        <Collapsible>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+            <CollapsibleTrigger className="w-full group">
+              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
+                    <Palette className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-bold text-foreground">ثيم التطبيق</h3>
+                    <p className="text-xs text-muted-foreground">التبديل بين الثيم الكوني والكلاسيكي</p>
+                  </div>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 pb-5 px-5">
+                <ThemeSchemePicker />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+
         {/* ===== الملف الشخصي ===== */}
         <Collapsible>
           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
