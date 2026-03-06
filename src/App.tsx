@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import NotificationOptIn from "@/components/NotificationOptIn";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 
 // Lazy-loaded pages
@@ -42,6 +43,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <NotificationOptIn />
+            <PWAInstallPrompt />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
