@@ -1,11 +1,13 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
+import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { AnimatePresence } from "framer-motion";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
@@ -42,7 +44,11 @@ export default function DashboardLayout() {
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
+          </AnimatePresence>
         </div>
       </main>
     </div>
