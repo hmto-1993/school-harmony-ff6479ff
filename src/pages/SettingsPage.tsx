@@ -739,8 +739,8 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* ===== All Collapsible Sections ===== */}
-      <div className="space-y-4">
+      {/* ===== البطاقات الرئيسية (شبكة في الأعلى) ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* ===== الفصول الدراسية ===== */}
         <Collapsible>
@@ -1225,67 +1225,6 @@ export default function SettingsPage() {
           </Card>
         </Collapsible>
 
-        {/* ===== إضافة معلم ===== */}
-        {isAdmin && (
-          <Collapsible>
-            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-              <CollapsibleTrigger className="w-full group">
-                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                    <div className="text-right">
-                      <h3 className="text-base font-bold text-foreground">إضافة معلم</h3>
-                      <p className="text-xs text-muted-foreground">إنشاء حساب جديد للمعلمين</p>
-                    </div>
-                  </div>
-                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                </div>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                  <div className="space-y-2">
-                    <Label>الاسم الكامل</Label>
-                    <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>البريد الإلكتروني</Label>
-                    <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
-                      placeholder="teacher@school.edu.sa" dir="ltr" className="text-right" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>رقم الهوية الوطنية</Label>
-                    <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
-                      placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>كلمة المرور</Label>
-                    <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
-                      placeholder="كلمة مرور قوية" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>الصلاحية</Label>
-                    <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="teacher">معلم</SelectItem>
-                        <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={handleCreateTeacher}
-                    disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
-                    className="gap-1.5">
-                    <Plus className="h-4 w-4" />
-                    {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-                  </Button>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-        )}
-
         {/* ===== ورقة الطباعة ===== */}
         {isAdmin && (
           <Collapsible>
@@ -1312,6 +1251,123 @@ export default function SettingsPage() {
             </Card>
           </Collapsible>
         )}
+
+        {/* ===== ألوان الاختبارات ===== */}
+        {isAdmin && (
+          <Collapsible>
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+              <CollapsibleTrigger className="w-full group">
+                <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl shadow-lg text-white"
+                      style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }}>
+                      <Palette className="h-5 w-5" />
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-base font-bold text-foreground">ألوان الاختبارات</h3>
+                      <p className="text-xs text-muted-foreground">تخصيص ألوان واجهة الاختبارات</p>
+                    </div>
+                  </div>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="px-5 pb-5 pt-0 space-y-6 max-w-lg">
+                  {/* MCQ Color */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {QUIZ_COLOR_OPTIONS.map(opt => (
+                        <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
+                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                            quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                          )}
+                          style={{ backgroundColor: opt.value }}
+                          title={opt.label} />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
+                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
+                    </div>
+                  </div>
+
+                  {/* True/False Color */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {QUIZ_COLOR_OPTIONS.map(opt => (
+                        <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
+                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                            quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                          )}
+                          style={{ backgroundColor: opt.value }}
+                          title={opt.label} />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
+                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
+                    </div>
+                  </div>
+
+                  {/* Selected Answer Color */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {QUIZ_COLOR_OPTIONS.map(opt => (
+                        <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
+                          className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                            quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                          )}
+                          style={{ backgroundColor: opt.value }}
+                          title={opt.label} />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
+                      <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
+                    </div>
+                  </div>
+
+                  {/* Preview */}
+                  <div className="rounded-xl border p-4 space-y-2">
+                    <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
+                    <div className="flex gap-3">
+                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
+                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
+                      <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
+                    </div>
+                  </div>
+
+                  <Button disabled={savingQuizColors} className="gap-1.5"
+                    onClick={async () => {
+                      setSavingQuizColors(true);
+                      const results = await Promise.all([
+                        supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
+                        supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
+                        supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
+                      ]);
+                      setSavingQuizColors(false);
+                      if (results.some(r => r.error)) {
+                        toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
+                      } else {
+                        toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
+                      }
+                    }}>
+                    <Save className="h-4 w-4" />
+                    {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
+                  </Button>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
+
+      </div>
+
+      {/* ===== الإعدادات الإضافية (أسفل) ===== */}
+      <div className="space-y-4">
 
         {/* ===== الملف الشخصي ===== */}
         <Collapsible>
@@ -1383,6 +1439,65 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <>
+            {/* ===== إضافة معلم ===== */}
+            <Collapsible>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
+                        <Plus className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">إضافة معلم</h3>
+                        <p className="text-xs text-muted-foreground">إنشاء حساب جديد للمعلمين</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                    <div className="space-y-2">
+                      <Label>الاسم الكامل</Label>
+                      <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>البريد الإلكتروني</Label>
+                      <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                        placeholder="teacher@school.edu.sa" dir="ltr" className="text-right" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>رقم الهوية الوطنية</Label>
+                      <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
+                        placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>كلمة المرور</Label>
+                      <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
+                        placeholder="كلمة مرور قوية" dir="ltr" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>الصلاحية</Label>
+                      <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="teacher">معلم</SelectItem>
+                          <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={handleCreateTeacher}
+                      disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
+                      className="gap-1.5">
+                      <Plus className="h-4 w-4" />
+                      {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+                    </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
             {/* ===== كلمات المرور ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
@@ -1422,116 +1537,6 @@ export default function SettingsPage() {
                       disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5">
                       <KeyRound className="h-4 w-4" />
                       {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* ===== ألوان الاختبارات ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl shadow-lg text-white"
-                        style={{ background: 'linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)' }}>
-                        <Palette className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">ألوان الاختبارات</h3>
-                        <p className="text-xs text-muted-foreground">تخصيص ألوان واجهة الاختبارات</p>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-6 max-w-lg">
-                    {/* MCQ Color */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {QUIZ_COLOR_OPTIONS.map(opt => (
-                          <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
-                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                              quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                            )}
-                            style={{ backgroundColor: opt.value }}
-                            title={opt.label} />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
-                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
-                      </div>
-                    </div>
-
-                    {/* True/False Color */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {QUIZ_COLOR_OPTIONS.map(opt => (
-                          <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
-                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                              quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                            )}
-                            style={{ backgroundColor: opt.value }}
-                            title={opt.label} />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
-                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
-                      </div>
-                    </div>
-
-                    {/* Selected Answer Color */}
-                    <div className="space-y-2">
-                      <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {QUIZ_COLOR_OPTIONS.map(opt => (
-                          <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
-                            className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                              quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                            )}
-                            style={{ backgroundColor: opt.value }}
-                            title={opt.label} />
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
-                        <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
-                      </div>
-                    </div>
-
-                    {/* Preview */}
-                    <div className="rounded-xl border p-4 space-y-2">
-                      <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
-                      <div className="flex gap-3">
-                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
-                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
-                        <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
-                      </div>
-                    </div>
-
-                    <Button disabled={savingQuizColors} className="gap-1.5"
-                      onClick={async () => {
-                        setSavingQuizColors(true);
-                        const results = await Promise.all([
-                          supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
-                          supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
-                          supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
-                        ]);
-                        setSavingQuizColors(false);
-                        if (results.some(r => r.error)) {
-                          toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
-                        } else {
-                          toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" });
-                        }
-                      }}>
-                      <Save className="h-4 w-4" />
-                      {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
                     </Button>
                   </CardContent>
                 </CollapsibleContent>
