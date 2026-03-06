@@ -16,8 +16,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, FileUp, ClipboardList, Eye, EyeOff, Trash2, Upload, Loader2,
-  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer, ChevronDown
+  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer, ChevronDown, Bell
 } from "lucide-react";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
@@ -53,6 +54,7 @@ export default function ActivitiesPage() {
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
+  const [sendNotification, setSendNotification] = useState(true);
 
   // Edit dialog
   const [editOpen, setEditOpen] = useState(false);
@@ -157,6 +159,21 @@ export default function ActivitiesPage() {
     }
 
     toast({ title: `تم إنشاء ${createType === "quiz" ? "الاختبار" : "النشاط"} ونشره في ${targetIds.length} فصل` });
+
+    // Send push notification if enabled
+    if (sendNotification) {
+      try {
+        await sendPushNotification(
+          createType === "quiz" ? "🎯 اختبار جديد" : "📄 نشاط جديد",
+          newTitle.trim(),
+          targetIds
+        );
+        toast({ title: "تم إرسال الإشعار للطلاب" });
+      } catch (e) {
+        console.error("Push notification failed:", e);
+      }
+    }
+
     resetCreate();
     fetchActivities();
   };
@@ -434,6 +451,19 @@ export default function ActivitiesPage() {
               <div>
                 <Label className="mb-2 block">النشر في الفصول *</Label>
                 <ClassSelector selected={selectedClasses} onToggle={toggleClassSelection} />
+              </div>
+
+              <div className="flex items-center justify-between bg-muted/30 rounded-2xl p-4 border border-border/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <Bell className="h-5 w-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm">إرسال إشعار فوري</p>
+                    <p className="text-xs text-muted-foreground">تنبيه الطلاب عند النشر</p>
+                  </div>
+                </div>
+                <Switch checked={sendNotification} onCheckedChange={setSendNotification} />
               </div>
 
               <Button onClick={handleCreate} disabled={creating} className="w-full gap-2 rounded-xl h-11">
