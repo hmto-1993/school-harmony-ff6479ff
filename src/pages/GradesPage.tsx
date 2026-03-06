@@ -53,7 +53,7 @@ export default function GradesPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display bg-gradient-to-l from-neon to-gold bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
             الدرجات والتقييمات
           </h1>
           <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
@@ -73,18 +73,18 @@ export default function GradesPage() {
                 key={cls.id}
                 onClick={() => setSelectedClass(cls.id)}
                 className={cn(
-                  "relative p-4 rounded-2xl border text-center transition-all duration-300 hover:scale-[1.04] hover-lift overflow-hidden glass-card",
+                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:shadow-lg overflow-hidden",
                   isActive
-                    ? "!border-neon !bg-neon/10 dark:!bg-neon/15 shadow-neon ring-2 ring-neon/30"
-                    : ""
+                    ? "bg-primary/10 dark:bg-primary/20 border-primary shadow-md ring-2 ring-primary/30"
+                    : "bg-sky-50/70 dark:bg-sky-500/5 border-sky-200/60 dark:border-sky-500/15 hover:border-sky-300 dark:hover:border-sky-500/30"
                 )}
               >
-                <div className={cn("absolute top-0 inset-x-0 h-1 rounded-b-sm transition-all", isActive ? "bg-neon" : "bg-neon/20")} />
+                <div className={cn("absolute top-0 inset-x-0 h-1 rounded-b-sm transition-all", isActive ? "bg-primary" : "bg-sky-300/50 dark:bg-sky-500/20")} />
                 <div className="relative pt-1">
-                    <span className={cn("text-base font-bold block", isActive ? "text-neon" : "text-gold")}>
+                  <span className={cn("text-base font-bold block", isActive ? "text-primary" : "text-sky-700 dark:text-sky-300")}>
                     {cls.name}
                   </span>
-                  <div className={cn("flex items-center justify-center gap-1 mt-1.5", isActive ? "text-neon" : "text-muted-foreground")}>
+                  <div className={cn("flex items-center justify-center gap-1 mt-1.5", isActive ? "text-primary" : "text-muted-foreground")}>
                     <Users className="h-3 w-3" />
                     <span className="text-[11px] font-medium">{count} طالب</span>
                   </div>
@@ -108,19 +108,19 @@ export default function GradesPage() {
                   key={type.id}
                   onClick={() => setActiveType(type.id)}
                   className={cn(
-                    "relative flex items-center gap-3 p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.04] hover-lift glass-card",
+                    "relative flex items-center gap-3 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:shadow-lg",
                     isActive
-                      ? "!border-neon !bg-neon/10 dark:!bg-neon/15 shadow-neon"
-                      : ""
+                      ? "bg-primary/10 dark:bg-primary/20 border-primary shadow-md"
+                      : "bg-emerald-50/70 dark:bg-emerald-500/5 border-emerald-200/60 dark:border-emerald-500/15 hover:border-emerald-300 dark:hover:border-emerald-500/30"
                   )}
                 >
                   <div className={cn(
                     "flex items-center justify-center h-11 w-11 rounded-xl text-white shadow-md transition-transform duration-300",
-                    isActive ? "bg-neon scale-110" : "bg-neon/60"
+                    isActive ? "bg-primary scale-110" : "bg-emerald-500/80"
                   )}>
                     <Icon className="h-5 w-5" />
                   </div>
-                  <span className={cn("text-sm font-bold", isActive ? "text-neon" : "text-gold")}>
+                  <span className={cn("text-sm font-bold", isActive ? "text-primary" : "text-emerald-700 dark:text-emerald-300")}>
                     {type.label}
                   </span>
                 </button>
@@ -150,9 +150,9 @@ export default function GradesPage() {
                 >
                   <div className={cn(
                     "h-2.5 w-2.5 rounded-full transition-all duration-300",
-                    isActive ? "bg-gold scale-125" : "bg-gold/40"
+                    isActive ? "bg-primary scale-125" : "bg-amber-400/60"
                   )} />
-                  <span className={cn("text-sm font-bold", isActive ? "text-gold" : "text-gold/70")}>
+                  <span className={cn("text-sm font-bold", isActive ? "text-primary" : "text-amber-700 dark:text-amber-300")}>
                     {period.label}
                   </span>
                 </button>

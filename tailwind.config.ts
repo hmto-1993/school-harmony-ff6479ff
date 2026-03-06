@@ -15,7 +15,6 @@ export default {
     extend: {
       fontFamily: {
         arabic: ['"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
-        display: ['"Orbitron"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -63,15 +62,6 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
-        gold: {
-          DEFAULT: "hsl(var(--gold))",
-          foreground: "hsl(var(--gold-foreground))",
-        },
-        neon: {
-          DEFAULT: "hsl(var(--neon))",
-          glow: "hsl(var(--neon-glow))",
-        },
-        space: "hsl(var(--space))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -105,17 +95,12 @@ export default {
           from: { opacity: "0", transform: "translateX(20px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
-        "glow-pulse": {
-          "0%, 100%": { boxShadow: "0 0 8px hsl(168 100% 50% / 0.2)" },
-          "50%": { boxShadow: "0 0 20px hsl(168 100% 50% / 0.4)" },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "slide-in": "slide-in-right 0.3s ease-out",
-        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
       },
     },
   },

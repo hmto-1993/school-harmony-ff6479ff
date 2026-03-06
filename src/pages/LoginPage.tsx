@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import defaultSchoolLogo from "@/assets/school-logo.png";
+import defaultSchoolLogo from "@/assets/school-logo.jpg";
+import loginBg from "@/assets/login-bg.jpg";
 import { GraduationCap, Shield, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
@@ -16,8 +17,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState("Alpha Physics");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("منصة إدارة مادة الفيزياء");
+  const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدرسة");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
   const navigate = useNavigate();
@@ -96,48 +97,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 gradient-space overflow-hidden">
-      {/* Animated stars background */}
-      <div className="absolute inset-0 overflow-hidden">
-        {Array.from({ length: 50 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-neon/30"
-            style={{
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              animation: `glow-pulse ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Orbital ring decorations */}
-      <div className="absolute w-[600px] h-[600px] border border-neon/10 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-12" />
-      <div className="absolute w-[500px] h-[500px] border border-gold/10 rounded-full top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45" />
+    <div className="relative flex min-h-screen items-center justify-center px-4">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(6px) brightness(0.55)" }}
+      />
+      {/* Overlay gradient — darker in dark mode */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <Card className="glass-card border-neon/20 shadow-neon dark:bg-card/60">
+        <Card className="glass border-border/30 shadow-2xl dark:bg-card/85 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
-            <div className="rounded-2xl bg-space/80 p-2 shadow-neon ring-1 ring-neon/20 animate-glow-pulse">
+            <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
               <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
             </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold font-display text-gold tracking-wider">{schoolName}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{schoolName}</h1>
               <p className="mt-1 text-sm text-muted-foreground">{schoolSubtitle}</p>
             </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
               <TabsList className="grid w-full grid-cols-2 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
-                <TabsTrigger value="staff" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-neon">
+                <TabsTrigger value="staff" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
                   <Shield className="h-4 w-4" />
                   معلم / مدير
                 </TabsTrigger>
-                <TabsTrigger value="student" className="gap-2 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-neon">
+                <TabsTrigger value="student" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
                   <GraduationCap className="h-4 w-4" />
                   طالب
                 </TabsTrigger>
@@ -155,7 +141,7 @@ export default function LoginPage() {
                       value={nationalId}
                       onChange={(e) => setNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right h-11 rounded-xl border-neon/20 focus:border-neon/50 dark:bg-muted/30 dark:border-neon/15"
+                      className="text-right h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
@@ -168,11 +154,11 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       dir="ltr"
-                      className="h-11 rounded-xl border-neon/20 focus:border-neon/50 dark:bg-muted/30 dark:border-neon/15"
+                      className="h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 rounded-xl gradient-gold hover:opacity-90 transition-all text-gold-foreground font-bold btn-neon shadow-gold" disabled={loading}>
+                  <Button type="submit" className="w-full h-11 rounded-xl gradient-primary hover:opacity-90 transition-opacity text-primary-foreground font-semibold" disabled={loading}>
                     {loading ? "جارٍ الدخول..." : (
                       <span className="flex items-center gap-2">
                         تسجيل الدخول
@@ -195,11 +181,11 @@ export default function LoginPage() {
                       value={studentNationalId}
                       onChange={(e) => setStudentNationalId(e.target.value)}
                       dir="ltr"
-                      className="text-right h-11 rounded-xl border-neon/20 focus:border-neon/50 dark:bg-muted/30 dark:border-neon/15"
+                      className="text-right h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 rounded-xl gradient-gold hover:opacity-90 transition-all text-gold-foreground font-bold btn-neon shadow-gold" disabled={loading}>
+                  <Button type="submit" className="w-full h-11 rounded-xl gradient-primary hover:opacity-90 transition-opacity text-primary-foreground font-semibold" disabled={loading}>
                     {loading ? "جارٍ الدخول..." : (
                       <span className="flex items-center gap-2">
                         دخول الطالب

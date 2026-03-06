@@ -475,7 +475,7 @@ export default function ResourceLibraryPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold font-display bg-gradient-to-l from-neon to-gold bg-clip-text text-transparent">مكتبة مصادر الفصول</h1>
+              <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">مكتبة مصادر الفصول</h1>
               <p className="text-sm text-muted-foreground mt-1">اختر فصلاً للوصول إلى حقائب الملفات والمصادر التعليمية</p>
             </>
           )}
@@ -550,31 +550,32 @@ export default function ResourceLibraryPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
               {/* Public/General Card */}
               <Card
-                className="group cursor-pointer glass-card hover:shadow-neon transition-all duration-300 rounded-2xl overflow-hidden hover-lift"
+                className="group cursor-pointer border-2 border-amber-500/20 hover:bg-amber-500/15 hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden"
                 onClick={() => setSelectedClassId("__public__")}
               >
                 <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                  <div className="w-20 h-20 rounded-2xl bg-gold/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <Globe className="h-10 w-10 text-gold" />
+                  <div className="w-20 h-20 rounded-2xl bg-amber-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                    <Globe className="h-10 w-10 text-amber-500" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gold text-sm leading-tight">عام</h3>
+                    <h3 className="font-bold text-foreground text-sm leading-tight">عام</h3>
                   </div>
                 </CardContent>
               </Card>
               {classes.map((cls, index) => {
+                const color = getClassColor(index);
                 return (
                   <Card
                     key={cls.id}
-                    className="group cursor-pointer glass-card hover:shadow-neon transition-all duration-300 rounded-2xl overflow-hidden hover-lift"
+                    className={`group cursor-pointer border-2 ${color.border} ${color.hoverBg} hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden`}
                     onClick={() => setSelectedClassId(cls.id)}
                   >
                     <CardContent className="p-5 flex flex-col items-center gap-3 text-center">
-                      <div className="w-20 h-20 rounded-2xl bg-neon/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                        <School className="h-10 w-10 text-neon" />
+                      <div className={`w-20 h-20 rounded-2xl ${color.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
+                        <School className={`h-10 w-10 ${color.icon}`} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gold text-sm leading-tight">{cls.grade} / {cls.section}</h3>
+                        <h3 className="font-bold text-foreground text-sm leading-tight">{cls.grade} / {cls.section}</h3>
                       </div>
                     </CardContent>
                   </Card>
@@ -664,7 +665,7 @@ export default function ResourceLibraryPage() {
                         <IconComp className="h-6 w-6 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-gold text-sm leading-tight truncate">{folder.title}</h3>
+                        <h3 className="font-bold text-foreground text-sm leading-tight truncate">{folder.title}</h3>
                         <div className="flex items-center gap-1.5 mt-1">
                           <Badge variant="outline" className="rounded-full text-[10px]">
                             {getCategoryLabel(folder.category)}
