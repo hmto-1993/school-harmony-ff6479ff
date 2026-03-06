@@ -11,7 +11,7 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon
 } from "lucide-react";
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.png";
