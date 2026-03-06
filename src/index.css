@@ -122,7 +122,110 @@
     --sidebar-border: 228 45% 12%;
     --sidebar-ring: 168 100% 45%;
   }
-}
+  }
+
+  /* ===== Classic Theme Override ===== */
+  .theme-classic:root, .theme-classic {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 20%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 217 91% 60%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --gold: 38 92% 50%;
+    --gold-foreground: 0 0% 100%;
+    --neon: 217 91% 60%;
+    --neon-glow: 217 91% 65%;
+    --space: 222 47% 11%;
+    --report-tab-attendance: 210 60% 95%;
+    --report-tab-attendance-active: 210 80% 45%;
+    --report-tab-attendance-text: 210 50% 35%;
+    --report-tab-grades: 150 50% 94%;
+    --report-tab-grades-active: 155 65% 40%;
+    --report-tab-grades-text: 150 45% 30%;
+    --report-tab-behavior: 40 60% 94%;
+    --report-tab-behavior-active: 40 65% 55%;
+    --report-tab-behavior-text: 35 50% 30%;
+    --report-btn-send: 160 65% 42%;
+    --report-btn-send-hover: 160 65% 36%;
+    --report-btn-print: 215 20% 40%;
+    --report-btn-print-hover: 215 20% 30%;
+    --sidebar-background: 222 47% 11%;
+    --sidebar-foreground: 220 20% 92%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 40% 18%;
+    --sidebar-accent-foreground: 220 20% 92%;
+    --sidebar-border: 222 30% 20%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .theme-classic.dark {
+    --background: 222 47% 8%;
+    --foreground: 220 20% 95%;
+    --card: 222 47% 11%;
+    --card-foreground: 220 20% 95%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 220 20% 95%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 222 40% 18%;
+    --secondary-foreground: 220 20% 90%;
+    --muted: 222 40% 15%;
+    --muted-foreground: 220 9% 55%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 217 91% 60%;
+    --gold: 38 92% 55%;
+    --gold-foreground: 0 0% 100%;
+    --neon: 217 91% 60%;
+    --neon-glow: 217 91% 70%;
+    --space: 222 47% 8%;
+    --report-tab-attendance: 210 40% 22%;
+    --report-tab-attendance-active: 210 70% 42%;
+    --report-tab-attendance-text: 210 60% 75%;
+    --report-tab-grades: 150 35% 18%;
+    --report-tab-grades-active: 155 55% 38%;
+    --report-tab-grades-text: 150 50% 70%;
+    --report-tab-behavior: 38 35% 20%;
+    --report-tab-behavior-active: 40 55% 50%;
+    --report-tab-behavior-text: 40 50% 70%;
+    --report-btn-send: 160 65% 42%;
+    --report-btn-send-hover: 160 65% 36%;
+    --report-btn-print: 215 15% 50%;
+    --report-btn-print-hover: 215 15% 40%;
+    --sidebar-background: 222 50% 6%;
+    --sidebar-foreground: 220 20% 90%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 45% 14%;
+    --sidebar-accent-foreground: 220 20% 90%;
+    --sidebar-border: 222 40% 14%;
+    --sidebar-ring: 217 91% 60%;
+  }
 
 @layer base {
   *, *::before, *::after {

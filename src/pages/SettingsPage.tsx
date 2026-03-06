@@ -39,6 +39,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
+import { useTheme } from "@/hooks/use-theme";
 import {
   Dialog,
   DialogContent,
@@ -87,6 +88,52 @@ interface GradeCategory {
   class_id: string | null;
   class_name?: string;
   category_group: string;
+}
+
+function ThemeSchemePicker() {
+  const { colorScheme, setColorScheme } = useTheme();
+  const schemes = [
+    {
+      id: "cosmic" as const,
+      label: "كوني (Cosmic)",
+      desc: "نيون أخضر + ذهبي + فضاء داكن",
+      gradient: "from-emerald-400 to-cyan-500",
+      ring: "ring-emerald-400/50",
+    },
+    {
+      id: "classic" as const,
+      label: "كلاسيكي (Classic)",
+      desc: "أزرق + بنفسجي + خلفية فاتحة",
+      gradient: "from-blue-500 to-violet-500",
+      ring: "ring-blue-500/50",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      {schemes.map((s) => (
+        <button
+          key={s.id}
+          onClick={() => setColorScheme(s.id)}
+          className={cn(
+            "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.03]",
+            colorScheme === s.id
+              ? `border-primary shadow-lg ring-2 ${s.ring} bg-primary/5`
+              : "border-border hover:border-primary/40"
+          )}
+        >
+          <div className={`w-14 h-14 mx-auto rounded-xl bg-gradient-to-br ${s.gradient} shadow-md mb-3`} />
+          <h4 className="font-bold text-sm text-foreground">{s.label}</h4>
+          <p className="text-[11px] text-muted-foreground mt-1">{s.desc}</p>
+          {colorScheme === s.id && (
+            <div className="absolute top-2 left-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+              <Check className="h-3 w-3 text-primary-foreground" />
+            </div>
+          )}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function SettingsPage() {
@@ -1409,6 +1456,31 @@ export default function SettingsPage() {
         <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
       </div>
       <div className="space-y-4">
+
+        {/* ===== ثيم التطبيق ===== */}
+        <Collapsible>
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+            <CollapsibleTrigger className="w-full group">
+              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
+                    <Palette className="h-5 w-5" />
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-base font-bold text-foreground">ثيم التطبيق</h3>
+                    <p className="text-xs text-muted-foreground">التبديل بين الثيم الكوني والكلاسيكي</p>
+                  </div>
+                </div>
+                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <CardContent className="pt-0 pb-5 px-5">
+                <ThemeSchemePicker />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
         {/* ===== الملف الشخصي ===== */}
         <Collapsible>
