@@ -28,7 +28,7 @@ import { useTheme } from "@/hooks/use-theme";
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/students", label: "الطلاب", icon: Users },
-  { to: "/attendance", label: "الحضور والغياب", icon: ClipboardCheck },
+  { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
@@ -40,7 +40,7 @@ const adminLinks = [
 
 const teacherLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/attendance", label: "الحضور والغياب", icon: ClipboardCheck },
+  { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
