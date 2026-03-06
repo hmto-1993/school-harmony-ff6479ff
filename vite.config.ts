@@ -54,9 +54,9 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "pwa-icon-192.png", "pwa-icon-512.png"],
       manifest: {
-        name: "مكتبتي التعليمية",
-        short_name: "مكتبتي",
-        description: "نظام إدارة المدرسة - مكتبتي التعليمية",
+        name: "Alpha Physics",
+        short_name: "Alpha Physics",
+        description: "Alpha Physics - منصة إدارة مادة الفيزياء",
         theme_color: "#3b82f6",
         background_color: "#f5f7fa",
         display: "standalone",

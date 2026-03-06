@@ -50,7 +50,7 @@ export default function InstallPage() {
             <img src={schoolLogo} alt="شعار المدرسة" className="h-10 w-10 rounded-xl object-contain shadow-md" />
             <div>
               <h1 className="text-lg font-bold text-foreground">تثبيت التطبيق</h1>
-              <p className="text-xs text-muted-foreground">مكتبتي التعليمية</p>
+              <p className="text-xs text-muted-foreground">Alpha Physics</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">
