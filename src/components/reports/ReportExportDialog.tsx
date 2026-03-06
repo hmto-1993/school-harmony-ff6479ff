@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 
 interface ReportExportDialogProps {
   title: string;
@@ -27,7 +27,7 @@ export default function ReportExportDialog({ title, onExportExcel, onExportPDF }
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
-          <Download className="h-4 w-4" />
+          <Upload className="h-4 w-4" />
           تصدير
         </Button>
       </DialogTrigger>

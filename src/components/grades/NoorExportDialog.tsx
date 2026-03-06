@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Download, FileSpreadsheet, Loader2, Zap, Copy, Check, Info } from "lucide-react";
+import { Upload, FileSpreadsheet, Loader2, Zap, Copy, Check, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ClassOption {
@@ -455,7 +455,7 @@ export default function NoorExportDialog() {
       <DialogContent className="sm:max-w-lg" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
+            <Upload className="h-5 w-5" />
             تصدير درجات لنظام نور
           </DialogTitle>
           <DialogDescription>
@@ -483,7 +483,7 @@ export default function NoorExportDialog() {
             </div>
             <div className="flex justify-end mt-2">
               <Button onClick={handleExport} disabled={loading || !selectedClass || !selectedCategory} className="gap-2">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 {loading ? "جاري التصدير..." : "تصدير"}
               </Button>
             </div>
