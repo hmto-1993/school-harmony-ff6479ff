@@ -17,6 +17,7 @@ import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.png";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
+import { useTheme } from "@/hooks/use-theme";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
