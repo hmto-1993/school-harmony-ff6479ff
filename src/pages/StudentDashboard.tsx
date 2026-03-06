@@ -205,6 +205,9 @@ export default function StudentDashboard() {
           </Card>
         </div>
 
+        {/* Announcements */}
+        <StudentAnnouncements classId={student.class_id} />
+
         {/* Details Tabs */}
         <Tabs defaultValue="grades" dir="rtl">
           <TabsList className="grid w-full grid-cols-5">
