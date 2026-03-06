@@ -740,6 +740,11 @@ export default function SettingsPage() {
       </div>
 
       {/* ===== البطاقات الرئيسية (شبكة في الأعلى) ===== */}
+      <div className="flex items-center gap-3 mb-2">
+        <div className="h-px flex-1 bg-gradient-to-l from-primary/40 to-transparent" />
+        <h2 className="text-sm font-bold text-primary tracking-wide">⚙️ الإعدادات الأساسية</h2>
+        <div className="h-px flex-1 bg-gradient-to-r from-primary/40 to-transparent" />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         {/* ===== الفصول الدراسية ===== */}
@@ -1367,6 +1372,11 @@ export default function SettingsPage() {
       </div>
 
       {/* ===== الإعدادات الإضافية (أسفل) ===== */}
+      <div className="flex items-center gap-3 mb-2 mt-6">
+        <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
+        <h2 className="text-sm font-bold text-muted-foreground tracking-wide">🔧 إعدادات إضافية</h2>
+        <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
+      </div>
       <div className="space-y-4">
 
         {/* ===== الملف الشخصي ===== */}
