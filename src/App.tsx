@@ -7,22 +7,31 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/use-theme";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import StudentsPage from "@/pages/StudentsPage";
-import AttendancePage from "@/pages/AttendancePage";
-import GradesPage from "@/pages/GradesPage";
-import ReportsPage from "@/pages/ReportsPage";
-import NotificationsPage from "@/pages/NotificationsPage";
-import SettingsPage from "@/pages/SettingsPage";
-import StudentDashboard from "@/pages/StudentDashboard";
-import ResourceLibraryPage from "@/pages/ResourceLibraryPage";
-import StudentLoginsPage from "@/pages/StudentLoginsPage";
-import ActivitiesPage from "@/pages/ActivitiesPage";
-import NotFound from "@/pages/NotFound";
 import NotificationOptIn from "@/components/NotificationOptIn";
+import { lazy, Suspense } from "react";
+
+// Lazy-loaded pages
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
+const StudentsPage = lazy(() => import("@/pages/StudentsPage"));
+const AttendancePage = lazy(() => import("@/pages/AttendancePage"));
+const GradesPage = lazy(() => import("@/pages/GradesPage"));
+const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
+const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
+const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
+const StudentDashboard = lazy(() => import("@/pages/StudentDashboard"));
+const ResourceLibraryPage = lazy(() => import("@/pages/ResourceLibraryPage"));
+const StudentLoginsPage = lazy(() => import("@/pages/StudentLoginsPage"));
+const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[60vh]">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -33,30 +42,32 @@ const App = () => (
         <NotificationOptIn />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/student" element={<StudentDashboard />} />
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <DashboardLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/dashboard" element={<DashboardPage />} />
-                <Route path="/students" element={<ProtectedRoute allowedRoles={["admin"]}><StudentsPage /></ProtectedRoute>} />
-                <Route path="/attendance" element={<AttendancePage />} />
-                <Route path="/grades" element={<GradesPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/library" element={<ResourceLibraryPage />} />
-                <Route path="/activities" element={<ActivitiesPage />} />
-                <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/student" element={<StudentDashboard />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route
+                  element={
+                    <ProtectedRoute>
+                      <DashboardLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/students" element={<ProtectedRoute allowedRoles={["admin"]}><StudentsPage /></ProtectedRoute>} />
+                  <Route path="/attendance" element={<AttendancePage />} />
+                  <Route path="/grades" element={<GradesPage />} />
+                  <Route path="/reports" element={<ReportsPage />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
+                  <Route path="/library" element={<ResourceLibraryPage />} />
+                  <Route path="/activities" element={<ActivitiesPage />} />
+                  <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
