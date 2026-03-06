@@ -76,26 +76,26 @@ export default function GradesPage() {
                 key={cls.id}
                 onClick={() => setSelectedClass(cls.id)}
                 className={cn(
-                  "relative p-4 rounded-2xl border text-center transition-all duration-300 hover:scale-[1.03] hover:shadow-lg overflow-hidden animate-fade-in group",
+                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden animate-fade-in group",
                   isActive
-                    ? "bg-gradient-to-br from-primary/15 to-primary/5 border-primary/50 shadow-md ring-1 ring-primary/20"
-                    : "bg-gradient-to-br from-primary/5 to-transparent border-border/50 hover:border-primary/30 hover:from-primary/8"
+                    ? "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/25"
+                    : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10"
                 )}
                 style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
               >
                 <div className={cn(
-                  "mx-auto w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-all duration-300 group-hover:scale-110",
-                  isActive ? "bg-primary/20 shadow-sm" : "bg-muted/60"
+                  "mx-auto w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-sm",
+                  isActive ? "bg-gradient-to-br from-primary to-primary/70 shadow-md shadow-primary/30" : "bg-muted"
                 )}>
-                  <Users className={cn("h-4.5 w-4.5", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <Users className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
                 </div>
                 <span className={cn("text-sm font-bold block", isActive ? "text-primary" : "text-foreground")}>
                   {cls.name}
                 </span>
-                <span className={cn("text-[11px] mt-1 block", isActive ? "text-primary/70" : "text-muted-foreground")}>
+                <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
                   {count} طالب
                 </span>
-                {isActive && <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-primary animate-pulse" />}
+                {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-primary via-primary/80 to-accent rounded-b" />}
               </button>
             );
           })}
@@ -115,23 +115,23 @@ export default function GradesPage() {
                   key={type.id}
                   onClick={() => setActiveType(type.id)}
                   className={cn(
-                    "relative flex flex-col items-center gap-2 p-4 rounded-2xl border text-center transition-all duration-300 hover:scale-[1.03] hover:shadow-lg group animate-fade-in",
+                    "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive
-                      ? "bg-gradient-to-br from-accent/15 to-accent/5 border-accent/50 shadow-md ring-1 ring-accent/20"
-                      : "bg-gradient-to-br from-accent/5 to-transparent border-border/50 hover:border-accent/30 hover:from-accent/8"
+                      ? "bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 border-accent shadow-lg shadow-accent/20 ring-2 ring-accent/25"
+                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-accent/40 hover:shadow-accent/10"
                   )}
                   style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
                 >
                   <div className={cn(
-                    "flex items-center justify-center h-11 w-11 rounded-xl transition-all duration-300 group-hover:scale-110",
-                    isActive ? "bg-accent/20 shadow-sm" : "bg-muted/60"
+                    "flex items-center justify-center h-12 w-12 rounded-xl transition-all duration-300 group-hover:scale-110 shadow-sm",
+                    isActive ? "bg-gradient-to-br from-accent to-accent/70 shadow-md shadow-accent/30" : "bg-muted"
                   )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-accent" : "text-muted-foreground")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-accent-foreground" : "text-muted-foreground")} />
                   </div>
                   <span className={cn("text-xs font-bold", isActive ? "text-accent" : "text-foreground")}>
                     {type.label}
                   </span>
-                  {isActive && <div className="absolute top-2 left-2 w-2 h-2 rounded-full bg-accent animate-pulse" />}
+                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-accent via-accent/80 to-primary rounded-b" />}
                 </button>
               );
             })}
@@ -151,20 +151,21 @@ export default function GradesPage() {
                   key={period.id}
                   onClick={() => setSelectedPeriod(period.id)}
                   className={cn(
-                    "relative flex items-center justify-center gap-2.5 p-4 rounded-2xl border transition-all duration-300 hover:scale-[1.03] hover:shadow-lg group animate-fade-in",
+                    "relative flex items-center justify-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive
-                      ? "bg-gradient-to-br from-success/15 to-success/5 border-success/50 shadow-md ring-1 ring-success/20"
-                      : "bg-gradient-to-br from-success/5 to-transparent border-border/50 hover:border-success/30 hover:from-success/8"
+                      ? "bg-gradient-to-br from-success/20 via-success/10 to-success/5 border-success shadow-lg shadow-success/20 ring-2 ring-success/25"
+                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-success/40 hover:shadow-success/10"
                   )}
                   style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
                 >
                   <div className={cn(
-                    "h-3 w-3 rounded-full transition-all duration-300",
-                    isActive ? "bg-success scale-125 shadow-sm" : "bg-muted-foreground/30"
+                    "h-3.5 w-3.5 rounded-full transition-all duration-300 shadow-sm",
+                    isActive ? "bg-success scale-125 shadow-md shadow-success/40" : "bg-muted-foreground/30"
                   )} />
                   <span className={cn("text-sm font-bold", isActive ? "text-success" : "text-foreground")}>
                     {period.label}
                   </span>
+                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-success via-success/80 to-primary rounded-b" />}
                 </button>
               );
             })}
