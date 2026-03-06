@@ -93,10 +93,12 @@ export default function WelcomeHero() {
       {/* Content */}
       <div className="relative z-[1] px-6 py-10 sm:px-10 sm:py-14 text-center max-w-3xl mx-auto space-y-5">
         <h2
-          className="text-2xl sm:text-3xl md:text-4xl font-bold font-display text-gold leading-relaxed tracking-wide"
+          className="text-2xl sm:text-3xl md:text-4xl font-bold font-display leading-relaxed tracking-wide"
           style={{ textShadow: "0 0 30px hsl(42 92% 55% / 0.3)" }}
         >
-          مرحباً بك في عالم الفيزياء الذكي
+          مرحباً بك في عالم{" "}
+          <span className="gold-shimmer">Alpha</span>{" "}
+          الفيزياء الذكي
         </h2>
 
         <p
