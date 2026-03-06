@@ -147,7 +147,7 @@ export default function StudentDashboard() {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <img src={schoolLogo} alt="الشعار" className="h-14 w-14 rounded-xl object-contain shadow-md" />
+            <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain shadow-md" />
             <div>
               <h1 className="text-lg font-bold text-foreground">{student.full_name}</h1>
               {student.class && (
