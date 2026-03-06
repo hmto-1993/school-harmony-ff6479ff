@@ -38,7 +38,7 @@ export default function DashboardLayout() {
           >
             <Menu className="h-5 w-5 text-neon" />
             <span className="text-sm font-bold font-display text-gold">Alpha Physics</span>
-            <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-contain mr-auto ring-1 ring-neon/20" />
+            <img src={schoolLogo} alt="شعار المدرسة" className="h-11 w-11 rounded-lg object-contain mr-auto ring-1 ring-neon/20" />
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto">
