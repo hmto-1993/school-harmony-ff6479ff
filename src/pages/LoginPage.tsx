@@ -123,7 +123,7 @@ export default function LoginPage() {
         <Card className="glass-card border-neon/20 shadow-neon dark:bg-card/60">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
             <div className="rounded-2xl bg-space/80 p-2 shadow-neon ring-1 ring-neon/20 animate-glow-pulse">
-              <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
+              <img src={schoolLogo} alt="شعار المدرسة" className="h-28 w-auto rounded-xl" />
             </div>
             <div className="text-center">
               <h1 className="text-2xl font-bold font-display text-gold tracking-wider">{schoolName}</h1>
