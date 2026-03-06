@@ -25,6 +25,7 @@ const ResourceLibraryPage = lazy(() => import("@/pages/ResourceLibraryPage"));
 const StudentLoginsPage = lazy(() => import("@/pages/StudentLoginsPage"));
 const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const InstallPage = lazy(() => import("@/pages/InstallPage"));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/install" element={<InstallPage />} />
                 <Route path="/student" element={<StudentDashboard />} />
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route
