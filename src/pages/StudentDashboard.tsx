@@ -159,10 +159,15 @@ export default function StudentDashboard() {
               )}
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 rounded-xl border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
-            <LogOut className="h-4 w-4" />
-            خروج
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={toggleTheme} className="rounded-xl border-border/60 hover:bg-accent/10">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 rounded-xl border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
+              <LogOut className="h-4 w-4" />
+              خروج
+            </Button>
+          </div>
         </div>
       </header>
 
