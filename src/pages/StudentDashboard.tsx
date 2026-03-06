@@ -11,12 +11,13 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon
 } from "lucide-react";
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.png";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
+import { useTheme } from "@/hooks/use-theme";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -63,6 +64,7 @@ function formatFileSize(bytes: number) {
 export default function StudentDashboard() {
   const { student, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   // Resource library state
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
@@ -157,10 +159,15 @@ export default function StudentDashboard() {
               )}
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 rounded-xl border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
-            <LogOut className="h-4 w-4" />
-            خروج
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={toggleTheme} className="rounded-xl border-border/60 hover:bg-accent/10">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSignOut} className="gap-2 rounded-xl border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30">
+              <LogOut className="h-4 w-4" />
+              خروج
+            </Button>
+          </div>
         </div>
       </header>
 
