@@ -16,6 +16,7 @@ import {
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
+import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -203,6 +204,9 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Announcements */}
+        <StudentAnnouncements classId={student.class_id} />
 
         {/* Details Tabs */}
         <Tabs defaultValue="grades" dir="rtl">

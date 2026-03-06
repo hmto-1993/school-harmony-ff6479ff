@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, CheckCircle, MessageSquare, Send, Users, GraduationCap, UserX, Megaphone } from "lucide-react";
+import AnnouncementsTab from "@/components/announcements/AnnouncementsTab";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -218,8 +219,12 @@ export default function NotificationsPage() {
         <p className="text-muted-foreground">إشعارات النظام وإرسال رسائل SMS لأولياء الأمور</p>
       </div>
 
-      <Tabs defaultValue="send-sms" dir="rtl">
+      <Tabs defaultValue="announcements" dir="rtl">
         <TabsList className="w-full justify-start">
+          <TabsTrigger value="announcements" className="gap-1.5">
+            <Megaphone className="h-4 w-4" />
+            الإعلانات العامة
+          </TabsTrigger>
           <TabsTrigger value="send-sms" className="gap-1.5">
             <MessageSquare className="h-4 w-4" />
             إرسال رسالة SMS
@@ -229,6 +234,11 @@ export default function NotificationsPage() {
             سجل الإشعارات
           </TabsTrigger>
         </TabsList>
+
+        {/* ===== Announcements ===== */}
+        <TabsContent value="announcements">
+          <AnnouncementsTab />
+        </TabsContent>
 
         {/* ===== Send SMS ===== */}
         <TabsContent value="send-sms" className="space-y-4">

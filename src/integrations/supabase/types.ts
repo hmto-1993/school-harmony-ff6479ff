@@ -50,6 +50,39 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean
+          target_class_ids: string[] | null
+          target_type: string
+          title: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean
+          target_class_ids?: string[] | null
+          target_type?: string
+          title: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean
+          target_class_ids?: string[] | null
+          target_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           class_id: string
