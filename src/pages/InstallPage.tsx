@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import installIos from "@/assets/install-ios.png";
 import installAndroid from "@/assets/install-android.png";
 import installDesktop from "@/assets/install-desktop.png";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;

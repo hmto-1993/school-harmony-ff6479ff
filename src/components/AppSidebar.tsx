@@ -1,6 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 import {
   LayoutDashboard,
   Users,
