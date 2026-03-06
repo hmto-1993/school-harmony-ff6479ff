@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileUp } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import BehaviorEntry from "@/components/grades/BehaviorEntry";
@@ -11,11 +11,11 @@ import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 
 const ENTRY_TYPES = [
-  { id: "daily", label: "إدخال يومي", icon: ClipboardList },
-  { id: "behavior", label: "السلوك", icon: UserCheck },
-  { id: "summary", label: "التقييم النهائي", icon: BarChart3 },
-  { id: "semester", label: "ملخص الفصل", icon: BookOpen },
-  { id: "import", label: "استيراد من ملف", icon: FileUp },
+  { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { id: "behavior", label: "السلوك", icon: UserCheck, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { id: "summary", label: "التقييم النهائي", icon: BarChart3, color: "text-purple-500", bg: "bg-purple-500/10" },
+  { id: "semester", label: "ملخص الفصل", icon: BookOpen, color: "text-rose-500", bg: "bg-rose-500/10" },
+  { id: "import", label: "استيراد من ملف", icon: FileDown, color: "text-teal-500", bg: "bg-teal-500/10" },
 ] as const;
 
 const PERIODS = [
@@ -102,7 +102,7 @@ export default function GradesPage() {
         </div>
       </div>
 
-      {/* Entry Type Cards — unified emerald tint, active = primary */}
+      {/* Entry Type Cards — green active, colorful icons */}
       {selectedClass && (
         <div className="animate-fade-in">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
@@ -117,21 +117,21 @@ export default function GradesPage() {
                   className={cn(
                     "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive
-                      ? "bg-gradient-to-br from-warning/20 via-warning/10 to-warning/5 border-warning shadow-lg shadow-warning/20 ring-2 ring-warning/25"
-                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-warning/40 hover:shadow-warning/10"
+                      ? "bg-gradient-to-br from-success/20 via-success/10 to-success/5 border-success shadow-lg shadow-success/20 ring-2 ring-success/25"
+                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-success/40 hover:shadow-success/10"
                   )}
                   style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
                 >
                   <div className={cn(
                     "flex items-center justify-center h-12 w-12 rounded-xl transition-all duration-300 group-hover:scale-110 shadow-sm",
-                    isActive ? "bg-gradient-to-br from-warning to-warning/70 shadow-md shadow-warning/30" : "bg-muted"
+                    isActive ? "bg-gradient-to-br from-success to-success/70 shadow-md shadow-success/30" : type.bg
                   )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-warning-foreground" : "text-muted-foreground")} />
+                    <Icon className={cn("h-5 w-5", isActive ? "text-success-foreground" : type.color)} />
                   </div>
-                  <span className={cn("text-xs font-bold", isActive ? "text-warning" : "text-foreground")}>
+                  <span className={cn("text-xs font-bold", isActive ? "text-success" : "text-foreground")}>
                     {type.label}
                   </span>
-                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-warning via-warning/80 to-primary rounded-b" />}
+                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-success via-success/80 to-primary rounded-b" />}
                 </button>
               );
             })}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileSpreadsheet, FileText, Printer } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
@@ -115,7 +115,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         {trigger || (
           <div className="flex items-center gap-0.5">
             <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
-              <Download className="h-4 w-4" />
+              <Upload className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.print(); }}>
               <Printer className="h-4 w-4" />
