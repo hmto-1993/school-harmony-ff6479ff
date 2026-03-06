@@ -137,7 +137,7 @@ export default function AttendancePage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold font-display bg-gradient-to-l from-neon to-gold bg-clip-text text-transparent">
           تسجيل الحضور والغياب
         </h1>
         <div className="flex items-center gap-2 mt-1">
@@ -171,7 +171,7 @@ export default function AttendancePage() {
         sickLeave={records.filter((r) => r.status === "sick_leave").length}
       />
 
-      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+      <Card className="glass-card border-0 shadow-lg">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">اختر الفصل</CardTitle>
