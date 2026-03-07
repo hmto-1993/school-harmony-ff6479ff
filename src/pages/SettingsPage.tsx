@@ -1651,6 +1651,67 @@ export default function SettingsPage() {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => {
+                  const settings = {
+                    showGrades,
+                    showAttendance,
+                    showBehavior,
+                    hiddenCategories,
+                  };
+                  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = "student-visibility-settings.json";
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast({ title: "تم التصدير", description: "تم تصدير إعدادات عرض الطالب بنجاح" });
+                }}
+              >
+                <Download className="h-3.5 w-3.5" />
+                تصدير الإعدادات
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                onClick={() => {
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = ".json";
+                  input.onchange = (e) => {
+                    const file = (e.target as HTMLInputElement).files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      try {
+                        const data = JSON.parse(ev.target?.result as string);
+                        if (typeof data.showGrades === "boolean") setShowGrades(data.showGrades);
+                        if (typeof data.showAttendance === "boolean") setShowAttendance(data.showAttendance);
+                        if (typeof data.showBehavior === "boolean") setShowBehavior(data.showBehavior);
+                        if (data.hiddenCategories && typeof data.hiddenCategories === "object") {
+                          setHiddenCategories({
+                            p1: Array.isArray(data.hiddenCategories.p1) ? data.hiddenCategories.p1 : [],
+                            p2: Array.isArray(data.hiddenCategories.p2) ? data.hiddenCategories.p2 : [],
+                          });
+                        }
+                        toast({ title: "تم الاستيراد", description: "تم استيراد الإعدادات بنجاح. اضغط 'حفظ الإعدادات' لتطبيقها." });
+                      } catch {
+                        toast({ title: "خطأ", description: "ملف غير صالح. تأكد من أنه ملف إعدادات JSON صحيح.", variant: "destructive" });
+                      }
+                    };
+                    reader.readAsText(file);
+                  };
+                  input.click();
+                }}
+              >
+                <Upload className="h-3.5 w-3.5" />
+                استيراد الإعدادات
+              </Button>
             </div>
           </CardContent>
         </Card>
