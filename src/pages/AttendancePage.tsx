@@ -158,12 +158,9 @@ export default function AttendancePage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
+              <HijriCalendar
                 selected={selectedDate}
-                onSelect={(d) => d && setSelectedDate(d)}
-                initialFocus
-                className={cn("p-3 pointer-events-auto")}
+                onSelect={(d) => setSelectedDate(d)}
               />
             </PopoverContent>
           </Popover>
