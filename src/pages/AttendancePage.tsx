@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";

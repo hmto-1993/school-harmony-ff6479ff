@@ -39,7 +39,7 @@ import {
   Users2,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";

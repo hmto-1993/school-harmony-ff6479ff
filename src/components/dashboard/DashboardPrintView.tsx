@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";

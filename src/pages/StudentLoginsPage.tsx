@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Users, Eye, TrendingUp, Calendar } from "lucide-react";
-import { format, subDays, isAfter } from "date-fns";
+import { format, subDays, isAfter } from "@/lib/date-utils";
 
 import ExportDialog from "@/components/student-logins/ExportDialog";
 

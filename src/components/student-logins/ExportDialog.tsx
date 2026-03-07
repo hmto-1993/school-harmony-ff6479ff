@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, FileText } from "lucide-react";
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 
 const formatTimeAr = (date: Date) => date.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
 import * as XLSX from "xlsx";

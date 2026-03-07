@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download } from "lucide-react";
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
