@@ -197,6 +197,7 @@ export default function SettingsPage() {
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
   const [popupAction, setPopupAction] = useState<string>("none");
+  const [popupRepeat, setPopupRepeat] = useState<string>("none");
   const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
@@ -303,7 +304,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -330,6 +331,7 @@ export default function SettingsPage() {
           try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
         }
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
+        if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
       });
 
       // Fetch popup history
@@ -1781,6 +1783,22 @@ export default function SettingsPage() {
               </Select>
               <p className="text-xs text-muted-foreground">عند اختيار وجهة، سيظهر للطالب زر للانتقال مباشرة إلى القسم المحدد</p>
             </div>
+            <div className="space-y-2">
+              <Label>تكرار الرسالة</Label>
+              <Select value={popupRepeat} onValueChange={setPopupRepeat}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">بدون تكرار (مرة واحدة)</SelectItem>
+                  <SelectItem value="daily">يومياً</SelectItem>
+                  <SelectItem value="weekly">أسبوعياً</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {popupRepeat === "daily" && "ستظهر الرسالة للطالب مرة واحدة كل يوم"}
+                {popupRepeat === "weekly" && "ستظهر الرسالة للطالب مرة واحدة كل أسبوع"}
+                {popupRepeat === "none" && "ستظهر الرسالة مرة واحدة فقط للطالب"}
+              </p>
+            </div>
             <div className="flex items-center gap-2">
               <Button disabled={savingPopup} className="gap-1.5"
                 onClick={async () => {
@@ -1793,6 +1811,7 @@ export default function SettingsPage() {
                     supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
                     supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
                     supabase.from("site_settings").upsert({ id: "student_popup_action", value: popupAction }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_repeat", value: popupRepeat }),
                   ];
                   const results = await Promise.all(updates);
                   if (popupTitle.trim() && popupMessage.trim() && user) {
