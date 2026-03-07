@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface ClassStats {
@@ -35,7 +36,8 @@ export default function DashboardPrintView({
   classStats,
   schoolName = "نظام إدارة المدرسة",
 }: Props) {
-  const today = format(new Date(), "yyyy/MM/dd");
+  const calendarType = useCalendarType();
+  const today = formatDateShort(new Date(), calendarType);
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
 
   const [headerConfig, setHeaderConfig] = useState<PrintHeaderConfig | null>(null);
