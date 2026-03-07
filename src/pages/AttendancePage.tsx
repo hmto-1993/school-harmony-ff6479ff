@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search } from "lucide-react";
+import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search, ArrowLeftRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
-import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
+import { useCalendarType, formatDateShort, setCalendarTypeGlobal, type CalendarType } from "@/hooks/use-calendar-type";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
@@ -157,7 +158,7 @@ export default function AttendancePage() {
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal backdrop-blur-sm")}>
                 <CalendarIcon className="h-4 w-4" />
-                {formatDateShort(selectedDate, calendarType)}
+                {formatDateShort(selectedDate, calendarType)} {calendarType === "hijri" ? "هـ" : "م"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
@@ -170,7 +171,25 @@ export default function AttendancePage() {
               />
             </PopoverContent>
           </Popover>
-          
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                onClick={async () => {
+                  const newType: CalendarType = calendarType === "hijri" ? "gregorian" : "hijri";
+                  setCalendarTypeGlobal(newType);
+                  await supabase.from("site_settings").upsert({ id: "calendar_type", value: newType });
+                }}
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">تبديل إلى {calendarType === "hijri" ? "ميلادي" : "هجري"}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
