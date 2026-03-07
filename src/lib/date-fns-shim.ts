@@ -128,4 +128,29 @@ export function min(dates: (Date | number)[]): Date {
 }
 
 // Re-export startOfMonth/endOfMonth for internal use
-import { startOfMonth, endOfMonth } from "./date-utils";
+import { startOfMonth, endOfMonth, startOfWeek as _startOfWeek } from "./date-utils";
+
+export function startOfISOWeek(date: Date | number): Date {
+  return _startOfWeek(date, { weekStartsOn: 1 });
+}
+
+export function endOfISOWeek(date: Date | number): Date {
+  const d = startOfISOWeek(date);
+  d.setDate(d.getDate() + 6);
+  d.setHours(23, 59, 59, 999);
+  return d;
+}
+
+export function getISOWeek(date: Date | number): number {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+}
+
+export function parse(dateString: string, formatString: string, referenceDate: Date): Date {
+  // Simple parse implementation for common formats
+  const d = new Date(dateString);
+  return isNaN(d.getTime()) ? referenceDate : d;
+}
