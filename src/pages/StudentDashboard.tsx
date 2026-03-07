@@ -596,6 +596,30 @@ export default function StudentDashboard() {
           onClose={() => setPreviewFile(null)}
         />
       )}
+
+      {/* Popup Message Dialog */}
+      <Dialog open={popupOpen} onOpenChange={setPopupOpen}>
+        <DialogContent dir="rtl" className="max-w-md rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
+          <div className="bg-gradient-to-l from-primary to-accent p-6 text-center">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <Megaphone className="h-7 w-7 text-white" />
+            </div>
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white">
+                {popupTitle || "رسالة من الإدارة"}
+              </DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-6 space-y-4">
+            <p className="text-foreground leading-relaxed whitespace-pre-wrap text-center">{popupMessage}</p>
+            <DialogFooter>
+              <Button onClick={() => setPopupOpen(false)} className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90">
+                حسناً
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
