@@ -47,6 +47,16 @@ import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 // ============ Types ============
 
@@ -90,6 +100,7 @@ export default function ReportsPage() {
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; active: boolean }>({ current: 0, total: 0, active: false });
+  const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; sections: { attendance: boolean; grades: boolean } }>({ open: false, sections: { attendance: true, grades: true } });
 
   // Attendance data
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
@@ -767,15 +778,15 @@ export default function ReportsPage() {
                 <Users2 className="h-3 w-3 inline ml-1" />
                 إرسال جماعي لكل الفصل عبر SMS
               </DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: true })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: true, grades: true } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير شامل لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: false })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: true, grades: false } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير الحضور لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: false, grades: true })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: false, grades: true } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير الدرجات لجميع الطلاب
               </DropdownMenuItem>
