@@ -512,18 +512,36 @@ export default function ReportsPage() {
             <Printer className="h-4 w-4" />
             طباعة
           </Button>
-          <Button
-            size="sm"
-            onClick={handleSendSMS}
-            disabled={sendingSMS || selectedStudent === "all"}
-            className="gap-1.5 text-white"
-            style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send))")}
-          >
-            <Send className="h-4 w-4" />
-            {sendingSMS ? "جارٍ الإرسال..." : "إرسال لولي الأمر"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                disabled={sendingSMS || selectedStudent === "all"}
+                className="gap-1.5 text-white"
+                style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send))")}
+              >
+                <Send className="h-4 w-4" />
+                {sendingSMS ? "جارٍ الإرسال..." : "إرسال لولي الأمر"}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" dir="rtl">
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
+                <ClipboardCheck className="h-4 w-4 ml-2" />
+                تقرير شامل (حضور + درجات)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
+                <Calendar className="h-4 w-4 ml-2" />
+                تقرير الحضور فقط
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
+                <GraduationCap className="h-4 w-4 ml-2" />
+                تقرير الدرجات فقط
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
