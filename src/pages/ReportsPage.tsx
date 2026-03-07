@@ -429,7 +429,7 @@ export default function ReportsPage() {
     }
   };
 
-  const handleSendSMS = async () => {
+  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
     if (selectedStudent === "all") {
       toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
       return;
@@ -443,16 +443,14 @@ export default function ReportsPage() {
     setSendingSMS(true);
 
     try {
-      // 1. Generate PDF
       toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
-      const pdfBuffer = await generateStudentReportPDF(student.full_name);
+      const pdfBuffer = await generateStudentReportPDF(student.full_name, sections);
       if (!pdfBuffer) {
         toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
         setSendingSMS(false);
         return;
       }
 
-      // 2. Upload to storage
       const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
       const { error: uploadError } = await supabase.storage
         .from("reports")
@@ -464,12 +462,16 @@ export default function ReportsPage() {
         return;
       }
 
-      // 3. Get public URL
       const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
       const pdfUrl = urlData?.publicUrl;
 
-      // 4. Send SMS with PDF link
-      const message = `تقرير الطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\nحاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const reportLabel = sections.attendance && sections.grades
+        ? "تقرير شامل"
+        : sections.attendance
+        ? "تقرير الحضور"
+        : "تقرير الدرجات";
+
+      const message = `${reportLabel} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
 
       const { data, error } = await supabase.functions.invoke("send-sms", {
         body: { phone: student.parent_phone, message },
