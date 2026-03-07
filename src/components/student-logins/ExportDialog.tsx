@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 
+const formatTimeAr = (date: Date) => date.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
