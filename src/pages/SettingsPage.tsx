@@ -2062,6 +2062,21 @@ export default function SettingsPage() {
                         )}
                       </div>
                     )}
+                    <div className="space-y-2">
+                      <Label>التوجيه عند الضغط (اختياري)</Label>
+                      <Select value={popupAction} onValueChange={setPopupAction}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">بدون توجيه</SelectItem>
+                          <SelectItem value="grades">الدرجات</SelectItem>
+                          <SelectItem value="attendance">الحضور</SelectItem>
+                          <SelectItem value="behavior">السلوك</SelectItem>
+                          <SelectItem value="activities">الأنشطة</SelectItem>
+                          <SelectItem value="library">المكتبة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">عند اختيار وجهة، سيظهر للطالب زر للانتقال مباشرة إلى القسم المحدد</p>
+                    </div>
                     <div className="flex items-center gap-2">
                     <Button disabled={savingPopup} className="gap-1.5"
                       onClick={async () => {
@@ -2073,6 +2088,7 @@ export default function SettingsPage() {
                           supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: popupExpiry }),
                           supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
                           supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_action", value: popupAction }),
                         ];
                         const results = await Promise.all(updates);
 
