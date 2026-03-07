@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, FileText, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Upload, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -71,7 +71,7 @@ export default function ActivityResults({ activityId, activityType, classId, cla
           نتائج: {clsName}
         </h3>
         <Button variant="outline" size="sm" onClick={exportResults} className="gap-1.5 rounded-xl">
-          <Download className="h-4 w-4" /> تصدير
+          <Upload className="h-4 w-4" /> تصدير
         </Button>
       </div>
 

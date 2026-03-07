@@ -452,7 +452,7 @@ export default function StudentsPage() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon" className="h-9 w-9" title="تصدير">
-                  <Download className="h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -470,14 +470,14 @@ export default function StudentsPage() {
             <Dialog open={importOpen} onOpenChange={(v) => { setImportOpen(v); if (!v) resetImport(); }}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="gap-1.5">
-                  <Upload className="h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   استيراد
                 </Button>
               </DialogTrigger>
               <DialogContent dir="rtl" className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
+                    <Download className="h-5 w-5" />
                     استيراد الطلاب
                   </DialogTitle>
                 </DialogHeader>
