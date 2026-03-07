@@ -1581,28 +1581,57 @@ export default function SettingsPage() {
               );
             })()}
 
-            <Button
-              disabled={savingVisibility}
-              className="gap-1.5"
-              onClick={async () => {
-                setSavingVisibility(true);
-                const results = await Promise.all([
-                  supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(showGrades) }),
-                  supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
-                  supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
-                  supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
-                ]);
-                setSavingVisibility(false);
-                if (results.some(r => r.error)) {
-                  toast({ title: "خطأ", description: "فشل حفظ إعدادات العرض", variant: "destructive" });
-                } else {
-                  toast({ title: "تم الحفظ", description: "تم تحديث إعدادات عرض بيانات الطالب" });
-                }
-              }}
-            >
-              <Save className="h-4 w-4" />
-              {savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                disabled={savingVisibility}
+                className="gap-1.5"
+                onClick={async () => {
+                  setSavingVisibility(true);
+                  const results = await Promise.all([
+                    supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(showGrades) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
+                    supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
+                  ]);
+                  setSavingVisibility(false);
+                  if (results.some(r => r.error)) {
+                    toast({ title: "خطأ", description: "فشل حفظ إعدادات العرض", variant: "destructive" });
+                  } else {
+                    toast({ title: "تم الحفظ", description: "تم تحديث إعدادات عرض بيانات الطالب" });
+                  }
+                }}
+              >
+                <Save className="h-4 w-4" />
+                {savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                onClick={async () => {
+                  setShowGrades(true);
+                  setShowAttendance(true);
+                  setShowBehavior(true);
+                  setHiddenCategories({ p1: [], p2: [] });
+                  setSavingVisibility(true);
+                  const results = await Promise.all([
+                    supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
+                    supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
+                    supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
+                    supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
+                  ]);
+                  setSavingVisibility(false);
+                  if (results.some(r => r.error)) {
+                    toast({ title: "خطأ", description: "فشل إعادة الضبط", variant: "destructive" });
+                  } else {
+                    toast({ title: "تم الضبط", description: "تم إعادة جميع إعدادات العرض للقيم الافتراضية" });
+                  }
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+                إعادة ضبط الكل
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
