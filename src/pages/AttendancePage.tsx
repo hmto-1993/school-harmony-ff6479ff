@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
-import HijriDateBadge from "@/components/HijriDateBadge";
+
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -170,7 +170,7 @@ export default function AttendancePage() {
               />
             </PopoverContent>
           </Popover>
-          <HijriDateBadge date={selectedDate} />
+          
         </div>
       </div>
 
