@@ -1929,6 +1929,60 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {activeCard === "calendar" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                نوع التقويم
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-md">
+            <p className="text-sm text-muted-foreground">اختر نوع التقويم المستخدم في عرض التواريخ في النظام</p>
+            <div className="grid grid-cols-2 gap-3">
+              {([
+                { value: "hijri" as CalendarType, label: "هجري", desc: "التقويم الهجري (أم القرى)" },
+                { value: "gregorian" as CalendarType, label: "ميلادي", desc: "التقويم الميلادي" },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setCalendarTypeSetting(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-300",
+                    calendarTypeSetting === opt.value
+                      ? "border-primary bg-primary/10 shadow-lg ring-2 ring-primary/20"
+                      : "border-border/50 bg-card hover:border-primary/30 hover:shadow-md"
+                  )}
+                >
+                  <CalendarDays className={cn("h-6 w-6", calendarTypeSetting === opt.value ? "text-primary" : "text-muted-foreground")} />
+                  <span className={cn("text-sm font-bold", calendarTypeSetting === opt.value ? "text-primary" : "text-foreground")}>{opt.label}</span>
+                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                </button>
+              ))}
+            </div>
+            <Button
+              disabled={savingCalendarType}
+              className="gap-1.5"
+              onClick={async () => {
+                setSavingCalendarType(true);
+                await supabase.from("site_settings").upsert({ id: "calendar_type", value: calendarTypeSetting });
+                setCalendarTypeGlobal(calendarTypeSetting);
+                setSavingCalendarType(false);
+                toast({ title: "تم الحفظ", description: `تم تغيير التقويم إلى ${calendarTypeSetting === "hijri" ? "هجري" : "ميلادي"}` });
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {savingCalendarType ? "جارٍ الحفظ..." : "حفظ"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
