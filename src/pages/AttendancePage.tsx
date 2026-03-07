@@ -244,6 +244,15 @@ export default function AttendancePage() {
                   <CheckCircle2 className="h-4 w-4 ml-1" />
                   تحديد الكل حاضر
                 </Button>
+                <div className="relative flex-1 min-w-[160px] max-w-[280px]">
+                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="بحث عن طالب..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 text-xs pr-8 backdrop-blur-sm"
+                  />
+                </div>
                 <div className="flex items-center gap-1.5 mr-auto">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AttendanceStatus | "all")}>
