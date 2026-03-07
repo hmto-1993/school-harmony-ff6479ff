@@ -48,17 +48,21 @@ Deno.serve(async (req) => {
     const { data: visSettings } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior"]);
+      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories"]);
 
     const visibility: Record<string, boolean> = {
       grades: true,
       attendance: true,
       behavior: true,
     };
+    let hiddenCategories: string[] = [];
     (visSettings || []).forEach((s: any) => {
       if (s.id === "student_show_grades") visibility.grades = s.value !== "false";
       if (s.id === "student_show_attendance") visibility.attendance = s.value !== "false";
       if (s.id === "student_show_behavior") visibility.behavior = s.value !== "false";
+      if (s.id === "student_hidden_categories" && s.value) {
+        try { hiddenCategories = JSON.parse(s.value); } catch { hiddenCategories = []; }
+      }
     });
 
     // Fetch student's class info
@@ -73,12 +77,18 @@ Deno.serve(async (req) => {
     }
 
     // Conditionally fetch data based on visibility settings
-    const grades = visibility.grades
-      ? (await supabase
-          .from("grades")
-          .select("score, category_id, grade_categories(name, max_score, weight)")
-          .eq("student_id", student.id)).data || []
-      : [];
+    let grades: any[] = [];
+    if (visibility.grades) {
+      const { data: gradesData } = await supabase
+        .from("grades")
+        .select("score, category_id, grade_categories(name, max_score, weight)")
+        .eq("student_id", student.id);
+      // Filter out hidden categories
+      grades = (gradesData || []).filter((g: any) => {
+        const catName = g.grade_categories?.name;
+        return !catName || !hiddenCategories.includes(catName);
+      });
+    }
 
     const behaviors = visibility.behavior
       ? (await supabase
