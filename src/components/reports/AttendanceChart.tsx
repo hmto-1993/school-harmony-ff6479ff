@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Sector } from "recharts";
 
 interface AttendanceChartProps {
   data: { status: string }[];
@@ -15,14 +15,51 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const COLORS = [
-  "hsl(142, 71%, 45%)",  // present - green
-  "hsl(0, 84%, 60%)",    // absent - red
-  "hsl(45, 93%, 47%)",   // late - yellow
-  "hsl(200, 80%, 50%)",  // early_leave - blue
-  "hsl(270, 60%, 55%)",  // sick_leave - purple
+  "hsl(160, 84%, 39%)",
+  "hsl(0, 72%, 55%)",
+  "hsl(38, 92%, 50%)",
+  "hsl(200, 80%, 50%)",
+  "hsl(270, 60%, 55%)",
 ];
 
+const renderActiveShape = (props: any) => {
+  const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
+  return (
+    <g>
+      <text x={cx} y={cy - 10} textAnchor="middle" fill="currentColor" className="text-foreground text-lg font-bold">
+        {payload.name}
+      </text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fill="currentColor" className="text-muted-foreground text-sm">
+        {value} ({(percent * 100).toFixed(0)}%)
+      </text>
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius - 4}
+        outerRadius={outerRadius + 6}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+        opacity={0.85}
+      />
+      <Sector
+        cx={cx} cy={cy}
+        innerRadius={innerRadius}
+        outerRadius={outerRadius}
+        startAngle={startAngle}
+        endAngle={endAngle}
+        fill={fill}
+      />
+    </g>
+  );
+};
+
 export default function AttendanceChart({ data }: AttendanceChartProps) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const onPieEnter = useCallback((_: any, index: number) => {
+    setActiveIndex(index);
+  }, []);
+
   const chartData = useMemo(() => {
     const counts: Record<string, number> = {};
     data.forEach((r) => {
@@ -45,41 +82,29 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
         <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
               data={chartData}
               cx="50%"
               cy="45%"
-              innerRadius={50}
-              outerRadius={85}
+              innerRadius={55}
+              outerRadius={95}
               paddingAngle={3}
               dataKey="value"
-              label={({ name, percent, x, y, midAngle }) => {
-                const RADIAN = Math.PI / 180;
-                const radius = 115;
-                const cx2 = 0;
-                const cy2 = 0;
-                const labelX = x + Math.cos(-midAngle * RADIAN) * 15;
-                const labelY = y + Math.sin(-midAngle * RADIAN) * 15;
-                return (
-                  <text
-                    x={labelX}
-                    y={labelY}
-                    textAnchor={labelX > (x - 10) ? "start" : "end"}
-                    dominantBaseline="central"
-                    fontSize={12}
-                    fill="currentColor"
-                  >
-                    {`${name} ${(percent * 100).toFixed(0)}%`}
-                  </text>
-                );
-              }}
-              labelLine={{ stroke: "currentColor", strokeWidth: 1 }}
+              onMouseEnter={onPieEnter}
+              strokeWidth={0}
+              animationBegin={200}
+              animationDuration={700}
+              animationEasing="ease-out"
             >
               {chartData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
-            <Tooltip />
-            <Legend wrapperStyle={{ paddingTop: "12px" }} />
+            <Legend
+              wrapperStyle={{ paddingTop: "16px" }}
+              formatter={(value: string) => <span className="text-xs text-foreground">{value}</span>}
+            />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>
