@@ -157,7 +157,7 @@ export default function AttendancePage() {
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal backdrop-blur-sm")}>
                 <CalendarIcon className="h-4 w-4" />
-                {formatDateShort(selectedDate, calendarType)} {calendarType === "hijri" ? "هـ" : "م"}
+                {formatDateShort(selectedDate, calendarType)}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
