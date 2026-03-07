@@ -1,4 +1,4 @@
-import { format } from "date-fns";
+import { format } from "@/lib/date-utils";
 import { LayoutDashboard, Sparkles, Printer, Calendar, ArrowLeftRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
