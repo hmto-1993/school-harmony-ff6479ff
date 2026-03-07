@@ -183,6 +183,12 @@ export default function SettingsPage() {
   const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
   const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
 
+  // Student popup message
+  const [popupEnabled, setPopupEnabled] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("");
+  const [savingPopup, setSavingPopup] = useState(false);
+
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
   const [newCatName, setNewCatName] = useState("");
@@ -279,12 +285,12 @@ export default function SettingsPage() {
       });
     }
 
-    // Fetch quiz color settings & student visibility
+    // Fetch quiz color settings & student visibility & popup
     if (isAdmin) {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -295,7 +301,6 @@ export default function SettingsPage() {
         if (s.id === "student_hidden_categories" && s.value) {
           try {
             const parsed = JSON.parse(s.value);
-            // Support both old format (string[]) and new format ({p1:[], p2:[]})
             if (Array.isArray(parsed)) {
               setHiddenCategories({ p1: parsed, p2: parsed });
             } else {
@@ -303,6 +308,9 @@ export default function SettingsPage() {
             }
           } catch { setHiddenCategories({ p1: [], p2: [] }); }
         }
+        if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
+        if (s.id === "student_popup_title") setPopupTitle(s.value || "");
+        if (s.id === "student_popup_message") setPopupMessage(s.value || "");
       });
     }
 
