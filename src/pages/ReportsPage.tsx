@@ -430,49 +430,57 @@ export default function ReportsPage() {
     }
   };
 
-  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
+  const generateAndUploadPDF = async (studentName: string, studentId: string, sections: { attendance: boolean; grades: boolean }): Promise<string | null> => {
+    toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
+    const pdfBuffer = await generateStudentReportPDF(studentName, sections);
+    if (!pdfBuffer) {
+      toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
+      return null;
+    }
+
+    const fileName = `report_${studentId}_${dateFrom}_${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from("reports")
+      .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
+
+    if (uploadError) {
+      toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
+    return urlData?.publicUrl || null;
+  };
+
+  const getReportLabel = (sections: { attendance: boolean; grades: boolean }) => {
+    if (sections.attendance && sections.grades) return "تقرير شامل";
+    if (sections.attendance) return "تقرير الحضور";
+    return "تقرير الدرجات";
+  };
+
+  const validateStudentForSend = (): { id: string; full_name: string; parent_phone: string } | null => {
     if (selectedStudent === "all") {
       toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
-      return;
+      return null;
     }
     const student = students.find((s) => s.id === selectedStudent);
     if (!student?.parent_phone) {
       toast({ title: "تنبيه", description: "لا يوجد رقم هاتف لولي أمر هذا الطالب", variant: "destructive" });
-      return;
+      return null;
     }
+    return student as { id: string; full_name: string; parent_phone: string };
+  };
+
+  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
+    const student = validateStudentForSend();
+    if (!student) return;
 
     setSendingSMS(true);
-
     try {
-      toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
-      const pdfBuffer = await generateStudentReportPDF(student.full_name, sections);
-      if (!pdfBuffer) {
-        toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
-        setSendingSMS(false);
-        return;
-      }
+      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
+      if (!pdfUrl) { setSendingSMS(false); return; }
 
-      const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("reports")
-        .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
-
-      if (uploadError) {
-        toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
-        setSendingSMS(false);
-        return;
-      }
-
-      const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
-      const pdfUrl = urlData?.publicUrl;
-
-      const reportLabel = sections.attendance && sections.grades
-        ? "تقرير شامل"
-        : sections.attendance
-        ? "تقرير الحضور"
-        : "تقرير الدرجات";
-
-      const message = `${reportLabel} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
 
       const { data, error } = await supabase.functions.invoke("send-sms", {
         body: { phone: student.parent_phone, message },
@@ -481,12 +489,36 @@ export default function ReportsPage() {
       if (error || !data?.success) {
         toast({ title: "خطأ", description: "فشل إرسال الرسالة", variant: "destructive" });
       } else {
-        toast({ title: "تم ✅", description: "تم إرسال التقرير PDF لولي الأمر بنجاح" });
+        toast({ title: "تم ✅", description: "تم إرسال التقرير عبر SMS بنجاح" });
       }
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
     }
+    setSendingSMS(false);
+  };
 
+  const handleSendWhatsApp = async (sections: { attendance: boolean; grades: boolean }) => {
+    const student = validateStudentForSend();
+    if (!student) return;
+
+    setSendingSMS(true);
+    try {
+      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
+      if (!pdfUrl) { setSendingSMS(false); return; }
+
+      // Format phone for wa.me (remove leading 0, add 966)
+      let phone = student.parent_phone.replace(/[\s\-\+]/g, "");
+      if (phone.startsWith("0")) phone = "966" + phone.slice(1);
+      if (!phone.startsWith("966")) phone = "966" + phone;
+
+      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+
+      toast({ title: "تم ✅", description: "تم فتح واتساب مع رسالة التقرير" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
+    }
     setSendingSMS(false);
   };
 
