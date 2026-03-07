@@ -99,7 +99,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action"]);
+      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat"]);
     let enabled = false;
     let title = "";
     let message = "";
@@ -107,6 +107,7 @@ export default function StudentDashboard() {
     let targetType = "all";
     let targetClassIds: string[] = [];
     let action = "none";
+    let repeat = "none";
     (data || []).forEach((s: any) => {
       if (s.id === "student_popup_enabled") enabled = s.value === "true";
       if (s.id === "student_popup_title") title = s.value || "";
@@ -117,6 +118,7 @@ export default function StudentDashboard() {
         try { targetClassIds = JSON.parse(s.value); } catch { targetClassIds = []; }
       }
       if (s.id === "student_popup_action") action = s.value || "none";
+      if (s.id === "student_popup_repeat") repeat = s.value || "none";
     });
 
     // Check expiry
@@ -125,6 +127,31 @@ export default function StudentDashboard() {
     // Check class targeting
     if (targetType === "specific" && student?.class_id) {
       if (!targetClassIds.includes(student.class_id)) enabled = false;
+    }
+
+    // Check repeat logic using localStorage
+    if (enabled && message.trim()) {
+      const storageKey = `popup_dismissed_${student?.id || "unknown"}`;
+      const lastDismissed = localStorage.getItem(storageKey);
+      
+      if (lastDismissed && repeat !== "none") {
+        const dismissedDate = new Date(lastDismissed);
+        const now = new Date();
+        
+        if (repeat === "daily") {
+          // Show again if dismissed on a different day
+          const sameDay = dismissedDate.toDateString() === now.toDateString();
+          if (sameDay) enabled = false;
+        } else if (repeat === "weekly") {
+          // Show again if 7+ days have passed
+          const diffMs = now.getTime() - dismissedDate.getTime();
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          if (diffDays < 7) enabled = false;
+        }
+      } else if (lastDismissed && repeat === "none") {
+        // No repeat = show only once ever
+        enabled = false;
+      }
     }
 
     if (enabled && message.trim()) {
