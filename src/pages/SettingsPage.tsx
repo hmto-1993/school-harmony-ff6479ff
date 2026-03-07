@@ -199,6 +199,10 @@ export default function SettingsPage() {
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
   const [popupAction, setPopupAction] = useState<string>("none");
+  // Calendar type
+  const [calendarTypeSetting, setCalendarTypeSetting] = useState<CalendarType>("hijri");
+  const [savingCalendarType, setSavingCalendarType] = useState(false);
+
   const [popupRepeat, setPopupRepeat] = useState<string>("none");
   const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
