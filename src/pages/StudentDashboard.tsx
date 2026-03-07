@@ -391,6 +391,7 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           <TabsContent value="activities">
             <StudentActivitiesTab studentId={student.id} classId={student.class_id} />
@@ -549,6 +550,8 @@ export default function StudentDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+          );
+        })()}
       </main>
 
       {previewFile && (
