@@ -47,6 +47,16 @@ import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 // ============ Types ============
 
@@ -90,6 +100,7 @@ export default function ReportsPage() {
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
   const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; active: boolean }>({ current: 0, total: 0, active: false });
+  const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; sections: { attendance: boolean; grades: boolean } }>({ open: false, sections: { attendance: true, grades: true } });
 
   // Attendance data
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
@@ -767,15 +778,15 @@ export default function ReportsPage() {
                 <Users2 className="h-3 w-3 inline ml-1" />
                 إرسال جماعي لكل الفصل عبر SMS
               </DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: true })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: true, grades: true } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير شامل لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: false })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: true, grades: false } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير الحضور لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: false, grades: true })}>
+              <DropdownMenuItem onClick={() => setBulkConfirm({ open: true, sections: { attendance: false, grades: true } })}>
                 <Users2 className="h-4 w-4 ml-2" />
                 تقرير الدرجات لجميع الطلاب
               </DropdownMenuItem>
@@ -1182,6 +1193,51 @@ export default function ReportsPage() {
           </table>
         )}
       </PrintPreviewDialog>
+      {/* Bulk send confirmation dialog */}
+      <AlertDialog open={bulkConfirm.open} onOpenChange={(open) => setBulkConfirm((prev) => ({ ...prev, open }))}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الإرسال الجماعي</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p>أنت على وشك إرسال التقارير لجميع أولياء أمور الفصل.</p>
+                <div className="rounded-xl bg-muted/60 p-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">إجمالي الطلاب:</span>
+                    <Badge variant="secondary" className="text-sm">{students.length}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">طلاب بأرقام هواتف (سيتم الإرسال):</span>
+                    <Badge className="text-sm bg-primary">{students.filter((s) => s.parent_phone).length}</Badge>
+                  </div>
+                  {students.filter((s) => !s.parent_phone).length > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-destructive">طلاب بدون أرقام (لن يتم الإرسال):</span>
+                      <Badge variant="destructive" className="text-sm">{students.filter((s) => !s.parent_phone).length}</Badge>
+                    </div>
+                  )}
+                </div>
+                {students.filter((s) => !s.parent_phone).length > 0 && (
+                  <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-2">
+                    <strong>الطلاب بدون أرقام:</strong>{" "}
+                    {students.filter((s) => !s.parent_phone).map((s) => s.full_name).join("، ")}
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handleBulkSendSMS(bulkConfirm.sections)}
+              disabled={students.filter((s) => s.parent_phone).length === 0}
+            >
+              <Send className="h-4 w-4 ml-2" />
+              إرسال ({students.filter((s) => s.parent_phone).length} طالب)
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
