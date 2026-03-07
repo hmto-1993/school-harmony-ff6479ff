@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +34,7 @@ import {
   Eye,
   Send,
   UserCircle,
+  ChevronDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -342,24 +344,31 @@ export default function ReportsPage() {
     window.print();
   };
 
-  const generateStudentReportPDF = async (studentName: string): Promise<ArrayBuffer | null> => {
+  const generateStudentReportPDF = async (studentName: string, sections: { attendance: boolean; grades: boolean }): Promise<ArrayBuffer | null> => {
     try {
       const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
       const autoTableImport = await import("jspdf-autotable");
       const autoTable = autoTableImport.default;
-      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+      const reportType = sections.attendance && !sections.grades ? "attendance" : sections.grades && !sections.attendance ? "grades" : "attendance";
+      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
       const tableStyles = getArabicTableStyles();
       const pageWidth = doc.internal.pageSize.getWidth();
 
+      const titleText = sections.attendance && sections.grades
+        ? `تقرير الطالب: ${studentName}`
+        : sections.attendance
+        ? `تقرير حضور الطالب: ${studentName}`
+        : `تقرير درجات الطالب: ${studentName}`;
+
       doc.setFontSize(16);
-      doc.text(`تقرير الطالب: ${studentName}`, pageWidth / 2, startY, { align: "center" });
+      doc.text(titleText, pageWidth / 2, startY, { align: "center" });
       doc.setFontSize(10);
       doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
 
       let currentY = startY + 15;
 
       // Attendance section
-      if (attendanceData.length > 0) {
+      if (sections.attendance && attendanceData.length > 0) {
         doc.setFontSize(13);
         doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
 
@@ -379,7 +388,6 @@ export default function ReportsPage() {
 
         currentY = (doc as any).lastAutoTable.finalY + 10;
 
-        // Summary
         doc.setFontSize(10);
         doc.text(
           `حاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late} | الإجمالي: ${attendanceSummary.total}`,
@@ -391,8 +399,8 @@ export default function ReportsPage() {
       }
 
       // Grades section
-      if (gradeData.length > 0) {
-        if (currentY > doc.internal.pageSize.getHeight() - 40) {
+      if (sections.grades && gradeData.length > 0) {
+        if (sections.attendance && currentY > doc.internal.pageSize.getHeight() - 40) {
           doc.addPage("a4", "landscape");
           currentY = 15;
         }
@@ -421,7 +429,7 @@ export default function ReportsPage() {
     }
   };
 
-  const handleSendSMS = async () => {
+  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
     if (selectedStudent === "all") {
       toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
       return;
@@ -435,16 +443,14 @@ export default function ReportsPage() {
     setSendingSMS(true);
 
     try {
-      // 1. Generate PDF
       toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
-      const pdfBuffer = await generateStudentReportPDF(student.full_name);
+      const pdfBuffer = await generateStudentReportPDF(student.full_name, sections);
       if (!pdfBuffer) {
         toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
         setSendingSMS(false);
         return;
       }
 
-      // 2. Upload to storage
       const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
       const { error: uploadError } = await supabase.storage
         .from("reports")
@@ -456,12 +462,16 @@ export default function ReportsPage() {
         return;
       }
 
-      // 3. Get public URL
       const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
       const pdfUrl = urlData?.publicUrl;
 
-      // 4. Send SMS with PDF link
-      const message = `تقرير الطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\nحاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const reportLabel = sections.attendance && sections.grades
+        ? "تقرير شامل"
+        : sections.attendance
+        ? "تقرير الحضور"
+        : "تقرير الدرجات";
+
+      const message = `${reportLabel} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
 
       const { data, error } = await supabase.functions.invoke("send-sms", {
         body: { phone: student.parent_phone, message },
@@ -502,18 +512,36 @@ export default function ReportsPage() {
             <Printer className="h-4 w-4" />
             طباعة
           </Button>
-          <Button
-            size="sm"
-            onClick={handleSendSMS}
-            disabled={sendingSMS || selectedStudent === "all"}
-            className="gap-1.5 text-white"
-            style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send))")}
-          >
-            <Send className="h-4 w-4" />
-            {sendingSMS ? "جارٍ الإرسال..." : "إرسال لولي الأمر"}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                disabled={sendingSMS || selectedStudent === "all"}
+                className="gap-1.5 text-white"
+                style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send))")}
+              >
+                <Send className="h-4 w-4" />
+                {sendingSMS ? "جارٍ الإرسال..." : "إرسال لولي الأمر"}
+                <ChevronDown className="h-3 w-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
+                <ClipboardCheck className="h-4 w-4 ml-2" />
+                تقرير شامل (حضور + درجات)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
+                <Calendar className="h-4 w-4 ml-2" />
+                تقرير الحضور فقط
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
+                <GraduationCap className="h-4 w-4 ml-2" />
+                تقرير الدرجات فقط
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
