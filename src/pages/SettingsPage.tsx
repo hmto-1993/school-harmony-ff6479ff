@@ -324,6 +324,14 @@ export default function SettingsPage() {
           try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
         }
       });
+
+      // Fetch popup history
+      const { data: historyData } = await supabase
+        .from("popup_messages")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (historyData) setPopupHistory(historyData as any);
     }
 
     setLoading(false);
