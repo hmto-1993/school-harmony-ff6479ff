@@ -11,10 +11,10 @@ interface Props {
 }
 
 const PIE_COLORS = [
-  "hsl(160, 84%, 39%)",
-  "hsl(0, 84%, 60%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(220, 9%, 70%)",
+  "hsl(152, 69%, 45%)",  // present - emerald
+  "hsl(0, 72%, 58%)",    // absent - coral red
+  "hsl(43, 96%, 52%)",   // late - amber gold
+  "hsl(220, 14%, 55%)",  // not recorded - neutral slate
 ];
 
 const renderActiveShape = (props: any) => {

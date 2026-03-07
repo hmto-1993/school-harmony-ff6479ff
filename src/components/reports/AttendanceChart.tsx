@@ -15,11 +15,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const COLORS = [
-  "hsl(160, 84%, 39%)",
-  "hsl(0, 72%, 55%)",
-  "hsl(38, 92%, 50%)",
-  "hsl(200, 80%, 50%)",
-  "hsl(270, 60%, 55%)",
+  "hsl(152, 69%, 45%)",  // present - emerald
+  "hsl(0, 72%, 58%)",    // absent - coral red
+  "hsl(43, 96%, 52%)",   // late - amber gold
+  "hsl(210, 78%, 55%)",  // early_leave - sky blue
+  "hsl(280, 60%, 58%)",  // sick_leave - violet
 ];
 
 const renderActiveShape = (props: any) => {
