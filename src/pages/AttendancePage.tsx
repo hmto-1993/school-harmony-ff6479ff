@@ -162,6 +162,24 @@ export default function AttendancePage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
+              <div className="flex items-center justify-between px-3 pt-3 pb-1">
+                <span className="text-xs text-muted-foreground">
+                  {calendarType === "hijri" ? "التقويم الهجري" : "التقويم الميلادي"}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={async () => {
+                    const newType: CalendarType = calendarType === "hijri" ? "gregorian" : "hijri";
+                    setCalendarTypeGlobal(newType);
+                    await supabase.from("site_settings").upsert({ id: "calendar_type", value: newType });
+                  }}
+                >
+                  <ArrowLeftRight className="h-3 w-3" />
+                  {calendarType === "hijri" ? "ميلادي" : "هجري"}
+                </Button>
+              </div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
@@ -171,25 +189,6 @@ export default function AttendancePage() {
               />
             </PopoverContent>
           </Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                onClick={async () => {
-                  const newType: CalendarType = calendarType === "hijri" ? "gregorian" : "hijri";
-                  setCalendarTypeGlobal(newType);
-                  await supabase.from("site_settings").upsert({ id: "calendar_type", value: newType });
-                }}
-              >
-                <ArrowLeftRight className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p className="text-xs">تبديل إلى {calendarType === "hijri" ? "ميلادي" : "هجري"}</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
       </div>
 
