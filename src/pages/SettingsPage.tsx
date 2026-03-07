@@ -1445,7 +1445,7 @@ export default function SettingsPage() {
             <p className="text-sm text-muted-foreground">اختر البيانات التي تريد إظهارها للطلاب عند تسجيل دخولهم</p>
             <div className="space-y-3 max-w-md">
               {[
-                { key: "grades" as const, label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: showGrades, setter: setShowGrades },
+                { key: "grades" as const, label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: showGrades, setter: setShowGrades, hasSubmenu: true },
                 { key: "attendance" as const, label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: Users, state: showAttendance, setter: setShowAttendance },
                 { key: "behavior" as const, label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: showBehavior, setter: setShowBehavior },
               ].map((item) => (
@@ -1522,6 +1522,25 @@ export default function SettingsPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Apply to both periods button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs"
+                    onClick={() => {
+                      const source = hiddenCategories[visibilityPeriod];
+                      const targetPeriod = visibilityPeriod === "p1" ? "p2" : "p1";
+                      setHiddenCategories(prev => ({
+                        ...prev,
+                        [targetPeriod]: [...source]
+                      }));
+                      toast({ title: "تم النسخ", description: `تم تطبيق إعدادات ${visibilityPeriod === "p1" ? "الفترة الأولى" : "الفترة الثانية"} على الفترتين` });
+                    }}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    تطبيق على الفترتين
+                  </Button>
 
                   <div className="grid grid-cols-1 gap-2">
                     {uniqueNames.map(name => {
