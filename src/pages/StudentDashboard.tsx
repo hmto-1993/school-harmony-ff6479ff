@@ -97,15 +97,32 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message"]);
+      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes"]);
     let enabled = false;
     let title = "";
     let message = "";
+    let expiry = "";
+    let targetType = "all";
+    let targetClassIds: string[] = [];
     (data || []).forEach((s: any) => {
       if (s.id === "student_popup_enabled") enabled = s.value === "true";
       if (s.id === "student_popup_title") title = s.value || "";
       if (s.id === "student_popup_message") message = s.value || "";
+      if (s.id === "student_popup_expiry") expiry = s.value || "";
+      if (s.id === "student_popup_target_type") targetType = s.value || "all";
+      if (s.id === "student_popup_target_classes" && s.value) {
+        try { targetClassIds = JSON.parse(s.value); } catch { targetClassIds = []; }
+      }
     });
+
+    // Check expiry
+    if (expiry && new Date(expiry) < new Date()) enabled = false;
+
+    // Check class targeting
+    if (targetType === "specific" && student?.class_id) {
+      if (!targetClassIds.includes(student.class_id)) enabled = false;
+    }
+
     if (enabled && message.trim()) {
       setPopupTitle(title);
       setPopupMessage(message);
