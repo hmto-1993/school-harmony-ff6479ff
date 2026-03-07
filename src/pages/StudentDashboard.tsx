@@ -295,7 +295,7 @@ export default function StudentDashboard() {
           ];
           const defaultTab = visibleTabs[0]?.value || "activities";
           return (
-        <Tabs defaultValue={defaultTab} dir="rtl">
+        <Tabs value={activeTab || defaultTab} onValueChange={setActiveTab} dir="rtl">
           <TabsList className={cn("grid w-full", `grid-cols-${visibleTabs.length}`)}>
             {visibleTabs.map(tab => (
               <TabsTrigger key={tab.value} value={tab.value} className="gap-1">
@@ -634,8 +634,37 @@ export default function StudentDashboard() {
           </div>
           <div className="p-6 space-y-4">
             <p className="text-foreground leading-relaxed whitespace-pre-wrap text-center">{popupMessage}</p>
-            <DialogFooter>
-              <Button onClick={() => setPopupOpen(false)} className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90">
+            <DialogFooter className="flex flex-col gap-2 sm:flex-col">
+              {popupAction && popupAction !== "none" && (
+                <Button
+                  onClick={() => {
+                    setActiveTab(popupAction);
+                    setPopupOpen(false);
+                    // Scroll to tabs
+                    setTimeout(() => {
+                      document.querySelector('[role="tablist"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }, 100);
+                  }}
+                  className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90"
+                >
+                  <ArrowRight className="h-4 w-4" />
+                  {{
+                    grades: "عرض الدرجات",
+                    attendance: "عرض الحضور",
+                    behavior: "عرض السلوك",
+                    activities: "عرض الأنشطة",
+                    library: "عرض المكتبة",
+                  }[popupAction] || "الانتقال"}
+                </Button>
+              )}
+              <Button
+                variant={popupAction && popupAction !== "none" ? "outline" : "default"}
+                onClick={() => setPopupOpen(false)}
+                className={cn(
+                  "w-full rounded-2xl h-11 text-base font-bold",
+                  (!popupAction || popupAction === "none") && "bg-gradient-to-l from-primary to-accent hover:opacity-90"
+                )}
+              >
                 حسناً
               </Button>
             </DialogFooter>
