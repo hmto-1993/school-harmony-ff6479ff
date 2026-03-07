@@ -36,7 +36,9 @@ import {
   UserCircle,
   ChevronDown,
   MessageCircle,
+  Users2,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
