@@ -647,7 +647,13 @@ export default function StudentDashboard() {
       )}
 
       {/* Popup Message Dialog */}
-      <Dialog open={popupOpen} onOpenChange={setPopupOpen}>
+      <Dialog open={popupOpen} onOpenChange={(open) => {
+        if (!open) {
+          const storageKey = `popup_dismissed_${student?.id || "unknown"}`;
+          localStorage.setItem(storageKey, new Date().toISOString());
+        }
+        setPopupOpen(open);
+      }}>
         <DialogContent dir="rtl" className="max-w-md rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
           <div className="bg-gradient-to-l from-primary to-accent p-6 text-center">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-3">
