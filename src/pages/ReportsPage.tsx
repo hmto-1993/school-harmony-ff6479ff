@@ -89,6 +89,7 @@ export default function ReportsPage() {
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; active: boolean }>({ current: 0, total: 0, active: false });
 
   // Attendance data
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
