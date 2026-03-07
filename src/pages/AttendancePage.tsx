@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import { useCalendarType, formatDateShort, setCalendarTypeGlobal, type CalendarType } from "@/hooks/use-calendar-type";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
