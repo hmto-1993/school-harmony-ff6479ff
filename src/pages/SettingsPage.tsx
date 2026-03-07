@@ -203,13 +203,22 @@ export default function SettingsPage() {
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewMessage, setPreviewMessage] = useState("");
   const [popupCountdown, setPopupCountdown] = useState("");
+  const popupExpiryNotified = useRef(false);
 
-  // Countdown timer for popup expiry
+  // Countdown timer for popup expiry + admin notification
   useEffect(() => {
-    if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); return; }
+    if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
     const calc = () => {
       const diff = new Date(popupExpiry).getTime() - Date.now();
-      if (diff <= 0) { setPopupCountdown("منتهية"); return; }
+      if (diff <= 0) {
+        setPopupCountdown("منتهية");
+        if (!popupExpiryNotified.current) {
+          popupExpiryNotified.current = true;
+          toast({ title: "⏰ انتهت صلاحية الرسالة المنبثقة", description: "الرسالة المنبثقة للطلاب انتهت صلاحيتها ولم تعد تظهر. يمكنك تعطيلها أو تحديث تاريخ الانتهاء.", variant: "destructive" });
+        }
+        return;
+      }
+      popupExpiryNotified.current = false;
       const d = Math.floor(diff / 86400000);
       const h = Math.floor((diff % 86400000) / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
