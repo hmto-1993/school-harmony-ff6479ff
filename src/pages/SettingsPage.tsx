@@ -3,7 +3,9 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -33,6 +35,7 @@ import {
   Check,
   X,
   MessageSquare,
+  Megaphone,
   ChevronDown,
   ArrowUp,
   ArrowDown,
@@ -183,6 +186,12 @@ export default function SettingsPage() {
   const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
   const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
 
+  // Student popup message
+  const [popupEnabled, setPopupEnabled] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [popupTitle, setPopupTitle] = useState("");
+  const [savingPopup, setSavingPopup] = useState(false);
+
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
   const [newCatName, setNewCatName] = useState("");
@@ -279,12 +288,12 @@ export default function SettingsPage() {
       });
     }
 
-    // Fetch quiz color settings & student visibility
+    // Fetch quiz color settings & student visibility & popup
     if (isAdmin) {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -295,7 +304,6 @@ export default function SettingsPage() {
         if (s.id === "student_hidden_categories" && s.value) {
           try {
             const parsed = JSON.parse(s.value);
-            // Support both old format (string[]) and new format ({p1:[], p2:[]})
             if (Array.isArray(parsed)) {
               setHiddenCategories({ p1: parsed, p2: parsed });
             } else {
@@ -303,6 +311,9 @@ export default function SettingsPage() {
             }
           } catch { setHiddenCategories({ p1: [], p2: [] }); }
         }
+        if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
+        if (s.id === "student_popup_title") setPopupTitle(s.value || "");
+        if (s.id === "student_popup_message") setPopupMessage(s.value || "");
       });
     }
 
@@ -1921,6 +1932,79 @@ export default function SettingsPage() {
                         {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
                       </Button>
                     </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* ===== رسالة منبثقة للطلاب ===== */}
+            <Collapsible>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg shadow-orange-500/20 text-white">
+                        <Megaphone className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">رسالة منبثقة للطلاب</h3>
+                        <p className="text-xs text-muted-foreground">عرض رسالة تظهر للطالب عند فتح لوحة التحكم</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {popupEnabled && <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/20 text-xs">مفعّلة</Badge>}
+                      <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    </div>
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-lg">
+                    <div className="flex items-center justify-between">
+                      <Label>تفعيل الرسالة المنبثقة</Label>
+                      <button
+                        type="button"
+                        onClick={() => setPopupEnabled(!popupEnabled)}
+                        className={cn(
+                          "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                          popupEnabled ? "bg-primary" : "bg-muted"
+                        )}
+                      >
+                        <span className={cn(
+                          "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
+                          popupEnabled ? "translate-x-1" : "translate-x-6"
+                        )} />
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>عنوان الرسالة</Label>
+                      <Input value={popupTitle} onChange={(e) => setPopupTitle(e.target.value)}
+                        placeholder="مثال: تنبيه مهم" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>نص الرسالة</Label>
+                      <Textarea value={popupMessage} onChange={(e) => setPopupMessage(e.target.value)}
+                        placeholder="اكتب الرسالة التي تريد عرضها للطلاب..."
+                        rows={4} />
+                    </div>
+                    <Button disabled={savingPopup} className="gap-1.5"
+                      onClick={async () => {
+                        setSavingPopup(true);
+                        const updates = [
+                          supabase.from("site_settings").upsert({ id: "student_popup_enabled", value: String(popupEnabled) }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_title", value: popupTitle }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_message", value: popupMessage }),
+                        ];
+                        const results = await Promise.all(updates);
+                        setSavingPopup(false);
+                        if (results.some((r) => r.error)) {
+                          toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+                        } else {
+                          toast({ title: "تم الحفظ", description: "تم تحديث إعدادات الرسالة المنبثقة" });
+                        }
+                      }}>
+                      <Save className="h-4 w-4" />
+                      {savingPopup ? "جارٍ الحفظ..." : "حفظ"}
+                    </Button>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
