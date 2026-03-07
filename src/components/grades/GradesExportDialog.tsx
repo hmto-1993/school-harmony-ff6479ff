@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
-import { format } from "@/lib/date-utils";
+import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";

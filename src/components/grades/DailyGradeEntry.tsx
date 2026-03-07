@@ -10,8 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Calendar, Download } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
-import { format, subDays, addDays, isToday } from "@/lib/date-utils";
-
+import { format, subDays, addDays, isToday } from "date-fns";
+import { ar } from "date-fns/locale";
 
 interface GradeCategory {
   id: string;
@@ -267,7 +267,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             </Button>
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm font-medium min-w-[160px] justify-center">
               <Calendar className="h-4 w-4 text-muted-foreground" />
-              {selectedDate.toLocaleDateString("ar-SA", { weekday: "long", year: "numeric", month: "2-digit", day: "2-digit" })}
+              {format(selectedDate, "EEEE yyyy/MM/dd", { locale: ar })}
             </div>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}>
               <ChevronLeft className="h-4 w-4" />

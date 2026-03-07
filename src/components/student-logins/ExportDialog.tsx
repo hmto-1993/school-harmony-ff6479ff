@@ -5,9 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, FileText } from "lucide-react";
-import { format } from "@/lib/date-utils";
-
-const formatTimeAr = (date: Date) => date.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
@@ -84,7 +83,7 @@ export default function ExportDialog({
         "اسم الطالب": l.students?.full_name || "غير معروف",
         "الفصل": getClassName(l.class_id),
         "التاريخ": format(new Date(l.logged_in_at), "yyyy/MM/dd"),
-        "الوقت": formatTimeAr(new Date(l.logged_in_at)),
+        "الوقت": format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailed), "السجل التفصيلي");
     }
@@ -97,7 +96,7 @@ export default function ExportDialog({
           "#": i + 1,
           "اسم الطالب": l.students?.full_name || "غير معروف",
           "التاريخ": format(new Date(l.logged_in_at), "yyyy/MM/dd"),
-          "الوقت": formatTimeAr(new Date(l.logged_in_at)),
+          "الوقت": format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
         }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), c.name.substring(0, 31));
       });
@@ -145,7 +144,7 @@ export default function ExportDialog({
         startY: 22,
         head: [["الوقت", "التاريخ", "الفصل", "اسم الطالب", "#"]],
         body: filteredLogins.map((l, i) => [
-          formatTimeAr(new Date(l.logged_in_at)),
+          format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
           format(new Date(l.logged_in_at), "yyyy/MM/dd"),
           getClassName(l.class_id),
           l.students?.full_name || "غير معروف",
@@ -167,7 +166,7 @@ export default function ExportDialog({
           startY: 22,
           head: [["الوقت", "التاريخ", "اسم الطالب", "#"]],
           body: classLogins.map((l, i) => [
-            formatTimeAr(new Date(l.logged_in_at)),
+            format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
             format(new Date(l.logged_in_at), "yyyy/MM/dd"),
             l.students?.full_name || "غير معروف",
             (i + 1).toString(),

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { format } from "@/lib/date-utils";
+import { format } from "date-fns";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardStatCards from "@/components/dashboard/DashboardStatCards";
 import AttendancePieChart from "@/components/dashboard/AttendancePieChart";

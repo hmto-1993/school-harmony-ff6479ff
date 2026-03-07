@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { format } from "@/lib/date-utils";
-
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,12 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search, ArrowLeftRight } from "lucide-react";
+import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
-import { useCalendarType, formatDateShort, setCalendarTypeGlobal, type CalendarType } from "@/hooks/use-calendar-type";
-
+import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -162,44 +160,12 @@ export default function AttendancePage() {
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
-              <div className="flex items-center justify-between px-3 pt-3 pb-1">
-                <span className="text-xs text-muted-foreground">
-                  {calendarType === "hijri" ? "التقويم الهجري" : "التقويم الميلادي"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 gap-1 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={async () => {
-                    const newType: CalendarType = calendarType === "hijri" ? "gregorian" : "hijri";
-                    setCalendarTypeGlobal(newType);
-                    await supabase.from("site_settings").upsert({ id: "calendar_type", value: newType });
-                  }}
-                >
-                  <ArrowLeftRight className="h-3 w-3" />
-                  {calendarType === "hijri" ? "ميلادي" : "هجري"}
-                </Button>
-              </div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(d)}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
-                month={selectedDate}
-                formatters={{
-                  formatCaption: (date) => {
-                    const locale = calendarType === "hijri" ? "ar-SA-u-ca-islamic-umalqura" : "ar-SA";
-                    return date.toLocaleDateString(locale, { year: "numeric", month: "long" });
-                  },
-                  formatDay: (date) => {
-                    const locale = calendarType === "hijri" ? "ar-SA-u-ca-islamic-umalqura" : "ar-SA";
-                    return date.toLocaleDateString(locale, { day: "numeric" });
-                  },
-                  formatWeekdayName: (date) => {
-                    return date.toLocaleDateString("ar-SA", { weekday: "short" });
-                  },
-                }}
               />
             </PopoverContent>
           </Popover>

@@ -1,10 +1,8 @@
-import { format } from "@/lib/date-utils";
-import { LayoutDashboard, Sparkles, Printer, Calendar, ArrowLeftRight } from "lucide-react";
+import { format } from "date-fns";
+import { LayoutDashboard, Sparkles, Printer, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
-import { useCalendarType, formatDate, formatDateShort, setCalendarTypeGlobal, type CalendarType } from "@/hooks/use-calendar-type";
-import { supabase } from "@/integrations/supabase/client";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useCalendarType, formatDate, formatDateShort } from "@/hooks/use-calendar-type";
 
 interface Props {
   onPrint?: () => void;
@@ -76,23 +74,6 @@ export default function DashboardHeader({ onPrint }: Props) {
             <div className="flex items-center gap-1.5">
               <Calendar className="h-3 w-3 text-white/50" />
               <span className="text-xs text-white/60">{primaryDate}</span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    onClick={async () => {
-                      const newType: CalendarType = calendarType === "hijri" ? "gregorian" : "hijri";
-                      setCalendarTypeGlobal(newType);
-                      await supabase.from("site_settings").upsert({ id: "calendar_type", value: newType });
-                    }}
-                    className="p-1 rounded-md hover:bg-white/15 text-white/50 hover:text-white/80 transition-colors"
-                  >
-                    <ArrowLeftRight className="h-3 w-3" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p className="text-xs">تبديل إلى {calendarType === "hijri" ? "ميلادي" : "هجري"}</p>
-                </TooltipContent>
-              </Tooltip>
             </div>
             {secondaryDate && (
               <span className="text-[11px] text-white/45 font-medium">{secondaryDate}</span>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Loader2, TrendingUp, Users, Award, BarChart3, Target, Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "@/lib/date-utils";
+import { format } from "date-fns";
 
 interface QuizStats {
   activityId: string;

@@ -39,7 +39,7 @@ import {
   Users2,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { format } from "@/lib/date-utils";
+import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";
@@ -57,7 +57,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-
 
 // ============ Types ============
 
@@ -714,7 +713,6 @@ export default function ReportsPage() {
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">التقارير والإحصائيات</h1>
           <p className="text-muted-foreground">تقارير يومية وفترية للحضور والدرجات مع إمكانية التصدير</p>
-          
         </div>
         <div className="flex items-center gap-2">
           <Button

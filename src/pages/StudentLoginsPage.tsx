@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Users, Eye, TrendingUp, Calendar } from "lucide-react";
-import { format, subDays, isAfter } from "@/lib/date-utils";
-
+import { format, subDays, isAfter } from "date-fns";
+import { ar } from "date-fns/locale";
 import ExportDialog from "@/components/student-logins/ExportDialog";
 
 interface LoginRecord {
@@ -29,7 +28,6 @@ interface ClassInfo {
 }
 
 export default function StudentLoginsPage() {
-  const calendarType = useCalendarType();
   const [logins, setLogins] = useState<LoginRecord[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -402,7 +400,7 @@ export default function StudentLoginsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">
-                            {formatDateShort(s.lastLogin, calendarType)} {new Date(s.lastLogin).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}
+                            {format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm", { locale: ar })}
                           </TableCell>
                         </TableRow>
                       ))}

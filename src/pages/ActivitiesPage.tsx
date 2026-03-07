@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { sendPushNotification } from "@/lib/push-notifications";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { format } from "@/lib/date-utils";
+import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
 import ActivityResults from "@/components/activities/ActivityResults";
 
