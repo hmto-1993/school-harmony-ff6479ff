@@ -180,6 +180,7 @@ export default function SettingsPage() {
   const [showAttendance, setShowAttendance] = useState(true);
   const [showBehavior, setShowBehavior] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
+  const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
 
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
