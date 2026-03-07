@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users } from "lucide-react";
+import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
