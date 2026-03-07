@@ -339,6 +339,39 @@ export type Database = {
           },
         ]
       }
+      popup_messages: {
+        Row: {
+          created_at: string
+          created_by: string
+          expiry: string | null
+          id: string
+          message: string
+          target_class_ids: string[] | null
+          target_type: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expiry?: string | null
+          id?: string
+          message: string
+          target_class_ids?: string[] | null
+          target_type?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expiry?: string | null
+          id?: string
+          message?: string
+          target_class_ids?: string[] | null
+          target_type?: string
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
