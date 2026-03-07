@@ -190,6 +190,9 @@ export default function SettingsPage() {
   const [popupEnabled, setPopupEnabled] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupTitle, setPopupTitle] = useState("");
+  const [popupExpiry, setPopupExpiry] = useState("");
+  const [popupTargetType, setPopupTargetType] = useState<"all" | "specific">("all");
+  const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
 
   // New category form
@@ -293,7 +296,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -314,6 +317,11 @@ export default function SettingsPage() {
         if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
         if (s.id === "student_popup_title") setPopupTitle(s.value || "");
         if (s.id === "student_popup_message") setPopupMessage(s.value || "");
+        if (s.id === "student_popup_expiry") setPopupExpiry(s.value || "");
+        if (s.id === "student_popup_target_type") setPopupTargetType((s.value as "all" | "specific") || "all");
+        if (s.id === "student_popup_target_classes" && s.value) {
+          try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
+        }
       });
     }
 
@@ -1986,6 +1994,58 @@ export default function SettingsPage() {
                         placeholder="اكتب الرسالة التي تريد عرضها للطلاب..."
                         rows={4} />
                     </div>
+                    <div className="space-y-2">
+                      <Label>تاريخ انتهاء الرسالة (اختياري)</Label>
+                      <Input type="datetime-local" value={popupExpiry} onChange={(e) => setPopupExpiry(e.target.value)}
+                        dir="ltr" className="text-right" />
+                      {popupExpiry && (
+                        <p className="text-xs text-muted-foreground">
+                          ستختفي الرسالة تلقائياً بعد: {new Date(popupExpiry).toLocaleString("ar-SA")}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label>استهداف الفصول</Label>
+                      <Select value={popupTargetType} onValueChange={(v: "all" | "specific") => { setPopupTargetType(v); if (v === "all") setPopupTargetClassIds([]); }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">جميع الطلاب</SelectItem>
+                          <SelectItem value="specific">فصول محددة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {popupTargetType === "specific" && (
+                      <div className="space-y-2">
+                        <Label>اختر الفصول</Label>
+                        <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/40 bg-muted/20 max-h-40 overflow-y-auto">
+                          {classes.map((c) => {
+                            const isSelected = popupTargetClassIds.includes(c.id);
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setPopupTargetClassIds((prev) =>
+                                    isSelected ? prev.filter((id) => id !== c.id) : [...prev, c.id]
+                                  );
+                                }}
+                                className={cn(
+                                  "px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                    : "bg-card text-muted-foreground border-border/40 hover:border-primary/40"
+                                )}
+                              >
+                                {c.name}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {popupTargetClassIds.length > 0 && (
+                          <p className="text-xs text-muted-foreground">تم اختيار {popupTargetClassIds.length} فصل</p>
+                        )}
+                      </div>
+                    )}
                     <Button disabled={savingPopup} className="gap-1.5"
                       onClick={async () => {
                         setSavingPopup(true);
@@ -1993,6 +2053,9 @@ export default function SettingsPage() {
                           supabase.from("site_settings").upsert({ id: "student_popup_enabled", value: String(popupEnabled) }),
                           supabase.from("site_settings").upsert({ id: "student_popup_title", value: popupTitle }),
                           supabase.from("site_settings").upsert({ id: "student_popup_message", value: popupMessage }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: popupExpiry }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
                         ];
                         const results = await Promise.all(updates);
                         setSavingPopup(false);
