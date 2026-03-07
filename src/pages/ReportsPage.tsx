@@ -57,7 +57,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import HijriDateBadge from "@/components/HijriDateBadge";
+
 
 // ============ Types ============
 
@@ -714,7 +714,7 @@ export default function ReportsPage() {
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">التقارير والإحصائيات</h1>
           <p className="text-muted-foreground">تقارير يومية وفترية للحضور والدرجات مع إمكانية التصدير</p>
-          <HijriDateBadge className="mt-2" />
+          
         </div>
         <div className="flex items-center gap-2">
           <Button
