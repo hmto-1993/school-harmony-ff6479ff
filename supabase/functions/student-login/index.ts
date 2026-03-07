@@ -55,13 +55,20 @@ Deno.serve(async (req) => {
       attendance: true,
       behavior: true,
     };
-    let hiddenCategories: string[] = [];
+    let hiddenCategories: { p1: string[]; p2: string[] } = { p1: [], p2: [] };
     (visSettings || []).forEach((s: any) => {
       if (s.id === "student_show_grades") visibility.grades = s.value !== "false";
       if (s.id === "student_show_attendance") visibility.attendance = s.value !== "false";
       if (s.id === "student_show_behavior") visibility.behavior = s.value !== "false";
       if (s.id === "student_hidden_categories" && s.value) {
-        try { hiddenCategories = JSON.parse(s.value); } catch { hiddenCategories = []; }
+        try {
+          const parsed = JSON.parse(s.value);
+          if (Array.isArray(parsed)) {
+            hiddenCategories = { p1: parsed, p2: parsed };
+          } else {
+            hiddenCategories = { p1: parsed.p1 || [], p2: parsed.p2 || [] };
+          }
+        } catch { hiddenCategories = { p1: [], p2: [] }; }
       }
     });
 
@@ -81,12 +88,14 @@ Deno.serve(async (req) => {
     if (visibility.grades) {
       const { data: gradesData } = await supabase
         .from("grades")
-        .select("score, category_id, grade_categories(name, max_score, weight)")
+        .select("score, period, category_id, grade_categories(name, max_score, weight)")
         .eq("student_id", student.id);
-      // Filter out hidden categories
+      // Filter out hidden categories per period
       grades = (gradesData || []).filter((g: any) => {
         const catName = g.grade_categories?.name;
-        return !catName || !hiddenCategories.includes(catName);
+        if (!catName) return true;
+        const period = g.period === 2 ? "p2" : "p1";
+        return !hiddenCategories[period].includes(catName);
       });
     }
 

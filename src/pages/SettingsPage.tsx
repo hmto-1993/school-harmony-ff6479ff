@@ -180,7 +180,8 @@ export default function SettingsPage() {
   const [showAttendance, setShowAttendance] = useState(true);
   const [showBehavior, setShowBehavior] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
-  const [hiddenCategories, setHiddenCategories] = useState<string[]>([]);
+  const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
+  const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
 
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
@@ -292,7 +293,15 @@ export default function SettingsPage() {
         if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
         if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
         if (s.id === "student_hidden_categories" && s.value) {
-          try { setHiddenCategories(JSON.parse(s.value)); } catch { setHiddenCategories([]); }
+          try {
+            const parsed = JSON.parse(s.value);
+            // Support both old format (string[]) and new format ({p1:[], p2:[]})
+            if (Array.isArray(parsed)) {
+              setHiddenCategories({ p1: parsed, p2: parsed });
+            } else {
+              setHiddenCategories({ p1: parsed.p1 || [], p2: parsed.p2 || [] });
+            }
+          } catch { setHiddenCategories({ p1: [], p2: [] }); }
         }
       });
     }
@@ -1470,10 +1479,11 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            {/* Grade Categories Visibility */}
+            {/* Grade Categories Visibility per Period */}
             {showGrades && (() => {
               const uniqueNames = Array.from(new Set(categories.map(c => c.name)));
               if (uniqueNames.length === 0) return null;
+              const currentHidden = hiddenCategories[visibilityPeriod];
               return (
                 <div className="space-y-3 max-w-md">
                   <div className="flex items-center gap-2 pt-2">
@@ -1481,17 +1491,51 @@ export default function SettingsPage() {
                     <span className="text-xs font-bold text-muted-foreground">فئات التقييم المعروضة للطالب</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  <p className="text-xs text-muted-foreground">حدد الفئات التي تريد إظهارها في صفحة الطالب. الفئات غير المحددة ستكون مخفية.</p>
+                  <p className="text-xs text-muted-foreground">حدد الفئات التي تريد إظهارها في صفحة الطالب لكل فترة بشكل مستقل.</p>
+
+                  {/* Period Selector */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {([
+                      { key: "p1" as const, label: "الفترة الأولى" },
+                      { key: "p2" as const, label: "الفترة الثانية" },
+                    ]).map(p => (
+                      <button
+                        key={p.key}
+                        onClick={() => setVisibilityPeriod(p.key)}
+                        className={cn(
+                          "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-bold transition-all duration-200",
+                          visibilityPeriod === p.key
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
+                        )}
+                      >
+                        <div className={cn(
+                          "h-2.5 w-2.5 rounded-full transition-all",
+                          visibilityPeriod === p.key ? "bg-primary scale-125" : "bg-muted-foreground/30"
+                        )} />
+                        {p.label}
+                        {hiddenCategories[p.key].length > 0 && (
+                          <span className="text-[10px] bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full font-bold">
+                            {hiddenCategories[p.key].length} مخفي
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="grid grid-cols-1 gap-2">
                     {uniqueNames.map(name => {
-                      const isHidden = hiddenCategories.includes(name);
+                      const isHidden = currentHidden.includes(name);
                       return (
                         <button
                           key={name}
                           onClick={() => {
-                            setHiddenCategories(prev =>
-                              isHidden ? prev.filter(n => n !== name) : [...prev, name]
-                            );
+                            setHiddenCategories(prev => ({
+                              ...prev,
+                              [visibilityPeriod]: isHidden
+                                ? prev[visibilityPeriod].filter(n => n !== name)
+                                : [...prev[visibilityPeriod], name]
+                            }));
                           }}
                           className={cn(
                             "flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all duration-200 text-right",
