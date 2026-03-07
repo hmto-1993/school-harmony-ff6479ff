@@ -342,6 +342,85 @@ export default function ReportsPage() {
     window.print();
   };
 
+  const generateStudentReportPDF = async (studentName: string): Promise<ArrayBuffer | null> => {
+    try {
+      const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+      const autoTableImport = await import("jspdf-autotable");
+      const autoTable = autoTableImport.default;
+      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+      const tableStyles = getArabicTableStyles();
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(16);
+      doc.text(`تقرير الطالب: ${studentName}`, pageWidth / 2, startY, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+
+      let currentY = startY + 15;
+
+      // Attendance section
+      if (attendanceData.length > 0) {
+        doc.setFontSize(13);
+        doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
+
+        const attTableData = attendanceData.map((r) => [
+          r.notes || "",
+          STATUS_LABELS[r.status] || r.status,
+          r.date,
+          r.student_name,
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
+          body: attTableData,
+          ...tableStyles,
+        });
+
+        currentY = (doc as any).lastAutoTable.finalY + 10;
+
+        // Summary
+        doc.setFontSize(10);
+        doc.text(
+          `حاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late} | الإجمالي: ${attendanceSummary.total}`,
+          pageWidth / 2,
+          currentY,
+          { align: "center" }
+        );
+        currentY += 10;
+      }
+
+      // Grades section
+      if (gradeData.length > 0) {
+        if (currentY > doc.internal.pageSize.getHeight() - 40) {
+          doc.addPage("a4", "landscape");
+          currentY = 15;
+        }
+        doc.setFontSize(13);
+        doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
+
+        const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب"];
+        const body = gradeData.map((r) => [
+          String(r.total),
+          ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
+          r.student_name,
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [head],
+          body,
+          ...tableStyles,
+        });
+      }
+
+      return doc.output("arraybuffer");
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      return null;
+    }
+  };
+
   const handleSendSMS = async () => {
     if (selectedStudent === "all") {
       toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
@@ -354,17 +433,49 @@ export default function ReportsPage() {
     }
 
     setSendingSMS(true);
-    const message = `تقرير الطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\nحاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late}`;
 
-    const { data, error } = await supabase.functions.invoke("send-sms", {
-      body: { phone: student.parent_phone, message },
-    });
+    try {
+      // 1. Generate PDF
+      toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
+      const pdfBuffer = await generateStudentReportPDF(student.full_name);
+      if (!pdfBuffer) {
+        toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
+        setSendingSMS(false);
+        return;
+      }
 
-    if (error || !data?.success) {
-      toast({ title: "خطأ", description: "فشل إرسال الرسالة", variant: "destructive" });
-    } else {
-      toast({ title: "تم", description: "تم إرسال التقرير لولي الأمر بنجاح" });
+      // 2. Upload to storage
+      const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
+      const { error: uploadError } = await supabase.storage
+        .from("reports")
+        .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
+
+      if (uploadError) {
+        toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
+        setSendingSMS(false);
+        return;
+      }
+
+      // 3. Get public URL
+      const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
+      const pdfUrl = urlData?.publicUrl;
+
+      // 4. Send SMS with PDF link
+      const message = `تقرير الطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\nحاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+
+      const { data, error } = await supabase.functions.invoke("send-sms", {
+        body: { phone: student.parent_phone, message },
+      });
+
+      if (error || !data?.success) {
+        toast({ title: "خطأ", description: "فشل إرسال الرسالة", variant: "destructive" });
+      } else {
+        toast({ title: "تم ✅", description: "تم إرسال التقرير PDF لولي الأمر بنجاح" });
+      }
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
     }
+
     setSendingSMS(false);
   };
 
