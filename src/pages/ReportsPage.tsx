@@ -560,17 +560,32 @@ export default function ReportsPage() {
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر SMS</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
-                <ClipboardCheck className="h-4 w-4 ml-2" />
+                <Send className="h-4 w-4 ml-2" />
                 تقرير شامل (حضور + درجات)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
-                <Calendar className="h-4 w-4 ml-2" />
+                <ClipboardCheck className="h-4 w-4 ml-2" />
                 تقرير الحضور فقط
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
                 <GraduationCap className="h-4 w-4 ml-2" />
+                تقرير الدرجات فقط
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر واتساب</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: true })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                تقرير شامل (حضور + درجات)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: false })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                تقرير الحضور فقط
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: false, grades: true })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
                 تقرير الدرجات فقط
               </DropdownMenuItem>
             </DropdownMenuContent>
