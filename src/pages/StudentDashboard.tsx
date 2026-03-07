@@ -122,23 +122,25 @@ export default function StudentDashboard() {
     navigate("/login");
   };
 
+  const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+
   // Calculate grade summary
-  const totalWeighted = student.grades.reduce((sum, g) => {
+  const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
     return sum + (g.score / cat.max_score) * cat.weight;
-  }, 0);
-  const totalWeight = student.grades.reduce((sum, g) => {
+  }, 0) : 0;
+  const totalWeight = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
     return sum + cat.weight;
-  }, 0);
+  }, 0) : 0;
   const percentage = totalWeight > 0 ? Math.round((totalWeighted / totalWeight) * 100) : 0;
 
-  const presentCount = student.attendance.filter((a) => a.status === "present").length;
-  const absentCount = student.attendance.filter((a) => a.status === "absent").length;
-  const positiveCount = student.behaviors.filter((b) => b.type === "إيجابي").length;
-  const negativeCount = student.behaviors.filter((b) => b.type === "سلبي").length;
+  const presentCount = vis.attendance ? student.attendance.filter((a) => a.status === "present").length : 0;
+  const absentCount = vis.attendance ? student.attendance.filter((a) => a.status === "absent").length : 0;
+  const positiveCount = vis.behavior ? student.behaviors.filter((b) => b.type === "إيجابي").length : 0;
+  const negativeCount = vis.behavior ? student.behaviors.filter((b) => b.type === "سلبي").length : 0;
 
   const generalFolders = folders.filter(f => !f.class_id);
   const classFolders = folders.filter(f => !!f.class_id);
@@ -173,73 +175,80 @@ export default function StudentDashboard() {
 
       <main className="container mx-auto p-4 space-y-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5 overflow-hidden">
-            <CardContent className="flex flex-col items-center p-5">
-              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-3 shadow-md shadow-primary/25 mb-2">
-                <GraduationCap className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{percentage}%</p>
-              <p className="text-xs text-muted-foreground">المعدل العام</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500/5 via-card to-emerald-500/10 dark:from-emerald-500/10 dark:via-card dark:to-emerald-500/5 overflow-hidden">
-            <CardContent className="flex flex-col items-center p-5">
-              <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 shadow-md shadow-emerald-500/25 mb-2">
-                <CheckCircle className="h-6 w-6 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{presentCount}</p>
-              <p className="text-xs text-muted-foreground">أيام الحضور</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-500/5 via-card to-rose-500/10 dark:from-rose-500/10 dark:via-card dark:to-rose-500/5 overflow-hidden">
-            <CardContent className="flex flex-col items-center p-5">
-              <div className="rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 p-3 shadow-md shadow-rose-500/25 mb-2">
-                <Clock className="h-6 w-6 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{absentCount}</p>
-              <p className="text-xs text-muted-foreground">أيام الغياب</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500/5 via-card to-blue-500/10 dark:from-blue-500/10 dark:via-card dark:to-blue-500/5 overflow-hidden">
-            <CardContent className="flex flex-col items-center p-5">
-              <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-md shadow-blue-500/25 mb-2">
-                <BookOpen className="h-6 w-6 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{positiveCount}/{positiveCount + negativeCount}</p>
-              <p className="text-xs text-muted-foreground">تقييم إيجابي</p>
-            </CardContent>
-          </Card>
+        <div className={cn("grid gap-4", 
+          [vis.grades, vis.attendance, vis.attendance, vis.behavior].filter(Boolean).length <= 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"
+        )}>
+          {vis.grades && (
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5 overflow-hidden">
+              <CardContent className="flex flex-col items-center p-5">
+                <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-3 shadow-md shadow-primary/25 mb-2">
+                  <GraduationCap className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{percentage}%</p>
+                <p className="text-xs text-muted-foreground">المعدل العام</p>
+              </CardContent>
+            </Card>
+          )}
+          {vis.attendance && (
+            <>
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500/5 via-card to-emerald-500/10 dark:from-emerald-500/10 dark:via-card dark:to-emerald-500/5 overflow-hidden">
+                <CardContent className="flex flex-col items-center p-5">
+                  <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-3 shadow-md shadow-emerald-500/25 mb-2">
+                    <CheckCircle className="h-6 w-6 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{presentCount}</p>
+                  <p className="text-xs text-muted-foreground">أيام الحضور</p>
+                </CardContent>
+              </Card>
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-rose-500/5 via-card to-rose-500/10 dark:from-rose-500/10 dark:via-card dark:to-rose-500/5 overflow-hidden">
+                <CardContent className="flex flex-col items-center p-5">
+                  <div className="rounded-2xl bg-gradient-to-br from-rose-500 to-rose-600 p-3 shadow-md shadow-rose-500/25 mb-2">
+                    <Clock className="h-6 w-6 text-white" />
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">{absentCount}</p>
+                  <p className="text-xs text-muted-foreground">أيام الغياب</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
+          {vis.behavior && (
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500/5 via-card to-blue-500/10 dark:from-blue-500/10 dark:via-card dark:to-blue-500/5 overflow-hidden">
+              <CardContent className="flex flex-col items-center p-5">
+                <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-3 shadow-md shadow-blue-500/25 mb-2">
+                  <BookOpen className="h-6 w-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{positiveCount}/{positiveCount + negativeCount}</p>
+                <p className="text-xs text-muted-foreground">تقييم إيجابي</p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
 
         {/* Details Tabs */}
-        <Tabs defaultValue="grades" dir="rtl">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="grades" className="gap-1">
-              <GraduationCap className="h-4 w-4" />
-              الدرجات
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-1">
-              <ClipboardCheck className="h-4 w-4" />
-              الحضور
-            </TabsTrigger>
-            <TabsTrigger value="behavior" className="gap-1">
-              <ShieldCheck className="h-4 w-4" />
-              السلوك
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="gap-1">
-              <Layers className="h-4 w-4" />
-              الأنشطة
-            </TabsTrigger>
-            <TabsTrigger value="library" className="gap-1">
-              <BookOpen className="h-4 w-4" />
-              المكتبة
-            </TabsTrigger>
+        {(() => {
+          const visibleTabs = [
+            ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
+            ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
+            ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
+            { value: "activities", label: "الأنشطة", icon: Layers },
+            { value: "library", label: "المكتبة", icon: BookOpen },
+          ];
+          const defaultTab = visibleTabs[0]?.value || "activities";
+          return (
+        <Tabs defaultValue={defaultTab} dir="rtl">
+          <TabsList className={cn("grid w-full", `grid-cols-${visibleTabs.length}`)}>
+            {visibleTabs.map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value} className="gap-1">
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
+          {vis.grades && (
           <TabsContent value="grades">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
@@ -282,7 +291,9 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
+          {vis.attendance && (
           <TabsContent value="attendance">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
@@ -328,7 +339,9 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
+          {vis.behavior && (
           <TabsContent value="behavior">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
@@ -378,6 +391,7 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
           <TabsContent value="activities">
             <StudentActivitiesTab studentId={student.id} classId={student.class_id} />
@@ -536,6 +550,8 @@ export default function StudentDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+          );
+        })()}
       </main>
 
       {previewFile && (

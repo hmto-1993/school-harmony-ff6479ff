@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Users,
   Eye,
+  EyeOff,
   UserCircle,
   KeyRound,
   Printer,
@@ -174,6 +175,12 @@ export default function SettingsPage() {
   const [quizColorSelected, setQuizColorSelected] = useState("#14b8a6");
   const [savingQuizColors, setSavingQuizColors] = useState(false);
 
+  // Student visibility settings
+  const [showGrades, setShowGrades] = useState(true);
+  const [showAttendance, setShowAttendance] = useState(true);
+  const [showBehavior, setShowBehavior] = useState(true);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
   const [newCatName, setNewCatName] = useState("");
@@ -270,16 +277,19 @@ export default function SettingsPage() {
       });
     }
 
-    // Fetch quiz color settings
+    // Fetch quiz color settings & student visibility
     if (isAdmin) {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
         if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
+        if (s.id === "student_show_grades") setShowGrades(s.value !== "false");
+        if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
+        if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
       });
     }
 
@@ -755,6 +765,7 @@ export default function SettingsPage() {
           { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
           { key: "print", icon: Printer, label: "ورقة الطباعة", desc: "ترويسة التقارير", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
+          { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -1404,6 +1415,81 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
+      {activeCard === "visibility" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Eye className="h-5 w-5 text-primary" />
+                التحكم بعرض بيانات الطالب
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">اختر البيانات التي تريد إظهارها للطلاب عند تسجيل دخولهم</p>
+            <div className="space-y-3 max-w-md">
+              {[
+                { key: "grades" as const, label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: showGrades, setter: setShowGrades },
+                { key: "attendance" as const, label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: Users, state: showAttendance, setter: setShowAttendance },
+                { key: "behavior" as const, label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: showBehavior, setter: setShowBehavior },
+              ].map((item) => (
+                <div key={item.key} className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
+                      item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                    )}>
+                      <item.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold">{item.label}</h4>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => item.setter(!item.state)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {item.state ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+              ))}
+            </div>
+            <Button
+              disabled={savingVisibility}
+              className="gap-1.5"
+              onClick={async () => {
+                setSavingVisibility(true);
+                const results = await Promise.all([
+                  supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(showGrades) }),
+                  supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
+                  supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
+                ]);
+                setSavingVisibility(false);
+                if (results.some(r => r.error)) {
+                  toast({ title: "خطأ", description: "فشل حفظ إعدادات العرض", variant: "destructive" });
+                } else {
+                  toast({ title: "تم الحفظ", description: "تم تحديث إعدادات عرض بيانات الطالب" });
+                }
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
         <h2 className="text-sm font-bold text-muted-foreground tracking-wide">🔧 إعدادات إضافية</h2>

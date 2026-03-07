@@ -13,6 +13,7 @@ interface StudentData {
   grades: any[];
   behaviors: any[];
   attendance: any[];
+  visibility?: { grades: boolean; attendance: boolean; behavior: boolean };
 }
 
 interface AuthContextType {
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         grades: data.grades,
         behaviors: data.behaviors,
         attendance: data.attendance,
+        visibility: data.visibility || { grades: true, attendance: true, behavior: true },
       };
       setStudent(studentData);
       sessionStorage.setItem("student_session", JSON.stringify(studentData));
