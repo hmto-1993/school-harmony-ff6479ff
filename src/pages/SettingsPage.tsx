@@ -2102,6 +2102,17 @@ export default function SettingsPage() {
                       <Save className="h-4 w-4" />
                       {savingPopup ? "جارٍ الحفظ..." : "حفظ"}
                     </Button>
+                    <Button variant="outline" className="gap-1.5"
+                      onClick={() => {
+                        setPreviewTitle(popupTitle);
+                        setPreviewMessage(popupMessage);
+                        setPopupPreviewOpen(true);
+                      }}
+                      disabled={!popupTitle.trim() && !popupMessage.trim()}>
+                      <Eye className="h-4 w-4" />
+                      معاينة
+                    </Button>
+                    </div>
 
                     {/* ===== سجل الرسائل السابقة ===== */}
                     {popupHistory.length > 0 && (
@@ -2130,19 +2141,30 @@ export default function SettingsPage() {
                                   )}
                                 </div>
                               </div>
-                              <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-xs h-8"
-                                onClick={() => {
-                                  setPopupTitle(msg.title);
-                                  setPopupMessage(msg.message);
-                                  setPopupExpiry(msg.expiry || "");
-                                  setPopupTargetType(msg.target_type as "all" | "specific");
-                                  setPopupTargetClassIds(msg.target_class_ids || []);
-                                  setPopupEnabled(true);
-                                  toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
-                                }}>
-                                <RotateCcw className="h-3.5 w-3.5" />
-                                إعادة تفعيل
-                              </Button>
+                              <div className="flex flex-col gap-1 shrink-0">
+                                <Button variant="ghost" size="sm" className="gap-1 text-xs h-7"
+                                  onClick={() => {
+                                    setPopupTitle(msg.title);
+                                    setPopupMessage(msg.message);
+                                    setPopupExpiry(msg.expiry || "");
+                                    setPopupTargetType(msg.target_type as "all" | "specific");
+                                    setPopupTargetClassIds(msg.target_class_ids || []);
+                                    setPopupEnabled(true);
+                                    toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
+                                  }}>
+                                  <RotateCcw className="h-3 w-3" />
+                                  تفعيل
+                                </Button>
+                                <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-destructive hover:text-destructive"
+                                  onClick={async () => {
+                                    await supabase.from("popup_messages").delete().eq("id", msg.id);
+                                    setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
+                                    toast({ title: "تم الحذف" });
+                                  }}>
+                                  <Trash2 className="h-3 w-3" />
+                                  حذف
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -2152,6 +2174,30 @@ export default function SettingsPage() {
                 </CollapsibleContent>
               </Card>
             </Collapsible>
+
+            {/* Popup Preview Dialog */}
+            <Dialog open={popupPreviewOpen} onOpenChange={setPopupPreviewOpen}>
+              <DialogContent dir="rtl" className="max-w-md rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
+                <div className="bg-gradient-to-l from-primary to-accent p-6 text-center">
+                  <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <Megaphone className="h-7 w-7 text-white" />
+                  </div>
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold text-white">
+                      {previewTitle || "رسالة من الإدارة"}
+                    </DialogTitle>
+                  </DialogHeader>
+                </div>
+                <div className="p-6 space-y-4">
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap text-center">{previewMessage}</p>
+                  <DialogFooter>
+                    <Button onClick={() => setPopupPreviewOpen(false)} className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90">
+                      حسناً
+                    </Button>
+                  </DialogFooter>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             {/* ===== صفحة الدخول ===== */}
             <Collapsible>
