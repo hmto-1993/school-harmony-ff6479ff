@@ -1167,7 +1167,13 @@ export default function ReportsPage() {
                   <tr key={i} style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: i % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
                     <td style={{ padding: "8px", fontWeight: 500, color: "#1e293b" }}>{row.student_name}</td>
                     <td style={{ padding: "8px", color: "#64748b" }}>{row.date}</td>
-                    <td style={{ padding: "8px", color: "#1e293b" }}>{STATUS_LABELS[row.status] || row.status}</td>
+                    <td style={{
+                      padding: "8px",
+                      fontWeight: 600,
+                      color: row.status === "present" ? "#059669" : row.status === "absent" ? "#dc2626" : row.status === "late" ? "#d97706" : row.status === "early_leave" ? "#2563eb" : row.status === "sick_leave" ? "#7c3aed" : "#1e293b",
+                      backgroundColor: row.status === "present" ? "#ecfdf5" : row.status === "absent" ? "#fef2f2" : row.status === "late" ? "#fffbeb" : row.status === "early_leave" ? "#eff6ff" : row.status === "sick_leave" ? "#f5f3ff" : "transparent",
+                      borderRadius: "6px",
+                    }}>{STATUS_LABELS[row.status] || row.status}</td>
                     <td style={{ padding: "8px", color: "#64748b" }}>{row.notes || "—"}</td>
                   </tr>
                 ))}
