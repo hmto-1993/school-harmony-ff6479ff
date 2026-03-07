@@ -42,6 +42,7 @@ import {
   Palette,
   History,
   RotateCcw,
+  Eye,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
