@@ -47,7 +47,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
-import { type CalendarType, setCalendarTypeGlobal } from "@/hooks/use-calendar-type";
+import { type CalendarType, setCalendarTypeGlobal, formatDateShort } from "@/hooks/use-calendar-type";
 import {
   Dialog,
   DialogContent,
@@ -1895,9 +1895,9 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
                         <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{msg.message}</p>
                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{new Date(msg.created_at).toLocaleDateString("ar-SA")}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{formatDateShort(msg.created_at, calendarTypeSetting)}</Badge>
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0">{msg.target_type === "all" ? "جميع الطلاب" : `${(msg.target_class_ids || []).length} فصل`}</Badge>
-                          {msg.expiry && <Badge variant="outline" className="text-[10px] px-1.5 py-0">ينتهي: {new Date(msg.expiry).toLocaleDateString("ar-SA")}</Badge>}
+                          {msg.expiry && <Badge variant="outline" className="text-[10px] px-1.5 py-0">ينتهي: {formatDateShort(msg.expiry, calendarTypeSetting)}</Badge>}
                         </div>
                       </div>
                       <div className="flex flex-col gap-1 shrink-0">

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,7 @@ const SMS_TYPE_LABELS: Record<SMSType, string> = {
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const calendarType = useCalendarType();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // SMS state
@@ -463,7 +465,7 @@ export default function NotificationsPage() {
                         <p className="font-medium">{n.students?.full_name}</p>
                         <p className="text-sm text-muted-foreground">{n.message}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {new Date(n.created_at).toLocaleDateString("ar-SA")} -{" "}
+                          {formatDateShort(n.created_at, calendarType)} -{" "}
                           {new Date(n.created_at).toLocaleTimeString("ar-SA")}
                         </p>
                       </div>

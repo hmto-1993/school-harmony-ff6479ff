@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,6 +29,7 @@ interface ClassInfo {
 }
 
 export default function StudentLoginsPage() {
+  const calendarType = useCalendarType();
   const [logins, setLogins] = useState<LoginRecord[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -400,7 +402,7 @@ export default function StudentLoginsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">
-                            {format(new Date(s.lastLogin), "yyyy/MM/dd HH:mm", { locale: ar })}
+                            {formatDateShort(s.lastLogin, calendarType)} {new Date(s.lastLogin).toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })}
                           </TableCell>
                         </TableRow>
                       ))}
