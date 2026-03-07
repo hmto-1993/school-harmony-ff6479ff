@@ -248,6 +248,7 @@ export default function StudentDashboard() {
             ))}
           </TabsList>
 
+          {vis.grades && (
           <TabsContent value="grades">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
@@ -290,7 +291,9 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
+          {vis.attendance && (
           <TabsContent value="attendance">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
@@ -336,7 +339,9 @@ export default function StudentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+          )}
 
+          {vis.behavior && (
           <TabsContent value="behavior">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
