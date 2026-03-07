@@ -44,6 +44,23 @@ Deno.serve(async (req) => {
       class_id: student.class_id,
     });
 
+    // Fetch visibility settings
+    const { data: visSettings } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior"]);
+
+    const visibility: Record<string, boolean> = {
+      grades: true,
+      attendance: true,
+      behavior: true,
+    };
+    (visSettings || []).forEach((s: any) => {
+      if (s.id === "student_show_grades") visibility.grades = s.value !== "false";
+      if (s.id === "student_show_attendance") visibility.attendance = s.value !== "false";
+      if (s.id === "student_show_behavior") visibility.behavior = s.value !== "false";
+    });
+
     // Fetch student's class info
     let className = null;
     if (student.class_id) {
@@ -55,27 +72,31 @@ Deno.serve(async (req) => {
       className = cls;
     }
 
-    // Fetch grades with categories
-    const { data: grades } = await supabase
-      .from("grades")
-      .select("score, category_id, grade_categories(name, max_score, weight)")
-      .eq("student_id", student.id);
+    // Conditionally fetch data based on visibility settings
+    const grades = visibility.grades
+      ? (await supabase
+          .from("grades")
+          .select("score, category_id, grade_categories(name, max_score, weight)")
+          .eq("student_id", student.id)).data || []
+      : [];
 
-    // Fetch behavior records
-    const { data: behaviors } = await supabase
-      .from("behavior_records")
-      .select("type, note, date")
-      .eq("student_id", student.id)
-      .order("date", { ascending: false })
-      .limit(20);
+    const behaviors = visibility.behavior
+      ? (await supabase
+          .from("behavior_records")
+          .select("type, note, date")
+          .eq("student_id", student.id)
+          .order("date", { ascending: false })
+          .limit(20)).data || []
+      : [];
 
-    // Fetch attendance
-    const { data: attendance } = await supabase
-      .from("attendance_records")
-      .select("status, date, notes")
-      .eq("student_id", student.id)
-      .order("date", { ascending: false })
-      .limit(30);
+    const attendance = visibility.attendance
+      ? (await supabase
+          .from("attendance_records")
+          .select("status, date, notes")
+          .eq("student_id", student.id)
+          .order("date", { ascending: false })
+          .limit(30)).data || []
+      : [];
 
     return new Response(
       JSON.stringify({
@@ -86,9 +107,10 @@ Deno.serve(async (req) => {
           class_id: student.class_id,
           class: className,
         },
-        grades: grades || [],
-        behaviors: behaviors || [],
-        attendance: attendance || [],
+        grades,
+        behaviors,
+        attendance,
+        visibility,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
