@@ -2069,6 +2069,26 @@ export default function SettingsPage() {
                           supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
                         ];
                         const results = await Promise.all(updates);
+
+                        // Save to history if message has content
+                        if (popupTitle.trim() && popupMessage.trim() && user) {
+                          await supabase.from("popup_messages").insert({
+                            title: popupTitle,
+                            message: popupMessage,
+                            expiry: popupExpiry || null,
+                            target_type: popupTargetType,
+                            target_class_ids: popupTargetClassIds,
+                            created_by: user.id,
+                          } as any);
+                          // Refresh history
+                          const { data: historyData } = await supabase
+                            .from("popup_messages")
+                            .select("*")
+                            .order("created_at", { ascending: false })
+                            .limit(20);
+                          if (historyData) setPopupHistory(historyData as any);
+                        }
+
                         setSavingPopup(false);
                         if (results.some((r) => r.error)) {
                           toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
@@ -2079,6 +2099,52 @@ export default function SettingsPage() {
                       <Save className="h-4 w-4" />
                       {savingPopup ? "جارٍ الحفظ..." : "حفظ"}
                     </Button>
+
+                    {/* ===== سجل الرسائل السابقة ===== */}
+                    {popupHistory.length > 0 && (
+                      <div className="border-t pt-4 mt-4 space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                          <History className="h-4 w-4 text-muted-foreground" />
+                          سجل الرسائل السابقة
+                        </div>
+                        <div className="space-y-2 max-h-64 overflow-y-auto">
+                          {popupHistory.map((msg) => (
+                            <div key={msg.id} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-border/40 bg-muted/20">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
+                                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{msg.message}</p>
+                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                    {new Date(msg.created_at).toLocaleDateString("ar-SA")}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                    {msg.target_type === "all" ? "جميع الطلاب" : `${(msg.target_class_ids || []).length} فصل`}
+                                  </Badge>
+                                  {msg.expiry && (
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                      ينتهي: {new Date(msg.expiry).toLocaleDateString("ar-SA")}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              <Button variant="ghost" size="sm" className="shrink-0 gap-1 text-xs h-8"
+                                onClick={() => {
+                                  setPopupTitle(msg.title);
+                                  setPopupMessage(msg.message);
+                                  setPopupExpiry(msg.expiry || "");
+                                  setPopupTargetType(msg.target_type as "all" | "specific");
+                                  setPopupTargetClassIds(msg.target_class_ids || []);
+                                  setPopupEnabled(true);
+                                  toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
+                                }}>
+                                <RotateCcw className="h-3.5 w-3.5" />
+                                إعادة تفعيل
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </CollapsibleContent>
               </Card>
