@@ -81,11 +81,11 @@ export default function PrintPreviewDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-auto border rounded-lg bg-white p-6">
+        <div className="flex-1 overflow-auto border rounded-lg bg-white p-6 text-gray-900 [&_*]:!text-gray-900 [&_table]:!text-gray-900 [&_th]:!text-gray-700 [&_td]:!text-gray-900 [&_.text-muted-foreground]:!text-gray-500 [&_h1]:!text-gray-900 [&_h2]:!text-gray-900 [&_h3]:!text-gray-900 [&_h4]:!text-gray-900 [&_p]:!text-gray-900 [&_span]:!text-gray-800 [&_.badge]:!text-inherit">
           <div
             ref={contentRef}
             dir="rtl"
-            style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}
+            style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", color: "#1a1a1a" }}
           >
             {/* Header from settings */}
             <ReportPrintHeaderInline reportType={reportType} />
