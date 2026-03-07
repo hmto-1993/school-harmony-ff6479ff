@@ -1692,7 +1692,182 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      <div className="flex items-center gap-3 mb-2 mt-6">
+      {activeCard === "popup" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Megaphone className="h-5 w-5 text-primary" />
+                رسالة منبثقة للطلاب
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-lg">
+            <div className="flex items-center justify-between">
+              <Label>تفعيل الرسالة المنبثقة</Label>
+              <button
+                type="button"
+                onClick={() => setPopupEnabled(!popupEnabled)}
+                className={cn(
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
+                  popupEnabled ? "bg-primary" : "bg-muted"
+                )}
+              >
+                <span className={cn(
+                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
+                  popupEnabled ? "translate-x-1" : "translate-x-6"
+                )} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              <Label>عنوان الرسالة</Label>
+              <Input value={popupTitle} onChange={(e) => setPopupTitle(e.target.value)} placeholder="مثال: تنبيه مهم" />
+            </div>
+            <div className="space-y-2">
+              <Label>نص الرسالة</Label>
+              <Textarea value={popupMessage} onChange={(e) => setPopupMessage(e.target.value)} placeholder="اكتب الرسالة التي تريد عرضها للطلاب..." rows={4} />
+            </div>
+            <div className="space-y-2">
+              <Label>تاريخ انتهاء الرسالة (اختياري)</Label>
+              <Input type="datetime-local" value={popupExpiry} onChange={(e) => setPopupExpiry(e.target.value)} dir="ltr" className="text-right" />
+              {popupExpiry && (
+                <p className="text-xs text-muted-foreground">ستختفي الرسالة تلقائياً بعد: {new Date(popupExpiry).toLocaleString("ar-SA")}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label>استهداف الفصول</Label>
+              <Select value={popupTargetType} onValueChange={(v: "all" | "specific") => { setPopupTargetType(v); if (v === "all") setPopupTargetClassIds([]); }}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الطلاب</SelectItem>
+                  <SelectItem value="specific">فصول محددة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {popupTargetType === "specific" && (
+              <div className="space-y-2">
+                <Label>اختر الفصول</Label>
+                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/40 bg-muted/20 max-h-40 overflow-y-auto">
+                  {classes.map((c) => {
+                    const isSelected = popupTargetClassIds.includes(c.id);
+                    return (
+                      <button key={c.id} type="button"
+                        onClick={() => setPopupTargetClassIds((prev) => isSelected ? prev.filter((id) => id !== c.id) : [...prev, c.id])}
+                        className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
+                          isSelected ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card text-muted-foreground border-border/40 hover:border-primary/40"
+                        )}
+                      >{c.name}</button>
+                    );
+                  })}
+                </div>
+                {popupTargetClassIds.length > 0 && <p className="text-xs text-muted-foreground">تم اختيار {popupTargetClassIds.length} فصل</p>}
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>التوجيه عند الضغط (اختياري)</Label>
+              <Select value={popupAction} onValueChange={setPopupAction}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">بدون توجيه</SelectItem>
+                  <SelectItem value="grades">الدرجات</SelectItem>
+                  <SelectItem value="attendance">الحضور</SelectItem>
+                  <SelectItem value="behavior">السلوك</SelectItem>
+                  <SelectItem value="activities">الأنشطة</SelectItem>
+                  <SelectItem value="library">المكتبة</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">عند اختيار وجهة، سيظهر للطالب زر للانتقال مباشرة إلى القسم المحدد</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button disabled={savingPopup} className="gap-1.5"
+                onClick={async () => {
+                  setSavingPopup(true);
+                  const updates = [
+                    supabase.from("site_settings").upsert({ id: "student_popup_enabled", value: String(popupEnabled) }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_title", value: popupTitle }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_message", value: popupMessage }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: popupExpiry }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_action", value: popupAction }),
+                  ];
+                  const results = await Promise.all(updates);
+                  if (popupTitle.trim() && popupMessage.trim() && user) {
+                    await supabase.from("popup_messages").insert({
+                      title: popupTitle, message: popupMessage, expiry: popupExpiry || null,
+                      target_type: popupTargetType, target_class_ids: popupTargetClassIds, created_by: user.id,
+                    } as any);
+                    const { data: historyData } = await supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20);
+                    if (historyData) setPopupHistory(historyData as any);
+                  }
+                  setSavingPopup(false);
+                  if (results.some((r) => r.error)) {
+                    toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+                  } else {
+                    toast({ title: "تم الحفظ", description: "تم تحديث إعدادات الرسالة المنبثقة" });
+                  }
+                }}>
+                <Save className="h-4 w-4" />
+                {savingPopup ? "جارٍ الحفظ..." : "حفظ"}
+              </Button>
+              <Button variant="outline" className="gap-1.5"
+                onClick={() => { setPreviewTitle(popupTitle); setPreviewMessage(popupMessage); setPopupPreviewOpen(true); }}
+                disabled={!popupTitle.trim() && !popupMessage.trim()}>
+                <Eye className="h-4 w-4" />
+                معاينة
+              </Button>
+            </div>
+            {popupHistory.length > 0 && (
+              <div className="border-t pt-4 mt-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  سجل الرسائل السابقة
+                </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {popupHistory.map((msg) => (
+                    <div key={msg.id} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-border/40 bg-muted/20">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{msg.message}</p>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{new Date(msg.created_at).toLocaleDateString("ar-SA")}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{msg.target_type === "all" ? "جميع الطلاب" : `${(msg.target_class_ids || []).length} فصل`}</Badge>
+                          {msg.expiry && <Badge variant="outline" className="text-[10px] px-1.5 py-0">ينتهي: {new Date(msg.expiry).toLocaleDateString("ar-SA")}</Badge>}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0">
+                        <Button variant="ghost" size="sm" className="gap-1 text-xs h-7"
+                          onClick={() => {
+                            setPopupTitle(msg.title); setPopupMessage(msg.message); setPopupExpiry(msg.expiry || "");
+                            setPopupTargetType(msg.target_type as "all" | "specific"); setPopupTargetClassIds(msg.target_class_ids || []);
+                            setPopupEnabled(true); toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
+                          }}>
+                          <RotateCcw className="h-3 w-3" />
+                          تفعيل
+                        </Button>
+                        <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            await supabase.from("popup_messages").delete().eq("id", msg.id);
+                            setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
+                            toast({ title: "تم الحذف" });
+                          }}>
+                          <Trash2 className="h-3 w-3" />
+                          حذف
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
         <h2 className="text-sm font-bold text-muted-foreground tracking-wide">🔧 إعدادات إضافية</h2>
         <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
