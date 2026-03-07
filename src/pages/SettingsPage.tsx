@@ -2060,6 +2060,7 @@ export default function SettingsPage() {
                         )}
                       </div>
                     )}
+                    <div className="flex items-center gap-2">
                     <Button disabled={savingPopup} className="gap-1.5"
                       onClick={async () => {
                         setSavingPopup(true);
