@@ -134,7 +134,12 @@ export default function AttendancePage() {
     loadStudents();
   };
 
-  const filteredRecords = statusFilter === "all" ? records : records.filter((r) => r.status === statusFilter);
+  const filteredRecords = useMemo(() => {
+    let result = records;
+    if (statusFilter !== "all") result = result.filter((r) => r.status === statusFilter);
+    if (searchQuery.trim()) result = result.filter((r) => r.full_name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+    return result;
+  }, [records, statusFilter, searchQuery]);
 
   return (
     <div className="space-y-6 animate-fade-in">
