@@ -180,11 +180,26 @@ export default function AttendancePage() {
                 </Button>
               </div>
               <Calendar
+                key={calendarType}
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(d)}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
+                formatters={{
+                  formatCaption: (date) => {
+                    if (calendarType === "hijri") {
+                      return date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
+                        year: "numeric",
+                        month: "long",
+                      });
+                    }
+                    return date.toLocaleDateString("ar-SA", {
+                      year: "numeric",
+                      month: "long",
+                    });
+                  },
+                }}
               />
             </PopoverContent>
           </Popover>
