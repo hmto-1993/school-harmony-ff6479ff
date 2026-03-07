@@ -11,8 +11,15 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
@@ -74,9 +81,37 @@ export default function StudentDashboard() {
   const [filesLoading, setFilesLoading] = useState(false);
   const [previewFile, setPreviewFile] = useState<{ url: string; name: string } | null>(null);
 
+  // Popup message state
+  const [popupOpen, setPopupOpen] = useState(false);
+  const [popupTitle, setPopupTitle] = useState("");
+  const [popupMessage, setPopupMessage] = useState("");
+
   useEffect(() => {
-    if (student) fetchFolders();
+    if (student) {
+      fetchFolders();
+      fetchPopup();
+    }
   }, [student]);
+
+  const fetchPopup = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message"]);
+    let enabled = false;
+    let title = "";
+    let message = "";
+    (data || []).forEach((s: any) => {
+      if (s.id === "student_popup_enabled") enabled = s.value === "true";
+      if (s.id === "student_popup_title") title = s.value || "";
+      if (s.id === "student_popup_message") message = s.value || "";
+    });
+    if (enabled && message.trim()) {
+      setPopupTitle(title);
+      setPopupMessage(message);
+      setPopupOpen(true);
+    }
+  };
 
   const fetchFolders = async () => {
     if (!student) return;
