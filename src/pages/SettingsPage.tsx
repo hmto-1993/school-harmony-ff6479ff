@@ -283,7 +283,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -291,6 +291,9 @@ export default function SettingsPage() {
         if (s.id === "student_show_grades") setShowGrades(s.value !== "false");
         if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
         if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
+        if (s.id === "student_hidden_categories" && s.value) {
+          try { setHiddenCategories(JSON.parse(s.value)); } catch { setHiddenCategories([]); }
+        }
       });
     }
 
@@ -1466,6 +1469,55 @@ export default function SettingsPage() {
                 </div>
               ))}
             </div>
+
+            {/* Grade Categories Visibility */}
+            {showGrades && (() => {
+              const uniqueNames = Array.from(new Set(categories.map(c => c.name)));
+              if (uniqueNames.length === 0) return null;
+              return (
+                <div className="space-y-3 max-w-md">
+                  <div className="flex items-center gap-2 pt-2">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-bold text-muted-foreground">فئات التقييم المعروضة للطالب</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">حدد الفئات التي تريد إظهارها في صفحة الطالب. الفئات غير المحددة ستكون مخفية.</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {uniqueNames.map(name => {
+                      const isHidden = hiddenCategories.includes(name);
+                      return (
+                        <button
+                          key={name}
+                          onClick={() => {
+                            setHiddenCategories(prev =>
+                              isHidden ? prev.filter(n => n !== name) : [...prev, name]
+                            );
+                          }}
+                          className={cn(
+                            "flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all duration-200 text-right",
+                            !isHidden
+                              ? "border-success/40 bg-success/5"
+                              : "border-border/50 bg-muted/30 opacity-70"
+                          )}
+                        >
+                          <span className={cn("text-sm font-semibold", !isHidden ? "text-foreground" : "text-muted-foreground line-through")}>
+                            {name}
+                          </span>
+                          <span className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold",
+                            !isHidden ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                          )}>
+                            {!isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                            {!isHidden ? "ظاهر" : "مخفي"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             <Button
               disabled={savingVisibility}
               className="gap-1.5"
@@ -1475,6 +1527,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(showGrades) }),
                   supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
                   supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
+                  supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
                 ]);
                 setSavingVisibility(false);
                 if (results.some(r => r.error)) {
