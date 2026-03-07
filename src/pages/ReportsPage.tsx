@@ -1127,23 +1127,31 @@ export default function ReportsPage() {
       >
         {previewType === "attendance" && attendanceData.length > 0 && (
           <>
-            <div className="grid grid-cols-4 gap-3">
-              <div className="border border-border/30 rounded-xl p-3 text-center bg-muted/20">
-                <p className="text-xl font-bold text-foreground">{attendanceSummary.total}</p>
-                <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
-              </div>
-              <div className="border border-border/30 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--success) / 0.08)" }}>
-                <p className="text-xl font-bold" style={{ color: "hsl(var(--success))" }}>{attendanceSummary.present}</p>
-                <p className="text-xs text-muted-foreground">حاضر</p>
-              </div>
-              <div className="border border-border/30 rounded-xl p-3 text-center bg-destructive/5">
-                <p className="text-xl font-bold text-destructive">{attendanceSummary.absent}</p>
-                <p className="text-xs text-muted-foreground">غائب</p>
-              </div>
-              <div className="border border-border/30 rounded-xl p-3 text-center" style={{ backgroundColor: "hsl(var(--warning) / 0.08)" }}>
-                <p className="text-xl font-bold" style={{ color: "hsl(var(--warning))" }}>{attendanceSummary.late}</p>
-                <p className="text-xs text-muted-foreground">متأخر</p>
-              </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+              {[
+                { label: "إجمالي السجلات", value: attendanceSummary.total, bg: "#f1f5f9", border: "#94a3b8", color: "#334155" },
+                { label: "حاضر", value: attendanceSummary.present, bg: "#ecfdf5", border: "#34d399", color: "#059669" },
+                { label: "غائب", value: attendanceSummary.absent, bg: "#fef2f2", border: "#fca5a5", color: "#dc2626" },
+                { label: "متأخر", value: attendanceSummary.late, bg: "#fffbeb", border: "#fbbf24", color: "#d97706" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    border: `2px solid ${stat.border}`,
+                    borderRadius: "12px",
+                    padding: "14px 8px",
+                    textAlign: "center",
+                    backgroundColor: stat.bg,
+                  }}
+                >
+                  <p style={{ fontSize: "22px", fontWeight: 700, color: stat.color, margin: 0, lineHeight: 1.2 }}>
+                    {stat.value}
+                  </p>
+                  <p style={{ fontSize: "11px", color: "#64748b", margin: "4px 0 0", fontWeight: 500 }}>
+                    {stat.label}
+                  </p>
+                </div>
+              ))}
             </div>
             <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
               <thead>
