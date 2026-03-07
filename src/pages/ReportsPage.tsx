@@ -1153,22 +1153,22 @@ export default function ReportsPage() {
                 </div>
               ))}
             </div>
-            <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+            <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-right p-2 font-semibold text-foreground">اسم الطالب</th>
-                  <th className="text-right p-2 font-semibold text-foreground">التاريخ</th>
-                  <th className="text-right p-2 font-semibold text-foreground">الحالة</th>
-                  <th className="text-right p-2 font-semibold text-foreground">ملاحظات</th>
+                <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
+                  <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>اسم الطالب</th>
+                  <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>التاريخ</th>
+                  <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>الحالة</th>
+                  <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>ملاحظات</th>
                 </tr>
               </thead>
               <tbody>
                 {attendanceData.map((row, i) => (
-                  <tr key={i} className="border-b border-border/50">
-                    <td className="p-2 font-medium text-foreground">{row.student_name}</td>
-                    <td className="p-2 text-muted-foreground">{row.date}</td>
-                    <td className="p-2 text-foreground">{STATUS_LABELS[row.status] || row.status}</td>
-                    <td className="p-2 text-muted-foreground">{row.notes || "—"}</td>
+                  <tr key={i} style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: i % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
+                    <td style={{ padding: "8px", fontWeight: 500, color: "#1e293b" }}>{row.student_name}</td>
+                    <td style={{ padding: "8px", color: "#64748b" }}>{row.date}</td>
+                    <td style={{ padding: "8px", color: "#1e293b" }}>{STATUS_LABELS[row.status] || row.status}</td>
+                    <td style={{ padding: "8px", color: "#64748b" }}>{row.notes || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1177,24 +1177,24 @@ export default function ReportsPage() {
         )}
 
         {previewType === "grades" && gradeData.length > 0 && (
-          <table className="w-full text-sm border-collapse" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+          <table style={{ width: "100%", fontSize: "13px", borderCollapse: "collapse", fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-right p-2 font-semibold text-foreground">اسم الطالب</th>
+              <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
+                <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>اسم الطالب</th>
                 {categoryNames.map((name) => (
-                  <th key={name} className="text-center p-2 font-semibold text-foreground">{name}</th>
+                  <th key={name} style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>{name}</th>
                 ))}
-                <th className="text-center p-2 font-semibold text-foreground">المجموع</th>
+                <th style={{ textAlign: "center", padding: "10px 8px", fontWeight: 600, color: "#1d4ed8", backgroundColor: "#eff6ff" }}>المجموع</th>
               </tr>
             </thead>
             <tbody>
               {gradeData.map((row, i) => (
-                <tr key={i} className="border-b border-border/50">
-                  <td className="p-2 font-medium text-foreground">{row.student_name}</td>
+                <tr key={i} style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: i % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
+                  <td style={{ padding: "8px", fontWeight: 500, color: "#1e293b" }}>{row.student_name}</td>
                   {categoryNames.map((name) => (
-                    <td key={name} className="text-center p-2 text-muted-foreground">{row.categories[name] ?? "—"}</td>
+                    <td key={name} style={{ textAlign: "center", padding: "8px", color: "#475569" }}>{row.categories[name] ?? "—"}</td>
                   ))}
-                  <td className="text-center p-2 font-bold text-primary">{row.total}</td>
+                  <td style={{ textAlign: "center", padding: "8px", fontWeight: 700, color: "#1d4ed8" }}>{row.total}</td>
                 </tr>
               ))}
             </tbody>
