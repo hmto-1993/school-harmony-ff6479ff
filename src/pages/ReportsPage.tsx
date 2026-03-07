@@ -715,11 +715,11 @@ export default function ReportsPage() {
             <Printer className="h-4 w-4" />
             طباعة
           </Button>
-          <DropdownMenu>
+           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size="sm"
-                disabled={sendingSMS || selectedStudent === "all"}
+                disabled={sendingSMS}
                 className="gap-1.5 text-white"
                 style={{ backgroundColor: "hsl(var(--report-btn-send))" }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-send-hover))")}
@@ -730,33 +730,54 @@ export default function ReportsPage() {
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر SMS</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
-                <Send className="h-4 w-4 ml-2" />
-                تقرير شامل (حضور + درجات)
+            <DropdownMenuContent align="end" className="w-64">
+              {selectedStudent !== "all" && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">إرسال فردي عبر SMS</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
+                    <Send className="h-4 w-4 ml-2" />
+                    تقرير شامل (حضور + درجات)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
+                    <ClipboardCheck className="h-4 w-4 ml-2" />
+                    تقرير الحضور فقط
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
+                    <GraduationCap className="h-4 w-4 ml-2" />
+                    تقرير الدرجات فقط
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">إرسال فردي عبر واتساب</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: true })}>
+                    <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                    تقرير شامل (حضور + درجات)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: false })}>
+                    <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                    تقرير الحضور فقط
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: false, grades: true })}>
+                    <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                    تقرير الدرجات فقط
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuLabel className="text-xs text-muted-foreground">
+                <Users2 className="h-3 w-3 inline ml-1" />
+                إرسال جماعي لكل الفصل عبر SMS
+              </DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: true })}>
+                <Users2 className="h-4 w-4 ml-2" />
+                تقرير شامل لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
-                <ClipboardCheck className="h-4 w-4 ml-2" />
-                تقرير الحضور فقط
+              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: true, grades: false })}>
+                <Users2 className="h-4 w-4 ml-2" />
+                تقرير الحضور لجميع الطلاب
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
-                <GraduationCap className="h-4 w-4 ml-2" />
-                تقرير الدرجات فقط
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر واتساب</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: true })}>
-                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
-                تقرير شامل (حضور + درجات)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: false })}>
-                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
-                تقرير الحضور فقط
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: false, grades: true })}>
-                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
-                تقرير الدرجات فقط
+              <DropdownMenuItem onClick={() => handleBulkSendSMS({ attendance: false, grades: true })}>
+                <Users2 className="h-4 w-4 ml-2" />
+                تقرير الدرجات لجميع الطلاب
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
