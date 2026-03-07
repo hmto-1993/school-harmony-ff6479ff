@@ -42,24 +42,44 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
         <CardTitle className="text-base">توزيع الحضور</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={320}>
           <PieChart>
             <Pie
               data={chartData}
               cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={100}
+              cy="45%"
+              innerRadius={50}
+              outerRadius={85}
               paddingAngle={3}
               dataKey="value"
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent, x, y, midAngle }) => {
+                const RADIAN = Math.PI / 180;
+                const radius = 115;
+                const cx2 = 0;
+                const cy2 = 0;
+                const labelX = x + Math.cos(-midAngle * RADIAN) * 15;
+                const labelY = y + Math.sin(-midAngle * RADIAN) * 15;
+                return (
+                  <text
+                    x={labelX}
+                    y={labelY}
+                    textAnchor={labelX > (x - 10) ? "start" : "end"}
+                    dominantBaseline="central"
+                    fontSize={12}
+                    fill="currentColor"
+                  >
+                    {`${name} ${(percent * 100).toFixed(0)}%`}
+                  </text>
+                );
+              }}
+              labelLine={{ stroke: "currentColor", strokeWidth: 1 }}
             >
               {chartData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <Tooltip />
-            <Legend />
+            <Legend wrapperStyle={{ paddingTop: "12px" }} />
           </PieChart>
         </ResponsiveContainer>
       </CardContent>
