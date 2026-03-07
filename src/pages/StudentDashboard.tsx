@@ -122,23 +122,25 @@ export default function StudentDashboard() {
     navigate("/login");
   };
 
+  const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+
   // Calculate grade summary
-  const totalWeighted = student.grades.reduce((sum, g) => {
+  const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
     return sum + (g.score / cat.max_score) * cat.weight;
-  }, 0);
-  const totalWeight = student.grades.reduce((sum, g) => {
+  }, 0) : 0;
+  const totalWeight = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
     return sum + cat.weight;
-  }, 0);
+  }, 0) : 0;
   const percentage = totalWeight > 0 ? Math.round((totalWeighted / totalWeight) * 100) : 0;
 
-  const presentCount = student.attendance.filter((a) => a.status === "present").length;
-  const absentCount = student.attendance.filter((a) => a.status === "absent").length;
-  const positiveCount = student.behaviors.filter((b) => b.type === "إيجابي").length;
-  const negativeCount = student.behaviors.filter((b) => b.type === "سلبي").length;
+  const presentCount = vis.attendance ? student.attendance.filter((a) => a.status === "present").length : 0;
+  const absentCount = vis.attendance ? student.attendance.filter((a) => a.status === "absent").length : 0;
+  const positiveCount = vis.behavior ? student.behaviors.filter((b) => b.type === "إيجابي").length : 0;
+  const negativeCount = vis.behavior ? student.behaviors.filter((b) => b.type === "سلبي").length : 0;
 
   const generalFolders = folders.filter(f => !f.class_id);
   const classFolders = folders.filter(f => !!f.class_id);
