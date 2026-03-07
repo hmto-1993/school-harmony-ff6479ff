@@ -196,6 +196,7 @@ export default function SettingsPage() {
   const [popupTargetType, setPopupTargetType] = useState<"all" | "specific">("all");
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
+  const [popupAction, setPopupAction] = useState<string>("none");
   const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
@@ -302,7 +303,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -328,6 +329,7 @@ export default function SettingsPage() {
         if (s.id === "student_popup_target_classes" && s.value) {
           try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
         }
+        if (s.id === "student_popup_action") setPopupAction(s.value || "none");
       });
 
       // Fetch popup history
@@ -2060,6 +2062,21 @@ export default function SettingsPage() {
                         )}
                       </div>
                     )}
+                    <div className="space-y-2">
+                      <Label>التوجيه عند الضغط (اختياري)</Label>
+                      <Select value={popupAction} onValueChange={setPopupAction}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">بدون توجيه</SelectItem>
+                          <SelectItem value="grades">الدرجات</SelectItem>
+                          <SelectItem value="attendance">الحضور</SelectItem>
+                          <SelectItem value="behavior">السلوك</SelectItem>
+                          <SelectItem value="activities">الأنشطة</SelectItem>
+                          <SelectItem value="library">المكتبة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground">عند اختيار وجهة، سيظهر للطالب زر للانتقال مباشرة إلى القسم المحدد</p>
+                    </div>
                     <div className="flex items-center gap-2">
                     <Button disabled={savingPopup} className="gap-1.5"
                       onClick={async () => {
@@ -2071,6 +2088,7 @@ export default function SettingsPage() {
                           supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: popupExpiry }),
                           supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
                           supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
+                          supabase.from("site_settings").upsert({ id: "student_popup_action", value: popupAction }),
                         ];
                         const results = await Promise.all(updates);
 
