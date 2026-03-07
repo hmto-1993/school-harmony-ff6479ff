@@ -84,7 +84,7 @@ export default function ExportDialog({
         "اسم الطالب": l.students?.full_name || "غير معروف",
         "الفصل": getClassName(l.class_id),
         "التاريخ": format(new Date(l.logged_in_at), "yyyy/MM/dd"),
-        "الوقت": format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
+        "الوقت": formatTimeAr(new Date(l.logged_in_at)),
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailed), "السجل التفصيلي");
     }
@@ -97,7 +97,7 @@ export default function ExportDialog({
           "#": i + 1,
           "اسم الطالب": l.students?.full_name || "غير معروف",
           "التاريخ": format(new Date(l.logged_in_at), "yyyy/MM/dd"),
-          "الوقت": format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
+          "الوقت": formatTimeAr(new Date(l.logged_in_at)),
         }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(data), c.name.substring(0, 31));
       });
@@ -145,7 +145,7 @@ export default function ExportDialog({
         startY: 22,
         head: [["الوقت", "التاريخ", "الفصل", "اسم الطالب", "#"]],
         body: filteredLogins.map((l, i) => [
-          format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
+          formatTimeAr(new Date(l.logged_in_at)),
           format(new Date(l.logged_in_at), "yyyy/MM/dd"),
           getClassName(l.class_id),
           l.students?.full_name || "غير معروف",
@@ -167,7 +167,7 @@ export default function ExportDialog({
           startY: 22,
           head: [["الوقت", "التاريخ", "اسم الطالب", "#"]],
           body: classLogins.map((l, i) => [
-            format(new Date(l.logged_in_at), "hh:mm:ss a", { locale: ar }),
+            formatTimeAr(new Date(l.logged_in_at)),
             format(new Date(l.logged_in_at), "yyyy/MM/dd"),
             l.students?.full_name || "غير معروف",
             (i + 1).toString(),
