@@ -196,6 +196,7 @@ export default function SettingsPage() {
   const [popupTargetType, setPopupTargetType] = useState<"all" | "specific">("all");
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
+  const [popupAction, setPopupAction] = useState<string>("none");
   const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
@@ -328,6 +329,7 @@ export default function SettingsPage() {
         if (s.id === "student_popup_target_classes" && s.value) {
           try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
         }
+        if (s.id === "student_popup_action") setPopupAction(s.value || "none");
       });
 
       // Fetch popup history
