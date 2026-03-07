@@ -525,6 +525,173 @@ export default function ReportsPage() {
     setSendingSMS(false);
   };
 
+  const handleBulkSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
+    if (!selectedClass) return;
+
+    const studentsWithPhone = students.filter((s) => s.parent_phone);
+    if (studentsWithPhone.length === 0) {
+      toast({ title: "تنبيه", description: "لا يوجد طلاب بأرقام هواتف أولياء أمور في هذا الفصل", variant: "destructive" });
+      return;
+    }
+
+    setSendingSMS(true);
+    setBulkProgress({ current: 0, total: studentsWithPhone.length, active: true });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // Fetch all class attendance and grades data once
+    const allAttendance: Record<string, AttendanceRow[]> = {};
+    const allGrades: Record<string, GradeRow> = {};
+
+    if (sections.attendance) {
+      const { data: attData } = await supabase
+        .from("attendance_records")
+        .select("status, notes, date, student_id, students(full_name)")
+        .eq("class_id", selectedClass)
+        .gte("date", dateFrom)
+        .lte("date", dateTo)
+        .order("date", { ascending: false });
+
+      (attData || []).forEach((r: any) => {
+        const sid = r.student_id;
+        if (!allAttendance[sid]) allAttendance[sid] = [];
+        allAttendance[sid].push({
+          student_name: r.students?.full_name || "—",
+          student_id: sid,
+          date: r.date,
+          status: r.status,
+          notes: r.notes,
+        });
+      });
+    }
+
+    if (sections.grades) {
+      const { data: cats } = await supabase
+        .from("grade_categories")
+        .select("id, name, weight, max_score")
+        .eq("class_id", selectedClass)
+        .order("sort_order");
+      const categories = cats || [];
+
+      const studentIds = studentsWithPhone.map((s) => s.id);
+      const { data: gradesData } = await supabase
+        .from("grades")
+        .select("student_id, category_id, score")
+        .in("student_id", studentIds);
+
+      const gradeMap: Record<string, Record<string, number | null>> = {};
+      (gradesData || []).forEach((g: any) => {
+        if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
+        gradeMap[g.student_id][g.category_id] = g.score;
+      });
+
+      studentsWithPhone.forEach((s) => {
+        const catScores: Record<string, number | null> = {};
+        let total = 0;
+        categories.forEach((cat) => {
+          const score = gradeMap[s.id]?.[cat.id] ?? null;
+          catScores[cat.name] = score;
+          if (score !== null) total += (score / cat.max_score) * cat.weight;
+        });
+        allGrades[s.id] = { student_name: s.full_name, categories: catScores, total: Math.round(total * 100) / 100 };
+      });
+    }
+
+    for (let i = 0; i < studentsWithPhone.length; i++) {
+      const student = studentsWithPhone[i];
+      setBulkProgress({ current: i + 1, total: studentsWithPhone.length, active: true });
+
+      try {
+        // Temporarily set student-specific data for PDF generation
+        const studentAttendance = allAttendance[student.id] || [];
+        const studentGrade = allGrades[student.id];
+        const studentAttSummary = {
+          total: studentAttendance.length,
+          present: studentAttendance.filter((r) => r.status === "present").length,
+          absent: studentAttendance.filter((r) => r.status === "absent").length,
+          late: studentAttendance.filter((r) => r.status === "late").length,
+        };
+
+        // Generate PDF for this specific student
+        const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+        const autoTableImport = await import("jspdf-autotable");
+        const autoTable = autoTableImport.default;
+        const reportType = sections.attendance && !sections.grades ? "attendance" : "grades";
+        const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
+        const tableStyles = getArabicTableStyles();
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(16);
+        doc.text(`تقرير الطالب: ${student.full_name}`, pageWidth / 2, startY, { align: "center" });
+        doc.setFontSize(10);
+        doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+
+        let currentY = startY + 15;
+
+        if (sections.attendance && studentAttendance.length > 0) {
+          doc.setFontSize(13);
+          doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
+          autoTable(doc, {
+            startY: currentY + 5,
+            head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
+            body: studentAttendance.map((r) => [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.student_name]),
+            ...tableStyles,
+          });
+          currentY = (doc as any).lastAutoTable.finalY + 10;
+          doc.setFontSize(10);
+          doc.text(`حاضر: ${studentAttSummary.present} | غائب: ${studentAttSummary.absent} | متأخر: ${studentAttSummary.late}`, pageWidth / 2, currentY, { align: "center" });
+          currentY += 10;
+        }
+
+        if (sections.grades && studentGrade) {
+          if (sections.attendance && currentY > doc.internal.pageSize.getHeight() - 40) {
+            doc.addPage("a4", "landscape");
+            currentY = 15;
+          }
+          doc.setFontSize(13);
+          doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
+          const catNames = Object.keys(studentGrade.categories);
+          const head = ["المجموع", ...catNames.slice().reverse(), "اسم الطالب"];
+          autoTable(doc, {
+            startY: currentY + 5,
+            head: [head],
+            body: [[String(studentGrade.total), ...catNames.slice().reverse().map((n) => studentGrade.categories[n] !== null ? String(studentGrade.categories[n]) : "—"), studentGrade.student_name]],
+            ...tableStyles,
+          });
+        }
+
+        const pdfBuffer = doc.output("arraybuffer");
+        const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
+        const { error: uploadError } = await supabase.storage
+          .from("reports")
+          .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
+
+        if (uploadError) { failCount++; continue; }
+
+        const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
+        const pdfUrl = urlData?.publicUrl;
+
+        const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+        const { data, error } = await supabase.functions.invoke("send-sms", {
+          body: { phone: student.parent_phone, message },
+        });
+
+        if (error || !data?.success) failCount++;
+        else successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setBulkProgress({ current: 0, total: 0, active: false });
+    setSendingSMS(false);
+    toast({
+      title: "تم الإرسال الجماعي ✅",
+      description: `نجح: ${successCount} | فشل: ${failCount} من أصل ${studentsWithPhone.length} طالب`,
+    });
+  };
+
   // ============ Render ============
 
   const className = classes.find((c) => c.id === selectedClass)?.name || "";
