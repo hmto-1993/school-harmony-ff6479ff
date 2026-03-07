@@ -42,6 +42,7 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
