@@ -202,6 +202,24 @@ export default function SettingsPage() {
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
   const [previewTitle, setPreviewTitle] = useState("");
   const [previewMessage, setPreviewMessage] = useState("");
+  const [popupCountdown, setPopupCountdown] = useState("");
+
+  // Countdown timer for popup expiry
+  useEffect(() => {
+    if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); return; }
+    const calc = () => {
+      const diff = new Date(popupExpiry).getTime() - Date.now();
+      if (diff <= 0) { setPopupCountdown("منتهية"); return; }
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setPopupCountdown(d > 0 ? `${d}ي ${h}س ${m}د` : h > 0 ? `${h}س ${m}د ${s}ث` : `${m}د ${s}ث`);
+    };
+    calc();
+    const id = setInterval(calc, 1000);
+    return () => clearInterval(id);
+  }, [popupEnabled, popupExpiry]);
 
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
@@ -840,6 +858,14 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-sm font-bold text-foreground">{card.label}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
+              {card.key === "popup" && popupCountdown && (
+                <div className={cn(
+                  "mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block",
+                  popupCountdown === "منتهية" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"
+                )}>
+                  ⏱ {popupCountdown === "منتهية" ? "منتهية الصلاحية" : `متبقي: ${popupCountdown}`}
+                </div>
+              )}
             </div>
             {activeCard === card.key && (
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-card border-b-2 border-r-2 border-primary" />
