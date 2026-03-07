@@ -108,6 +108,8 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "date-fns/locale": path.resolve(__dirname, "./src/lib/date-fns-locale-shim.ts"),
+      "date-fns": path.resolve(__dirname, "./src/lib/date-fns-shim.ts"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
