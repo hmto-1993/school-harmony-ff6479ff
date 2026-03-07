@@ -527,7 +527,7 @@ export default function ReportsPage() {
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" dir="rtl">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
                 <ClipboardCheck className="h-4 w-4 ml-2" />
                 تقرير شامل (حضور + درجات)
