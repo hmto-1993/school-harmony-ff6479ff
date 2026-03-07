@@ -228,28 +228,24 @@ export default function StudentDashboard() {
         <StudentAnnouncements classId={student.class_id} />
 
         {/* Details Tabs */}
-        <Tabs defaultValue="grades" dir="rtl">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="grades" className="gap-1">
-              <GraduationCap className="h-4 w-4" />
-              الدرجات
-            </TabsTrigger>
-            <TabsTrigger value="attendance" className="gap-1">
-              <ClipboardCheck className="h-4 w-4" />
-              الحضور
-            </TabsTrigger>
-            <TabsTrigger value="behavior" className="gap-1">
-              <ShieldCheck className="h-4 w-4" />
-              السلوك
-            </TabsTrigger>
-            <TabsTrigger value="activities" className="gap-1">
-              <Layers className="h-4 w-4" />
-              الأنشطة
-            </TabsTrigger>
-            <TabsTrigger value="library" className="gap-1">
-              <BookOpen className="h-4 w-4" />
-              المكتبة
-            </TabsTrigger>
+        {(() => {
+          const visibleTabs = [
+            ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
+            ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
+            ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
+            { value: "activities", label: "الأنشطة", icon: Layers },
+            { value: "library", label: "المكتبة", icon: BookOpen },
+          ];
+          const defaultTab = visibleTabs[0]?.value || "activities";
+          return (
+        <Tabs defaultValue={defaultTab} dir="rtl">
+          <TabsList className={cn("grid w-full", `grid-cols-${visibleTabs.length}`)}>
+            {visibleTabs.map(tab => (
+              <TabsTrigger key={tab.value} value={tab.value} className="gap-1">
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
           <TabsContent value="grades">
