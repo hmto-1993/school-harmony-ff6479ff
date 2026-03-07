@@ -14,7 +14,6 @@ import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
-import { useCalendarType, formatDateShort } from "@/hooks/use-calendar-type";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -44,7 +43,6 @@ export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const calendarType = useCalendarType();
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
@@ -156,7 +154,7 @@ export default function AttendancePage() {
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal backdrop-blur-sm")}>
                 <CalendarIcon className="h-4 w-4" />
-                {formatDateShort(selectedDate, calendarType)}
+                {new Date(date).toLocaleDateString("ar-SA")}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">

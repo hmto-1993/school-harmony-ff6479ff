@@ -42,12 +42,10 @@ import {
   Palette,
   History,
   RotateCcw,
-  CalendarDays,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
-import { type CalendarType, setCalendarTypeGlobal } from "@/hooks/use-calendar-type";
 import {
   Dialog,
   DialogContent,
@@ -199,10 +197,6 @@ export default function SettingsPage() {
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
   const [popupAction, setPopupAction] = useState<string>("none");
-  // Calendar type
-  const [calendarTypeSetting, setCalendarTypeSetting] = useState<CalendarType>("hijri");
-  const [savingCalendarType, setSavingCalendarType] = useState(false);
-
   const [popupRepeat, setPopupRepeat] = useState<string>("none");
   const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
   const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
@@ -337,9 +331,8 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["calendar_type", "quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat"]);
       (qcData || []).forEach((s: any) => {
-        if (s.id === "calendar_type") { const v = s.value === "gregorian" ? "gregorian" : "hijri"; setCalendarTypeSetting(v as CalendarType); setCalendarTypeGlobal(v as CalendarType); }
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
         if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
@@ -851,7 +844,6 @@ export default function SettingsPage() {
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
           { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
-          { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeSetting === "hijri" ? "هجري" : "ميلادي", gradient: "from-teal-500 to-cyan-600", shadow: "shadow-teal-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -1925,60 +1917,6 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
-
-      {activeCard === "calendar" && isAdmin && (
-        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <CalendarDays className="h-5 w-5 text-primary" />
-                نوع التقويم
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4 max-w-md">
-            <p className="text-sm text-muted-foreground">اختر نوع التقويم المستخدم في عرض التواريخ في النظام</p>
-            <div className="grid grid-cols-2 gap-3">
-              {([
-                { value: "hijri" as CalendarType, label: "هجري", desc: "التقويم الهجري (أم القرى)" },
-                { value: "gregorian" as CalendarType, label: "ميلادي", desc: "التقويم الميلادي" },
-              ]).map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setCalendarTypeSetting(opt.value)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-300",
-                    calendarTypeSetting === opt.value
-                      ? "border-primary bg-primary/10 shadow-lg ring-2 ring-primary/20"
-                      : "border-border/50 bg-card hover:border-primary/30 hover:shadow-md"
-                  )}
-                >
-                  <CalendarDays className={cn("h-6 w-6", calendarTypeSetting === opt.value ? "text-primary" : "text-muted-foreground")} />
-                  <span className={cn("text-sm font-bold", calendarTypeSetting === opt.value ? "text-primary" : "text-foreground")}>{opt.label}</span>
-                  <span className="text-xs text-muted-foreground">{opt.desc}</span>
-                </button>
-              ))}
-            </div>
-            <Button
-              disabled={savingCalendarType}
-              className="gap-1.5"
-              onClick={async () => {
-                setSavingCalendarType(true);
-                await supabase.from("site_settings").upsert({ id: "calendar_type", value: calendarTypeSetting });
-                setCalendarTypeGlobal(calendarTypeSetting);
-                setSavingCalendarType(false);
-                toast({ title: "تم الحفظ", description: `تم تغيير التقويم إلى ${calendarTypeSetting === "hijri" ? "هجري" : "ميلادي"}` });
-              }}
-            >
-              <Save className="h-4 w-4" />
-              {savingCalendarType ? "جارٍ الحفظ..." : "حفظ"}
-            </Button>
           </CardContent>
         </Card>
       )}
