@@ -1604,33 +1604,53 @@ export default function SettingsPage() {
                 <Save className="h-4 w-4" />
                 {savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                onClick={async () => {
-                  setShowGrades(true);
-                  setShowAttendance(true);
-                  setShowBehavior(true);
-                  setHiddenCategories({ p1: [], p2: [] });
-                  setSavingVisibility(true);
-                  const results = await Promise.all([
-                    supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
-                    supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
-                    supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
-                    supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
-                  ]);
-                  setSavingVisibility(false);
-                  if (results.some(r => r.error)) {
-                    toast({ title: "خطأ", description: "فشل إعادة الضبط", variant: "destructive" });
-                  } else {
-                    toast({ title: "تم الضبط", description: "تم إعادة جميع إعدادات العرض للقيم الافتراضية" });
-                  }
-                }}
-              >
-                <X className="h-3.5 w-3.5" />
-                إعادة ضبط الكل
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                    إعادة ضبط الكل
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>إعادة ضبط إعدادات العرض؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم إعادة جميع إعدادات عرض بيانات الطالب للقيم الافتراضية (إظهار الكل وإزالة جميع الاستثناءات).
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={async () => {
+                        setShowGrades(true);
+                        setShowAttendance(true);
+                        setShowBehavior(true);
+                        setHiddenCategories({ p1: [], p2: [] });
+                        setSavingVisibility(true);
+                        const results = await Promise.all([
+                          supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
+                        ]);
+                        setSavingVisibility(false);
+                        if (results.some(r => r.error)) {
+                          toast({ title: "خطأ", description: "فشل إعادة الضبط", variant: "destructive" });
+                        } else {
+                          toast({ title: "تم الضبط", description: "تم إعادة جميع إعدادات العرض للقيم الافتراضية" });
+                        }
+                      }}
+                    >
+                      إعادة الضبط
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
