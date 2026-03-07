@@ -194,6 +194,7 @@ export default function SettingsPage() {
   const [popupTargetType, setPopupTargetType] = useState<"all" | "specific">("all");
   const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
   const [savingPopup, setSavingPopup] = useState(false);
+  const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
 
   // New category form
   const [newCatClassId, setNewCatClassId] = useState("");
