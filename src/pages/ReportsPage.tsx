@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -35,6 +35,7 @@ import {
   Send,
   UserCircle,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -429,49 +430,57 @@ export default function ReportsPage() {
     }
   };
 
-  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
+  const generateAndUploadPDF = async (studentName: string, studentId: string, sections: { attendance: boolean; grades: boolean }): Promise<string | null> => {
+    toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
+    const pdfBuffer = await generateStudentReportPDF(studentName, sections);
+    if (!pdfBuffer) {
+      toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
+      return null;
+    }
+
+    const fileName = `report_${studentId}_${dateFrom}_${Date.now()}.pdf`;
+    const { error: uploadError } = await supabase.storage
+      .from("reports")
+      .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
+
+    if (uploadError) {
+      toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
+    return urlData?.publicUrl || null;
+  };
+
+  const getReportLabel = (sections: { attendance: boolean; grades: boolean }) => {
+    if (sections.attendance && sections.grades) return "تقرير شامل";
+    if (sections.attendance) return "تقرير الحضور";
+    return "تقرير الدرجات";
+  };
+
+  const validateStudentForSend = (): { id: string; full_name: string; parent_phone: string } | null => {
     if (selectedStudent === "all") {
       toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
-      return;
+      return null;
     }
     const student = students.find((s) => s.id === selectedStudent);
     if (!student?.parent_phone) {
       toast({ title: "تنبيه", description: "لا يوجد رقم هاتف لولي أمر هذا الطالب", variant: "destructive" });
-      return;
+      return null;
     }
+    return student as { id: string; full_name: string; parent_phone: string };
+  };
+
+  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
+    const student = validateStudentForSend();
+    if (!student) return;
 
     setSendingSMS(true);
-
     try {
-      toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
-      const pdfBuffer = await generateStudentReportPDF(student.full_name, sections);
-      if (!pdfBuffer) {
-        toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
-        setSendingSMS(false);
-        return;
-      }
+      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
+      if (!pdfUrl) { setSendingSMS(false); return; }
 
-      const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
-      const { error: uploadError } = await supabase.storage
-        .from("reports")
-        .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
-
-      if (uploadError) {
-        toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
-        setSendingSMS(false);
-        return;
-      }
-
-      const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
-      const pdfUrl = urlData?.publicUrl;
-
-      const reportLabel = sections.attendance && sections.grades
-        ? "تقرير شامل"
-        : sections.attendance
-        ? "تقرير الحضور"
-        : "تقرير الدرجات";
-
-      const message = `${reportLabel} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
 
       const { data, error } = await supabase.functions.invoke("send-sms", {
         body: { phone: student.parent_phone, message },
@@ -480,12 +489,36 @@ export default function ReportsPage() {
       if (error || !data?.success) {
         toast({ title: "خطأ", description: "فشل إرسال الرسالة", variant: "destructive" });
       } else {
-        toast({ title: "تم ✅", description: "تم إرسال التقرير PDF لولي الأمر بنجاح" });
+        toast({ title: "تم ✅", description: "تم إرسال التقرير عبر SMS بنجاح" });
       }
     } catch (err: any) {
       toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
     }
+    setSendingSMS(false);
+  };
 
+  const handleSendWhatsApp = async (sections: { attendance: boolean; grades: boolean }) => {
+    const student = validateStudentForSend();
+    if (!student) return;
+
+    setSendingSMS(true);
+    try {
+      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
+      if (!pdfUrl) { setSendingSMS(false); return; }
+
+      // Format phone for wa.me (remove leading 0, add 966)
+      let phone = student.parent_phone.replace(/[\s\-\+]/g, "");
+      if (phone.startsWith("0")) phone = "966" + phone.slice(1);
+      if (!phone.startsWith("966")) phone = "966" + phone;
+
+      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
+      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+      window.open(waUrl, "_blank");
+
+      toast({ title: "تم ✅", description: "تم فتح واتساب مع رسالة التقرير" });
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
+    }
     setSendingSMS(false);
   };
 
@@ -527,17 +560,32 @@ export default function ReportsPage() {
                 <ChevronDown className="h-3 w-3" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر SMS</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: true })}>
-                <ClipboardCheck className="h-4 w-4 ml-2" />
+                <Send className="h-4 w-4 ml-2" />
                 تقرير شامل (حضور + درجات)
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: true, grades: false })}>
-                <Calendar className="h-4 w-4 ml-2" />
+                <ClipboardCheck className="h-4 w-4 ml-2" />
                 تقرير الحضور فقط
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleSendSMS({ attendance: false, grades: true })}>
                 <GraduationCap className="h-4 w-4 ml-2" />
+                تقرير الدرجات فقط
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">عبر واتساب</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: true })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                تقرير شامل (حضور + درجات)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: true, grades: false })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
+                تقرير الحضور فقط
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSendWhatsApp({ attendance: false, grades: true })}>
+                <MessageCircle className="h-4 w-4 ml-2 text-green-500" />
                 تقرير الدرجات فقط
               </DropdownMenuItem>
             </DropdownMenuContent>
