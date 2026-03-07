@@ -85,6 +85,8 @@ export default function StudentDashboard() {
   const [popupOpen, setPopupOpen] = useState(false);
   const [popupTitle, setPopupTitle] = useState("");
   const [popupMessage, setPopupMessage] = useState("");
+  const [popupAction, setPopupAction] = useState<string>("none");
+  const [activeTab, setActiveTab] = useState<string>("");
 
   useEffect(() => {
     if (student) {
@@ -97,13 +99,14 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes"]);
+      .in("id", ["student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action"]);
     let enabled = false;
     let title = "";
     let message = "";
     let expiry = "";
     let targetType = "all";
     let targetClassIds: string[] = [];
+    let action = "none";
     (data || []).forEach((s: any) => {
       if (s.id === "student_popup_enabled") enabled = s.value === "true";
       if (s.id === "student_popup_title") title = s.value || "";
@@ -113,6 +116,7 @@ export default function StudentDashboard() {
       if (s.id === "student_popup_target_classes" && s.value) {
         try { targetClassIds = JSON.parse(s.value); } catch { targetClassIds = []; }
       }
+      if (s.id === "student_popup_action") action = s.value || "none";
     });
 
     // Check expiry
@@ -126,6 +130,7 @@ export default function StudentDashboard() {
     if (enabled && message.trim()) {
       setPopupTitle(title);
       setPopupMessage(message);
+      setPopupAction(action);
       setPopupOpen(true);
     }
   };
