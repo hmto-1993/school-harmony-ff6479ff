@@ -344,24 +344,31 @@ export default function ReportsPage() {
     window.print();
   };
 
-  const generateStudentReportPDF = async (studentName: string): Promise<ArrayBuffer | null> => {
+  const generateStudentReportPDF = async (studentName: string, sections: { attendance: boolean; grades: boolean }): Promise<ArrayBuffer | null> => {
     try {
       const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
       const autoTableImport = await import("jspdf-autotable");
       const autoTable = autoTableImport.default;
-      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+      const reportType = sections.attendance && !sections.grades ? "attendance" : sections.grades && !sections.attendance ? "grades" : "attendance";
+      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
       const tableStyles = getArabicTableStyles();
       const pageWidth = doc.internal.pageSize.getWidth();
 
+      const titleText = sections.attendance && sections.grades
+        ? `تقرير الطالب: ${studentName}`
+        : sections.attendance
+        ? `تقرير حضور الطالب: ${studentName}`
+        : `تقرير درجات الطالب: ${studentName}`;
+
       doc.setFontSize(16);
-      doc.text(`تقرير الطالب: ${studentName}`, pageWidth / 2, startY, { align: "center" });
+      doc.text(titleText, pageWidth / 2, startY, { align: "center" });
       doc.setFontSize(10);
       doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
 
       let currentY = startY + 15;
 
       // Attendance section
-      if (attendanceData.length > 0) {
+      if (sections.attendance && attendanceData.length > 0) {
         doc.setFontSize(13);
         doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
 
@@ -381,7 +388,6 @@ export default function ReportsPage() {
 
         currentY = (doc as any).lastAutoTable.finalY + 10;
 
-        // Summary
         doc.setFontSize(10);
         doc.text(
           `حاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late} | الإجمالي: ${attendanceSummary.total}`,
@@ -393,8 +399,8 @@ export default function ReportsPage() {
       }
 
       // Grades section
-      if (gradeData.length > 0) {
-        if (currentY > doc.internal.pageSize.getHeight() - 40) {
+      if (sections.grades && gradeData.length > 0) {
+        if (sections.attendance && currentY > doc.internal.pageSize.getHeight() - 40) {
           doc.addPage("a4", "landscape");
           currentY = 15;
         }
