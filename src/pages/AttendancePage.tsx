@@ -188,16 +188,17 @@ export default function AttendancePage() {
                 className={cn("p-3 pointer-events-auto")}
                 formatters={{
                   formatCaption: (date) => {
+                    const locale = calendarType === "hijri" ? "ar-SA-u-ca-islamic-umalqura" : "ar-SA";
+                    return date.toLocaleDateString(locale, { year: "numeric", month: "long" });
+                  },
+                  formatDay: (date) => {
                     if (calendarType === "hijri") {
-                      return date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
-                        year: "numeric",
-                        month: "long",
-                      });
+                      return date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", { day: "numeric" });
                     }
-                    return date.toLocaleDateString("ar-SA", {
-                      year: "numeric",
-                      month: "long",
-                    });
+                    return date.toLocaleDateString("ar-SA", { day: "numeric" });
+                  },
+                  formatWeekdayName: (date) => {
+                    return date.toLocaleDateString("ar-SA", { weekday: "short" });
                   },
                 }}
               />
