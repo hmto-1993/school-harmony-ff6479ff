@@ -95,7 +95,7 @@ export default function GradesPage() {
                 <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
                   {count} طالب
                 </span>
-                {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-primary via-primary/80 to-accent rounded-b" />}
+                
               </button>
             );
           })}
@@ -131,7 +131,6 @@ export default function GradesPage() {
                   <span className={cn("text-xs font-bold", isActive ? "text-success" : "text-foreground")}>
                     {type.label}
                   </span>
-                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-success via-success/80 to-primary rounded-b" />}
                 </button>
               );
             })}
@@ -165,7 +164,7 @@ export default function GradesPage() {
                   <span className={cn("text-sm font-bold", isActive ? "text-success" : "text-foreground")}>
                     {period.label}
                   </span>
-                  {isActive && <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-l from-success via-success/80 to-primary rounded-b" />}
+                  
                 </button>
               );
             })}
