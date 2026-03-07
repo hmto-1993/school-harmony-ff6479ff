@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,10 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users } from "lucide-react";
+import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
@@ -41,6 +42,7 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
@@ -132,7 +134,12 @@ export default function AttendancePage() {
     loadStudents();
   };
 
-  const filteredRecords = statusFilter === "all" ? records : records.filter((r) => r.status === statusFilter);
+  const filteredRecords = useMemo(() => {
+    let result = records;
+    if (statusFilter !== "all") result = result.filter((r) => r.status === statusFilter);
+    if (searchQuery.trim()) result = result.filter((r) => r.full_name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+    return result;
+  }, [records, statusFilter, searchQuery]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -237,6 +244,15 @@ export default function AttendancePage() {
                   <CheckCircle2 className="h-4 w-4 ml-1" />
                   تحديد الكل حاضر
                 </Button>
+                <div className="relative flex-1 min-w-[160px] max-w-[280px]">
+                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    placeholder="بحث عن طالب..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 text-xs pr-8 backdrop-blur-sm"
+                  />
+                </div>
                 <div className="flex items-center gap-1.5 mr-auto">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AttendanceStatus | "all")}>
