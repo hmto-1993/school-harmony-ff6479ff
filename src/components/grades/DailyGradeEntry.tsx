@@ -11,7 +11,7 @@ import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRigh
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { format, subDays, addDays, isToday } from "date-fns";
-import { ar } from "date-fns/locale";
+
 
 interface GradeCategory {
   id: string;

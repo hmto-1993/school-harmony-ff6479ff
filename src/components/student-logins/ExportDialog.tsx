@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
-import { ar } from "date-fns/locale";
+
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
