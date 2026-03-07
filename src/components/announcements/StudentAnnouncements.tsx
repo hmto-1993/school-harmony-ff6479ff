@@ -20,6 +20,7 @@ interface StudentAnnouncementsProps {
 
 export default function StudentAnnouncements({ classId }: StudentAnnouncementsProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const calendarType = useCalendarType();
 
   useEffect(() => {
     fetchAnnouncements();
@@ -63,7 +64,7 @@ export default function StudentAnnouncements({ classId }: StudentAnnouncementsPr
                 <h3 className="font-semibold text-foreground">{ann.title}</h3>
                 <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{ann.body}</p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  {new Date(ann.created_at).toLocaleDateString("ar-SA")}
+                  {formatDateShort(ann.created_at, calendarType)}
                 </p>
               </div>
             </div>
