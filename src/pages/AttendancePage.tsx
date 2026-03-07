@@ -180,22 +180,20 @@ export default function AttendancePage() {
                 </Button>
               </div>
               <Calendar
-                key={calendarType}
                 mode="single"
                 selected={selectedDate}
                 onSelect={(d) => d && setSelectedDate(d)}
                 initialFocus
                 className={cn("p-3 pointer-events-auto")}
+                month={selectedDate}
                 formatters={{
                   formatCaption: (date) => {
                     const locale = calendarType === "hijri" ? "ar-SA-u-ca-islamic-umalqura" : "ar-SA";
                     return date.toLocaleDateString(locale, { year: "numeric", month: "long" });
                   },
                   formatDay: (date) => {
-                    if (calendarType === "hijri") {
-                      return date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", { day: "numeric" });
-                    }
-                    return date.toLocaleDateString("ar-SA", { day: "numeric" });
+                    const locale = calendarType === "hijri" ? "ar-SA-u-ca-islamic-umalqura" : "ar-SA";
+                    return date.toLocaleDateString(locale, { day: "numeric" });
                   },
                   formatWeekdayName: (date) => {
                     return date.toLocaleDateString("ar-SA", { weekday: "short" });
