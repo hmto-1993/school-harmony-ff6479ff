@@ -47,7 +47,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
-import { type CalendarType, setCalendarTypeGlobal } from "@/hooks/use-calendar-type";
+import { type CalendarType, setCalendarTypeGlobal, formatDateShort } from "@/hooks/use-calendar-type";
 import {
   Dialog,
   DialogContent,
