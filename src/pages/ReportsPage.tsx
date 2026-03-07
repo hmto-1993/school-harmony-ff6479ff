@@ -784,6 +784,24 @@ export default function ReportsPage() {
         </div>
       </div>
 
+      {/* Bulk send progress */}
+      {bulkProgress.active && (
+        <Card className="border-0 shadow-lg bg-card/80 print:hidden">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <Users2 className="h-5 w-5 text-primary" />
+              <div className="flex-1 space-y-1.5">
+                <div className="flex justify-between text-sm">
+                  <span className="font-medium">جارٍ الإرسال الجماعي...</span>
+                  <span className="text-muted-foreground">{bulkProgress.current} / {bulkProgress.total}</span>
+                </div>
+                <Progress value={(bulkProgress.current / bulkProgress.total) * 100} className="h-2" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 print:hidden">
         <CardContent className="pt-6">
