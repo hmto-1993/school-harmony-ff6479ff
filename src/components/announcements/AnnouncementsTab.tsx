@@ -40,6 +40,7 @@ interface ClassOption {
 
 export default function AnnouncementsTab() {
   const { user } = useAuth();
+  const calendarType = useCalendarType();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -312,7 +313,7 @@ export default function AnnouncementsTab() {
                         <Badge key={cid} variant="outline" className="text-xs">{getClassName(cid)}</Badge>
                       ))}
                       <span className="text-xs text-muted-foreground">
-                        {new Date(ann.created_at).toLocaleDateString("ar-SA")} - {new Date(ann.created_at).toLocaleTimeString("ar-SA")}
+                        {formatDateShort(ann.created_at, calendarType)} - {new Date(ann.created_at).toLocaleTimeString("ar-SA")}
                       </span>
                     </div>
                   </div>
