@@ -165,7 +165,9 @@ export default function AcademicCalendarWidget() {
                       onClick={() => setSelectedWeek(isSelected ? null : week)}
                       className={cn(
                         "grid grid-cols-[50px_1fr_auto] border-t cursor-pointer transition-all",
-                        getWeekRowStyle(week.type),
+                        isCurrent
+                          ? "bg-primary/10 dark:bg-primary/20 border-primary/30"
+                          : getWeekRowStyle(week.type),
                         isCurrent && "ring-2 ring-primary ring-inset",
                         isSelected && "ring-2 ring-primary/60 ring-inset shadow-sm",
                         "hover:brightness-95 dark:hover:brightness-110",
@@ -176,13 +178,20 @@ export default function AcademicCalendarWidget() {
                         "p-2 text-center text-sm font-bold border-l flex items-center justify-center",
                         isCurrent ? "text-primary" : "text-foreground/70",
                       )}>
-                        {week.weekNumber}
+                        {isCurrent ? (
+                          <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs">
+                            {week.weekNumber}
+                          </span>
+                        ) : week.weekNumber}
                       </div>
 
-                      {/* Date range */}
-                      <div className="p-2 border-l flex items-center">
+                      {/* Date range - Hijri + Gregorian */}
+                      <div className="p-2 border-l flex flex-col justify-center gap-0.5">
                         <span className="text-xs text-foreground/80">
-                          {formatDateShort(week.startDate)} – {formatDateShort(week.endDate)}
+                          {formatDateShort(week.startDate)} – {formatDateShort(week.endDate)} م
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatHijriDate(week.startDate)} – {formatHijriDate(week.endDate)} هـ
                         </span>
                       </div>
 
