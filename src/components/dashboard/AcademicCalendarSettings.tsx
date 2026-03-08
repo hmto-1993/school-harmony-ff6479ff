@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,17 +33,36 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
   const { user } = useAuth();
   const { calendarData, refetch } = useAcademicWeek();
 
+  const [defaultAcademicYear, setDefaultAcademicYear] = useState<string>("");
   const [startDate, setStartDate] = useState(calendarData?.start_date || "");
   const [totalWeeks, setTotalWeeks] = useState(calendarData?.total_weeks || 18);
   const [semester, setSemester] = useState(calendarData?.semester || "first");
-  const [academicYear, setAcademicYear] = useState(calendarData?.academic_year || "1446-1447");
+  const [academicYear, setAcademicYear] = useState(calendarData?.academic_year || "1447-1448");
   const [examDates, setExamDates] = useState<ExamDate[]>(calendarData?.exam_dates || []);
   const [holidays, setHolidays] = useState<HolidayDate[]>(calendarData?.holidays || []);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [deletingPresetKey, setDeletingPresetKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch default academic year from site_settings
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "default_academic_year")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          setDefaultAcademicYear(data.value);
+          if (!calendarData?.academic_year) {
+            setAcademicYear(data.value);
+          }
+        }
+      });
+  }, []);
 
   const addExamDate = () => {
     setExamDates(prev => [...prev, { date: "", label: "", type: "midterm" }]);
