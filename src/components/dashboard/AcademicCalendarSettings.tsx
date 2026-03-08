@@ -54,7 +54,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
       total_weeks: totalWeeks,
       semester,
       academic_year: academicYear,
-      exam_dates: examDates.filter(e => e.date && e.label),
+      exam_dates: JSON.parse(JSON.stringify(examDates.filter(e => e.date && e.label))),
       created_by: user!.id,
     };
 
@@ -62,7 +62,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     if (calendarData?.id) {
       ({ error } = await supabase.from("academic_calendar").update(payload).eq("id", calendarData.id));
     } else {
-      ({ error } = await supabase.from("academic_calendar").insert(payload));
+      ({ error } = await supabase.from("academic_calendar").insert([payload]));
     }
 
     setSaving(false);
