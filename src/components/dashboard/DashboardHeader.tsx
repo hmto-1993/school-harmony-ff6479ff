@@ -2,8 +2,9 @@ import { format } from "date-fns";
 import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   onPrint?: () => void;
@@ -30,6 +31,13 @@ export default function DashboardHeader({ onPrint }: Props) {
   const hijriDate = useMemo(() => toHijri(new Date()), []);
   const { currentWeek, calendarData, isExamWeek } = useAcademicWeek();
   const todayExam = isExamWeek(new Date());
+  const [dashboardTitle, setDashboardTitle] = useState("لوحة التحكم");
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("id", "dashboard_title").maybeSingle().then(({ data }) => {
+      if (data?.value) setDashboardTitle(data.value);
+    });
+  }, []);
 
   return (
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
@@ -46,7 +54,7 @@ export default function DashboardHeader({ onPrint }: Props) {
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{dashboardTitle}</h1>
               <p className="text-sm text-white/70 mt-0.5">نظرة شاملة على أداء الطلاب اليوم</p>
             </div>
           </div>

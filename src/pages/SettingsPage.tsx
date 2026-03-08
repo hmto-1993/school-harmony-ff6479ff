@@ -177,6 +177,7 @@ export default function SettingsPage() {
   // Login page settings
   const [loginSchoolName, setLoginSchoolName] = useState("");
   const [loginSubtitle, setLoginSubtitle] = useState("");
+  const [dashboardTitle, setDashboardTitle] = useState("");
   const [savingLogin, setSavingLogin] = useState(false);
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -326,11 +327,12 @@ export default function SettingsPage() {
       const { data: loginData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year"]);
+        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]);
       (loginData || []).forEach((s: any) => {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
         if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
+        if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
         if (s.id === "default_academic_year" && s.value) {
           setDefaultAcademicYear(s.value);
           setNewYear(s.value);
@@ -2477,12 +2479,19 @@ export default function SettingsPage() {
                       <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
                         placeholder="مثال: نظام إدارة المدرسة" />
                     </div>
+                    <div className="space-y-2">
+                      <Label>عنوان لوحة التحكم</Label>
+                      <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
+                        placeholder="لوحة التحكم" />
+                      <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
+                    </div>
                     <Button disabled={savingLogin} className="gap-1.5"
                       onClick={async () => {
                         setSavingLogin(true);
                         const updates = [
                           supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
                           supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
+                          supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
                         ];
                         const results = await Promise.all(updates);
                         setSavingLogin(false);
