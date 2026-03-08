@@ -110,9 +110,6 @@ export default function AcademicCalendarWidget() {
               <CalendarDays className="h-5 w-5 text-primary" />
               التقويم الأكاديمي
             </CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} className="h-8 w-8">
-              <Settings2 className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Status banner */}
