@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";
@@ -93,8 +94,8 @@ export default function ReportsPage() {
   const { role, user } = useAuth();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [dateFrom, setDateFrom] = useState<Date>(new Date());
+  const [dateTo, setDateTo] = useState<Date>(new Date());
   const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
@@ -867,24 +868,20 @@ export default function ReportsPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => {
-                  setDateFrom(e.target.value);
-                  if (reportType === "daily") setDateTo(e.target.value);
+              <HijriDatePicker
+                date={dateFrom}
+                onDateChange={(d) => {
+                  setDateFrom(d);
+                  if (reportType === "daily") setDateTo(d);
                 }}
-                className="w-40"
               />
             </div>
             {reportType === "periodic" && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">إلى تاريخ</Label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-40"
+                <HijriDatePicker
+                  date={dateTo}
+                  onDateChange={(d) => setDateTo(d)}
                 />
               </div>
             )}
