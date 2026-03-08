@@ -2479,6 +2479,12 @@ export default function SettingsPage() {
                       <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
                         placeholder="مثال: نظام إدارة المدرسة" />
                     </div>
+                    <div className="space-y-2">
+                      <Label>عنوان لوحة التحكم</Label>
+                      <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
+                        placeholder="لوحة التحكم" />
+                      <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
+                    </div>
                     <Button disabled={savingLogin} className="gap-1.5"
                       onClick={async () => {
                         setSavingLogin(true);
