@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import GradesChart from "@/components/reports/GradesChart";
@@ -93,8 +94,10 @@ export default function ReportsPage() {
   const { role, user } = useAuth();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [dateFrom, setDateFrom] = useState(() => format(new Date(), "yyyy-MM-dd"));
-  const [dateTo, setDateTo] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [dateFromDate, setDateFromDate] = useState<Date>(new Date());
+  const [dateToDate, setDateToDate] = useState<Date>(new Date());
+  const dateFrom = format(dateFromDate, "yyyy-MM-dd");
+  const dateTo = format(dateToDate, "yyyy-MM-dd");
   const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
@@ -853,7 +856,7 @@ export default function ReportsPage() {
               <Select value={reportType} onValueChange={(v: "daily" | "periodic") => {
                 setReportType(v);
                 if (v === "daily") {
-                  setDateTo(dateFrom);
+                  setDateToDate(dateFromDate);
                 }
               }}>
                 <SelectTrigger className="w-36">
@@ -867,24 +870,20 @@ export default function ReportsPage() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => {
-                  setDateFrom(e.target.value);
-                  if (reportType === "daily") setDateTo(e.target.value);
+              <HijriDatePicker
+                date={dateFromDate}
+                onDateChange={(d) => {
+                  setDateFromDate(d);
+                  if (reportType === "daily") setDateToDate(d);
                 }}
-                className="w-40"
               />
             </div>
             {reportType === "periodic" && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">إلى تاريخ</Label>
-                <Input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  className="w-40"
+                <HijriDatePicker
+                  date={dateToDate}
+                  onDateChange={(d) => setDateToDate(d)}
                 />
               </div>
             )}

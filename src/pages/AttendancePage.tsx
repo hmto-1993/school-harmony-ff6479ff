@@ -7,10 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { HijriCalendar } from "@/components/ui/hijri-calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, CalendarIcon, Filter, ClipboardCheck, Users, Search } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
@@ -43,7 +42,7 @@ export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isHijriMode, setIsHijriMode] = useState(false);
+  
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
@@ -151,24 +150,10 @@ export default function AttendancePage() {
         </h1>
         <div className="flex items-center gap-2 mt-1">
           <span className="text-muted-foreground">التاريخ:</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className={cn("gap-1.5 font-normal backdrop-blur-sm")}>
-                <CalendarIcon className="h-4 w-4" />
-                {isHijriMode
-                  ? selectedDate.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", { year: "numeric", month: "long", day: "numeric" }) + " هـ"
-                  : selectedDate.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }) + " م"
-                }
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <HijriCalendar
-                selected={selectedDate}
-                onSelect={(d) => setSelectedDate(d)}
-                onModeChange={setIsHijriMode}
-              />
-            </PopoverContent>
-          </Popover>
+          <HijriDatePicker
+            date={selectedDate}
+            onDateChange={(d) => setSelectedDate(d)}
+          />
         </div>
       </div>
 

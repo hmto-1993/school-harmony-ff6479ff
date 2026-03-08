@@ -7,11 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Calendar, Download } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
-import { format, subDays, addDays, isToday } from "date-fns";
-import { ar } from "date-fns/locale";
+import { subDays, addDays, isToday } from "date-fns";
+import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 
 interface GradeCategory {
   id: string;
@@ -265,10 +265,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}>
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-muted text-sm font-medium min-w-[160px] justify-center">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              {format(selectedDate, "EEEE yyyy/MM/dd", { locale: ar })}
-            </div>
+            <HijriDatePicker
+              date={selectedDate}
+              onDateChange={setSelectedDate}
+            />
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
