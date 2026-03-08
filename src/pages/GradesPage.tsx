@@ -9,6 +9,7 @@ import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
+import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -56,7 +57,10 @@ export default function GradesPage() {
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
             الدرجات والتقييمات
           </h1>
-          <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
+            <AcademicWeekBadge />
+          </div>
         </div>
         <NoorExportDialog />
       </div>
