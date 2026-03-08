@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
+import { CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
 import { useAcademicWeek, WeekInfo } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
-import AcademicCalendarSettings from "./AcademicCalendarSettings";
 
 const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
@@ -76,7 +74,6 @@ function isSameWeek(a: Date, weekStart: Date, weekEnd: Date): boolean {
 
 export default function AcademicCalendarWidget() {
   const { calendarData, currentWeek, getWeeksInfo } = useAcademicWeek();
-  const [showSettings, setShowSettings] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
@@ -113,9 +110,6 @@ export default function AcademicCalendarWidget() {
               <CalendarDays className="h-5 w-5 text-primary" />
               التقويم الأكاديمي
             </CardTitle>
-            <Button variant="ghost" size="icon" onClick={() => setShowSettings(true)} className="h-8 w-8">
-              <Settings2 className="h-4 w-4" />
-            </Button>
           </div>
 
           {/* Status banner */}
@@ -134,7 +128,7 @@ export default function AcademicCalendarWidget() {
 
           {!calendarData && (
             <p className="text-sm text-muted-foreground mt-1">
-              اضغط على الإعدادات لتحديد بداية الفصل الدراسي
+              اذهب إلى الإعدادات لتحديد بداية الفصل الدراسي
             </p>
           )}
         </CardHeader>
@@ -237,8 +231,6 @@ export default function AcademicCalendarWidget() {
           )}
         </CardContent>
       </Card>
-
-      {showSettings && <AcademicCalendarSettings onClose={() => setShowSettings(false)} />}
     </>
   );
 }
