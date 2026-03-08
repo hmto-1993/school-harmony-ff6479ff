@@ -175,7 +175,7 @@ export default function AcademicCalendarWidget() {
                         isCurrent ? "text-sky-700 dark:text-sky-300" : "text-foreground/70",
                       )}>
                         {isCurrent ? (
-                          <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs">
+                          <span className="bg-sky-500 dark:bg-sky-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold">
                             {week.weekNumber}
                           </span>
                         ) : week.weekNumber}
