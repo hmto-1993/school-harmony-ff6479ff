@@ -857,6 +857,7 @@ export default function SettingsPage() {
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
           { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeLocal === "hijri" ? "هجري" : "ميلادي", gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
           { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
+          { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
