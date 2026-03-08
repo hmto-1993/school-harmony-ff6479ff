@@ -1,7 +1,9 @@
 import { format } from "date-fns";
-import { LayoutDashboard, Sparkles, Printer, Calendar } from "lucide-react";
+import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMemo } from "react";
+import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 
 interface Props {
   onPrint?: () => void;
@@ -24,6 +26,8 @@ export default function DashboardHeader({ onPrint }: Props) {
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
   const hijriDate = useMemo(() => toHijri(new Date()), []);
+  const { currentWeek, calendarData, isExamWeek } = useAcademicWeek();
+  const todayExam = isExamWeek(new Date());
 
   return (
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
@@ -70,6 +74,17 @@ export default function DashboardHeader({ onPrint }: Props) {
             </div>
             {hijriDate && (
               <span className="text-[11px] text-white/45 font-medium">{hijriDate}</span>
+            )}
+            {currentWeek && (
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <BookOpen className="h-3 w-3 text-white/50" />
+                <span className="text-[11px] text-white/60">الأسبوع {currentWeek}{calendarData ? ` من ${calendarData.total_weeks}` : ""}</span>
+                {todayExam && (
+                  <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-white/30 text-white/80">
+                    {todayExam.label}
+                  </Badge>
+                )}
+              </div>
             )}
           </div>
         </div>
