@@ -2025,26 +2025,71 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
-            <Button
-              disabled={savingAcademicYear || !defaultAcademicYear.trim()}
-              className="gap-1.5"
-              onClick={async () => {
-                setSavingAcademicYear(true);
-                const { error } = await supabase
-                  .from("site_settings")
-                  .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
-                setSavingAcademicYear(false);
-                if (error) {
-                  toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
-                } else {
-                  setNewYear(defaultAcademicYear);
-                  toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
-                }
-              }}
-            >
-              <Save className="h-4 w-4" />
-              {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
-            </Button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                disabled={savingAcademicYear || !defaultAcademicYear.trim()}
+                className="gap-1.5"
+                onClick={async () => {
+                  setSavingAcademicYear(true);
+                  const { error } = await supabase
+                    .from("site_settings")
+                    .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
+                  setSavingAcademicYear(false);
+                  if (error) {
+                    toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
+                  } else {
+                    setNewYear(defaultAcademicYear);
+                    toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
+                  }
+                }}
+              >
+                <Save className="h-4 w-4" />
+                {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
+                    <RotateCcw className="h-4 w-4" />
+                    تحديث جميع الفصول ({classes.length})
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>تحديث العام الدراسي لجميع الفصول؟</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم تغيير العام الدراسي لجميع الفصول الموجودة ({classes.length} فصل) إلى <strong className="text-foreground">{defaultAcademicYear}</strong>. هذا الإجراء لا يمكن التراجع عنه.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={async () => {
+                        setSavingAcademicYear(true);
+                        const { error } = await supabase
+                          .from("classes")
+                          .update({ academic_year: defaultAcademicYear })
+                          .neq("academic_year", "__never__");
+                        // Also save as default
+                        await supabase
+                          .from("site_settings")
+                          .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
+                        setSavingAcademicYear(false);
+                        if (error) {
+                          toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                        } else {
+                          setNewYear(defaultAcademicYear);
+                          setClasses(prev => prev.map(c => ({ ...c, academic_year: defaultAcademicYear })));
+                          toast({ title: "تم التحديث", description: `تم تغيير العام الدراسي لجميع الفصول إلى ${defaultAcademicYear}` });
+                        }
+                      }}
+                    >
+                      تحديث الكل
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
       )}
