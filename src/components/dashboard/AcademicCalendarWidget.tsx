@@ -128,7 +128,7 @@ export default function AcademicCalendarWidget() {
 
           {!calendarData && (
             <p className="text-sm text-muted-foreground mt-1">
-              اضغط على الإعدادات لتحديد بداية الفصل الدراسي
+              اذهب إلى الإعدادات لتحديد بداية الفصل الدراسي
             </p>
           )}
         </CardHeader>
