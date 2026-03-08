@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAcademicWeek, ExamDate, AcademicCalendarData } from "@/hooks/useAcademicWeek";
 import { toast } from "@/hooks/use-toast";
-import { CalendarDays, Upload, FileText, Plus, Trash2, Loader2, Sparkles } from "lucide-react";
+import { CalendarDays, Upload, FileText, Plus, Trash2, Loader2, Sparkles, GraduationCap } from "lucide-react";
+import { MOE_PRESETS, type MOEPresetKey } from "./moeCalendarPresets";
 import * as XLSX from "xlsx";
 
 interface Props {
@@ -148,12 +149,48 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="manual" className="mt-2">
-          <TabsList className="grid grid-cols-3 w-full">
+        <Tabs defaultValue="moe" className="mt-2">
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="moe" className="text-xs gap-1"><GraduationCap className="h-3 w-3" /> وزارة التعليم</TabsTrigger>
             <TabsTrigger value="manual" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> يدوي</TabsTrigger>
             <TabsTrigger value="csv" className="text-xs gap-1"><Upload className="h-3 w-3" /> ملف Excel</TabsTrigger>
             <TabsTrigger value="pdf" className="text-xs gap-1"><FileText className="h-3 w-3" /> ملف PDF</TabsTrigger>
           </TabsList>
+
+          {/* MOE Preset Tab */}
+          <TabsContent value="moe" className="space-y-3 mt-4">
+            <p className="text-xs text-muted-foreground">
+              اختر الفصل الدراسي لاستيراد التقويم الأكاديمي الرسمي لوزارة التعليم السعودية تلقائياً
+            </p>
+            <div className="grid gap-2">
+              {Object.entries(MOE_PRESETS).map(([key, preset]) => (
+                <Button
+                  key={key}
+                  variant="outline"
+                  className="w-full justify-between h-auto py-3 px-4"
+                  onClick={() => {
+                    setStartDate(preset.start_date);
+                    setTotalWeeks(preset.total_weeks);
+                    setSemester(preset.semester);
+                    setAcademicYear(preset.academic_year);
+                    setExamDates(preset.exam_dates);
+                    toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
+                  }}
+                >
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-sm font-medium">{preset.label}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {preset.start_date} • {preset.total_weeks} أسبوع • {preset.exam_dates.length} فترة اختبارات
+                    </span>
+                  </div>
+                  <Badge variant="secondary" className="text-[10px]">{preset.academic_year} هـ</Badge>
+                </Button>
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              * التواريخ مبنية على التقويم الدراسي المعتمد من وزارة التعليم للعام ١٤٤٦-١٤٤٧هـ
+            </p>
+          </TabsContent>
 
           {/* Manual Tab */}
           <TabsContent value="manual" className="space-y-4 mt-4">
