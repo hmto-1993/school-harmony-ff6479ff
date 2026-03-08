@@ -327,11 +327,12 @@ export default function SettingsPage() {
       const { data: loginData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year"]);
+        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]);
       (loginData || []).forEach((s: any) => {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
         if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
+        if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
         if (s.id === "default_academic_year" && s.value) {
           setDefaultAcademicYear(s.value);
           setNewYear(s.value);
