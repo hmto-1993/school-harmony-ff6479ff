@@ -2,8 +2,9 @@ import { format } from "date-fns";
 import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   onPrint?: () => void;
