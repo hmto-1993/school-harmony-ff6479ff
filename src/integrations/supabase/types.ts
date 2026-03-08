@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_calendar: {
+        Row: {
+          academic_year: string
+          created_at: string
+          created_by: string
+          exam_dates: Json
+          id: string
+          semester: string
+          start_date: string
+          total_weeks: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year?: string
+          created_at?: string
+          created_by: string
+          exam_dates?: Json
+          id?: string
+          semester?: string
+          start_date: string
+          total_weeks?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          created_at?: string
+          created_by?: string
+          exam_dates?: Json
+          id?: string
+          semester?: string
+          start_date?: string
+          total_weeks?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_class_targets: {
         Row: {
           activity_id: string
