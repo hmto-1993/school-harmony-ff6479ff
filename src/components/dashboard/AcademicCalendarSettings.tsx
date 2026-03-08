@@ -180,7 +180,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                   <div className="flex flex-col items-start gap-0.5">
                     <span className="text-sm font-medium">{preset.label}</span>
                     <span className="text-[10px] text-muted-foreground">
-                      {preset.start_date} • {preset.total_weeks} أسبوع • {preset.exam_dates.length} فترة اختبارات
+                      {preset.start_date} → {preset.end_date} • {preset.total_weeks} أسبوع • {preset.holidays.length} إجازة
                     </span>
                   </div>
                   <Badge variant="secondary" className="text-[10px]">{preset.academic_year} هـ</Badge>
