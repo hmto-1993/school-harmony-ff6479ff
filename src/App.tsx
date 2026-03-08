@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { CalendarTypeProvider } from "@/hooks/useCalendarType";
+import { AcademicWeekProvider } from "@/hooks/useAcademicWeek";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import NotificationOptIn from "@/components/NotificationOptIn";
@@ -40,6 +41,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <CalendarTypeProvider>
+        <AcademicWeekProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -77,6 +79,7 @@ const App = () => (
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
+        </AcademicWeekProvider>
       </CalendarTypeProvider>
     </ThemeProvider>
   </QueryClientProvider>

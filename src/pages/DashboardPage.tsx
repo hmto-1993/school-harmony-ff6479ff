@@ -9,6 +9,7 @@ import ClassSummaryTable from "@/components/dashboard/ClassSummaryTable";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
+import AcademicCalendarWidget from "@/components/dashboard/AcademicCalendarWidget";
 
 interface ClassStats {
   name: string;
@@ -121,7 +122,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <PeriodComparison />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <PeriodComparison />
+        </div>
+        <AcademicCalendarWidget />
+      </div>
       <PerformanceDashboard />
 
       {/* Print-only view */}
