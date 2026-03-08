@@ -856,7 +856,7 @@ export default function ReportsPage() {
               <Select value={reportType} onValueChange={(v: "daily" | "periodic") => {
                 setReportType(v);
                 if (v === "daily") {
-                  setDateTo(dateFrom);
+                  setDateToDate(dateFromDate);
                 }
               }}>
                 <SelectTrigger className="w-36">
@@ -871,10 +871,10 @@ export default function ReportsPage() {
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
               <HijriDatePicker
-                date={dateFrom}
+                date={dateFromDate}
                 onDateChange={(d) => {
-                  setDateFrom(d);
-                  if (reportType === "daily") setDateTo(d);
+                  setDateFromDate(d);
+                  if (reportType === "daily") setDateToDate(d);
                 }}
               />
             </div>
@@ -882,8 +882,8 @@ export default function ReportsPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold text-muted-foreground">إلى تاريخ</Label>
                 <HijriDatePicker
-                  date={dateTo}
-                  onDateChange={(d) => setDateTo(d)}
+                  date={dateToDate}
+                  onDateChange={(d) => setDateToDate(d)}
                 />
               </div>
             )}
@@ -1113,7 +1113,7 @@ export default function ReportsPage() {
 
         {/* ===== Behavior Report ===== */}
         <TabsContent value="behavior" className="space-y-4">
-          <BehaviorReport selectedClass={selectedClass} dateFrom={dateFromStr} dateTo={dateToStr} selectedStudent={selectedStudent} />
+          <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
         </TabsContent>
       </Tabs>
 
