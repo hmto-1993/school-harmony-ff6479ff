@@ -2491,6 +2491,7 @@ export default function SettingsPage() {
                         const updates = [
                           supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
                           supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
+                          supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
                         ];
                         const results = await Promise.all(updates);
                         setSavingLogin(false);

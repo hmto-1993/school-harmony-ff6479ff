@@ -54,7 +54,7 @@ export default function DashboardHeader({ onPrint }: Props) {
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{dashboardTitle}</h1>
               <p className="text-sm text-white/70 mt-0.5">نظرة شاملة على أداء الطلاب اليوم</p>
             </div>
           </div>
