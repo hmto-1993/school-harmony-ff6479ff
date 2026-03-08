@@ -1,12 +1,11 @@
 import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Try main first (dashboard layout), fallback to window
     const main = document.querySelector("main");
     const target = main && main.scrollHeight > main.clientHeight ? main : null;
 
@@ -30,15 +29,23 @@ export default function BackToTop() {
   };
 
   return (
-    <button
-      onClick={scrollToTop}
-      aria-label="العودة للأعلى"
-      className={cn(
-        "fixed bottom-6 left-6 z-50 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center transition-all duration-300 hover:bg-primary/90 hover:shadow-xl active:scale-95",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          key="back-to-top"
+          onClick={scrollToTop}
+          aria-label="العودة للأعلى"
+          initial={{ opacity: 0, scale: 0.5, y: 20 }}
+          animate={{ opacity: 0.7, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.5, y: 20 }}
+          whileHover={{ opacity: 1, scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className="fixed bottom-6 left-6 z-50 h-11 w-11 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center"
+        >
+          <ArrowUp className="h-5 w-5" />
+        </motion.button>
       )}
-    >
-      <ArrowUp className="h-5 w-5" />
-    </button>
+    </AnimatePresence>
   );
 }
