@@ -16,7 +16,9 @@ function toHijri(date: Date): string {
       month: "long",
       day: "numeric",
     });
-    return formatter.format(date);
+    const formatted = formatter.format(date);
+    // Ensure "هـ" suffix appears only once
+    return formatted.includes("هـ") ? formatted : formatted + " هـ";
   } catch {
     return "";
   }

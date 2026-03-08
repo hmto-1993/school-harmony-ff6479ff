@@ -15,9 +15,11 @@ interface HijriDatePickerProps {
 
 function formatDateLabel(date: Date, isHijri: boolean): string {
   if (isHijri) {
-    return date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
+    const formatted = date.toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
       year: "numeric", month: "long", day: "numeric",
-    }) + " هـ";
+    });
+    // The ar-SA locale already appends "هـ", avoid duplicating it
+    return formatted.includes("هـ") ? formatted : formatted + " هـ";
   }
   return date.toLocaleDateString("ar-EG", {
     year: "numeric", month: "long", day: "numeric",
