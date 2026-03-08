@@ -148,12 +148,13 @@ export default function AttendancePage() {
           <ClipboardCheck className="h-7 w-7 text-primary" />
           التحضير
         </h1>
-        <div className="flex items-center gap-2 mt-1">
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="text-muted-foreground">التاريخ:</span>
           <HijriDatePicker
             date={selectedDate}
             onDateChange={(d) => setSelectedDate(d)}
           />
+          <AcademicWeekBadge date={selectedDate} />
         </div>
       </div>
 
