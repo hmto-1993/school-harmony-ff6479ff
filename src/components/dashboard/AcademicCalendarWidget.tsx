@@ -17,21 +17,18 @@ function formatDateShort(date: Date): string {
 
 function formatHijriDate(date: Date): string {
   try {
-    const formatted = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+    const formatter = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", {
       day: "numeric",
       month: "numeric",
       year: "numeric",
-    }).format(date);
-    // Parse out day/month from the formatted string
-    const parts = formatted.replace(/[^\d/]/g, "").split("/");
-    if (parts.length >= 2) {
-      const day = parseInt(parts[0]);
-      const month = parseInt(parts[1]) - 1;
-      if (month >= 0 && month < 12) {
-        return `${day} ${HIJRI_MONTHS[month]}`;
-      }
+    });
+    const parts = formatter.formatToParts(date);
+    const day = parts.find(p => p.type === "day")?.value || "1";
+    const month = parseInt(parts.find(p => p.type === "month")?.value || "1") - 1;
+    if (month >= 0 && month < 12) {
+      return `${day} ${HIJRI_MONTHS[month]}`;
     }
-    return formatted;
+    return day;
   } catch {
     return "";
   }
