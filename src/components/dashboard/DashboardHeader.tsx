@@ -31,6 +31,13 @@ export default function DashboardHeader({ onPrint }: Props) {
   const hijriDate = useMemo(() => toHijri(new Date()), []);
   const { currentWeek, calendarData, isExamWeek } = useAcademicWeek();
   const todayExam = isExamWeek(new Date());
+  const [dashboardTitle, setDashboardTitle] = useState("لوحة التحكم");
+
+  useEffect(() => {
+    supabase.from("site_settings").select("value").eq("id", "dashboard_title").maybeSingle().then(({ data }) => {
+      if (data?.value) setDashboardTitle(data.value);
+    });
+  }, []);
 
   return (
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
