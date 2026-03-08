@@ -42,9 +42,11 @@ import {
   Palette,
   History,
   RotateCcw,
+  CalendarDays,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
   Dialog,
@@ -99,6 +101,7 @@ interface GradeCategory {
 export default function SettingsPage() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
+  const { calendarType: calendarTypeLocal, setCalendarType: setGlobalCalendarType } = useCalendarType();
 
   // Profile state
   const [profileName, setProfileName] = useState("");
@@ -844,6 +847,7 @@ export default function SettingsPage() {
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
           { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
+          { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeLocal === "hijri" ? "هجري" : "ميلادي", gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -1917,6 +1921,54 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "calendar" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                نوع التقويم الافتراضي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-md">
+            <p className="text-sm text-muted-foreground">
+              اختر نوع التقويم الافتراضي الذي سيُستخدم في جميع صفحات التحضير والدرجات والتقارير.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "gregorian" as const, label: "ميلادي", sub: "Gregorian", emoji: "🌍" },
+                { value: "hijri" as const, label: "هجري", sub: "Hijri (أم القرى)", emoji: "🕌" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setGlobalCalendarType(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-200",
+                    calendarTypeLocal === opt.value
+                      ? "border-primary bg-primary/10 shadow-lg scale-[1.02]"
+                      : "border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50"
+                  )}
+                >
+                  <span className="text-3xl">{opt.emoji}</span>
+                  <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                  <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
+                  {calendarTypeLocal === opt.value && (
+                    <Badge variant="default" className="text-[10px] px-2 py-0">
+                      <Check className="h-3 w-3 ml-1" />
+                      مُفعّل
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       )}
