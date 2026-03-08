@@ -4,8 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardStatCards from "@/components/dashboard/DashboardStatCards";
-import AttendancePieChart from "@/components/dashboard/AttendancePieChart";
-import ClassSummaryTable from "@/components/dashboard/ClassSummaryTable";
+import AttendanceOverview from "@/components/dashboard/AttendanceOverview";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
@@ -108,19 +107,13 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2">
-          <AttendancePieChart
-            todayPresent={todayPresent}
-            todayAbsent={todayAbsent}
-            todayLate={todayLate}
-            todayNotRecorded={todayNotRecorded}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <ClassSummaryTable classStats={classStats} />
-        </div>
-      </div>
+      <AttendanceOverview
+        todayPresent={todayPresent}
+        todayAbsent={todayAbsent}
+        todayLate={todayLate}
+        todayNotRecorded={todayNotRecorded}
+        classStats={classStats}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
