@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useAcademicWeek, ExamDate, AcademicCalendarData } from "@/hooks/useAcademicWeek";
+import { useAcademicWeek, ExamDate, HolidayDate } from "@/hooks/useAcademicWeek";
 import { toast } from "@/hooks/use-toast";
 import { CalendarDays, Upload, FileText, Plus, Trash2, Loader2, Sparkles, GraduationCap } from "lucide-react";
 import { MOE_PRESETS, type MOEPresetKey } from "./moeCalendarPresets";
@@ -27,6 +27,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
   const [semester, setSemester] = useState(calendarData?.semester || "first");
   const [academicYear, setAcademicYear] = useState(calendarData?.academic_year || "1446-1447");
   const [examDates, setExamDates] = useState<ExamDate[]>(calendarData?.exam_dates || []);
+  const [holidays, setHolidays] = useState<HolidayDate[]>(calendarData?.holidays || []);
   const [saving, setSaving] = useState(false);
   const [parsing, setParsing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
