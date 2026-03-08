@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,17 +33,36 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
   const { user } = useAuth();
   const { calendarData, refetch } = useAcademicWeek();
 
+  const [defaultAcademicYear, setDefaultAcademicYear] = useState<string>("");
   const [startDate, setStartDate] = useState(calendarData?.start_date || "");
   const [totalWeeks, setTotalWeeks] = useState(calendarData?.total_weeks || 18);
   const [semester, setSemester] = useState(calendarData?.semester || "first");
-  const [academicYear, setAcademicYear] = useState(calendarData?.academic_year || "1446-1447");
+  const [academicYear, setAcademicYear] = useState(calendarData?.academic_year || "1447-1448");
   const [examDates, setExamDates] = useState<ExamDate[]>(calendarData?.exam_dates || []);
   const [holidays, setHolidays] = useState<HolidayDate[]>(calendarData?.holidays || []);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [parsing, setParsing] = useState(false);
+  const [deletingPresetKey, setDeletingPresetKey] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch default academic year from site_settings
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "default_academic_year")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          setDefaultAcademicYear(data.value);
+          if (!calendarData?.academic_year) {
+            setAcademicYear(data.value);
+          }
+        }
+      });
+  }, []);
 
   const addExamDate = () => {
     setExamDates(prev => [...prev, { date: "", label: "", type: "midterm" }]);
@@ -203,32 +222,122 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
             <p className="text-xs text-muted-foreground">
               اختر الفصل الدراسي لاستيراد التقويم الأكاديمي الرسمي لوزارة التعليم السعودية تلقائياً
             </p>
-            <div className="grid gap-2">
-              {Object.entries(MOE_PRESETS).map(([key, preset]) => (
-                <Button
-                  key={key}
-                  variant="outline"
-                  className="w-full justify-between h-auto py-3 px-4"
-                  onClick={() => {
-                    setStartDate(preset.start_date);
-                    setTotalWeeks(preset.total_weeks);
-                    setSemester(preset.semester);
-                    setAcademicYear(preset.academic_year);
-                    setExamDates(preset.exam_dates);
-                    setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
-                    toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
-                  }}
-                >
-                  <div className="flex flex-col items-start gap-0.5">
-                    <span className="text-sm font-medium">{preset.label}</span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {preset.start_date} → {preset.end_date} • {preset.total_weeks} أسبوع • {preset.holidays.length} إجازة
-                    </span>
-                  </div>
-                  <Badge variant="secondary" className="text-[10px]">{preset.academic_year} هـ</Badge>
-                </Button>
-              ))}
-            </div>
+
+            {/* Current year presets */}
+            {(() => {
+              const currentYear = defaultAcademicYear || "1447-1448";
+              const currentPresets = Object.entries(MOE_PRESETS).filter(([, p]) => p.academic_year === currentYear);
+              const oldPresets = Object.entries(MOE_PRESETS).filter(([, p]) => p.academic_year !== currentYear);
+
+              return (
+                <>
+                  {currentPresets.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-xs text-primary font-semibold">العام الحالي ({currentYear} هـ)</Label>
+                      {currentPresets.map(([key, preset]) => (
+                        <Button
+                          key={key}
+                          variant="outline"
+                          className="w-full justify-between h-auto py-3 px-4 border-primary/30 bg-primary/5"
+                          onClick={() => {
+                            setStartDate(preset.start_date);
+                            setTotalWeeks(preset.total_weeks);
+                            setSemester(preset.semester);
+                            setAcademicYear(preset.academic_year);
+                            setExamDates(preset.exam_dates);
+                            setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
+                            toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
+                          }}
+                        >
+                          <div className="flex flex-col items-start gap-0.5">
+                            <span className="text-sm font-medium">{preset.label}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {preset.start_date} → {preset.end_date} • {preset.total_weeks} أسبوع • {preset.holidays.length} إجازة
+                            </span>
+                          </div>
+                          <Badge variant="default" className="text-[10px]">{preset.academic_year} هـ</Badge>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+
+                  {oldPresets.length > 0 && (
+                    <div className="space-y-2 mt-4 pt-3 border-t border-dashed">
+                      <Label className="text-xs text-muted-foreground font-semibold">أعوام سابقة</Label>
+                      {oldPresets.map(([key, preset]) => (
+                        <div key={key} className="flex items-center gap-1">
+                          <Button
+                            variant="outline"
+                            className="flex-1 justify-between h-auto py-2 px-3 opacity-70 hover:opacity-100"
+                            onClick={() => {
+                              setStartDate(preset.start_date);
+                              setTotalWeeks(preset.total_weeks);
+                              setSemester(preset.semester);
+                              setAcademicYear(preset.academic_year);
+                              setExamDates(preset.exam_dates);
+                              setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
+                              toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
+                            }}
+                          >
+                            <div className="flex flex-col items-start gap-0.5">
+                              <span className="text-xs font-medium">{preset.label}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {preset.start_date} → {preset.end_date} • {preset.total_weeks} أسبوع
+                              </span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px]">{preset.academic_year} هـ</Badge>
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                disabled={deletingPresetKey === key}
+                              >
+                                {deletingPresetKey === key ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent dir="rtl">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>حذف تقويم {preset.label}؟</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  سيتم حذف أي تقويم محفوظ لهذا الفصل من قاعدة البيانات. هذا الإجراء لا يمكن التراجع عنه.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={async () => {
+                                    setDeletingPresetKey(key);
+                                    const { error } = await supabase
+                                      .from("academic_calendar")
+                                      .delete()
+                                      .eq("semester", preset.semester)
+                                      .eq("academic_year", preset.academic_year);
+                                    setDeletingPresetKey(null);
+                                    if (error) {
+                                      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                                    } else {
+                                      toast({ title: "تم الحذف", description: `تم حذف تقويم ${preset.label}` });
+                                      await refetch();
+                                    }
+                                  }}
+                                >
+                                  حذف التقويم
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+
             <p className="text-[10px] text-muted-foreground text-center">
               * التواريخ مبنية على التقويم الدراسي المعتمد من وزارة التعليم للعام ١٤٤٦-١٤٤٧هـ و ١٤٤٧-١٤٤٨هـ
             </p>
