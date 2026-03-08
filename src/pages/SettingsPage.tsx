@@ -138,6 +138,10 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeCard, setActiveCard] = useState<string | null>(null);
 
+  // Academic year
+  const [defaultAcademicYear, setDefaultAcademicYear] = useState("1446-1447");
+  const [savingAcademicYear, setSavingAcademicYear] = useState(false);
+
   // New class form
   const [newClassName, setNewClassName] = useState("");
   const [newSection, setNewSection] = useState("");
@@ -321,11 +325,15 @@ export default function SettingsPage() {
       const { data: loginData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["school_name", "school_subtitle", "school_logo_url"]);
+        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year"]);
       (loginData || []).forEach((s: any) => {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
         if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
+        if (s.id === "default_academic_year" && s.value) {
+          setDefaultAcademicYear(s.value);
+          setNewYear(s.value);
+        }
       });
     }
 
@@ -848,6 +856,7 @@ export default function SettingsPage() {
           { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
           { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeLocal === "hijri" ? "هجري" : "ميلادي", gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
+          { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -1969,6 +1978,73 @@ export default function SettingsPage() {
                 </button>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "academic_year" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <GraduationCap className="h-5 w-5 text-primary" />
+                العام الدراسي الافتراضي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-md">
+            <p className="text-sm text-muted-foreground">
+              حدد العام الدراسي الافتراضي الذي سيُستخدم عند إنشاء فصول جديدة.
+            </p>
+            <div className="space-y-2">
+              <Label>العام الدراسي</Label>
+              <Input
+                value={defaultAcademicYear}
+                onChange={(e) => setDefaultAcademicYear(e.target.value)}
+                placeholder="مثال: 1446-1447"
+                dir="ltr"
+                className="text-center text-lg font-bold"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["1445-1446", "1446-1447", "1447-1448", "1448-1449"].map((yr) => (
+                <button
+                  key={yr}
+                  onClick={() => setDefaultAcademicYear(yr)}
+                  className={cn(
+                    "px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200",
+                    defaultAcademicYear === yr
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
+                  )}
+                >
+                  {yr}
+                </button>
+              ))}
+            </div>
+            <Button
+              disabled={savingAcademicYear || !defaultAcademicYear.trim()}
+              className="gap-1.5"
+              onClick={async () => {
+                setSavingAcademicYear(true);
+                const { error } = await supabase
+                  .from("site_settings")
+                  .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
+                setSavingAcademicYear(false);
+                if (error) {
+                  toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
+                } else {
+                  setNewYear(defaultAcademicYear);
+                  toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
+                }
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
+            </Button>
           </CardContent>
         </Card>
       )}
