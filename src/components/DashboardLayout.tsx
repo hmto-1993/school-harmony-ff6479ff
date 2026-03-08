@@ -52,6 +52,7 @@ export default function DashboardLayout() {
           </AnimatePresence>
         </div>
       </main>
+      <BackToTop />
     </div>
   );
 }
