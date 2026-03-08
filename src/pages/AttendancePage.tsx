@@ -44,7 +44,6 @@ export default function AttendancePage() {
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isHijriMode, setIsHijriMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
