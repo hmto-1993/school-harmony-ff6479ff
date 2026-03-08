@@ -163,10 +163,9 @@ export default function AcademicCalendarWidget() {
                       className={cn(
                         "grid grid-cols-[50px_1fr_auto] border-t cursor-pointer transition-all",
                         isCurrent
-                          ? "bg-primary/10 dark:bg-primary/20 border-primary/30"
+                          ? "bg-sky-100 dark:bg-sky-900/30 border-sky-300 dark:border-sky-700 ring-2 ring-sky-400 dark:ring-sky-500 ring-inset shadow-md"
                           : getWeekRowStyle(week.type),
-                        isCurrent && "ring-2 ring-primary ring-inset",
-                        isSelected && "ring-2 ring-primary/60 ring-inset shadow-sm",
+                        !isCurrent && isSelected && "ring-2 ring-primary/60 ring-inset shadow-sm",
                         "hover:brightness-95 dark:hover:brightness-110",
                       )}
                     >
