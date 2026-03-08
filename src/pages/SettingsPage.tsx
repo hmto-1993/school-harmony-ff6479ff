@@ -177,6 +177,7 @@ export default function SettingsPage() {
   // Login page settings
   const [loginSchoolName, setLoginSchoolName] = useState("");
   const [loginSubtitle, setLoginSubtitle] = useState("");
+  const [dashboardTitle, setDashboardTitle] = useState("");
   const [savingLogin, setSavingLogin] = useState(false);
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
