@@ -13,6 +13,7 @@ import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
+import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
