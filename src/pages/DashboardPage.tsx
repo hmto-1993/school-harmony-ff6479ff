@@ -107,19 +107,13 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-2">
-          <AttendancePieChart
-            todayPresent={todayPresent}
-            todayAbsent={todayAbsent}
-            todayLate={todayLate}
-            todayNotRecorded={todayNotRecorded}
-          />
-        </div>
-        <div className="lg:col-span-3">
-          <ClassSummaryTable classStats={classStats} />
-        </div>
-      </div>
+      <AttendanceOverview
+        todayPresent={todayPresent}
+        todayAbsent={todayAbsent}
+        todayLate={todayLate}
+        todayNotRecorded={todayNotRecorded}
+        classStats={classStats}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
