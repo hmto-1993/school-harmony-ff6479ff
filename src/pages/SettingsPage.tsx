@@ -101,6 +101,7 @@ interface GradeCategory {
 export default function SettingsPage() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
+  const { calendarType: calendarTypeLocal, setCalendarType: setGlobalCalendarType } = useCalendarType();
 
   // Profile state
   const [profileName, setProfileName] = useState("");
