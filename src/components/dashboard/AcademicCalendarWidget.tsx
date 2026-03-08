@@ -74,7 +74,6 @@ function isSameWeek(a: Date, weekStart: Date, weekEnd: Date): boolean {
 
 export default function AcademicCalendarWidget() {
   const { calendarData, currentWeek, getWeeksInfo } = useAcademicWeek();
-  const [showSettings, setShowSettings] = useState(false);
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
