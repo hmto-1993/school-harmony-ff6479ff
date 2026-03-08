@@ -199,7 +199,7 @@ export function HijriCalendar({ selected, onSelect, className, onModeChange, def
   }
 
   const caption = isHijri
-    ? `${HIJRI_MONTHS[hijriMonth - 1]} ${hijriYear} هـ`
+    ? `${HIJRI_MONTHS[hijriMonth - 1]} ${hijriYear}هـ`
     : `${GREGORIAN_MONTHS[gregMonth]} ${gregYear}`;
 
   const getDayLabel = (d: Date): string => {
