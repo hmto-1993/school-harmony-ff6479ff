@@ -9,8 +9,32 @@ import AcademicCalendarSettings from "./AcademicCalendarSettings";
 
 const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
+const HIJRI_MONTHS = ["محرم", "صفر", "ربيع الأول", "ربيع الثاني", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"];
+
 function formatDateShort(date: Date): string {
   return `${date.getDate()} ${MONTHS_AR[date.getMonth()]}`;
+}
+
+function formatHijriDate(date: Date): string {
+  try {
+    const formatted = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+      day: "numeric",
+      month: "numeric",
+      year: "numeric",
+    }).format(date);
+    // Parse out day/month from the formatted string
+    const parts = formatted.replace(/[^\d/]/g, "").split("/");
+    if (parts.length >= 2) {
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      if (month >= 0 && month < 12) {
+        return `${day} ${HIJRI_MONTHS[month]}`;
+      }
+    }
+    return formatted;
+  } catch {
+    return "";
+  }
 }
 
 function getWeekRowStyle(type: WeekInfo["type"]): string {
@@ -68,7 +92,14 @@ export default function AcademicCalendarWidget() {
   const statusText = useMemo(() => {
     if (!activeWeek) return null;
     const parts: string[] = [];
-    parts.push(`${formatDateShort(activeWeek.startDate)} - ${formatDateShort(activeWeek.endDate)}`);
+    // Hijri range
+    const hijriStart = formatHijriDate(activeWeek.startDate);
+    const hijriEnd = formatHijriDate(activeWeek.endDate);
+    if (hijriStart && hijriEnd) {
+      parts.push(`${hijriStart} - ${hijriEnd} هـ`);
+    }
+    // Gregorian range
+    parts.push(`${formatDateShort(activeWeek.startDate)} - ${formatDateShort(activeWeek.endDate)} م`);
     parts.push(`الأسبوع ${activeWeek.weekNumber}`);
     if (activeWeek.type !== "normal") {
       parts.push(activeWeek.label);
