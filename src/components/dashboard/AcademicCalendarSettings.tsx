@@ -50,12 +50,17 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
       return;
     }
     setSaving(true);
+    // Combine exam_dates and holidays into one jsonb array
+    const combinedDates = [
+      ...examDates.filter(e => e.date && e.label).map(e => ({ date: e.date, label: e.label, type: e.type })),
+      ...holidays.map(h => ({ date: h.date, label: h.label, type: "holiday" as const })),
+    ];
     const payload = {
       start_date: startDate,
       total_weeks: totalWeeks,
       semester,
       academic_year: academicYear,
-      exam_dates: JSON.parse(JSON.stringify(examDates.filter(e => e.date && e.label))),
+      exam_dates: JSON.parse(JSON.stringify(combinedDates)),
       created_by: user!.id,
     };
 

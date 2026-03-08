@@ -3,8 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface ExamDate {
   date: string; // YYYY-MM-DD
-  label: string; // e.g. "اختبارات منتصف الفصل"
+  label: string;
   type: "midterm" | "final";
+}
+
+export interface HolidayDate {
+  date: string; // YYYY-MM-DD
+  label: string;
 }
 
 export interface AcademicCalendarData {
@@ -12,8 +17,21 @@ export interface AcademicCalendarData {
   start_date: string;
   total_weeks: number;
   exam_dates: ExamDate[];
+  holidays: HolidayDate[];
   semester: string;
   academic_year: string;
+}
+
+export type WeekType = "normal" | "midterm" | "final" | "holiday" | "mixed";
+
+export interface WeekInfo {
+  weekNumber: number;
+  startDate: Date;
+  endDate: Date;
+  type: WeekType;
+  label: string;
+  examDates: ExamDate[];
+  holidayDates: HolidayDate[];
 }
 
 interface AcademicWeekContextValue {
@@ -23,6 +41,7 @@ interface AcademicWeekContextValue {
   getWeekForDate: (date: Date) => number | null;
   getExamForDate: (date: Date) => ExamDate | null;
   isExamWeek: (date: Date) => ExamDate | null;
+  getWeeksInfo: () => WeekInfo[];
   refetch: () => Promise<void>;
 }
 
@@ -33,6 +52,12 @@ function dateDiffDays(a: Date, b: Date): number {
   const aUtc = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
   const bUtc = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
   return Math.floor((bUtc - aUtc) / msPerDay);
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
 }
 
 export function AcademicWeekProvider({ children }: { children: ReactNode }) {
@@ -49,11 +74,25 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (data) {
+      const rawExamDates = (data.exam_dates as any) || [];
+      // Separate exam_dates and holidays from the combined array
+      const examDates: ExamDate[] = [];
+      const holidays: HolidayDate[] = [];
+      
+      for (const item of rawExamDates) {
+        if (item.type === "holiday") {
+          holidays.push({ date: item.date, label: item.label });
+        } else {
+          examDates.push({ date: item.date, label: item.label, type: item.type });
+        }
+      }
+
       setCalendarData({
         id: data.id,
         start_date: data.start_date,
         total_weeks: data.total_weeks,
-        exam_dates: (data.exam_dates as any as ExamDate[]) || [],
+        exam_dates: examDates,
+        holidays,
         semester: data.semester,
         academic_year: data.academic_year,
       });
@@ -87,7 +126,6 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
     if (!calendarData) return null;
     const week = getWeekForDate(date);
     if (!week) return null;
-    // Check if any exam date falls in the same week
     const start = new Date(calendarData.start_date);
     for (const exam of calendarData.exam_dates) {
       const examDate = new Date(exam.date);
@@ -97,12 +135,62 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
     return null;
   }, [calendarData, getWeekForDate]);
 
+  const getWeeksInfo = useCallback((): WeekInfo[] => {
+    if (!calendarData) return [];
+    const weeks: WeekInfo[] = [];
+    const start = new Date(calendarData.start_date);
+
+    for (let w = 1; w <= calendarData.total_weeks; w++) {
+      const weekStart = addDays(start, (w - 1) * 7);
+      const weekEnd = addDays(weekStart, 6);
+
+      // Find exams in this week
+      const weekExams = calendarData.exam_dates.filter(e => {
+        const d = new Date(e.date);
+        return d >= weekStart && d <= weekEnd;
+      });
+
+      // Find holidays in this week
+      const weekHolidays = calendarData.holidays.filter(h => {
+        const d = new Date(h.date);
+        return d >= weekStart && d <= weekEnd;
+      });
+
+      let type: WeekType = "normal";
+      let label = `أسبوع ${w}`;
+
+      if (weekExams.length > 0 && weekHolidays.length > 0) {
+        type = "mixed";
+        label = weekExams[0].label;
+      } else if (weekExams.length > 0) {
+        const hasFinal = weekExams.some(e => e.type === "final");
+        type = hasFinal ? "final" : "midterm";
+        label = weekExams[0].label;
+      } else if (weekHolidays.length > 0) {
+        type = "holiday";
+        label = weekHolidays[0].label;
+      }
+
+      weeks.push({
+        weekNumber: w,
+        startDate: weekStart,
+        endDate: weekEnd,
+        type,
+        label,
+        examDates: weekExams,
+        holidayDates: weekHolidays,
+      });
+    }
+    return weeks;
+  }, [calendarData]);
+
   const currentWeek = getWeekForDate(new Date());
 
   return (
     <AcademicWeekContext.Provider value={{
       calendarData, loading, currentWeek,
       getWeekForDate, getExamForDate, isExamWeek,
+      getWeeksInfo,
       refetch: fetchCalendar,
     }}>
       {children}
