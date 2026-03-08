@@ -1,11 +1,9 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Settings2, CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
+import { CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
 import { useAcademicWeek, WeekInfo } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
-import AcademicCalendarSettings from "./AcademicCalendarSettings";
 
 const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
