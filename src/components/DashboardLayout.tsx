@@ -8,6 +8,7 @@ import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from "framer-motion";
+import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
@@ -51,6 +52,7 @@ export default function DashboardLayout() {
           </AnimatePresence>
         </div>
       </main>
+      <BackToTop />
     </div>
   );
 }
