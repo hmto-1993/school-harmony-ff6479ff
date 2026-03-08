@@ -1,24 +1,32 @@
 import { ArrowUp } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function BackToTop() {
   const [visible, setVisible] = useState(false);
 
-  const getScrollParent = useCallback(() => {
-    return document.querySelector("main");
+  useEffect(() => {
+    // Try main first (dashboard layout), fallback to window
+    const main = document.querySelector("main");
+    const target = main && main.scrollHeight > main.clientHeight ? main : null;
+
+    const onScroll = () => {
+      const scrollTop = target ? target.scrollTop : (window.scrollY || document.documentElement.scrollTop);
+      setVisible(scrollTop > 300);
+    };
+
+    const el = target || window;
+    el.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const el = getScrollParent();
-    if (!el) return;
-    const onScroll = () => setVisible(el.scrollTop > 300);
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, [getScrollParent]);
-
   const scrollToTop = () => {
-    getScrollParent()?.scrollTo({ top: 0, behavior: "smooth" });
+    const main = document.querySelector("main");
+    if (main && main.scrollTop > 0) {
+      main.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
