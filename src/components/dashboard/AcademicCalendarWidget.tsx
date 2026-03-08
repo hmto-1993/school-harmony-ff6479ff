@@ -225,6 +225,10 @@ export default function AcademicCalendarWidget() {
                   <span>اختبارات نهائية</span>
                 </div>
                 <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-sky-100 dark:bg-sky-900/40 border-2 border-sky-400" />
+                  <span>الأسبوع الحالي</span>
+                </div>
+                <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-card border border-border" />
                   <span>دراسة</span>
                 </div>
