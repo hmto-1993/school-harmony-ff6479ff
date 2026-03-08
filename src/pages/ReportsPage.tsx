@@ -1113,7 +1113,7 @@ export default function ReportsPage() {
 
         {/* ===== Behavior Report ===== */}
         <TabsContent value="behavior" className="space-y-4">
-          <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
+          <BehaviorReport selectedClass={selectedClass} dateFrom={dateFromStr} dateTo={dateToStr} selectedStudent={selectedStudent} />
         </TabsContent>
       </Tabs>
 
