@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HijriCalendar } from "@/components/ui/hijri-calendar";
+import { useCalendarType } from "@/hooks/useCalendarType";
 
 interface HijriDatePickerProps {
   date: Date;
@@ -24,8 +25,14 @@ function formatDateLabel(date: Date, isHijri: boolean): string {
 }
 
 export function HijriDatePicker({ date, onDateChange, className, buttonClassName }: HijriDatePickerProps) {
-  const [isHijri, setIsHijri] = React.useState(false);
+  const { isHijri: savedIsHijri, setCalendarType } = useCalendarType();
+  const [isHijri, setIsHijri] = React.useState(savedIsHijri);
   const [open, setOpen] = React.useState(false);
+
+  // Sync with global preference
+  React.useEffect(() => {
+    setIsHijri(savedIsHijri);
+  }, [savedIsHijri]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -42,11 +49,15 @@ export function HijriDatePicker({ date, onDateChange, className, buttonClassName
       <PopoverContent className={cn("w-auto p-0", className)} align="start">
         <HijriCalendar
           selected={date}
+          defaultHijri={isHijri}
           onSelect={(d) => {
             onDateChange(d);
             setOpen(false);
           }}
-          onModeChange={setIsHijri}
+          onModeChange={(h) => {
+            setIsHijri(h);
+            setCalendarType(h ? "hijri" : "gregorian");
+          }}
         />
       </PopoverContent>
     </Popover>
