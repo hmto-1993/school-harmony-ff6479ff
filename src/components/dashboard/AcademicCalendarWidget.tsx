@@ -172,7 +172,7 @@ export default function AcademicCalendarWidget() {
                       {/* Week number */}
                       <div className={cn(
                         "p-2 text-center text-sm font-bold border-l flex items-center justify-center",
-                        isCurrent ? "text-primary" : "text-foreground/70",
+                        isCurrent ? "text-sky-700 dark:text-sky-300" : "text-foreground/70",
                       )}>
                         {isCurrent ? (
                           <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs">
