@@ -8,6 +8,7 @@ interface HijriCalendarProps {
   selected?: Date;
   onSelect?: (date: Date) => void;
   className?: string;
+  onModeChange?: (isHijri: boolean) => void;
 }
 
 // Hijri month names in Arabic
@@ -101,7 +102,7 @@ function isToday(d: Date): boolean {
   return isSameDay(d, new Date());
 }
 
-export function HijriCalendar({ selected, onSelect, className }: HijriCalendarProps) {
+export function HijriCalendar({ selected, onSelect, className, onModeChange }: HijriCalendarProps) {
   const [isHijri, setIsHijri] = React.useState(false);
 
   // Current view state - always stored as Gregorian year/month for Gregorian mode
@@ -128,7 +129,9 @@ export function HijriCalendar({ selected, onSelect, className }: HijriCalendarPr
       setGregYear(firstDay.getFullYear());
       setGregMonth(firstDay.getMonth());
     }
-    setIsHijri(!isHijri);
+    const newMode = !isHijri;
+    setIsHijri(newMode);
+    onModeChange?.(newMode);
   };
 
   const handlePrev = () => {
