@@ -163,20 +163,19 @@ export default function AcademicCalendarWidget() {
                       className={cn(
                         "grid grid-cols-[50px_1fr_auto] border-t cursor-pointer transition-all",
                         isCurrent
-                          ? "bg-primary/10 dark:bg-primary/20 border-primary/30"
+                          ? "bg-sky-100 dark:bg-sky-900/30 border-sky-300 dark:border-sky-700 ring-2 ring-sky-400 dark:ring-sky-500 ring-inset shadow-md"
                           : getWeekRowStyle(week.type),
-                        isCurrent && "ring-2 ring-primary ring-inset",
-                        isSelected && "ring-2 ring-primary/60 ring-inset shadow-sm",
+                        !isCurrent && isSelected && "ring-2 ring-primary/60 ring-inset shadow-sm",
                         "hover:brightness-95 dark:hover:brightness-110",
                       )}
                     >
                       {/* Week number */}
                       <div className={cn(
                         "p-2 text-center text-sm font-bold border-l flex items-center justify-center",
-                        isCurrent ? "text-primary" : "text-foreground/70",
+                        isCurrent ? "text-sky-700 dark:text-sky-300" : "text-foreground/70",
                       )}>
                         {isCurrent ? (
-                          <span className="bg-primary text-primary-foreground rounded-full w-7 h-7 flex items-center justify-center text-xs">
+                          <span className="bg-sky-500 dark:bg-sky-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold">
                             {week.weekNumber}
                           </span>
                         ) : week.weekNumber}
@@ -224,6 +223,10 @@ export default function AcademicCalendarWidget() {
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-rose-100 dark:bg-rose-900/40 border border-rose-300" />
                   <span>اختبارات نهائية</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-sky-100 dark:bg-sky-900/40 border-2 border-sky-400" />
+                  <span>الأسبوع الحالي</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded bg-card border border-border" />
