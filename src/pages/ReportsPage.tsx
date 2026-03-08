@@ -96,6 +96,8 @@ export default function ReportsPage() {
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [dateFrom, setDateFrom] = useState<Date>(new Date());
   const [dateTo, setDateTo] = useState<Date>(new Date());
+  const dateFromStr = format(dateFrom, "yyyy-MM-dd");
+  const dateToStr = format(dateTo, "yyyy-MM-dd");
   const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
