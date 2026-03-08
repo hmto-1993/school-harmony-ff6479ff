@@ -2096,6 +2096,10 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {activeCard === "academic_calendar" && isAdmin && (
+        <AcademicCalendarSettings onClose={() => setActiveCard(null)} />
+      )}
+
 
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
