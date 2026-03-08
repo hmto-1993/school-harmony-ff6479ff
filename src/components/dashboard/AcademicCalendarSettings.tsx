@@ -10,8 +10,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAcademicWeek, ExamDate, HolidayDate } from "@/hooks/useAcademicWeek";
 import { toast } from "@/hooks/use-toast";
-import { CalendarDays, Upload, FileText, Plus, Trash2, Loader2, Sparkles, GraduationCap } from "lucide-react";
+import { CalendarDays, Upload, FileText, Plus, Trash2, Loader2, Sparkles, GraduationCap, TreePalm } from "lucide-react";
 import { MOE_PRESETS, type MOEPresetKey } from "./moeCalendarPresets";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import * as XLSX from "xlsx";
 
 interface Props {
@@ -29,6 +40,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
   const [examDates, setExamDates] = useState<ExamDate[]>(calendarData?.exam_dates || []);
   const [holidays, setHolidays] = useState<HolidayDate[]>(calendarData?.holidays || []);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [parsing, setParsing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -45,16 +57,41 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setExamDates(prev => prev.map((e, i) => i === index ? { ...e, [field]: value } : e));
   };
 
+  const addHoliday = () => {
+    setHolidays(prev => [...prev, { date: "", label: "" }]);
+  };
+
+  const removeHoliday = (index: number) => {
+    setHolidays(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateHoliday = (index: number, field: keyof HolidayDate, value: string) => {
+    setHolidays(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
+  };
+
+  const handleDelete = async () => {
+    if (!calendarData?.id) return;
+    setDeleting(true);
+    const { error } = await supabase.from("academic_calendar").delete().eq("id", calendarData.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الحذف", description: "تم حذف التقويم الأكاديمي بنجاح" });
+      await refetch();
+      onClose();
+    }
+  };
+
   const handleSave = async () => {
     if (!startDate) {
       toast({ title: "خطأ", description: "يرجى تحديد تاريخ بداية الفصل", variant: "destructive" });
       return;
     }
     setSaving(true);
-    // Combine exam_dates and holidays into one jsonb array
     const combinedDates = [
       ...examDates.filter(e => e.date && e.label).map(e => ({ date: e.date, label: e.label, type: e.type })),
-      ...holidays.map(h => ({ date: h.date, label: h.label, type: "holiday" as const })),
+      ...holidays.filter(h => h.date && h.label).map(h => ({ date: h.date, label: h.label, type: "holiday" as const })),
     ];
     const payload = {
       start_date: startDate,
@@ -92,7 +129,6 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows: any[] = XLSX.utils.sheet_to_json(ws);
 
-      // Expected columns: date, label, type
       const parsed: ExamDate[] = rows
         .filter(r => r.date && r.label)
         .map(r => ({
@@ -120,7 +156,6 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setParsing(true);
 
     try {
-      // Read PDF as text (basic extraction)
       const text = await file.text();
 
       const { data, error } = await supabase.functions.invoke("parse-academic-calendar", {
@@ -195,7 +230,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
               ))}
             </div>
             <p className="text-[10px] text-muted-foreground text-center">
-              * التواريخ مبنية على التقويم الدراسي المعتمد من وزارة التعليم للعام ١٤٤٦-١٤٤٧هـ
+              * التواريخ مبنية على التقويم الدراسي المعتمد من وزارة التعليم للعام ١٤٤٦-١٤٤٧هـ و ١٤٤٧-١٤٤٨هـ
             </p>
           </TabsContent>
 
@@ -263,7 +298,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
           </TabsContent>
         </Tabs>
 
-        {/* Exam dates editor (shared across all tabs) */}
+        {/* Exam dates editor */}
         <div className="space-y-3 mt-4 border-t pt-4">
           <div className="flex items-center justify-between">
             <Label className="text-sm font-semibold">مواعيد الاختبارات</Label>
@@ -303,13 +338,72 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
           ))}
         </div>
 
-        {/* Save */}
+        {/* Holidays editor */}
+        <div className="space-y-3 mt-4 border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold flex items-center gap-1.5">
+              <TreePalm className="h-4 w-4 text-emerald-500" />
+              مواعيد الإجازات
+            </Label>
+            <Button variant="ghost" size="sm" onClick={addHoliday} className="gap-1 text-xs h-7">
+              <Plus className="h-3 w-3" /> إضافة
+            </Button>
+          </div>
+
+          {holidays.length === 0 && (
+            <p className="text-xs text-muted-foreground text-center py-3">لا توجد إجازات</p>
+          )}
+
+          {holidays.map((holiday, i) => (
+            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
+              <div className="flex-1">
+                <Label className="text-[10px]">التاريخ</Label>
+                <Input type="date" value={holiday.date} onChange={e => updateHoliday(i, "date", e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="flex-1">
+                <Label className="text-[10px]">الوصف</Label>
+                <Input value={holiday.label} onChange={e => updateHoliday(i, "label", e.target.value)} className="h-8 text-xs" placeholder="إجازة اليوم الوطني" />
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeHoliday(i)}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Save & Delete */}
         <div className="flex gap-2 mt-4">
           <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}
             حفظ التقويم
           </Button>
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
+          {calendarData?.id && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deleting}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>حذف التقويم الأكاديمي؟</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    سيتم حذف التقويم الأكاديمي وجميع مواعيد الاختبارات والإجازات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleDelete}
+                  >
+                    حذف التقويم
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </DialogContent>
     </Dialog>
