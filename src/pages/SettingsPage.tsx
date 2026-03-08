@@ -1925,6 +1925,54 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {activeCard === "calendar" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                نوع التقويم الافتراضي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 max-w-md">
+            <p className="text-sm text-muted-foreground">
+              اختر نوع التقويم الافتراضي الذي سيُستخدم في جميع صفحات التحضير والدرجات والتقارير.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: "gregorian" as const, label: "ميلادي", sub: "Gregorian", emoji: "🌍" },
+                { value: "hijri" as const, label: "هجري", sub: "Hijri (أم القرى)", emoji: "🕌" },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setGlobalCalendarType(opt.value)}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-200",
+                    calendarTypeLocal === opt.value
+                      ? "border-primary bg-primary/10 shadow-lg scale-[1.02]"
+                      : "border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50"
+                  )}
+                >
+                  <span className="text-3xl">{opt.emoji}</span>
+                  <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                  <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
+                  {calendarTypeLocal === opt.value && (
+                    <Badge variant="default" className="text-[10px] px-2 py-0">
+                      <Check className="h-3 w-3 ml-1" />
+                      مُفعّل
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
