@@ -39,7 +39,7 @@ const PageLoader = () => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <TooltipProvider>
+      <CalendarTypeProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -75,7 +75,7 @@ const App = () => (
             </Suspense>
           </AuthProvider>
         </BrowserRouter>
-      </TooltipProvider>
+      </CalendarTypeProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
