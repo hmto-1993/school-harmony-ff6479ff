@@ -231,8 +231,6 @@ export default function AcademicCalendarWidget() {
           )}
         </CardContent>
       </Card>
-
-      {showSettings && <AcademicCalendarSettings onClose={() => setShowSettings(false)} />}
     </>
   );
 }
