@@ -1,4 +1,5 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   early_leave: { color: "#3b82f6", label: "خروج مبكر" },
 };
 
-const ALERT_THRESHOLD = 0.2;
+const DEFAULT_ALERT_THRESHOLD = 0.2;
 
 interface WeekData {
   weekNum: number;
@@ -82,7 +83,20 @@ export default function AttendanceWeeklyReport({
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
+  const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
   const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
+
+  // Fetch threshold from settings
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "absence_threshold")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setAlertThreshold(Number(data.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+      });
+  }, []);
 
   // Build lesson lookup: key = "weekNum-dayIndex-slotIndex"
   const lessonLookup = useMemo(() => {
@@ -138,7 +152,7 @@ export default function AttendanceWeeklyReport({
         weeksData[w.weekNum] = slots;
       });
 
-      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > ALERT_THRESHOLD;
+      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
 
       return {
         id: s.id, name: s.full_name, weeks: weeksData,
@@ -148,7 +162,7 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
 
   const handleExportExcel = async () => {
     const XLSX = await import("xlsx");
@@ -170,7 +184,7 @@ export default function AttendanceWeeklyReport({
       row["غائب"] = s.totalAbsent;
       row["متأخر"] = s.totalLate;
       row["معذور"] = s.totalExcused;
-      row["تنبيه"] = s.isAtRisk ? "⚠ تجاوز 20%" : "";
+      row["تنبيه"] = s.isAtRisk ? `⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : "";
       return row;
     });
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
@@ -456,7 +470,7 @@ export default function AttendanceWeeklyReport({
           <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm">
             <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
             <span className="text-destructive font-medium">
-              {atRiskCount} طالب تجاوز نسبة الغياب 20% من إجمالي الحصص المنعقدة
+              {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
             </span>
           </div>
         )}

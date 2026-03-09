@@ -48,6 +48,7 @@ import {
   LockOpen,
   Trophy,
   Crown,
+  AlertTriangle,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -265,6 +266,10 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Absence threshold settings
+  const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [savingThreshold, setSavingThreshold] = useState(false);
+
   // Countdown timer for popup expiry + admin notification
   useEffect(() => {
     if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
@@ -396,7 +401,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -425,6 +430,7 @@ export default function SettingsPage() {
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
         if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
+        if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
       });
 
       // Fetch popup history
@@ -2582,6 +2588,74 @@ export default function SettingsPage() {
                       disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5">
                       <KeyRound className="h-4 w-4" />
                       {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+                    </Button>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* ===== نسبة الغياب للإنذار ===== */}
+            <Collapsible>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-destructive to-destructive/80 shadow-lg shadow-destructive/20 text-white">
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">حد إنذار الغياب</h3>
+                        <p className="text-xs text-muted-foreground">تحديد نسبة الغياب التي يتم عندها إنذار الطالب وولي الأمر — الحالي: {absenceThreshold}%</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                    <div className="space-y-2">
+                      <Label>نسبة الغياب المسموح بها (%)</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min={5}
+                          max={50}
+                          value={absenceThreshold}
+                          onChange={(e) => setAbsenceThreshold(Math.min(50, Math.max(5, Number(e.target.value) || 20)))}
+                          className="w-24 text-center font-bold text-lg"
+                          dir="ltr"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        عند تجاوز الطالب هذه النسبة يظهر تنبيه في تقارير الحضور وإنذارات الغياب. القيمة الافتراضية حسب نظام وزارة التعليم: 20%
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {[10, 15, 20, 25, 30].map((v) => (
+                        <Button
+                          key={v}
+                          variant={absenceThreshold === v ? "default" : "outline"}
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={() => setAbsenceThreshold(v)}
+                        >
+                          {v}%
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        setSavingThreshold(true);
+                        await supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) });
+                        setSavingThreshold(false);
+                        toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار إلى ${absenceThreshold}%` });
+                      }}
+                      disabled={savingThreshold}
+                      className="gap-1.5"
+                    >
+                      <Save className="h-4 w-4" />
+                      {savingThreshold ? "جارٍ الحفظ..." : "حفظ"}
                     </Button>
                   </CardContent>
                 </CollapsibleContent>

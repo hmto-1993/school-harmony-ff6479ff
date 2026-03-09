@@ -132,8 +132,16 @@ export default function AbsenceWarningSlip({
     // Build default warning text
     const subj = subjectData?.value || "المادة الدراسية";
     const absentCount = attendance?.length || 0;
+    // Fetch absence threshold
+    const { data: thresholdData } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "absence_threshold")
+      .maybeSingle();
+    const threshold = thresholdData?.value ? Number(thresholdData.value) : 20;
+
     setWarningText(
-      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه 20% يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
+      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه ${threshold}% يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
     );
 
     setLoading(false);
