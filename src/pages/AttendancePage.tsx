@@ -57,7 +57,19 @@ export default function AttendancePage() {
   const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
+  const [overrideLock, setOverrideLock] = useState(false);
   const date = format(selectedDate, "yyyy-MM-dd");
+
+  // Compute if currently selected class is locked (limit reached and no override)
+  const selectedProgress = selectedClass ? weeklyProgress[selectedClass] : null;
+  const isClassLocked = useMemo(() => {
+    if (!selectedProgress) return false;
+    if (overrideLock) return false; // Admin has disabled the lock
+    // Only lock if attendance hasn't been saved yet for today (to allow editing existing)
+    const alreadySavedToday = records.some(r => r.existing_id);
+    if (alreadySavedToday) return false; // Allow editing if already saved for today
+    return selectedProgress.sessions >= selectedProgress.limit;
+  }, [selectedProgress, overrideLock, records]);
 
   // Derive the academic week bounds for the selected date
   const weekBounds = useMemo(() => {
