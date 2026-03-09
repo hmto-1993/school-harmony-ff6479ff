@@ -58,7 +58,55 @@ export default function AttendancePage() {
   useEffect(() => {
     if (!selectedClass) return;
     loadStudents();
+    loadDayNote();
   }, [selectedClass, date]);
+
+  const loadDayNote = async () => {
+    if (!selectedClass) return;
+    const { data } = await supabase
+      .from("attendance_schedule_exceptions")
+      .select("reason")
+      .eq("class_id", selectedClass)
+      .eq("original_date", date)
+      .eq("type", "note")
+      .maybeSingle();
+    const note = data?.reason || "";
+    setSavedDayNote(note);
+    setDayNote(note);
+  };
+
+  const saveDayNote = async () => {
+    if (!user || !selectedClass) return;
+    setSavingNote(true);
+    
+    // Check if note already exists
+    const { data: existing } = await supabase
+      .from("attendance_schedule_exceptions")
+      .select("id")
+      .eq("class_id", selectedClass)
+      .eq("original_date", date)
+      .eq("type", "note")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("attendance_schedule_exceptions")
+        .update({ reason: dayNote })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("attendance_schedule_exceptions").insert({
+        class_id: selectedClass,
+        original_date: date,
+        type: "note",
+        reason: dayNote,
+        created_by: user.id,
+      });
+    }
+
+    setSavedDayNote(dayNote);
+    setSavingNote(false);
+    toast({ title: "تم الحفظ", description: "تم حفظ ملاحظة اليوم" });
+  };
 
   const loadStudents = async () => {
     const { data: students } = await supabase
