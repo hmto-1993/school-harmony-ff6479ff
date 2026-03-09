@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, UserX, BookOpen, TrendingDown } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, UserX, BookOpen, TrendingDown, FileWarning } from "lucide-react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
+import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
 
 interface AbsentStudent {
   id: string;
@@ -28,6 +30,15 @@ export default function SmartDashboardSummary() {
   const [currentLesson, setCurrentLesson] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentWeek } = useAcademicWeek();
+
+  // Warning slip state
+  const [warningOpen, setWarningOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<AtRiskStudent | null>(null);
+
+  const openWarning = (student: AtRiskStudent) => {
+    setSelectedStudent(student);
+    setWarningOpen(true);
+  };
 
   useEffect(() => {
     fetchSummary();
