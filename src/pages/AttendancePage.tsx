@@ -66,6 +66,7 @@ export default function AttendancePage() {
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
   const [overrideLock, setOverrideLock] = useState(false);
+  const [absenceAlerts, setAbsenceAlerts] = useState<Record<string, AbsenceAlert>>({});
   const date = format(selectedDate, "yyyy-MM-dd");
 
   // Compute if currently selected class is locked (limit reached and no override)
