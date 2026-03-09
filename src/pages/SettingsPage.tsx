@@ -2262,19 +2262,9 @@ export default function SettingsPage() {
                           variant="outline"
                           size="icon"
                           className="h-7 w-7 text-xs"
-                          onClick={async () => {
+                          onClick={() => {
                             const newVal = Math.max(1, periodsPerWeek - 1);
-                            const { data: existing } = await supabase
-                              .from("class_schedules")
-                              .select("id")
-                              .eq("class_id", c.id)
-                              .maybeSingle();
-                            if (existing) {
-                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
-                            } else {
-                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
-                            }
-                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                            saveClassSchedule(c.id, newVal);
                           }}
                         >
                           −
@@ -2284,19 +2274,9 @@ export default function SettingsPage() {
                           variant="outline"
                           size="icon"
                           className="h-7 w-7 text-xs"
-                          onClick={async () => {
+                          onClick={() => {
                             const newVal = Math.min(20, periodsPerWeek + 1);
-                            const { data: existing } = await supabase
-                              .from("class_schedules")
-                              .select("id")
-                              .eq("class_id", c.id)
-                              .maybeSingle();
-                            if (existing) {
-                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
-                            } else {
-                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
-                            }
-                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                            saveClassSchedule(c.id, newVal);
                           }}
                         >
                           +
