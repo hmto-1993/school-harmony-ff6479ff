@@ -6,13 +6,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Trophy, Award, Printer, X, Sparkles, AlertTriangle, Eye, ChevronLeft,
+  Trophy, Award, Printer, X, Sparkles, AlertTriangle, Eye, ChevronLeft, Upload, Loader2, FileImage,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 /* ─── Types ─── */
 interface FullMarkGrade {
