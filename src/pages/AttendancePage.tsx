@@ -446,11 +446,17 @@ export default function AttendancePage() {
                 {/* Weekly progress badge */}
                 <div className={cn(
                   "mt-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
-                  isComplete
+                  isComplete && !overrideLock
+                    ? "bg-success/15 text-success border-success/30"
+                    : isComplete && overrideLock
                     ? "bg-success/15 text-success border-success/30"
                     : "bg-muted/60 text-muted-foreground border-border/40"
                 )}>
-                  {isComplete && <CheckCircle2 className="h-2.5 w-2.5" />}
+                  {isComplete && !overrideLock ? (
+                    <Lock className="h-2.5 w-2.5" />
+                  ) : isComplete ? (
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                  ) : null}
                   {sessions}/{limit}
                 </div>
                 {isSelected && (
