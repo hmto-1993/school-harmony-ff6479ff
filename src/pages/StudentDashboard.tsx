@@ -11,7 +11,7 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X, AlertTriangle
 } from "lucide-react";
 import {
   Dialog,
@@ -88,10 +88,25 @@ export default function StudentDashboard() {
   const [popupAction, setPopupAction] = useState<string>("none");
   const [activeTab, setActiveTab] = useState<string>("");
 
+  // Warnings state
+  const [warnings, setWarnings] = useState<{ id: string; message: string; created_at: string; is_read: boolean }[]>([]);
+
+  const fetchWarnings = async () => {
+    if (!student) return;
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, message, created_at, is_read")
+      .eq("student_id", student.id)
+      .eq("type", "warning")
+      .order("created_at", { ascending: false });
+    setWarnings(data || []);
+  };
+
   useEffect(() => {
     if (student) {
       fetchFolders();
       fetchPopup();
+      fetchWarnings();
     }
   }, [student]);
 
@@ -317,6 +332,7 @@ export default function StudentDashboard() {
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
+            ...(warnings.length > 0 ? [{ value: "warnings", label: "الإنذارات", icon: AlertTriangle }] : []),
             { value: "activities", label: "الأنشطة", icon: Layers },
             { value: "library", label: "المكتبة", icon: BookOpen },
           ];
@@ -472,6 +488,45 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          )}
+
+          {/* Warnings Tab */}
+          {warnings.length > 0 && (
+          <TabsContent value="warnings">
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-destructive to-destructive/60" />
+                  الإنذارات الأكاديمية
+                  <Badge variant="destructive" className="text-xs">{warnings.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {warnings.map((w) => (
+                  <div
+                    key={w.id}
+                    className={cn(
+                      "rounded-xl border p-4 space-y-2",
+                      w.is_read
+                        ? "border-border/40 bg-muted/30"
+                        : "border-destructive/30 bg-destructive/5"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(w.created_at).toLocaleDateString("ar-SA", {
+                          year: "numeric", month: "long", day: "numeric",
+                        })}
+                      </span>
+                      {!w.is_read && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">جديد</Badge>}
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">{w.message}</p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </TabsContent>

@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Download, X } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Printer, Send, X, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface AbsentDate {
@@ -36,6 +38,8 @@ export default function AbsenceWarningSlip({
   const [absentDates, setAbsentDates] = useState<AbsentDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [subjectName, setSubjectName] = useState("المادة الدراسية");
+  const [warningText, setWarningText] = useState("");
+  const [sending, setSending] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -103,12 +107,50 @@ export default function AbsenceWarningSlip({
       .maybeSingle();
     if (subjectData?.value) setSubjectName(subjectData.value);
 
+    // Build default warning text
+    const subj = subjectData?.value || "المادة الدراسية";
+    const absentCount = attendance?.length || 0;
+    setWarningText(
+      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه 20% يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
+    );
+
     setLoading(false);
+  };
+
+  const handleSendToStudent = async () => {
+    setSending(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase.from("notifications").insert({
+      student_id: studentId,
+      type: "warning",
+      message: warningText,
+      created_by: userData?.user?.id || null,
+    });
+    setSending(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الإرسال", description: "تم إرسال الإنذار إلى حساب الطالب بنجاح" });
+      onOpenChange(false);
+    }
   };
 
   const handlePrint = () => {
     const content = printRef.current;
     if (!content) return;
+
+    // Clone and replace textarea with styled div for print
+    const clone = content.cloneNode(true) as HTMLElement;
+    const textareaEl = clone.querySelector("textarea");
+    if (textareaEl) {
+      const div = document.createElement("div");
+      div.style.cssText = "background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:20px 0;line-height:1.8;font-size:14px;white-space:pre-wrap;";
+      div.textContent = warningText;
+      textareaEl.parentElement?.replaceChild(div, textareaEl);
+    }
+    // Remove the label above textarea
+    const labels = clone.querySelectorAll("p");
+    labels.forEach(p => { if (p.textContent?.includes("قابل للتعديل")) p.remove(); });
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
@@ -216,7 +258,7 @@ export default function AbsenceWarningSlip({
         </style>
       </head>
       <body>
-        ${content.innerHTML}
+        ${clone.innerHTML}
       </body>
       </html>
     `);
@@ -353,27 +395,30 @@ export default function AbsenceWarningSlip({
               </div>
             </div>
 
-            {/* Warning Text */}
-            <div
-              style={{
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "8px",
-                padding: "16px",
-                margin: "20px 0",
-                lineHeight: 1.8,
-                fontSize: "14px",
-              }}
-            >
-              <p style={{ marginBottom: "8px" }}>
-                <strong>تحية طيبة وبعد،</strong>
-              </p>
-              <p>
-                نود إشعاركم بأن الطالب المذكور أعلاه قد بلغت نسبة غيابه <strong style={{ color: "#dc2626" }}>{absenceRate}%</strong> من إجمالي الحصص الدراسية ({totalAbsent} غياب من أصل {totalDays} حصة).
-              </p>
-              <p style={{ marginTop: "8px" }}>
-                وحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه <strong>20%</strong> يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.
-              </p>
+            {/* Editable Warning Text */}
+            <div style={{ margin: "20px 0" }}>
+              <p style={{ fontWeight: 600, marginBottom: "8px", fontSize: "14px", color: "#64748b" }}>نص الإنذار (قابل للتعديل):</p>
+              <Textarea
+                value={warningText}
+                onChange={(e) => setWarningText(e.target.value)}
+                className="min-h-[140px] text-sm leading-relaxed bg-rose-50 border-rose-200 text-slate-800 dark:bg-rose-50 dark:text-slate-800 dark:border-rose-200"
+                dir="rtl"
+                style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", lineHeight: 1.8 }}
+              />
+            </div>
+
+            {/* Warning text for print (hidden in dialog, shown in print) */}
+            <div className="hidden print-warning-text" style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "8px",
+              padding: "16px",
+              margin: "20px 0",
+              lineHeight: 1.8,
+              fontSize: "14px",
+              whiteSpace: "pre-wrap",
+            }}>
+              {warningText}
             </div>
 
             {/* Absent Dates Table */}
@@ -447,6 +492,15 @@ export default function AbsenceWarningSlip({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4 ml-1" />
             إغلاق
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleSendToStudent}
+            disabled={loading || sending || !warningText.trim()}
+            className="gap-1.5"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            إرسال للطالب
           </Button>
           <Button onClick={handlePrint} disabled={loading} className="gap-1.5">
             <Printer className="h-4 w-4" />
