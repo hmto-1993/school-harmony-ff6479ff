@@ -47,6 +47,7 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
+import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
@@ -161,6 +162,7 @@ export default function SettingsPage() {
   const [importedClasses, setImportedClasses] = useState<{ name: string; grade: string; section: string }[]>([]);
   const [importingClasses, setImportingClasses] = useState(false);
   const classFileRef = useRef<HTMLInputElement>(null);
+  const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
 
   // Edit category
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
@@ -1104,30 +1106,41 @@ export default function SettingsPage() {
                               </Button>
                             </>
                           ) : (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent dir="rtl">
-                                <AlertDialogHeader>
-                                   <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
-                                   <AlertDialogDescription>
-                                     سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    onClick={() => handleDeleteClass(cls.id)}
-                                  >
-                                    حذف
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-primary hover:text-primary"
+                                title="جدول الحصص"
+                                onClick={() => setScheduleDialogClass({ id: cls.id, name: cls.name })}
+                              >
+                                <CalendarDays className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                     <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
+                                     <AlertDialogDescription>
+                                       سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                      onClick={() => handleDeleteClass(cls.id)}
+                                    >
+                                      حذف
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </>
                           )}
                         </TableCell>
                       )}
@@ -1136,6 +1149,12 @@ export default function SettingsPage() {
                 </TableBody>
               </Table>
             </div>
+            <ClassScheduleDialog
+              open={!!scheduleDialogClass}
+              onOpenChange={(open) => !open && setScheduleDialogClass(null)}
+              classId={scheduleDialogClass?.id || ""}
+              className={scheduleDialogClass?.name || ""}
+            />
           </CardContent>
         </Card>
       )}
