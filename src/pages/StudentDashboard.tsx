@@ -328,7 +328,7 @@ export default function StudentDashboard() {
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-            ...(warnings.length > 0 ? [{ value: "warnings", label: "الإنذارات", icon: AlertTriangle }] : []),
+            
             { value: "activities", label: "الأنشطة", icon: Layers },
             { value: "library", label: "المكتبة", icon: BookOpen },
           ];
