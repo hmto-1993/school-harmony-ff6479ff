@@ -45,7 +45,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   early_leave: { color: "#3b82f6", label: "خروج مبكر" },
 };
 
-const ALERT_THRESHOLD = 0.2;
+const DEFAULT_ALERT_THRESHOLD = 0.2;
 
 interface WeekData {
   weekNum: number;
