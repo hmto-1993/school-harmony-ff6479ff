@@ -9,6 +9,7 @@ import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
 import AcademicCalendarWidget from "@/components/dashboard/AcademicCalendarWidget";
+import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary";
 
 interface ClassStats {
   name: string;
@@ -96,6 +97,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <DashboardHeader onPrint={handlePrint} />
+
+      <SmartDashboardSummary />
 
       <DashboardStatCards
         totalStudents={totalStudents}
