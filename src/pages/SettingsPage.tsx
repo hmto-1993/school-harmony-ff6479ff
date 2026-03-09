@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,6 +171,39 @@ export default function SettingsPage() {
   const [attendanceOverrideLock, setAttendanceOverrideLock] = useState(false);
   const [classSchedules, setClassSchedules] = useState<Record<string, { periodsPerWeek: number; daysOfWeek: number[] }>>({});
   const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
+  const pendingScheduleUpdates = useRef<Record<string, { periodsPerWeek: number; timeout: NodeJS.Timeout }>>({});
+
+  // Debounced save for class schedules (300ms delay)
+  const saveClassSchedule = useCallback(async (classId: string, newVal: number) => {
+    // Cancel any pending update for this class
+    if (pendingScheduleUpdates.current[classId]) {
+      clearTimeout(pendingScheduleUpdates.current[classId].timeout);
+    }
+
+    // Update UI immediately
+    setClassSchedules(prev => ({
+      ...prev,
+      [classId]: { ...prev[classId], periodsPerWeek: newVal, daysOfWeek: prev[classId]?.daysOfWeek || [0, 1, 2, 3, 4] }
+    }));
+
+    // Schedule database update after 300ms
+    pendingScheduleUpdates.current[classId] = {
+      periodsPerWeek: newVal,
+      timeout: setTimeout(async () => {
+        const { data: existing } = await supabase
+          .from("class_schedules")
+          .select("id")
+          .eq("class_id", classId)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", classId);
+        } else {
+          await supabase.from("class_schedules").insert({ class_id: classId, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
+        }
+        delete pendingScheduleUpdates.current[classId];
+      }, 300)
+    };
+  }, []);
 
   // Edit category
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
@@ -2229,19 +2262,9 @@ export default function SettingsPage() {
                           variant="outline"
                           size="icon"
                           className="h-7 w-7 text-xs"
-                          onClick={async () => {
+                          onClick={() => {
                             const newVal = Math.max(1, periodsPerWeek - 1);
-                            const { data: existing } = await supabase
-                              .from("class_schedules")
-                              .select("id")
-                              .eq("class_id", c.id)
-                              .maybeSingle();
-                            if (existing) {
-                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
-                            } else {
-                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
-                            }
-                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                            saveClassSchedule(c.id, newVal);
                           }}
                         >
                           −
@@ -2251,19 +2274,9 @@ export default function SettingsPage() {
                           variant="outline"
                           size="icon"
                           className="h-7 w-7 text-xs"
-                          onClick={async () => {
+                          onClick={() => {
                             const newVal = Math.min(20, periodsPerWeek + 1);
-                            const { data: existing } = await supabase
-                              .from("class_schedules")
-                              .select("id")
-                              .eq("class_id", c.id)
-                              .maybeSingle();
-                            if (existing) {
-                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
-                            } else {
-                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
-                            }
-                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                            saveClassSchedule(c.id, newVal);
                           }}
                         >
                           +
