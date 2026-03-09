@@ -184,7 +184,7 @@ export default function AttendanceWeeklyReport({
       row["غائب"] = s.totalAbsent;
       row["متأخر"] = s.totalLate;
       row["معذور"] = s.totalExcused;
-      row["تنبيه"] = s.isAtRisk ? "⚠ تجاوز 20%" : "";
+      row["تنبيه"] = s.isAtRisk ? `⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : "";
       return row;
     });
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
