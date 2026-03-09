@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning, MessageCircle } from "lucide-react";
+import WhatsAppMessageDialog from "@/components/whatsapp/WhatsAppMessageDialog";
+import type { TemplateType } from "@/components/whatsapp/WhatsAppMessageDialog";
 import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
 import { format } from "date-fns";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
@@ -85,6 +87,11 @@ export default function StudentsPage() {
     totalDays: number;
   } | null>(null);
   const [loadingWarning, setLoadingWarning] = useState<string | null>(null);
+
+  // WhatsApp dialog state
+  const [waOpen, setWaOpen] = useState(false);
+  const [waStudent, setWaStudent] = useState<{ name: string; phone: string | null; absenceCount?: number; lastDate?: string } | null>(null);
+  const [waTemplateType, setWaTemplateType] = useState<TemplateType>("absence");
 
   const openWarningSlip = async (student: Student) => {
     setLoadingWarning(student.id);
@@ -853,12 +860,13 @@ export default function StudentsPage() {
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
-                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-20">إنذار</th>
+                     <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-20">إنذار</th>
+                     <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-20">واتساب</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={role === "admin" ? 7 : 6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={role === "admin" ? 8 : 7} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
                 ) : filtered.map((s, i) => {
                   const isEven = i % 2 === 0;
                   const isLast = i === filtered.length - 1;
@@ -894,8 +902,36 @@ export default function StudentsPage() {
                          onClick={() => openWarningSlip(s)}
                        >
                          {loadingWarning === s.id
-                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                           : <FileWarning className="h-3.5 w-3.5" />}
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <FileWarning className="h-3.5 w-3.5" />}
+                       </Button>
+                     </td>
+                     <td className="p-3 text-center">
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                         title="إرسال واتساب"
+                         onClick={async () => {
+                           // Fetch absence data for template
+                           const { data: att } = await supabase
+                             .from("attendance_records")
+                             .select("status, date")
+                             .eq("student_id", s.id)
+                             .eq("status", "absent")
+                             .order("date", { ascending: false });
+                           const absences = att || [];
+                           setWaStudent({
+                             name: s.full_name,
+                             phone: s.parent_phone,
+                             absenceCount: absences.length,
+                             lastDate: absences[0]?.date || "",
+                           });
+                           setWaTemplateType(absences.length > 0 ? "absence" : "full_mark");
+                           setWaOpen(true);
+                         }}
+                       >
+                         <MessageCircle className="h-3.5 w-3.5" />
                        </Button>
                      </td>
                    </tr>
@@ -956,6 +992,22 @@ export default function StudentsPage() {
           absenceRate={warningStudent.absenceRate}
           totalAbsent={warningStudent.totalAbsent}
           totalDays={warningStudent.totalDays}
+        />
+      )}
+
+      {/* WhatsApp Message Dialog */}
+      {waStudent && (
+        <WhatsAppMessageDialog
+          open={waOpen}
+          onOpenChange={setWaOpen}
+          studentName={waStudent.name}
+          parentPhone={waStudent.phone}
+          templateType={waTemplateType}
+          templateData={{
+            student_name: waStudent.name,
+            absence_count: waStudent.absenceCount,
+            last_date: waStudent.lastDate,
+          }}
         />
       )}
     </div>
