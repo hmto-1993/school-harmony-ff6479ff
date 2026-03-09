@@ -208,13 +208,13 @@ export default function AttendanceWeeklyReport({
         return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
-          return { content: cfg ? "●" : "", styles: { halign: "center" as const, fontSize: 9, textColor: cfg ? hexToRgb(cfg.color) as [number, number, number] : [200, 200, 200] as [number, number, number] } };
+          return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.color) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
         });
       });
       return [
         ...statusCells,
-        { content: s.name, styles: { halign: "right" as const, fontStyle: "bold" as const } },
-        { content: String(idx + 1), styles: { halign: "center" as const } },
+        { content: s.name, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9 } },
+        { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
     });
 
