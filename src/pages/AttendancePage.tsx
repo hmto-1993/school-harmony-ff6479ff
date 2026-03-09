@@ -152,6 +152,26 @@ export default function AttendancePage() {
     );
   };
 
+  const handleMoveSession = async () => {
+    if (!user || !selectedClass || records.length === 0) return;
+    const newDate = format(moveTargetDate, "yyyy-MM-dd");
+    if (newDate === date) return;
+    setMovingDate(true);
+    const { error } = await supabase
+      .from("attendance_records")
+      .update({ date: newDate })
+      .eq("class_id", selectedClass)
+      .eq("date", date);
+    if (error) {
+      toast({ title: "خطأ", description: "فشل نقل الحصة", variant: "destructive" });
+    } else {
+      toast({ title: "تم النقل", description: `تم نقل حصة التحضير إلى ${newDate}` });
+      setSelectedDate(moveTargetDate);
+    }
+    setMovingDate(false);
+    setMoveDialogOpen(false);
+  };
+
   const markAllPresent = () => {
     setRecords((prev) => prev.map((r) => ({ ...r, status: "present" as AttendanceStatus })));
   };
