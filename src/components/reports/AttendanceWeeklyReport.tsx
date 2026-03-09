@@ -328,10 +328,10 @@ export default function AttendanceWeeklyReport({
                     الأسبوع {w.weekNum}
                   </th>
                 ))}
-                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#dcfce7", color: "#16a34a", minWidth: 48 }} rowSpan={2}>حاضر</th>
-                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#fee2e2", color: "#dc2626", minWidth: 48 }} rowSpan={2}>غائب</th>
-                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#fef9c3", color: "#a16207", minWidth: 48 }} rowSpan={2}>متأخر</th>
-                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#dbeafe", color: "#2563eb", minWidth: 48 }} rowSpan={2}>معذور</th>
+                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#e8ecf1", color: "#374151", minWidth: 48 }} rowSpan={2}>حاضر</th>
+                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#e8ecf1", color: "#374151", minWidth: 48 }} rowSpan={2}>غائب</th>
+                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#e8ecf1", color: "#374151", minWidth: 48 }} rowSpan={2}>متأخر</th>
+                <th className="border border-border/30 px-2 py-2 text-center font-bold" style={{ backgroundColor: "#e8ecf1", color: "#374151", minWidth: 48 }} rowSpan={2}>معذور</th>
               </tr>
             </thead>
             <tbody>
