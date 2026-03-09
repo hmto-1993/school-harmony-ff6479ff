@@ -363,6 +363,34 @@ export default function AttendanceWeeklyReport({
             </tbody>
           </table>
         </div>
+
+        {/* Summary statistics */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+          {[
+            { label: "إجمالي الحضور", value: studentRows.reduce((a, s) => a + s.totalPresent, 0), color: "#22c55e" },
+            { label: "إجمالي الغياب", value: studentRows.reduce((a, s) => a + s.totalAbsent, 0), color: "#ef4444" },
+            { label: "إجمالي التأخر", value: studentRows.reduce((a, s) => a + s.totalLate, 0), color: "#f59e0b" },
+            { label: "إجمالي الاستئذان", value: studentRows.reduce((a, s) => a + s.totalExcused, 0), color: "#3b82f6" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-lg border border-border/40 p-3 text-center"
+              style={{ borderTop: `3px solid ${stat.color}` }}
+            >
+              <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+              <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {atRiskCount > 0 && (
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm">
+            <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+            <span className="text-destructive font-medium">
+              {atRiskCount} طالب تجاوز نسبة الغياب 20% من إجمالي الحصص المنعقدة
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
