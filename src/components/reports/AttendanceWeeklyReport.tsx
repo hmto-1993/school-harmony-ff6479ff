@@ -83,7 +83,20 @@ export default function AttendanceWeeklyReport({
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
+  const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
   const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
+
+  // Fetch threshold from settings
+  useEffect(() => {
+    supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "absence_threshold")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setAlertThreshold(Number(data.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+      });
+  }, []);
 
   // Build lesson lookup: key = "weekNum-dayIndex-slotIndex"
   const lessonLookup = useMemo(() => {
