@@ -536,7 +536,7 @@ export default function StudentNotificationCards({
                           ? "border-destructive/40 bg-destructive/10"
                           : "border-border/30 bg-muted/20 hover:bg-muted/40"
                       )}
-                      onClick={() => setSelectedWarning(w)}
+                      onClick={() => openWarningDetail(w)}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">
@@ -550,12 +550,104 @@ export default function StudentNotificationCards({
                 </div>
               </div>
             )}
+
+            {/* Excuse status */}
+            {selectedWarning && (() => {
+              const excuse = existingExcuses.find(e => e.notification_id === selectedWarning.id);
+              if (excuse) {
+                return (
+                  <div className={cn(
+                    "rounded-xl border p-4",
+                    excuse.status === "pending" ? "border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20" :
+                    excuse.status === "accepted" ? "border-emerald-300/50 bg-emerald-50/50 dark:bg-emerald-950/20" :
+                    "border-red-300/50 bg-red-50/50 dark:bg-red-950/20"
+                  )}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileImage className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">العذر المقدم</span>
+                      <Badge variant={
+                        excuse.status === "pending" ? "secondary" :
+                        excuse.status === "accepted" ? "default" : "destructive"
+                      } className="text-xs mr-auto">
+                        {excuse.status === "pending" ? "قيد المراجعة" :
+                         excuse.status === "accepted" ? "✅ مقبول" : "❌ مرفوض"}
+                      </Badge>
+                    </div>
+                    <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <FileImage className="h-3 w-3" />
+                      {excuse.file_name}
+                    </a>
+                    {excuse.reason && <p className="text-xs text-muted-foreground mt-2">{excuse.reason}</p>}
+                    {excuse.review_note && <p className="text-xs mt-2 text-foreground">ملاحظة المعلم: {excuse.review_note}</p>}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setWarningDetailOpen(false)}>
               <X className="h-4 w-4 ml-1" />
               إغلاق
+            </Button>
+            {selectedWarning && !existingExcuses.find(e => e.notification_id === selectedWarning.id) && (
+              <Button
+                onClick={() => setExcuseOpen(true)}
+                className="gap-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
+              >
+                <Upload className="h-4 w-4" />
+                تقديم عذر
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ Excuse Upload Dialog ═══ */}
+      <Dialog open={excuseOpen} onOpenChange={setExcuseOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" />
+              تقديم عذر للغياب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              يمكنك رفع صورة التقرير الطبي أو أي مستند يثبت العذر
+            </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ملف العذر (صورة) *</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setExcuseFile(e.target.files?.[0] || null)}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground">الحد الأقصى: 5 ميجابايت</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">سبب العذر (اختياري)</label>
+              <Textarea
+                value={excuseReason}
+                onChange={(e) => setExcuseReason(e.target.value)}
+                placeholder="مثال: تقرير طبي بسبب المرض"
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setExcuseOpen(false)}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleExcuseSubmit}
+              disabled={!excuseFile || excuseUploading}
+              className="gap-1.5"
+            >
+              {excuseUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              رفع العذر
             </Button>
           </DialogFooter>
         </DialogContent>
