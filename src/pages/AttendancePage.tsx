@@ -611,9 +611,9 @@ export default function AttendancePage() {
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
+                <Button onClick={handleSave} disabled={saving || isClassLocked} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
-                  {saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
+                  {isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
                 </Button>
               </div>
             </>
