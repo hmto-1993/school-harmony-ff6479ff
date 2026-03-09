@@ -32,9 +32,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (error || !profile) {
+      // Return uniform response to prevent enumeration
       return new Response(
-        JSON.stringify({ error: "رقم الهوية غير مسجل" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -42,9 +43,10 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
 
     if (!user?.email) {
+      // Same uniform response
       return new Response(
-        JSON.stringify({ error: "لم يتم العثور على بيانات المستخدم" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -56,7 +58,7 @@ Deno.serve(async (req) => {
     const maskedEmail = `${maskedLocal}@${domain}`;
 
     return new Response(
-      JSON.stringify({ email: maskedEmail }),
+      JSON.stringify({ email: maskedEmail, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

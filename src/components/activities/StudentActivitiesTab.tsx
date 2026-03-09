@@ -219,19 +219,22 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       return;
     }
     setUploadingFor(activityId);
-    const ext = file.name.substring(file.name.lastIndexOf('.'));
-    const safeName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
-    const { error } = await supabase.storage.from("activities").upload(`student-uploads/${safeName}`, file);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+
+    const formData = new FormData();
+    formData.append("student_id", studentId);
+    formData.append("activity_id", activityId);
+    formData.append("class_id", classId);
+    formData.append("file", file);
+
+    const { data, error } = await supabase.functions.invoke("upload-student-file", {
+      body: formData,
+    });
+
+    if (error || data?.error) {
+      toast({ title: "خطأ", description: data?.error || error?.message || "فشل رفع الملف", variant: "destructive" });
       setUploadingFor(null);
       return;
     }
-    const { data: urlData } = supabase.storage.from("activities").getPublicUrl(`student-uploads/${safeName}`);
-    await supabase.from("student_file_submissions").insert({
-      activity_id: activityId, student_id: studentId, class_id: classId,
-      file_url: urlData.publicUrl, file_name: file.name, file_size: file.size,
-    } as any);
     toast({ title: "تم رفع الملف بنجاح" });
     setUploadingFor(null);
   };
