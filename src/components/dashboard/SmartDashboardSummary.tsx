@@ -119,7 +119,13 @@ export default function SmartDashboardSummary() {
         const data = studentDays[s.id];
         if (data && data.total.size >= 5) {
           const rate = (data.absent / data.total.size) * 100;
-          if (rate >= 20) {
+          let exceeded = false;
+          if (mode === "sessions" && allowedSessions > 0) {
+            exceeded = data.absent > allowedSessions;
+          } else {
+            exceeded = rate >= threshold;
+          }
+          if (exceeded) {
             risk.push({
               id: s.id,
               full_name: s.full_name,
