@@ -470,7 +470,7 @@ export default function AttendanceWeeklyReport({
           <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm">
             <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
             <span className="text-destructive font-medium">
-              {atRiskCount} طالب تجاوز نسبة الغياب 20% من إجمالي الحصص المنعقدة
+              {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
             </span>
           </div>
         )}
