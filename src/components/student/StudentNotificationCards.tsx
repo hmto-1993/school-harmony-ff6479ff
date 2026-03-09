@@ -250,18 +250,16 @@ export default function StudentNotificationCards({
 
       const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(`excuses/${fileName}`);
 
-      const { error: insertErr } = await supabase.from("excuse_submissions").insert({
-        notification_id: selectedWarning.id,
-        student_id: studentId,
-        file_url: urlData.publicUrl,
-        file_name: excuseFile.name,
-        reason: excuseReason,
-        status: "pending",
+      const { data: excuseResult, error: excuseErr } = await supabase.functions.invoke("submit-excuse", {
+        body: {
+          student_id: studentId,
+          notification_id: selectedWarning.id,
+          file_url: urlData.publicUrl,
+          file_name: excuseFile.name,
+          reason: excuseReason,
+        },
       });
-      if (insertErr) throw insertErr;
-
-      // Update notification status
-      await supabase.from("notifications").update({ status: "excuse_pending" }).eq("id", selectedWarning.id);
+      if (excuseErr || !excuseResult?.success) throw new Error(excuseResult?.error || excuseErr?.message || "Failed to submit excuse");
 
       setExistingExcuses(prev => [{ file_url: urlData.publicUrl, file_name: excuseFile.name, reason: excuseReason, status: "pending", notification_id: selectedWarning.id, created_at: new Date().toISOString() }, ...prev]);
       toast({ title: "تم الإرسال", description: "تم رفع العذر بنجاح وسيتم مراجعته من المعلم" });
