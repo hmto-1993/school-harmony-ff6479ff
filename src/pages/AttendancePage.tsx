@@ -399,6 +399,10 @@ export default function AttendancePage() {
               { gradient: "from-destructive/15 to-destructive/5", border: "border-destructive/40", text: "text-destructive", iconBg: "bg-destructive/20" },
             ];
             const color = colorPalette[index % colorPalette.length];
+            const progress = weeklyProgress[c.id];
+            const sessions = progress?.sessions ?? 0;
+            const limit = progress?.limit ?? 5;
+            const isComplete = sessions >= limit;
             return (
               <button
                 key={c.id}
@@ -422,6 +426,16 @@ export default function AttendancePage() {
                   "text-sm font-bold truncate",
                   isSelected ? color.text : "text-foreground"
                 )}>{c.name}</p>
+                {/* Weekly progress badge */}
+                <div className={cn(
+                  "mt-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
+                  isComplete
+                    ? "bg-success/15 text-success border-success/30"
+                    : "bg-muted/60 text-muted-foreground border-border/40"
+                )}>
+                  {isComplete && <CheckCircle2 className="h-2.5 w-2.5" />}
+                  {sessions}/{limit}
+                </div>
                 {isSelected && (
                   <div className={cn("absolute top-2 left-2 w-2.5 h-2.5 rounded-full animate-pulse", "bg-primary")} />
                 )}
