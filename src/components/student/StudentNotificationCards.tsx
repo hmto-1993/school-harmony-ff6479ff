@@ -61,6 +61,13 @@ export default function StudentNotificationCards({
   const [warningDetailOpen, setWarningDetailOpen] = useState(false);
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
 
+  // --- Absence settings ---
+  const [allowedSessions, setAllowedSessions] = useState(0);
+  const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [absenceMode, setAbsenceMode] = useState("percentage");
+  const [totalTermSessions, setTotalTermSessions] = useState(0);
+  const [isExceeded, setIsExceeded] = useState(false);
+
   // --- Excuse submission ---
   const [excuseOpen, setExcuseOpen] = useState(false);
   const [excuseFile, setExcuseFile] = useState<File | null>(null);
