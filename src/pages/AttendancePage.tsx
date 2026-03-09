@@ -98,6 +98,39 @@ export default function AttendancePage() {
     loadDayNote();
   }, [selectedClass, date]);
 
+  const loadWeeklyProgress = async () => {
+    // 1. Fetch class_schedules for periods_per_week limits
+    const { data: schedules } = await supabase
+      .from("class_schedules")
+      .select("class_id, periods_per_week");
+
+    const limitsMap: Record<string, number> = {};
+    (schedules || []).forEach(s => { limitsMap[s.class_id] = s.periods_per_week; });
+
+    // 2. Fetch distinct attendance dates per class within the academic week
+    const { data: records } = await supabase
+      .from("attendance_records")
+      .select("class_id, date")
+      .gte("date", weekBounds.start)
+      .lte("date", weekBounds.end);
+
+    // Count distinct dates per class
+    const sessionMap: Record<string, Set<string>> = {};
+    (records || []).forEach(r => {
+      if (!sessionMap[r.class_id]) sessionMap[r.class_id] = new Set();
+      sessionMap[r.class_id].add(r.date);
+    });
+
+    const progress: WeeklyProgress = {};
+    classes.forEach(c => {
+      progress[c.id] = {
+        sessions: sessionMap[c.id]?.size ?? 0,
+        limit: limitsMap[c.id] ?? 5,
+      };
+    });
+    setWeeklyProgress(progress);
+  };
+
   const loadDayNote = async () => {
     if (!selectedClass) return;
     const { data } = await supabase
