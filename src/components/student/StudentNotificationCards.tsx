@@ -61,6 +61,13 @@ export default function StudentNotificationCards({
   const [warningDetailOpen, setWarningDetailOpen] = useState(false);
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
 
+  // --- Excuse submission ---
+  const [excuseOpen, setExcuseOpen] = useState(false);
+  const [excuseFile, setExcuseFile] = useState<File | null>(null);
+  const [excuseReason, setExcuseReason] = useState("");
+  const [excuseUploading, setExcuseUploading] = useState(false);
+  const [existingExcuses, setExistingExcuses] = useState<any[]>([]);
+
   // --- Login popup ---
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   const [loginPopupType, setLoginPopupType] = useState<"warning" | "achievement" | null>(null);
