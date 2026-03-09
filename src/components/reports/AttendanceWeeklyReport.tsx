@@ -299,23 +299,22 @@ export default function AttendanceWeeklyReport({
         <div ref={tableRef} className="overflow-auto rounded-lg border border-border/40 max-h-[600px]">
           <table className="w-full border-collapse" dir="rtl" style={{ fontSize: 13 }}>
             <thead className="sticky top-0 z-10">
-              <tr style={{ backgroundColor: "#e8ecf1" }}>
+              <tr className="bg-muted">
                 <th
-                  className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground"
+                  className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground bg-muted"
                   rowSpan={2}
-                  style={{ minWidth: 36, backgroundColor: "#e8ecf1" }}
+                  style={{ minWidth: 36 }}
                 >م</th>
                 <th
-                  className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground"
+                  className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground bg-muted"
                   rowSpan={2}
-                  style={{ minWidth: 160, backgroundColor: "#e8ecf1" }}
+                  style={{ minWidth: 160 }}
                 >اسم الطالب</th>
                 {weeks.map((w) => (
                   <th
                     key={w.weekNum}
                     colSpan={periodsPerWeek}
-                    className="border border-border/30 px-2 py-2 text-center font-bold"
-                    style={{ backgroundColor: "#e8ecf1", color: "#374151" }}
+                    className="border border-border/30 px-2 py-2 text-center font-bold bg-muted text-foreground"
                   >
                     الأسبوع {w.weekNum}
                   </th>
