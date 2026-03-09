@@ -382,27 +382,30 @@ export default function AbsenceWarningSlip({
               </div>
             </div>
 
-            {/* Warning Text */}
-            <div
-              style={{
-                background: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "8px",
-                padding: "16px",
-                margin: "20px 0",
-                lineHeight: 1.8,
-                fontSize: "14px",
-              }}
-            >
-              <p style={{ marginBottom: "8px" }}>
-                <strong>تحية طيبة وبعد،</strong>
-              </p>
-              <p>
-                نود إشعاركم بأن الطالب المذكور أعلاه قد بلغت نسبة غيابه <strong style={{ color: "#dc2626" }}>{absenceRate}%</strong> من إجمالي الحصص الدراسية ({totalAbsent} غياب من أصل {totalDays} حصة).
-              </p>
-              <p style={{ marginTop: "8px" }}>
-                وحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه <strong>20%</strong> يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.
-              </p>
+            {/* Editable Warning Text */}
+            <div style={{ margin: "20px 0" }}>
+              <p style={{ fontWeight: 600, marginBottom: "8px", fontSize: "14px", color: "#64748b" }}>نص الإنذار (قابل للتعديل):</p>
+              <Textarea
+                value={warningText}
+                onChange={(e) => setWarningText(e.target.value)}
+                className="min-h-[140px] text-sm leading-relaxed bg-rose-50 border-rose-200 text-slate-800 dark:bg-rose-50 dark:text-slate-800 dark:border-rose-200"
+                dir="rtl"
+                style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif", lineHeight: 1.8 }}
+              />
+            </div>
+
+            {/* Warning text for print (hidden in dialog, shown in print) */}
+            <div className="hidden print-warning-text" style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: "8px",
+              padding: "16px",
+              margin: "20px 0",
+              lineHeight: 1.8,
+              fontSize: "14px",
+              whiteSpace: "pre-wrap",
+            }}>
+              {warningText}
             </div>
 
             {/* Absent Dates Table */}
