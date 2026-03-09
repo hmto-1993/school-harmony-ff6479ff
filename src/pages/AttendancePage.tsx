@@ -527,8 +527,13 @@ export default function AttendancePage() {
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">
-                <Button variant="outline" size="sm" onClick={markAllPresent} className="backdrop-blur-sm">
-                  <CheckCircle2 className="h-4 w-4 ml-1" />
+                <Button
+                  size="sm"
+                  onClick={markAllPresent}
+                  disabled={isClassLocked}
+                  className="gap-1.5 bg-success hover:bg-success/90 text-success-foreground shadow-sm"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
                   تحديد الكل حاضر
                 </Button>
                 <div className="relative flex-1 min-w-[160px] max-w-[280px]">
