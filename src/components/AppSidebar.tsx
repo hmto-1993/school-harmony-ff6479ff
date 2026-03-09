@@ -42,6 +42,7 @@ const teacherLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
   { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
+  { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/activities", label: "الأنشطة", icon: Layers },
