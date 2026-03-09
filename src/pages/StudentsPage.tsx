@@ -124,6 +124,7 @@ export default function StudentsPage() {
   useEffect(() => {
     fetchStudents();
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    loadExceededStudents();
   }, []);
 
   const fetchStudents = async () => {
