@@ -107,7 +107,32 @@ export default function AbsenceWarningSlip({
       .maybeSingle();
     if (subjectData?.value) setSubjectName(subjectData.value);
 
+    // Build default warning text
+    const subj = subjectData?.value || "المادة الدراسية";
+    const absentCount = attendance?.length || 0;
+    setWarningText(
+      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه 20% يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
+    );
+
     setLoading(false);
+  };
+
+  const handleSendToStudent = async () => {
+    setSending(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await supabase.from("notifications").insert({
+      student_id: studentId,
+      type: "warning",
+      message: warningText,
+      created_by: userData?.user?.id || null,
+    });
+    setSending(false);
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الإرسال", description: "تم إرسال الإنذار إلى حساب الطالب بنجاح" });
+      onOpenChange(false);
+    }
   };
 
   const handlePrint = () => {
