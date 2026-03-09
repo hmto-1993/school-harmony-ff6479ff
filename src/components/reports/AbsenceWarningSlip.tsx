@@ -449,19 +449,6 @@ export default function AbsenceWarningSlip({
               />
             </div>
 
-            {/* Warning text for print (hidden in dialog, shown in print) */}
-            <div className="hidden print-warning-text" style={{
-              background: "#fef2f2",
-              border: "1px solid #fecaca",
-              borderRadius: "8px",
-              padding: "16px",
-              margin: "20px 0",
-              lineHeight: 1.8,
-              fontSize: "14px",
-              whiteSpace: "pre-wrap",
-            }}>
-              {warningText}
-            </div>
 
             {/* Absent Dates Table */}
             {absentDates.length > 0 && (
