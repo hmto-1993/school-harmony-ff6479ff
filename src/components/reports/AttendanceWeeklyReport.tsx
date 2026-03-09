@@ -162,7 +162,7 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
 
   const handleExportExcel = async () => {
     const XLSX = await import("xlsx");
