@@ -86,6 +86,12 @@ export default function AttendancePage() {
     });
   }, []);
 
+  // Load weekly progress whenever classes list or week bounds change
+  useEffect(() => {
+    if (classes.length === 0) return;
+    loadWeeklyProgress();
+  }, [classes, weekBounds]);
+
   useEffect(() => {
     if (!selectedClass) return;
     loadStudents();
