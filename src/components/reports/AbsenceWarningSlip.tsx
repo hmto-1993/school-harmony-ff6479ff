@@ -297,6 +297,15 @@ export default function AbsenceWarningSlip({
             body { padding: 0; }
             @page { margin: 15mm; }
           }
+          @page {
+            margin: 15mm;
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
+            @bottom-center { content: none; }
+            @top-left { content: none; }
+            @top-right { content: none; }
+            @top-center { content: none; }
+          }
         </style>
       </head>
       <body>
