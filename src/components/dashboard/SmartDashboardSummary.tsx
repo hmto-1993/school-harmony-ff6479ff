@@ -125,6 +125,30 @@ export default function SmartDashboardSummary() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Current Lesson - FIRST */}
+      <Card className="border-0 ring-1 ring-info/15 bg-gradient-to-br from-info/5 via-card to-info/10 overflow-hidden">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-info to-info/70 shadow-md">
+              <BookOpen className="h-4 w-4 text-info-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">درس اليوم</p>
+              <p className="text-xs text-muted-foreground">
+                {currentWeek ? `الأسبوع ${currentWeek}` : "الخطة الدراسية"}
+              </p>
+            </div>
+          </div>
+          {currentLesson ? (
+            <div className="bg-info/5 rounded-lg px-3 py-2">
+              <p className="text-sm font-semibold text-foreground">{currentLesson}</p>
+            </div>
+          ) : (
+            <p className="text-xs text-muted-foreground">لم يتم تعيين درس لهذا اليوم</p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Absent Today */}
       <Card className="border-0 ring-1 ring-destructive/15 bg-gradient-to-br from-destructive/5 via-card to-destructive/10 overflow-hidden">
         <CardContent className="p-4">
@@ -199,30 +223,6 @@ export default function SmartDashboardSummary() {
             </div>
           ) : (
             <p className="text-xs text-success font-medium">✓ لا يوجد طلاب بلغوا الحد</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Current Lesson */}
-      <Card className="border-0 ring-1 ring-info/15 bg-gradient-to-br from-info/5 via-card to-info/10 overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-info to-info/70 shadow-md">
-              <BookOpen className="h-4 w-4 text-info-foreground" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-foreground">درس اليوم</p>
-              <p className="text-xs text-muted-foreground">
-                {currentWeek ? `الأسبوع ${currentWeek}` : "الخطة الدراسية"}
-              </p>
-            </div>
-          </div>
-          {currentLesson ? (
-            <div className="bg-info/5 rounded-lg px-3 py-2">
-              <p className="text-sm font-semibold text-foreground">{currentLesson}</p>
-            </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">لم يتم تعيين درس لهذا اليوم</p>
           )}
         </CardContent>
       </Card>
