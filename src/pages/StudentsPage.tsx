@@ -127,6 +127,43 @@ export default function StudentsPage() {
     loadExceededStudents();
   }, []);
 
+  const loadExceededStudents = async () => {
+    const { data: settings } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
+    
+    let threshold = 20;
+    let allowedSessions = 0;
+    let mode = "percentage";
+    (settings || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
+      if (s.id === "absence_mode") mode = s.value || "percentage";
+    });
+
+    const { data: allAtt } = await supabase
+      .from("attendance_records")
+      .select("student_id, status");
+
+    const studentAbsences: Record<string, { absent: number; total: number }> = {};
+    (allAtt || []).forEach((r: any) => {
+      if (!studentAbsences[r.student_id]) studentAbsences[r.student_id] = { absent: 0, total: 0 };
+      studentAbsences[r.student_id].total++;
+      if (r.status === "absent") studentAbsences[r.student_id].absent++;
+    });
+
+    const exceeded = new Set<string>();
+    Object.entries(studentAbsences).forEach(([sid, data]) => {
+      if (mode === "sessions" && allowedSessions > 0) {
+        if (data.absent > allowedSessions) exceeded.add(sid);
+      } else if (data.total > 0) {
+        if ((data.absent / data.total) * 100 >= threshold) exceeded.add(sid);
+      }
+    });
+    setExceededStudents(exceeded);
+  };
+
   const fetchStudents = async () => {
     const { data } = await supabase
       .from("students")
