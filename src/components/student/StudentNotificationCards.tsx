@@ -367,16 +367,24 @@ export default function StudentNotificationCards({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <h3 className="text-sm sm:text-base font-bold text-red-900 dark:text-red-200 truncate">
-                          ⚠️ إنذار غياب
+                          {isExceeded ? "🚫 محروم من الاختبار" : "⚠️ إنذار غياب"}
                         </h3>
                         {newWarnings.length > 0 && (
                           <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0">
                             جديد
                           </Badge>
                         )}
+                        {isExceeded && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0 animate-pulse">
+                            محروم
+                          </Badge>
+                        )}
                       </div>
-                      <p className="text-xs text-red-700 dark:text-red-300/80 line-clamp-1">
-                        {warnings.length} إنذار — {absentDates.length} يوم غياب مسجّل
+                      <p className="text-xs text-red-700 dark:text-red-300/80 line-clamp-2">
+                        {absenceMode === "sessions" && allowedSessions > 0
+                          ? `لقد غبت ${absentDates.length} حصص من أصل ${allowedSessions} حصص مسموح بها`
+                          : `${absentDates.length} يوم غياب — النسبة ${attendance.length > 0 ? Math.round((absentDates.length / attendance.length) * 100) : 0}% من الحد ${absenceThreshold}%`
+                        }
                       </p>
                     </div>
                     <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30">
