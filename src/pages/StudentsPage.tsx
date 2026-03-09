@@ -994,6 +994,22 @@ export default function StudentsPage() {
           totalDays={warningStudent.totalDays}
         />
       )}
+
+      {/* WhatsApp Message Dialog */}
+      {waStudent && (
+        <WhatsAppMessageDialog
+          open={waOpen}
+          onOpenChange={setWaOpen}
+          studentName={waStudent.name}
+          parentPhone={waStudent.phone}
+          templateType={waTemplateType}
+          templateData={{
+            student_name: waStudent.name,
+            absence_count: waStudent.absenceCount,
+            last_date: waStudent.lastDate,
+          }}
+        />
+      )}
     </div>
   );
 }
