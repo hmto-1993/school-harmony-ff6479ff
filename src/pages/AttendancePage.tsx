@@ -35,9 +35,13 @@ const statusOptions: { value: AttendanceStatus; label: string; color: string }[]
   { value: "sick_leave", label: "إجازة مرضية", color: "bg-info/10 text-info border-info/30" },
 ];
 
+// Map: classId -> { sessions: number; limit: number }
+type WeeklyProgress = Record<string, { sessions: number; limit: number }>;
+
 export default function AttendancePage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { calendarData, getWeekForDate } = useAcademicWeek();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [records, setRecords] = useState<StudentAttendance[]>([]);
@@ -52,7 +56,29 @@ export default function AttendancePage() {
   const [moveConfirmOpen, setMoveConfirmOpen] = useState(false);
   const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
   const [movingDate, setMovingDate] = useState(false);
+  const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
   const date = format(selectedDate, "yyyy-MM-dd");
+
+  // Derive the academic week bounds for the selected date
+  const weekBounds = useMemo(() => {
+    if (calendarData) {
+      const weekNum = getWeekForDate(selectedDate);
+      if (weekNum !== null) {
+        const calStart = new Date(calendarData.start_date);
+        const wStart = new Date(calStart);
+        wStart.setDate(calStart.getDate() + (weekNum - 1) * 7);
+        const wEnd = new Date(wStart);
+        wEnd.setDate(wStart.getDate() + 6);
+        return { start: format(wStart, "yyyy-MM-dd"), end: format(wEnd, "yyyy-MM-dd") };
+      }
+    }
+    // Fallback: Sat-based week (Saudi school week)
+    const sat = new Date(selectedDate);
+    sat.setDate(sat.getDate() - ((sat.getDay() + 1) % 7));
+    const fri = new Date(sat);
+    fri.setDate(sat.getDate() + 6);
+    return { start: format(sat, "yyyy-MM-dd"), end: format(fri, "yyyy-MM-dd") };
+  }, [selectedDate, calendarData, getWeekForDate]);
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => {
