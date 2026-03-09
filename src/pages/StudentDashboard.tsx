@@ -324,6 +324,15 @@ export default function StudentDashboard() {
           )}
         </div>
 
+        {/* Full Mark Celebration */}
+        {vis.grades && student.grades.length > 0 && (
+          <FullMarkCelebration
+            studentName={student.full_name}
+            className={student.class?.name || ""}
+            grades={student.grades}
+          />
+        )}
+
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
 
