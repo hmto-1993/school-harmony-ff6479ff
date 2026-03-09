@@ -281,8 +281,7 @@ export default function AttendanceWeeklyReport({
       <CardContent className="pt-0">
         {/* Legend bar - matches reference image */}
         <div
-          className="flex items-center justify-between rounded-lg border border-border/40 px-4 py-2 mb-3"
-          style={{ backgroundColor: "#f8fafc" }}
+          className="flex items-center justify-between rounded-lg border border-border/40 px-4 py-2 mb-3 bg-muted/50"
           dir="rtl"
         >
           <span className="text-xs font-bold text-muted-foreground">مفتاح الرموز</span>
