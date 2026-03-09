@@ -89,19 +89,6 @@ export default function StudentDashboard() {
   const [popupAction, setPopupAction] = useState<string>("none");
   const [activeTab, setActiveTab] = useState<string>("");
 
-  // Warnings state
-  const [warnings, setWarnings] = useState<{ id: string; message: string; created_at: string; is_read: boolean }[]>([]);
-
-  const fetchWarnings = async () => {
-    if (!student) return;
-    const { data } = await supabase
-      .from("notifications")
-      .select("id, message, created_at, is_read")
-      .eq("student_id", student.id)
-      .eq("type", "warning")
-      .order("created_at", { ascending: false });
-    setWarnings(data || []);
-  };
 
   useEffect(() => {
     if (student) {
