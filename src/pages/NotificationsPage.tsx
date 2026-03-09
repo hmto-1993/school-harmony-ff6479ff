@@ -330,6 +330,88 @@ export default function NotificationsPage() {
           <AnnouncementsTab />
         </TabsContent>
 
+        {/* ===== Excuses Review ===== */}
+        <TabsContent value="excuses" className="space-y-4">
+          <Card className="shadow-card">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileImage className="h-5 w-5" />
+                أعذار الغياب المقدمة من الطلاب
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {excuses.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <FileImage className="h-12 w-12 mb-3 opacity-30" />
+                  <p>لا توجد أعذار مقدمة</p>
+                </div>
+              ) : (
+                <div className="overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">الطالب</TableHead>
+                        <TableHead className="text-right">الفصل</TableHead>
+                        <TableHead className="text-right">سبب العذر</TableHead>
+                        <TableHead className="text-right">الملف</TableHead>
+                        <TableHead className="text-right">التاريخ</TableHead>
+                        <TableHead className="text-right">الحالة</TableHead>
+                        <TableHead className="text-center">إجراء</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {excuses.map((excuse) => (
+                        <TableRow key={excuse.id} className={excuse.status === "pending" ? "bg-amber-50/50 dark:bg-amber-950/10" : ""}>
+                          <TableCell className="font-medium">{excuse.students?.full_name || "—"}</TableCell>
+                          <TableCell className="text-sm">{excuse.students?.classes?.name || "—"}</TableCell>
+                          <TableCell className="text-sm max-w-[200px] truncate">{excuse.reason || "—"}</TableCell>
+                          <TableCell>
+                            <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+                              <FileImage className="h-3 w-3" />
+                              عرض
+                            </a>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground">
+                            {new Date(excuse.created_at).toLocaleDateString("ar-SA")}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={
+                              excuse.status === "pending" ? "secondary" :
+                              excuse.status === "accepted" ? "default" : "destructive"
+                            } className="text-xs">
+                              {excuse.status === "pending" && <Clock className="h-3 w-3 ml-1" />}
+                              {excuse.status === "accepted" && <Check className="h-3 w-3 ml-1" />}
+                              {excuse.status === "rejected" && <XIcon className="h-3 w-3 ml-1" />}
+                              {excuse.status === "pending" ? "قيد المراجعة" :
+                               excuse.status === "accepted" ? "مقبول" : "مرفوض"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {excuse.status === "pending" ? (
+                              <div className="flex items-center gap-1 justify-center">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-950/30"
+                                  onClick={() => { setReviewingExcuse(excuse); setReviewNote(""); }}
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ===== Send SMS ===== */}
         <TabsContent value="send-sms" className="space-y-4">
           {/* Type & Class Selection */}
