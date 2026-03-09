@@ -49,6 +49,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole((data?.role as AppRole) || null);
   };
 
+  // Restore student session by re-fetching from server
+  useEffect(() => {
+    const saved = sessionStorage.getItem("student_session");
+    if (saved) {
+      try {
+        const { national_id } = JSON.parse(saved);
+        if (national_id) {
+          supabase.functions.invoke("student-login", { body: { national_id } }).then(({ data, error }) => {
+            if (!error && data && !data.error) {
+              setStudent({
+                id: data.student.id,
+                full_name: data.student.full_name,
+                national_id: data.student.national_id,
+                class_id: data.student.class_id || null,
+                class: data.student.class,
+                grades: data.grades,
+                behaviors: data.behaviors,
+                attendance: data.attendance,
+                visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+              });
+            } else {
+              sessionStorage.removeItem("student_session");
+            }
+            setStudentRestoring(false);
+          });
+        } else {
+          sessionStorage.removeItem("student_session");
+          setStudentRestoring(false);
+        }
+      } catch {
+        sessionStorage.removeItem("student_session");
+        setStudentRestoring(false);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
