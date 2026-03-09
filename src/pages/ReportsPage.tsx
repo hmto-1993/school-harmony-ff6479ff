@@ -967,6 +967,7 @@ export default function ReportsPage() {
             <Trophy className="h-4 w-4" />
             التحليل الشهري
           </TabsTrigger>
+        </TabsList>
 
         {/* ===== Attendance Report ===== */}
         <TabsContent value="attendance" className="space-y-4">
