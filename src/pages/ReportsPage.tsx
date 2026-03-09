@@ -490,8 +490,12 @@ export default function ReportsPage() {
       return null;
     }
 
-    const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
-    return urlData?.publicUrl || null;
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from("reports").createSignedUrl(fileName, 3600);
+    if (signedUrlError) {
+      toast({ title: "خطأ", description: "فشل إنشاء رابط التقرير", variant: "destructive" });
+      return null;
+    }
+    return signedUrlData?.signedUrl || null;
   };
 
   const getReportLabel = (sections: { attendance: boolean; grades: boolean }) => {
