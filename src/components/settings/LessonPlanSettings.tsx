@@ -1,16 +1,15 @@
-import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2 } from "lucide-react";
+import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import * as XLSX from "xlsx";
 
 interface ClassOption {
   id: string;
@@ -36,8 +35,9 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
   const [slots, setSlots] = useState<Record<string, LessonSlot>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch schedule for the class
   useEffect(() => {
     if (!selectedClassId) return;
     (async () => {
@@ -56,7 +56,6 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     })();
   }, [selectedClassId]);
 
-  // Fetch lesson plans for selected class + week
   const fetchLessons = useCallback(async () => {
     if (!selectedClassId) return;
     setLoading(true);
@@ -102,7 +101,6 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     if (!user || !selectedClassId) return;
     setSaving(true);
 
-    // Delete existing for this class+week, then insert all
     await supabase
       .from("lesson_plans")
       .delete()
@@ -141,6 +139,107 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     fetchLessons();
   };
 
+  // Download Excel template
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الجمع", "اسم الوحدة": "الوحدة الأولى" },
+      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الطرح", "اسم الوحدة": "الوحدة الأولى" },
+      { "رقم الأسبوع": 2, "عنوان الدرس": "مثال: درس الضرب", "اسم الوحدة": "الوحدة الثانية" },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws["!cols"] = [{ wch: 14 }, { wch: 30 }, { wch: 25 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "خطة الدروس");
+    XLSX.writeFile(wb, "lesson_plan_template.xlsx");
+  };
+
+  // Import from Excel/CSV
+  const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !selectedClassId) return;
+    setImporting(true);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const wb = XLSX.read(arrayBuffer, { type: "array" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws);
+
+      if (rows.length === 0) {
+        toast({ title: "خطأ", description: "الملف فارغ", variant: "destructive" });
+        setImporting(false);
+        return;
+      }
+
+      // Map columns (support Arabic & English headers)
+      const mapped = rows.map((r) => ({
+        weekNumber: Number(r["رقم الأسبوع"] || r["Week Number"] || r["week_number"] || weekNumber),
+        lessonTitle: String(r["عنوان الدرس"] || r["Lesson Title"] || r["lesson_title"] || "").trim(),
+        objectives: String(r["اسم الوحدة"] || r["Unit Name"] || r["unit_name"] || r["الأهداف"] || r["Objectives"] || "").trim(),
+      })).filter((r) => r.lessonTitle);
+
+      if (mapped.length === 0) {
+        toast({ title: "خطأ", description: "لم يتم العثور على دروس صالحة في الملف", variant: "destructive" });
+        setImporting(false);
+        return;
+      }
+
+      // Group by week number
+      const byWeek: Record<number, typeof mapped> = {};
+      mapped.forEach((m) => {
+        if (!byWeek[m.weekNumber]) byWeek[m.weekNumber] = [];
+        byWeek[m.weekNumber].push(m);
+      });
+
+      let totalInserted = 0;
+
+      for (const [wk, lessons] of Object.entries(byWeek)) {
+        const wkNum = Number(wk);
+
+        // Delete existing for this week
+        await supabase
+          .from("lesson_plans")
+          .delete()
+          .eq("class_id", selectedClassId)
+          .eq("week_number", wkNum)
+          .eq("created_by", user.id);
+
+        // Distribute lessons across days/slots
+        const insertRows = lessons.map((lesson, idx) => {
+          const dayIdx = daysOfWeek[idx % daysOfWeek.length];
+          const slotIdx = Math.floor(idx / daysOfWeek.length);
+          return {
+            class_id: selectedClassId,
+            week_number: wkNum,
+            day_index: dayIdx,
+            slot_index: slotIdx,
+            lesson_title: lesson.lessonTitle,
+            objectives: lesson.objectives,
+            teacher_reflection: "",
+            is_completed: false,
+            created_by: user.id,
+          };
+        });
+
+        const { error } = await supabase.from("lesson_plans").insert(insertRows);
+        if (!error) totalInserted += insertRows.length;
+      }
+
+      toast({
+        title: "✅ تم الاستيراد",
+        description: `تم استيراد ${totalInserted} درس بنجاح`,
+      });
+
+      // Refresh grid
+      fetchLessons();
+    } catch {
+      toast({ title: "خطأ", description: "فشل قراءة الملف", variant: "destructive" });
+    }
+
+    setImporting(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <div className="space-y-4">
       {/* Controls */}
@@ -172,6 +271,31 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           حفظ الخطة
         </Button>
+
+        {/* Import / Template buttons */}
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls,.csv"
+            onChange={handleFileImport}
+            className="hidden"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+            disabled={!selectedClassId || importing}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+            استيراد
+          </Button>
+          <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleDownloadTemplate}>
+            <Download className="h-4 w-4" />
+            تحميل النموذج
+          </Button>
+        </div>
       </div>
 
       {/* Grid */}
