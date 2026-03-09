@@ -390,16 +390,38 @@ export default function AttendanceWeeklyReport({
                     Array.from({ length: periodsPerWeek }, (_, i) => {
                       const status = s.weeks[w.weekNum]?.[i];
                       const cfg = status ? STATUS_CONFIG[status] : null;
+                      // For lesson view, compute day_index from slot position
+                      const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
+                      const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
+                      const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
+                      const lesson = lessonLookup.get(lessonKey);
+
+                      const handleSlotClick = () => {
+                        setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
+                      };
+
                       return (
                         <td
                           key={`${w.weekNum}-${i}`}
-                          className="border border-border/15 text-center"
-                          style={{ padding: "6px 2px", minWidth: 30 }}
+                          className={cn("border border-border/15 text-center", lessonPlans.length > 0 && "cursor-pointer hover:bg-primary/5")}
+                          style={{ padding: "6px 2px", minWidth: viewMode === "lessons" ? 60 : 30 }}
+                          onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
+                          title={lesson?.lesson_title || undefined}
                         >
-                          {cfg ? (
-                            <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
+                          {viewMode === "attendance" ? (
+                            cfg ? (
+                              <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
+                            ) : (
+                              <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
+                            )
                           ) : (
-                            <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
+                            lesson ? (
+                              <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "text-primary font-bold" : "text-foreground")}>
+                                {lesson.lesson_title}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">—</span>
+                            )
                           )}
                         </td>
                       );
