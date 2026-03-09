@@ -43,6 +43,9 @@ import {
   History,
   RotateCcw,
   CalendarDays,
+  ClipboardCheck,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
