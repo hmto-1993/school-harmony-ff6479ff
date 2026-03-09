@@ -139,6 +139,19 @@ export default function AbsenceWarningSlip({
     const content = printRef.current;
     if (!content) return;
 
+    // Clone and replace textarea with styled div for print
+    const clone = content.cloneNode(true) as HTMLElement;
+    const textareaEl = clone.querySelector("textarea");
+    if (textareaEl) {
+      const div = document.createElement("div");
+      div.style.cssText = "background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:20px 0;line-height:1.8;font-size:14px;white-space:pre-wrap;";
+      div.textContent = warningText;
+      textareaEl.parentElement?.replaceChild(div, textareaEl);
+    }
+    // Remove the label above textarea
+    const labels = clone.querySelectorAll("p");
+    labels.forEach(p => { if (p.textContent?.includes("قابل للتعديل")) p.remove(); });
+
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
