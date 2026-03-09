@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { format } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
