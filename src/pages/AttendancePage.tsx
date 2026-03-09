@@ -206,6 +206,11 @@ export default function AttendancePage() {
             onDateChange={(d) => setSelectedDate(d)}
           />
           <AcademicWeekBadge date={selectedDate} />
+          {savedDayNote && (
+            <span className="text-xs px-2 py-1 rounded-md bg-info/10 text-info border border-info/30">
+              📝 {savedDayNote}
+            </span>
+          )}
         </div>
       </div>
 
