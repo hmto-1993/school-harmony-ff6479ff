@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bell, CheckCircle, MessageSquare, Send, Users, GraduationCap, UserX, Megaphone } from "lucide-react";
+import { Bell, CheckCircle, MessageSquare, Send, Users, GraduationCap, UserX, Megaphone, FileImage, Check, X as XIcon, Clock } from "lucide-react";
 import AnnouncementsTab from "@/components/announcements/AnnouncementsTab";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +36,30 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+
+interface Notification {
+  id: string;
+  type: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  status?: string;
+  students: { full_name: string } | null;
+}
+
+interface ExcuseSubmission {
+  id: string;
+  notification_id: string;
+  student_id: string;
+  file_url: string;
+  file_name: string;
+  reason: string;
+  status: string;
+  review_note: string;
+  created_at: string;
+  students?: { full_name: string; class_id: string | null; classes?: { name: string } | null } | null;
+  notifications?: { message: string; created_at: string } | null;
+}
 
 interface Notification {
   id: string;
