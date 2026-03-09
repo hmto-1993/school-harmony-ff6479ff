@@ -882,7 +882,7 @@ export default function ReportsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="daily">يومي</SelectItem>
-                  <SelectItem value="periodic">فتري</SelectItem>
+                  <SelectItem value="periodic">أسبوعي</SelectItem>
                 </SelectContent>
               </Select>
             </div>
