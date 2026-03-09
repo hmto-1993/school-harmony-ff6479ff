@@ -1084,6 +1084,11 @@ export default function ReportsPage() {
                   dateFrom={dateFrom}
                   dateTo={dateTo}
                   className={className}
+                  lessonPlans={lessonPlans}
+                  onLessonUpdated={async () => {
+                    const { data } = await supabase.from("lesson_plans").select("*").eq("class_id", selectedClass);
+                    setLessonPlans(data || []);
+                  }}
                 />
               )}
             </div>
