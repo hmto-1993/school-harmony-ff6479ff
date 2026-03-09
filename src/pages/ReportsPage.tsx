@@ -1195,6 +1195,11 @@ export default function ReportsPage() {
         <TabsContent value="behavior" className="space-y-4">
           <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
         </TabsContent>
+
+        {/* ===== Monthly Analytics ===== */}
+        <TabsContent value="analytics" className="space-y-4">
+          <MonthlyAnalytics selectedClass={selectedClass} classes={classes} />
+        </TabsContent>
       </Tabs>
 
       {/* Print Preview Dialog */}
