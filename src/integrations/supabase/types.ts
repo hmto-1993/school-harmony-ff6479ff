@@ -170,6 +170,47 @@ export type Database = {
           },
         ]
       }
+      attendance_schedule_exceptions: {
+        Row: {
+          class_id: string
+          created_at: string
+          created_by: string
+          id: string
+          new_date: string | null
+          original_date: string
+          reason: string
+          type: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          new_date?: string | null
+          original_date: string
+          reason?: string
+          type?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          new_date?: string | null
+          original_date?: string
+          reason?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_schedule_exceptions_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       behavior_records: {
         Row: {
           class_id: string
@@ -217,6 +258,41 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_schedules: {
+        Row: {
+          class_id: string
+          created_at: string
+          days_of_week: number[]
+          id: string
+          periods_per_week: number
+          updated_at: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          days_of_week?: number[]
+          id?: string
+          periods_per_week?: number
+          updated_at?: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          days_of_week?: number[]
+          id?: string
+          periods_per_week?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_schedules_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: true
+            referencedRelation: "classes"
             referencedColumns: ["id"]
           },
         ]
