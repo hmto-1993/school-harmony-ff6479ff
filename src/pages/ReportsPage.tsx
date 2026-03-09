@@ -875,6 +875,11 @@ export default function ReportsPage() {
                 setReportType(v);
                 if (v === "daily") {
                   setDateToDate(dateFromDate);
+                } else {
+                  // أسبوعي: اضبط "إلى تاريخ" لنهاية الأسبوع (بعد 6 أيام)
+                  const endOfWeek = new Date(dateFromDate);
+                  endOfWeek.setDate(endOfWeek.getDate() + 6);
+                  setDateToDate(endOfWeek);
                 }
               }}>
                 <SelectTrigger className="w-36">
@@ -887,18 +892,25 @@ export default function ReportsPage() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "من تاريخ"}</Label>
+              <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "بداية الأسبوع"}</Label>
               <HijriDatePicker
                 date={dateFromDate}
                 onDateChange={(d) => {
                   setDateFromDate(d);
-                  if (reportType === "daily") setDateToDate(d);
+                  if (reportType === "daily") {
+                    setDateToDate(d);
+                  } else {
+                    // أسبوعي: اضبط تاريخ النهاية تلقائياً بعد 6 أيام
+                    const endOfWeek = new Date(d);
+                    endOfWeek.setDate(endOfWeek.getDate() + 6);
+                    setDateToDate(endOfWeek);
+                  }
                 }}
               />
             </div>
             {reportType === "periodic" && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">إلى تاريخ</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">نهاية الأسبوع</Label>
                 <HijriDatePicker
                   date={dateToDate}
                   onDateChange={(d) => setDateToDate(d)}
