@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
-import { Sparkles, Star } from "lucide-react";
+import { Star } from "lucide-react";
+import { useHonorRoll } from "@/contexts/HonorRollContext";
 
 interface Props {
   size?: "sm" | "md" | "lg";
@@ -41,7 +42,7 @@ export default function DiamondStarBadge({ size = "sm", className, showTooltip =
         "relative flex items-center justify-center",
         "bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500",
         "rounded-sm rotate-45 shadow-md shadow-amber-400/30",
-        size === "sm" ? "w-3.5 h-3.5" : size === "md" ? "w-4.5 h-4.5" : "w-5.5 h-5.5"
+        size === "sm" ? "w-3.5 h-3.5" : size === "md" ? "w-4 h-4" : "w-5 h-5"
       )}>
         <Star 
           className={cn(
@@ -58,8 +59,33 @@ export default function DiamondStarBadge({ size = "sm", className, showTooltip =
  * Wrapper that only shows the badge if student is honored
  */
 export function HonorBadgeIfEligible({ studentId, size = "sm" }: { studentId: string; size?: "sm" | "md" | "lg" }) {
-  // This component is designed to be used with HonorRollContext
-  // Import useHonorRoll from HonorRollContext and check isHonored(studentId)
-  // For now, it renders conditionally based on a prop or context
-  return null; // Will be implemented with context
+  const { isHonored, isEnabled } = useHonorRoll();
+  
+  if (!isEnabled || !isHonored(studentId)) {
+    return null;
+  }
+  
+  return <DiamondStarBadge size={size} />;
+}
+
+/**
+ * Student name with honor badge if eligible
+ */
+export function StudentNameWithBadge({ 
+  studentId, 
+  name, 
+  className 
+}: { 
+  studentId: string; 
+  name: string; 
+  className?: string;
+}) {
+  const { isHonored, isEnabled } = useHonorRoll();
+  
+  return (
+    <span className={cn("inline-flex items-center gap-1.5", className)}>
+      {name}
+      {isEnabled && isHonored(studentId) && <DiamondStarBadge size="sm" />}
+    </span>
+  );
 }
