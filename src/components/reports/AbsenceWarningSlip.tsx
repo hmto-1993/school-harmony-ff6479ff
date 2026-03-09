@@ -258,7 +258,7 @@ export default function AbsenceWarningSlip({
         </style>
       </head>
       <body>
-        ${content.innerHTML}
+        ${clone.innerHTML}
       </body>
       </html>
     `);
