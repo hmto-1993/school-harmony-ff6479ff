@@ -94,7 +94,6 @@ export default function StudentDashboard() {
     if (student) {
       fetchFolders();
       fetchPopup();
-      fetchWarnings();
     }
   }, [student]);
 
