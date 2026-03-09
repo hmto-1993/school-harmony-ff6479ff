@@ -1,10 +1,11 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, FileText, FileSpreadsheet, Download } from "lucide-react";
+import { AlertTriangle, FileText, FileSpreadsheet, Download, BookOpen, ClipboardCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import LessonSlotDialog from "./LessonSlotDialog";
 
 interface AttendanceRecord {
   student_name: string;
