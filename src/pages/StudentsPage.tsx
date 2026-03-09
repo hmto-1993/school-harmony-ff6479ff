@@ -88,6 +88,11 @@ export default function StudentsPage() {
   } | null>(null);
   const [loadingWarning, setLoadingWarning] = useState<string | null>(null);
 
+  // WhatsApp dialog state
+  const [waOpen, setWaOpen] = useState(false);
+  const [waStudent, setWaStudent] = useState<{ name: string; phone: string | null; absenceCount?: number; lastDate?: string } | null>(null);
+  const [waTemplateType, setWaTemplateType] = useState<TemplateType>("absence");
+
   const openWarningSlip = async (student: Student) => {
     setLoadingWarning(student.id);
     // Fetch absence data for this student
