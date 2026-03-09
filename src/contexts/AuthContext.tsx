@@ -35,10 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<StudentData | null>(() => {
-    const saved = sessionStorage.getItem("student_session");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [student, setStudent] = useState<StudentData | null>(null);
+  const [studentRestoring, setStudentRestoring] = useState(() => !!sessionStorage.getItem("student_session"));
 
   const isStudent = !!student && !user;
 
