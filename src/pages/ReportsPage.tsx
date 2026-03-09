@@ -50,6 +50,8 @@ import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
+import ReportExportDialog from "@/components/reports/ReportExportDialog";
 import {
   AlertDialog,
   AlertDialogContent,
