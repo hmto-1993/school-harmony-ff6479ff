@@ -56,6 +56,9 @@ export default function StudentsPage() {
     parent_phone: "",
   });
 
+  // Absence exceeded tracking
+  const [exceededStudents, setExceededStudents] = useState<Set<string>>(new Set());
+
   // Import state
   const [importOpen, setImportOpen] = useState(false);
   const [importClassId, setImportClassId] = useState("");
