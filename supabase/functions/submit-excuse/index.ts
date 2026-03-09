@@ -21,6 +21,15 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+
+    // Validate file_url points to our Supabase Storage
+    const allowedPrefix = `${supabaseUrl}/storage/v1/object/public/`;
+    if (!file_url.startsWith(allowedPrefix)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid file URL" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 

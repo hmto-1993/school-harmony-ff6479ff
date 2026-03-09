@@ -5,6 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Generate a deterministic but fake email from national_id
+ * so the response shape is identical for found/not-found cases.
+ */
+function fakePlaceholderEmail(nationalId: string): string {
+  // Use a hash-like transform so it looks like a real masked email
+  const prefix = nationalId.substring(0, 2);
+  return `${prefix}***@***.com`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -24,6 +34,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const uniformMessage = "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني";
+
     // Look up profile by national_id
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -32,9 +44,9 @@ Deno.serve(async (req) => {
       .single();
 
     if (error || !profile) {
-      // Return uniform response to prevent enumeration
+      // Return a fake email so response shape is identical — signIn will fail naturally
       return new Response(
-        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -43,22 +55,15 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
 
     if (!user?.email) {
-      // Same uniform response
       return new Response(
-        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Obfuscate email: show first 2 chars + *** + domain
-    const [localPart, domain] = user.email.split("@");
-    const maskedLocal = localPart.length > 2
-      ? localPart.substring(0, 2) + "***"
-      : localPart[0] + "***";
-    const maskedEmail = `${maskedLocal}@${domain}`;
-
+    // Return real email for login — client uses this for signInWithPassword
     return new Response(
-      JSON.stringify({ email: maskedEmail, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+      JSON.stringify({ email: user.email, message: uniformMessage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
