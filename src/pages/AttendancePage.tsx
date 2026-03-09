@@ -677,7 +677,17 @@ export default function AttendancePage() {
                         )}
                       >
                         <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/10">{record.full_name}</td>
+                        <td className="p-3 font-semibold border-l border-border/10">
+                          <div className="flex items-center gap-2">
+                            <span>{record.full_name}</span>
+                            {absenceAlerts[record.student_id]?.exceeded && (
+                              <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 shrink-0 animate-pulse">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                محروم
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-3 border-l border-border/10">
                           <div className="flex flex-wrap gap-1">
                             {statusOptions.map((opt) => (
