@@ -37,6 +37,7 @@ import {
   ChevronDown,
   MessageCircle,
   Users2,
+  Trophy,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -50,6 +51,7 @@ import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -962,6 +964,10 @@ export default function ReportsPage() {
             <Heart className="h-4 w-4" />
             تقرير السلوك
           </TabsTrigger>
+          <TabsTrigger value="analytics" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400">
+            <Trophy className="h-4 w-4" />
+            التحليل الشهري
+          </TabsTrigger>
         </TabsList>
 
         {/* ===== Attendance Report ===== */}
@@ -1188,6 +1194,11 @@ export default function ReportsPage() {
         {/* ===== Behavior Report ===== */}
         <TabsContent value="behavior" className="space-y-4">
           <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
+        </TabsContent>
+
+        {/* ===== Monthly Analytics ===== */}
+        <TabsContent value="analytics" className="space-y-4">
+          <MonthlyAnalytics selectedClass={selectedClass} classes={classes} />
         </TabsContent>
       </Tabs>
 
