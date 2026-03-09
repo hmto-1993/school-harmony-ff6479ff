@@ -129,16 +129,16 @@ export default function ReportsPage() {
 
   // Fetch periods per week when class changes
   useEffect(() => {
-    const fetchSchedule = async () => {
+    const fetchScheduleAndLessons = async () => {
       if (!selectedClass) return;
-      const { data } = await supabase
-        .from("class_schedules")
-        .select("periods_per_week")
-        .eq("class_id", selectedClass)
-        .single();
-      setPeriodsPerWeek(data?.periods_per_week || 5);
+      const [schedRes, lessonsRes] = await Promise.all([
+        supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClass).single(),
+        supabase.from("lesson_plans").select("*").eq("class_id", selectedClass),
+      ]);
+      setPeriodsPerWeek(schedRes.data?.periods_per_week || 5);
+      setLessonPlans(lessonsRes.data || []);
     };
-    fetchSchedule();
+    fetchScheduleAndLessons();
   }, [selectedClass]);
 
   // Fetch classes
