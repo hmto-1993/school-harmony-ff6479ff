@@ -423,6 +423,7 @@ export default function SettingsPage() {
         }
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
+        if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
       });
 
       // Fetch popup history
