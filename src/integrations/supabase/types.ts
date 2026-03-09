@@ -413,6 +413,59 @@ export type Database = {
           },
         ]
       }
+      lesson_plans: {
+        Row: {
+          class_id: string
+          created_at: string
+          created_by: string
+          day_index: number
+          id: string
+          is_completed: boolean
+          lesson_title: string
+          objectives: string | null
+          slot_index: number
+          teacher_reflection: string | null
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          created_by: string
+          day_index?: number
+          id?: string
+          is_completed?: boolean
+          lesson_title?: string
+          objectives?: string | null
+          slot_index?: number
+          teacher_reflection?: string | null
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          created_by?: string
+          day_index?: number
+          id?: string
+          is_completed?: boolean
+          lesson_title?: string
+          objectives?: string | null
+          slot_index?: number
+          teacher_reflection?: string | null
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plans_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
