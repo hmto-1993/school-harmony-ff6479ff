@@ -273,6 +273,7 @@ export default function AttendancePage() {
     toast({ title: "تم الحفظ", description: "تم حفظ سجلات الحضور بنجاح" });
     setSaving(false);
     loadStudents();
+    loadWeeklyProgress();
   };
 
   const filteredRecords = useMemo(() => {
