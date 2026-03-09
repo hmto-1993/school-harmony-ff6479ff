@@ -38,6 +38,14 @@ const statusOptions: { value: AttendanceStatus; label: string; color: string }[]
 // Map: classId -> { sessions: number; limit: number }
 type WeeklyProgress = Record<string, { sessions: number; limit: number }>;
 
+interface AbsenceAlert {
+  student_id: string;
+  totalAbsent: number;
+  allowedSessions: number;
+  threshold: number;
+  exceeded: boolean;
+}
+
 export default function AttendancePage() {
   const { user } = useAuth();
   const { toast } = useToast();
