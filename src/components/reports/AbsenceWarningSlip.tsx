@@ -522,10 +522,35 @@ export default function AbsenceWarningSlip({
           </div>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        {/* Status Badge */}
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-xs text-muted-foreground">حالة الإنذار:</span>
+          <Badge variant={
+            notificationStatus === "excuse_pending" ? "secondary" :
+            notificationStatus === "seen" ? "outline" : "default"
+          } className="text-xs">
+            {notificationStatus === "sent" ? "تم الإرسال" :
+             notificationStatus === "seen" ? "تمت المشاهدة" :
+             notificationStatus === "excuse_pending" ? "بانتظار العذر" :
+             notificationStatus === "excuse_accepted" ? "✅ تم قبول العذر" :
+             notificationStatus === "excuse_rejected" ? "❌ تم رفض العذر" :
+             notificationStatus}
+          </Badge>
+        </div>
+
+        <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4 ml-1" />
             إغلاق
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleWhatsApp}
+            disabled={loading || !parentPhone}
+            className="gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <MessageCircle className="h-4 w-4" />
+            واتساب
           </Button>
           <Button
             variant="secondary"
