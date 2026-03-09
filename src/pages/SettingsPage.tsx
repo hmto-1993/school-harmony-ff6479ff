@@ -258,6 +258,10 @@ export default function SettingsPage() {
   const [popupCountdown, setPopupCountdown] = useState("");
   const popupExpiryNotified = useRef(false);
 
+  // Honor Roll settings
+  const [honorRollEnabled, setHonorRollEnabled] = useState(false);
+  const [savingHonorRoll, setSavingHonorRoll] = useState(false);
+
   // Countdown timer for popup expiry + admin notification
   useEffect(() => {
     if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
