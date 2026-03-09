@@ -43,7 +43,9 @@ export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const [dayNote, setDayNote] = useState("");
+  const [savedDayNote, setSavedDayNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
 
   const date = format(selectedDate, "yyyy-MM-dd");
 
@@ -56,7 +58,55 @@ export default function AttendancePage() {
   useEffect(() => {
     if (!selectedClass) return;
     loadStudents();
+    loadDayNote();
   }, [selectedClass, date]);
+
+  const loadDayNote = async () => {
+    if (!selectedClass) return;
+    const { data } = await supabase
+      .from("attendance_schedule_exceptions")
+      .select("reason")
+      .eq("class_id", selectedClass)
+      .eq("original_date", date)
+      .eq("type", "note")
+      .maybeSingle();
+    const note = data?.reason || "";
+    setSavedDayNote(note);
+    setDayNote(note);
+  };
+
+  const saveDayNote = async () => {
+    if (!user || !selectedClass) return;
+    setSavingNote(true);
+    
+    // Check if note already exists
+    const { data: existing } = await supabase
+      .from("attendance_schedule_exceptions")
+      .select("id")
+      .eq("class_id", selectedClass)
+      .eq("original_date", date)
+      .eq("type", "note")
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from("attendance_schedule_exceptions")
+        .update({ reason: dayNote })
+        .eq("id", existing.id);
+    } else {
+      await supabase.from("attendance_schedule_exceptions").insert({
+        class_id: selectedClass,
+        original_date: date,
+        type: "note",
+        reason: dayNote,
+        created_by: user.id,
+      });
+    }
+
+    setSavedDayNote(dayNote);
+    setSavingNote(false);
+    toast({ title: "تم الحفظ", description: "تم حفظ ملاحظة اليوم" });
+  };
 
   const loadStudents = async () => {
     const { data: students } = await supabase
@@ -156,6 +206,11 @@ export default function AttendancePage() {
             onDateChange={(d) => setSelectedDate(d)}
           />
           <AcademicWeekBadge date={selectedDate} />
+          {savedDayNote && (
+            <span className="text-xs px-2 py-1 rounded-md bg-info/10 text-info border border-info/30">
+              📝 {savedDayNote}
+            </span>
+          )}
         </div>
       </div>
 
@@ -208,6 +263,32 @@ export default function AttendancePage() {
           })}
         </div>
       </div>
+
+      {/* Day Note Input */}
+      {selectedClass && (
+        <Card className="border-0 shadow-sm bg-card/60">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={dayNote}
+                onChange={(e) => setDayNote(e.target.value)}
+                placeholder="ملاحظة اليوم (مثال: إجازة، مرضي، تأجيل...)"
+                className="flex-1 h-9 text-sm"
+              />
+              <Button
+                onClick={saveDayNote}
+                disabled={savingNote || dayNote === savedDayNote}
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+              >
+                <Save className="h-4 w-4 ml-1" />
+                حفظ الملاحظة
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <AttendanceStats
         total={records.length}
