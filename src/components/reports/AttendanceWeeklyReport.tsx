@@ -152,7 +152,7 @@ export default function AttendanceWeeklyReport({
         weeksData[w.weekNum] = slots;
       });
 
-      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > ALERT_THRESHOLD;
+      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
 
       return {
         id: s.id, name: s.full_name, weeks: weeksData,
