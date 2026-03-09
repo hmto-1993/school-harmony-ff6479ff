@@ -331,8 +331,8 @@ export default function AttendanceWeeklyReport({
                     backgroundColor: s.isAtRisk ? "#fef2f2" : idx % 2 === 0 ? "#ffffff" : "#f8fafc",
                   }}
                 >
-                  <td className="border border-border/20 px-2 py-2 text-center text-muted-foreground font-medium">{idx + 1}</td>
-                  <td className="border border-border/20 px-3 py-2 text-right font-semibold whitespace-nowrap">
+                  <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold" style={{ fontSize: 14 }}>{idx + 1}</td>
+                  <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground" style={{ fontSize: 14, letterSpacing: 0 }}>
                     {s.name}
                     {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5 text-destructive" />}
                   </td>
@@ -344,9 +344,13 @@ export default function AttendanceWeeklyReport({
                         <td
                           key={`${w.weekNum}-${i}`}
                           className="border border-border/15 text-center"
-                          style={{ padding: "4px 2px", minWidth: 28 }}
+                          style={{ padding: "6px 2px", minWidth: 30 }}
                         >
-                          <span style={{ color: cfg?.color || "#d1d5db", fontSize: 18, lineHeight: 1 }}>●</span>
+                          {cfg ? (
+                            <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
+                          ) : (
+                            <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
+                          )}
                         </td>
                       );
                     })
