@@ -317,8 +317,7 @@ export default function StudentNotificationCards({
                   "shadow-lg shadow-red-200/30 dark:shadow-red-900/20"
                 )}
                 onClick={() => {
-                  setSelectedWarning(warnings[0]);
-                  setWarningDetailOpen(true);
+                  openWarningDetail(warnings[0]);
                 }}
               >
                 <CardContent className="p-4 sm:p-5">
