@@ -74,7 +74,43 @@ export default function StudentsPage() {
     parent_phone: "",
   });
 
-  useEffect(() => {
+  // Warning slip state
+  const [warningOpen, setWarningOpen] = useState(false);
+  const [warningStudent, setWarningStudent] = useState<{
+    id: string;
+    name: string;
+    className: string;
+    absenceRate: number;
+    totalAbsent: number;
+    totalDays: number;
+  } | null>(null);
+  const [loadingWarning, setLoadingWarning] = useState<string | null>(null);
+
+  const openWarningSlip = async (student: Student) => {
+    setLoadingWarning(student.id);
+    // Fetch absence data for this student
+    const { data: attendance } = await supabase
+      .from("attendance_records")
+      .select("status, date")
+      .eq("student_id", student.id);
+
+    const records = attendance || [];
+    const totalDays = records.length;
+    const totalAbsent = records.filter((r) => r.status === "absent").length;
+    const absenceRate = totalDays > 0 ? Math.round((totalAbsent / totalDays) * 100) : 0;
+
+    setWarningStudent({
+      id: student.id,
+      name: student.full_name,
+      className: student.classes?.name || "غير محدد",
+      absenceRate,
+      totalAbsent,
+      totalDays,
+    });
+    setLoadingWarning(null);
+    setWarningOpen(true);
+  };
+
     fetchStudents();
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
   }, []);
