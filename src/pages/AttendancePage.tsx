@@ -264,6 +264,32 @@ export default function AttendancePage() {
         </div>
       </div>
 
+      {/* Day Note Input */}
+      {selectedClass && (
+        <Card className="border-0 shadow-sm bg-card/60">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={dayNote}
+                onChange={(e) => setDayNote(e.target.value)}
+                placeholder="ملاحظة اليوم (مثال: إجازة، مرضي، تأجيل...)"
+                className="flex-1 h-9 text-sm"
+              />
+              <Button
+                onClick={saveDayNote}
+                disabled={savingNote || dayNote === savedDayNote}
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+              >
+                <Save className="h-4 w-4 ml-1" />
+                حفظ الملاحظة
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <AttendanceStats
         total={records.length}
         present={records.filter((r) => r.status === "present").length}
