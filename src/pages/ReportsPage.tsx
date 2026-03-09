@@ -733,7 +733,7 @@ export default function ReportsPage() {
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">التقارير والإحصائيات</h1>
-          <p className="text-muted-foreground">تقارير يومية وفترية للحضور والدرجات مع إمكانية التصدير</p>
+          <p className="text-muted-foreground">تقارير يومية وأسبوعية للحضور والدرجات مع إمكانية التصدير</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
