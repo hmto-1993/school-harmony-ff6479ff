@@ -138,6 +138,57 @@ export default function NotificationsPage() {
     fetchNotifications();
   };
 
+  // Fetch excuses for review
+  const fetchExcuses = async () => {
+    const { data } = await supabase
+      .from("excuse_submissions")
+      .select("*, students(full_name, class_id, classes(name)), notifications(message, created_at)")
+      .order("created_at", { ascending: false });
+    setExcuses((data as ExcuseSubmission[]) || []);
+  };
+
+  // Handle excuse review (accept/reject)
+  const handleReviewExcuse = async (action: "accepted" | "rejected") => {
+    if (!reviewingExcuse) return;
+    setReviewLoading(true);
+    try {
+      // Update excuse status
+      await supabase.from("excuse_submissions").update({
+        status: action,
+        review_note: reviewNote,
+        reviewed_by: user?.id,
+        reviewed_at: new Date().toISOString(),
+      }).eq("id", reviewingExcuse.id);
+
+      // Update notification status
+      await supabase.from("notifications").update({
+        status: action === "accepted" ? "excuse_accepted" : "excuse_rejected",
+      }).eq("id", reviewingExcuse.notification_id);
+
+      // If accepted, remove absence record
+      if (action === "accepted") {
+        // Get the date from the notification message or find the latest absence
+        const { data: absences } = await supabase
+          .from("attendance_records")
+          .select("id")
+          .eq("student_id", reviewingExcuse.student_id)
+          .eq("status", "absent")
+          .order("date", { ascending: false })
+          .limit(1);
+        if (absences && absences.length > 0) {
+          await supabase.from("attendance_records").update({ status: "sick_leave" }).eq("id", absences[0].id);
+        }
+      }
+
+      toast({ title: action === "accepted" ? "تم القبول" : "تم الرفض", description: action === "accepted" ? "تم قبول العذر وتحديث سجل الحضور" : "تم رفض العذر" });
+      fetchExcuses();
+      setReviewingExcuse(null);
+      setReviewNote("");
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setReviewLoading(false);
+  };
 
 
   // Fetch classes
