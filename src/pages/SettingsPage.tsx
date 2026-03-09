@@ -265,6 +265,10 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Absence threshold settings
+  const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [savingThreshold, setSavingThreshold] = useState(false);
+
   // Countdown timer for popup expiry + admin notification
   useEffect(() => {
     if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
