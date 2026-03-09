@@ -170,7 +170,7 @@ export default function AttendancePage() {
       setSelectedDate(moveTargetDate);
     }
     setMovingDate(false);
-    setMoveDialogOpen(false);
+    setMoveConfirmOpen(false);
   };
 
   const markAllPresent = () => {
