@@ -2588,6 +2588,9 @@ export default function SettingsPage() {
               </Card>
             </Collapsible>
 
+            {/* ===== قوالب واتساب ===== */}
+            <WhatsAppTemplatesSettings />
+
             {/* ===== مزود SMS ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
