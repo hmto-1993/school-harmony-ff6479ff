@@ -55,10 +55,11 @@ export default function DiamondStarBadge({ size = "sm", className, showTooltip =
 }
 
 /**
- * Hook to check if a student is on the honor roll
+ * Wrapper that only shows the badge if student is honored
  */
-export function useHonorRollStatus(studentId: string | undefined) {
-  // This would typically be fetched from context or a query
-  // For now, it returns a placeholder - the actual logic is in HonorRoll component
-  return { isHonored: false };
+export function HonorBadgeIfEligible({ studentId, size = "sm" }: { studentId: string; size?: "sm" | "md" | "lg" }) {
+  // This component is designed to be used with HonorRollContext
+  // Import useHonorRoll from HonorRollContext and check isHonored(studentId)
+  // For now, it renders conditionally based on a prop or context
+  return null; // Will be implemented with context
 }
