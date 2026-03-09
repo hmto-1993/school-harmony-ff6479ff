@@ -858,7 +858,7 @@ export default function StudentsPage() {
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={role === "admin" ? 6 : 5} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={role === "admin" ? 7 : 6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
                 ) : filtered.map((s, i) => {
                   const isEven = i % 2 === 0;
                   const isLast = i === filtered.length - 1;
