@@ -963,7 +963,10 @@ export default function ReportsPage() {
             <Heart className="h-4 w-4" />
             تقرير السلوك
           </TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="analytics" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400">
+            <Trophy className="h-4 w-4" />
+            التحليل الشهري
+          </TabsTrigger>
 
         {/* ===== Attendance Report ===== */}
         <TabsContent value="attendance" className="space-y-4">
