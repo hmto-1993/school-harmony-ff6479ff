@@ -320,6 +320,9 @@ export default function StudentDashboard() {
           attendance={vis.attendance ? student.attendance : []}
         />
 
+        {/* Honor Roll */}
+        <HonorRoll classId={student.class_id} />
+
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
 
