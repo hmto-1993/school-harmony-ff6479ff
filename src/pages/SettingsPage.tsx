@@ -46,6 +46,8 @@ import {
   ClipboardCheck,
   Lock,
   LockOpen,
+  Trophy,
+  Crown,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -258,6 +260,10 @@ export default function SettingsPage() {
   const [popupCountdown, setPopupCountdown] = useState("");
   const popupExpiryNotified = useRef(false);
 
+  // Honor Roll settings
+  const [honorRollEnabled, setHonorRollEnabled] = useState(false);
+  const [savingHonorRoll, setSavingHonorRoll] = useState(false);
+
   // Countdown timer for popup expiry + admin notification
   useEffect(() => {
     if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
@@ -389,7 +395,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -417,6 +423,7 @@ export default function SettingsPage() {
         }
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
+        if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
       });
 
       // Fetch popup history
@@ -922,6 +929,7 @@ export default function SettingsPage() {
           { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
           { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
+          { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
@@ -2288,6 +2296,91 @@ export default function SettingsPage() {
                   );
                 })}
               </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Honor Roll Panel */}
+      {activeCard === "honor_roll" && isAdmin && (
+        <Card className="border-2 border-amber-400/30 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                لوحة الشرف
+              </CardTitle>
+              <Badge variant={honorRollEnabled ? "default" : "secondary"} className={cn(honorRollEnabled && "bg-amber-500 text-amber-950")}>
+                {honorRollEnabled ? "مفعّلة" : "معطّلة"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-gradient-to-br from-amber-50/50 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-5">
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-400/20">
+                  <Crown className="h-7 w-7 text-amber-950" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground mb-1">نظام لوحة الشرف</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    يتم عرض الطلاب المتميزين تلقائياً بناءً على المعايير التالية:
+                  </p>
+                  <ul className="mt-2 text-sm text-muted-foreground space-y-1">
+                    <li className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                      <strong>انتظام كامل:</strong> صفر غياب خلال الشهر الحالي
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                      <strong>درجة كاملة:</strong> في أحدث اختبار فترة
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-muted/20">
+              <div>
+                <p className="font-medium text-foreground">نشر لوحة الشرف</p>
+                <p className="text-xs text-muted-foreground mt-0.5">تظهر للطلاب في صفحتهم الرئيسية</p>
+              </div>
+              <Button
+                variant={honorRollEnabled ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "gap-2 min-w-[100px]",
+                  honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950"
+                )}
+                disabled={savingHonorRoll}
+                onClick={async () => {
+                  setSavingHonorRoll(true);
+                  const newVal = !honorRollEnabled;
+                  await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
+                  setHonorRollEnabled(newVal);
+                  setSavingHonorRoll(false);
+                  toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب الآن" : "تم إخفاء لوحة الشرف" });
+                }}
+              >
+                {savingHonorRoll ? (
+                  <span className="animate-spin">⏳</span>
+                ) : honorRollEnabled ? (
+                  <>
+                    <Eye className="h-4 w-4" />
+                    مفعّلة
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-4 w-4" />
+                    معطّلة
+                  </>
+                )}
+              </Button>
+            </div>
+
+            <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
+              <strong>ملاحظة:</strong> يظهر شعار النجمة الماسية 💎⭐ بجانب أسماء الطلاب المتميزين في جميع أنحاء التطبيق.
+              الخصوصية محفوظة: تُعرض الأسماء والإنجازات فقط، بدون درجات خاصة.
             </div>
           </CardContent>
         </Card>

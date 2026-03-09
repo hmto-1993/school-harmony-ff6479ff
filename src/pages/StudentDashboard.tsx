@@ -25,6 +25,7 @@ import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
 import StudentNotificationCards from "@/components/student/StudentNotificationCards";
+import HonorRoll from "@/components/student/HonorRoll";
 import { useTheme } from "@/hooks/use-theme";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -318,6 +319,9 @@ export default function StudentDashboard() {
           grades={vis.grades ? student.grades : []}
           attendance={vis.attendance ? student.attendance : []}
         />
+
+        {/* Honor Roll */}
+        <HonorRoll classId={student.class_id} />
 
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
