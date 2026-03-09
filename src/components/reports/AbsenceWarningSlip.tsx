@@ -480,6 +480,15 @@ export default function AbsenceWarningSlip({
             <X className="h-4 w-4 ml-1" />
             إغلاق
           </Button>
+          <Button
+            variant="secondary"
+            onClick={handleSendToStudent}
+            disabled={loading || sending || !warningText.trim()}
+            className="gap-1.5"
+          >
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            إرسال للطالب
+          </Button>
           <Button onClick={handlePrint} disabled={loading} className="gap-1.5">
             <Printer className="h-4 w-4" />
             طباعة الإنذار
