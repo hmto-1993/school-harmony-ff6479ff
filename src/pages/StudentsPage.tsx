@@ -860,7 +860,8 @@ export default function StudentsPage() {
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
-                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-20">إنذار</th>
+                     <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-20">إنذار</th>
+                     <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-20">واتساب</th>
                 </tr>
               </thead>
               <tbody>
