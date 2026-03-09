@@ -509,11 +509,6 @@ export default function AbsenceWarningSlip({
               </div>
             </div>
 
-            {/* Date Footer */}
-            <div style={{ textAlign: "left", marginTop: "20px", fontSize: "12px", color: "#64748b" }}>
-              <p>التاريخ: {todayFormatted}</p>
-              <p>{todayHijri}</p>
-            </div>
           </div>
         )}
 
