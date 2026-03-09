@@ -392,6 +392,22 @@ export default function SettingsPage() {
         .order("created_at", { ascending: false })
         .limit(20);
       if (historyData) setPopupHistory(historyData as any);
+      
+      // Fetch attendance override lock setting
+      const { data: overrideSetting } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "attendance_override_lock")
+        .maybeSingle();
+      setAttendanceOverrideLock(overrideSetting?.value === "true");
+      
+      // Fetch class schedules
+      const { data: schedulesData } = await supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week");
+      const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
+      (schedulesData || []).forEach((s: any) => {
+        schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
+      });
+      setClassSchedules(schedulesMap);
     }
 
     setLoading(false);
