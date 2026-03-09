@@ -229,6 +229,17 @@ export default function AttendancePage() {
             onDateChange={(d) => setSelectedDate(d)}
           />
           <AcademicWeekBadge date={selectedDate} />
+          {selectedClass && records.some(r => r.existing_id) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-xs"
+              onClick={() => { setMoveTargetDate(selectedDate); setMoveDialogOpen(true); }}
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              نقل الحصة
+            </Button>
+          )}
           {savedDayNote && (
             <span className="text-xs px-2 py-1 rounded-md bg-info/10 text-info border border-info/30">
               📝 {savedDayNote}
@@ -236,6 +247,27 @@ export default function AttendancePage() {
           )}
         </div>
       </div>
+
+      {/* Move Session Dialog */}
+      <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>نقل حصة التحضير</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">اختر التاريخ الجديد لنقل سجلات الحضور إليه:</p>
+          <HijriDatePicker
+            date={moveTargetDate}
+            onDateChange={setMoveTargetDate}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>إلغاء</Button>
+            <Button onClick={handleMoveSession} disabled={movingDate || format(moveTargetDate, "yyyy-MM-dd") === date}>
+              <ArrowRightLeft className="h-4 w-4 ml-1" />
+              {movingDate ? "جارٍ النقل..." : "نقل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Class Selection Cards */}
       <div>
