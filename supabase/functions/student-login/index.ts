@@ -5,6 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const MAX_ATTEMPTS = 5;
+const WINDOW_MINUTES = 15;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -24,6 +27,26 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Get client IP for logging
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+               req.headers.get("cf-connecting-ip") || "unknown";
+
+    // Rate limiting: check recent failed attempts for this national_id
+    const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from("student_login_attempts")
+      .select("*", { count: "exact", head: true })
+      .eq("national_id", national_id)
+      .eq("success", false)
+      .gte("attempted_at", windowStart);
+
+    if ((count ?? 0) >= MAX_ATTEMPTS) {
+      return new Response(
+        JSON.stringify({ error: `تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة بعد ${WINDOW_MINUTES} دقيقة` }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Verify student by national_id only
     const { data: student, error } = await supabase
       .from("students")
@@ -32,11 +55,25 @@ Deno.serve(async (req) => {
       .single();
 
     if (error || !student) {
+      // Log failed attempt
+      await supabase.from("student_login_attempts").insert({
+        national_id,
+        ip_address: ip,
+        success: false,
+      });
+
       return new Response(
         JSON.stringify({ error: "رقم الهوية الوطنية غير مسجل" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Log successful attempt
+    await supabase.from("student_login_attempts").insert({
+      national_id,
+      ip_address: ip,
+      success: true,
+    });
 
     // Log student login
     await supabase.from("student_logins").insert({
@@ -116,6 +153,10 @@ Deno.serve(async (req) => {
           .order("date", { ascending: false })
           .limit(30)).data || []
       : [];
+
+    // Clean up old attempts (older than 24 hours) in background
+    const cleanupCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    supabase.from("student_login_attempts").delete().lt("attempted_at", cleanupCutoff).then(() => {});
 
     return new Response(
       JSON.stringify({
