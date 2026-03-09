@@ -43,6 +43,9 @@ import {
   History,
   RotateCcw,
   CalendarDays,
+  ClipboardCheck,
+  Lock,
+  LockOpen,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -163,6 +166,11 @@ export default function SettingsPage() {
   const [importingClasses, setImportingClasses] = useState(false);
   const classFileRef = useRef<HTMLInputElement>(null);
   const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
+  
+  // Attendance settings
+  const [attendanceOverrideLock, setAttendanceOverrideLock] = useState(false);
+  const [classSchedules, setClassSchedules] = useState<Record<string, { periodsPerWeek: number; daysOfWeek: number[] }>>({});
+  const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
 
   // Edit category
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
@@ -384,6 +392,22 @@ export default function SettingsPage() {
         .order("created_at", { ascending: false })
         .limit(20);
       if (historyData) setPopupHistory(historyData as any);
+      
+      // Fetch attendance override lock setting
+      const { data: overrideSetting } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "attendance_override_lock")
+        .maybeSingle();
+      setAttendanceOverrideLock(overrideSetting?.value === "true");
+      
+      // Fetch class schedules
+      const { data: schedulesData } = await supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week");
+      const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
+      (schedulesData || []).forEach((s: any) => {
+        schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
+      });
+      setClassSchedules(schedulesMap);
     }
 
     setLoading(false);
@@ -863,6 +887,7 @@ export default function SettingsPage() {
           { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeLocal === "hijri" ? "هجري" : "ميلادي", gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
           { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
+          { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -2119,6 +2144,138 @@ export default function SettingsPage() {
 
       {activeCard === "academic_calendar" && isAdmin && (
         <AcademicCalendarSettings onClose={() => setActiveCard(null)} />
+      )}
+
+      {/* Attendance Settings Panel */}
+      {activeCard === "attendance_settings" && isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ClipboardCheck className="h-5 w-5 text-primary" />
+                إعدادات التحضير
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Override Lock Toggle */}
+            <div className="rounded-xl border-2 border-border/50 p-4 space-y-3 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {attendanceOverrideLock ? (
+                    <LockOpen className="h-6 w-6 text-warning" />
+                  ) : (
+                    <Lock className="h-6 w-6 text-success" />
+                  )}
+                  <div>
+                    <h3 className="font-semibold">تجاوز القفل التلقائي</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {attendanceOverrideLock 
+                        ? "القفل معطّل — يمكن إضافة حصص إضافية بعد اكتمال الحد الأسبوعي"
+                        : "القفل مفعّل — سيتم قفل التحضير تلقائياً عند الوصول للحد الأسبوعي"}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={attendanceOverrideLock ? "destructive" : "outline"}
+                  size="sm"
+                  disabled={savingAttendanceSettings}
+                  onClick={async () => {
+                    setSavingAttendanceSettings(true);
+                    const newValue = !attendanceOverrideLock;
+                    const { data: existing } = await supabase
+                      .from("site_settings")
+                      .select("id")
+                      .eq("id", "attendance_override_lock")
+                      .maybeSingle();
+                    if (existing) {
+                      await supabase.from("site_settings").update({ value: String(newValue) }).eq("id", "attendance_override_lock");
+                    } else {
+                      await supabase.from("site_settings").insert({ id: "attendance_override_lock", value: String(newValue) });
+                    }
+                    setAttendanceOverrideLock(newValue);
+                    setSavingAttendanceSettings(false);
+                    toast({ title: "تم الحفظ", description: newValue ? "تم تعطيل القفل التلقائي" : "تم تفعيل القفل التلقائي" });
+                  }}
+                >
+                  {attendanceOverrideLock ? "إعادة تفعيل القفل" : "تعطيل القفل"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Class Periods Settings */}
+            <div className="space-y-3">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                عدد الحصص الأسبوعية لكل فصل
+              </h3>
+              <p className="text-xs text-muted-foreground">حدد عدد الحصص المطلوبة أسبوعياً لكل فصل. عند الوصول للحد، سيتم قفل التحضير تلقائياً.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+                {classes.map((c) => {
+                  const schedule = classSchedules[c.id];
+                  const periodsPerWeek = schedule?.periodsPerWeek ?? 5;
+                  return (
+                    <div
+                      key={c.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors"
+                    >
+                      <span className="font-medium text-sm truncate flex-1">{c.name}</span>
+                      <div className="flex items-center gap-2 mr-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 text-xs"
+                          onClick={async () => {
+                            const newVal = Math.max(1, periodsPerWeek - 1);
+                            const { data: existing } = await supabase
+                              .from("class_schedules")
+                              .select("id")
+                              .eq("class_id", c.id)
+                              .maybeSingle();
+                            if (existing) {
+                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
+                            } else {
+                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
+                            }
+                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                          }}
+                        >
+                          −
+                        </Button>
+                        <span className="w-8 text-center font-bold text-primary">{periodsPerWeek}</span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-7 w-7 text-xs"
+                          onClick={async () => {
+                            const newVal = Math.min(20, periodsPerWeek + 1);
+                            const { data: existing } = await supabase
+                              .from("class_schedules")
+                              .select("id")
+                              .eq("class_id", c.id)
+                              .maybeSingle();
+                            if (existing) {
+                              await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", c.id);
+                            } else {
+                              await supabase.from("class_schedules").insert({ class_id: c.id, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
+                            }
+                            setClassSchedules(prev => ({ ...prev, [c.id]: { ...prev[c.id], periodsPerWeek: newVal, daysOfWeek: prev[c.id]?.daysOfWeek || [0, 1, 2, 3, 4] } }));
+                          }}
+                        >
+                          +
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
 

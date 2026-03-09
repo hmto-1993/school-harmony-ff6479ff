@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
@@ -57,7 +57,19 @@ export default function AttendancePage() {
   const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
+  const [overrideLock, setOverrideLock] = useState(false);
   const date = format(selectedDate, "yyyy-MM-dd");
+
+  // Compute if currently selected class is locked (limit reached and no override)
+  const selectedProgress = selectedClass ? weeklyProgress[selectedClass] : null;
+  const isClassLocked = useMemo(() => {
+    if (!selectedProgress) return false;
+    if (overrideLock) return false; // Admin has disabled the lock
+    // Only lock if attendance hasn't been saved yet for today (to allow editing existing)
+    const alreadySavedToday = records.some(r => r.existing_id);
+    if (alreadySavedToday) return false; // Allow editing if already saved for today
+    return selectedProgress.sessions >= selectedProgress.limit;
+  }, [selectedProgress, overrideLock, records]);
 
   // Derive the academic week bounds for the selected date
   const weekBounds = useMemo(() => {
@@ -83,6 +95,10 @@ export default function AttendancePage() {
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => {
       setClasses(data || []);
+    });
+    // Fetch override lock setting
+    supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(({ data }) => {
+      setOverrideLock(data?.value === "true");
     });
   }, []);
 
@@ -430,11 +446,17 @@ export default function AttendancePage() {
                 {/* Weekly progress badge */}
                 <div className={cn(
                   "mt-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
-                  isComplete
+                  isComplete && !overrideLock
+                    ? "bg-success/15 text-success border-success/30"
+                    : isComplete && overrideLock
                     ? "bg-success/15 text-success border-success/30"
                     : "bg-muted/60 text-muted-foreground border-border/40"
                 )}>
-                  {isComplete && <CheckCircle2 className="h-2.5 w-2.5" />}
+                  {isComplete && !overrideLock ? (
+                    <Lock className="h-2.5 w-2.5" />
+                  ) : isComplete ? (
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                  ) : null}
                   {sessions}/{limit}
                 </div>
                 {isSelected && (
@@ -470,6 +492,19 @@ export default function AttendancePage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Lock Banner */}
+      {isClassLocked && selectedClass && (
+        <div className="flex items-center gap-3 rounded-xl border-2 border-warning/40 bg-warning/10 p-4 animate-fade-in">
+          <Lock className="h-6 w-6 text-warning shrink-0" />
+          <div>
+            <p className="font-semibold text-sm text-warning">تم الوصول للحد الأسبوعي</p>
+            <p className="text-xs text-muted-foreground">
+              اكتمل تحضير هذا الفصل ({selectedProgress?.sessions}/{selectedProgress?.limit} حصص). لإضافة حصص إضافية، فعّل "تجاوز القفل" من الإعدادات.
+            </p>
+          </div>
+        </div>
       )}
 
       <AttendanceStats
@@ -582,9 +617,9 @@ export default function AttendancePage() {
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
+                <Button onClick={handleSave} disabled={saving || isClassLocked} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
-                  {saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
+                  {isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
                 </Button>
               </div>
             </>
