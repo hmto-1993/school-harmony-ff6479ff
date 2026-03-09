@@ -24,6 +24,7 @@ import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
+import FullMarkCelebration from "@/components/student/FullMarkCelebration";
 import { useTheme } from "@/hooks/use-theme";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
