@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning } from "lucide-react";
+import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
 import { format } from "date-fns";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
@@ -72,6 +73,43 @@ export default function StudentsPage() {
     class_id: "",
     parent_phone: "",
   });
+
+  // Warning slip state
+  const [warningOpen, setWarningOpen] = useState(false);
+  const [warningStudent, setWarningStudent] = useState<{
+    id: string;
+    name: string;
+    className: string;
+    absenceRate: number;
+    totalAbsent: number;
+    totalDays: number;
+  } | null>(null);
+  const [loadingWarning, setLoadingWarning] = useState<string | null>(null);
+
+  const openWarningSlip = async (student: Student) => {
+    setLoadingWarning(student.id);
+    // Fetch absence data for this student
+    const { data: attendance } = await supabase
+      .from("attendance_records")
+      .select("status, date")
+      .eq("student_id", student.id);
+
+    const records = attendance || [];
+    const totalDays = records.length;
+    const totalAbsent = records.filter((r) => r.status === "absent").length;
+    const absenceRate = totalDays > 0 ? Math.round((totalAbsent / totalDays) * 100) : 0;
+
+    setWarningStudent({
+      id: student.id,
+      name: student.full_name,
+      className: student.classes?.name || "غير محدد",
+      absenceRate,
+      totalAbsent,
+      totalDays,
+    });
+    setLoadingWarning(null);
+    setWarningOpen(true);
+  };
 
   useEffect(() => {
     fetchStudents();
@@ -814,12 +852,13 @@ export default function StudentsPage() {
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الاسم الكامل</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">رقم الهوية</th>
                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الفصل</th>
-                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">جوال ولي الأمر</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">جوال ولي الأمر</th>
+                    <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-20">إنذار</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={role === "admin" ? 6 : 5} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
+                  <tr><td colSpan={role === "admin" ? 7 : 6} className="text-center py-8 text-muted-foreground">لا توجد نتائج</td></tr>
                 ) : filtered.map((s, i) => {
                   const isEven = i % 2 === 0;
                   const isLast = i === filtered.length - 1;
@@ -844,7 +883,22 @@ export default function StudentsPage() {
                          <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
                        ) : <span className="text-muted-foreground">—</span>}
                      </td>
-                  </tr>
+                     <td className="p-3 border-l border-border/10 text-muted-foreground text-xs">{s.parent_phone || "—"}</td>
+                     <td className="p-3 text-center">
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                         title="توليد إنذار غياب"
+                         disabled={loadingWarning === s.id}
+                         onClick={() => openWarningSlip(s)}
+                       >
+                         {loadingWarning === s.id
+                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                           : <FileWarning className="h-3.5 w-3.5" />}
+                       </Button>
+                     </td>
+                   </tr>
                   );
                 })}
               </tbody>
@@ -890,6 +944,20 @@ export default function StudentsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Absence Warning Slip */}
+      {warningStudent && (
+        <AbsenceWarningSlip
+          open={warningOpen}
+          onOpenChange={setWarningOpen}
+          studentId={warningStudent.id}
+          studentName={warningStudent.name}
+          className={warningStudent.className}
+          absenceRate={warningStudent.absenceRate}
+          totalAbsent={warningStudent.totalAbsent}
+          totalDays={warningStudent.totalDays}
+        />
+      )}
     </div>
   );
 }
