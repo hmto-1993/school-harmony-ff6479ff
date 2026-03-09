@@ -6,13 +6,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Trophy, Award, Printer, X, Sparkles, AlertTriangle, Eye, ChevronLeft,
+  Trophy, Award, Printer, X, Sparkles, AlertTriangle, Eye, ChevronLeft, Upload, Loader2, FileImage,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 /* ─── Types ─── */
 interface FullMarkGrade {
@@ -58,6 +61,13 @@ export default function StudentNotificationCards({
   const [warningDetailOpen, setWarningDetailOpen] = useState(false);
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
 
+  // --- Excuse submission ---
+  const [excuseOpen, setExcuseOpen] = useState(false);
+  const [excuseFile, setExcuseFile] = useState<File | null>(null);
+  const [excuseReason, setExcuseReason] = useState("");
+  const [excuseUploading, setExcuseUploading] = useState(false);
+  const [existingExcuses, setExistingExcuses] = useState<any[]>([]);
+
   // --- Login popup ---
   const [loginPopupOpen, setLoginPopupOpen] = useState(false);
   const [loginPopupType, setLoginPopupType] = useState<"warning" | "achievement" | null>(null);
@@ -92,7 +102,7 @@ export default function StudentNotificationCards({
     );
   }, [grades]);
 
-  // Fetch warnings
+  // Fetch warnings + excuses
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -102,6 +112,14 @@ export default function StudentNotificationCards({
         .eq("type", "warning")
         .order("created_at", { ascending: false });
       setWarnings(data || []);
+
+      // Fetch existing excuses
+      const { data: excuses } = await supabase
+        .from("excuse_submissions")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false });
+      setExistingExcuses(excuses || []);
     })();
   }, [studentId]);
 
@@ -167,6 +185,57 @@ export default function StudentNotificationCards({
     pw.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="UTF-8"><title>شهادة تميز - ${studentName}</title><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'IBM Plex Sans Arabic',sans-serif;padding:30px;background:#fff;color:#1e293b;direction:rtl}.header{border-bottom:3px solid #3b82f6;padding-bottom:12px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}.header-section{flex:1;line-height:1.8}.header-section p{margin:0;font-weight:600}.header-center{display:flex;align-items:center;gap:10px;flex-shrink:0}.header-center img{object-fit:contain}.cert-border{border:4px double #DAA520;border-radius:16px;padding:40px;margin:20px 0;text-align:center;background:linear-gradient(135deg,#FFFDF0,#FFF8E1,#FFFDF0)}.cert-title{font-size:28px;font-weight:700;color:#B8860B;margin-bottom:16px}.sig-box{text-align:center;width:30%}.sig-box p{margin-bottom:40px;font-weight:600;font-size:13px}.sig-line{border-top:1px solid #1e293b;padding-top:8px;font-size:12px;color:#64748b}@media print{body{padding:0}@page{margin:15mm}}</style></head><body>${content.innerHTML}</body></html>`);
     pw.document.close();
     pw.onload = () => pw.print();
+  };
+
+  // Mark warning as seen when detail opens
+  const openWarningDetail = async (w: Warning) => {
+    setSelectedWarning(w);
+    setWarningDetailOpen(true);
+    // Mark as seen
+    if (!w.is_read) {
+      await supabase.from("notifications").update({ is_read: true, status: "seen" }).eq("id", w.id);
+      setWarnings(prev => prev.map(x => x.id === w.id ? { ...x, is_read: true } : x));
+    }
+  };
+
+  // Handle excuse submission
+  const handleExcuseSubmit = async () => {
+    if (!excuseFile || !selectedWarning) return;
+    if (excuseFile.size > 5 * 1024 * 1024) {
+      toast({ title: "خطأ", description: "حجم الملف يتجاوز 5 ميجابايت", variant: "destructive" });
+      return;
+    }
+    setExcuseUploading(true);
+    try {
+      const ext = excuseFile.name.split(".").pop() || "jpg";
+      const fileName = `excuse_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("school-assets").upload(`excuses/${fileName}`, excuseFile);
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(`excuses/${fileName}`);
+
+      const { error: insertErr } = await supabase.from("excuse_submissions").insert({
+        notification_id: selectedWarning.id,
+        student_id: studentId,
+        file_url: urlData.publicUrl,
+        file_name: excuseFile.name,
+        reason: excuseReason,
+        status: "pending",
+      });
+      if (insertErr) throw insertErr;
+
+      // Update notification status
+      await supabase.from("notifications").update({ status: "excuse_pending" }).eq("id", selectedWarning.id);
+
+      setExistingExcuses(prev => [{ file_url: urlData.publicUrl, file_name: excuseFile.name, reason: excuseReason, status: "pending", notification_id: selectedWarning.id, created_at: new Date().toISOString() }, ...prev]);
+      toast({ title: "تم الإرسال", description: "تم رفع العذر بنجاح وسيتم مراجعته من المعلم" });
+      setExcuseOpen(false);
+      setExcuseFile(null);
+      setExcuseReason("");
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setExcuseUploading(false);
   };
 
   const todayHijri = new Date().toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
@@ -248,8 +317,7 @@ export default function StudentNotificationCards({
                   "shadow-lg shadow-red-200/30 dark:shadow-red-900/20"
                 )}
                 onClick={() => {
-                  setSelectedWarning(warnings[0]);
-                  setWarningDetailOpen(true);
+                  openWarningDetail(warnings[0]);
                 }}
               >
                 <CardContent className="p-4 sm:p-5">
@@ -468,7 +536,7 @@ export default function StudentNotificationCards({
                           ? "border-destructive/40 bg-destructive/10"
                           : "border-border/30 bg-muted/20 hover:bg-muted/40"
                       )}
-                      onClick={() => setSelectedWarning(w)}
+                      onClick={() => openWarningDetail(w)}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-muted-foreground">
@@ -482,12 +550,104 @@ export default function StudentNotificationCards({
                 </div>
               </div>
             )}
+
+            {/* Excuse status */}
+            {selectedWarning && (() => {
+              const excuse = existingExcuses.find(e => e.notification_id === selectedWarning.id);
+              if (excuse) {
+                return (
+                  <div className={cn(
+                    "rounded-xl border p-4",
+                    excuse.status === "pending" ? "border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20" :
+                    excuse.status === "accepted" ? "border-emerald-300/50 bg-emerald-50/50 dark:bg-emerald-950/20" :
+                    "border-red-300/50 bg-red-50/50 dark:bg-red-950/20"
+                  )}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileImage className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-semibold">العذر المقدم</span>
+                      <Badge variant={
+                        excuse.status === "pending" ? "secondary" :
+                        excuse.status === "accepted" ? "default" : "destructive"
+                      } className="text-xs mr-auto">
+                        {excuse.status === "pending" ? "قيد المراجعة" :
+                         excuse.status === "accepted" ? "✅ مقبول" : "❌ مرفوض"}
+                      </Badge>
+                    </div>
+                    <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                      <FileImage className="h-3 w-3" />
+                      {excuse.file_name}
+                    </a>
+                    {excuse.reason && <p className="text-xs text-muted-foreground mt-2">{excuse.reason}</p>}
+                    {excuse.review_note && <p className="text-xs mt-2 text-foreground">ملاحظة المعلم: {excuse.review_note}</p>}
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={() => setWarningDetailOpen(false)}>
               <X className="h-4 w-4 ml-1" />
               إغلاق
+            </Button>
+            {selectedWarning && !existingExcuses.find(e => e.notification_id === selectedWarning.id) && (
+              <Button
+                onClick={() => setExcuseOpen(true)}
+                className="gap-1.5 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
+              >
+                <Upload className="h-4 w-4" />
+                تقديم عذر
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ Excuse Upload Dialog ═══ */}
+      <Dialog open={excuseOpen} onOpenChange={setExcuseOpen}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-primary" />
+              تقديم عذر للغياب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              يمكنك رفع صورة التقرير الطبي أو أي مستند يثبت العذر
+            </p>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ملف العذر (صورة) *</label>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={(e) => setExcuseFile(e.target.files?.[0] || null)}
+                className="cursor-pointer"
+              />
+              <p className="text-xs text-muted-foreground">الحد الأقصى: 5 ميجابايت</p>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">سبب العذر (اختياري)</label>
+              <Textarea
+                value={excuseReason}
+                onChange={(e) => setExcuseReason(e.target.value)}
+                placeholder="مثال: تقرير طبي بسبب المرض"
+                rows={2}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setExcuseOpen(false)}>
+              إلغاء
+            </Button>
+            <Button
+              onClick={handleExcuseSubmit}
+              disabled={!excuseFile || excuseUploading}
+              className="gap-1.5"
+            >
+              {excuseUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              رفع العذر
             </Button>
           </DialogFooter>
         </DialogContent>

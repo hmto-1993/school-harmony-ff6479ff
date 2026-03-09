@@ -4,8 +4,9 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Send, X, Loader2 } from "lucide-react";
+import { Printer, Send, X, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface AbsentDate {
@@ -40,6 +41,8 @@ export default function AbsenceWarningSlip({
   const [subjectName, setSubjectName] = useState("المادة الدراسية");
   const [warningText, setWarningText] = useState("");
   const [sending, setSending] = useState(false);
+  const [parentPhone, setParentPhone] = useState<string | null>(null);
+  const [notificationStatus, setNotificationStatus] = useState<string>("sent");
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -107,6 +110,25 @@ export default function AbsenceWarningSlip({
       .maybeSingle();
     if (subjectData?.value) setSubjectName(subjectData.value);
 
+    // Get parent phone
+    const { data: studentData } = await supabase
+      .from("students")
+      .select("parent_phone")
+      .eq("id", studentId)
+      .single();
+    if (studentData?.parent_phone) setParentPhone(studentData.parent_phone);
+
+    // Check latest notification status for this student
+    const { data: notifData } = await supabase
+      .from("notifications")
+      .select("id, status")
+      .eq("student_id", studentId)
+      .eq("type", "warning")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (notifData?.status) setNotificationStatus(notifData.status);
+
     // Build default warning text
     const subj = subjectData?.value || "المادة الدراسية";
     const absentCount = attendance?.length || 0;
@@ -125,14 +147,26 @@ export default function AbsenceWarningSlip({
       type: "warning",
       message: warningText,
       created_by: userData?.user?.id || null,
+      status: "sent",
     });
     setSending(false);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
+      setNotificationStatus("sent");
       toast({ title: "تم الإرسال", description: "تم إرسال الإنذار إلى حساب الطالب بنجاح" });
       onOpenChange(false);
     }
+  };
+
+  const handleWhatsApp = () => {
+    if (!parentPhone) {
+      toast({ title: "تنبيه", description: "لا يوجد رقم هاتف لولي الأمر", variant: "destructive" });
+      return;
+    }
+    const phone = parentPhone.startsWith("+") ? parentPhone.slice(1) : parentPhone.startsWith("0") ? "966" + parentPhone.slice(1) : parentPhone;
+    const text = encodeURIComponent(warningText);
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
   const handlePrint = () => {
@@ -488,10 +522,35 @@ export default function AbsenceWarningSlip({
           </div>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        {/* Status Badge */}
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-xs text-muted-foreground">حالة الإنذار:</span>
+          <Badge variant={
+            notificationStatus === "excuse_pending" ? "secondary" :
+            notificationStatus === "seen" ? "outline" : "default"
+          } className="text-xs">
+            {notificationStatus === "sent" ? "تم الإرسال" :
+             notificationStatus === "seen" ? "تمت المشاهدة" :
+             notificationStatus === "excuse_pending" ? "بانتظار العذر" :
+             notificationStatus === "excuse_accepted" ? "✅ تم قبول العذر" :
+             notificationStatus === "excuse_rejected" ? "❌ تم رفض العذر" :
+             notificationStatus}
+          </Badge>
+        </div>
+
+        <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             <X className="h-4 w-4 ml-1" />
             إغلاق
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleWhatsApp}
+            disabled={loading || !parentPhone}
+            className="gap-1.5 text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+          >
+            <MessageCircle className="h-4 w-4" />
+            واتساب
           </Button>
           <Button
             variant="secondary"
