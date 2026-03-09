@@ -119,6 +119,23 @@ export default function ReportsPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState<"attendance" | "grades" | "behavior">("attendance");
 
+  // Periods per week for weekly report
+  const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
+
+  // Fetch periods per week when class changes
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!selectedClass) return;
+      const { data } = await supabase
+        .from("class_schedules")
+        .select("periods_per_week")
+        .eq("class_id", selectedClass)
+        .single();
+      setPeriodsPerWeek(data?.periods_per_week || 5);
+    };
+    fetchSchedule();
+  }, [selectedClass]);
+
   // Fetch classes
   useEffect(() => {
     const fetchClasses = async () => {
