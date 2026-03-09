@@ -54,6 +54,7 @@ import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
+import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
