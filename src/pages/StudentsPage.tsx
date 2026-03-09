@@ -944,6 +944,20 @@ export default function StudentsPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Absence Warning Slip */}
+      {warningStudent && (
+        <AbsenceWarningSlip
+          open={warningOpen}
+          onOpenChange={setWarningOpen}
+          studentId={warningStudent.id}
+          studentName={warningStudent.name}
+          className={warningStudent.className}
+          absenceRate={warningStudent.absenceRate}
+          totalAbsent={warningStudent.totalAbsent}
+          totalDays={warningStudent.totalDays}
+        />
+      )}
     </div>
   );
 }
