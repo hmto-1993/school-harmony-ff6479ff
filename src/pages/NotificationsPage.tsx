@@ -653,6 +653,72 @@ export default function NotificationsPage() {
         </TabsContent>
 
       </Tabs>
+
+      {/* ===== Excuse Review Dialog ===== */}
+      <Dialog open={!!reviewingExcuse} onOpenChange={(open) => { if (!open) setReviewingExcuse(null); }}>
+        <DialogContent className="max-w-lg" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileImage className="h-5 w-5 text-primary" />
+              مراجعة العذر
+            </DialogTitle>
+          </DialogHeader>
+          {reviewingExcuse && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">الطالب:</span>
+                  <p className="font-medium">{reviewingExcuse.students?.full_name}</p>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">الفصل:</span>
+                  <p className="font-medium">{reviewingExcuse.students?.classes?.name}</p>
+                </div>
+              </div>
+              <div>
+                <span className="text-muted-foreground text-sm">سبب العذر:</span>
+                <p className="text-sm mt-1">{reviewingExcuse.reason || "لم يُذكر سبب"}</p>
+              </div>
+              <div className="border rounded-xl overflow-hidden">
+                <a href={reviewingExcuse.file_url} target="_blank" rel="noopener noreferrer">
+                  <img src={reviewingExcuse.file_url} alt="ملف العذر" className="w-full max-h-[300px] object-contain bg-muted" />
+                </a>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm">ملاحظة المعلم (اختياري)</Label>
+                <Textarea
+                  value={reviewNote}
+                  onChange={(e) => setReviewNote(e.target.value)}
+                  placeholder="مثال: العذر مقبول، تم تحديث سجل الحضور"
+                  rows={2}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2 flex-wrap">
+            <Button variant="outline" onClick={() => setReviewingExcuse(null)}>
+              إلغاء
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => handleReviewExcuse("rejected")}
+              disabled={reviewLoading}
+              className="gap-1.5"
+            >
+              <XIcon className="h-4 w-4" />
+              رفض العذر
+            </Button>
+            <Button
+              onClick={() => handleReviewExcuse("accepted")}
+              disabled={reviewLoading}
+              className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Check className="h-4 w-4" />
+              قبول العذر
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
