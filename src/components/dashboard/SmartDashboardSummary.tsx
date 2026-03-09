@@ -216,13 +216,20 @@ export default function SmartDashboardSummary() {
             </Badge>
           </div>
           {atRiskStudents.length > 0 ? (
-            <div className="max-h-24 overflow-y-auto space-y-1 scrollbar-thin">
+            <div className="max-h-28 overflow-y-auto space-y-1.5 scrollbar-thin">
               {atRiskStudents.slice(0, 5).map((s) => (
-                <div key={s.id} className="flex items-center justify-between text-xs bg-warning/5 rounded-lg px-2 py-1">
-                  <span className="font-medium text-foreground truncate">{s.full_name}</span>
-                  <div className="flex items-center gap-1">
-                    <TrendingDown className="h-3 w-3 text-warning" />
+                <div key={s.id} className="flex items-center justify-between text-xs bg-warning/5 rounded-lg px-2 py-1.5 gap-2">
+                  <span className="font-medium text-foreground truncate flex-1">{s.full_name}</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <span className="text-warning font-bold text-[10px]">{s.absenceRate}%</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-1.5 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => openWarning(s)}
+                    >
+                      <FileWarning className="h-3 w-3" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -237,6 +244,20 @@ export default function SmartDashboardSummary() {
           )}
         </CardContent>
       </Card>
+
+      {/* Warning Slip Dialog */}
+      {selectedStudent && (
+        <AbsenceWarningSlip
+          open={warningOpen}
+          onOpenChange={setWarningOpen}
+          studentId={selectedStudent.id}
+          studentName={selectedStudent.full_name}
+          className={selectedStudent.class_name}
+          absenceRate={selectedStudent.absenceRate}
+          totalAbsent={selectedStudent.totalAbsent}
+          totalDays={selectedStudent.totalDays}
+        />
+      )}
     </div>
   );
 }
