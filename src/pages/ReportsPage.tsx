@@ -94,6 +94,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function ReportsPage() {
   const { role, user } = useAuth();
+  const { getWeeksInfo, currentWeek } = useAcademicWeek();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [dateFromDate, setDateFromDate] = useState<Date>(new Date());
