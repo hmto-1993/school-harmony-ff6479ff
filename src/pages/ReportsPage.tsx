@@ -951,24 +951,26 @@ export default function ReportsPage() {
       </Card>
 
       <Tabs defaultValue="attendance" dir="rtl">
-        <TabsList className="report-tabs-list w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
-          <TabsTrigger value="attendance" className="report-tab report-tab--attendance gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
+        <div className="w-full overflow-x-auto scrollbar-none">
+        <TabsList className="report-tabs-list flex w-max min-w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
+          <TabsTrigger value="attendance" className="report-tab report-tab--attendance whitespace-nowrap gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <ClipboardCheck className="h-4 w-4" />
             تقرير الحضور
           </TabsTrigger>
-          <TabsTrigger value="grades" className="report-tab report-tab--grades gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
+          <TabsTrigger value="grades" className="report-tab report-tab--grades whitespace-nowrap gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <GraduationCap className="h-4 w-4" />
             تقرير الدرجات
           </TabsTrigger>
-          <TabsTrigger value="behavior" className="report-tab report-tab--behavior gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
+          <TabsTrigger value="behavior" className="report-tab report-tab--behavior whitespace-nowrap gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <Heart className="h-4 w-4" />
             تقرير السلوك
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400">
+          <TabsTrigger value="analytics" className="report-tab whitespace-nowrap gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400">
             <Trophy className="h-4 w-4" />
             التحليل الشهري
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* ===== Attendance Report ===== */}
         <TabsContent value="attendance" className="space-y-4">
