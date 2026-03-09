@@ -339,9 +339,10 @@ export default function StudentDashboard() {
           const defaultTab = visibleTabs[0]?.value || "activities";
           return (
         <Tabs value={activeTab || defaultTab} onValueChange={setActiveTab} dir="rtl">
-          <TabsList className="flex w-full h-auto flex-wrap gap-1 p-1">
+          <div className="w-full overflow-x-auto scrollbar-none">
+          <TabsList className="flex w-max min-w-full h-auto gap-1 p-1">
             {visibleTabs.map(tab => (
-              <TabsTrigger key={tab.value} value={tab.value} className="flex-1 min-w-fit gap-1 text-xs sm:text-sm px-2 py-1.5">
+              <TabsTrigger key={tab.value} value={tab.value} className="flex-1 whitespace-nowrap gap-1 text-xs sm:text-sm px-3 py-1.5">
                 <tab.icon className="h-4 w-4" />
                 {tab.label}
               </TabsTrigger>
