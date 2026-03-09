@@ -878,10 +878,13 @@ export default function ReportsPage() {
                 if (v === "daily") {
                   setDateToDate(dateFromDate);
                 } else {
-                  // أسبوعي: اضبط "إلى تاريخ" لنهاية الأسبوع (بعد 6 أيام)
-                  const endOfWeek = new Date(dateFromDate);
-                  endOfWeek.setDate(endOfWeek.getDate() + 6);
-                  setDateToDate(endOfWeek);
+                  // أسبوعي: اضبط التاريخ للأسبوع الحالي من التقويم الأكاديمي
+                  const weeksInfo = getWeeksInfo();
+                  const activeWeek = weeksInfo.find(w => w.weekNumber === currentWeek) || weeksInfo[0];
+                  if (activeWeek) {
+                    setDateFromDate(activeWeek.startDate);
+                    setDateToDate(activeWeek.endDate);
+                  }
                 }
               }}>
                 <SelectTrigger className="w-36">
@@ -893,30 +896,54 @@ export default function ReportsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">{reportType === "daily" ? "التاريخ" : "بداية الأسبوع"}</Label>
-              <HijriDatePicker
-                date={dateFromDate}
-                onDateChange={(d) => {
-                  setDateFromDate(d);
-                  if (reportType === "daily") {
-                    setDateToDate(d);
-                  } else {
-                    // أسبوعي: اضبط تاريخ النهاية تلقائياً بعد 6 أيام
-                    const endOfWeek = new Date(d);
-                    endOfWeek.setDate(endOfWeek.getDate() + 6);
-                    setDateToDate(endOfWeek);
-                  }
-                }}
-              />
-            </div>
-            {reportType === "periodic" && (
+            {reportType === "daily" ? (
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">نهاية الأسبوع</Label>
+                <Label className="text-xs font-semibold text-muted-foreground">التاريخ</Label>
                 <HijriDatePicker
-                  date={dateToDate}
-                  onDateChange={(d) => setDateToDate(d)}
+                  date={dateFromDate}
+                  onDateChange={(d) => {
+                    setDateFromDate(d);
+                    setDateToDate(d);
+                  }}
                 />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-muted-foreground">الأسبوع</Label>
+                <Select
+                  value={(() => {
+                    const weeksInfo = getWeeksInfo();
+                    const match = weeksInfo.find(w => format(w.startDate, "yyyy-MM-dd") === format(dateFromDate, "yyyy-MM-dd"));
+                    return match ? String(match.weekNumber) : "";
+                  })()}
+                  onValueChange={(v) => {
+                    const weeksInfo = getWeeksInfo();
+                    const week = weeksInfo.find(w => w.weekNumber === Number(v));
+                    if (week) {
+                      setDateFromDate(week.startDate);
+                      setDateToDate(week.endDate);
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-52">
+                    <SelectValue placeholder="اختر الأسبوع" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {getWeeksInfo().map((w) => (
+                      <SelectItem key={w.weekNumber} value={String(w.weekNumber)}>
+                        <span className="flex items-center gap-2">
+                          <span>{w.label}</span>
+                          {w.weekNumber === currentWeek && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">الحالي</Badge>
+                          )}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
+                </p>
               </div>
             )}
           </div>
