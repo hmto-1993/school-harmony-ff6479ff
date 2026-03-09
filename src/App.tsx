@@ -48,35 +48,37 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
-              <NotificationOptIn />
-              <PWAInstallPrompt />
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/install" element={<InstallPage />} />
-                  <Route path="/student" element={<StudentDashboard />} />
-                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                  <Route
-                    element={
-                      <ProtectedRoute>
-                        <DashboardLayout />
-                      </ProtectedRoute>
-                    }
-                  >
-                    <Route path="/dashboard" element={<DashboardPage />} />
-                    <Route path="/students" element={<ProtectedRoute allowedRoles={["admin"]}><StudentsPage /></ProtectedRoute>} />
-                    <Route path="/attendance" element={<AttendancePage />} />
-                    <Route path="/grades" element={<GradesPage />} />
-                    <Route path="/reports" element={<ReportsPage />} />
-                    <Route path="/notifications" element={<NotificationsPage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/library" element={<ResourceLibraryPage />} />
-                    <Route path="/activities" element={<ActivitiesPage />} />
-                    <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
-                  </Route>
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
+              <HonorRollProvider>
+                <NotificationOptIn />
+                <PWAInstallPrompt />
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/install" element={<InstallPage />} />
+                    <Route path="/student" element={<StudentDashboard />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route
+                      element={
+                        <ProtectedRoute>
+                          <DashboardLayout />
+                        </ProtectedRoute>
+                      }
+                    >
+                      <Route path="/dashboard" element={<DashboardPage />} />
+                      <Route path="/students" element={<ProtectedRoute allowedRoles={["admin"]}><StudentsPage /></ProtectedRoute>} />
+                      <Route path="/attendance" element={<AttendancePage />} />
+                      <Route path="/grades" element={<GradesPage />} />
+                      <Route path="/reports" element={<ReportsPage />} />
+                      <Route path="/notifications" element={<NotificationsPage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/library" element={<ResourceLibraryPage />} />
+                      <Route path="/activities" element={<ActivitiesPage />} />
+                      <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </HonorRollProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
