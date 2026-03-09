@@ -913,6 +913,30 @@ export type Database = {
           },
         ]
       }
+      student_login_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_address: string | null
+          national_id: string
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          national_id: string
+          success?: boolean
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_address?: string | null
+          national_id?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       student_logins: {
         Row: {
           class_id: string | null
