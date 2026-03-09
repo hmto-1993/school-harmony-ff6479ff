@@ -268,6 +268,9 @@ export default function SettingsPage() {
 
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
+  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
+  const [totalTermSessions, setTotalTermSessions] = useState(0);
   const [savingThreshold, setSavingThreshold] = useState(false);
 
   // Countdown timer for popup expiry + admin notification
