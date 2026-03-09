@@ -536,6 +536,16 @@ export default function AttendancePage() {
                   <CheckCircle2 className="h-4 w-4" />
                   تحديد الكل حاضر
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setRecords((prev) => prev.map((r) => ({ ...r, status: "absent" as AttendanceStatus })))}
+                  disabled={isClassLocked}
+                  className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <AlertTriangle className="h-4 w-4" />
+                  تحديد الكل غائب
+                </Button>
                 <div className="relative flex-1 min-w-[160px] max-w-[280px]">
                   <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
