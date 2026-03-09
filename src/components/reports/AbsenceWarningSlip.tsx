@@ -110,6 +110,25 @@ export default function AbsenceWarningSlip({
       .maybeSingle();
     if (subjectData?.value) setSubjectName(subjectData.value);
 
+    // Get parent phone
+    const { data: studentData } = await supabase
+      .from("students")
+      .select("parent_phone")
+      .eq("id", studentId)
+      .single();
+    if (studentData?.parent_phone) setParentPhone(studentData.parent_phone);
+
+    // Check latest notification status for this student
+    const { data: notifData } = await supabase
+      .from("notifications")
+      .select("id, status")
+      .eq("student_id", studentId)
+      .eq("type", "warning")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (notifData?.status) setNotificationStatus(notifData.status);
+
     // Build default warning text
     const subj = subjectData?.value || "المادة الدراسية";
     const absentCount = attendance?.length || 0;
