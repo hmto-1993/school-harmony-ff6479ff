@@ -124,6 +124,9 @@ export default function ReportsPage() {
   // Periods per week for weekly report
   const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
 
+  // Lesson plans for weekly report
+  const [lessonPlans, setLessonPlans] = useState<any[]>([]);
+
   // Fetch periods per week when class changes
   useEffect(() => {
     const fetchSchedule = async () => {
