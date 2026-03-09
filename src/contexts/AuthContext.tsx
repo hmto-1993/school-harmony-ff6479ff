@@ -35,10 +35,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<StudentData | null>(() => {
-    const saved = sessionStorage.getItem("student_session");
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [student, setStudent] = useState<StudentData | null>(null);
+  const [studentRestoring, setStudentRestoring] = useState(() => !!sessionStorage.getItem("student_session"));
 
   const isStudent = !!student && !user;
 
@@ -50,6 +48,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .single();
     setRole((data?.role as AppRole) || null);
   };
+
+  // Restore student session by re-fetching from server
+  useEffect(() => {
+    const saved = sessionStorage.getItem("student_session");
+    if (saved) {
+      try {
+        const { national_id } = JSON.parse(saved);
+        if (national_id) {
+          supabase.functions.invoke("student-login", { body: { national_id } }).then(({ data, error }) => {
+            if (!error && data && !data.error) {
+              setStudent({
+                id: data.student.id,
+                full_name: data.student.full_name,
+                national_id: data.student.national_id,
+                class_id: data.student.class_id || null,
+                class: data.student.class,
+                grades: data.grades,
+                behaviors: data.behaviors,
+                attendance: data.attendance,
+                visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+              });
+            } else {
+              sessionStorage.removeItem("student_session");
+            }
+            setStudentRestoring(false);
+          });
+        } else {
+          sessionStorage.removeItem("student_session");
+          setStudentRestoring(false);
+        }
+      } catch {
+        sessionStorage.removeItem("student_session");
+        setStudentRestoring(false);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -102,7 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         visibility: data.visibility || { grades: true, attendance: true, behavior: true },
       };
       setStudent(studentData);
-      sessionStorage.setItem("student_session", JSON.stringify(studentData));
+      // Only store minimal session identifier, not full data
+      sessionStorage.setItem("student_session", JSON.stringify({
+        id: studentData.id,
+        national_id: studentData.national_id,
+      }));
       return { error: null };
     } catch {
       return { error: "حدث خطأ غير متوقع" };
@@ -122,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, student, isStudent, signIn, signInStudent, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
       {children}
     </AuthContext.Provider>
   );
