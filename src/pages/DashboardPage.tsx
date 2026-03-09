@@ -120,11 +120,17 @@ export default function DashboardPage() {
         classStats={classStats}
       />
 
+      {/* Honor Roll Section */}
+      <HonorRoll />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <PeriodComparison />
         </div>
-        <AcademicCalendarWidget />
+        <div className="space-y-6">
+          <AcademicCalendarWidget />
+          <SafeZoneCounter />
+        </div>
       </div>
       <PerformanceDashboard />
 
