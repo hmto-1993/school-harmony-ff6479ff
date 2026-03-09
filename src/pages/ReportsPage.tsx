@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
+import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
@@ -117,6 +118,23 @@ export default function ReportsPage() {
   // Print preview
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState<"attendance" | "grades" | "behavior">("attendance");
+
+  // Periods per week for weekly report
+  const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
+
+  // Fetch periods per week when class changes
+  useEffect(() => {
+    const fetchSchedule = async () => {
+      if (!selectedClass) return;
+      const { data } = await supabase
+        .from("class_schedules")
+        .select("periods_per_week")
+        .eq("class_id", selectedClass)
+        .single();
+      setPeriodsPerWeek(data?.periods_per_week || 5);
+    };
+    fetchSchedule();
+  }, [selectedClass]);
 
   // Fetch classes
   useEffect(() => {
@@ -1017,6 +1035,18 @@ export default function ReportsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Weekly Grid Report */}
+              {reportType === "periodic" && (
+                <AttendanceWeeklyReport
+                  attendanceData={attendanceData}
+                  students={students}
+                  periodsPerWeek={periodsPerWeek}
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  className={className}
+                />
+              )}
             </div>
           )}
 
