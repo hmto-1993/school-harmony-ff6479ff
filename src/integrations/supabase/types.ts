@@ -324,6 +324,63 @@ export type Database = {
         }
         Relationships: []
       }
+      excuse_submissions: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          notification_id: string
+          reason: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          notification_id: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          notification_id?: string
+          reason?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "excuse_submissions_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "excuse_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_categories: {
         Row: {
           category_group: string
@@ -473,6 +530,7 @@ export type Database = {
           id: string
           is_read: boolean
           message: string
+          status: string
           student_id: string
           type: string
         }
@@ -482,6 +540,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message: string
+          status?: string
           student_id: string
           type: string
         }
@@ -491,6 +550,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message?: string
+          status?: string
           student_id?: string
           type?: string
         }
