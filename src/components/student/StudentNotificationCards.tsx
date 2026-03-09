@@ -102,7 +102,7 @@ export default function StudentNotificationCards({
     );
   }, [grades]);
 
-  // Fetch warnings
+  // Fetch warnings + excuses
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -112,6 +112,14 @@ export default function StudentNotificationCards({
         .eq("type", "warning")
         .order("created_at", { ascending: false });
       setWarnings(data || []);
+
+      // Fetch existing excuses
+      const { data: excuses } = await supabase
+        .from("excuse_submissions")
+        .select("*")
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false });
+      setExistingExcuses(excuses || []);
     })();
   }, [studentId]);
 
