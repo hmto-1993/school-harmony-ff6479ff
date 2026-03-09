@@ -51,6 +51,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
+import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
@@ -921,6 +922,7 @@ export default function SettingsPage() {
           { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
           { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
+          { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -2287,6 +2289,25 @@ export default function SettingsPage() {
                 })}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "lesson_plans" && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                خطة الدروس الأسبوعية
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <LessonPlanSettings classes={classes.map((c) => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
       )}

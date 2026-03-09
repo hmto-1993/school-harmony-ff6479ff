@@ -1,10 +1,11 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, FileText, FileSpreadsheet, Download } from "lucide-react";
+import { AlertTriangle, FileText, FileSpreadsheet, Download, BookOpen, ClipboardCheck } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import LessonSlotDialog from "./LessonSlotDialog";
 
 interface AttendanceRecord {
   student_name: string;
@@ -14,6 +15,17 @@ interface AttendanceRecord {
   notes: string | null;
 }
 
+interface LessonPlanData {
+  id: string;
+  week_number: number;
+  day_index: number;
+  slot_index: number;
+  lesson_title: string;
+  objectives: string;
+  teacher_reflection: string;
+  is_completed: boolean;
+}
+
 interface Props {
   attendanceData: AttendanceRecord[];
   students: { id: string; full_name: string }[];
@@ -21,6 +33,8 @@ interface Props {
   dateFrom: string;
   dateTo: string;
   className?: string;
+  lessonPlans?: LessonPlanData[];
+  onLessonUpdated?: () => void;
 }
 
 const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
@@ -63,8 +77,21 @@ export default function AttendanceWeeklyReport({
   dateFrom,
   dateTo,
   className: classDisplayName,
+  lessonPlans = [],
+  onLessonUpdated,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
+  const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
+
+  // Build lesson lookup: key = "weekNum-dayIndex-slotIndex"
+  const lessonLookup = useMemo(() => {
+    const map = new Map<string, LessonPlanData>();
+    lessonPlans.forEach((lp) => {
+      map.set(`${lp.week_number}-${lp.day_index}-${lp.slot_index}`, lp);
+    });
+    return map;
+  }, [lessonPlans]);
 
   const { weeks, studentRows, totalPeriodsHeld } = useMemo(() => {
     const fromDate = new Date(dateFrom);
@@ -259,6 +286,31 @@ export default function AttendanceWeeklyReport({
                 {atRiskCount} طالب في خطر
               </Badge>
             )}
+            {/* View Toggle */}
+            {lessonPlans.length > 0 && (
+              <div className="flex rounded-lg border border-border/50 overflow-hidden">
+                <button
+                  onClick={() => setViewMode("attendance")}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                    viewMode === "attendance" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
+                  )}
+                >
+                  <ClipboardCheck className="h-3.5 w-3.5" />
+                  الحضور
+                </button>
+                <button
+                  onClick={() => setViewMode("lessons")}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                    viewMode === "lessons" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
+                  )}
+                >
+                  <BookOpen className="h-3.5 w-3.5" />
+                  الدروس
+                </button>
+              </div>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5">
@@ -338,16 +390,38 @@ export default function AttendanceWeeklyReport({
                     Array.from({ length: periodsPerWeek }, (_, i) => {
                       const status = s.weeks[w.weekNum]?.[i];
                       const cfg = status ? STATUS_CONFIG[status] : null;
+                      // For lesson view, compute day_index from slot position
+                      const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
+                      const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
+                      const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
+                      const lesson = lessonLookup.get(lessonKey);
+
+                      const handleSlotClick = () => {
+                        setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
+                      };
+
                       return (
                         <td
                           key={`${w.weekNum}-${i}`}
-                          className="border border-border/15 text-center"
-                          style={{ padding: "6px 2px", minWidth: 30 }}
+                          className={cn("border border-border/15 text-center", lessonPlans.length > 0 && "cursor-pointer hover:bg-primary/5")}
+                          style={{ padding: "6px 2px", minWidth: viewMode === "lessons" ? 60 : 30 }}
+                          onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
+                          title={lesson?.lesson_title || undefined}
                         >
-                          {cfg ? (
-                            <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
+                          {viewMode === "attendance" ? (
+                            cfg ? (
+                              <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
+                            ) : (
+                              <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
+                            )
                           ) : (
-                            <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
+                            lesson ? (
+                              <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "text-primary font-bold" : "text-foreground")}>
+                                {lesson.lesson_title}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">—</span>
+                            )
                           )}
                         </td>
                       );
@@ -387,6 +461,16 @@ export default function AttendanceWeeklyReport({
           </div>
         )}
       </CardContent>
+
+      <LessonSlotDialog
+        open={slotDialog.open}
+        onOpenChange={(open) => setSlotDialog((prev) => ({ ...prev, open }))}
+        lesson={slotDialog.lesson}
+        weekNum={slotDialog.weekNum}
+        dayIndex={slotDialog.dayIndex}
+        slotIndex={slotDialog.slotIndex}
+        onUpdated={() => onLessonUpdated?.()}
+      />
     </Card>
   );
 }
