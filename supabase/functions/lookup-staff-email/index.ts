@@ -5,6 +5,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/**
+ * Generate a deterministic but fake email from national_id
+ * so the response shape is identical for found/not-found cases.
+ */
+function fakePlaceholderEmail(nationalId: string): string {
+  // Use a hash-like transform so it looks like a real masked email
+  const prefix = nationalId.substring(0, 2);
+  return `${prefix}***@***.com`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -24,6 +34,8 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const uniformMessage = "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني";
+
     // Look up profile by national_id
     const { data: profile, error } = await supabase
       .from("profiles")
@@ -31,13 +43,10 @@ Deno.serve(async (req) => {
       .eq("national_id", national_id)
       .single();
 
-    const uniformResponse = {
-      message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
-    };
-
     if (error || !profile) {
+      // Return a fake email so response shape is identical — signIn will fail naturally
       return new Response(
-        JSON.stringify(uniformResponse),
+        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -47,15 +56,14 @@ Deno.serve(async (req) => {
 
     if (!user?.email) {
       return new Response(
-        JSON.stringify(uniformResponse),
+        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Trigger password reset server-side (optional: actual reset email)
-    // Return the same uniform response regardless — no email field exposed
+    // Return real email for login — client uses this for signInWithPassword
     return new Response(
-      JSON.stringify(uniformResponse),
+      JSON.stringify({ email: user.email, message: uniformMessage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
