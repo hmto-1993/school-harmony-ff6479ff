@@ -348,6 +348,7 @@ export default function StudentDashboard() {
               </TabsTrigger>
             ))}
           </TabsList>
+          </div>
 
           {vis.grades && (
           <TabsContent value="grades">
