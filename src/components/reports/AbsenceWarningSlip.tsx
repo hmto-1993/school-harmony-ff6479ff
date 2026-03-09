@@ -38,6 +38,8 @@ export default function AbsenceWarningSlip({
   const [absentDates, setAbsentDates] = useState<AbsentDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [subjectName, setSubjectName] = useState("المادة الدراسية");
+  const [warningText, setWarningText] = useState("");
+  const [sending, setSending] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
