@@ -31,10 +31,13 @@ Deno.serve(async (req) => {
       .eq("national_id", national_id)
       .single();
 
+    const uniformResponse = {
+      message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
+    };
+
     if (error || !profile) {
-      // Return uniform response to prevent enumeration
       return new Response(
-        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        JSON.stringify(uniformResponse),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -43,22 +46,16 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
 
     if (!user?.email) {
-      // Same uniform response
       return new Response(
-        JSON.stringify({ email: null, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+        JSON.stringify(uniformResponse),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Obfuscate email: show first 2 chars + *** + domain
-    const [localPart, domain] = user.email.split("@");
-    const maskedLocal = localPart.length > 2
-      ? localPart.substring(0, 2) + "***"
-      : localPart[0] + "***";
-    const maskedEmail = `${maskedLocal}@${domain}`;
-
+    // Trigger password reset server-side (optional: actual reset email)
+    // Return the same uniform response regardless — no email field exposed
     return new Response(
-      JSON.stringify({ email: maskedEmail, message: "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني" }),
+      JSON.stringify(uniformResponse),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
