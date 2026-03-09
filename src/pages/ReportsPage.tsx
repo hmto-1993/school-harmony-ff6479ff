@@ -43,6 +43,7 @@ import { format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
+import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
