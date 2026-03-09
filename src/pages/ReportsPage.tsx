@@ -1035,6 +1035,18 @@ export default function ReportsPage() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Weekly Grid Report */}
+              {reportType === "periodic" && (
+                <AttendanceWeeklyReport
+                  attendanceData={attendanceData}
+                  students={students}
+                  periodsPerWeek={periodsPerWeek}
+                  dateFrom={dateFrom}
+                  dateTo={dateTo}
+                  className={className}
+                />
+              )}
             </div>
           )}
 
