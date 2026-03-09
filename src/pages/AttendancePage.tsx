@@ -488,6 +488,19 @@ export default function AttendancePage() {
         </Card>
       )}
 
+      {/* Lock Banner */}
+      {isClassLocked && selectedClass && (
+        <div className="flex items-center gap-3 rounded-xl border-2 border-warning/40 bg-warning/10 p-4 animate-fade-in">
+          <Lock className="h-6 w-6 text-warning shrink-0" />
+          <div>
+            <p className="font-semibold text-sm text-warning">تم الوصول للحد الأسبوعي</p>
+            <p className="text-xs text-muted-foreground">
+              اكتمل تحضير هذا الفصل ({selectedProgress?.sessions}/{selectedProgress?.limit} حصص). لإضافة حصص إضافية، فعّل "تجاوز القفل" من الإعدادات.
+            </p>
+          </div>
+        </div>
+      )}
+
       <AttendanceStats
         total={records.length}
         present={records.filter((r) => r.status === "present").length}
