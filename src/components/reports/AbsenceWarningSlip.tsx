@@ -320,12 +320,6 @@ export default function AbsenceWarningSlip({
     };
   };
 
-  const todayFormatted = format(new Date(), "yyyy/MM/dd");
-  const todayHijri = new Date().toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
