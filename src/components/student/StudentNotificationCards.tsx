@@ -61,6 +61,13 @@ export default function StudentNotificationCards({
   const [warningDetailOpen, setWarningDetailOpen] = useState(false);
   const [selectedWarning, setSelectedWarning] = useState<Warning | null>(null);
 
+  // --- Absence settings ---
+  const [allowedSessions, setAllowedSessions] = useState(0);
+  const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [absenceMode, setAbsenceMode] = useState("percentage");
+  const [totalTermSessions, setTotalTermSessions] = useState(0);
+  const [isExceeded, setIsExceeded] = useState(false);
+
   // --- Excuse submission ---
   const [excuseOpen, setExcuseOpen] = useState(false);
   const [excuseFile, setExcuseFile] = useState<File | null>(null);
@@ -102,26 +109,55 @@ export default function StudentNotificationCards({
     );
   }, [grades]);
 
-  // Fetch warnings + excuses
+  // Fetch warnings + excuses + absence settings
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("notifications")
-        .select("id, message, created_at, is_read")
-        .eq("student_id", studentId)
-        .eq("type", "warning")
-        .order("created_at", { ascending: false });
-      setWarnings(data || []);
+      const [warningsRes, excusesRes, settingsRes] = await Promise.all([
+        supabase
+          .from("notifications")
+          .select("id, message, created_at, is_read")
+          .eq("student_id", studentId)
+          .eq("type", "warning")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("excuse_submissions")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("site_settings")
+          .select("id, value")
+          .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]),
+      ]);
 
-      // Fetch existing excuses
-      const { data: excuses } = await supabase
-        .from("excuse_submissions")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false });
-      setExistingExcuses(excuses || []);
+      setWarnings(warningsRes.data || []);
+      setExistingExcuses(excusesRes.data || []);
+
+      let threshold = 20;
+      let sessions = 0;
+      let mode = "percentage";
+      let total = 0;
+      (settingsRes.data || []).forEach((s: any) => {
+        if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+        if (s.id === "absence_allowed_sessions") sessions = Number(s.value) || 0;
+        if (s.id === "absence_mode") mode = s.value || "percentage";
+        if (s.id === "total_term_sessions") total = Number(s.value) || 0;
+      });
+      setAbsenceThreshold(threshold);
+      setAllowedSessions(sessions);
+      setAbsenceMode(mode);
+      setTotalTermSessions(total);
+
+      // Calculate if exceeded
+      const absentCount = attendance.filter(a => a.status === "absent").length;
+      const totalAttendance = attendance.length;
+      if (mode === "sessions" && sessions > 0) {
+        setIsExceeded(absentCount > sessions);
+      } else if (totalAttendance > 0) {
+        setIsExceeded((absentCount / totalAttendance) * 100 >= threshold);
+      }
     })();
-  }, [studentId]);
+  }, [studentId, attendance]);
 
   // Fetch header & subject
   useEffect(() => {
@@ -331,16 +367,24 @@ export default function StudentNotificationCards({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">
                         <h3 className="text-sm sm:text-base font-bold text-red-900 dark:text-red-200 truncate">
-                          ⚠️ إنذار غياب
+                          {isExceeded ? "🚫 محروم من الاختبار" : "⚠️ إنذار غياب"}
                         </h3>
                         {newWarnings.length > 0 && (
                           <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0">
                             جديد
                           </Badge>
                         )}
+                        {isExceeded && (
+                          <Badge variant="destructive" className="text-[10px] px-1.5 py-0 shrink-0 animate-pulse">
+                            محروم
+                          </Badge>
+                        )}
                       </div>
-                      <p className="text-xs text-red-700 dark:text-red-300/80 line-clamp-1">
-                        {warnings.length} إنذار — {absentDates.length} يوم غياب مسجّل
+                      <p className="text-xs text-red-700 dark:text-red-300/80 line-clamp-2">
+                        {absenceMode === "sessions" && allowedSessions > 0
+                          ? `لقد غبت ${absentDates.length} حصص من أصل ${allowedSessions} حصص مسموح بها`
+                          : `${absentDates.length} يوم غياب — النسبة ${attendance.length > 0 ? Math.round((absentDates.length / attendance.length) * 100) : 0}% من الحد ${absenceThreshold}%`
+                        }
                       </p>
                     </div>
                     <Button size="sm" variant="ghost" className="shrink-0 h-8 px-2 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30">

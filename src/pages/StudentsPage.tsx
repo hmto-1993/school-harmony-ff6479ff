@@ -56,6 +56,9 @@ export default function StudentsPage() {
     parent_phone: "",
   });
 
+  // Absence exceeded tracking
+  const [exceededStudents, setExceededStudents] = useState<Set<string>>(new Set());
+
   // Import state
   const [importOpen, setImportOpen] = useState(false);
   const [importClassId, setImportClassId] = useState("");
@@ -121,7 +124,45 @@ export default function StudentsPage() {
   useEffect(() => {
     fetchStudents();
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    loadExceededStudents();
   }, []);
+
+  const loadExceededStudents = async () => {
+    const { data: settings } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
+    
+    let threshold = 20;
+    let allowedSessions = 0;
+    let mode = "percentage";
+    (settings || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
+      if (s.id === "absence_mode") mode = s.value || "percentage";
+    });
+
+    const { data: allAtt } = await supabase
+      .from("attendance_records")
+      .select("student_id, status");
+
+    const studentAbsences: Record<string, { absent: number; total: number }> = {};
+    (allAtt || []).forEach((r: any) => {
+      if (!studentAbsences[r.student_id]) studentAbsences[r.student_id] = { absent: 0, total: 0 };
+      studentAbsences[r.student_id].total++;
+      if (r.status === "absent") studentAbsences[r.student_id].absent++;
+    });
+
+    const exceeded = new Set<string>();
+    Object.entries(studentAbsences).forEach(([sid, data]) => {
+      if (mode === "sessions" && allowedSessions > 0) {
+        if (data.absent > allowedSessions) exceeded.add(sid);
+      } else if (data.total > 0) {
+        if ((data.absent / data.total) * 100 >= threshold) exceeded.add(sid);
+      }
+    });
+    setExceededStudents(exceeded);
+  };
 
   const fetchStudents = async () => {
     const { data } = await supabase
@@ -884,7 +925,16 @@ export default function StudentsPage() {
                       </td>
                     )}
                     <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                    <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
+                    <td className="p-3 font-semibold border-l border-border/10">
+                      <div className="flex items-center gap-2">
+                        <span>{s.full_name}</span>
+                        {exceededStudents.has(s.id) && (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 shrink-0">
+                            محروم
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
                      <td className="p-3 border-l border-border/10">
                        {s.classes?.name ? (

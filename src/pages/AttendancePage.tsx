@@ -11,6 +11,7 @@ import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
@@ -38,6 +39,14 @@ const statusOptions: { value: AttendanceStatus; label: string; color: string }[]
 // Map: classId -> { sessions: number; limit: number }
 type WeeklyProgress = Record<string, { sessions: number; limit: number }>;
 
+interface AbsenceAlert {
+  student_id: string;
+  totalAbsent: number;
+  allowedSessions: number;
+  threshold: number;
+  exceeded: boolean;
+}
+
 export default function AttendancePage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,6 +67,7 @@ export default function AttendancePage() {
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
   const [overrideLock, setOverrideLock] = useState(false);
+  const [absenceAlerts, setAbsenceAlerts] = useState<Record<string, AbsenceAlert>>({});
   const date = format(selectedDate, "yyyy-MM-dd");
 
   // Compute if currently selected class is locked (limit reached and no override)
@@ -112,6 +122,7 @@ export default function AttendancePage() {
     if (!selectedClass) return;
     loadStudents();
     loadDayNote();
+    loadAbsenceAlerts();
   }, [selectedClass, date]);
 
   const loadWeeklyProgress = async () => {
@@ -193,6 +204,74 @@ export default function AttendancePage() {
     setSavingNote(false);
     toast({ title: "تم الحفظ", description: "تم حفظ ملاحظة اليوم" });
   };
+
+  const loadAbsenceAlerts = async () => {
+    if (!selectedClass) return;
+    // Fetch settings
+    const { data: settings } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
+    
+    let threshold = 20;
+    let allowedSessions = 0;
+    let mode = "percentage";
+    let totalSessions = 0;
+    (settings || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
+      if (s.id === "absence_mode") mode = s.value || "percentage";
+      if (s.id === "total_term_sessions") totalSessions = Number(s.value) || 0;
+    });
+
+    // Fetch all attendance for students in this class
+    const { data: students } = await supabase
+      .from("students")
+      .select("id")
+      .eq("class_id", selectedClass);
+    
+    if (!students || students.length === 0) return;
+    
+    const studentIds = students.map(s => s.id);
+    const { data: allAtt } = await supabase
+      .from("attendance_records")
+      .select("student_id, status")
+      .in("student_id", studentIds);
+
+    const alerts: Record<string, AbsenceAlert> = {};
+    const studentAbsences: Record<string, { absent: number; total: number }> = {};
+    
+    (allAtt || []).forEach((r: any) => {
+      if (!studentAbsences[r.student_id]) studentAbsences[r.student_id] = { absent: 0, total: 0 };
+      studentAbsences[r.student_id].total++;
+      if (r.status === "absent") studentAbsences[r.student_id].absent++;
+    });
+
+    studentIds.forEach(sid => {
+      const data = studentAbsences[sid];
+      if (!data) return;
+      
+      let exceeded = false;
+      if (mode === "sessions" && allowedSessions > 0) {
+        exceeded = data.absent > allowedSessions;
+      } else if (data.total > 0) {
+        exceeded = (data.absent / data.total) * 100 >= threshold;
+      }
+      
+      if (data.absent > 0) {
+        alerts[sid] = {
+          student_id: sid,
+          totalAbsent: data.absent,
+          allowedSessions,
+          threshold,
+          exceeded,
+        };
+      }
+    });
+    
+    setAbsenceAlerts(alerts);
+  };
+
 
   const loadStudents = async () => {
     const { data: students } = await supabase
@@ -599,7 +678,17 @@ export default function AttendancePage() {
                         )}
                       >
                         <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/10">{record.full_name}</td>
+                        <td className="p-3 font-semibold border-l border-border/10">
+                          <div className="flex items-center gap-2">
+                            <span>{record.full_name}</span>
+                            {absenceAlerts[record.student_id]?.exceeded && (
+                              <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 shrink-0 animate-pulse">
+                                <AlertTriangle className="h-2.5 w-2.5" />
+                                محروم
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
                         <td className="p-3 border-l border-border/10">
                           <div className="flex flex-wrap gap-1">
                             {statusOptions.map((opt) => (

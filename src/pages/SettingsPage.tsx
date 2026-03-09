@@ -268,6 +268,9 @@ export default function SettingsPage() {
 
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
+  const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
+  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
+  const [totalTermSessions, setTotalTermSessions] = useState(0);
   const [savingThreshold, setSavingThreshold] = useState(false);
 
   // Countdown timer for popup expiry + admin notification
@@ -401,7 +404,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -431,6 +434,9 @@ export default function SettingsPage() {
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
         if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
+        if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
+        if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
+        if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
       });
 
       // Fetch popup history
@@ -2612,7 +2618,62 @@ export default function SettingsPage() {
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
+                  <CardContent className="px-5 pb-5 pt-0 space-y-5 max-w-lg">
+                    {/* Mode Toggle */}
+                    <div className="space-y-2">
+                      <Label>طريقة تحديد الحد</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={absenceMode === "percentage" ? "default" : "outline"}
+                          size="sm"
+                          className="h-9 text-xs flex-1"
+                          onClick={() => setAbsenceMode("percentage")}
+                        >
+                          بالنسبة المئوية (%)
+                        </Button>
+                        <Button
+                          variant={absenceMode === "sessions" ? "default" : "outline"}
+                          size="sm"
+                          className="h-9 text-xs flex-1"
+                          onClick={() => setAbsenceMode("sessions")}
+                        >
+                          بعدد الحصص
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Total Term Sessions */}
+                    <div className="space-y-2">
+                      <Label>إجمالي حصص الفصل الدراسي</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min={10}
+                          max={500}
+                          value={totalTermSessions || ""}
+                          onChange={(e) => {
+                            const val = Math.min(500, Math.max(0, Number(e.target.value) || 0));
+                            setTotalTermSessions(val);
+                            // Auto-calculate the other field
+                            if (absenceMode === "percentage" && val > 0) {
+                              setAbsenceAllowedSessions(Math.round((absenceThreshold / 100) * val));
+                            }
+                            if (absenceMode === "sessions" && val > 0 && absenceAllowedSessions > 0) {
+                              setAbsenceThreshold(Math.round((absenceAllowedSessions / val) * 100));
+                            }
+                          }}
+                          className="w-28 text-center font-bold text-lg"
+                          dir="ltr"
+                          placeholder="مثال: 90"
+                        />
+                        <span className="text-sm text-muted-foreground">حصة</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        أدخل عدد الحصص الكلي للفصل الدراسي لتفعيل الحساب التلقائي بين النسبة وعدد الحصص
+                      </p>
+                    </div>
+
+                    {/* Percentage Field */}
                     <div className="space-y-2">
                       <Label>نسبة الغياب المسموح بها (%)</Label>
                       <div className="flex items-center gap-3">
@@ -2621,35 +2682,94 @@ export default function SettingsPage() {
                           min={5}
                           max={50}
                           value={absenceThreshold}
-                          onChange={(e) => setAbsenceThreshold(Math.min(50, Math.max(5, Number(e.target.value) || 20)))}
-                          className="w-24 text-center font-bold text-lg"
+                          onChange={(e) => {
+                            const val = Math.min(50, Math.max(5, Number(e.target.value) || 20));
+                            setAbsenceThreshold(val);
+                            if (totalTermSessions > 0) {
+                              setAbsenceAllowedSessions(Math.round((val / 100) * totalTermSessions));
+                            }
+                          }}
+                          className={cn("w-24 text-center font-bold text-lg", absenceMode === "percentage" && "ring-2 ring-primary")}
                           dir="ltr"
                         />
                         <span className="text-sm text-muted-foreground">%</span>
                       </div>
+                      <div className="flex flex-wrap gap-2">
+                        {[10, 15, 20, 25, 30].map((v) => (
+                          <Button
+                            key={v}
+                            variant={absenceThreshold === v ? "default" : "outline"}
+                            size="sm"
+                            className="h-8 text-xs"
+                            onClick={() => {
+                              setAbsenceThreshold(v);
+                              if (totalTermSessions > 0) {
+                                setAbsenceAllowedSessions(Math.round((v / 100) * totalTermSessions));
+                              }
+                            }}
+                          >
+                            {v}%
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Sessions Field */}
+                    <div className="space-y-2">
+                      <Label>عدد الحصص المسموح بها</Label>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={200}
+                          value={absenceAllowedSessions || ""}
+                          onChange={(e) => {
+                            const val = Math.min(200, Math.max(0, Number(e.target.value) || 0));
+                            setAbsenceAllowedSessions(val);
+                            if (totalTermSessions > 0 && val > 0) {
+                              setAbsenceThreshold(Math.round((val / totalTermSessions) * 100));
+                            }
+                          }}
+                          className={cn("w-24 text-center font-bold text-lg", absenceMode === "sessions" && "ring-2 ring-primary")}
+                          dir="ltr"
+                          placeholder="مثال: 5"
+                        />
+                        <span className="text-sm text-muted-foreground">حصة</span>
+                      </div>
+                      {totalTermSessions > 0 && absenceAllowedSessions > 0 && (
+                        <p className="text-xs text-info font-medium">
+                          = {Math.round((absenceAllowedSessions / totalTermSessions) * 100)}% من إجمالي {totalTermSessions} حصة
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Blocking Warning */}
+                    <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+                      <p className="text-xs font-bold text-destructive flex items-center gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        إجراء تلقائي عند التجاوز
+                      </p>
                       <p className="text-xs text-muted-foreground">
-                        عند تجاوز الطالب هذه النسبة يظهر تنبيه في تقارير الحضور وإنذارات الغياب. القيمة الافتراضية حسب نظام وزارة التعليم: 20%
+                        عند تجاوز الطالب عدد الحصص المسموح بها ({absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`})،
+                        يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong> ويظهر تنبيه بارز في صفحات التحضير والطلاب.
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {[10, 15, 20, 25, 30].map((v) => (
-                        <Button
-                          key={v}
-                          variant={absenceThreshold === v ? "default" : "outline"}
-                          size="sm"
-                          className="h-8 text-xs"
-                          onClick={() => setAbsenceThreshold(v)}
-                        >
-                          {v}%
-                        </Button>
-                      ))}
-                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      عند تجاوز الطالب هذا الحد يظهر تنبيه في تقارير الحضور وإنذارات الغياب. القيمة الافتراضية حسب نظام وزارة التعليم: 20%
+                    </p>
+
                     <Button
                       onClick={async () => {
                         setSavingThreshold(true);
-                        await supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) });
+                        await Promise.all([
+                          supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) }),
+                          supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(absenceAllowedSessions) }),
+                          supabase.from("site_settings").upsert({ id: "absence_mode", value: absenceMode }),
+                          supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(totalTermSessions) }),
+                        ]);
                         setSavingThreshold(false);
-                        toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار إلى ${absenceThreshold}%` });
+                        toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}` });
                       }}
                       disabled={savingThreshold}
                       className="gap-1.5"
