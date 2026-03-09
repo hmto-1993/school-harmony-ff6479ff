@@ -96,6 +96,10 @@ export default function AttendancePage() {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => {
       setClasses(data || []);
     });
+    // Fetch override lock setting
+    supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(({ data }) => {
+      setOverrideLock(data?.value === "true");
+    });
   }, []);
 
   // Load weekly progress whenever classes list or week bounds change
