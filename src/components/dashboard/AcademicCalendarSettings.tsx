@@ -210,14 +210,12 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
         </DialogHeader>
 
         <Tabs defaultValue="moe" className="mt-2">
-          <div className="w-full overflow-x-auto scrollbar-none">
-          <TabsList className="flex w-max min-w-full">
-            <TabsTrigger value="moe" className="whitespace-nowrap text-xs gap-1"><GraduationCap className="h-3 w-3" /> وزارة التعليم</TabsTrigger>
-            <TabsTrigger value="manual" className="whitespace-nowrap text-xs gap-1"><CalendarDays className="h-3 w-3" /> يدوي</TabsTrigger>
-            <TabsTrigger value="csv" className="whitespace-nowrap text-xs gap-1"><Upload className="h-3 w-3" /> ملف Excel</TabsTrigger>
-            <TabsTrigger value="pdf" className="whitespace-nowrap text-xs gap-1"><FileText className="h-3 w-3" /> ملف PDF</TabsTrigger>
+          <TabsList className="grid grid-cols-4 w-full">
+            <TabsTrigger value="moe" className="text-xs gap-1"><GraduationCap className="h-3 w-3" /> وزارة التعليم</TabsTrigger>
+            <TabsTrigger value="manual" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> يدوي</TabsTrigger>
+            <TabsTrigger value="csv" className="text-xs gap-1"><Upload className="h-3 w-3" /> ملف Excel</TabsTrigger>
+            <TabsTrigger value="pdf" className="text-xs gap-1"><FileText className="h-3 w-3" /> ملف PDF</TabsTrigger>
           </TabsList>
-          </div>
 
           {/* MOE Preset Tab */}
           <TabsContent value="moe" className="space-y-3 mt-4">

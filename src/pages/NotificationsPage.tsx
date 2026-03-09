@@ -301,13 +301,12 @@ export default function NotificationsPage() {
       </div>
 
       <Tabs defaultValue="announcements" dir="rtl">
-        <div className="w-full overflow-x-auto scrollbar-none">
-        <TabsList className="flex w-max min-w-full justify-start">
-          <TabsTrigger value="announcements" className="whitespace-nowrap gap-1.5">
+        <TabsList className="w-full justify-start flex-wrap">
+          <TabsTrigger value="announcements" className="gap-1.5">
             <Megaphone className="h-4 w-4" />
             الإعلانات العامة
           </TabsTrigger>
-          <TabsTrigger value="excuses" className="whitespace-nowrap gap-1.5 relative">
+          <TabsTrigger value="excuses" className="gap-1.5 relative">
             <FileImage className="h-4 w-4" />
             مراجعة الأعذار
             {excuses.filter(e => e.status === "pending").length > 0 && (
@@ -316,16 +315,15 @@ export default function NotificationsPage() {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="send-sms" className="whitespace-nowrap gap-1.5">
+          <TabsTrigger value="send-sms" className="gap-1.5">
             <MessageSquare className="h-4 w-4" />
             إرسال رسالة SMS
           </TabsTrigger>
-          <TabsTrigger value="history" className="whitespace-nowrap gap-1.5">
+          <TabsTrigger value="history" className="gap-1.5">
             <Bell className="h-4 w-4" />
             سجل الإشعارات
           </TabsTrigger>
         </TabsList>
-        </div>
 
         {/* ===== Announcements ===== */}
         <TabsContent value="announcements">
