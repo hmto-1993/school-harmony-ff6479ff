@@ -493,6 +493,45 @@ export default function StudentDashboard() {
           </TabsContent>
           )}
 
+          {/* Warnings Tab */}
+          {warnings.length > 0 && (
+          <TabsContent value="warnings">
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-destructive to-destructive/60" />
+                  الإنذارات الأكاديمية
+                  <Badge variant="destructive" className="text-xs">{warnings.length}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {warnings.map((w) => (
+                  <div
+                    key={w.id}
+                    className={cn(
+                      "rounded-xl border p-4 space-y-2",
+                      w.is_read
+                        ? "border-border/40 bg-muted/30"
+                        : "border-destructive/30 bg-destructive/5"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(w.created_at).toLocaleDateString("ar-SA", {
+                          year: "numeric", month: "long", day: "numeric",
+                        })}
+                      </span>
+                      {!w.is_read && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">جديد</Badge>}
+                    </div>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">{w.message}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          )}
+
           <TabsContent value="activities">
             <StudentActivitiesTab studentId={student.id} classId={student.class_id} />
           </TabsContent>
