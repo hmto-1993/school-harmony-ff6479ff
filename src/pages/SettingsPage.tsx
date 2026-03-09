@@ -2313,6 +2313,7 @@ export default function SettingsPage() {
       )}
 
 
+      <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
         <h2 className="text-sm font-bold text-muted-foreground tracking-wide">🔧 إعدادات إضافية</h2>
         <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
