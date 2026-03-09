@@ -166,6 +166,11 @@ export default function SettingsPage() {
   const [importingClasses, setImportingClasses] = useState(false);
   const classFileRef = useRef<HTMLInputElement>(null);
   const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
+  
+  // Attendance settings
+  const [attendanceOverrideLock, setAttendanceOverrideLock] = useState(false);
+  const [classSchedules, setClassSchedules] = useState<Record<string, { periodsPerWeek: number; daysOfWeek: number[] }>>({});
+  const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
 
   // Edit category
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
