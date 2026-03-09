@@ -883,7 +883,22 @@ export default function StudentsPage() {
                          <Badge variant="secondary" className="text-xs">{s.classes.name}</Badge>
                        ) : <span className="text-muted-foreground">—</span>}
                      </td>
-                  </tr>
+                     <td className="p-3 border-l border-border/10 text-muted-foreground text-xs">{s.parent_phone || "—"}</td>
+                     <td className="p-3 text-center">
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                         title="توليد إنذار غياب"
+                         disabled={loadingWarning === s.id}
+                         onClick={() => openWarningSlip(s)}
+                       >
+                         {loadingWarning === s.id
+                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                           : <FileWarning className="h-3.5 w-3.5" />}
+                       </Button>
+                     </td>
+                   </tr>
                   );
                 })}
               </tbody>
