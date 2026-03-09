@@ -925,7 +925,7 @@ export default function ReportsPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className="w-52">
+                  <SelectTrigger className="w-52" dir="rtl">
                     <SelectValue placeholder="اختر الأسبوع" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64" dir="rtl">
