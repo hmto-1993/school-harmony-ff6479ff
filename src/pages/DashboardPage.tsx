@@ -98,6 +98,8 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <DashboardHeader onPrint={handlePrint} />
 
+      <SmartDashboardSummary />
+
       <DashboardStatCards
         totalStudents={totalStudents}
         totalClasses={totalClasses}
