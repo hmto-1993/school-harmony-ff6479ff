@@ -187,6 +187,57 @@ export default function StudentNotificationCards({
     pw.onload = () => pw.print();
   };
 
+  // Mark warning as seen when detail opens
+  const openWarningDetail = async (w: Warning) => {
+    setSelectedWarning(w);
+    setWarningDetailOpen(true);
+    // Mark as seen
+    if (!w.is_read) {
+      await supabase.from("notifications").update({ is_read: true, status: "seen" }).eq("id", w.id);
+      setWarnings(prev => prev.map(x => x.id === w.id ? { ...x, is_read: true } : x));
+    }
+  };
+
+  // Handle excuse submission
+  const handleExcuseSubmit = async () => {
+    if (!excuseFile || !selectedWarning) return;
+    if (excuseFile.size > 5 * 1024 * 1024) {
+      toast({ title: "خطأ", description: "حجم الملف يتجاوز 5 ميجابايت", variant: "destructive" });
+      return;
+    }
+    setExcuseUploading(true);
+    try {
+      const ext = excuseFile.name.split(".").pop() || "jpg";
+      const fileName = `excuse_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("school-assets").upload(`excuses/${fileName}`, excuseFile);
+      if (uploadErr) throw uploadErr;
+
+      const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(`excuses/${fileName}`);
+
+      const { error: insertErr } = await supabase.from("excuse_submissions").insert({
+        notification_id: selectedWarning.id,
+        student_id: studentId,
+        file_url: urlData.publicUrl,
+        file_name: excuseFile.name,
+        reason: excuseReason,
+        status: "pending",
+      });
+      if (insertErr) throw insertErr;
+
+      // Update notification status
+      await supabase.from("notifications").update({ status: "excuse_pending" }).eq("id", selectedWarning.id);
+
+      setExistingExcuses(prev => [{ file_url: urlData.publicUrl, file_name: excuseFile.name, reason: excuseReason, status: "pending", notification_id: selectedWarning.id, created_at: new Date().toISOString() }, ...prev]);
+      toast({ title: "تم الإرسال", description: "تم رفع العذر بنجاح وسيتم مراجعته من المعلم" });
+      setExcuseOpen(false);
+      setExcuseFile(null);
+      setExcuseReason("");
+    } catch (err: any) {
+      toast({ title: "خطأ", description: err.message, variant: "destructive" });
+    }
+    setExcuseUploading(false);
+  };
+
   const todayHijri = new Date().toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
     year: "numeric", month: "long", day: "numeric",
   });
