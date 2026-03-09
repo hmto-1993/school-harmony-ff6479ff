@@ -246,13 +246,13 @@ export default function AttendanceWeeklyReport({
           styles: {
             halign: "center" as const,
             fontSize: 8,
-            textColor: sym === "✓" ? [16, 185, 129] : sym === "✗" ? [239, 68, 68] : sym === "⧖" ? [245, 158, 11] : [100, 100, 100],
+            textColor: (sym === "✓" ? [16, 185, 129] : sym === "✗" ? [239, 68, 68] : sym === "⧖" ? [245, 158, 11] : [100, 100, 100]) as [number, number, number],
           },
         })),
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [16, 185, 129] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: s.isAtRisk ? [255, 255, 255] : [239, 68, 68], fillColor: s.isAtRisk ? [239, 68, 68] : undefined } },
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [245, 158, 11] } },
-        { content: String(s.totalExcused), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [124, 58, 237] } },
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [16, 185, 129] as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: (s.isAtRisk ? [255, 255, 255] : [239, 68, 68]) as [number, number, number], fillColor: s.isAtRisk ? [239, 68, 68] as [number, number, number] : undefined } },
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [245, 158, 11] as [number, number, number] } },
+        { content: String(s.totalExcused), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [124, 58, 237] as [number, number, number] } },
       ];
     });
 
