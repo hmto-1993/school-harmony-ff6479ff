@@ -325,9 +325,9 @@ export default function AttendanceWeeklyReport({
               {studentRows.map((s, idx) => (
                 <tr
                   key={s.id}
-                  style={{
-                    backgroundColor: s.isAtRisk ? "#fef2f2" : idx % 2 === 0 ? "#ffffff" : "#f8fafc",
-                  }}
+                  className={cn(
+                    s.isAtRisk ? "bg-destructive/10" : idx % 2 === 0 ? "bg-card" : "bg-muted/30",
+                  )}
                 >
                   <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold" style={{ fontSize: 14 }}>{idx + 1}</td>
                   <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground" style={{ fontSize: 14, letterSpacing: 0 }}>
