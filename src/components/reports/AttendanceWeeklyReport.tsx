@@ -362,10 +362,10 @@ export default function AttendanceWeeklyReport({
                       );
                     })
                   )}
-                  <td className="border border-border/20 px-2 py-2 text-center font-bold" style={{ color: "#16a34a" }}>{s.totalPresent}</td>
-                  <td className="border border-border/20 px-2 py-2 text-center font-bold" style={{ color: "#dc2626", backgroundColor: s.isAtRisk ? "#fecaca" : undefined }}>{s.totalAbsent}</td>
-                  <td className="border border-border/20 px-2 py-2 text-center font-bold" style={{ color: "#a16207" }}>{s.totalLate}</td>
-                  <td className="border border-border/20 px-2 py-2 text-center font-bold" style={{ color: "#2563eb" }}>{s.totalExcused}</td>
+                  <td className="border border-border/20 px-2 py-2 text-center font-bold">{s.totalPresent}</td>
+                  <td className="border border-border/20 px-2 py-2 text-center font-bold" style={{ backgroundColor: s.isAtRisk ? "#fecaca" : undefined }}>{s.totalAbsent}</td>
+                  <td className="border border-border/20 px-2 py-2 text-center font-bold">{s.totalLate}</td>
+                  <td className="border border-border/20 px-2 py-2 text-center font-bold">{s.totalExcused}</td>
                 </tr>
               ))}
             </tbody>
