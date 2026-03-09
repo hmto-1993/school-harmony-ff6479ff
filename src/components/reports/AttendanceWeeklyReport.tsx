@@ -77,8 +77,21 @@ export default function AttendanceWeeklyReport({
   dateFrom,
   dateTo,
   className: classDisplayName,
+  lessonPlans = [],
+  onLessonUpdated,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
+  const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
+  const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
+
+  // Build lesson lookup: key = "weekNum-dayIndex-slotIndex"
+  const lessonLookup = useMemo(() => {
+    const map = new Map<string, LessonPlanData>();
+    lessonPlans.forEach((lp) => {
+      map.set(`${lp.week_number}-${lp.day_index}-${lp.slot_index}`, lp);
+    });
+    return map;
+  }, [lessonPlans]);
 
   const { weeks, studentRows, totalPeriodsHeld } = useMemo(() => {
     const fromDate = new Date(dateFrom);
