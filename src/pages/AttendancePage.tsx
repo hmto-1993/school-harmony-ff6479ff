@@ -121,6 +121,7 @@ export default function AttendancePage() {
     if (!selectedClass) return;
     loadStudents();
     loadDayNote();
+    loadAbsenceAlerts();
   }, [selectedClass, date]);
 
   const loadWeeklyProgress = async () => {
