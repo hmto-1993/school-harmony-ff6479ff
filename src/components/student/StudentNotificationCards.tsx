@@ -109,26 +109,55 @@ export default function StudentNotificationCards({
     );
   }, [grades]);
 
-  // Fetch warnings + excuses
+  // Fetch warnings + excuses + absence settings
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("notifications")
-        .select("id, message, created_at, is_read")
-        .eq("student_id", studentId)
-        .eq("type", "warning")
-        .order("created_at", { ascending: false });
-      setWarnings(data || []);
+      const [warningsRes, excusesRes, settingsRes] = await Promise.all([
+        supabase
+          .from("notifications")
+          .select("id, message, created_at, is_read")
+          .eq("student_id", studentId)
+          .eq("type", "warning")
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("excuse_submissions")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("site_settings")
+          .select("id, value")
+          .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]),
+      ]);
 
-      // Fetch existing excuses
-      const { data: excuses } = await supabase
-        .from("excuse_submissions")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("created_at", { ascending: false });
-      setExistingExcuses(excuses || []);
+      setWarnings(warningsRes.data || []);
+      setExistingExcuses(excusesRes.data || []);
+
+      let threshold = 20;
+      let sessions = 0;
+      let mode = "percentage";
+      let total = 0;
+      (settingsRes.data || []).forEach((s: any) => {
+        if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+        if (s.id === "absence_allowed_sessions") sessions = Number(s.value) || 0;
+        if (s.id === "absence_mode") mode = s.value || "percentage";
+        if (s.id === "total_term_sessions") total = Number(s.value) || 0;
+      });
+      setAbsenceThreshold(threshold);
+      setAllowedSessions(sessions);
+      setAbsenceMode(mode);
+      setTotalTermSessions(total);
+
+      // Calculate if exceeded
+      const absentCount = attendance.filter(a => a.status === "absent").length;
+      const totalAttendance = attendance.length;
+      if (mode === "sessions" && sessions > 0) {
+        setIsExceeded(absentCount > sessions);
+      } else if (totalAttendance > 0) {
+        setIsExceeded((absentCount / totalAttendance) * 100 >= threshold);
+      }
     })();
-  }, [studentId]);
+  }, [studentId, attendance]);
 
   // Fetch header & subject
   useEffect(() => {
