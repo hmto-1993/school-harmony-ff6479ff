@@ -110,11 +110,17 @@ export default function NotificationsPage() {
   const [customMessage, setCustomMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [smsLog, setSmsLog] = useState<{ name: string; phone: string; success: boolean; error?: string }[]>([]);
+  // Excuse review state
+  const [excuses, setExcuses] = useState<ExcuseSubmission[]>([]);
+  const [reviewingExcuse, setReviewingExcuse] = useState<ExcuseSubmission | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
 
 
   useEffect(() => {
     fetchNotifications();
     fetchClasses();
+    fetchExcuses();
   }, []);
 
   // Fetch notifications
