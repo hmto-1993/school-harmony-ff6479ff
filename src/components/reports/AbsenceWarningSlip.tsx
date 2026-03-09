@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -297,6 +297,15 @@ export default function AbsenceWarningSlip({
             body { padding: 0; }
             @page { margin: 15mm; }
           }
+          @page {
+            margin: 15mm;
+            @bottom-left { content: none; }
+            @bottom-right { content: none; }
+            @bottom-center { content: none; }
+            @top-left { content: none; }
+            @top-right { content: none; }
+            @top-center { content: none; }
+          }
         </style>
       </head>
       <body>
@@ -311,12 +320,6 @@ export default function AbsenceWarningSlip({
     };
   };
 
-  const todayFormatted = format(new Date(), "yyyy/MM/dd");
-  const todayHijri = new Date().toLocaleDateString("ar-SA-u-ca-islamic-umalqura", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -509,11 +512,6 @@ export default function AbsenceWarningSlip({
               </div>
             </div>
 
-            {/* Date Footer */}
-            <div style={{ textAlign: "left", marginTop: "20px", fontSize: "12px", color: "#64748b" }}>
-              <p>التاريخ: {todayFormatted}</p>
-              <p>{todayHijri}</p>
-            </div>
           </div>
         )}
 
