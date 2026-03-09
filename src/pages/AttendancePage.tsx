@@ -48,6 +48,7 @@ export default function AttendancePage() {
   const [savedDayNote, setSavedDayNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveConfirmOpen, setMoveConfirmOpen] = useState(false);
   const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
   const [movingDate, setMovingDate] = useState(false);
   const date = format(selectedDate, "yyyy-MM-dd");
