@@ -13,11 +13,48 @@ serve(async (req) => {
   }
 
   try {
-    const { title, body, classIds } = await req.json();
-
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Verify caller is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const authSupabase = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData, error: authErr } = await authSupabase.auth.getUser(token);
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify caller has admin or teacher role
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .in("role", ["admin", "teacher"])
+      .limit(1);
+
+    if (!roleData || roleData.length === 0) {
+      return new Response(JSON.stringify({ error: "Forbidden: insufficient role" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { title, body, classIds } = await req.json();
 
     // Get push subscriptions, optionally filtered by class
     let query = supabase.from("push_subscriptions").select("*");
@@ -28,12 +65,6 @@ serve(async (req) => {
     const { data: subscriptions, error } = await query;
     if (error) throw error;
 
-    // Web Push requires VAPID. For now, we use the Notification API via service worker.
-    // Since Web Push with VAPID requires the web-push library (not available in Deno easily),
-    // we'll store notifications in the DB and let the service worker poll/display them.
-    // For a production setup, you'd integrate with a push service like OneSignal.
-    
-    // Store the notification for polling
     const notificationRecord = {
       title,
       body,
@@ -41,16 +72,14 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
     };
 
-    // For each subscription endpoint, we'll try to send via fetch (standard Web Push)
     const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY");
-    
+
     const results = {
       total: subscriptions?.length || 0,
       sent: 0,
       failed: 0,
     };
 
-    // If no VAPID key, just log - notifications will work via in-app polling
     if (!VAPID_PRIVATE_KEY) {
       console.log("VAPID_PRIVATE_KEY not set. Notifications stored for in-app delivery.", notificationRecord);
     }
@@ -68,7 +97,7 @@ serve(async (req) => {
   } catch (err) {
     console.error("Error:", err);
     return new Response(
-      JSON.stringify({ error: err.message }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
