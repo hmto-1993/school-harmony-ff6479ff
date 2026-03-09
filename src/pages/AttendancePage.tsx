@@ -204,6 +204,74 @@ export default function AttendancePage() {
     toast({ title: "تم الحفظ", description: "تم حفظ ملاحظة اليوم" });
   };
 
+  const loadAbsenceAlerts = async () => {
+    if (!selectedClass) return;
+    // Fetch settings
+    const { data: settings } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
+    
+    let threshold = 20;
+    let allowedSessions = 0;
+    let mode = "percentage";
+    let totalSessions = 0;
+    (settings || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
+      if (s.id === "absence_mode") mode = s.value || "percentage";
+      if (s.id === "total_term_sessions") totalSessions = Number(s.value) || 0;
+    });
+
+    // Fetch all attendance for students in this class
+    const { data: students } = await supabase
+      .from("students")
+      .select("id")
+      .eq("class_id", selectedClass);
+    
+    if (!students || students.length === 0) return;
+    
+    const studentIds = students.map(s => s.id);
+    const { data: allAtt } = await supabase
+      .from("attendance_records")
+      .select("student_id, status")
+      .in("student_id", studentIds);
+
+    const alerts: Record<string, AbsenceAlert> = {};
+    const studentAbsences: Record<string, { absent: number; total: number }> = {};
+    
+    (allAtt || []).forEach((r: any) => {
+      if (!studentAbsences[r.student_id]) studentAbsences[r.student_id] = { absent: 0, total: 0 };
+      studentAbsences[r.student_id].total++;
+      if (r.status === "absent") studentAbsences[r.student_id].absent++;
+    });
+
+    studentIds.forEach(sid => {
+      const data = studentAbsences[sid];
+      if (!data) return;
+      
+      let exceeded = false;
+      if (mode === "sessions" && allowedSessions > 0) {
+        exceeded = data.absent > allowedSessions;
+      } else if (data.total > 0) {
+        exceeded = (data.absent / data.total) * 100 >= threshold;
+      }
+      
+      if (data.absent > 0) {
+        alerts[sid] = {
+          student_id: sid,
+          totalAbsent: data.absent,
+          allowedSessions,
+          threshold,
+          exceeded,
+        };
+      }
+    });
+    
+    setAbsenceAlerts(alerts);
+  };
+
+
   const loadStudents = async () => {
     const { data: students } = await supabase
       .from("students")
