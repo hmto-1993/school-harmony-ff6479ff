@@ -4,8 +4,9 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Printer, Send, X, Loader2 } from "lucide-react";
+import { Printer, Send, X, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface AbsentDate {
