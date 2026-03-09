@@ -111,6 +111,7 @@ export default function StudentsPage() {
     setWarningOpen(true);
   };
 
+  useEffect(() => {
     fetchStudents();
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
   }, []);
