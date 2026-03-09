@@ -301,10 +301,19 @@ export default function NotificationsPage() {
       </div>
 
       <Tabs defaultValue="announcements" dir="rtl">
-        <TabsList className="w-full justify-start">
+        <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="announcements" className="gap-1.5">
             <Megaphone className="h-4 w-4" />
             الإعلانات العامة
+          </TabsTrigger>
+          <TabsTrigger value="excuses" className="gap-1.5 relative">
+            <FileImage className="h-4 w-4" />
+            مراجعة الأعذار
+            {excuses.filter(e => e.status === "pending").length > 0 && (
+              <Badge variant="destructive" className="absolute -top-1 -left-1 text-[10px] px-1.5 py-0 min-w-[18px] h-[18px]">
+                {excuses.filter(e => e.status === "pending").length}
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="send-sms" className="gap-1.5">
             <MessageSquare className="h-4 w-4" />
