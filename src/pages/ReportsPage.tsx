@@ -712,8 +712,9 @@ export default function ReportsPage() {
 
         if (uploadError) { failCount++; continue; }
 
-        const { data: urlData } = supabase.storage.from("reports").getPublicUrl(fileName);
-        const pdfUrl = urlData?.publicUrl;
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from("reports").createSignedUrl(fileName, 3600);
+        if (signedUrlError) { failCount++; continue; }
+        const pdfUrl = signedUrlData?.signedUrl;
 
         const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
         const { data, error } = await supabase.functions.invoke("send-sms", {

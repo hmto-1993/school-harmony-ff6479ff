@@ -48,8 +48,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Obfuscate email: show first 2 chars + *** + domain
+    const [localPart, domain] = user.email.split("@");
+    const maskedLocal = localPart.length > 2
+      ? localPart.substring(0, 2) + "***"
+      : localPart[0] + "***";
+    const maskedEmail = `${maskedLocal}@${domain}`;
+
     return new Response(
-      JSON.stringify({ email: user.email }),
+      JSON.stringify({ email: maskedEmail }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

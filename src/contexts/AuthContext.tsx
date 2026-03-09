@@ -102,7 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         visibility: data.visibility || { grades: true, attendance: true, behavior: true },
       };
       setStudent(studentData);
-      sessionStorage.setItem("student_session", JSON.stringify(studentData));
+      // Only store minimal session identifier, not full data
+      sessionStorage.setItem("student_session", JSON.stringify({
+        id: studentData.id,
+        national_id: studentData.national_id,
+      }));
       return { error: null };
     } catch {
       return { error: "حدث خطأ غير متوقع" };
