@@ -9,11 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -46,7 +47,9 @@ export default function AttendancePage() {
   const [dayNote, setDayNote] = useState("");
   const [savedDayNote, setSavedDayNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
-
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
+  const [movingDate, setMovingDate] = useState(false);
   const date = format(selectedDate, "yyyy-MM-dd");
 
   useEffect(() => {
@@ -149,6 +152,26 @@ export default function AttendancePage() {
     );
   };
 
+  const handleMoveSession = async () => {
+    if (!user || !selectedClass || records.length === 0) return;
+    const newDate = format(moveTargetDate, "yyyy-MM-dd");
+    if (newDate === date) return;
+    setMovingDate(true);
+    const { error } = await supabase
+      .from("attendance_records")
+      .update({ date: newDate })
+      .eq("class_id", selectedClass)
+      .eq("date", date);
+    if (error) {
+      toast({ title: "خطأ", description: "فشل نقل الحصة", variant: "destructive" });
+    } else {
+      toast({ title: "تم النقل", description: `تم نقل حصة التحضير إلى ${newDate}` });
+      setSelectedDate(moveTargetDate);
+    }
+    setMovingDate(false);
+    setMoveDialogOpen(false);
+  };
+
   const markAllPresent = () => {
     setRecords((prev) => prev.map((r) => ({ ...r, status: "present" as AttendanceStatus })));
   };
@@ -206,6 +229,17 @@ export default function AttendancePage() {
             onDateChange={(d) => setSelectedDate(d)}
           />
           <AcademicWeekBadge date={selectedDate} />
+          {selectedClass && records.some(r => r.existing_id) && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1 text-xs"
+              onClick={() => { setMoveTargetDate(selectedDate); setMoveDialogOpen(true); }}
+            >
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+              نقل الحصة
+            </Button>
+          )}
           {savedDayNote && (
             <span className="text-xs px-2 py-1 rounded-md bg-info/10 text-info border border-info/30">
               📝 {savedDayNote}
@@ -213,6 +247,27 @@ export default function AttendancePage() {
           )}
         </div>
       </div>
+
+      {/* Move Session Dialog */}
+      <Dialog open={moveDialogOpen} onOpenChange={setMoveDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>نقل حصة التحضير</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">اختر التاريخ الجديد لنقل سجلات الحضور إليه:</p>
+          <HijriDatePicker
+            date={moveTargetDate}
+            onDateChange={setMoveTargetDate}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMoveDialogOpen(false)}>إلغاء</Button>
+            <Button onClick={handleMoveSession} disabled={movingDate || format(moveTargetDate, "yyyy-MM-dd") === date}>
+              <ArrowRightLeft className="h-4 w-4 ml-1" />
+              {movingDate ? "جارٍ النقل..." : "نقل"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Class Selection Cards */}
       <div>
