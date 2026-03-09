@@ -9,6 +9,7 @@ import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
 import DashboardPrintView from "@/components/dashboard/DashboardPrintView";
 import AcademicCalendarWidget from "@/components/dashboard/AcademicCalendarWidget";
+import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary";
 
 interface ClassStats {
   name: string;
