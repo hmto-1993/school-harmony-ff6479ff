@@ -925,7 +925,16 @@ export default function StudentsPage() {
                       </td>
                     )}
                     <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                    <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
+                    <td className="p-3 font-semibold border-l border-border/10">
+                      <div className="flex items-center gap-2">
+                        <span>{s.full_name}</span>
+                        {exceededStudents.has(s.id) && (
+                          <Badge variant="destructive" className="text-[9px] px-1.5 py-0 h-4 gap-0.5 shrink-0">
+                            محروم
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 text-muted-foreground border-l border-border/10">{s.national_id || "—"}</td>
                      <td className="p-3 border-l border-border/10">
                        {s.classes?.name ? (
