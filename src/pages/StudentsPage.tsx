@@ -902,8 +902,36 @@ export default function StudentsPage() {
                          onClick={() => openWarningSlip(s)}
                        >
                          {loadingWarning === s.id
-                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                           : <FileWarning className="h-3.5 w-3.5" />}
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <FileWarning className="h-3.5 w-3.5" />}
+                       </Button>
+                     </td>
+                     <td className="p-3 text-center">
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-100 dark:hover:bg-green-900/30"
+                         title="إرسال واتساب"
+                         onClick={async () => {
+                           // Fetch absence data for template
+                           const { data: att } = await supabase
+                             .from("attendance_records")
+                             .select("status, date")
+                             .eq("student_id", s.id)
+                             .eq("status", "absent")
+                             .order("date", { ascending: false });
+                           const absences = att || [];
+                           setWaStudent({
+                             name: s.full_name,
+                             phone: s.parent_phone,
+                             absenceCount: absences.length,
+                             lastDate: absences[0]?.date || "",
+                           });
+                           setWaTemplateType(absences.length > 0 ? "absence" : "full_mark");
+                           setWaOpen(true);
+                         }}
+                       >
+                         <MessageCircle className="h-3.5 w-3.5" />
                        </Button>
                      </td>
                    </tr>
