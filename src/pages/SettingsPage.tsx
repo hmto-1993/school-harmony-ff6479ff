@@ -929,6 +929,7 @@ export default function SettingsPage() {
           { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
           { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
+          { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
