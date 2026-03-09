@@ -147,14 +147,26 @@ export default function AbsenceWarningSlip({
       type: "warning",
       message: warningText,
       created_by: userData?.user?.id || null,
+      status: "sent",
     });
     setSending(false);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
+      setNotificationStatus("sent");
       toast({ title: "تم الإرسال", description: "تم إرسال الإنذار إلى حساب الطالب بنجاح" });
       onOpenChange(false);
     }
+  };
+
+  const handleWhatsApp = () => {
+    if (!parentPhone) {
+      toast({ title: "تنبيه", description: "لا يوجد رقم هاتف لولي الأمر", variant: "destructive" });
+      return;
+    }
+    const phone = parentPhone.startsWith("+") ? parentPhone.slice(1) : parentPhone.startsWith("0") ? "966" + parentPhone.slice(1) : parentPhone;
+    const text = encodeURIComponent(warningText);
+    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
   const handlePrint = () => {
