@@ -41,6 +41,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
+import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { Badge } from "@/components/ui/badge";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
