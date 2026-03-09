@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { CalendarTypeProvider } from "@/hooks/useCalendarType";
 import { AcademicWeekProvider } from "@/hooks/useAcademicWeek";
+import { HonorRollProvider } from "@/contexts/HonorRollContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import NotificationOptIn from "@/components/NotificationOptIn";
