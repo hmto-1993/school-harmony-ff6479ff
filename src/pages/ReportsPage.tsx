@@ -925,18 +925,13 @@ export default function ReportsPage() {
                     }
                   }}
                 >
-                  <SelectTrigger className="w-64" dir="rtl">
+                  <SelectTrigger className="w-52" dir="rtl">
                     <SelectValue placeholder="اختر الأسبوع" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64" dir="rtl">
                     {getWeeksInfo().map((w) => (
                       <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
-                        <span className="flex items-center gap-2 flex-row-reverse">
-                          {w.weekNumber === currentWeek && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">الحالي</Badge>
-                          )}
-                          <span>{w.label}</span>
-                        </span>
+                        {w.label}{w.weekNumber === currentWeek ? " (الحالي)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
