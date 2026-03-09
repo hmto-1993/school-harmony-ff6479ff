@@ -162,6 +162,7 @@ export default function SettingsPage() {
   const [importedClasses, setImportedClasses] = useState<{ name: string; grade: string; section: string }[]>([]);
   const [importingClasses, setImportingClasses] = useState(false);
   const classFileRef = useRef<HTMLInputElement>(null);
+  const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
 
   // Edit category
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
