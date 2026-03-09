@@ -328,7 +328,7 @@ export default function AttendanceWeeklyReport({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1.5">
-                  <Download className="h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                   تصدير
                 </Button>
               </DropdownMenuTrigger>
