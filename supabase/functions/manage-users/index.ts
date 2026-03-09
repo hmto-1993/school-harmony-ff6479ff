@@ -18,73 +18,45 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { action, email, password, full_name, role } = await req.json();
-
-    if (action === "seed") {
-      // إنشاء حساب admin
-      const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.createUser({
-        email: "admin@faisaliah.edu.sa",
-        password: "Admin@123456",
-        email_confirm: true,
-      });
-
-      if (adminError && !adminError.message.includes("already been registered")) {
-        throw adminError;
-      }
-
-      if (adminUser?.user) {
-        await supabaseAdmin.from("profiles").upsert({
-          user_id: adminUser.user.id,
-          full_name: "مدير النظام",
-        });
-        await supabaseAdmin.from("user_roles").upsert({
-          user_id: adminUser.user.id,
-          role: "admin",
-        });
-      }
-
-      // إنشاء حساب معلم تجريبي
-      const { data: teacherUser, error: teacherError } = await supabaseAdmin.auth.admin.createUser({
-        email: "teacher@faisaliah.edu.sa",
-        password: "Teacher@123456",
-        email_confirm: true,
-      });
-
-      if (teacherError && !teacherError.message.includes("already been registered")) {
-        throw teacherError;
-      }
-
-      if (teacherUser?.user) {
-        await supabaseAdmin.from("profiles").upsert({
-          user_id: teacherUser.user.id,
-          full_name: "أحمد المعلم",
-        });
-        await supabaseAdmin.from("user_roles").upsert({
-          user_id: teacherUser.user.id,
-          role: "teacher",
-        });
-
-        // ربط المعلم بالشعب
-        const { data: classes } = await supabaseAdmin.from("classes").select("id");
-        if (classes) {
-          for (const cls of classes) {
-            await supabaseAdmin.from("teacher_classes").upsert({
-              teacher_id: teacherUser.user.id,
-              class_id: cls.id,
-              subject: "حاسب آلي",
-            });
-          }
-        }
-      }
-
+    // --- Authentication: verify JWT and require admin role ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return new Response(
-        JSON.stringify({ success: true, message: "تم إنشاء الحسابات التجريبية بنجاح" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "غير مصرح - يجب تسجيل الدخول" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getUser(token);
+    if (claimsError || !claimsData?.user) {
+      return new Response(
+        JSON.stringify({ error: "غير مصرح - جلسة غير صالحة" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const callerId = claimsData.user.id;
+
+    // Check caller has admin role
+    const { data: roleData } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callerId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(
+        JSON.stringify({ error: "غير مصرح - صلاحيات غير كافية" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Process actions (seed action removed) ---
+    const { action, email, password, full_name, role } = await req.json();
+
     if (action === "create_user") {
-      // إنشاء مستخدم جديد (للأدمن فقط)
       const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
         email,
         password,
@@ -118,7 +90,6 @@ serve(async (req) => {
         );
       }
 
-      // Find user by email
       const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
       if (listError) throw listError;
 
@@ -161,7 +132,6 @@ serve(async (req) => {
         .select("user_id, full_name")
         .in("user_id", teacherIds);
 
-      // Get emails
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
       const teacherUsers = users.filter((u) => teacherIds.includes(u.id));
 
