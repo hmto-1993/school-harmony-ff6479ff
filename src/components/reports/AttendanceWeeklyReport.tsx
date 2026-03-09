@@ -287,7 +287,7 @@ export default function AttendanceWeeklyReport({
           <span className="text-xs font-bold text-muted-foreground">مفتاح الرموز</span>
           <div className="flex items-center gap-5">
             {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
-              <span key={key} className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "#475569" }}>
+              <span key={key} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <span style={{ color: val.color, fontSize: 18, lineHeight: 1 }}>●</span>
                 {val.label}
               </span>
