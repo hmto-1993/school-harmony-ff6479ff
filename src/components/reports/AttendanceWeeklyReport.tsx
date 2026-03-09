@@ -281,14 +281,13 @@ export default function AttendanceWeeklyReport({
       <CardContent className="pt-0">
         {/* Legend bar - matches reference image */}
         <div
-          className="flex items-center justify-between rounded-lg border border-border/40 px-4 py-2 mb-3"
-          style={{ backgroundColor: "#f8fafc" }}
+          className="flex items-center justify-between rounded-lg border border-border/40 px-4 py-2 mb-3 bg-muted/50"
           dir="rtl"
         >
           <span className="text-xs font-bold text-muted-foreground">مفتاح الرموز</span>
           <div className="flex items-center gap-5">
             {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
-              <span key={key} className="flex items-center gap-1.5 text-xs font-medium" style={{ color: "#475569" }}>
+              <span key={key} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 <span style={{ color: val.color, fontSize: 18, lineHeight: 1 }}>●</span>
                 {val.label}
               </span>
@@ -300,23 +299,22 @@ export default function AttendanceWeeklyReport({
         <div ref={tableRef} className="overflow-auto rounded-lg border border-border/40 max-h-[600px]">
           <table className="w-full border-collapse" dir="rtl" style={{ fontSize: 13 }}>
             <thead className="sticky top-0 z-10">
-              <tr style={{ backgroundColor: "#e8ecf1" }}>
+              <tr className="bg-muted">
                 <th
-                  className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground"
+                  className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground bg-muted"
                   rowSpan={2}
-                  style={{ minWidth: 36, backgroundColor: "#e8ecf1" }}
+                  style={{ minWidth: 36 }}
                 >م</th>
                 <th
-                  className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground"
+                  className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground bg-muted"
                   rowSpan={2}
-                  style={{ minWidth: 160, backgroundColor: "#e8ecf1" }}
+                  style={{ minWidth: 160 }}
                 >اسم الطالب</th>
                 {weeks.map((w) => (
                   <th
                     key={w.weekNum}
                     colSpan={periodsPerWeek}
-                    className="border border-border/30 px-2 py-2 text-center font-bold"
-                    style={{ backgroundColor: "#e8ecf1", color: "#374151" }}
+                    className="border border-border/30 px-2 py-2 text-center font-bold bg-muted text-foreground"
                   >
                     الأسبوع {w.weekNum}
                   </th>
@@ -327,9 +325,9 @@ export default function AttendanceWeeklyReport({
               {studentRows.map((s, idx) => (
                 <tr
                   key={s.id}
-                  style={{
-                    backgroundColor: s.isAtRisk ? "#fef2f2" : idx % 2 === 0 ? "#ffffff" : "#f8fafc",
-                  }}
+                  className={cn(
+                    s.isAtRisk ? "bg-destructive/10" : idx % 2 === 0 ? "bg-card" : "bg-muted/30",
+                  )}
                 >
                   <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold" style={{ fontSize: 14 }}>{idx + 1}</td>
                   <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground" style={{ fontSize: 14, letterSpacing: 0 }}>
