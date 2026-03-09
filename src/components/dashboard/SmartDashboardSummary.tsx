@@ -49,8 +49,8 @@ export default function SmartDashboardSummary() {
     const today = format(new Date(), "yyyy-MM-dd");
     const dayIndex = new Date().getDay(); // 0=Sun
 
-    // Fetch absent today, all attendance records, classes, and current lesson in parallel
-    const [absRes, allAttRes, classesRes, lessonRes] = await Promise.all([
+    // Fetch absent today, all attendance records, classes, current lesson, and settings in parallel
+    const [absRes, allAttRes, classesRes, lessonRes, settingsRes] = await Promise.all([
       supabase
         .from("attendance_records")
         .select("student_id, students!inner(full_name, class_id, classes!inner(name))")
@@ -72,7 +72,21 @@ export default function SmartDashboardSummary() {
             .limit(1)
             .maybeSingle()
         : Promise.resolve({ data: null }),
+      supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]),
     ]);
+
+    // Parse settings
+    let threshold = 20;
+    let allowedSessions = 0;
+    let mode = "percentage";
+    ((settingsRes as any).data || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
+      if (s.id === "absence_mode") mode = s.value || "percentage";
+    });
 
     // Absent today
     const absentList: AbsentStudent[] = (absRes.data || []).map((r: any) => ({
