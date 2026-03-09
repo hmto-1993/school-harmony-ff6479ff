@@ -195,12 +195,8 @@ export default function AttendanceWeeklyReport({
       styles: { halign: "center" as const, fillColor: [230, 236, 244] as [number, number, number], textColor: [50, 50, 50] as [number, number, number], fontSize: 7 },
     }));
 
-    // RTL order: totals (left) <- weeks <- name <- # (right)
+    // RTL order: weeks (left) <- name <- # (right)
     const head = [[
-      { content: "معذور", styles: { halign: "center" as const, fillColor: [219, 234, 254] as [number, number, number], textColor: [37, 99, 235] as [number, number, number] } },
-      { content: "متأخر", styles: { halign: "center" as const, fillColor: [254, 249, 195] as [number, number, number], textColor: [161, 98, 7] as [number, number, number] } },
-      { content: "غائب", styles: { halign: "center" as const, fillColor: [254, 226, 226] as [number, number, number], textColor: [220, 38, 38] as [number, number, number] } },
-      { content: "حاضر", styles: { halign: "center" as const, fillColor: [220, 252, 231] as [number, number, number], textColor: [22, 163, 74] as [number, number, number] } },
       ...weekGroupHeaders.slice().reverse(),
       { content: "اسم الطالب", styles: { halign: "right" as const } },
       { content: "م", styles: { halign: "center" as const } },
@@ -216,10 +212,6 @@ export default function AttendanceWeeklyReport({
         });
       });
       return [
-        { content: String(s.totalExcused), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [37, 99, 235] as [number, number, number] } },
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [161, 98, 7] as [number, number, number] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: (s.isAtRisk ? [255, 255, 255] : [220, 38, 38]) as [number, number, number], fillColor: s.isAtRisk ? [254, 202, 202] as [number, number, number] : undefined } },
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontStyle: "bold" as const, textColor: [22, 163, 74] as [number, number, number] } },
         ...statusCells,
         { content: s.name, styles: { halign: "right" as const, fontStyle: "bold" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const } },
