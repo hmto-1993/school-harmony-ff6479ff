@@ -1149,6 +1149,12 @@ export default function SettingsPage() {
                 </TableBody>
               </Table>
             </div>
+            <ClassScheduleDialog
+              open={!!scheduleDialogClass}
+              onOpenChange={(open) => !open && setScheduleDialogClass(null)}
+              classId={scheduleDialogClass?.id || ""}
+              className={scheduleDialogClass?.name || ""}
+            />
           </CardContent>
         </Card>
       )}
