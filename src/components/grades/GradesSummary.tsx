@@ -594,7 +594,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasClasswork && (
                             <>
                               {classworkCats.map(cat => {
-                                const catScore = currentGrades[cat.id];
                                 return (
                                   <React.Fragment key={cat.id}>
                                     <td className={cn(
@@ -605,11 +604,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                     </td>
                                     <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
                                       <InlineScoreInput
-                                        value={catScore}
+                                        value={sg.manualScores[cat.id] ?? 0}
                                         maxScore={Number(cat.max_score)}
                                         studentId={sg.student_id}
                                         categoryId={cat.id}
-                                        gradeId={sg.grade_ids[cat.id]}
+                                        recordId={sg.manualScoreIds[cat.id]}
                                         period={selectedPeriod}
                                         userId={user?.id || ""}
                                         onSaved={loadAllData}
