@@ -465,14 +465,14 @@ export default function AttendanceWeeklyReport({
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ minWidth: 36, width: 40 }}
+                    style={{ minWidth: 32, width: 36 }}
                   >م</th>
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ minWidth: 160, textAlign: "right" }}
+                    style={{ textAlign: "right", whiteSpace: "nowrap" }}
                   >اسم الطالب</th>
-                  {weeks.map((w) => (
+                  {filteredWeeks.map((w) => (
                     <th
                       key={w.weekNum}
                       colSpan={slotsPerWeek}
@@ -481,10 +481,13 @@ export default function AttendanceWeeklyReport({
                       الأسبوع {w.weekNum}
                     </th>
                   ))}
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#16a34a" }}>حاضر</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#dc2626" }}>غائب</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#d97706" }}>متأخر</th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
-                  {weeks.map((w) =>
+                  {filteredWeeks.map((w) =>
                     Array.from({ length: slotsPerWeek }, (_, i) => (
                       <th
                         key={`${w.weekNum}-s${i}`}
@@ -509,7 +512,7 @@ export default function AttendanceWeeklyReport({
                       {s.name}
                       {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5" style={{ color: "#ef4444" }} />}
                     </td>
-                    {weeks.map((w) =>
+                    {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
                         const cfg = status ? STATUS_CONFIG[status] : null;
@@ -554,6 +557,9 @@ export default function AttendanceWeeklyReport({
                         );
                       })
                     )}
+                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
                   </tr>
                 ))}
               </tbody>
