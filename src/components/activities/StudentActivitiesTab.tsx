@@ -173,7 +173,7 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       return;
     }
     const { data: questions } = await supabase
-      .from("quiz_questions")
+      .from("quiz_questions_student" as any)
       .select("*")
       .eq("activity_id", activity.id)
       .order("sort_order");
