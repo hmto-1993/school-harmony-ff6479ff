@@ -530,6 +530,9 @@ export default function AttendanceWeeklyReport({
                         </span>
                       )}
                     </td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
                     {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
@@ -574,10 +577,7 @@ export default function AttendanceWeeklyReport({
                           </td>
                         );
                       })
-                    )}
-                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
-                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
-                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
+                    )
                   </tr>
                 ))}
               </tbody>
