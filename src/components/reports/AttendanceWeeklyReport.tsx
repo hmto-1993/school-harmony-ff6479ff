@@ -287,9 +287,9 @@ export default function AttendanceWeeklyReport({
       startY: legendY + 5,
       head, body,
       ...tableStyles,
-      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [160, 150, 130], lineWidth: 0.3 },
-      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [245, 240, 225], textColor: [50, 50, 50] },
-      alternateRowStyles: { fillColor: [252, 250, 245] },
+      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
+      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
+      alternateRowStyles: { fillColor: [248, 249, 250] },
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
           data.cell.styles.fillColor = [254, 242, 242];
