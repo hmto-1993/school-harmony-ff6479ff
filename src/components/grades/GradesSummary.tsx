@@ -436,7 +436,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
                               </th>
                               <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5">
-                                المجموع
+                                الدرجة
                               </th>
                             </React.Fragment>
                           ))}
