@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, ImagePlus, GripVertical, CheckCircle2 } from "lucide-react";
+import { SignedImage } from "@/components/activities/SignedImage";
 import { cn } from "@/lib/utils";
 
 export interface QuizQuestion {
