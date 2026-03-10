@@ -78,15 +78,15 @@ export default function DashboardLayout() {
       </main>
       <BackToTop />
 
-      {/* Mobile print close button - visible on screen, hidden during actual printing via CSS */}
+      {/* زر العودة أثناء معاينة الطباعة - يظهر على الشاشة ويختفي عند الطباعة الفعلية */}
       {showPrintClose && (
         <button
-          onClick={handleClosePrintPreview}
-          className="print-close-btn fixed top-4 left-4 z-[9999] flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive text-destructive-foreground shadow-lg font-bold text-sm"
+          onClick={handleBackToDashboard}
+          className="no-print fixed top-4 left-4 z-[9999] flex items-center gap-2 px-5 py-3 rounded-xl bg-orange-600 text-white shadow-2xl font-bold text-base hover:bg-orange-700 transition-colors"
           style={{ WebkitAppearance: "none" }}
         >
-          <X className="h-5 w-5" />
-          إغلاق
+          <ArrowRight className="h-5 w-5" />
+          العودة للوحة التحكم
         </button>
       )}
     </div>
