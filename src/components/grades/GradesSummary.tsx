@@ -476,7 +476,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             <>
                               {examCats.map(cat => (
                                 <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                                  {renderDots(currentGrades[cat.id], Number(cat.max_score))}
+                                  {renderScore(currentGrades[cat.id])}
                                 </td>
                               ))}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">
