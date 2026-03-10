@@ -77,9 +77,9 @@ function getWeekNumber(date: Date, startDate: Date): number {
 function AbsentDots({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <span className="inline-flex items-center gap-[2px] justify-center flex-wrap" title={`${count} حصة غياب`}>
+    <span className="inline-flex items-center gap-[3px] justify-center flex-wrap" title={`${count} حصة غياب`}>
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} style={{ color: "#ef4444", fontSize: 12, lineHeight: 1 }}>●</span>
+        <span key={i} style={{ color: "#ef4444", fontSize: 16, lineHeight: 1 }}>●</span>
       ))}
     </span>
   );
