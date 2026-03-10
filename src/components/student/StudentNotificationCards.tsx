@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ export default function StudentNotificationCards({
   grades,
   attendance,
 }: Props) {
+  const { student: authStudent } = useAuth();
   // --- Full mark detection ---
   const [fullMarks, setFullMarks] = useState<FullMarkGrade[]>([]);
   const [certOpen, setCertOpen] = useState(false);
@@ -257,6 +259,8 @@ export default function StudentNotificationCards({
           file_url: urlData.publicUrl,
           file_name: excuseFile.name,
           reason: excuseReason,
+          session_token: authStudent?.session_token,
+          session_issued_at: authStudent?.session_issued_at,
         },
       });
       if (excuseErr || !excuseResult?.success) throw new Error(excuseResult?.error || excuseErr?.message || "Failed to submit excuse");

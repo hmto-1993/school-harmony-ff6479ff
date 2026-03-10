@@ -5,13 +5,37 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+async function verifySessionToken(
+  token: string,
+  studentId: string,
+  issuedAt: number,
+  secret: string
+): Promise<boolean> {
+  // Check token age
+  if (Date.now() - issuedAt > SESSION_MAX_AGE_MS) return false;
+
+  const data = `${studentId}:${issuedAt}`;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return token === expected;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { student_id, notification_id, file_url, file_name, reason } = await req.json();
+    const { student_id, notification_id, file_url, file_name, reason, session_token, session_issued_at } = await req.json();
 
     if (!student_id || !notification_id || !file_url || !file_name) {
       return new Response(
@@ -20,7 +44,24 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Verify session token to authenticate the student
+    if (!session_token || !session_issued_at) {
+      return new Response(
+        JSON.stringify({ error: "Authentication required" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const isValid = await verifySessionToken(session_token, student_id, session_issued_at, serviceRoleKey);
+    if (!isValid) {
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired session" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Validate file_url points to our Supabase Storage
     const allowedPrefix = `${supabaseUrl}/storage/v1/object/public/`;
@@ -30,7 +71,7 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify the student exists
