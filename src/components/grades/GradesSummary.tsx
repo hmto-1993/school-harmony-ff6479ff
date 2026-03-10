@@ -155,106 +155,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setLoading(false);
   };
 
-  // === ROW EDIT (manual scores only) ===
-  const startRowEdit = (studentId: string) => {
-    const row = summaryRows.find((r) => r.student_id === studentId);
-    if (row) {
-      setEditMode("row");
-      setEditingStudent(studentId);
-      setRowEdits({ ...row.manualScores });
-    }
-  };
-
-  const handleRowGrade = (categoryId: string, value: string, maxScore: number) => {
-    const numValue = value === "" ? null : Math.min(maxScore, Math.max(0, Number(value)));
-    setRowEdits((prev) => ({ ...prev, [categoryId]: numValue }));
-  };
-
-  const saveRowEdit = async () => {
-    if (!user || !editingStudent) return;
-    setSaving(true);
-    const row = summaryRows.find((r) => r.student_id === editingStudent);
-    if (!row) return;
-    const classCats = allCategories.filter((c) => c.class_id === row.class_id);
-
-    for (const cat of classCats) {
-      const score = rowEdits[cat.id];
-      if (score !== null && score !== undefined) {
-        const existingId = row.manualScoreIds[cat.id];
-        if (existingId) {
-          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
-        } else {
-          await supabase.from("manual_category_scores" as any).insert({
-            student_id: editingStudent, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod,
-          });
-        }
-      }
-    }
-    toast({ title: "تم الحفظ", description: "تم تعديل درجات الطالب بنجاح" });
-    cancelEdit();
-    loadAllData();
-  };
-
-  // === COLUMN EDIT (manual scores only) ===
-  const startColumnEdit = (catId: string, classId: string) => {
-    const classStudents = summaryRows.filter(r => r.class_id === classId);
-    const initial: Record<string, number | null> = {};
-    classStudents.forEach(s => { initial[s.student_id] = s.manualScores[catId] ?? 0; });
-    setEditMode("column");
-    setEditingColumnCatId(catId);
-    setEditingClassId(classId);
-    setColEdits(initial);
-  };
-
-  const handleColGrade = (studentId: string, value: string, maxScore: number) => {
-    const numValue = value === "" ? null : Math.min(maxScore, Math.max(0, Number(value)));
-    setColEdits((prev) => ({ ...prev, [studentId]: numValue }));
-  };
-
-  const setAllColumnGrades = (value: string, maxScore: number) => {
-    const numValue = value === "" ? null : Math.min(maxScore, Math.max(0, Number(value)));
-    setColEdits(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(k => { updated[k] = numValue; });
-      return updated;
-    });
-  };
-
-  const saveColumnEdit = async () => {
-    if (!user || !editingColumnCatId) return;
-    setSaving(true);
-    const classStudents = summaryRows.filter(r => r.class_id === editingClassId);
-
-    for (const s of classStudents) {
-      const score = colEdits[s.student_id];
-      if (score !== null && score !== undefined) {
-        const existingId = s.manualScoreIds[editingColumnCatId];
-        if (existingId) {
-          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
-        } else {
-          await supabase.from("manual_category_scores" as any).insert({
-            student_id: s.student_id, category_id: editingColumnCatId, score, recorded_by: user.id, period: selectedPeriod,
-          });
-        }
-      }
-    }
-    toast({ title: "تم الحفظ", description: "تم تعديل درجات العمود بنجاح" });
-    cancelEdit();
-    loadAllData();
-  };
-
-  const cancelEdit = () => {
-    setEditMode(null);
-    setEditingStudent(null);
-    setEditingColumnCatId(null);
-    setEditingClassId(null);
-    setRowEdits({});
-    setColEdits({});
-    setSaving(false);
-  };
-
-  const isEditing = editMode !== null;
-
   const filteredRows = summaryRows.filter((r) => {
     const matchesName = !searchName || r.full_name.includes(searchName);
     const matchesClass = !selectedClass || selectedClass === "all" || r.class_id === selectedClass;
@@ -333,15 +233,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : groupedByClass.map((group) => {
-    const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
+        const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
         const examCats = group.categories.filter(c => c.category_group === 'exams');
         const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
 
         const hasClasswork = !categoryGroupFilter ? classworkCats.length > 0 : categoryGroupFilter === 'classwork' && classworkCats.length > 0;
         const hasExams = !categoryGroupFilter ? examCats.length > 0 : categoryGroupFilter === 'exams' && examCats.length > 0;
         const hasOther = !categoryGroupFilter ? otherCats.length > 0 : false;
-
-        const allCatsForGroup = [...classworkCats, ...examCats, ...otherCats];
 
         return (
           <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
@@ -354,57 +252,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     {selectedPeriod === 1 ? "فترة أولى" : "فترة ثانية"}
                   </Badge>
                 </div>
-
-                {/* Edit Menu Button */}
-                {!isEditing && (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className="gap-1.5">
-                        <Pencil className="h-4 w-4" />
-                        تعديل
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-2" align="end">
-                      <div className="space-y-1">
-                        <p className="text-xs font-semibold text-muted-foreground px-2 py-1">تعديل عمود (فئة كاملة)</p>
-                        {allCatsForGroup.map(cat => (
-                          <button
-                            key={cat.id}
-                            onClick={() => startColumnEdit(cat.id, group.id)}
-                            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-accent transition-colors text-right"
-                          >
-                            <Columns className="h-4 w-4 text-primary shrink-0" />
-                            <span>{cat.name}</span>
-                            <Badge variant="outline" className="text-[10px] mr-auto">{Number(cat.max_score)}</Badge>
-                          </button>
-                        ))}
-                        <div className="border-t my-1.5" />
-                        <p className="text-xs font-semibold text-muted-foreground px-2 py-1">تعديل صف (طالب)</p>
-                        <p className="text-[11px] text-muted-foreground px-2 pb-1">اضغط على أيقونة القلم بجانب اسم الطالب</p>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-
-                {/* Save / Cancel for column edit */}
-                {editMode === "column" && editingClassId === group.id && (
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-primary/10 text-primary border-primary/30">
-                      تعديل: {allCategories.find(c => c.id === editingColumnCatId)?.name}
-                    </Badge>
-                    <Input
-                      type="number"
-                      placeholder="تعبئة الكل"
-                      className="w-24 h-8 text-center"
-                      dir="ltr"
-                      min={0}
-                      max={Number(allCategories.find(c => c.id === editingColumnCatId)?.max_score || 100)}
-                      onChange={(e) => setAllColumnGrades(e.target.value, Number(allCategories.find(c => c.id === editingColumnCatId)?.max_score || 100))}
-                    />
-                    <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}><X className="h-4 w-4" /></Button>
-                    <Button size="sm" onClick={saveColumnEdit} disabled={saving}><Save className="h-4 w-4 ml-1" /> حفظ</Button>
-                  </div>
-                )}
               </div>
             </CardHeader>
             <CardContent>
@@ -431,8 +278,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                         </th>
                       ))}
-                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">المجموع</th>
-                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 w-[60px] last:rounded-tl-xl">تعديل</th>
+                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">المجموع</th>
                     </tr>
                     {/* Sub-headers row */}
                     <tr className="bg-muted/30">
@@ -440,10 +286,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         <>
                           {classworkCats.map(cat => (
                             <React.Fragment key={cat.id}>
-                              <th className={cn(
-                                "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
-                                editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
-                              )}>
+                              <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px] text-muted-foreground">
                                 <div>{cat.name}</div>
                                 <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
                               </th>
@@ -458,10 +301,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasExams && (
                         <>
                           {examCats.map(cat => (
-                            <th key={cat.id} className={cn(
-                              "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
-                              editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
-                            )}>
+                            <th key={cat.id} className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px] text-muted-foreground">
                               <div>{cat.name}</div>
                               <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
                             </th>
@@ -473,7 +313,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                   </thead>
                   <tbody>
                     {group.students.map((sg, i) => {
-                      const isRowEditing = editMode === "row" && editingStudent === sg.student_id;
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
                       const currentGrades = sg.grades;
@@ -491,22 +330,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           );
                         }
 
-                        // Calculate per-unit value (each dot = 1 unit)
-                        const perUnit = Math.round(maxScore / Math.max(maxScore, 1));
-                        const totalUnits = maxScore; // each point = 1 dot potential
-                        // Group by perSlot chunks to reduce dot count for large scores
-                        const isStarred = score >= maxScore;
-
-                        // Build dots: each dot represents a scoring unit
-                        // For large max_score, group into chunks
                         let chunkSize = 1;
                         if (maxScore > 6) chunkSize = Math.ceil(maxScore / 6);
                         const dotCount = Math.ceil(maxScore / chunkSize);
+                        const isStarred = score >= maxScore;
                         
                         let remaining = score;
                         const dots: Array<"excellent" | "average" | "zero"> = [];
-                        for (let i = 0; i < dotCount; i++) {
-                          const chunkVal = Math.min(chunkSize, maxScore - i * chunkSize);
+                        for (let d = 0; d < dotCount; d++) {
+                          const chunkVal = Math.min(chunkSize, maxScore - d * chunkSize);
                           const halfChunk = Math.round(chunkVal / 2);
                           if (remaining >= chunkVal) {
                             dots.push("excellent");
@@ -521,10 +353,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
                         return (
                           <div className="flex items-center justify-center gap-0.5 flex-wrap">
-                            {dots.map((lvl, i) => {
-                              if (lvl === "excellent") return <CircleCheck key={i} className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />;
-                              if (lvl === "average") return <CircleMinus key={i} className="h-3 w-3 text-amber-500 dark:text-amber-400" />;
-                              return <CircleX key={i} className="h-3 w-3 text-rose-500 dark:text-rose-400" />;
+                            {dots.map((lvl, idx) => {
+                              if (lvl === "excellent") return <CircleCheck key={idx} className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />;
+                              if (lvl === "average") return <CircleMinus key={idx} className="h-3 w-3 text-amber-500 dark:text-amber-400" />;
+                              return <CircleX key={idx} className="h-3 w-3 text-rose-500 dark:text-rose-400" />;
                             })}
                             {isStarred && (
                               <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
@@ -534,53 +366,36 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         );
                       };
 
-                      const renderCell = (cat: CategoryInfo) => {
-                        return renderDots(currentGrades[cat.id], Number(cat.max_score));
-                      };
-
                       return (
                         <tr key={sg.student_id} className={cn(
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                           !isLast && "border-b border-border/20",
-                          isRowEditing && "bg-primary/5 ring-1 ring-inset ring-primary/20"
                         )}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
 
-                          {/* Classwork categories with individual totals */}
+                          {/* Classwork categories with dots + inline score */}
                           {hasClasswork && (
                             <>
-                              {classworkCats.map(cat => {
-                                const isScoreEditing = 
-                                  (editMode === "row" && editingStudent === sg.student_id) ||
-                                  (editMode === "column" && editingColumnCatId === cat.id);
-                                const editVal = editMode === "row" ? rowEdits[cat.id] : colEdits[sg.student_id];
-                                return (
-                                  <React.Fragment key={cat.id}>
-                                    <td className="p-2 text-center border-l border-border/10">
-                                      {renderCell(cat)}
-                                    </td>
-                                    <td className={cn(
-                                      "p-1.5 text-center border-l border-border/10",
-                                      isScoreEditing ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-primary/5"
-                                    )}>
-                                      {isScoreEditing ? (
-                                        <Input
-                                          type="number" min={0} max={Number(cat.max_score)}
-                                          value={editVal ?? ""}
-                                          onChange={(e) => {
-                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
-                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
-                                          }}
-                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
-                                        />
-                                      ) : (
-                                        <span className="text-xs font-bold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
-                                      )}
-                                    </td>
-                                  </React.Fragment>
-                                );
-                              })}
+                              {classworkCats.map(cat => (
+                                <React.Fragment key={cat.id}>
+                                  <td className="p-2 text-center border-l border-border/10">
+                                    {renderDots(currentGrades[cat.id], Number(cat.max_score))}
+                                  </td>
+                                  <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
+                                    <InlineScoreInput
+                                      value={sg.manualScores[cat.id] ?? 0}
+                                      maxScore={Number(cat.max_score)}
+                                      studentId={sg.student_id}
+                                      categoryId={cat.id}
+                                      recordId={sg.manualScoreIds[cat.id]}
+                                      period={selectedPeriod}
+                                      userId={user?.id || ""}
+                                      onSaved={loadAllData}
+                                    />
+                                  </td>
+                                </React.Fragment>
+                              ))}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
                                 {classworkSub.score} / {classworkSub.max}
                               </td>
@@ -592,7 +407,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             <>
                               {examCats.map(cat => (
                                 <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                                  {renderCell(cat)}
+                                  {renderDots(currentGrades[cat.id], Number(cat.max_score))}
                                 </td>
                               ))}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">
@@ -604,27 +419,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {/* Other categories */}
                           {hasOther && otherCats.map(cat => (
                             <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                              {renderCell(cat)}
+                              {renderDots(currentGrades[cat.id], Number(cat.max_score))}
                             </td>
                           ))}
 
                           {/* Grand total */}
-                          <td className="p-2 text-center font-bold border-l border-border/10">
+                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>
                             {allSub.score} / {allSub.max}
-                          </td>
-
-                          {/* Edit button per row */}
-                          <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
-                            {isRowEditing ? (
-                              <div className="flex gap-1 justify-center">
-                                <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}><X className="h-4 w-4" /></Button>
-                                <Button size="sm" onClick={saveRowEdit} disabled={saving}><Save className="h-4 w-4" /></Button>
-                              </div>
-                            ) : (
-                              <Button size="sm" variant="ghost" onClick={() => startRowEdit(sg.student_id)} disabled={isEditing}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                            )}
                           </td>
                         </tr>
                       );
