@@ -491,7 +491,7 @@ export default function AttendanceWeeklyReport({
                       colSpan={slotsPerWeek}
                       className="logbook-th logbook-th-week"
                     >
-                      الأسبوع {w.weekNum}
+                      <span className="logbook-week-label">الأسبوع {w.weekNum}</span>
                     </th>
                   ))}
                   <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
