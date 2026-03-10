@@ -606,10 +606,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasExams && (
                             <>
                               {examCats.map(cat => (
-                                <td key={cat.id} className={cn(
-                                  "p-2 text-center border-l border-border/10",
-                                  editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                )}>
+                                <td key={cat.id} className="p-2 text-center border-l border-border/10">
                                   {renderCell(cat)}
                                 </td>
                               ))}
