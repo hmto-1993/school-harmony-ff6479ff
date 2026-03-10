@@ -137,17 +137,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setEditMode({ type: "column", categoryId, classId });
   };
 
-  const startRowEdit = (studentId: string, categories: CategoryInfo[]) => {
-    const row = summaryRows.find(r => r.student_id === studentId);
-    if (!row) return;
-    const edits: Record<string, string> = {};
-    categories.forEach(cat => {
-      edits[`${studentId}__${cat.id}`] = String(row.manualScores[cat.id] ?? 0);
-    });
-    setTempEdits(edits);
-    setEditMode({ type: "row", studentId });
-  };
-
   const cancelEdit = () => {
     setEditMode(null);
     setTempEdits({});
