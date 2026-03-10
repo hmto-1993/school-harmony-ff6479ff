@@ -639,25 +639,36 @@ export default function AttendanceWeeklyReport({
         }
         .logbook-th-week {
           background: #dee2e6;
-          font-size: 12px;
+          font-size: 11px;
           letter-spacing: 0 !important;
+          padding: 2px;
+          position: relative;
+          height: 60px;
+        }
+        .logbook-week-label {
+          writing-mode: vertical-rl;
+          transform: rotate(180deg);
+          display: inline-block;
+          white-space: nowrap;
+          font-size: 11px;
+          line-height: 1;
         }
         .logbook-th-session {
           background: #e9ecef;
           font-size: 10px;
           padding: 3px 2px;
-          min-width: 28px;
-          width: 28px;
+          min-width: 24px;
+          width: 24px;
           color: #868e96;
           border: 1.5px solid #ced4da;
         }
         .logbook-th-total {
           background: #e9ecef;
           font-size: 11px;
-          min-width: 28px;
-          width: 30px;
+          min-width: 22px;
+          width: 22px;
           font-weight: 800;
-          padding: 4px 2px;
+          padding: 2px 1px;
         }
         .logbook-td {
           border: 1px solid #dee2e6;
