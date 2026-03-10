@@ -21,6 +21,8 @@ interface SummaryRow {
   class_id: string;
   grades: Record<string, number | null>;
   grade_ids: Record<string, string>;
+  manualScores: Record<string, number>;
+  manualScoreIds: Record<string, string>;
   total: string;
 }
 
