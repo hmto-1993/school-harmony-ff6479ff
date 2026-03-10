@@ -73,18 +73,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [summaryRows, setSummaryRows] = useState<SummaryRow[]>([]);
-  const [saving, setSaving] = useState(false);
   const [searchName, setSearchName] = useState("");
-
-  // Edit state
-  const [editMode, setEditMode] = useState<EditMode>(null);
-  const [editingStudent, setEditingStudent] = useState<string | null>(null);
-  const [editingColumnCatId, setEditingColumnCatId] = useState<string | null>(null);
-  const [editingClassId, setEditingClassId] = useState<string | null>(null);
-  // For row edit: { [catId]: score }
-  const [rowEdits, setRowEdits] = useState<Record<string, number | null>>({});
-  // For column edit: { [studentId]: score }
-  const [colEdits, setColEdits] = useState<Record<string, number | null>>({});
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
