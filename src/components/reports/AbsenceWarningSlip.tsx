@@ -293,8 +293,30 @@ export default function AbsenceWarningSlip({
             font-size: 12px;
             color: #64748b;
           }
+          .back-btn {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            background: #ea580c;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-family: 'IBM Plex Sans Arabic', sans-serif;
+          }
+          .back-btn:active { background: #c2410c; }
+          .back-btn svg { width: 20px; height: 20px; }
           @media print {
             body { padding: 0; }
+            .back-btn { display: none !important; }
             @page { margin: 15mm; }
           }
           @page {
@@ -309,6 +331,10 @@ export default function AbsenceWarningSlip({
         </style>
       </head>
       <body>
+        <button class="back-btn" onclick="window.close(); if(!window.closed) history.back();">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          العودة
+        </button>
         ${clone.innerHTML}
       </body>
       </html>
