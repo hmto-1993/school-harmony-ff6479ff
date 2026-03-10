@@ -14,6 +14,7 @@ import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
   { id: "behavior", label: "السلوك", icon: UserCheck, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { id: "classwork", label: "المهام والمشاركة", icon: Users, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   { id: "summary", label: "التقييم النهائي", icon: BarChart3, color: "text-purple-500", bg: "bg-purple-500/10" },
   { id: "semester", label: "ملخص الفصل", icon: BookOpen, color: "text-rose-500", bg: "bg-rose-500/10" },
   { id: "import", label: "استيراد من ملف", icon: FileDown, color: "text-teal-500", bg: "bg-teal-500/10" },
@@ -47,7 +48,7 @@ export default function GradesPage() {
     load();
   }, []);
 
-  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "import";
+  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -184,6 +185,9 @@ export default function GradesPage() {
           )}
           {activeType === "behavior" && (
             <BehaviorEntry selectedClass={selectedClass} onClassChange={setSelectedClass} />
+          )}
+          {activeType === "classwork" && (
+            <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} categoryGroupFilter="classwork" />
           )}
           {activeType === "summary" && (
             <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
