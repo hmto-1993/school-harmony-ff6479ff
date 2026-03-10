@@ -293,34 +293,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     return { score, max };
   };
 
-  // Get effective grade for a cell considering edit modes
-  const getEffectiveGrade = (studentId: string, catId: string, originalGrade: number | null): number | null => {
-    if (editMode === "row" && editingStudent === studentId) {
-      return rowEdits[catId] ?? null;
-    }
-    if (editMode === "column" && editingColumnCatId === catId) {
-      return colEdits[studentId] ?? null;
-    }
-    return originalGrade;
-  };
-
-  const getEffectiveGrades = (sg: SummaryRow): Record<string, number | null> => {
-    const grades = { ...sg.grades };
-    if (editMode === "row" && editingStudent === sg.student_id) {
-      return { ...rowEdits };
-    }
-    if (editMode === "column" && editingColumnCatId) {
-      grades[editingColumnCatId] = colEdits[sg.student_id] ?? sg.grades[editingColumnCatId];
-    }
-    return grades;
-  };
-
-  const isCellEditable = (studentId: string, catId: string): boolean => {
-    if (editMode === "row" && editingStudent === studentId) return true;
-    if (editMode === "column" && editingColumnCatId === catId) return true;
-    return false;
-  };
-
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
 
   return (
