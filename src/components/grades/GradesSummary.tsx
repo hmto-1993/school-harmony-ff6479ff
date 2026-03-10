@@ -431,7 +431,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 return (
                                   <td key={cat.id} className={cn(
                                     "p-1.5 text-center border-l border-border/10",
-                                    isEditing ? "bg-primary/10" : ""
+                                    isEditing ? "bg-emerald-500/10" : ""
                                   )}>
                                     {isEditing ? (() => {
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
