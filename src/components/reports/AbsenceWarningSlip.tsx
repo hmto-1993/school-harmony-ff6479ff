@@ -211,6 +211,47 @@ export default function AbsenceWarningSlip({
       // Cleanup: remove the temporary print container
       const el = document.getElementById("absence-print-area");
       if (el) el.remove();
+
+      // Add a floating "back" button for mobile users in case screen stays blank
+      const existingBtn = document.getElementById("post-print-back-btn");
+      if (existingBtn) existingBtn.remove();
+
+      const backBtn = document.createElement("button");
+      backBtn.id = "post-print-back-btn";
+      backBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="m15 18-6-6 6-6"/></svg> العودة`;
+      backBtn.style.cssText = `
+        position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:99999;
+        display:flex;align-items:center;gap:6px;
+        padding:12px 28px;border:none;border-radius:12px;
+        background:#f97316;color:white;font-size:16px;font-weight:700;
+        font-family:'IBM Plex Sans Arabic',sans-serif;
+        box-shadow:0 4px 20px rgba(0,0,0,0.25);cursor:pointer;
+        animation:fadeInBtn 0.3s ease;
+      `;
+      // Add animation keyframes
+      const style = document.createElement("style");
+      style.textContent = `
+        @keyframes fadeInBtn { from { opacity:0; transform:translateX(-50%) translateY(-10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+        @media print { #post-print-back-btn, #post-print-back-btn-style { display:none !important; } }
+      `;
+      style.id = "post-print-back-btn-style";
+      document.head.appendChild(style);
+
+      backBtn.onclick = () => {
+        backBtn.remove();
+        style.remove();
+        // Force re-render by scrolling to top
+        window.scrollTo(0, 0);
+      };
+      document.body.appendChild(backBtn);
+
+      // Auto-remove after 10 seconds if user interacts normally
+      setTimeout(() => {
+        const btn = document.getElementById("post-print-back-btn");
+        const s = document.getElementById("post-print-back-btn-style");
+        if (btn) btn.remove();
+        if (s) s.remove();
+      }, 10000);
     });
   }, [warningText, onOpenChange]);
 
