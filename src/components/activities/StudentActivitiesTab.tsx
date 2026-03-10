@@ -89,11 +89,11 @@ function ActivityItem({ activity, completedQuizzes, uploadingFor, onOpenQuiz, on
           </Button>
         )}
         {activity.file_url && (
-          <a href={activity.file_url} target="_blank" rel="noopener noreferrer">
+          <SignedFileLink bucket="activities" path={activity.file_url}>
             <Button size="sm" variant="outline" className="gap-1.5 rounded-xl">
               <Download className="h-4 w-4" /> تحميل الملف
             </Button>
-          </a>
+          </SignedFileLink>
         )}
         {activity.allow_student_uploads && (
           <label className="cursor-pointer">
