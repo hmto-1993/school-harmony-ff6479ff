@@ -461,11 +461,48 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const examSub = calcSubtotal(currentGrades, examCats);
                       const allSub = calcSubtotal(currentGrades, group.categories);
 
-                      const renderDot = (score: number | null, maxScore: number) => {
-                        if (score == null) return <CircleMinus className="h-5 w-5 text-muted-foreground opacity-30 mx-auto" />;
-                        if (score >= maxScore) return <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" />;
-                        if (score > 0) return <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" />;
-                        return <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" />;
+                      const isParticipation = (name: string) => name === "المشاركة";
+                      const MAX_SLOTS = 3;
+
+                      const renderDots = (score: number | null, maxScore: number, catName: string) => {
+                        const slotCount = isParticipation(catName) ? MAX_SLOTS : 1;
+                        const perSlot = Math.round(maxScore / slotCount);
+                        const halfSlot = Math.round(perSlot / 2);
+
+                        if (score == null) {
+                          return (
+                            <div className="flex items-center justify-center gap-0.5">
+                              {Array.from({ length: slotCount }).map((_, i) => (
+                                <CircleMinus key={i} className="h-5 w-5 text-muted-foreground opacity-30" />
+                              ))}
+                            </div>
+                          );
+                        }
+
+                        // Reconstruct slot levels from total score
+                        let remaining = score;
+                        const levels: Array<"excellent" | "average" | "zero"> = [];
+                        for (let i = 0; i < slotCount; i++) {
+                          if (remaining >= perSlot) {
+                            levels.push("excellent");
+                            remaining -= perSlot;
+                          } else if (remaining >= halfSlot) {
+                            levels.push("average");
+                            remaining -= halfSlot;
+                          } else {
+                            levels.push("zero");
+                          }
+                        }
+
+                        return (
+                          <div className="flex items-center justify-center gap-0.5">
+                            {levels.map((lvl, i) => {
+                              if (lvl === "excellent") return <CircleCheck key={i} className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
+                              if (lvl === "average") return <CircleMinus key={i} className="h-5 w-5 text-amber-500 dark:text-amber-400" />;
+                              return <CircleX key={i} className="h-5 w-5 text-rose-500 dark:text-rose-400" />;
+                            })}
+                          </div>
+                        );
                       };
 
                       const renderCell = (cat: CategoryInfo) => {
@@ -486,7 +523,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         }
                         // Show dots for classwork categories, numbers for exams
                         if (categoryGroupFilter === "classwork" || cat.category_group === "classwork") {
-                          return renderDot(currentGrades[cat.id], Number(cat.max_score));
+                          return renderDots(currentGrades[cat.id], Number(cat.max_score), cat.name);
                         }
                         return (
                           <span className={sg.grades[cat.id] == null ? "text-muted-foreground" : ""}>
