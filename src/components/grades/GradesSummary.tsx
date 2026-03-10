@@ -461,6 +461,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const examSub = calcSubtotal(currentGrades, examCats);
                       const allSub = calcSubtotal(currentGrades, group.categories);
 
+                      const renderDot = (score: number | null, maxScore: number) => {
+                        if (score == null) return <CircleMinus className="h-5 w-5 text-muted-foreground opacity-30 mx-auto" />;
+                        if (score >= maxScore) return <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" />;
+                        if (score > 0) return <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" />;
+                        return <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" />;
+                      };
+
                       const renderCell = (cat: CategoryInfo) => {
                         const editable = isCellEditable(sg.student_id, cat.id);
                         if (editable) {
@@ -476,6 +483,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                               className="w-16 mx-auto text-center h-8" dir="ltr"
                             />
                           );
+                        }
+                        // Show dots for classwork categories, numbers for exams
+                        if (categoryGroupFilter === "classwork" || cat.category_group === "classwork") {
+                          return renderDot(currentGrades[cat.id], Number(cat.max_score));
                         }
                         return (
                           <span className={sg.grades[cat.id] == null ? "text-muted-foreground" : ""}>
