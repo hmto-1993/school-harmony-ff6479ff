@@ -485,6 +485,9 @@ export default function AttendanceWeeklyReport({
                     rowSpan={2}
                     style={{ textAlign: "right", whiteSpace: "nowrap" }}
                   >اسم الطالب</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                   {filteredWeeks.map((w) => (
                     <th
                       key={w.weekNum}
@@ -494,9 +497,6 @@ export default function AttendanceWeeklyReport({
                       <span className="logbook-week-label">الأسبوع {w.weekNum}</span>
                     </th>
                   ))}
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
