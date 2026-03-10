@@ -262,9 +262,9 @@ export default function AttendanceWeeklyReport({
     }));
 
     const summaryHeaders = [
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 10 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 10 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 10 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 8, cellWidth: 8 } },
     ];
 
     const head = [[
@@ -491,7 +491,7 @@ export default function AttendanceWeeklyReport({
                       colSpan={slotsPerWeek}
                       className="logbook-th logbook-th-week"
                     >
-                      الأسبوع {w.weekNum}
+                      <span className="logbook-week-label">الأسبوع {w.weekNum}</span>
                     </th>
                   ))}
                   <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
@@ -639,25 +639,36 @@ export default function AttendanceWeeklyReport({
         }
         .logbook-th-week {
           background: #dee2e6;
-          font-size: 12px;
+          font-size: 11px;
           letter-spacing: 0 !important;
+          padding: 2px;
+          position: relative;
+          height: 60px;
+        }
+        .logbook-week-label {
+          writing-mode: vertical-rl;
+          transform: rotate(180deg);
+          display: inline-block;
+          white-space: nowrap;
+          font-size: 11px;
+          line-height: 1;
         }
         .logbook-th-session {
           background: #e9ecef;
           font-size: 10px;
           padding: 3px 2px;
-          min-width: 28px;
-          width: 28px;
+          min-width: 24px;
+          width: 24px;
           color: #868e96;
           border: 1.5px solid #ced4da;
         }
         .logbook-th-total {
           background: #e9ecef;
           font-size: 11px;
-          min-width: 28px;
-          width: 30px;
+          min-width: 22px;
+          width: 22px;
           font-weight: 800;
-          padding: 4px 2px;
+          padding: 2px 1px;
         }
         .logbook-td {
           border: 1px solid #dee2e6;
@@ -685,21 +696,21 @@ export default function AttendanceWeeklyReport({
           line-height: 1.3;
         }
         .logbook-td-dot {
-          padding: 4px 2px;
-          min-width: 28px;
+          padding: 3px 1px;
+          min-width: 24px;
         }
         .logbook-td-total {
           background: #f8f9fa;
-          font-size: 12px;
-          min-width: 28px;
-          width: 30px;
+          font-size: 11px;
+          min-width: 22px;
+          width: 22px;
           padding: 2px 1px;
         }
         .summary-dot {
           color: transparent;
           display: inline-block;
-          width: 12px;
-          height: 12px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
           vertical-align: middle;
         }
