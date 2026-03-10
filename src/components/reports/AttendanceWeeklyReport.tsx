@@ -608,58 +608,72 @@ export default function AttendanceWeeklyReport({
       <style>{`
         /* Logbook table styling */
         .logbook-th {
-          background: #f5f0e1;
-          color: #3d3520;
+          background: #e8edf3;
+          color: #2c3e50;
           font-weight: 700;
           text-align: center;
           padding: 8px 6px;
-          border: 2px solid #a89968;
+          border: 2px solid #8a9bb5;
           font-size: 13px;
           white-space: nowrap;
         }
         .logbook-th-week {
-          background: #efe8d0;
+          background: #dce3ed;
           font-size: 12px;
           letter-spacing: 0 !important;
         }
         .logbook-th-session {
-          background: #f5f0e1;
+          background: #e8edf3;
           font-size: 10px;
           padding: 3px 2px;
           min-width: 28px;
           width: 28px;
-          color: #8a7a50;
-          border: 2px solid #a89968;
+          color: #5a6d82;
+          border: 2px solid #8a9bb5;
+        }
+        .logbook-th-total {
+          background: #e8edf3;
+          font-size: 11px;
+          min-width: 40px;
+          width: 44px;
+          font-weight: 800;
         }
         .logbook-td {
-          border: 1.5px solid #c9b97a;
+          border: 1.5px solid #a0b0c4;
           padding: 4px 3px;
           text-align: center;
           vertical-align: middle;
         }
         .logbook-td-num {
           font-weight: 700;
-          color: #3d3520;
-          width: 36px;
-          background: #faf8f0;
+          color: #2c3e50;
+          width: 32px;
+          background: #f0f3f7;
           font-size: 13px;
         }
         .logbook-td-name {
           text-align: right;
-          padding-right: 10px;
-          padding-left: 6px;
+          padding-right: 8px;
+          padding-left: 4px;
           font-weight: 700;
-          color: #1a1510;
+          color: #1a2533;
           white-space: nowrap;
-          background: #faf8f0;
-          font-size: 13px;
+          background: #f0f3f7;
+          font-size: 12px;
+          max-width: 0;
+          width: auto;
         }
         .logbook-td-dot {
           padding: 4px 2px;
           min-width: 28px;
         }
-        .logbook-row-even { background: #fffdf5; }
-        .logbook-row-odd  { background: #faf5e6; }
+        .logbook-td-total {
+          background: #f0f3f7;
+          font-size: 13px;
+          min-width: 40px;
+        }
+        .logbook-row-even { background: #f8fafc; }
+        .logbook-row-odd  { background: #eef2f7; }
         .logbook-row-risk { background: #fef2f2; }
         .logbook-row-risk .logbook-td-name,
         .logbook-row-risk .logbook-td-num {
