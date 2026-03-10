@@ -268,7 +268,7 @@ export default function AttendanceWeeklyReport({
     ]];
 
     const body = studentRows.map((s, idx) => {
-      const statusCells = weeks.slice().reverse().flatMap((w) => {
+      const statusCells = exportWeeks.slice().reverse().flatMap((w) => {
         const slots = s.weeks[w.weekNum] || [];
         return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
           const st = slots[i];
