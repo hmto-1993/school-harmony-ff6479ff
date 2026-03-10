@@ -28,6 +28,7 @@ interface GradesSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
   selectedPeriod?: number;
+  categoryGroupFilter?: string;
 }
 
 type EditMode = "row" | "column" | null;
