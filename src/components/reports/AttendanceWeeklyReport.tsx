@@ -268,8 +268,8 @@ export default function AttendanceWeeklyReport({
     ];
 
     const head = [[
-      ...summaryHeaders,
       ...weekGroupHeaders.slice().reverse(),
+      ...summaryHeaders,
       { content: "اسم الطالب", styles: { halign: "right" as const } },
       { content: "م", styles: { halign: "center" as const } },
     ]];
@@ -287,10 +287,10 @@ export default function AttendanceWeeklyReport({
       const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
 
       return [
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
         { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
