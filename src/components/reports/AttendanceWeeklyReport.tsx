@@ -254,10 +254,11 @@ export default function AttendanceWeeklyReport({
     });
     doc.setTextColor(0, 0, 0);
 
-    const weekGroupHeaders = weeks.map((w) => ({
+    const exportWeeks = filteredWeeks;
+    const weekGroupHeaders = exportWeeks.map((w) => ({
       content: `الأسبوع ${w.weekNum}`,
       colSpan: Math.min(w.dates.length, periodsPerWeek),
-      styles: { halign: "center" as const, fillColor: [245, 240, 225] as [number, number, number], textColor: [50, 50, 50] as [number, number, number], fontSize: 7 },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
     }));
 
     const head = [[
