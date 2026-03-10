@@ -1254,6 +1254,20 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Class filter */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <Label className="text-sm font-semibold whitespace-nowrap">تطبيق على:</Label>
+              <Select value={catClassFilter} onValueChange={setCatClassFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الفصول</SelectItem>
+                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
             {isAdmin && (
               <div className="flex gap-2 flex-wrap">
                 <Dialog>
@@ -1274,6 +1288,7 @@ export default function SettingsPage() {
                         <Select value={newCatClassId} onValueChange={setNewCatClassId}>
                           <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="all">جميع الفصول</SelectItem>
                             {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
                           </SelectContent>
                         </Select>
@@ -1320,6 +1335,7 @@ export default function SettingsPage() {
                         <Select value={newCatClassId} onValueChange={setNewCatClassId}>
                           <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="all">جميع الفصول</SelectItem>
                             {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
                           </SelectContent>
                         </Select>
@@ -1329,14 +1345,14 @@ export default function SettingsPage() {
                         <Select value={newCatGroup} onValueChange={setNewCatGroup}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="classwork">أعمال الفصل</SelectItem>
+                            <SelectItem value="classwork">المهام الأدائية والمشاركة والتفاعل</SelectItem>
                             <SelectItem value="exam">الاختبارات</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
                         <Label>اسم الفئة</Label>
-                        <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="مثال: اختبار شهري" />
+                        <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="مثال: المشاركة" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>الدرجة القصوى</Label>
@@ -1357,140 +1373,214 @@ export default function SettingsPage() {
                 )}
               </div>
             )}
-            {(() => {
-              const grouped = classes.map(cls => ({
-                cls,
-                cats: categories.filter(c => c.class_id === cls.id),
-              })).filter(g => g.cats.length > 0);
 
-              const groups = grouped.flatMap(g => [
-                { label: `أعمال الفصل - ${g.cls.name}`, icon: "📝", cats: g.cats.filter(c => c.category_group === "classwork"), otherGroupKey: "exam", otherGroupLabel: "الاختبارات" },
-                { label: `الاختبارات - ${g.cls.name}`, icon: "📋", cats: g.cats.filter(c => c.category_group === "exam"), otherGroupKey: "classwork", otherGroupLabel: "أعمال الفصل" },
-              ]).filter(g => g.cats.length > 0);
+            {/* Section 1: المهام الأدائية والمشاركة والتفاعل */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold flex items-center gap-2 px-1 text-emerald-600 dark:text-emerald-400">
+                <span>📝</span>
+                المهام الأدائية والمشاركة والتفاعل
+              </h3>
+              <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-emerald-50 dark:bg-emerald-900/20">
+                      <TableHead className="text-right">الفئة</TableHead>
+                      <TableHead className="text-right">الدرجة القصوى</TableHead>
+                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {classworkCategories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
+                          لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع
+                        </TableCell>
+                      </TableRow>
+                    ) : classworkCategories.map((cat) => (
+                      <TableRow key={cat.id}>
+                        <TableCell className="font-medium">
+                          {isAdmin ? (
+                            <Input
+                              value={editingCats[cat.id]?.name ?? cat.name}
+                              onChange={(e) =>
+                                setEditingCats((prev) => ({
+                                  ...prev,
+                                  [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
+                                }))
+                              }
+                              className="h-8 w-40"
+                            />
+                          ) : <span>{cat.name}</span>}
+                        </TableCell>
+                        <TableCell>
+                          {isAdmin ? (
+                            <Input type="number" className="w-24 h-8"
+                              value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                              onChange={(e) =>
+                                setEditingCats((prev) => ({
+                                  ...prev,
+                                  [cat.id]: { ...prev[cat.id], name: prev[cat.id]?.name ?? cat.name, max_score: parseFloat(e.target.value) || 0 },
+                                }))
+                              }
+                            />
+                          ) : <span>{cat.max_score}</span>}
+                        </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleReorderCategory(cat.id, "up", classworkCategories)}
+                                disabled={classworkCategories.indexOf(cat) === 0} title="تحريك لأعلى">
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleReorderCategory(cat.id, "down", classworkCategories)}
+                                disabled={classworkCategories.indexOf(cat) === classworkCategories.length - 1} title="تحريك لأسفل">
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                onClick={() =>
+                                  setEditingCats((prev) => ({
+                                    ...prev,
+                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: prev[cat.id]?.name ?? cat.name, category_group: "exam" },
+                                  }))
+                                }
+                                title="نقل إلى الاختبارات">
+                                ← الاختبارات
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
+                                    <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها{catClassFilter === "all" ? " من جميع الفصول" : ""}.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
 
-              return groups.map((group) => (
-                <div key={group.label} className="space-y-2">
-                  <h3 className="text-sm font-bold text-primary flex items-center gap-2 px-1">
-                    <span>{group.icon}</span>
-                    {group.label}
-                  </h3>
-                  <div className="rounded-lg border border-border/50 overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-muted/50">
-                          <TableHead className="text-right">الفئة</TableHead>
-                          <TableHead className="text-right">الدرجة القصوى</TableHead>
-                          {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {group.cats.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
-                              لا توجد فئات في هذا القسم
-                            </TableCell>
-                          </TableRow>
-                        ) : group.cats.map((cat) => (
-                          <TableRow key={cat.id}>
-                            <TableCell className="font-medium">
-                              {isAdmin ? (
-                                <Input
-                                  value={editingCats[cat.id]?.name ?? cat.name}
-                                  onChange={(e) =>
-                                    setEditingCats((prev) => ({
-                                      ...prev,
-                                      [cat.id]: {
-                                        ...prev[cat.id],
-                                        max_score: prev[cat.id]?.max_score ?? cat.max_score,
-                                        weight: prev[cat.id]?.weight ?? cat.weight,
-                                        name: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  className="h-8 w-40"
-                                />
-                              ) : (
-                                <span>{cat.name}</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {isAdmin ? (
-                                <Input
-                                  type="number"
-                                  className="w-24"
-                                  value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                                  onChange={(e) =>
-                                    setEditingCats((prev) => ({
-                                      ...prev,
-                                      [cat.id]: {
-                                        ...prev[cat.id],
-                                        name: prev[cat.id]?.name ?? cat.name,
-                                        max_score: parseFloat(e.target.value) || 0,
-                                      },
-                                    }))
-                                  }
-                                />
-                              ) : (
-                                <span>{cat.max_score}</span>
-                              )}
-                            </TableCell>
-                            {isAdmin && (
-                              <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                    onClick={() => handleReorderCategory(cat.id, "up", group.cats)}
-                                    disabled={group.cats.indexOf(cat) === 0} title="تحريك لأعلى">
-                                    <ArrowUp className="h-3.5 w-3.5" />
+            {/* Section 2: الاختبارات */}
+            <div className="space-y-2">
+              <h3 className="text-sm font-bold flex items-center gap-2 px-1 text-amber-600 dark:text-amber-400">
+                <span>📋</span>
+                الاختبارات
+              </h3>
+              <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-amber-50 dark:bg-amber-900/20">
+                      <TableHead className="text-right">الفئة</TableHead>
+                      <TableHead className="text-right">الدرجة القصوى</TableHead>
+                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {examCategories.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
+                          لا توجد فئات — أضف: اختبار عملي، اختبار الفترة
+                        </TableCell>
+                      </TableRow>
+                    ) : examCategories.map((cat) => (
+                      <TableRow key={cat.id}>
+                        <TableCell className="font-medium">
+                          {isAdmin ? (
+                            <Input
+                              value={editingCats[cat.id]?.name ?? cat.name}
+                              onChange={(e) =>
+                                setEditingCats((prev) => ({
+                                  ...prev,
+                                  [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
+                                }))
+                              }
+                              className="h-8 w-40"
+                            />
+                          ) : <span>{cat.name}</span>}
+                        </TableCell>
+                        <TableCell>
+                          {isAdmin ? (
+                            <Input type="number" className="w-24 h-8"
+                              value={editingCats[cat.id]?.max_score ?? cat.max_score}
+                              onChange={(e) =>
+                                setEditingCats((prev) => ({
+                                  ...prev,
+                                  [cat.id]: { ...prev[cat.id], name: prev[cat.id]?.name ?? cat.name, max_score: parseFloat(e.target.value) || 0 },
+                                }))
+                              }
+                            />
+                          ) : <span>{cat.max_score}</span>}
+                        </TableCell>
+                        {isAdmin && (
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleReorderCategory(cat.id, "up", examCategories)}
+                                disabled={examCategories.indexOf(cat) === 0} title="تحريك لأعلى">
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                onClick={() => handleReorderCategory(cat.id, "down", examCategories)}
+                                disabled={examCategories.indexOf(cat) === examCategories.length - 1} title="تحريك لأسفل">
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
+                                onClick={() =>
+                                  setEditingCats((prev) => ({
+                                    ...prev,
+                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: prev[cat.id]?.name ?? cat.name, category_group: "classwork" },
+                                  }))
+                                }
+                                title="نقل إلى أعمال الفصل">
+                                ← المهام الأدائية
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
+                                    <Trash2 className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                    onClick={() => handleReorderCategory(cat.id, "down", group.cats)}
-                                    disabled={group.cats.indexOf(cat) === group.cats.length - 1} title="تحريك لأسفل">
-                                    <ArrowDown className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
-                                    onClick={() =>
-                                      setEditingCats((prev) => ({
-                                        ...prev,
-                                        [cat.id]: {
-                                          ...prev[cat.id],
-                                          max_score: prev[cat.id]?.max_score ?? cat.max_score,
-                                          weight: prev[cat.id]?.weight ?? cat.weight,
-                                          name: prev[cat.id]?.name ?? cat.name,
-                                          category_group: group.otherGroupKey,
-                                        },
-                                      }))
-                                    }
-                                    title={`نقل إلى ${group.otherGroupLabel}`}>
-                                    ← {group.otherGroupLabel}
-                                  </Button>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent dir="rtl">
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
-                                        <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها.</AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                        <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            )}
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              ));
-            })()}
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
+                                    <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها{catClassFilter === "all" ? " من جميع الفصول" : ""}.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
+            {catClassFilter === "all" && (
+              <p className="text-xs text-muted-foreground text-center">
+                💡 أي تعديل سيُطبق على جميع الفصول تلقائياً
+              </p>
+            )}
           </CardContent>
         </Card>
       )}
