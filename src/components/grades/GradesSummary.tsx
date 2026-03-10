@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Pencil, X, Search, Download } from "lucide-react";
+import { Save, Pencil, X, Search, Download, Columns, Rows, ChevronDown } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
@@ -29,6 +30,8 @@ interface GradesSummaryProps {
   onClassChange: (classId: string) => void;
   selectedPeriod?: number;
 }
+
+type EditMode = null | "row" | "column";
 
 export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: GradesSummaryProps) {
   const { user } = useAuth();
