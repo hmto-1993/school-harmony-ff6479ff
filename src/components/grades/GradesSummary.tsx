@@ -205,38 +205,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     return { score, max };
   };
 
-  const renderDots = (score: number | null, maxScore: number) => {
-    if (score == null) {
-      return (
-        <div className="flex items-center justify-center gap-0.5">
-          <CircleMinus className="h-3.5 w-3.5 text-muted-foreground opacity-30" />
-        </div>
-      );
-    }
-    let chunkSize = 1;
-    if (maxScore > 6) chunkSize = Math.ceil(maxScore / 6);
-    const dotCount = Math.ceil(maxScore / chunkSize);
-    const isStarred = score >= maxScore;
-    let remaining = score;
-    const dots: Array<"excellent" | "average" | "zero"> = [];
-    for (let d = 0; d < dotCount; d++) {
-      const chunkVal = Math.min(chunkSize, maxScore - d * chunkSize);
-      const halfChunk = Math.round(chunkVal / 2);
-      if (remaining >= chunkVal) { dots.push("excellent"); remaining -= chunkVal; }
-      else if (remaining >= halfChunk && remaining > 0) { dots.push("average"); remaining = 0; }
-      else { dots.push("zero"); }
-    }
-    return (
-      <div className="flex items-center justify-center gap-0.5 flex-wrap">
-        {dots.map((lvl, idx) => {
-          if (lvl === "excellent") return <CircleCheck key={idx} className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />;
-          if (lvl === "average") return <CircleMinus key={idx} className="h-3 w-3 text-amber-500 dark:text-amber-400" />;
-          return <CircleX key={idx} className="h-3 w-3 text-rose-500 dark:text-rose-400" />;
-        })}
-        {isStarred && <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />}
-        <span className="text-[10px] text-muted-foreground font-medium mr-0.5">{score}</span>
-      </div>
-    );
+  const renderScore = (score: number | null) => {
+    if (score == null) return <span className="text-muted-foreground opacity-40">—</span>;
+    return <span className="text-xs font-semibold">{score}</span>;
   };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
