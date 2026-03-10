@@ -481,9 +481,9 @@ export default function AttendanceWeeklyReport({
                       الأسبوع {w.weekNum}
                     </th>
                   ))}
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#16a34a" }}>حاضر</th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#dc2626" }}>غائب</th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#d97706" }}>متأخر</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
