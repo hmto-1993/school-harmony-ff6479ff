@@ -254,10 +254,11 @@ export default function AttendanceWeeklyReport({
     });
     doc.setTextColor(0, 0, 0);
 
-    const weekGroupHeaders = weeks.map((w) => ({
+    const exportWeeks = filteredWeeks;
+    const weekGroupHeaders = exportWeeks.map((w) => ({
       content: `الأسبوع ${w.weekNum}`,
       colSpan: Math.min(w.dates.length, periodsPerWeek),
-      styles: { halign: "center" as const, fillColor: [245, 240, 225] as [number, number, number], textColor: [50, 50, 50] as [number, number, number], fontSize: 7 },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
     }));
 
     const head = [[
@@ -267,7 +268,7 @@ export default function AttendanceWeeklyReport({
     ]];
 
     const body = studentRows.map((s, idx) => {
-      const statusCells = weeks.slice().reverse().flatMap((w) => {
+      const statusCells = exportWeeks.slice().reverse().flatMap((w) => {
         const slots = s.weeks[w.weekNum] || [];
         return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
           const st = slots[i];
@@ -286,9 +287,9 @@ export default function AttendanceWeeklyReport({
       startY: legendY + 5,
       head, body,
       ...tableStyles,
-      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [160, 150, 130], lineWidth: 0.3 },
-      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [245, 240, 225], textColor: [50, 50, 50] },
-      alternateRowStyles: { fillColor: [252, 250, 245] },
+      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
+      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
+      alternateRowStyles: { fillColor: [248, 249, 250] },
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
           data.cell.styles.fillColor = [254, 242, 242];
