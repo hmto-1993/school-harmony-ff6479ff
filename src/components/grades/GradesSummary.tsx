@@ -555,7 +555,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             <>
                               {classworkCats.map(cat => {
                                 const catScore = currentGrades[cat.id];
-                                const catEditable = isCellEditable(sg.student_id, cat.id);
                                 return (
                                   <React.Fragment key={cat.id}>
                                     <td className={cn(
@@ -565,19 +564,27 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       {renderCell(cat)}
                                     </td>
                                     <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
-                                      {catEditable ? (
-                                        <Input
-                                          type="number" min={0} max={Number(cat.max_score)}
-                                          value={editMode === "row" ? (rowEdits[cat.id] ?? "") : (colEdits[sg.student_id] ?? "")}
-                                          onChange={(e) => {
-                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
-                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
-                                          }}
-                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
-                                        />
-                                      ) : (
-                                        <span className="text-xs font-bold text-primary">{catScore ?? 0}</span>
-                                      )}
+                                      <Input
+                                        type="number" min={0} max={Number(cat.max_score)}
+                                        value={catScore ?? 0}
+                                        onChange={(e) => {
+                                          const val = e.target.value;
+                                          const numValue = val === "" ? null : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+                                          // Start a quick row edit for this specific cell
+                                          if (editMode === "row" && editingStudent === sg.student_id) {
+                                            handleRowGrade(cat.id, val, Number(cat.max_score));
+                                          } else if (editMode === "column" && editingColumnCatId === cat.id) {
+                                            handleColGrade(sg.student_id, val, Number(cat.max_score));
+                                          } else {
+                                            // Direct inline edit - start row edit automatically
+                                            startRowEdit(sg.student_id);
+                                            setTimeout(() => {
+                                              setRowEdits(prev => ({ ...prev, [cat.id]: numValue }));
+                                            }, 0);
+                                          }
+                                        }}
+                                        className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+                                      />
                                     </td>
                                   </React.Fragment>
                                 );
