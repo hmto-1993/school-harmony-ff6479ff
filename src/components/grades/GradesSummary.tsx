@@ -384,10 +384,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {classworkCats.map(cat => (
                             <th key={cat.id} className={cn(
                               "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                              isEditing ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                              isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
                             )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                              {cat.name}
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
