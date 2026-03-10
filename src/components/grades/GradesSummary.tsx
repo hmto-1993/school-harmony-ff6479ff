@@ -134,10 +134,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setLoading(false);
   };
 
-  const startEdit = (classId: string, students: SummaryRow[], classworkCats: CategoryInfo[]) => {
+  const startEdit = (classId: string, students: SummaryRow[], editableCats: CategoryInfo[]) => {
     const edits: Record<string, string> = {};
     students.forEach(s => {
-      classworkCats.forEach(cat => {
+      editableCats.forEach(cat => {
         edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0);
       });
     });
@@ -288,7 +288,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       size="sm" variant="outline"
                       className="h-8 gap-1.5"
                       disabled={editingClassId !== null && editingClassId !== group.id}
-                      onClick={() => startEdit(group.id, group.students, classworkCats)}
+                      onClick={() => startEdit(group.id, group.students, [...classworkCats, ...examCats])}
                     >
                       <Pencil className="h-3.5 w-3.5" /> تعديل الدرجات
                     </Button>
@@ -302,7 +302,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__all__">الجميع</SelectItem>
-                            {classworkCats.map(cat => (
+                            {[...classworkCats, ...examCats].map(cat => (
                               <SelectItem key={cat.id} value={cat.id}>{cat.name} (من {Number(cat.max_score)})</SelectItem>
                             ))}
                           </SelectContent>
@@ -319,15 +319,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           if (!fillAllCatId || fillAllValue === "") return;
                           const newEdits = { ...tempEdits };
                           if (fillAllCatId === "__all__") {
-                            // Fill all categories for all students
+                            const allEditCats = [...classworkCats, ...examCats];
                             group.students.forEach(s => {
-                              classworkCats.forEach(cat => {
+                              allEditCats.forEach(cat => {
                                 const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
                                 newEdits[`${s.student_id}__${cat.id}`] = String(val);
                               });
                             });
                           } else {
-                            const cat = classworkCats.find(c => c.id === fillAllCatId);
+                            const cat = [...classworkCats, ...examCats].find(c => c.id === fillAllCatId);
                             if (!cat) return;
                             const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
                             group.students.forEach(s => {
@@ -361,7 +361,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
                       {hasClasswork && (
-                        <th colSpan={classworkCats.length * 2 + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
+                        <th colSpan={classworkCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
                           المهام الادائية والمشاركة والتفاعل
                         </th>
                       )}
@@ -396,9 +396,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasExams && (
                         <>
                           {examCats.map(cat => (
-                            <th key={cat.id} className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px] text-muted-foreground">
+                            <th key={cat.id} className={cn(
+                              "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
+                              isEditing ? "bg-accent/20 text-primary" : "text-muted-foreground"
+                            )}>
                               <div>{cat.name}</div>
-                              <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
+                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-accent/5">المجموع</th>
@@ -461,11 +464,34 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
                           {hasExams && (
                             <>
-                              {examCats.map(cat => (
-                                <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                                  {renderScore(currentGrades[cat.id])}
-                                </td>
-                              ))}
+                              {examCats.map(cat => {
+                                const cellKey = `${sg.student_id}__${cat.id}`;
+                                return (
+                                  <td key={cat.id} className={cn(
+                                    "p-1.5 text-center border-l border-border/10",
+                                    isEditing ? "bg-accent/10" : ""
+                                  )}>
+                                    {isEditing ? (() => {
+                                      const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                      return (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={tempEdits[cellKey] ?? ""}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          className={cn(
+                                            "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                            locked && "opacity-40 pointer-events-none"
+                                          )}
+                                          dir="ltr"
+                                          disabled={!!locked}
+                                        />
+                                      );
+                                    })() : (
+                                      <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">
                                 {examSub.score} / {examSub.max}
                               </td>
