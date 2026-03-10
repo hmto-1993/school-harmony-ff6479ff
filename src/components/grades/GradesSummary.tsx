@@ -32,8 +32,7 @@ interface GradesSummaryProps {
   categoryGroupFilter?: string;
 }
 
-type EditMode = null | { type: "column"; categoryId: string; classId: string } | { type: "row"; studentId: string };
-
+type EditMode = null | { type: "column"; categoryId: string; classId: string };
 export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
