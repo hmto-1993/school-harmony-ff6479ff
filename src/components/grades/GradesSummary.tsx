@@ -384,10 +384,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {classworkCats.map(cat => (
                             <th key={cat.id} className={cn(
                               "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                              isEditing ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                              isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
                             )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                              {cat.name}
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
@@ -398,10 +397,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {examCats.map(cat => (
                             <th key={cat.id} className={cn(
                               "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                              isEditing ? "bg-accent/20 text-primary" : "text-muted-foreground"
+                              isEditing ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "text-muted-foreground"
                             )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                              {cat.name}
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-accent/5">المجموع</th>
@@ -433,7 +431,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 return (
                                   <td key={cat.id} className={cn(
                                     "p-1.5 text-center border-l border-border/10",
-                                    isEditing ? "bg-primary/10" : ""
+                                    isEditing ? "bg-emerald-500/10" : ""
                                   )}>
                                     {isEditing ? (() => {
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
@@ -469,7 +467,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 return (
                                   <td key={cat.id} className={cn(
                                     "p-1.5 text-center border-l border-border/10",
-                                    isEditing ? "bg-accent/10" : ""
+                                    isEditing ? "bg-amber-500/10" : ""
                                   )}>
                                     {isEditing ? (() => {
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
