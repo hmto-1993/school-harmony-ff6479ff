@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Search, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
+import { Search, CircleCheck, CircleMinus, CircleX, Star, Pencil, Check, X, ArrowDown } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 
@@ -31,40 +32,7 @@ interface GradesSummaryProps {
   categoryGroupFilter?: string;
 }
 
-// Inline editable score input that saves on blur independently
-function InlineScoreInput({ value, maxScore, studentId, categoryId, recordId, period, userId, onSaved }: {
-  value: number; maxScore: number; studentId: string; categoryId: string; recordId?: string; period: number; userId: string; onSaved: () => void;
-}) {
-  const [localVal, setLocalVal] = useState<string>(String(value));
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => { setLocalVal(String(value)); }, [value]);
-
-  const handleBlur = async () => {
-    const numVal = localVal === "" ? 0 : Math.min(maxScore, Math.max(0, Number(localVal)));
-    if (numVal === value) return;
-    setSaving(true);
-    if (recordId) {
-      await supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", recordId);
-    } else {
-      await supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: userId, period });
-    }
-    setSaving(false);
-    onSaved();
-  };
-
-  return (
-    <Input
-      type="number" min={0} max={maxScore}
-      value={localVal}
-      onChange={(e) => setLocalVal(e.target.value)}
-      onBlur={handleBlur}
-      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-      disabled={saving}
-      className="w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr"
-    />
-  );
-}
+type EditMode = null | { type: "column"; categoryId: string; classId: string } | { type: "row"; studentId: string };
 
 export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
   const { user } = useAuth();
@@ -74,6 +42,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [summaryRows, setSummaryRows] = useState<SummaryRow[]>([]);
   const [searchName, setSearchName] = useState("");
+  const [editMode, setEditMode] = useState<EditMode>(null);
+  // temp edits: key = `${studentId}__${categoryId}`, value = string
+  const [tempEdits, setTempEdits] = useState<Record<string, string>>({});
+  const [fillAllValue, setFillAllValue] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
@@ -155,6 +128,79 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setLoading(false);
   };
 
+  const startColumnEdit = (categoryId: string, classId: string, students: SummaryRow[]) => {
+    const edits: Record<string, string> = {};
+    students.forEach(s => {
+      edits[`${s.student_id}__${categoryId}`] = String(s.manualScores[categoryId] ?? 0);
+    });
+    setTempEdits(edits);
+    setFillAllValue("");
+    setEditMode({ type: "column", categoryId, classId });
+  };
+
+  const startRowEdit = (studentId: string, categories: CategoryInfo[]) => {
+    const row = summaryRows.find(r => r.student_id === studentId);
+    if (!row) return;
+    const edits: Record<string, string> = {};
+    categories.forEach(cat => {
+      edits[`${studentId}__${cat.id}`] = String(row.manualScores[cat.id] ?? 0);
+    });
+    setTempEdits(edits);
+    setEditMode({ type: "row", studentId });
+  };
+
+  const cancelEdit = () => {
+    setEditMode(null);
+    setTempEdits({});
+    setFillAllValue("");
+  };
+
+  const applyFillAll = (categoryId: string, students: SummaryRow[], maxScore: number) => {
+    if (fillAllValue === "") return;
+    const val = Math.min(maxScore, Math.max(0, Number(fillAllValue)));
+    const newEdits = { ...tempEdits };
+    students.forEach(s => {
+      newEdits[`${s.student_id}__${categoryId}`] = String(val);
+    });
+    setTempEdits(newEdits);
+  };
+
+  const saveEdits = async () => {
+    if (!user?.id) return;
+    setSaving(true);
+    const entries = Object.entries(tempEdits);
+    const upserts: any[] = [];
+
+    for (const [key, val] of entries) {
+      const [studentId, categoryId] = key.split("__");
+      const row = summaryRows.find(r => r.student_id === studentId);
+      if (!row) continue;
+      const cat = allCategories.find(c => c.id === categoryId);
+      if (!cat) continue;
+      const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+      const existingId = row.manualScoreIds[categoryId];
+
+      if (existingId) {
+        upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId));
+      } else {
+        upserts.push(supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: user.id, period: selectedPeriod }));
+      }
+    }
+
+    await Promise.all(upserts);
+    setSaving(false);
+    cancelEdit();
+    toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
+    loadAllData();
+  };
+
+  const isCellEditing = (studentId: string, categoryId: string) => {
+    if (!editMode) return false;
+    if (editMode.type === "column") return editMode.categoryId === categoryId;
+    if (editMode.type === "row") return editMode.studentId === studentId;
+    return false;
+  };
+
   const filteredRows = summaryRows.filter((r) => {
     const matchesName = !searchName || r.full_name.includes(searchName);
     const matchesClass = !selectedClass || selectedClass === "all" || r.class_id === selectedClass;
@@ -178,11 +224,44 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     return { score, max };
   };
 
+  const renderDots = (score: number | null, maxScore: number) => {
+    if (score == null) {
+      return (
+        <div className="flex items-center justify-center gap-0.5">
+          <CircleMinus className="h-3.5 w-3.5 text-muted-foreground opacity-30" />
+        </div>
+      );
+    }
+    let chunkSize = 1;
+    if (maxScore > 6) chunkSize = Math.ceil(maxScore / 6);
+    const dotCount = Math.ceil(maxScore / chunkSize);
+    const isStarred = score >= maxScore;
+    let remaining = score;
+    const dots: Array<"excellent" | "average" | "zero"> = [];
+    for (let d = 0; d < dotCount; d++) {
+      const chunkVal = Math.min(chunkSize, maxScore - d * chunkSize);
+      const halfChunk = Math.round(chunkVal / 2);
+      if (remaining >= chunkVal) { dots.push("excellent"); remaining -= chunkVal; }
+      else if (remaining >= halfChunk && remaining > 0) { dots.push("average"); remaining = 0; }
+      else { dots.push("zero"); }
+    }
+    return (
+      <div className="flex items-center justify-center gap-0.5 flex-wrap">
+        {dots.map((lvl, idx) => {
+          if (lvl === "excellent") return <CircleCheck key={idx} className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />;
+          if (lvl === "average") return <CircleMinus key={idx} className="h-3 w-3 text-amber-500 dark:text-amber-400" />;
+          return <CircleX key={idx} className="h-3 w-3 text-rose-500 dark:text-rose-400" />;
+        })}
+        {isStarred && <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />}
+        <span className="text-[10px] text-muted-foreground font-medium mr-0.5">{score}</span>
+      </div>
+    );
+  };
+
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
 
   return (
     <div className="space-y-4">
-      {/* Search Filter */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -190,7 +269,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         </div>
       </div>
 
-      {/* Export button */}
       {groupedByClass.length > 0 && (
         <div className="flex justify-end">
           <GradesExportDialog
@@ -230,6 +308,42 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         </div>
       )}
 
+      {/* Save/Cancel bar when editing */}
+      {editMode && (
+        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+          <span className="text-sm font-medium text-primary">
+            {editMode.type === "column" ? "تعديل العمود" : "تعديل صف الطالب"}
+          </span>
+          {editMode.type === "column" && (
+            <div className="flex items-center gap-1.5 mr-auto">
+              <span className="text-xs text-muted-foreground">ملء الكل:</span>
+              <Input
+                type="number" min={0}
+                value={fillAllValue}
+                onChange={(e) => setFillAllValue(e.target.value)}
+                className="w-16 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                dir="ltr"
+              />
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => {
+                const cat = allCategories.find(c => c.id === (editMode as any).categoryId);
+                const classStudents = groupedByClass.find(g => g.id === (editMode as any).classId)?.students || [];
+                if (cat) applyFillAll((editMode as any).categoryId, classStudents, Number(cat.max_score));
+              }}>
+                <ArrowDown className="h-3 w-3 ml-1" /> تطبيق
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5 mr-2">
+            <Button size="sm" onClick={saveEdits} disabled={saving} className="h-7 text-xs gap-1">
+              <Check className="h-3.5 w-3.5" /> حفظ
+            </Button>
+            <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-7 text-xs gap-1">
+              <X className="h-3.5 w-3.5" /> إلغاء
+            </Button>
+          </div>
+        </div>
+      )}
+
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : groupedByClass.map((group) => {
@@ -240,6 +354,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         const hasClasswork = !categoryGroupFilter ? classworkCats.length > 0 : categoryGroupFilter === 'classwork' && classworkCats.length > 0;
         const hasExams = !categoryGroupFilter ? examCats.length > 0 : categoryGroupFilter === 'exams' && examCats.length > 0;
         const hasOther = !categoryGroupFilter ? otherCats.length > 0 : false;
+
+        // All classwork cats for this class (for row editing)
+        const allEditableCats = classworkCats;
 
         return (
           <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
@@ -258,7 +375,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
-                    {/* Group headers row */}
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
@@ -280,7 +396,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       ))}
                       <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">المجموع</th>
                     </tr>
-                    {/* Sub-headers row */}
                     <tr className="bg-muted/30">
                       {hasClasswork && (
                         <>
@@ -290,8 +405,23 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 <div>{cat.name}</div>
                                 <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
                               </th>
-                              <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5">
-                                الدرجة
+                              <th className={cn(
+                                "text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5",
+                                editMode?.type === "column" && (editMode as any).categoryId === cat.id && "bg-primary/20 ring-2 ring-primary/30"
+                              )}>
+                                <div className="flex flex-col items-center gap-1">
+                                  <span>الدرجة</span>
+                                  {!editMode && (
+                                    <Button
+                                      size="sm" variant="ghost"
+                                      className="h-5 w-5 p-0 hover:bg-primary/20"
+                                      onClick={() => startColumnEdit(cat.id, group.id, group.students)}
+                                      title="تعديل العمود"
+                                    >
+                                      <Pencil className="h-3 w-3 text-primary" />
+                                    </Button>
+                                  )}
+                                </div>
                               </th>
                             </React.Fragment>
                           ))}
@@ -316,93 +446,70 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
                       const currentGrades = sg.grades;
-
                       const classworkSub = calcSubtotal(currentGrades, classworkCats);
                       const examSub = calcSubtotal(currentGrades, examCats);
                       const allSub = calcSubtotal(currentGrades, group.categories);
-
-                      const renderDots = (score: number | null, maxScore: number) => {
-                        if (score == null) {
-                          return (
-                            <div className="flex items-center justify-center gap-0.5">
-                              <CircleMinus className="h-3.5 w-3.5 text-muted-foreground opacity-30" />
-                            </div>
-                          );
-                        }
-
-                        let chunkSize = 1;
-                        if (maxScore > 6) chunkSize = Math.ceil(maxScore / 6);
-                        const dotCount = Math.ceil(maxScore / chunkSize);
-                        const isStarred = score >= maxScore;
-                        
-                        let remaining = score;
-                        const dots: Array<"excellent" | "average" | "zero"> = [];
-                        for (let d = 0; d < dotCount; d++) {
-                          const chunkVal = Math.min(chunkSize, maxScore - d * chunkSize);
-                          const halfChunk = Math.round(chunkVal / 2);
-                          if (remaining >= chunkVal) {
-                            dots.push("excellent");
-                            remaining -= chunkVal;
-                          } else if (remaining >= halfChunk && remaining > 0) {
-                            dots.push("average");
-                            remaining = 0;
-                          } else {
-                            dots.push("zero");
-                          }
-                        }
-
-                        return (
-                          <div className="flex items-center justify-center gap-0.5 flex-wrap">
-                            {dots.map((lvl, idx) => {
-                              if (lvl === "excellent") return <CircleCheck key={idx} className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />;
-                              if (lvl === "average") return <CircleMinus key={idx} className="h-3 w-3 text-amber-500 dark:text-amber-400" />;
-                              return <CircleX key={idx} className="h-3 w-3 text-rose-500 dark:text-rose-400" />;
-                            })}
-                            {isStarred && (
-                              <Star className="h-3 w-3 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
-                            )}
-                            <span className="text-[10px] text-muted-foreground font-medium mr-0.5">{score}</span>
-                          </div>
-                        );
-                      };
+                      const isRowEditing = editMode?.type === "row" && (editMode as any).studentId === sg.student_id;
 
                       return (
                         <tr key={sg.student_id} className={cn(
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                           !isLast && "border-b border-border/20",
+                          isRowEditing && "bg-primary/5 ring-1 ring-inset ring-primary/20",
                         )}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                          <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
+                          <td className="p-3 font-semibold border-l border-border/10">
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex-1">{sg.full_name}</span>
+                              {!editMode && hasClasswork && (
+                                <Button
+                                  size="sm" variant="ghost"
+                                  className="h-5 w-5 p-0 hover:bg-primary/20 shrink-0"
+                                  onClick={() => startRowEdit(sg.student_id, allEditableCats)}
+                                  title="تعديل صف الطالب"
+                                >
+                                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
 
-                          {/* Classwork categories with dots + inline score */}
                           {hasClasswork && (
                             <>
-                              {classworkCats.map(cat => (
-                                <React.Fragment key={cat.id}>
-                                  <td className="p-2 text-center border-l border-border/10">
-                                    {renderDots(currentGrades[cat.id], Number(cat.max_score))}
-                                  </td>
-                                  <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
-                                    <InlineScoreInput
-                                      value={sg.manualScores[cat.id] ?? 0}
-                                      maxScore={Number(cat.max_score)}
-                                      studentId={sg.student_id}
-                                      categoryId={cat.id}
-                                      recordId={sg.manualScoreIds[cat.id]}
-                                      period={selectedPeriod}
-                                      userId={user?.id || ""}
-                                      onSaved={loadAllData}
-                                    />
-                                  </td>
-                                </React.Fragment>
-                              ))}
+                              {classworkCats.map(cat => {
+                                const cellKey = `${sg.student_id}__${cat.id}`;
+                                const isEditing = isCellEditing(sg.student_id, cat.id);
+                                return (
+                                  <React.Fragment key={cat.id}>
+                                    <td className="p-2 text-center border-l border-border/10">
+                                      {renderDots(currentGrades[cat.id], Number(cat.max_score))}
+                                    </td>
+                                    <td className={cn(
+                                      "p-1.5 text-center border-l border-border/10",
+                                      isEditing ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-primary/5"
+                                    )}>
+                                      {isEditing ? (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={tempEdits[cellKey] ?? ""}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          className="w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                          dir="ltr"
+                                          autoFocus={i === 0 && editMode?.type === "column"}
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-semibold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
+                                      )}
+                                    </td>
+                                  </React.Fragment>
+                                );
+                              })}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
                                 {classworkSub.score} / {classworkSub.max}
                               </td>
                             </>
                           )}
 
-                          {/* Exam categories */}
                           {hasExams && (
                             <>
                               {examCats.map(cat => (
@@ -416,14 +523,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             </>
                           )}
 
-                          {/* Other categories */}
                           {hasOther && otherCats.map(cat => (
                             <td key={cat.id} className="p-2 text-center border-l border-border/10">
                               {renderDots(currentGrades[cat.id], Number(cat.max_score))}
                             </td>
                           ))}
 
-                          {/* Grand total */}
                           <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>
                             {allSub.score} / {allSub.max}
                           </td>
