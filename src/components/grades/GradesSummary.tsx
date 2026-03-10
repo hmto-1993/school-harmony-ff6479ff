@@ -558,21 +558,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       };
 
                       const renderCell = (cat: CategoryInfo) => {
-                        const editable = isCellEditable(sg.student_id, cat.id);
-                        if (editable) {
-                          const val = editMode === "row" ? rowEdits[cat.id] : colEdits[sg.student_id];
-                          return (
-                            <Input
-                              type="number" min={0} max={Number(cat.max_score)}
-                              value={val ?? ""}
-                              onChange={(e) => {
-                                if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
-                                else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
-                              }}
-                              className="w-16 mx-auto text-center h-8" dir="ltr"
-                            />
-                          );
-                        }
                         return renderDots(currentGrades[cat.id], Number(cat.max_score));
                       };
 
