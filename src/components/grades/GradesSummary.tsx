@@ -182,11 +182,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     loadAllData();
   };
 
-  const isCellEditing = (studentId: string, categoryId: string) => {
+  const isCellEditing = (categoryId: string) => {
     if (!editMode) return false;
-    if (editMode.type === "column") return editMode.categoryId === categoryId;
-    if (editMode.type === "row") return editMode.studentId === studentId;
-    return false;
+    return editMode.categoryId === categoryId;
   };
 
   const filteredRows = summaryRows.filter((r) => {
