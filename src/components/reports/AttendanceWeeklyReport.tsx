@@ -190,14 +190,15 @@ export default function AttendanceWeeklyReport({
 
   const handleExportExcel = async () => {
     const XLSX = await import("xlsx");
+    const exportWeeks = filteredWeeks;
     const headers = [
       "م", "اسم الطالب",
-      ...weeks.flatMap((w) => Array.from({ length: periodsPerWeek }, (_, i) => `أ${w.weekNum}-${i + 1}`)),
+      ...exportWeeks.flatMap((w) => Array.from({ length: periodsPerWeek }, (_, i) => `أ${w.weekNum}-${i + 1}`)),
       "حاضر", "غائب", "متأخر", "معذور", "تنبيه",
     ];
     const rows = studentRows.map((s, idx) => {
       const row: Record<string, any> = { "م": idx + 1, "اسم الطالب": s.name };
-      weeks.forEach((w) => {
+      exportWeeks.forEach((w) => {
         const slots = s.weeks[w.weekNum] || [];
         for (let i = 0; i < periodsPerWeek; i++) {
           const st = slots[i];
