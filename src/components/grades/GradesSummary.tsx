@@ -143,11 +143,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     });
     setTempEdits(edits);
     setEditingClassId(classId);
+    setFillAllValue("");
+    setFillAllCatId("");
   };
 
   const cancelEdit = () => {
     setEditingClassId(null);
     setTempEdits({});
+    setFillAllValue("");
+    setFillAllCatId("");
   };
 
   const saveEdits = async () => {
