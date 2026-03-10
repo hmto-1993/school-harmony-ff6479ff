@@ -14,6 +14,8 @@ interface StudentData {
   behaviors: any[];
   attendance: any[];
   visibility?: { grades: boolean; attendance: boolean; behavior: boolean };
+  session_token?: string;
+  session_issued_at?: number;
 }
 
 interface AuthContextType {
@@ -68,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 behaviors: data.behaviors,
                 attendance: data.attendance,
                 visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+                session_token: data.session_token,
+                session_issued_at: data.session_issued_at,
               });
             } else {
               sessionStorage.removeItem("student_session");
@@ -134,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         behaviors: data.behaviors,
         attendance: data.attendance,
         visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+        session_token: data.session_token,
+        session_issued_at: data.session_issued_at,
       };
       setStudent(studentData);
       // Only store minimal session identifier, not full data
