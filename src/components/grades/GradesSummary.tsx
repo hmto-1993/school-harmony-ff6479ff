@@ -303,7 +303,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           <SelectContent>
                             <SelectItem value="__all__">الجميع</SelectItem>
                             {[...classworkCats, ...examCats].map(cat => (
-                              <SelectItem key={cat.id} value={cat.id}>{cat.name} (من {Number(cat.max_score)})</SelectItem>
+                              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
