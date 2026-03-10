@@ -36,22 +36,22 @@ interface GradesSummaryProps {
 type EditMode = "row" | "column" | null;
 
 // Inline editable score input that saves on blur independently
-function InlineScoreInput({ value, maxScore, studentId, categoryId, gradeId, period, userId, onSaved }: {
-  value: number | null; maxScore: number; studentId: string; categoryId: string; gradeId?: string; period: number; userId: string; onSaved: () => void;
+function InlineScoreInput({ value, maxScore, studentId, categoryId, recordId, period, userId, onSaved }: {
+  value: number; maxScore: number; studentId: string; categoryId: string; recordId?: string; period: number; userId: string; onSaved: () => void;
 }) {
-  const [localVal, setLocalVal] = useState<string>(String(value ?? 0));
+  const [localVal, setLocalVal] = useState<string>(String(value));
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { setLocalVal(String(value ?? 0)); }, [value]);
+  useEffect(() => { setLocalVal(String(value)); }, [value]);
 
   const handleBlur = async () => {
     const numVal = localVal === "" ? 0 : Math.min(maxScore, Math.max(0, Number(localVal)));
-    if (numVal === (value ?? 0)) return;
+    if (numVal === value) return;
     setSaving(true);
-    if (gradeId) {
-      await supabase.from("grades").update({ score: numVal }).eq("id", gradeId);
+    if (recordId) {
+      await supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", recordId);
     } else {
-      await supabase.from("grades").insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: userId, period });
+      await supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: userId, period });
     }
     setSaving(false);
     onSaved();
