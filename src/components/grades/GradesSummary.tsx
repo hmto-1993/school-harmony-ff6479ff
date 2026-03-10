@@ -491,7 +491,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const isRowEditing = editMode === "row" && editingStudent === sg.student_id;
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
-                      const currentGrades = getEffectiveGrades(sg);
+                      const currentGrades = sg.grades;
 
                       const classworkSub = calcSubtotal(currentGrades, classworkCats);
                       const examSub = calcSubtotal(currentGrades, examCats);
