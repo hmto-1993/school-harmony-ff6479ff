@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useQuizColors, colorStyles } from "@/hooks/use-quiz-colors";
 import { SignedFileLink } from "@/components/activities/SignedFileLink";
+import { SignedImage } from "@/components/activities/SignedImage";
 import {
   ClipboardList, FileUp, Download, Loader2, Upload,
   CheckCircle2, ArrowRight, AlertCircle, Send, Timer
