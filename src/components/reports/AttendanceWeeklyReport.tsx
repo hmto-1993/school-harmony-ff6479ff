@@ -77,9 +77,9 @@ function getWeekNumber(date: Date, startDate: Date): number {
 function AbsentDots({ count }: { count: number }) {
   if (count === 0) return null;
   return (
-    <span className="inline-flex items-center gap-[3px] justify-center flex-wrap" title={`${count} حصة غياب`}>
+    <span className="inline-flex items-center gap-[2px] justify-center flex-wrap" title={`${count} حصة غياب`}>
       {Array.from({ length: count }, (_, i) => (
-        <span key={i} style={{ color: "#ef4444", fontSize: 16, lineHeight: 1 }}>●</span>
+        <span key={i} style={{ color: "#ef4444", fontSize: 12, lineHeight: 1 }}>●</span>
       ))}
     </span>
   );
@@ -482,18 +482,18 @@ export default function AttendanceWeeklyReport({
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-muted">
                     <th
-                      className="border border-border/30 px-1 py-2.5 text-center font-bold text-muted-foreground bg-muted"
-                      style={{ width: 28, maxWidth: 28 }}
+                      className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground bg-muted"
+                      style={{ minWidth: 36 }}
                     >م</th>
                     <th
                       className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground bg-muted"
-                      style={{ minWidth: 140 }}
+                      style={{ minWidth: 160 }}
                     >اسم الطالب</th>
                     {filteredWeeks.map((w) => (
                       <th
                         key={w.weekNum}
                         className="border border-border/30 px-2 py-2 text-center font-bold bg-muted text-foreground"
-                        style={{ minWidth: 70 }}
+                        style={{ minWidth: 60 }}
                       >
                         الأسبوع {w.weekNum}
                       </th>
@@ -508,7 +508,7 @@ export default function AttendanceWeeklyReport({
                         s.isAtRisk ? "bg-destructive/10" : idx % 2 === 0 ? "bg-card" : "bg-muted/30",
                       )}
                     >
-                      <td className="border border-border/20 px-1 py-2.5 text-center text-foreground font-semibold" style={{ width: 28, maxWidth: 28 }}>{idx + 1}</td>
+                      <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold">{idx + 1}</td>
                       <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground">
                         {s.name}
                         {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5 text-destructive" />}
