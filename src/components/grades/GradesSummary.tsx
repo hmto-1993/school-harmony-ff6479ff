@@ -400,7 +400,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                               "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
                               isEditing ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "text-muted-foreground"
                             )}>
-                              {cat.name}
+                              <div>{cat.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-accent/5">المجموع</th>
