@@ -261,7 +261,14 @@ export default function AttendanceWeeklyReport({
       styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
     }));
 
+    const summaryHeaders = [
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 10 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 10 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 10 } },
+    ];
+
     const head = [[
+      ...summaryHeaders,
       ...weekGroupHeaders.slice().reverse(),
       { content: "اسم الطالب", styles: { halign: "right" as const } },
       { content: "م", styles: { halign: "center" as const } },
@@ -276,9 +283,15 @@ export default function AttendanceWeeklyReport({
           return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
         });
       });
+
+      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+
       return [
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
-        { content: s.name, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9 } },
+        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
     });
