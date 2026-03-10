@@ -232,7 +232,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
               const headers = [
                 "#", "الطالب",
-                ...classworkCats.flatMap(c => [c.name, `مجموع ${c.name}`]),
+                ...classworkCats.map(c => c.name),
                 ...(classworkCats.length > 0 ? ["إجمالي المهام"] : []),
                 ...examCats.map(c => c.name), ...(examCats.length > 0 ? ["مجموع الاختبارات"] : []),
                 ...otherCats.map(c => c.name),
@@ -243,10 +243,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 const exSub = calcSubtotal(sg.grades, examCats);
                 return [
                   String(i + 1), sg.full_name,
-                  ...classworkCats.flatMap(c => [
-                    sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—",
-                    String(sg.grades[c.id] ?? 0),
-                  ]),
+                  ...classworkCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
                   ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
@@ -385,18 +382,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasClasswork && (
                         <>
                           {classworkCats.map(cat => (
-                            <React.Fragment key={cat.id}>
-                              <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px] text-muted-foreground">
-                                {cat.name}
-                              </th>
-                              <th className={cn(
-                                "text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5",
-                                isEditing && "bg-primary/20"
-                              )}>
-                                <div>الدرجة</div>
-                                <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
-                              </th>
-                            </React.Fragment>
+                            <th key={cat.id} className={cn(
+                              "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
+                              isEditing ? "bg-primary/20 text-primary" : "text-muted-foreground"
+                            )}>
+                              <div>{cat.name}</div>
+                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                            </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
                         </>
@@ -436,34 +428,29 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                               {classworkCats.map(cat => {
                                 const cellKey = `${sg.student_id}__${cat.id}`;
                                 return (
-                                  <React.Fragment key={cat.id}>
-                                    <td className="p-2 text-center border-l border-border/10">
-                                      {renderScore(currentGrades[cat.id])}
-                                    </td>
-                                    <td className={cn(
-                                      "p-1.5 text-center border-l border-border/10",
-                                      isEditing ? "bg-primary/10" : "bg-primary/5"
-                                    )}>
+                                  <td key={cat.id} className={cn(
+                                    "p-1.5 text-center border-l border-border/10",
+                                    isEditing ? "bg-primary/10" : ""
+                                  )}>
                                     {isEditing ? (() => {
-                                        const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
-                                        return (
-                                          <Input
-                                            type="number" min={0} max={Number(cat.max_score)}
-                                            value={tempEdits[cellKey] ?? ""}
-                                            onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                            className={cn(
-                                              "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                              locked && "opacity-40 pointer-events-none"
-                                            )}
-                                            dir="ltr"
-                                            disabled={!!locked}
-                                          />
-                                        );
-                                      })() : (
-                                        <span className="text-xs font-semibold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
-                                      )}
-                                    </td>
-                                  </React.Fragment>
+                                      const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                      return (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={tempEdits[cellKey] ?? ""}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          className={cn(
+                                            "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                            locked && "opacity-40 pointer-events-none"
+                                          )}
+                                          dir="ltr"
+                                          disabled={!!locked}
+                                        />
+                                      );
+                                    })() : (
+                                      <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
+                                    )}
+                                  </td>
                                 );
                               })}
                               <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
