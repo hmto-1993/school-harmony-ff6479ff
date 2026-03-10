@@ -48,7 +48,7 @@ export default function GradesPage() {
     load();
   }, []);
 
-  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "import";
+  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 
   return (
     <div className="space-y-6 animate-fade-in">
