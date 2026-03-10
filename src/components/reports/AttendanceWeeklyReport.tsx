@@ -164,6 +164,30 @@ export default function AttendanceWeeklyReport({
     return { weeks, studentRows, totalPeriodsHeld };
   }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
 
+  // Initialize selectedWeeks when weeks change
+  useEffect(() => {
+    if (weeks.length > 0 && selectedWeeks.size === 0) {
+      setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+    }
+  }, [weeks]);
+
+  const filteredWeeks = useMemo(() => {
+    if (selectedWeeks.size === 0) return weeks;
+    return weeks.filter(w => selectedWeeks.has(w.weekNum));
+  }, [weeks, selectedWeeks]);
+
+  const toggleWeek = (weekNum: number) => {
+    setSelectedWeeks(prev => {
+      const next = new Set(prev);
+      if (next.has(weekNum)) next.delete(weekNum);
+      else next.add(weekNum);
+      return next;
+    });
+  };
+
+  const selectAllWeeks = () => setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+  const deselectAllWeeks = () => setSelectedWeeks(new Set());
+
   const handleExportExcel = async () => {
     const XLSX = await import("xlsx");
     const headers = [
