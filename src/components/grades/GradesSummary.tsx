@@ -435,30 +435,14 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const classworkSub = calcSubtotal(currentGrades, classworkCats);
                       const examSub = calcSubtotal(currentGrades, examCats);
                       const allSub = calcSubtotal(currentGrades, group.categories);
-                      const isRowEditing = editMode?.type === "row" && (editMode as any).studentId === sg.student_id;
 
                       return (
                         <tr key={sg.student_id} className={cn(
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                           !isLast && "border-b border-border/20",
-                          isRowEditing && "bg-primary/5 ring-1 ring-inset ring-primary/20",
                         )}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                          <td className="p-3 font-semibold border-l border-border/10">
-                            <div className="flex items-center gap-1.5">
-                              <span className="flex-1">{sg.full_name}</span>
-                              {!editMode && hasClasswork && (
-                                <Button
-                                  size="sm" variant="ghost"
-                                  className="h-5 w-5 p-0 hover:bg-primary/20 shrink-0"
-                                  onClick={() => startRowEdit(sg.student_id, allEditableCats)}
-                                  title="تعديل صف الطالب"
-                                >
-                                  <Pencil className="h-3 w-3 text-muted-foreground" />
-                                </Button>
-                              )}
-                            </div>
-                          </td>
+                          <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
 
                           {hasClasswork && (
                             <>
