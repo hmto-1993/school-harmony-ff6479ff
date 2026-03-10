@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,9 +6,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Upload, X } from "lucide-react";
+import { Printer, Upload, X, ArrowRight } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
+import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
 
 interface Props {
@@ -29,10 +30,23 @@ export default function PrintPreviewDialog({
   const contentRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
-  const handlePrint = () => {
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const handlePrint = useCallback(() => {
     onOpenChange(false);
-    setTimeout(() => window.print(), 200);
-  };
+    setIsPrinting(true);
+    setTimeout(() => {
+      safePrint(() => {
+        setIsPrinting(false);
+        // Clear cached content ref data
+        if (contentRef.current) {
+          contentRef.current.querySelectorAll("img").forEach(img => {
+            img.removeAttribute("src");
+          });
+        }
+      });
+    }, 200);
+  }, [onOpenChange]);
 
   const handleExportPng = async () => {
     if (!contentRef.current) return;

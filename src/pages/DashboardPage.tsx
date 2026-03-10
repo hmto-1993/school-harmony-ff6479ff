@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { safePrint } from "@/lib/print-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -93,7 +94,7 @@ export default function DashboardPage() {
   };
 
   const handlePrint = useCallback(() => {
-    window.print();
+    safePrint();
   }, []);
 
   return (

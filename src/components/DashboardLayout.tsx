@@ -3,8 +3,8 @@ import AppSidebar from "@/components/AppSidebar";
 import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
-import { Menu } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Menu, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from "framer-motion";
@@ -14,6 +14,28 @@ export default function DashboardLayout() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showPrintClose, setShowPrintClose] = useState(false);
+
+  // Show a close button on mobile when print is triggered, hide after print
+  useEffect(() => {
+    const onBeforePrint = () => setShowPrintClose(true);
+    const onAfterPrint = () => setShowPrintClose(false);
+    window.addEventListener("beforeprint", onBeforePrint);
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint", onAfterPrint);
+    };
+  }, []);
+
+  const handleClosePrintPreview = useCallback(() => {
+    setShowPrintClose(false);
+    // Force exit print mode on mobile by triggering a minimal re-render
+    document.body.style.display = "none";
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight;
+    document.body.style.display = "";
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full bg-background" dir="rtl">
@@ -53,6 +75,18 @@ export default function DashboardLayout() {
         </div>
       </main>
       <BackToTop />
+
+      {/* Mobile print close button - visible on screen, hidden during actual printing via CSS */}
+      {showPrintClose && (
+        <button
+          onClick={handleClosePrintPreview}
+          className="print-close-btn fixed top-4 left-4 z-[9999] flex items-center gap-2 px-4 py-3 rounded-xl bg-destructive text-destructive-foreground shadow-lg font-bold text-sm"
+          style={{ WebkitAppearance: "none" }}
+        >
+          <X className="h-5 w-5" />
+          إغلاق
+        </button>
+      )}
     </div>
   );
 }

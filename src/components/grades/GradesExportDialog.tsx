@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { safePrint } from "@/lib/print-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -104,7 +105,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
   const handlePrint = () => {
     setOpen(false);
-    setTimeout(() => window.print(), 300);
+    setTimeout(() => safePrint(), 300);
   };
 
   if (groups.length === 0) return null;
@@ -117,7 +118,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
             <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
               <Upload className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.print(); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); safePrint(); }}>
               <Printer className="h-4 w-4" />
             </Button>
           </div>
