@@ -49,6 +49,7 @@ export default function StudentNotificationCards({
   grades,
   attendance,
 }: Props) {
+  const { student: authStudent } = useAuth();
   // --- Full mark detection ---
   const [fullMarks, setFullMarks] = useState<FullMarkGrade[]>([]);
   const [certOpen, setCertOpen] = useState(false);
