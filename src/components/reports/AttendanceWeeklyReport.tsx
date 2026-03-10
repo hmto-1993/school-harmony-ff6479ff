@@ -577,7 +577,7 @@ export default function AttendanceWeeklyReport({
                           </td>
                         );
                       })
-                    )
+                    )}
                   </tr>
                 ))}
               </tbody>
