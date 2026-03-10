@@ -473,15 +473,22 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       "p-1.5 text-center border-l border-border/10",
                                       isEditing ? "bg-primary/10" : "bg-primary/5"
                                     )}>
-                                      {isEditing ? (
-                                        <Input
-                                          type="number" min={0} max={Number(cat.max_score)}
-                                          value={tempEdits[cellKey] ?? ""}
-                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                          className="w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                          dir="ltr"
-                                        />
-                                      ) : (
+                                    {isEditing ? (() => {
+                                        const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                        return (
+                                          <Input
+                                            type="number" min={0} max={Number(cat.max_score)}
+                                            value={tempEdits[cellKey] ?? ""}
+                                            onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                            className={cn(
+                                              "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                              locked && "opacity-40 pointer-events-none"
+                                            )}
+                                            dir="ltr"
+                                            disabled={!!locked}
+                                          />
+                                        );
+                                      })() : (
                                         <span className="text-xs font-semibold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
                                       )}
                                     </td>
