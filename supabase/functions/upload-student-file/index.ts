@@ -11,6 +11,21 @@ const ALLOWED_MIME_TYPES = [
   "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const SESSION_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+async function verifySessionToken(
+  token: string, studentId: string, issuedAt: number, secret: string
+): Promise<boolean> {
+  if (Date.now() - issuedAt > SESSION_MAX_AGE_MS) return false;
+  const data = `${studentId}:${issuedAt}`;
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  const expected = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  return token === expected;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,11 +38,30 @@ Deno.serve(async (req) => {
     const activityId = formData.get("activity_id") as string;
     const classId = formData.get("class_id") as string;
     const file = formData.get("file") as File;
+    const sessionToken = formData.get("session_token") as string;
+    const sessionIssuedAt = Number(formData.get("session_issued_at"));
 
     if (!studentId || !activityId || !classId || !file) {
       return new Response(
         JSON.stringify({ error: "جميع الحقول مطلوبة" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Verify session token
+    if (!sessionToken || !sessionIssuedAt) {
+      return new Response(
+        JSON.stringify({ error: "المصادقة مطلوبة" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isValid = await verifySessionToken(sessionToken, studentId, sessionIssuedAt, serviceRoleKey);
+    if (!isValid) {
+      return new Response(
+        JSON.stringify({ error: "جلسة غير صالحة أو منتهية" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -46,7 +80,6 @@ Deno.serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // Verify student exists
