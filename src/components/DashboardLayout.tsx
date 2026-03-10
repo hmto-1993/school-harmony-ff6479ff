@@ -12,11 +12,12 @@ import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showPrintClose, setShowPrintClose] = useState(false);
 
-  // Show a close button on mobile when print is triggered, hide after print
+  // Show a back button when print preview is triggered, hide after print
   useEffect(() => {
     const onBeforePrint = () => setShowPrintClose(true);
     const onAfterPrint = () => setShowPrintClose(false);
@@ -28,14 +29,15 @@ export default function DashboardLayout() {
     };
   }, []);
 
-  const handleClosePrintPreview = useCallback(() => {
+  const handleBackToDashboard = useCallback(() => {
     setShowPrintClose(false);
-    // Force exit print mode on mobile by triggering a minimal re-render
+    // Force exit print mode on mobile
     document.body.style.display = "none";
     // eslint-disable-next-line no-unused-expressions
     document.body.offsetHeight;
     document.body.style.display = "";
-  }, []);
+    navigate("/reports");
+  }, [navigate]);
 
   return (
     <div className="flex min-h-screen w-full bg-background" dir="rtl">
