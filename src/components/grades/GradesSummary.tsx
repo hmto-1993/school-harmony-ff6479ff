@@ -170,13 +170,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setLoading(false);
   };
 
-  // === ROW EDIT ===
+  // === ROW EDIT (manual scores only) ===
   const startRowEdit = (studentId: string) => {
     const row = summaryRows.find((r) => r.student_id === studentId);
     if (row) {
       setEditMode("row");
       setEditingStudent(studentId);
-      setRowEdits({ ...row.grades });
+      setRowEdits({ ...row.manualScores });
     }
   };
 
@@ -194,12 +194,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
     for (const cat of classCats) {
       const score = rowEdits[cat.id];
-      const existingId = row.grade_ids[cat.id];
       if (score !== null && score !== undefined) {
+        const existingId = row.manualScoreIds[cat.id];
         if (existingId) {
-          await supabase.from("grades").update({ score }).eq("id", existingId);
+          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
         } else {
-          await supabase.from("grades").insert({
+          await supabase.from("manual_category_scores" as any).insert({
             student_id: editingStudent, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod,
           });
         }
@@ -210,11 +210,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     loadAllData();
   };
 
-  // === COLUMN EDIT ===
+  // === COLUMN EDIT (manual scores only) ===
   const startColumnEdit = (catId: string, classId: string) => {
     const classStudents = summaryRows.filter(r => r.class_id === classId);
     const initial: Record<string, number | null> = {};
-    classStudents.forEach(s => { initial[s.student_id] = s.grades[catId] ?? null; });
+    classStudents.forEach(s => { initial[s.student_id] = s.manualScores[catId] ?? 0; });
     setEditMode("column");
     setEditingColumnCatId(catId);
     setEditingClassId(classId);
@@ -242,12 +242,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
     for (const s of classStudents) {
       const score = colEdits[s.student_id];
-      const existingId = s.grade_ids[editingColumnCatId];
       if (score !== null && score !== undefined) {
+        const existingId = s.manualScoreIds[editingColumnCatId];
         if (existingId) {
-          await supabase.from("grades").update({ score }).eq("id", existingId);
+          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
         } else {
-          await supabase.from("grades").insert({
+          await supabase.from("manual_category_scores" as any).insert({
             student_id: s.student_id, category_id: editingColumnCatId, score, recorded_by: user.id, period: selectedPeriod,
           });
         }
