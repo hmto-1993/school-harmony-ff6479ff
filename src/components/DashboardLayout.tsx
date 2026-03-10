@@ -1,10 +1,10 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useCallback } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, ArrowRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from "framer-motion";
