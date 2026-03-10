@@ -33,6 +33,41 @@ interface GradesSummaryProps {
 
 type EditMode = "row" | "column" | null;
 
+// Inline editable score input that saves on blur independently
+function InlineScoreInput({ value, maxScore, studentId, categoryId, gradeId, period, userId, onSaved }: {
+  value: number | null; maxScore: number; studentId: string; categoryId: string; gradeId?: string; period: number; userId: string; onSaved: () => void;
+}) {
+  const [localVal, setLocalVal] = useState<string>(String(value ?? 0));
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { setLocalVal(String(value ?? 0)); }, [value]);
+
+  const handleBlur = async () => {
+    const numVal = localVal === "" ? 0 : Math.min(maxScore, Math.max(0, Number(localVal)));
+    if (numVal === (value ?? 0)) return;
+    setSaving(true);
+    if (gradeId) {
+      await supabase.from("grades").update({ score: numVal }).eq("id", gradeId);
+    } else {
+      await supabase.from("grades").insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: userId, period });
+    }
+    setSaving(false);
+    onSaved();
+  };
+
+  return (
+    <Input
+      type="number" min={0} max={maxScore}
+      value={localVal}
+      onChange={(e) => setLocalVal(e.target.value)}
+      onBlur={handleBlur}
+      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+      disabled={saving}
+      className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+    />
+  );
+}
+
 export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
