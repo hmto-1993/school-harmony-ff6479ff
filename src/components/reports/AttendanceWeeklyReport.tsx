@@ -509,8 +509,13 @@ export default function AttendanceWeeklyReport({
                   >
                     <td className="logbook-td logbook-td-num">{idx + 1}</td>
                     <td className="logbook-td logbook-td-name">
-                      {s.name}
-                      {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5" style={{ color: "#ef4444" }} />}
+                      <span>{s.name}</span>
+                      {s.isAtRisk && (
+                        <span className="block text-[10px] mt-0.5" style={{ color: "#ef4444" }}>
+                          <AlertTriangle className="inline h-3 w-3 ml-0.5" style={{ color: "#ef4444" }} />
+                          تجاوز {Math.round(alertThreshold * 100)}%
+                        </span>
+                      )}
                     </td>
                     {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
