@@ -33,7 +33,7 @@ interface GradesSummaryProps {
 
 type EditMode = "row" | "column" | null;
 
-export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: GradesSummaryProps) {
+export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
