@@ -170,13 +170,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     setLoading(false);
   };
 
-  // === ROW EDIT ===
+  // === ROW EDIT (manual scores only) ===
   const startRowEdit = (studentId: string) => {
     const row = summaryRows.find((r) => r.student_id === studentId);
     if (row) {
       setEditMode("row");
       setEditingStudent(studentId);
-      setRowEdits({ ...row.grades });
+      setRowEdits({ ...row.manualScores });
     }
   };
 
@@ -194,12 +194,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
     for (const cat of classCats) {
       const score = rowEdits[cat.id];
-      const existingId = row.grade_ids[cat.id];
       if (score !== null && score !== undefined) {
+        const existingId = row.manualScoreIds[cat.id];
         if (existingId) {
-          await supabase.from("grades").update({ score }).eq("id", existingId);
+          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
         } else {
-          await supabase.from("grades").insert({
+          await supabase.from("manual_category_scores" as any).insert({
             student_id: editingStudent, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod,
           });
         }
@@ -210,11 +210,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     loadAllData();
   };
 
-  // === COLUMN EDIT ===
+  // === COLUMN EDIT (manual scores only) ===
   const startColumnEdit = (catId: string, classId: string) => {
     const classStudents = summaryRows.filter(r => r.class_id === classId);
     const initial: Record<string, number | null> = {};
-    classStudents.forEach(s => { initial[s.student_id] = s.grades[catId] ?? null; });
+    classStudents.forEach(s => { initial[s.student_id] = s.manualScores[catId] ?? 0; });
     setEditMode("column");
     setEditingColumnCatId(catId);
     setEditingClassId(classId);
@@ -242,12 +242,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
     for (const s of classStudents) {
       const score = colEdits[s.student_id];
-      const existingId = s.grade_ids[editingColumnCatId];
       if (score !== null && score !== undefined) {
+        const existingId = s.manualScoreIds[editingColumnCatId];
         if (existingId) {
-          await supabase.from("grades").update({ score }).eq("id", existingId);
+          await supabase.from("manual_category_scores" as any).update({ score, updated_at: new Date().toISOString() }).eq("id", existingId);
         } else {
-          await supabase.from("grades").insert({
+          await supabase.from("manual_category_scores" as any).insert({
             student_id: s.student_id, category_id: editingColumnCatId, score, recorded_by: user.id, period: selectedPeriod,
           });
         }
@@ -291,34 +291,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       if (grades[cat.id] != null) score += grades[cat.id]!;
     });
     return { score, max };
-  };
-
-  // Get effective grade for a cell considering edit modes
-  const getEffectiveGrade = (studentId: string, catId: string, originalGrade: number | null): number | null => {
-    if (editMode === "row" && editingStudent === studentId) {
-      return rowEdits[catId] ?? null;
-    }
-    if (editMode === "column" && editingColumnCatId === catId) {
-      return colEdits[studentId] ?? null;
-    }
-    return originalGrade;
-  };
-
-  const getEffectiveGrades = (sg: SummaryRow): Record<string, number | null> => {
-    const grades = { ...sg.grades };
-    if (editMode === "row" && editingStudent === sg.student_id) {
-      return { ...rowEdits };
-    }
-    if (editMode === "column" && editingColumnCatId) {
-      grades[editingColumnCatId] = colEdits[sg.student_id] ?? sg.grades[editingColumnCatId];
-    }
-    return grades;
-  };
-
-  const isCellEditable = (studentId: string, catId: string): boolean => {
-    if (editMode === "row" && editingStudent === studentId) return true;
-    if (editMode === "column" && editingColumnCatId === catId) return true;
-    return false;
   };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
@@ -519,7 +491,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const isRowEditing = editMode === "row" && editingStudent === sg.student_id;
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
-                      const currentGrades = getEffectiveGrades(sg);
+                      const currentGrades = sg.grades;
 
                       const classworkSub = calcSubtotal(currentGrades, classworkCats);
                       const examSub = calcSubtotal(currentGrades, examCats);
@@ -594,25 +566,32 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasClasswork && (
                             <>
                               {classworkCats.map(cat => {
+                                const isScoreEditing = 
+                                  (editMode === "row" && editingStudent === sg.student_id) ||
+                                  (editMode === "column" && editingColumnCatId === cat.id);
+                                const editVal = editMode === "row" ? rowEdits[cat.id] : colEdits[sg.student_id];
                                 return (
                                   <React.Fragment key={cat.id}>
-                                    <td className={cn(
-                                      "p-2 text-center border-l border-border/10",
-                                      editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                    )}>
+                                    <td className="p-2 text-center border-l border-border/10">
                                       {renderCell(cat)}
                                     </td>
-                                    <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
-                                      <InlineScoreInput
-                                        value={sg.manualScores[cat.id] ?? 0}
-                                        maxScore={Number(cat.max_score)}
-                                        studentId={sg.student_id}
-                                        categoryId={cat.id}
-                                        recordId={sg.manualScoreIds[cat.id]}
-                                        period={selectedPeriod}
-                                        userId={user?.id || ""}
-                                        onSaved={loadAllData}
-                                      />
+                                    <td className={cn(
+                                      "p-1.5 text-center border-l border-border/10",
+                                      isScoreEditing ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-primary/5"
+                                    )}>
+                                      {isScoreEditing ? (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={editVal ?? ""}
+                                          onChange={(e) => {
+                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
+                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
+                                          }}
+                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
+                                      )}
                                     </td>
                                   </React.Fragment>
                                 );
@@ -627,10 +606,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasExams && (
                             <>
                               {examCats.map(cat => (
-                                <td key={cat.id} className={cn(
-                                  "p-2 text-center border-l border-border/10",
-                                  editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                )}>
+                                <td key={cat.id} className="p-2 text-center border-l border-border/10">
                                   {renderCell(cat)}
                                 </td>
                               ))}
@@ -642,10 +618,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
                           {/* Other categories */}
                           {hasOther && otherCats.map(cat => (
-                            <td key={cat.id} className={cn(
-                              "p-2 text-center border-l border-border/10",
-                              editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                            )}>
+                            <td key={cat.id} className="p-2 text-center border-l border-border/10">
                               {renderCell(cat)}
                             </td>
                           ))}
