@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,9 +6,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Upload, X } from "lucide-react";
+import { Printer, Upload, X, ArrowRight } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
+import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
 
 interface Props {
