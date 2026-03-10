@@ -40,10 +40,14 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [summaryRows, setSummaryRows] = useState<SummaryRow[]>([]);
+  const [editMode, setEditMode] = useState<EditMode>(null);
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
-  const [editedGrades, setEditedGrades] = useState<Record<string, number | null>>({});
+  const [editingColumn, setEditingColumn] = useState<string | null>(null);
+  const [editingClassId, setEditingClassId] = useState<string | null>(null);
+  const [editedGrades, setEditedGrades] = useState<Record<string, Record<string, number | null>>>({});
   const [saving, setSaving] = useState(false);
   const [searchName, setSearchName] = useState("");
+  const [editMenuOpen, setEditMenuOpen] = useState<string | null>(null);
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
