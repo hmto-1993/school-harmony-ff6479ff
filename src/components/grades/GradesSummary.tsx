@@ -329,10 +329,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {/* Fill all controls */}
                       <div className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
                         <Select value={fillAllCatId} onValueChange={setFillAllCatId}>
-                          <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-transparent">
+                          <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs border-0 bg-transparent">
                             <SelectValue placeholder="اختر الفئة" />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="__all__">الجميع</SelectItem>
                             {classworkCats.map(cat => (
                               <SelectItem key={cat.id} value={cat.id}>{cat.name} (من {Number(cat.max_score)})</SelectItem>
                             ))}
@@ -348,13 +349,23 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
-                          const cat = classworkCats.find(c => c.id === fillAllCatId);
-                          if (!cat) return;
-                          const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
                           const newEdits = { ...tempEdits };
-                          group.students.forEach(s => {
-                            newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
-                          });
+                          if (fillAllCatId === "__all__") {
+                            // Fill all categories for all students
+                            group.students.forEach(s => {
+                              classworkCats.forEach(cat => {
+                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                                newEdits[`${s.student_id}__${cat.id}`] = String(val);
+                              });
+                            });
+                          } else {
+                            const cat = classworkCats.find(c => c.id === fillAllCatId);
+                            if (!cat) return;
+                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                            group.students.forEach(s => {
+                              newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
+                            });
+                          }
                           setTempEdits(newEdits);
                         }}>
                           <ArrowDown className="h-3 w-3" /> ملء الكل
