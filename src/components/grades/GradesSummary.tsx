@@ -317,13 +317,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : groupedByClass.map((group) => {
-        const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
+    const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
         const examCats = group.categories.filter(c => c.category_group === 'exams');
         const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
 
-        const hasClasswork = classworkCats.length > 0;
-        const hasExams = examCats.length > 0;
-        const hasOther = otherCats.length > 0;
+        const hasClasswork = !categoryGroupFilter ? classworkCats.length > 0 : categoryGroupFilter === 'classwork' && classworkCats.length > 0;
+        const hasExams = !categoryGroupFilter ? examCats.length > 0 : categoryGroupFilter === 'exams' && examCats.length > 0;
+        const hasOther = !categoryGroupFilter ? otherCats.length > 0 : false;
 
         const allCatsForGroup = [...classworkCats, ...examCats, ...otherCats];
 
