@@ -288,7 +288,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       size="sm" variant="outline"
                       className="h-8 gap-1.5"
                       disabled={editingClassId !== null && editingClassId !== group.id}
-                      onClick={() => startEdit(group.id, group.students, classworkCats)}
+                      onClick={() => startEdit(group.id, group.students, [...classworkCats, ...examCats])}
                     >
                       <Pencil className="h-3.5 w-3.5" /> تعديل الدرجات
                     </Button>
