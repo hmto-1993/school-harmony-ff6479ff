@@ -178,7 +178,7 @@ export default function AbsenceWarningSlip({
     window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
   };
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     const content = printRef.current;
     if (!content) return;
 
@@ -195,157 +195,24 @@ export default function AbsenceWarningSlip({
     const labels = clone.querySelectorAll("p");
     labels.forEach(p => { if (p.textContent?.includes("قابل للتعديل")) p.remove(); });
 
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+    // Create a temporary print container in the current page (no new window)
+    const printContainer = document.createElement("div");
+    printContainer.className = "print-area";
+    printContainer.id = "absence-print-area";
+    printContainer.setAttribute("dir", "rtl");
+    printContainer.style.cssText = "font-family:'IBM Plex Sans Arabic',sans-serif;color:#1e293b;background:white;padding:20px;";
+    printContainer.innerHTML = clone.innerHTML;
+    document.body.appendChild(printContainer);
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>إنذار غياب - ${studentName}</title>
-        <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-            padding: 20px;
-            background: white;
-            color: #1e293b;
-            direction: rtl;
-          }
-          .header {
-            border-bottom: 3px solid #3b82f6;
-            padding-bottom: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-          }
-          .header-section { flex: 1; line-height: 1.8; }
-          .header-section p { margin: 0; font-weight: 600; }
-          .header-center { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-          .header-center img { object-fit: contain; }
-          .title {
-            text-align: center;
-            margin: 24px 0;
-            font-size: 22px;
-            font-weight: 700;
-            color: #dc2626;
-            border: 2px solid #dc2626;
-            padding: 12px 24px;
-            display: inline-block;
-            width: 100%;
-          }
-          .info-box {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 20px;
-          }
-          .info-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed #e2e8f0;
-          }
-          .info-row:last-child { border-bottom: none; }
-          .info-label { color: #64748b; font-size: 14px; }
-          .info-value { font-weight: 600; font-size: 14px; }
-          .warning-text {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: 8px;
-            padding: 16px;
-            margin: 20px 0;
-            line-height: 1.8;
-            font-size: 14px;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 16px 0;
-          }
-          th, td {
-            border: 1px solid #e2e8f0;
-            padding: 10px;
-            text-align: center;
-            font-size: 13px;
-          }
-          th { background: #f1f5f9; font-weight: 600; }
-          .signatures {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 40px;
-            padding-top: 20px;
-          }
-          .sig-box {
-            text-align: center;
-            width: 30%;
-          }
-          .sig-box p { margin-bottom: 40px; font-weight: 600; font-size: 13px; }
-          .sig-line { border-top: 1px solid #1e293b; padding-top: 8px; font-size: 12px; color: #64748b; }
-          .date-footer {
-            text-align: left;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #64748b;
-          }
-          .back-btn {
-            position: fixed;
-            top: 12px;
-            left: 12px;
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border-radius: 12px;
-            background: #ea580c;
-            color: white;
-            font-weight: 700;
-            font-size: 15px;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            font-family: 'IBM Plex Sans Arabic', sans-serif;
-          }
-          .back-btn:active { background: #c2410c; }
-          .back-btn svg { width: 20px; height: 20px; }
-          @media print {
-            body { padding: 0; }
-            .back-btn { display: none !important; }
-            @page { margin: 15mm; }
-          }
-          @page {
-            margin: 15mm;
-            @bottom-left { content: none; }
-            @bottom-right { content: none; }
-            @bottom-center { content: none; }
-            @top-left { content: none; }
-            @top-right { content: none; }
-            @top-center { content: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <button class="back-btn" onclick="window.close(); if(!window.closed) history.back();">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          العودة
-        </button>
-        ${clone.innerHTML}
-      </body>
-      </html>
-    `);
+    // Close dialog before printing
+    onOpenChange(false);
 
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
-    };
-  };
+    safePrint(() => {
+      // Cleanup: remove the temporary print container
+      const el = document.getElementById("absence-print-area");
+      if (el) el.remove();
+    });
+  }, [warningText, onOpenChange]);
 
 
   return (
