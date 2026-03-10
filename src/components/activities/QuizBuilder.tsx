@@ -108,7 +108,7 @@ export default function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
             {/* Image upload */}
             <div className="flex items-center gap-2">
               {q.image_url && (
-                <img src={q.image_url} alt="" className="h-16 w-16 rounded-xl object-cover border border-border/30" />
+                <SignedImage bucket="activities" path={q.image_url} className="h-16 w-16 rounded-xl object-cover border border-border/30" />
               )}
               <label className="cursor-pointer">
                 <input

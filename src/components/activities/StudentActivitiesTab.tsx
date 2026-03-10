@@ -307,7 +307,7 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                             </Badge>
                           </div>
                         </div>
-                        {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
+                        {q.image_url && <SignedImage bucket="activities" path={q.image_url} className="max-h-48 rounded-xl object-contain mx-auto" />}
                       </div>
                     );
                   })()}
