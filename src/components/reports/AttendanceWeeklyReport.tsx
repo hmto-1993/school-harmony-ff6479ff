@@ -415,8 +415,8 @@ export default function AttendanceWeeklyReport({
             className="attendance-legend flex items-center justify-between rounded-md px-4 py-2 mb-3"
             dir="rtl"
             style={{
-              background: "#faf5e6",
-              border: "2px solid #c9b97a",
+              background: "#e8edf3",
+              border: "2px solid #8a9bb5",
             }}
           >
             <span className="text-xs font-bold" style={{ color: "#6b5c2e" }}>مفتاح الرموز</span>
