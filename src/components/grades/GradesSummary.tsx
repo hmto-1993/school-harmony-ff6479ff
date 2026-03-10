@@ -294,32 +294,65 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         </div>
       )}
 
-      {/* Save/Cancel bar when editing */}
+      {/* Top-level edit button or active edit bar */}
+      {!editMode && groupedByClass.length > 0 && (
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => {
+            // Find first available classwork category to start editing
+            const firstGroup = groupedByClass[0];
+            const firstCat = firstGroup?.categories.find(c => c.category_group === 'classwork');
+            if (firstCat) startColumnEdit(firstCat.id, firstGroup.id, firstGroup.students);
+          }}>
+            <Pencil className="h-3.5 w-3.5" /> تعديل الدرجات
+          </Button>
+        </div>
+      )}
+
       {editMode && (
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
-          <span className="text-sm font-medium text-primary">
-            {editMode.type === "column" ? "تعديل العمود" : "تعديل صف الطالب"}
-          </span>
-          {editMode.type === "column" && (
-            <div className="flex items-center gap-1.5 mr-auto">
-              <span className="text-xs text-muted-foreground">ملء الكل:</span>
-              <Input
-                type="number" min={0}
-                value={fillAllValue}
-                onChange={(e) => setFillAllValue(e.target.value)}
-                className="w-16 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                dir="ltr"
-              />
-              <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => {
-                const cat = allCategories.find(c => c.id === (editMode as any).categoryId);
-                const classStudents = groupedByClass.find(g => g.id === (editMode as any).classId)?.students || [];
-                if (cat) applyFillAll((editMode as any).categoryId, classStudents, Number(cat.max_score));
-              }}>
-                <ArrowDown className="h-3 w-3 ml-1" /> تطبيق
-              </Button>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5 mr-2">
+        <div className="flex flex-wrap items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/20">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-primary">تعديل:</span>
+            <Select
+              value={`${editMode.classId}||${editMode.categoryId}`}
+              onValueChange={(val) => {
+                const [classId, catId] = val.split("||");
+                const classStudents = groupedByClass.find(g => g.id === classId)?.students || [];
+                startColumnEdit(catId, classId, classStudents);
+              }}
+            >
+              <SelectTrigger className="h-8 w-auto min-w-[180px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {groupedByClass.map(group => {
+                  const cwCats = group.categories.filter(c => c.category_group === 'classwork');
+                  return cwCats.map(cat => (
+                    <SelectItem key={`${group.id}||${cat.id}`} value={`${group.id}||${cat.id}`}>
+                      {group.name} - {cat.name}
+                    </SelectItem>
+                  ));
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-1.5 mr-auto">
+            <span className="text-xs text-muted-foreground">ملء الكل:</span>
+            <Input
+              type="number" min={0}
+              value={fillAllValue}
+              onChange={(e) => setFillAllValue(e.target.value)}
+              className="w-16 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              dir="ltr"
+            />
+            <Button size="sm" variant="outline" className="h-7 text-xs px-2" onClick={() => {
+              const cat = allCategories.find(c => c.id === editMode.categoryId);
+              const classStudents = groupedByClass.find(g => g.id === editMode.classId)?.students || [];
+              if (cat) applyFillAll(editMode.categoryId, classStudents, Number(cat.max_score));
+            }}>
+              <ArrowDown className="h-3 w-3 ml-1" /> تطبيق
+            </Button>
+          </div>
+          <div className="flex items-center gap-1.5">
             <Button size="sm" onClick={saveEdits} disabled={saving} className="h-7 text-xs gap-1">
               <Check className="h-3.5 w-3.5" /> حفظ
             </Button>
@@ -340,9 +373,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         const hasClasswork = !categoryGroupFilter ? classworkCats.length > 0 : categoryGroupFilter === 'classwork' && classworkCats.length > 0;
         const hasExams = !categoryGroupFilter ? examCats.length > 0 : categoryGroupFilter === 'exams' && examCats.length > 0;
         const hasOther = !categoryGroupFilter ? otherCats.length > 0 : false;
-
-        // All classwork cats for this class (for row editing)
-        const allEditableCats = classworkCats;
 
         return (
           <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
