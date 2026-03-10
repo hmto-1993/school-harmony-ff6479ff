@@ -23,6 +23,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
 import ActivityResults from "@/components/activities/ActivityResults";
+import { SignedFileLink } from "@/components/activities/SignedFileLink";
 
 interface ClassInfo { id: string; name: string; grade: string; section: string; }
 interface Activity {
