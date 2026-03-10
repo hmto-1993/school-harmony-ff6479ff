@@ -61,8 +61,8 @@ export default function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
     const safeName = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
     const { error } = await supabase.storage.from("activities").upload(`quiz-images/${safeName}`, file);
     if (!error) {
-      const { data: urlData } = supabase.storage.from("activities").getPublicUrl(`quiz-images/${safeName}`);
-      updateQuestion(qIndex, { image_url: urlData.publicUrl });
+      // Store path for private bucket — signed URLs generated on demand
+      updateQuestion(qIndex, { image_url: `quiz-images/${safeName}` });
     }
     setUploading(null);
   };

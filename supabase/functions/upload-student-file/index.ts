@@ -128,20 +128,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: urlData } = supabase.storage.from("activities").getPublicUrl(filePath);
-
-    // Record submission
+    // Store path (not public URL) — generate signed URLs on demand
     await supabase.from("student_file_submissions").insert({
       activity_id: activityId,
       student_id: studentId,
       class_id: classId,
-      file_url: urlData.publicUrl,
+      file_url: filePath,
       file_name: file.name,
       file_size: file.size,
     });
 
+    // Return a short-lived signed URL for immediate display
+    const { data: signedData } = await supabase.storage
+      .from("activities")
+      .createSignedUrl(filePath, 60 * 60 * 24 * 7); // 7 days
+
     return new Response(
-      JSON.stringify({ success: true, file_url: urlData.publicUrl }),
+      JSON.stringify({ success: true, file_url: signedData?.signedUrl || filePath }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

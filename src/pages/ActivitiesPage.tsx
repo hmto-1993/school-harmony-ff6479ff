@@ -126,8 +126,8 @@ export default function ActivitiesPage() {
         setCreating(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from("activities").getPublicUrl(`files/${safeName}`);
-      fileUrl = urlData.publicUrl;
+      // Store path for private bucket — signed URLs generated on demand
+      fileUrl = `files/${safeName}`;
       fileName = selectedFile.name;
     }
 
