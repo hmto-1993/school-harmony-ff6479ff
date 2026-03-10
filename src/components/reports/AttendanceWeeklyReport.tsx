@@ -609,76 +609,75 @@ export default function AttendanceWeeklyReport({
       <style>{`
         /* Logbook table styling */
         .logbook-th {
-          background: #e8edf3;
-          color: #2c3e50;
+          background: #e9ecef;
+          color: #495057;
           font-weight: 700;
           text-align: center;
           padding: 8px 6px;
-          border: 2px solid #8a9bb5;
+          border: 1.5px solid #ced4da;
           font-size: 13px;
           white-space: nowrap;
         }
         .logbook-th-week {
-          background: #dce3ed;
+          background: #dee2e6;
           font-size: 12px;
           letter-spacing: 0 !important;
         }
         .logbook-th-session {
-          background: #e8edf3;
+          background: #e9ecef;
           font-size: 10px;
           padding: 3px 2px;
           min-width: 28px;
           width: 28px;
-          color: #5a6d82;
-          border: 2px solid #8a9bb5;
+          color: #868e96;
+          border: 1.5px solid #ced4da;
         }
         .logbook-th-total {
-          background: #e8edf3;
+          background: #e9ecef;
           font-size: 11px;
           min-width: 40px;
           width: 44px;
           font-weight: 800;
         }
         .logbook-td {
-          border: 1.5px solid #a0b0c4;
+          border: 1px solid #dee2e6;
           padding: 4px 3px;
           text-align: center;
           vertical-align: middle;
         }
         .logbook-td-num {
           font-weight: 700;
-          color: #2c3e50;
+          color: #495057;
           width: 32px;
-          background: #f0f3f7;
+          background: #f8f9fa;
           font-size: 13px;
         }
         .logbook-td-name {
           text-align: right;
           padding-right: 8px;
           padding-left: 4px;
-          font-weight: 700;
-          color: #1a2533;
+          font-weight: 600;
+          color: #212529;
           white-space: nowrap;
-          background: #f0f3f7;
-          font-size: 12px;
-          max-width: 0;
-          width: auto;
+          background: #f8f9fa;
+          font-size: 13px;
+          width: 1%;
         }
         .logbook-td-dot {
           padding: 4px 2px;
           min-width: 28px;
         }
         .logbook-td-total {
-          background: #f0f3f7;
+          background: #f8f9fa;
           font-size: 13px;
           min-width: 40px;
         }
-        .logbook-row-even { background: #f8fafc; }
-        .logbook-row-odd  { background: #eef2f7; }
-        .logbook-row-risk { background: #fef2f2; }
+        .logbook-row-even { background: #ffffff; }
+        .logbook-row-odd  { background: #f8f9fa; }
+        .logbook-row-risk { background: #fff5f5; }
         .logbook-row-risk .logbook-td-name,
         .logbook-row-risk .logbook-td-num {
-          background: #fef2f2;
+          background: #fff5f5;
         }
 
         /* Session dot circle */
@@ -686,12 +685,12 @@ export default function AttendanceWeeklyReport({
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
-          border: 2px solid;
+          border: none;
           color: #fff;
-          font-size: 10px;
+          font-size: 9px;
           font-weight: 800;
           line-height: 1;
         }
