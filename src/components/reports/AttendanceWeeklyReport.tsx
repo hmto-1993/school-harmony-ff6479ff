@@ -696,21 +696,21 @@ export default function AttendanceWeeklyReport({
           line-height: 1.3;
         }
         .logbook-td-dot {
-          padding: 4px 2px;
-          min-width: 28px;
+          padding: 3px 1px;
+          min-width: 24px;
         }
         .logbook-td-total {
           background: #f8f9fa;
-          font-size: 12px;
-          min-width: 28px;
-          width: 30px;
+          font-size: 11px;
+          min-width: 22px;
+          width: 22px;
           padding: 2px 1px;
         }
         .summary-dot {
           color: transparent;
           display: inline-block;
-          width: 12px;
-          height: 12px;
+          width: 10px;
+          height: 10px;
           border-radius: 50%;
           vertical-align: middle;
         }
