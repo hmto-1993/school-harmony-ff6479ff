@@ -104,7 +104,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
   const handlePrint = () => {
     setOpen(false);
-    setTimeout(() => window.print(), 300);
+    setTimeout(() => safePrint(), 300);
   };
 
   if (groups.length === 0) return null;

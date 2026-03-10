@@ -384,7 +384,7 @@ export default function ReportsPage() {
   // ============ Print & Send ============
 
   const handlePrint = () => {
-    window.print();
+    safePrint();
   };
 
   const generateStudentReportPDF = async (studentName: string, sections: { attendance: boolean; grades: boolean }): Promise<ArrayBuffer | null> => {

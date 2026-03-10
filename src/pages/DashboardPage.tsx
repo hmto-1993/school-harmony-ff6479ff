@@ -93,7 +93,7 @@ export default function DashboardPage() {
   };
 
   const handlePrint = useCallback(() => {
-    window.print();
+    safePrint();
   }, []);
 
   return (
