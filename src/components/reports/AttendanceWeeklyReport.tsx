@@ -352,10 +352,35 @@ export default function AttendanceWeeklyReport({
                   </button>
                 </div>
               )}
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
-                <Printer className="h-4 w-4" />
-                طباعة
-              </Button>
+              {/* Week selector popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Settings2 className="h-4 w-4" />
+                    الأسابيع ({selectedWeeks.size}/{weeks.length})
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-3" dir="rtl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">اختر الأسابيع</span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={selectAllWeeks}>الكل</Button>
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={deselectAllWeeks}>لا شيء</Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-auto">
+                    {weeks.map(w => (
+                      <label key={w.weekNum} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                        <Checkbox
+                          checked={selectedWeeks.has(w.weekNum)}
+                          onCheckedChange={() => toggleWeek(w.weekNum)}
+                        />
+                        الأسبوع {w.weekNum}
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5">
