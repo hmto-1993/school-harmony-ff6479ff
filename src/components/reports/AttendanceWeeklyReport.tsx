@@ -261,7 +261,14 @@ export default function AttendanceWeeklyReport({
       styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
     }));
 
+    const summaryHeaders = [
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 10 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 10 } },
+      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 10 } },
+    ];
+
     const head = [[
+      ...summaryHeaders,
       ...weekGroupHeaders.slice().reverse(),
       { content: "اسم الطالب", styles: { halign: "right" as const } },
       { content: "م", styles: { halign: "center" as const } },
@@ -276,9 +283,15 @@ export default function AttendanceWeeklyReport({
           return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
         });
       });
+
+      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+
       return [
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
-        { content: s.name, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9 } },
+        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
     });
@@ -481,9 +494,9 @@ export default function AttendanceWeeklyReport({
                       الأسبوع {w.weekNum}
                     </th>
                   ))}
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#16a34a" }}>حاضر</th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#dc2626" }}>غائب</th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#d97706" }}>متأخر</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
@@ -509,8 +522,13 @@ export default function AttendanceWeeklyReport({
                   >
                     <td className="logbook-td logbook-td-num">{idx + 1}</td>
                     <td className="logbook-td logbook-td-name">
-                      {s.name}
-                      {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5" style={{ color: "#ef4444" }} />}
+                      <span>{s.name}</span>
+                      {s.isAtRisk && (
+                        <span className="block text-[10px] mt-0.5" style={{ color: "#ef4444" }}>
+                          <AlertTriangle className="inline h-3 w-3 ml-0.5" style={{ color: "#ef4444" }} />
+                          تجاوز {Math.round(alertThreshold * 100)}%
+                        </span>
+                      )}
                     </td>
                     {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
@@ -636,9 +654,10 @@ export default function AttendanceWeeklyReport({
         .logbook-th-total {
           background: #e9ecef;
           font-size: 11px;
-          min-width: 40px;
-          width: 44px;
+          min-width: 28px;
+          width: 30px;
           font-weight: 800;
+          padding: 4px 2px;
         }
         .logbook-td {
           border: 1px solid #dee2e6;
@@ -663,6 +682,7 @@ export default function AttendanceWeeklyReport({
           background: #f8f9fa;
           font-size: 13px;
           width: 1%;
+          line-height: 1.3;
         }
         .logbook-td-dot {
           padding: 4px 2px;
@@ -670,8 +690,18 @@ export default function AttendanceWeeklyReport({
         }
         .logbook-td-total {
           background: #f8f9fa;
-          font-size: 13px;
-          min-width: 40px;
+          font-size: 12px;
+          min-width: 28px;
+          width: 30px;
+          padding: 2px 1px;
+        }
+        .summary-dot {
+          color: transparent;
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          vertical-align: middle;
         }
         .logbook-row-even { background: #ffffff; }
         .logbook-row-odd  { background: #f8f9fa; }
