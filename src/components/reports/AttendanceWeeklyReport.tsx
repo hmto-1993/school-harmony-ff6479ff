@@ -641,9 +641,10 @@ export default function AttendanceWeeklyReport({
         .logbook-th-total {
           background: #e9ecef;
           font-size: 11px;
-          min-width: 40px;
-          width: 44px;
+          min-width: 28px;
+          width: 30px;
           font-weight: 800;
+          padding: 4px 2px;
         }
         .logbook-td {
           border: 1px solid #dee2e6;
