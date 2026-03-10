@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, CircleCheck, CircleMinus, CircleX, Star, Pencil, Check, X } from "lucide-react";
+import { Search, CircleCheck, CircleMinus, CircleX, Star, Pencil, Check, X, ArrowDown } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [tempEdits, setTempEdits] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [fillAllValue, setFillAllValue] = useState("");
+  const [fillAllCatId, setFillAllCatId] = useState<string>("");
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
@@ -140,11 +143,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     });
     setTempEdits(edits);
     setEditingClassId(classId);
+    setFillAllValue("");
+    setFillAllCatId("");
   };
 
   const cancelEdit = () => {
     setEditingClassId(null);
     setTempEdits({});
+    setFillAllValue("");
+    setFillAllCatId("");
   };
 
   const saveEdits = async () => {
@@ -307,7 +314,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 </div>
                 {/* Edit / Save / Cancel buttons */}
                 
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
@@ -319,12 +326,48 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     </Button>
                   ) : (
                     <>
-                      <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1">
-                        <Check className="h-3.5 w-3.5" /> حفظ
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1">
-                        <X className="h-3.5 w-3.5" /> إلغاء
-                      </Button>
+                      {/* Fill all controls */}
+                      <div className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
+                        <Select value={fillAllCatId} onValueChange={setFillAllCatId}>
+                          <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-transparent">
+                            <SelectValue placeholder="اختر الفئة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {classworkCats.map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>{cat.name} (من {Number(cat.max_score)})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number" min={0}
+                          placeholder="الدرجة"
+                          value={fillAllValue}
+                          onChange={(e) => setFillAllValue(e.target.value)}
+                          className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          dir="ltr"
+                        />
+                        <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
+                          if (!fillAllCatId || fillAllValue === "") return;
+                          const cat = classworkCats.find(c => c.id === fillAllCatId);
+                          if (!cat) return;
+                          const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                          const newEdits = { ...tempEdits };
+                          group.students.forEach(s => {
+                            newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
+                          });
+                          setTempEdits(newEdits);
+                        }}>
+                          <ArrowDown className="h-3 w-3" /> ملء الكل
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1">
+                          <Check className="h-3.5 w-3.5" /> حفظ
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1">
+                          <X className="h-3.5 w-3.5" /> إلغاء
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
@@ -362,14 +405,14 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {classworkCats.map(cat => (
                             <React.Fragment key={cat.id}>
                               <th className="text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px] text-muted-foreground">
-                                <div>{cat.name}</div>
-                                <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
+                                {cat.name}
                               </th>
                               <th className={cn(
                                 "text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5",
                                 isEditing && "bg-primary/20"
                               )}>
-                                الدرجة
+                                <div>الدرجة</div>
+                                <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                               </th>
                             </React.Fragment>
                           ))}
