@@ -5,11 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Search, CircleCheck, CircleMinus, CircleX, Star, Pencil, Check, X, ArrowDown } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
-
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
