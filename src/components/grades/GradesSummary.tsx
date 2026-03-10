@@ -546,18 +546,39 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
 
-                          {/* Classwork categories */}
+                          {/* Classwork categories with individual totals */}
                           {hasClasswork && (
                             <>
-                              {classworkCats.map(cat => (
-                                <td key={cat.id} className={cn(
-                                  "p-2 text-center border-l border-border/10",
-                                  editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                )}>
-                                  {renderCell(cat)}
-                                </td>
-                              ))}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/5 text-primary">
+                              {classworkCats.map(cat => {
+                                const catScore = currentGrades[cat.id];
+                                const catEditable = isCellEditable(sg.student_id, cat.id);
+                                return (
+                                  <React.Fragment key={cat.id}>
+                                    <td className={cn(
+                                      "p-2 text-center border-l border-border/10",
+                                      editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
+                                    )}>
+                                      {renderCell(cat)}
+                                    </td>
+                                    <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
+                                      {catEditable ? (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={editMode === "row" ? (rowEdits[cat.id] ?? "") : (colEdits[sg.student_id] ?? "")}
+                                          onChange={(e) => {
+                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
+                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
+                                          }}
+                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-primary">{catScore ?? 0}</span>
+                                      )}
+                                    </td>
+                                  </React.Fragment>
+                                );
+                              })}
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
                                 {classworkSub.score} / {classworkSub.max}
                               </td>
                             </>
