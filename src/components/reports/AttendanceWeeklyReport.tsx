@@ -41,11 +41,11 @@ interface Props {
 }
 
 const STATUS_CONFIG: Record<string, { color: string; printColor: string; label: string; dotChar: string }> = {
-  present:    { color: "#22c55e", printColor: "#16a34a", label: "حاضر",      dotChar: "◉" },
-  absent:     { color: "#ef4444", printColor: "#dc2626", label: "غائب",      dotChar: "●" },
-  sick_leave: { color: "#3b82f6", printColor: "#2563eb", label: "مستأذن",    dotChar: "●" },
-  late:       { color: "#f59e0b", printColor: "#d97706", label: "متأخر",     dotChar: "●" },
-  early_leave:{ color: "#3b82f6", printColor: "#2563eb", label: "خروج مبكر", dotChar: "●" },
+  present:    { color: "#4caf50", printColor: "#388e3c", label: "حاضر",      dotChar: "●" },
+  absent:     { color: "#e53935", printColor: "#c62828", label: "غائب",      dotChar: "●" },
+  sick_leave: { color: "#1e88e5", printColor: "#1565c0", label: "مستأذن",    dotChar: "●" },
+  late:       { color: "#fbc02d", printColor: "#f9a825", label: "متأخر",     dotChar: "●" },
+  early_leave:{ color: "#1e88e5", printColor: "#1565c0", label: "خروج مبكر", dotChar: "●" },
 };
 
 const DEFAULT_ALERT_THRESHOLD = 0.2;
