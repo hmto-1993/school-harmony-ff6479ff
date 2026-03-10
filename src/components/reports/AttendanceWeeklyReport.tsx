@@ -268,8 +268,8 @@ export default function AttendanceWeeklyReport({
     ];
 
     const head = [[
-      ...summaryHeaders,
       ...weekGroupHeaders.slice().reverse(),
+      ...summaryHeaders,
       { content: "اسم الطالب", styles: { halign: "right" as const } },
       { content: "م", styles: { halign: "center" as const } },
     ]];
@@ -287,10 +287,10 @@ export default function AttendanceWeeklyReport({
       const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
 
       return [
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
         { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
@@ -485,6 +485,9 @@ export default function AttendanceWeeklyReport({
                     rowSpan={2}
                     style={{ textAlign: "right", whiteSpace: "nowrap" }}
                   >اسم الطالب</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                   {filteredWeeks.map((w) => (
                     <th
                       key={w.weekNum}
@@ -494,9 +497,6 @@ export default function AttendanceWeeklyReport({
                       <span className="logbook-week-label">الأسبوع {w.weekNum}</span>
                     </th>
                   ))}
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#4caf50" }}>●</span></th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#e53935" }}>●</span></th>
-                  <th className="logbook-th logbook-th-total" rowSpan={2}><span className="summary-dot" style={{ backgroundColor: "#fbc02d" }}>●</span></th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
@@ -530,6 +530,9 @@ export default function AttendanceWeeklyReport({
                         </span>
                       )}
                     </td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
                     {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
@@ -575,9 +578,6 @@ export default function AttendanceWeeklyReport({
                         );
                       })
                     )}
-                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
-                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
-                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
                   </tr>
                 ))}
               </tbody>
