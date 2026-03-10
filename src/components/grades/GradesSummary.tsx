@@ -423,15 +423,20 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasClasswork && (
                         <>
                           {classworkCats.map(cat => (
-                            <th key={cat.id} className={cn(
-                              "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
-                              editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
-                            )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
-                            </th>
+                            <React.Fragment key={cat.id}>
+                              <th className={cn(
+                                "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
+                                editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
+                              )}>
+                                <div>{cat.name}</div>
+                                <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
+                              </th>
+                              <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5">
+                                المجموع
+                              </th>
+                            </React.Fragment>
                           ))}
-                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/5">المجموع</th>
+                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
                         </>
                       )}
                       {hasExams && (
