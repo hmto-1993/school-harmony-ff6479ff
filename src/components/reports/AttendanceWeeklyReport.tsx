@@ -508,7 +508,7 @@ export default function AttendanceWeeklyReport({
                         s.isAtRisk ? "bg-destructive/10" : idx % 2 === 0 ? "bg-card" : "bg-muted/30",
                       )}
                     >
-                      <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold">{idx + 1}</td>
+                      <td className="border border-border/20 px-1 py-2.5 text-center text-foreground font-semibold" style={{ width: 28, maxWidth: 28 }}>{idx + 1}</td>
                       <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground">
                         {s.name}
                         {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5 text-destructive" />}
