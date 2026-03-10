@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -290,7 +290,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
               const headers = [
                 "#", "الطالب",
-                ...classworkCats.map(c => c.name), ...(classworkCats.length > 0 ? ["مجموع المهام"] : []),
+                ...classworkCats.flatMap(c => [c.name, `مجموع ${c.name}`]),
+                ...(classworkCats.length > 0 ? ["إجمالي المهام"] : []),
                 ...examCats.map(c => c.name), ...(examCats.length > 0 ? ["مجموع الاختبارات"] : []),
                 ...otherCats.map(c => c.name),
                 "المجموع",
@@ -300,7 +301,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 const exSub = calcSubtotal(sg.grades, examCats);
                 return [
                   String(i + 1), sg.full_name,
-                  ...classworkCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...classworkCats.flatMap(c => [
+                    sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—",
+                    String(sg.grades[c.id] ?? 0),
+                  ]),
                   ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
                   ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
@@ -400,7 +404,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
                       {hasClasswork && (
-                        <th colSpan={classworkCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
+                        <th colSpan={classworkCats.length * 2 + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
                           المهام الادائية والمشاركة والتفاعل
                         </th>
                       )}
@@ -423,15 +427,20 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasClasswork && (
                         <>
                           {classworkCats.map(cat => (
-                            <th key={cat.id} className={cn(
-                              "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
-                              editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
-                            )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
-                            </th>
+                            <React.Fragment key={cat.id}>
+                              <th className={cn(
+                                "text-center p-2 font-medium text-xs border-b-2 border-primary/20 min-w-[70px]",
+                                editMode === "column" && editingColumnCatId === cat.id ? "bg-primary/15 text-primary" : "text-muted-foreground"
+                              )}>
+                                <div>{cat.name}</div>
+                                <div className="text-[10px] font-normal">من {Number(cat.max_score)}</div>
+                              </th>
+                              <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5">
+                                المجموع
+                              </th>
+                            </React.Fragment>
                           ))}
-                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/5">المجموع</th>
+                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
                         </>
                       )}
                       {hasExams && (
@@ -541,18 +550,39 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
 
-                          {/* Classwork categories */}
+                          {/* Classwork categories with individual totals */}
                           {hasClasswork && (
                             <>
-                              {classworkCats.map(cat => (
-                                <td key={cat.id} className={cn(
-                                  "p-2 text-center border-l border-border/10",
-                                  editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                )}>
-                                  {renderCell(cat)}
-                                </td>
-                              ))}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/5 text-primary">
+                              {classworkCats.map(cat => {
+                                const catScore = currentGrades[cat.id];
+                                const catEditable = isCellEditable(sg.student_id, cat.id);
+                                return (
+                                  <React.Fragment key={cat.id}>
+                                    <td className={cn(
+                                      "p-2 text-center border-l border-border/10",
+                                      editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
+                                    )}>
+                                      {renderCell(cat)}
+                                    </td>
+                                    <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
+                                      {catEditable ? (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={editMode === "row" ? (rowEdits[cat.id] ?? "") : (colEdits[sg.student_id] ?? "")}
+                                          onChange={(e) => {
+                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
+                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
+                                          }}
+                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-primary">{catScore ?? 0}</span>
+                                      )}
+                                    </td>
+                                  </React.Fragment>
+                                );
+                              })}
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
                                 {classworkSub.score} / {classworkSub.max}
                               </td>
                             </>
