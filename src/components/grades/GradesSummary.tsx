@@ -448,7 +448,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             <>
                               {classworkCats.map(cat => {
                                 const cellKey = `${sg.student_id}__${cat.id}`;
-                                const isEditing = isCellEditing(sg.student_id, cat.id);
+                                const isEditing = isCellEditing(cat.id);
                                 return (
                                   <React.Fragment key={cat.id}>
                                     <td className="p-2 text-center border-l border-border/10">
