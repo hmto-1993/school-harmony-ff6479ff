@@ -259,6 +259,8 @@ export default function StudentNotificationCards({
           file_url: urlData.publicUrl,
           file_name: excuseFile.name,
           reason: excuseReason,
+          session_token: authStudent?.session_token,
+          session_issued_at: authStudent?.session_issued_at,
         },
       });
       if (excuseErr || !excuseResult?.success) throw new Error(excuseResult?.error || excuseErr?.message || "Failed to submit excuse");
