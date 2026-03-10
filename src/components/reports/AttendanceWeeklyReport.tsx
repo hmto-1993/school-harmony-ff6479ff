@@ -482,18 +482,18 @@ export default function AttendanceWeeklyReport({
                 <thead className="sticky top-0 z-10">
                   <tr className="bg-muted">
                     <th
-                      className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground bg-muted"
-                      style={{ minWidth: 36 }}
+                      className="border border-border/30 px-1 py-2.5 text-center font-bold text-muted-foreground bg-muted"
+                      style={{ width: 28, maxWidth: 28 }}
                     >م</th>
                     <th
                       className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground bg-muted"
-                      style={{ minWidth: 160 }}
+                      style={{ minWidth: 140 }}
                     >اسم الطالب</th>
                     {filteredWeeks.map((w) => (
                       <th
                         key={w.weekNum}
                         className="border border-border/30 px-2 py-2 text-center font-bold bg-muted text-foreground"
-                        style={{ minWidth: 60 }}
+                        style={{ minWidth: 70 }}
                       >
                         الأسبوع {w.weekNum}
                       </th>
