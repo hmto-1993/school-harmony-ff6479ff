@@ -14,6 +14,28 @@ export default function DashboardLayout() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showPrintClose, setShowPrintClose] = useState(false);
+
+  // Show a close button on mobile when print is triggered, hide after print
+  useEffect(() => {
+    const onBeforePrint = () => setShowPrintClose(true);
+    const onAfterPrint = () => setShowPrintClose(false);
+    window.addEventListener("beforeprint", onBeforePrint);
+    window.addEventListener("afterprint", onAfterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", onBeforePrint);
+      window.removeEventListener("afterprint", onAfterPrint);
+    };
+  }, []);
+
+  const handleClosePrintPreview = useCallback(() => {
+    setShowPrintClose(false);
+    // Force exit print mode on mobile by triggering a minimal re-render
+    document.body.style.display = "none";
+    // eslint-disable-next-line no-unused-expressions
+    document.body.offsetHeight;
+    document.body.style.display = "";
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full bg-background" dir="rtl">
