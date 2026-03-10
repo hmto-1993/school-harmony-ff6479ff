@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Service role can insert student_logins" ON public.student_logins;
