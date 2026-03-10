@@ -290,7 +290,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
               const headers = [
                 "#", "الطالب",
-                ...classworkCats.map(c => c.name), ...(classworkCats.length > 0 ? ["مجموع المهام"] : []),
+                ...classworkCats.flatMap(c => [c.name, `مجموع ${c.name}`]),
+                ...(classworkCats.length > 0 ? ["إجمالي المهام"] : []),
                 ...examCats.map(c => c.name), ...(examCats.length > 0 ? ["مجموع الاختبارات"] : []),
                 ...otherCats.map(c => c.name),
                 "المجموع",
@@ -300,7 +301,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 const exSub = calcSubtotal(sg.grades, examCats);
                 return [
                   String(i + 1), sg.full_name,
-                  ...classworkCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...classworkCats.flatMap(c => [
+                    sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—",
+                    String(sg.grades[c.id] ?? 0),
+                  ]),
                   ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
                   ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
