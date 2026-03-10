@@ -438,7 +438,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                 return (
                                   <React.Fragment key={cat.id}>
                                     <td className="p-2 text-center border-l border-border/10">
-                                      {renderDots(currentGrades[cat.id], Number(cat.max_score))}
+                                      {renderScore(currentGrades[cat.id])}
                                     </td>
                                     <td className={cn(
                                       "p-1.5 text-center border-l border-border/10",
