@@ -267,8 +267,8 @@
   .print\:hidden { display: none !important; }
   .print\:shadow-none { box-shadow: none !important; }
   .print\:block { display: block !important; }
-  /* Hide mobile close button during actual printing */
-  .print-close-btn { display: none !important; }
+  /* إخفاء زر العودة وأي عنصر no-print أثناء الطباعة الفعلية */
+  .no-print, .print-close-btn { display: none !important; }
   @page {
     size: A4;
     margin: 12mm;
