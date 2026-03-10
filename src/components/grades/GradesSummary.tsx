@@ -423,21 +423,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                               </th>
                               <th className={cn(
                                 "text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[45px] bg-primary/5",
-                                editMode?.type === "column" && (editMode as any).categoryId === cat.id && "bg-primary/20 ring-2 ring-primary/30"
+                                editMode && editMode.categoryId === cat.id && "bg-primary/20 ring-2 ring-primary/30"
                               )}>
-                                <div className="flex flex-col items-center gap-1">
-                                  <span>الدرجة</span>
-                                  {!editMode && (
-                                    <Button
-                                      size="sm" variant="ghost"
-                                      className="h-5 w-5 p-0 hover:bg-primary/20"
-                                      onClick={() => startColumnEdit(cat.id, group.id, group.students)}
-                                      title="تعديل العمود"
-                                    >
-                                      <Pencil className="h-3 w-3 text-primary" />
-                                    </Button>
-                                  )}
-                                </div>
+                                الدرجة
                               </th>
                             </React.Fragment>
                           ))}
