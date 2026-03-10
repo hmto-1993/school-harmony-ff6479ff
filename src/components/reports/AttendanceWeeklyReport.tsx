@@ -298,9 +298,7 @@ export default function AttendanceWeeklyReport({
     doc.save(`تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Print removed per user request
 
   if (studentRows.length === 0) return null;
 
