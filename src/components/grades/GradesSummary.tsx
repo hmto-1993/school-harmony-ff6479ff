@@ -594,25 +594,32 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasClasswork && (
                             <>
                               {classworkCats.map(cat => {
+                                const isScoreEditing = 
+                                  (editMode === "row" && editingStudent === sg.student_id) ||
+                                  (editMode === "column" && editingColumnCatId === cat.id);
+                                const editVal = editMode === "row" ? rowEdits[cat.id] : colEdits[sg.student_id];
                                 return (
                                   <React.Fragment key={cat.id}>
-                                    <td className={cn(
-                                      "p-2 text-center border-l border-border/10",
-                                      editMode === "column" && editingColumnCatId === cat.id && "bg-primary/5"
-                                    )}>
+                                    <td className="p-2 text-center border-l border-border/10">
                                       {renderCell(cat)}
                                     </td>
-                                    <td className="p-1.5 text-center border-l border-border/10 bg-primary/5">
-                                      <InlineScoreInput
-                                        value={sg.manualScores[cat.id] ?? 0}
-                                        maxScore={Number(cat.max_score)}
-                                        studentId={sg.student_id}
-                                        categoryId={cat.id}
-                                        recordId={sg.manualScoreIds[cat.id]}
-                                        period={selectedPeriod}
-                                        userId={user?.id || ""}
-                                        onSaved={loadAllData}
-                                      />
+                                    <td className={cn(
+                                      "p-1.5 text-center border-l border-border/10",
+                                      isScoreEditing ? "bg-primary/10 ring-1 ring-inset ring-primary/30" : "bg-primary/5"
+                                    )}>
+                                      {isScoreEditing ? (
+                                        <Input
+                                          type="number" min={0} max={Number(cat.max_score)}
+                                          value={editVal ?? ""}
+                                          onChange={(e) => {
+                                            if (editMode === "row") handleRowGrade(cat.id, e.target.value, Number(cat.max_score));
+                                            else handleColGrade(sg.student_id, e.target.value, Number(cat.max_score));
+                                          }}
+                                          className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-primary">{sg.manualScores[cat.id] ?? 0}</span>
+                                      )}
                                     </td>
                                   </React.Fragment>
                                 );
