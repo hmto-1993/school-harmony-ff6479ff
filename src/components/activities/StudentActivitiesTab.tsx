@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useQuizColors, colorStyles } from "@/hooks/use-quiz-colors";
+import { SignedFileLink } from "@/components/activities/SignedFileLink";
+import { SignedImage } from "@/components/activities/SignedImage";
 import {
   ClipboardList, FileUp, Download, Loader2, Upload,
   CheckCircle2, ArrowRight, AlertCircle, Send, Timer
@@ -89,11 +91,11 @@ function ActivityItem({ activity, completedQuizzes, uploadingFor, onOpenQuiz, on
           </Button>
         )}
         {activity.file_url && (
-          <a href={activity.file_url} target="_blank" rel="noopener noreferrer">
+          <SignedFileLink bucket="activities" path={activity.file_url}>
             <Button size="sm" variant="outline" className="gap-1.5 rounded-xl">
               <Download className="h-4 w-4" /> تحميل الملف
             </Button>
-          </a>
+          </SignedFileLink>
         )}
         {activity.allow_student_uploads && (
           <label className="cursor-pointer">
@@ -305,7 +307,7 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
                             </Badge>
                           </div>
                         </div>
-                        {q.image_url && <img src={q.image_url} alt="" className="max-h-48 rounded-xl object-contain mx-auto" />}
+                        {q.image_url && <SignedImage bucket="activities" path={q.image_url} className="max-h-48 rounded-xl object-contain mx-auto" />}
                       </div>
                     );
                   })()}

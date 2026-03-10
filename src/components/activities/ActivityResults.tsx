@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { SignedFileLink } from "@/components/activities/SignedFileLink";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,9 +138,9 @@ export default function ActivityResults({ activityId, activityType, classId, cla
                         {fSub.length > 0 ? (
                           <div className="flex flex-col items-center gap-1">
                             {fSub.map(f => (
-                              <a key={f.id} href={f.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                              <SignedFileLink key={f.id} bucket="activities" path={f.file_url} className="text-xs text-primary hover:underline flex items-center gap-1">
                                 <FileText className="h-3 w-3" /> {f.file_name}
-                              </a>
+                              </SignedFileLink>
                             ))}
                           </div>
                         ) : "-"}

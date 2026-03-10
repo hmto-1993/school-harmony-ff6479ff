@@ -44,16 +44,25 @@ Deno.serve(async (req) => {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
                req.headers.get("cf-connecting-ip") || "unknown";
 
-    // Rate limiting: check recent failed attempts for this national_id
+    // Rate limiting: check recent failed attempts by national_id AND by IP
     const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
-    const { count } = await supabase
-      .from("student_login_attempts")
-      .select("*", { count: "exact", head: true })
-      .eq("national_id", national_id)
-      .eq("success", false)
-      .gte("attempted_at", windowStart);
+    
+    const [{ count: idCount }, { count: ipCount }] = await Promise.all([
+      supabase
+        .from("student_login_attempts")
+        .select("*", { count: "exact", head: true })
+        .eq("national_id", national_id)
+        .eq("success", false)
+        .gte("attempted_at", windowStart),
+      supabase
+        .from("student_login_attempts")
+        .select("*", { count: "exact", head: true })
+        .eq("ip_address", ip)
+        .eq("success", false)
+        .gte("attempted_at", windowStart),
+    ]);
 
-    if ((count ?? 0) >= MAX_ATTEMPTS) {
+    if ((idCount ?? 0) >= MAX_ATTEMPTS || (ipCount ?? 0) >= MAX_ATTEMPTS * 3) {
       return new Response(
         JSON.stringify({ error: `تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة بعد ${WINDOW_MINUTES} دقيقة` }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }

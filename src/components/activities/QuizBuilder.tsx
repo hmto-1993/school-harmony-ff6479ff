@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, ImagePlus, GripVertical, CheckCircle2 } from "lucide-react";
+import { SignedImage } from "@/components/activities/SignedImage";
 import { cn } from "@/lib/utils";
 
 export interface QuizQuestion {
@@ -61,8 +62,8 @@ export default function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
     const safeName = `quiz_${Date.now()}_${Math.random().toString(36).substring(2, 8)}${ext}`;
     const { error } = await supabase.storage.from("activities").upload(`quiz-images/${safeName}`, file);
     if (!error) {
-      const { data: urlData } = supabase.storage.from("activities").getPublicUrl(`quiz-images/${safeName}`);
-      updateQuestion(qIndex, { image_url: urlData.publicUrl });
+      // Store path for private bucket — signed URLs generated on demand
+      updateQuestion(qIndex, { image_url: `quiz-images/${safeName}` });
     }
     setUploading(null);
   };
@@ -108,7 +109,7 @@ export default function QuizBuilder({ questions, onChange }: QuizBuilderProps) {
             {/* Image upload */}
             <div className="flex items-center gap-2">
               {q.image_url && (
-                <img src={q.image_url} alt="" className="h-16 w-16 rounded-xl object-cover border border-border/30" />
+                <SignedImage bucket="activities" path={q.image_url} className="h-16 w-16 rounded-xl object-cover border border-border/30" />
               )}
               <label className="cursor-pointer">
                 <input

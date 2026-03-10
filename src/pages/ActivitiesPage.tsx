@@ -23,6 +23,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
 import ActivityResults from "@/components/activities/ActivityResults";
+import { SignedFileLink } from "@/components/activities/SignedFileLink";
 
 interface ClassInfo { id: string; name: string; grade: string; section: string; }
 interface Activity {
@@ -126,8 +127,8 @@ export default function ActivitiesPage() {
         setCreating(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from("activities").getPublicUrl(`files/${safeName}`);
-      fileUrl = urlData.publicUrl;
+      // Store path for private bucket — signed URLs generated on demand
+      fileUrl = `files/${safeName}`;
       fileName = selectedFile.name;
     }
 
@@ -338,10 +339,10 @@ export default function ActivitiesPage() {
                   </Badge>
                 )}
                 <span className="text-xs text-muted-foreground">{format(new Date(activity.created_at), "yyyy/MM/dd")}</span>
-                {activity.file_name && (
-                  <a href={activity.file_url!} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+                {activity.file_name && activity.file_url && (
+                  <SignedFileLink bucket="activities" path={activity.file_url} className="text-xs text-primary hover:underline flex items-center gap-1">
                     <FileText className="h-3 w-3" /> {activity.file_name}
-                  </a>
+                  </SignedFileLink>
                 )}
               </div>
             </div>
