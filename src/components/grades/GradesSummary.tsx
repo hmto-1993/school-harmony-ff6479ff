@@ -33,8 +33,6 @@ interface GradesSummaryProps {
   categoryGroupFilter?: string;
 }
 
-type EditMode = "row" | "column" | null;
-
 // Inline editable score input that saves on blur independently
 function InlineScoreInput({ value, maxScore, studentId, categoryId, recordId, period, userId, onSaved }: {
   value: number; maxScore: number; studentId: string; categoryId: string; recordId?: string; period: number; userId: string; onSaved: () => void;
