@@ -260,10 +260,10 @@
     color-scheme: light;
   }
 
-  body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
-  body * { visibility: hidden; }
-  .print-area, .print-area * { visibility: visible !important; display: revert; }
-  .print-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px 28px; }
+  body, html { background: white !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
+  body > *:not(.print-area):not(#absence-print-area) { display: none !important; }
+  .print-area, #absence-print-area { display: block !important; visibility: visible !important; position: static !important; width: 100% !important; padding: 20px 28px !important; }
+  .print-area *, #absence-print-area * { visibility: visible !important; }
   .print\:hidden { display: none !important; }
   .print\:shadow-none { box-shadow: none !important; }
   .print\:block { display: block !important; }
