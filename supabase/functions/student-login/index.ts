@@ -8,6 +8,19 @@ const corsHeaders = {
 const MAX_ATTEMPTS = 5;
 const WINDOW_MINUTES = 15;
 
+async function generateSessionToken(studentId: string, issuedAt: number, secret: string): Promise<string> {
+  const data = `${studentId}:${issuedAt}`;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -80,6 +93,10 @@ Deno.serve(async (req) => {
       student_id: student.id,
       class_id: student.class_id,
     });
+
+    // Generate HMAC session token for subsequent authenticated calls
+    const issuedAt = Date.now();
+    const sessionToken = await generateSessionToken(student.id, issuedAt, serviceRoleKey);
 
     // Fetch visibility settings
     const { data: visSettings } = await supabase
@@ -171,6 +188,8 @@ Deno.serve(async (req) => {
         behaviors,
         attendance,
         visibility,
+        session_token: sessionToken,
+        session_issued_at: issuedAt,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
