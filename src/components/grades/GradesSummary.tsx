@@ -45,6 +45,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [tempEdits, setTempEdits] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [fillAllValue, setFillAllValue] = useState("");
+  const [fillAllCatId, setFillAllCatId] = useState<string>("");
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
