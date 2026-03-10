@@ -3,8 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, FileText, FileSpreadsheet, Upload, BookOpen, ClipboardCheck, Printer } from "lucide-react";
+import { AlertTriangle, FileText, FileSpreadsheet, Upload, BookOpen, ClipboardCheck, Settings2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import LessonSlotDialog from "./LessonSlotDialog";
 
@@ -84,6 +86,7 @@ export default function AttendanceWeeklyReport({
   const tableRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
   const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
 
   useEffect(() => {
@@ -160,6 +163,30 @@ export default function AttendanceWeeklyReport({
 
     return { weeks, studentRows, totalPeriodsHeld };
   }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
+
+  // Initialize selectedWeeks when weeks change
+  useEffect(() => {
+    if (weeks.length > 0 && selectedWeeks.size === 0) {
+      setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+    }
+  }, [weeks]);
+
+  const filteredWeeks = useMemo(() => {
+    if (selectedWeeks.size === 0) return weeks;
+    return weeks.filter(w => selectedWeeks.has(w.weekNum));
+  }, [weeks, selectedWeeks]);
+
+  const toggleWeek = (weekNum: number) => {
+    setSelectedWeeks(prev => {
+      const next = new Set(prev);
+      if (next.has(weekNum)) next.delete(weekNum);
+      else next.add(weekNum);
+      return next;
+    });
+  };
+
+  const selectAllWeeks = () => setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+  const deselectAllWeeks = () => setSelectedWeeks(new Set());
 
   const handleExportExcel = async () => {
     const XLSX = await import("xlsx");
@@ -271,9 +298,7 @@ export default function AttendanceWeeklyReport({
     doc.save(`تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Print removed per user request
 
   if (studentRows.length === 0) return null;
 
@@ -325,10 +350,35 @@ export default function AttendanceWeeklyReport({
                   </button>
                 </div>
               )}
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
-                <Printer className="h-4 w-4" />
-                طباعة
-              </Button>
+              {/* Week selector popover */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Settings2 className="h-4 w-4" />
+                    الأسابيع ({selectedWeeks.size}/{weeks.length})
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-3" dir="rtl">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-semibold">اختر الأسابيع</span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={selectAllWeeks}>الكل</Button>
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={deselectAllWeeks}>لا شيء</Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 max-h-48 overflow-auto">
+                    {weeks.map(w => (
+                      <label key={w.weekNum} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                        <Checkbox
+                          checked={selectedWeeks.has(w.weekNum)}
+                          onCheckedChange={() => toggleWeek(w.weekNum)}
+                        />
+                        الأسبوع {w.weekNum}
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5">
@@ -365,14 +415,14 @@ export default function AttendanceWeeklyReport({
             className="attendance-legend flex items-center justify-between rounded-md px-4 py-2 mb-3"
             dir="rtl"
             style={{
-              background: "#faf5e6",
-              border: "2px solid #c9b97a",
+              background: "#e8edf3",
+              border: "2px solid #8a9bb5",
             }}
           >
-            <span className="text-xs font-bold" style={{ color: "#6b5c2e" }}>مفتاح الرموز</span>
+            <span className="text-xs font-bold" style={{ color: "#2c3e50" }}>مفتاح الرموز</span>
             <div className="flex items-center gap-6">
               {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
-                <span key={key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#3d3520" }}>
+                <span key={key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#2c3e50" }}>
                   <span
                     style={{
                       display: "inline-flex",
@@ -413,14 +463,14 @@ export default function AttendanceWeeklyReport({
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ minWidth: 36, width: 40 }}
+                    style={{ minWidth: 32, width: 36 }}
                   >م</th>
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ minWidth: 160, textAlign: "right" }}
+                    style={{ textAlign: "right", whiteSpace: "nowrap" }}
                   >اسم الطالب</th>
-                  {weeks.map((w) => (
+                  {filteredWeeks.map((w) => (
                     <th
                       key={w.weekNum}
                       colSpan={slotsPerWeek}
@@ -429,10 +479,13 @@ export default function AttendanceWeeklyReport({
                       الأسبوع {w.weekNum}
                     </th>
                   ))}
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#16a34a" }}>حاضر</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#dc2626" }}>غائب</th>
+                  <th className="logbook-th logbook-th-total" rowSpan={2} style={{ color: "#d97706" }}>متأخر</th>
                 </tr>
                 {/* Session sub-header row */}
                 <tr>
-                  {weeks.map((w) =>
+                  {filteredWeeks.map((w) =>
                     Array.from({ length: slotsPerWeek }, (_, i) => (
                       <th
                         key={`${w.weekNum}-s${i}`}
@@ -457,7 +510,7 @@ export default function AttendanceWeeklyReport({
                       {s.name}
                       {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5" style={{ color: "#ef4444" }} />}
                     </td>
-                    {weeks.map((w) =>
+                    {filteredWeeks.map((w) =>
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
                         const cfg = status ? STATUS_CONFIG[status] : null;
@@ -502,6 +555,9 @@ export default function AttendanceWeeklyReport({
                         );
                       })
                     )}
+                    <td className="logbook-td logbook-td-total" style={{ color: "#16a34a", fontWeight: 700 }}>{s.totalPresent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#dc2626", fontWeight: 700 }}>{s.totalAbsent}</td>
+                    <td className="logbook-td logbook-td-total" style={{ color: "#d97706", fontWeight: 700 }}>{s.totalLate}</td>
                   </tr>
                 ))}
               </tbody>
@@ -552,58 +608,72 @@ export default function AttendanceWeeklyReport({
       <style>{`
         /* Logbook table styling */
         .logbook-th {
-          background: #f5f0e1;
-          color: #3d3520;
+          background: #e8edf3;
+          color: #2c3e50;
           font-weight: 700;
           text-align: center;
           padding: 8px 6px;
-          border: 2px solid #a89968;
+          border: 2px solid #8a9bb5;
           font-size: 13px;
           white-space: nowrap;
         }
         .logbook-th-week {
-          background: #efe8d0;
+          background: #dce3ed;
           font-size: 12px;
           letter-spacing: 0 !important;
         }
         .logbook-th-session {
-          background: #f5f0e1;
+          background: #e8edf3;
           font-size: 10px;
           padding: 3px 2px;
           min-width: 28px;
           width: 28px;
-          color: #8a7a50;
-          border: 2px solid #a89968;
+          color: #5a6d82;
+          border: 2px solid #8a9bb5;
+        }
+        .logbook-th-total {
+          background: #e8edf3;
+          font-size: 11px;
+          min-width: 40px;
+          width: 44px;
+          font-weight: 800;
         }
         .logbook-td {
-          border: 1.5px solid #c9b97a;
+          border: 1.5px solid #a0b0c4;
           padding: 4px 3px;
           text-align: center;
           vertical-align: middle;
         }
         .logbook-td-num {
           font-weight: 700;
-          color: #3d3520;
-          width: 36px;
-          background: #faf8f0;
+          color: #2c3e50;
+          width: 32px;
+          background: #f0f3f7;
           font-size: 13px;
         }
         .logbook-td-name {
           text-align: right;
-          padding-right: 10px;
-          padding-left: 6px;
+          padding-right: 8px;
+          padding-left: 4px;
           font-weight: 700;
-          color: #1a1510;
+          color: #1a2533;
           white-space: nowrap;
-          background: #faf8f0;
-          font-size: 13px;
+          background: #f0f3f7;
+          font-size: 12px;
+          max-width: 0;
+          width: auto;
         }
         .logbook-td-dot {
           padding: 4px 2px;
           min-width: 28px;
         }
-        .logbook-row-even { background: #fffdf5; }
-        .logbook-row-odd  { background: #faf5e6; }
+        .logbook-td-total {
+          background: #f0f3f7;
+          font-size: 13px;
+          min-width: 40px;
+        }
+        .logbook-row-even { background: #f8fafc; }
+        .logbook-row-odd  { background: #eef2f7; }
         .logbook-row-risk { background: #fef2f2; }
         .logbook-row-risk .logbook-td-name,
         .logbook-row-risk .logbook-td-num {
