@@ -61,7 +61,7 @@ function InlineScoreInput({ value, maxScore, studentId, categoryId, recordId, pe
       onBlur={handleBlur}
       onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
       disabled={saving}
-      className="w-14 mx-auto text-center h-7 text-xs" dir="ltr"
+      className="w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr"
     />
   );
 }
