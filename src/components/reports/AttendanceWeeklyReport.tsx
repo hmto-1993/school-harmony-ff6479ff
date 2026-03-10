@@ -419,10 +419,10 @@ export default function AttendanceWeeklyReport({
               border: "2px solid #8a9bb5",
             }}
           >
-            <span className="text-xs font-bold" style={{ color: "#6b5c2e" }}>مفتاح الرموز</span>
+            <span className="text-xs font-bold" style={{ color: "#2c3e50" }}>مفتاح الرموز</span>
             <div className="flex items-center gap-6">
               {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
-                <span key={key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#3d3520" }}>
+                <span key={key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#2c3e50" }}>
                   <span
                     style={{
                       display: "inline-flex",
