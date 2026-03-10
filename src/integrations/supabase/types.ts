@@ -1111,7 +1111,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      quiz_questions_student: {
+        Row: {
+          activity_id: string | null
+          id: string | null
+          image_url: string | null
+          options: Json | null
+          question_text: string | null
+          question_type: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          activity_id?: string | null
+          id?: string | null
+          image_url?: string | null
+          options?: Json | null
+          question_text?: string | null
+          question_type?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          activity_id?: string | null
+          id?: string | null
+          image_url?: string | null
+          options?: Json | null
+          question_text?: string | null
+          question_type?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
