@@ -310,7 +310,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 </div>
                 {/* Edit / Save / Cancel buttons */}
                 
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
@@ -322,12 +322,48 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     </Button>
                   ) : (
                     <>
-                      <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1">
-                        <Check className="h-3.5 w-3.5" /> حفظ
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1">
-                        <X className="h-3.5 w-3.5" /> إلغاء
-                      </Button>
+                      {/* Fill all controls */}
+                      <div className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
+                        <Select value={fillAllCatId} onValueChange={setFillAllCatId}>
+                          <SelectTrigger className="h-7 w-auto min-w-[100px] text-xs border-0 bg-transparent">
+                            <SelectValue placeholder="اختر الفئة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {classworkCats.map(cat => (
+                              <SelectItem key={cat.id} value={cat.id}>{cat.name} (من {Number(cat.max_score)})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="number" min={0}
+                          placeholder="الدرجة"
+                          value={fillAllValue}
+                          onChange={(e) => setFillAllValue(e.target.value)}
+                          className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          dir="ltr"
+                        />
+                        <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
+                          if (!fillAllCatId || fillAllValue === "") return;
+                          const cat = classworkCats.find(c => c.id === fillAllCatId);
+                          if (!cat) return;
+                          const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                          const newEdits = { ...tempEdits };
+                          group.students.forEach(s => {
+                            newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
+                          });
+                          setTempEdits(newEdits);
+                        }}>
+                          <ArrowDown className="h-3 w-3" /> ملء الكل
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1">
+                          <Check className="h-3.5 w-3.5" /> حفظ
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1">
+                          <X className="h-3.5 w-3.5" /> إلغاء
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
