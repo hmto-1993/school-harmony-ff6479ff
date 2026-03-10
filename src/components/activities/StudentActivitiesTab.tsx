@@ -173,7 +173,7 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       return;
     }
     const { data: questions } = await supabase
-      .from("quiz_questions")
+      .from("quiz_questions_student" as any)
       .select("*")
       .eq("activity_id", activity.id)
       .order("sort_order");
@@ -189,24 +189,30 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
     setSubmitting(true);
     setTimerActive(false);
 
-    let score = 0;
-    const total = selectedQuiz.questions.length;
-    selectedQuiz.questions.forEach(q => {
-      if (quizAnswers[q.id] === q.correct_answer) score++;
+    // Grade server-side via edge function
+    const sessionToken = sessionStorage.getItem("student_session_token");
+    const sessionIssuedAt = Number(sessionStorage.getItem("student_session_issued_at"));
+
+    const { data, error } = await supabase.functions.invoke("grade-quiz", {
+      body: {
+        activity_id: selectedQuiz.id,
+        student_id: studentId,
+        answers: quizAnswers,
+        session_token: sessionToken,
+        session_issued_at: sessionIssuedAt,
+      },
     });
 
-    await supabase.from("quiz_submissions").insert({
-      activity_id: selectedQuiz.id,
-      student_id: studentId,
-      answers: quizAnswers,
-      score,
-      total,
-    } as any);
+    if (error || data?.error) {
+      toast({ title: "خطأ", description: data?.error || error?.message || "فشل تسليم الاختبار", variant: "destructive" });
+      setSubmitting(false);
+      return;
+    }
 
-    setQuizResult({ score, total });
+    setQuizResult({ score: data.score, total: data.total });
     setCompletedQuizzes(prev => new Set(prev).add(selectedQuiz.id));
     setSubmitting(false);
-  }, [selectedQuiz, quizAnswers, submitting, studentId]);
+  }, [selectedQuiz, quizAnswers, submitting, studentId, toast]);
 
   const handleTimerExpire = useCallback(() => {
     toast({ title: "⏰ انتهى الوقت!", description: "تم تسليم الاختبار تلقائياً" });
