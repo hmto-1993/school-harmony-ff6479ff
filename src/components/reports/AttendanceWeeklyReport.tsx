@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, FileText, FileSpreadsheet, Upload, BookOpen, ClipboardCheck } from "lucide-react";
+import { AlertTriangle, FileText, FileSpreadsheet, Upload, BookOpen, ClipboardCheck, Printer } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import LessonSlotDialog from "./LessonSlotDialog";
@@ -38,12 +38,12 @@ interface Props {
   onLessonUpdated?: () => void;
 }
 
-const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
-  present: { color: "#22c55e", label: "حاضر" },
-  absent: { color: "#ef4444", label: "غائب" },
-  sick_leave: { color: "#3b82f6", label: "مستأذن" },
-  late: { color: "#f59e0b", label: "متأخر" },
-  early_leave: { color: "#3b82f6", label: "خروج مبكر" },
+const STATUS_CONFIG: Record<string, { color: string; printColor: string; label: string; dotChar: string }> = {
+  present:    { color: "#22c55e", printColor: "#16a34a", label: "حاضر",      dotChar: "◉" },
+  absent:     { color: "#ef4444", printColor: "#dc2626", label: "غائب",      dotChar: "●" },
+  sick_leave: { color: "#3b82f6", printColor: "#2563eb", label: "مستأذن",    dotChar: "●" },
+  late:       { color: "#f59e0b", printColor: "#d97706", label: "متأخر",     dotChar: "●" },
+  early_leave:{ color: "#3b82f6", printColor: "#2563eb", label: "خروج مبكر", dotChar: "●" },
 };
 
 const DEFAULT_ALERT_THRESHOLD = 0.2;
@@ -86,7 +86,6 @@ export default function AttendanceWeeklyReport({
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
   const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
 
-  // Fetch threshold from settings
   useEffect(() => {
     supabase
       .from("site_settings")
@@ -98,7 +97,6 @@ export default function AttendanceWeeklyReport({
       });
   }, []);
 
-  // Build lesson lookup: key = "weekNum-dayIndex-slotIndex"
   const lessonLookup = useMemo(() => {
     const map = new Map<string, LessonPlanData>();
     lessonPlans.forEach((lp) => {
@@ -109,7 +107,6 @@ export default function AttendanceWeeklyReport({
 
   const { weeks, studentRows, totalPeriodsHeld } = useMemo(() => {
     const fromDate = new Date(dateFrom);
-
     const dateSet = new Set(attendanceData.map((r) => r.date));
     const allDates = Array.from(dateSet).sort();
 
@@ -208,7 +205,6 @@ export default function AttendanceWeeklyReport({
     doc.setFont("Amiri", "normal");
     doc.text(`${classDisplayName || ""} | من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
-    // Legend bar
     const legendY = startY + 12;
     doc.setFontSize(7);
     const legendEntries = [
@@ -233,10 +229,9 @@ export default function AttendanceWeeklyReport({
     const weekGroupHeaders = weeks.map((w) => ({
       content: `الأسبوع ${w.weekNum}`,
       colSpan: Math.min(w.dates.length, periodsPerWeek),
-      styles: { halign: "center" as const, fillColor: [230, 236, 244] as [number, number, number], textColor: [50, 50, 50] as [number, number, number], fontSize: 7 },
+      styles: { halign: "center" as const, fillColor: [245, 240, 225] as [number, number, number], textColor: [50, 50, 50] as [number, number, number], fontSize: 7 },
     }));
 
-    // RTL order: weeks (left) <- name <- # (right)
     const head = [[
       ...weekGroupHeaders.slice().reverse(),
       { content: "اسم الطالب", styles: { halign: "right" as const } },
@@ -249,7 +244,7 @@ export default function AttendanceWeeklyReport({
         return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
-          return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.color) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
+          return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
         });
       });
       return [
@@ -263,9 +258,9 @@ export default function AttendanceWeeklyReport({
       startY: legendY + 5,
       head, body,
       ...tableStyles,
-      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [220, 225, 230], lineWidth: 0.2 },
-      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [230, 236, 244], textColor: [50, 50, 50] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
+      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [160, 150, 130], lineWidth: 0.3 },
+      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [245, 240, 225], textColor: [50, 50, 50] },
+      alternateRowStyles: { fillColor: [252, 250, 245] },
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
           data.cell.styles.fillColor = [254, 242, 242];
@@ -276,216 +271,392 @@ export default function AttendanceWeeklyReport({
     doc.save(`تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (studentRows.length === 0) return null;
 
   const atRiskCount = studentRows.filter((s) => s.isAtRisk).length;
+  const slotsPerWeek = periodsPerWeek;
 
   return (
-    <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div>
-            <CardTitle className="text-base flex items-center gap-2">
-              📊 تقرير الحضور الأسبوعي
-              {classDisplayName && <Badge variant="secondary" className="text-xs font-normal">{classDisplayName}</Badge>}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground mt-1">
-              من {dateFrom} إلى {dateTo} · {totalPeriodsHeld} حصة · الحد: {periodsPerWeek}/أسبوع
-            </p>
-          </div>
-          <div className="flex items-center gap-2 print:hidden">
-            {atRiskCount > 0 && (
-              <Badge variant="destructive" className="gap-1">
-                <AlertTriangle className="h-3 w-3" />
-                {atRiskCount} طالب في خطر
-              </Badge>
-            )}
-            {/* View Toggle */}
-            {lessonPlans.length > 0 && (
-              <div className="flex rounded-lg border border-border/50 overflow-hidden">
-                <button
-                  onClick={() => setViewMode("attendance")}
-                  className={cn(
-                    "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                    viewMode === "attendance" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                  )}
-                >
-                  <ClipboardCheck className="h-3.5 w-3.5" />
-                  الحضور
-                </button>
-                <button
-                  onClick={() => setViewMode("lessons")}
-                  className={cn(
-                    "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                    viewMode === "lessons" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                  )}
-                >
-                  <BookOpen className="h-3.5 w-3.5" />
-                  الدروس
-                </button>
-              </div>
-            )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <Upload className="h-4 w-4" />
-                  تصدير
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
-                  <FileSpreadsheet className="h-4 w-4" /> Excel
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
-                  <FileText className="h-4 w-4" /> PDF
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        {/* Legend bar - matches reference image */}
-        <div
-          className="flex items-center justify-between rounded-lg border border-border/40 px-4 py-2 mb-3 bg-muted/50"
-          dir="rtl"
-        >
-          <span className="text-xs font-bold text-muted-foreground">مفتاح الرموز</span>
-          <div className="flex items-center gap-5">
-            {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
-              <span key={key} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                <span style={{ color: val.color, fontSize: 18, lineHeight: 1 }}>●</span>
-                {val.label}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Table */}
-        <div ref={tableRef} className="overflow-auto rounded-lg border border-border/40 max-h-[600px]">
-          <table className="w-full border-collapse" dir="rtl" style={{ fontSize: 13 }}>
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-muted">
-                <th
-                  className="border border-border/30 px-3 py-2.5 text-center font-bold text-muted-foreground bg-muted"
-                  rowSpan={2}
-                  style={{ minWidth: 36 }}
-                >م</th>
-                <th
-                  className="border border-border/30 px-3 py-2.5 text-right font-bold text-muted-foreground bg-muted"
-                  rowSpan={2}
-                  style={{ minWidth: 160 }}
-                >اسم الطالب</th>
-                {weeks.map((w) => (
-                  <th
-                    key={w.weekNum}
-                    colSpan={periodsPerWeek}
-                    className="border border-border/30 px-2 py-2 text-center font-bold bg-muted text-foreground"
+    <>
+      <Card className="weekly-attendance-report border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <CardHeader className="pb-2 print:hidden">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2">
+                📊 تقرير الحضور الأسبوعي
+                {classDisplayName && <Badge variant="secondary" className="text-xs font-normal">{classDisplayName}</Badge>}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                من {dateFrom} إلى {dateTo} · {totalPeriodsHeld} حصة · الحد: {periodsPerWeek}/أسبوع
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {atRiskCount > 0 && (
+                <Badge variant="destructive" className="gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {atRiskCount} طالب في خطر
+                </Badge>
+              )}
+              {lessonPlans.length > 0 && (
+                <div className="flex rounded-lg border border-border/50 overflow-hidden">
+                  <button
+                    onClick={() => setViewMode("attendance")}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                      viewMode === "attendance" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
+                    )}
                   >
-                    الأسبوع {w.weekNum}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {studentRows.map((s, idx) => (
-                <tr
-                  key={s.id}
-                  className={cn(
-                    s.isAtRisk ? "bg-destructive/10" : idx % 2 === 0 ? "bg-card" : "bg-muted/30",
-                  )}
-                >
-                  <td className="border border-border/20 px-2 py-2.5 text-center text-foreground font-semibold">{idx + 1}</td>
-                  <td className="border border-border/20 px-4 py-2.5 text-right font-bold whitespace-nowrap text-foreground">
-                    {s.name}
-                    {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5 text-destructive" />}
-                  </td>
+                    <ClipboardCheck className="h-3.5 w-3.5" />
+                    الحضور
+                  </button>
+                  <button
+                    onClick={() => setViewMode("lessons")}
+                    className={cn(
+                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
+                      viewMode === "lessons" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
+                    )}
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    الدروس
+                  </button>
+                </div>
+              )}
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
+                <Printer className="h-4 w-4" />
+                طباعة
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Upload className="h-4 w-4" />
+                    تصدير
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4" /> Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                    <FileText className="h-4 w-4" /> PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          {/* ===== PRINT HEADER (hidden on screen) ===== */}
+          <div className="hidden print:block mb-4">
+            <div className="text-center mb-2">
+              <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>تقرير الحضور الأسبوعي</h1>
+              <p style={{ fontSize: 13, margin: "4px 0 0", color: "#555" }}>
+                {classDisplayName} — من {dateFrom} إلى {dateTo}
+              </p>
+            </div>
+          </div>
+
+          {/* ===== LEGEND BAR ===== */}
+          <div
+            className="attendance-legend flex items-center justify-between rounded-md px-4 py-2 mb-3"
+            dir="rtl"
+            style={{
+              background: "#faf5e6",
+              border: "2px solid #c9b97a",
+            }}
+          >
+            <span className="text-xs font-bold" style={{ color: "#6b5c2e" }}>مفتاح الرموز</span>
+            <div className="flex items-center gap-6">
+              {Object.entries(STATUS_CONFIG).filter(([k]) => k !== "early_leave").map(([key, val]) => (
+                <span key={key} className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: "#3d3520" }}>
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      backgroundColor: val.color,
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      border: "2px solid rgba(0,0,0,0.15)",
+                    }}
+                  >
+                    {key === "present" ? "✓" : key === "absent" ? "✕" : key === "late" ? "!" : "⏎"}
+                  </span>
+                  {val.label}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== TABLE ===== */}
+          <div ref={tableRef} className="overflow-auto rounded-md max-h-[600px] print:max-h-none print:overflow-visible attendance-table-wrapper">
+            <table
+              className="w-full attendance-logbook-table"
+              dir="rtl"
+              style={{
+                borderCollapse: "collapse",
+                fontSize: 13,
+              }}
+            >
+              <thead className="sticky top-0 z-10 print:sticky-none">
+                {/* Week group header row */}
+                <tr>
+                  <th
+                    className="logbook-th"
+                    rowSpan={2}
+                    style={{ minWidth: 36, width: 40 }}
+                  >م</th>
+                  <th
+                    className="logbook-th"
+                    rowSpan={2}
+                    style={{ minWidth: 160, textAlign: "right" }}
+                  >اسم الطالب</th>
+                  {weeks.map((w) => (
+                    <th
+                      key={w.weekNum}
+                      colSpan={slotsPerWeek}
+                      className="logbook-th logbook-th-week"
+                    >
+                      الأسبوع {w.weekNum}
+                    </th>
+                  ))}
+                </tr>
+                {/* Session sub-header row */}
+                <tr>
                   {weeks.map((w) =>
-                    Array.from({ length: periodsPerWeek }, (_, i) => {
-                      const status = s.weeks[w.weekNum]?.[i];
-                      const cfg = status ? STATUS_CONFIG[status] : null;
-                      // For lesson view, compute day_index from slot position
-                      const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
-                      const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
-                      const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
-                      const lesson = lessonLookup.get(lessonKey);
-
-                      const handleSlotClick = () => {
-                        setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
-                      };
-
-                      return (
-                        <td
-                          key={`${w.weekNum}-${i}`}
-                          className={cn("border border-border/15 text-center", lessonPlans.length > 0 && "cursor-pointer hover:bg-primary/5")}
-                          style={{ padding: "6px 2px", minWidth: viewMode === "lessons" ? 60 : 30 }}
-                          onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
-                          title={lesson?.lesson_title || undefined}
-                        >
-                          {viewMode === "attendance" ? (
-                            cfg ? (
-                              <span style={{ color: cfg.color, fontSize: 20, lineHeight: 1 }}>●</span>
-                            ) : (
-                              <span style={{ color: "#d1d5db", fontSize: 20, lineHeight: 1 }}>●</span>
-                            )
-                          ) : (
-                            lesson ? (
-                              <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "text-primary font-bold" : "text-foreground")}>
-                                {lesson.lesson_title}
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground">—</span>
-                            )
-                          )}
-                        </td>
-                      );
-                    })
+                    Array.from({ length: slotsPerWeek }, (_, i) => (
+                      <th
+                        key={`${w.weekNum}-s${i}`}
+                        className="logbook-th logbook-th-session"
+                      >
+                        {i + 1}
+                      </th>
+                    ))
                   )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {studentRows.map((s, idx) => (
+                  <tr
+                    key={s.id}
+                    className={cn(
+                      s.isAtRisk ? "logbook-row-risk" : idx % 2 === 0 ? "logbook-row-even" : "logbook-row-odd",
+                    )}
+                  >
+                    <td className="logbook-td logbook-td-num">{idx + 1}</td>
+                    <td className="logbook-td logbook-td-name">
+                      {s.name}
+                      {s.isAtRisk && <AlertTriangle className="inline h-3.5 w-3.5 mr-1.5" style={{ color: "#ef4444" }} />}
+                    </td>
+                    {weeks.map((w) =>
+                      Array.from({ length: slotsPerWeek }, (_, i) => {
+                        const status = s.weeks[w.weekNum]?.[i];
+                        const cfg = status ? STATUS_CONFIG[status] : null;
+                        const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
+                        const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
+                        const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
+                        const lesson = lessonLookup.get(lessonKey);
 
-        {/* Summary statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-          {[
-            { label: "إجمالي الحضور", value: studentRows.reduce((a, s) => a + s.totalPresent, 0), color: "#22c55e" },
-            { label: "إجمالي الغياب", value: studentRows.reduce((a, s) => a + s.totalAbsent, 0), color: "#ef4444" },
-            { label: "إجمالي التأخر", value: studentRows.reduce((a, s) => a + s.totalLate, 0), color: "#f59e0b" },
-            { label: "إجمالي الاستئذان", value: studentRows.reduce((a, s) => a + s.totalExcused, 0), color: "#3b82f6" },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-lg border border-border/40 p-3 text-center"
-              style={{ borderTop: `3px solid ${stat.color}` }}
-            >
-              <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-            </div>
-          ))}
-        </div>
+                        const handleSlotClick = () => {
+                          setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
+                        };
 
-        {atRiskCount > 0 && (
-          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm">
-            <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
-            <span className="text-destructive font-medium">
-              {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
-            </span>
+                        return (
+                          <td
+                            key={`${w.weekNum}-${i}`}
+                            className={cn("logbook-td logbook-td-dot", lessonPlans.length > 0 && "cursor-pointer")}
+                            onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
+                            title={lesson?.lesson_title || undefined}
+                          >
+                            {viewMode === "attendance" ? (
+                              <span
+                                className="session-dot"
+                                style={{
+                                  backgroundColor: cfg ? cfg.color : "#e5e0d0",
+                                  borderColor: cfg ? cfg.color : "#ccc5b0",
+                                }}
+                              >
+                                {cfg ? (
+                                  status === "present" ? "✓" : status === "absent" ? "✕" : status === "late" ? "!" : "⏎"
+                                ) : ""}
+                              </span>
+                            ) : (
+                              lesson ? (
+                                <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "font-bold" : "")} style={{ color: lesson.is_completed ? "#22c55e" : "#333" }}>
+                                  {lesson.lesson_title}
+                                </span>
+                              ) : (
+                                <span style={{ color: "#bbb", fontSize: 10 }}>—</span>
+                              )
+                            )}
+                          </td>
+                        );
+                      })
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-      </CardContent>
 
-      <LessonSlotDialog
-        open={slotDialog.open}
-        onOpenChange={(open) => setSlotDialog((prev) => ({ ...prev, open }))}
-        lesson={slotDialog.lesson}
-        weekNum={slotDialog.weekNum}
-        dayIndex={slotDialog.dayIndex}
-        slotIndex={slotDialog.slotIndex}
-        onUpdated={() => onLessonUpdated?.()}
-      />
-    </Card>
+          {/* ===== SUMMARY STATS (screen only) ===== */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 print:hidden">
+            {[
+              { label: "إجمالي الحضور", value: studentRows.reduce((a, s) => a + s.totalPresent, 0), color: "#22c55e" },
+              { label: "إجمالي الغياب", value: studentRows.reduce((a, s) => a + s.totalAbsent, 0), color: "#ef4444" },
+              { label: "إجمالي التأخر", value: studentRows.reduce((a, s) => a + s.totalLate, 0), color: "#f59e0b" },
+              { label: "إجمالي الاستئذان", value: studentRows.reduce((a, s) => a + s.totalExcused, 0), color: "#3b82f6" },
+            ].map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-lg border border-border/40 p-3 text-center"
+                style={{ borderTop: `3px solid ${stat.color}` }}
+              >
+                <p className="text-2xl font-bold" style={{ color: stat.color }}>{stat.value}</p>
+                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {atRiskCount > 0 && (
+            <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm print:hidden">
+              <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
+              <span className="text-destructive font-medium">
+                {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
+              </span>
+            </div>
+          )}
+        </CardContent>
+
+        <LessonSlotDialog
+          open={slotDialog.open}
+          onOpenChange={(open) => setSlotDialog((prev) => ({ ...prev, open }))}
+          lesson={slotDialog.lesson}
+          weekNum={slotDialog.weekNum}
+          dayIndex={slotDialog.dayIndex}
+          slotIndex={slotDialog.slotIndex}
+          onUpdated={() => onLessonUpdated?.()}
+        />
+      </Card>
+
+      {/* ===== LOGBOOK STYLES ===== */}
+      <style>{`
+        /* Logbook table styling */
+        .logbook-th {
+          background: #f5f0e1;
+          color: #3d3520;
+          font-weight: 700;
+          text-align: center;
+          padding: 8px 6px;
+          border: 2px solid #a89968;
+          font-size: 13px;
+          white-space: nowrap;
+        }
+        .logbook-th-week {
+          background: #efe8d0;
+          font-size: 12px;
+          letter-spacing: 0 !important;
+        }
+        .logbook-th-session {
+          background: #f5f0e1;
+          font-size: 10px;
+          padding: 3px 2px;
+          min-width: 28px;
+          width: 28px;
+          color: #8a7a50;
+          border: 2px solid #a89968;
+        }
+        .logbook-td {
+          border: 1.5px solid #c9b97a;
+          padding: 4px 3px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .logbook-td-num {
+          font-weight: 700;
+          color: #3d3520;
+          width: 36px;
+          background: #faf8f0;
+          font-size: 13px;
+        }
+        .logbook-td-name {
+          text-align: right;
+          padding-right: 10px;
+          padding-left: 6px;
+          font-weight: 700;
+          color: #1a1510;
+          white-space: nowrap;
+          background: #faf8f0;
+          font-size: 13px;
+        }
+        .logbook-td-dot {
+          padding: 4px 2px;
+          min-width: 28px;
+        }
+        .logbook-row-even { background: #fffdf5; }
+        .logbook-row-odd  { background: #faf5e6; }
+        .logbook-row-risk { background: #fef2f2; }
+        .logbook-row-risk .logbook-td-name,
+        .logbook-row-risk .logbook-td-num {
+          background: #fef2f2;
+        }
+
+        /* Session dot circle */
+        .session-dot {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          border: 2px solid;
+          color: #fff;
+          font-size: 10px;
+          font-weight: 800;
+          line-height: 1;
+        }
+
+        /* Legend print styling */
+        .attendance-legend { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+          .weekly-attendance-report {
+            box-shadow: none !important;
+            border: none !important;
+            background: white !important;
+            backdrop-filter: none !important;
+          }
+          .attendance-table-wrapper {
+            max-height: none !important;
+            overflow: visible !important;
+          }
+          .logbook-th, .logbook-th-week, .logbook-th-session,
+          .logbook-td, .logbook-td-num, .logbook-td-name,
+          .logbook-row-even, .logbook-row-odd, .logbook-row-risk,
+          .session-dot, .attendance-legend {
+            print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
+          }
+          thead { position: static !important; }
+          @page {
+            size: A4 landscape;
+            margin: 8mm;
+          }
+          /* Hide browser header/footer */
+          @page { margin-top: 5mm; margin-bottom: 5mm; }
+        }
+      `}</style>
+    </>
   );
 }
 
