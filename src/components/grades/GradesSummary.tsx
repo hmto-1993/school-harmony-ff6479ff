@@ -319,15 +319,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           if (!fillAllCatId || fillAllValue === "") return;
                           const newEdits = { ...tempEdits };
                           if (fillAllCatId === "__all__") {
-                            // Fill all categories for all students
+                            const allEditCats = [...classworkCats, ...examCats];
                             group.students.forEach(s => {
-                              classworkCats.forEach(cat => {
+                              allEditCats.forEach(cat => {
                                 const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
                                 newEdits[`${s.student_id}__${cat.id}`] = String(val);
                               });
                             });
                           } else {
-                            const cat = classworkCats.find(c => c.id === fillAllCatId);
+                            const cat = [...classworkCats, ...examCats].find(c => c.id === fillAllCatId);
                             if (!cat) return;
                             const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
                             group.students.forEach(s => {
