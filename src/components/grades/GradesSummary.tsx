@@ -106,11 +106,16 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     const studentIds = students.map((s) => s.id);
 
     let allGrades: any[] = [];
+    let allManualScores: any[] = [];
     if (studentIds.length > 0) {
-      const { data: gradesData } = await supabase
-        .from("grades").select("id, student_id, category_id, score, period")
-        .in("student_id", studentIds).eq("period", selectedPeriod);
+      const [{ data: gradesData }, { data: manualData }] = await Promise.all([
+        supabase.from("grades").select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds).eq("period", selectedPeriod),
+        supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds).eq("period", selectedPeriod),
+      ]);
       allGrades = gradesData || [];
+      allManualScores = (manualData as any[]) || [];
     }
 
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
@@ -119,18 +124,30 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id });
     });
 
+    const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
+    allManualScores.forEach((m: any) => {
+      if (!manualMap.has(m.student_id)) manualMap.set(m.student_id, new Map());
+      manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
+    });
+
     const classMap = new Map(cls.map((c) => [c.id, c.name]));
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id);
       const studentGradesMap = gradesMap.get(s.id) || new Map();
+      const studentManualMap = manualMap.get(s.id) || new Map();
       const grades: Record<string, number | null> = {};
       const gradeIds: Record<string, string> = {};
+      const manualScores: Record<string, number> = {};
+      const manualScoreIds: Record<string, string> = {};
 
       classCats.forEach((c) => {
         const g = studentGradesMap.get(c.id);
         grades[c.id] = g?.score ?? null;
         if (g?.id) gradeIds[c.id] = g.id;
+        const m = studentManualMap.get(c.id);
+        manualScores[c.id] = m?.score ?? 0;
+        if (m?.id) manualScoreIds[c.id] = m.id;
       });
 
       let total = 0, maxTotal = 0;
@@ -142,7 +159,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        grades, grade_ids: gradeIds, total: maxTotal > 0 ? `${total} / ${maxTotal}` : "—",
+        grades, grade_ids: gradeIds, manualScores, manualScoreIds,
+        total: maxTotal > 0 ? `${total} / ${maxTotal}` : "—",
       };
     });
 
