@@ -71,10 +71,8 @@ export default function AttendanceWeeklyReport({
   className: classDisplayName,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
-  const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
 
   useEffect(() => {
     supabase
