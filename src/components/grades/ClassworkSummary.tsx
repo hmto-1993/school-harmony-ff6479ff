@@ -254,7 +254,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const classMap = new Map(cls.map((c) => [c.id, c.name]));
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
-      const classCats = cats.filter((c) => c.class_id === s.class_id);
+      const classCats = cats.filter((c) => c.class_id === s.class_id || c.class_id === null);
       const studentGradesList = gradesListMap.get(s.id) || new Map();
       const studentManualMap = manualMap.get(s.id) || new Map();
       const dailySlots: Record<string, SlotLevel[]> = {};
@@ -367,7 +367,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     .map((cls) => ({
       ...cls,
       students: filteredRows.filter((r) => r.class_id === cls.id),
-      categories: allCategories.filter((c) => c.class_id === cls.id),
+      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
     }))
     .filter((g) => g.students.length > 0);
 
