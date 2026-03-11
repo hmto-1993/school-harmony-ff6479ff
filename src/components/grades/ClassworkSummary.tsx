@@ -21,12 +21,15 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
+type SlotLevel = "excellent" | "average" | "zero";
+
 interface SummaryRow {
   student_id: string;
   full_name: string;
   class_name: string;
   class_id: string;
-  dailyPoints: Record<string, number | null>;
+  dailySlots: Record<string, SlotLevel[]>;
+  dailyCumulativeScore: Record<string, number>;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
 }
