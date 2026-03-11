@@ -14,6 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { toast } from "@/hooks/use-toast";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
