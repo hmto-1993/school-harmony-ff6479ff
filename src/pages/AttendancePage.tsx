@@ -386,7 +386,7 @@ export default function AttendancePage() {
     }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "الحضور");
-    XLSX.writeFile(wb, `حضور_${className}_${date}.xlsx`);
+    safeWriteXLSX(wb, `حضور_${className}_${date}.xlsx`);
     toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
   };
 
