@@ -116,7 +116,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       let total = 0, maxTotal = 0;
       classCats.forEach((cat) => {
         maxTotal += Number(cat.max_score);
-        if (grades[cat.id] !== null && grades[cat.id] !== undefined) total += grades[cat.id]!;
+        total += manualScores[cat.id] ?? 0;
       });
 
       return {
@@ -195,11 +195,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     }))
     .filter((g) => g.students.length > 0);
 
-  const calcSubtotal = (grades: Record<string, number | null>, cats: CategoryInfo[]) => {
+  const calcSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
     let score = 0, max = 0;
     cats.forEach(cat => {
       max += Number(cat.max_score);
-      if (grades[cat.id] != null) score += grades[cat.id]!;
+      score += scores[cat.id] ?? 0;
     });
     return { score, max };
   };
@@ -238,15 +238,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 "المجموع",
               ];
               const rows = group.students.map((sg, i) => {
-                const cwSub = calcSubtotal(sg.grades, classworkCats);
-                const exSub = calcSubtotal(sg.grades, examCats);
+                const cwSub = calcSubtotal(sg.manualScores, classworkCats);
+                const exSub = calcSubtotal(sg.manualScores, examCats);
                 return [
                   String(i + 1), sg.full_name,
                   ...classworkCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
-                  ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...examCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
-                  ...otherCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...otherCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   sg.total,
                 ];
               });
@@ -412,10 +412,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     {group.students.map((sg, i) => {
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
-                      const currentGrades = sg.grades;
-                      const classworkSub = calcSubtotal(currentGrades, classworkCats);
-                      const examSub = calcSubtotal(currentGrades, examCats);
-                      const allSub = calcSubtotal(currentGrades, group.categories);
+                      const currentManual = sg.manualScores;
+                      const classworkSub = calcSubtotal(currentManual, classworkCats);
+                      const examSub = calcSubtotal(currentManual, examCats);
+                      const allSub = calcSubtotal(currentManual, group.categories);
 
                       return (
                         <tr key={sg.student_id} className={cn(
@@ -499,7 +499,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
                           {hasOther && otherCats.map(cat => (
                             <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                              {renderScore(currentGrades[cat.id])}
+                              {renderScore(sg.manualScores[cat.id] ?? null)}
                             </td>
                           ))}
 
