@@ -319,30 +319,6 @@ export default function AttendanceWeeklyReport({
                   {atRiskCount} طالب في خطر
                 </Badge>
               )}
-              {lessonPlans.length > 0 && (
-                <div className="flex rounded-lg border border-border/50 overflow-hidden">
-                  <button
-                    onClick={() => setViewMode("attendance")}
-                    className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                      viewMode === "attendance" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <ClipboardCheck className="h-3.5 w-3.5" />
-                    الحضور
-                  </button>
-                  <button
-                    onClick={() => setViewMode("lessons")}
-                    className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                      viewMode === "lessons" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    الدروس
-                  </button>
-                </div>
-              )}
               {/* Week selector popover */}
               <Popover>
                 <PopoverTrigger asChild>
