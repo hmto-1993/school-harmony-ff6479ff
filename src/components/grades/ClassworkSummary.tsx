@@ -91,10 +91,22 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
           row.push(String(sg.manualScores[cat.id] ?? 0));
           const points = sg.dailyPoints[cat.id];
           if (points != null) {
-            if (points >= Number(cat.max_score)) {
+            const max = Number(cat.max_score);
+            if (points >= max) {
               row.push("★");
             } else {
-              row.push(String(points));
+              // Build dot representation: ● for earned, ◐ for partial, ○ for not earned
+              const perDot = max <= 5 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
+              const totalDots = Math.ceil(max / perDot);
+              const filledDots = Math.floor(points / perDot);
+              const hasPartial = points % perDot > 0;
+              let dotStr = "";
+              for (let d = 0; d < totalDots; d++) {
+                if (d < filledDots) dotStr += "●";
+                else if (d === filledDots && hasPartial) dotStr += "◐";
+                else dotStr += "○";
+              }
+              row.push(dotStr);
             }
           } else {
             row.push("—");
@@ -105,15 +117,27 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         return row;
       });
 
+      const nameColIndex = headers.length - 2;
       autoTable(doc, {
         startY: startY + 15,
         head: [headers],
         body: rows,
         ...tableStyles,
-        styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 2 },
+        styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5 },
         headStyles: { ...tableStyles.headStyles, fontSize: 7 },
         columnStyles: {
-          [headers.length - 2]: { halign: "right" as const, cellWidth: "auto" },
+          [nameColIndex]: { halign: "right" as const, cellWidth: 35 },
+        },
+        didParseCell: (data: any) => {
+          if (data.section === "body") {
+            const text = data.cell.text?.[0] || "";
+            // Color dots/stars
+            if (text === "★") {
+              data.cell.styles.textColor = [234, 179, 8]; // yellow
+            } else if (text.includes("●") || text.includes("◐") || text.includes("○")) {
+              data.cell.styles.textColor = [16, 185, 129]; // emerald
+            }
+          }
         },
       });
 
