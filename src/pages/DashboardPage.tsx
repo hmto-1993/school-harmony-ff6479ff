@@ -131,6 +131,7 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-6">
           <AcademicCalendarWidget />
+          <WeekLessonsWidget />
           <SafeZoneCounter />
         </div>
       </div>
