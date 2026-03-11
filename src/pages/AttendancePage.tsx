@@ -674,6 +674,24 @@ export default function AttendancePage() {
                   <AlertTriangle className="h-4 w-4" />
                   تحديد الكل غائب
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5">
+                      <Upload className="h-4 w-4" />
+                      تصدير
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={exportAttendanceExcel} className="gap-2 cursor-pointer">
+                      <FileSpreadsheet className="h-4 w-4" />
+                      تصدير Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={exportAttendancePDF} className="gap-2 cursor-pointer">
+                      <FileText className="h-4 w-4" />
+                      تصدير PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <div className="relative flex-1 min-w-[160px] max-w-[280px]">
                   <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <Input
