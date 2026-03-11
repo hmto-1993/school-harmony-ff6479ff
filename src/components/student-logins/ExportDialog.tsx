@@ -178,7 +178,7 @@ export default function ExportDialog({
       });
     }
 
-    doc.save(`سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

@@ -311,7 +311,7 @@ export default function AttendanceWeeklyReport({
       },
     });
 
-    doc.save(`تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
   };
 
   // Print removed per user request

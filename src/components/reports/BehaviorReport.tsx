@@ -138,7 +138,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ...tableStyles,
       columnStyles: { 3: { halign: "right" } },
     });
-    doc.save(`تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
   };
 
   return (
