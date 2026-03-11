@@ -63,11 +63,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate file_url points to our Supabase Storage
-    const allowedPrefix = `${supabaseUrl}/storage/v1/object/public/`;
-    if (!file_url.startsWith(allowedPrefix)) {
+    // Validate file_url is a relative storage path (not a full URL)
+    if (file_url.startsWith("http")) {
       return new Response(
-        JSON.stringify({ error: "Invalid file URL" }),
+        JSON.stringify({ error: "Invalid file path — use relative storage path" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

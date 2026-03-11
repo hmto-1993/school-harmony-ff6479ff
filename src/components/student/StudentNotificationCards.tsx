@@ -618,10 +618,7 @@ export default function StudentNotificationCards({
                          excuse.status === "accepted" ? "✅ مقبول" : "❌ مرفوض"}
                       </Badge>
                     </div>
-                    <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-                      <FileImage className="h-3 w-3" />
-                      {excuse.file_name}
-                    </a>
+                    <ExcuseFileLink fileUrl={excuse.file_url} fileName={excuse.file_name} />
                     {excuse.reason && <p className="text-xs text-muted-foreground mt-2">{excuse.reason}</p>}
                     {excuse.review_note && <p className="text-xs mt-2 text-foreground">ملاحظة المعلم: {excuse.review_note}</p>}
                   </div>
