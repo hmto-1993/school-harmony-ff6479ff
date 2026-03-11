@@ -239,31 +239,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         </div>
       </div>
 
-      {groupedByClass.length > 0 && (
-        <div className="flex justify-end">
-          <GradesExportDialog
-            title="المهام والمشاركة"
-            fileName="المهام_والمشاركة"
-            groups={groupedByClass.map((group) => {
-              const headers = ["#", "الطالب",
-                ...group.categories.flatMap(c => [`${c.name} (نقاط)`, `${c.name} (درجة)`]),
-                "الإجمالي"];
-              const rows = group.students.map((sg, i) => {
-                const sub = calcManualSubtotal(sg.manualScores, group.categories);
-                return [
-                  String(i + 1), sg.full_name,
-                  ...group.categories.flatMap(c => [
-                    sg.dailyPoints[c.id] != null ? String(sg.dailyPoints[c.id]) : "—",
-                    String(sg.manualScores[c.id] ?? 0),
-                  ]),
-                  `${sub.score} / ${sub.max}`,
-                ];
-              });
-              return { className: group.name, headers, rows } as ExportTableGroup;
-            })}
-          />
-        </div>
-      )}
+      {/* Print header - only visible in print */}
+      <div className="hidden print:block">
+        <ReportPrintHeader reportType="grades" />
+      </div>
+      )
 
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات بعد</p>
