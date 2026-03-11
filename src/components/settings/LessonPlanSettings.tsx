@@ -271,6 +271,15 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           حفظ الخطة
         </Button>
+        <Button
+          variant="secondary"
+          disabled={saving || !selectedClassId || Object.keys(slots).length === 0}
+          className="gap-1.5"
+          onClick={handleBroadcast}
+        >
+          <BookOpen className="h-4 w-4" />
+          تعميم على جميع الفصول
+        </Button>
 
         {/* Import / Template buttons */}
         <div className="flex items-center gap-2">
