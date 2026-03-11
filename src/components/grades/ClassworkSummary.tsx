@@ -665,16 +665,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                         dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
                                       } else if (d === filledDots && hasPartial) {
                                         dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                      } else {
-                                        dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50 print:h-2 print:w-2" />);
                                       }
+                                      // Hide remaining (red) icons — only show earned dots
+                                    }
+                                    const totalShown = dots.length;
+                                    if (totalShown === 0) {
+                                      return <span className="text-muted-foreground text-xs font-medium">{points}</span>;
                                     }
                                     return (
                                       <div
                                         className="inline-grid gap-0.5 justify-items-center"
                                         style={{
-                                          gridTemplateColumns: `repeat(${Math.ceil(targetDots / 2)}, 1fr)`,
-                                          gridTemplateRows: 'auto auto',
+                                          gridTemplateColumns: `repeat(${Math.min(totalShown, Math.ceil(targetDots / 2))}, 1fr)`,
                                           margin: '0 auto',
                                         }}
                                       >
