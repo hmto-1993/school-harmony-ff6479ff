@@ -56,7 +56,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet.data), sheet.name.substring(0, 31));
     });
 
-    XLSX.writeFile(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
     setOpen(false);
   };
