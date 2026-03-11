@@ -21,12 +21,15 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
+type SlotLevel = "excellent" | "average" | "zero";
+
 interface SummaryRow {
   student_id: string;
   full_name: string;
   class_name: string;
   class_id: string;
-  dailyPoints: Record<string, number | null>;
+  dailySlots: Record<string, SlotLevel[]>;
+  dailyCumulativeScore: Record<string, number>;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
 }
@@ -112,27 +115,20 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         let colOffset = 1; // start after الإجمالي
         [...classworkCats].reverse().forEach(cat => {
           row.push(String(sg.manualScores[cat.id] ?? 0));
-          const points = sg.dailyPoints[cat.id];
+          const slots = sg.dailySlots[cat.id] || [];
+          const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
+          const max = Number(cat.max_score);
           const pointsColIndex = colOffset + 1;
-          if (points != null) {
-            const max = Number(cat.max_score);
-            if (points >= max) {
-              row.push(" "); // placeholder, will draw star
+          if (slots.length > 0) {
+            if (cumScore >= max) {
+              row.push(" ");
               dotCells.set(`${i}_${pointsColIndex}`, { type: "star" });
             } else {
-              const perDot = (() => {
-                const catNameLower = cat.name;
-                const targetDots = catNameLower.includes("مشاركة") ? 15
-                  : catNameLower.includes("كتاب") ? 10
-                  : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
-                  : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
-                return max / targetDots;
-              })();
-              const totalDots = Math.round(max / perDot);
-              const filledDots = Math.floor(points / perDot);
-              const hasPartial = points % perDot > 0;
-              row.push(" "); // placeholder, will draw dots
-              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots, partialDot: hasPartial, totalDots } });
+              const filledDots = slots.filter(s => s === "excellent").length;
+              const partialDots = slots.filter(s => s === "average").length;
+              const zeroDots = slots.filter(s => s === "zero").length;
+              row.push(" ");
+              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots: filledDots + partialDots, partialDot: false, totalDots: slots.length } });
             }
           } else {
             row.push("—");
@@ -234,16 +230,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       allManualScores = (manualData as any[]) || [];
     }
 
-    // Sum scores across all dates per student+category (cumulative progress)
-    const gradesMap = new Map<string, Map<string, number | null>>();
+    // Decompose each grade record into individual slot levels
+    const MAX_PARTICIPATION_SLOTS = 3;
+    const isParticipation = (name: string) => name === "المشاركة";
+
+    // Map: student_id -> category_id -> array of individual scores (one per date)
+    const gradesListMap = new Map<string, Map<string, number[]>>();
     allGrades.forEach((g) => {
-      if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      const studentMap = gradesMap.get(g.student_id)!;
+      if (!gradesListMap.has(g.student_id)) gradesListMap.set(g.student_id, new Map());
+      const studentMap = gradesListMap.get(g.student_id)!;
+      if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
       if (g.score != null) {
-        const prev = studentMap.get(g.category_id);
-        studentMap.set(g.category_id, (prev ?? 0) + Number(g.score));
-      } else if (!studentMap.has(g.category_id)) {
-        studentMap.set(g.category_id, null);
+        studentMap.get(g.category_id)!.push(Number(g.score));
       }
     });
 
@@ -257,14 +255,42 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id);
-      const studentGradesMap = gradesMap.get(s.id) || new Map();
+      const studentGradesList = gradesListMap.get(s.id) || new Map();
       const studentManualMap = manualMap.get(s.id) || new Map();
-      const dailyPoints: Record<string, number | null> = {};
+      const dailySlots: Record<string, SlotLevel[]> = {};
+      const dailyCumulativeScore: Record<string, number> = {};
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
 
       classCats.forEach((c) => {
-        dailyPoints[c.id] = studentGradesMap.get(c.id) ?? null;
+        const scores = studentGradesList.get(c.id) || [];
+        const max = Number(c.max_score);
+        const isPartCat = isParticipation(c.name);
+        const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+        const perSlot = Math.round(max / (isPartCat ? 15 : (max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5))));
+
+        // Decompose each daily score into slot levels
+        const slots: SlotLevel[] = [];
+        let cumulative = 0;
+        scores.forEach((score) => {
+          cumulative += score;
+          // Decompose this daily score into its individual slots
+          let remaining = score;
+          for (let si = 0; si < slotCount; si++) {
+            if (remaining >= perSlot) {
+              slots.push("excellent");
+              remaining -= perSlot;
+            } else if (remaining >= Math.round(perSlot / 2)) {
+              slots.push("average");
+              remaining -= Math.round(perSlot / 2);
+            } else {
+              slots.push("zero");
+            }
+          }
+        });
+
+        dailySlots[c.id] = slots;
+        dailyCumulativeScore[c.id] = cumulative;
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
@@ -273,7 +299,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        dailyPoints, manualScores, manualScoreIds,
+        dailySlots, dailyCumulativeScore, manualScores, manualScoreIds,
       };
     });
 
@@ -638,41 +664,27 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
-                            const points = sg.dailyPoints[cat.id];
+                            const slots = sg.dailySlots[cat.id] || [];
+                            const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
+                            const max = Number(cat.max_score);
                             return (
                               <React.Fragment key={cat.id}>
-                                {/* Daily points column — only earned dots */}
+                                {/* Daily points column — actual entered dots */}
                                 <td className="p-1.5 text-center border-l border-border/10">
-                                  {points != null ? (() => {
-                                    const max = Number(cat.max_score);
-                                    if (points >= max) {
+                                  {slots.length > 0 ? (() => {
+                                    if (cumScore >= max) {
                                       return <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />;
                                     }
-                                    const catNameLower = cat.name;
-                                    const targetDots = catNameLower.includes("مشاركة") ? 15
-                                      : catNameLower.includes("كتاب") ? 10
-                                      : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
-                                      : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
-                                    const perDot = max / targetDots;
-                                    const filledDots = Math.floor(points / perDot);
-                                    const hasPartial = points % perDot > 0;
-                                    const dots: React.ReactNode[] = [];
-
-                                    for (let d = 0; d < filledDots; d++) {
-                                      dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                    }
-                                    if (hasPartial) {
-                                      dots.push(<CircleMinus key="partial" className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                    }
-
-                                    if (dots.length === 0) {
-                                      return <span className="text-muted-foreground opacity-40 text-xs">0</span>;
-                                    }
+                                    const dots: React.ReactNode[] = slots.map((level, d) => {
+                                      if (level === "excellent") return <CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                      if (level === "average") return <CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                      return <CircleX key={d} className="h-4 w-4 text-rose-500 dark:text-rose-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                    });
                                     return (
                                       <div
                                         className="inline-grid gap-0.5 justify-items-center"
                                         style={{
-                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(targetDots / 2))}, 1fr)`,
+                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(dots.length / 2) || 1)}, 1fr)`,
                                           margin: '0 auto',
                                         }}
                                       >
