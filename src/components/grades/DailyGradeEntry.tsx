@@ -48,7 +48,9 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   if (level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
   if (level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
   if (level === "zero") return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
-  return <CircleMinus className={cn(size, "text-muted-foreground opacity-30")} />;
+  return (
+    <div className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />
+  );
 };
 
 const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
