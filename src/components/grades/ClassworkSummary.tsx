@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, FileText, Printer } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import { safeSavePDF } from "@/lib/download-utils";
@@ -17,6 +17,52 @@ import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+
+type GradeLevel = "excellent" | "average" | "zero";
+
+const isParticipation = (name: string) => name === "المشاركة";
+const MAX_PARTICIPATION_SLOTS = 3;
+
+/** Decompose a daily score into colored icon levels */
+function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
+  if (score <= 0) return ["zero"];
+  const isPartCat = isParticipation(catName);
+  const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+  const perSlot = Math.round(maxScore / slotCount);
+
+  // Full score on participation → single star (handled separately)
+  if (score >= maxScore && isPartCat) return ["excellent"]; // will render as star
+
+  const icons: GradeLevel[] = [];
+  let remaining = score;
+  for (let si = 0; si < slotCount; si++) {
+    if (remaining >= perSlot) {
+      icons.push("excellent");
+      remaining -= perSlot;
+    } else if (remaining >= Math.round(perSlot / 2)) {
+      icons.push("average");
+      remaining -= Math.round(perSlot / 2);
+    } else if (remaining > 0) {
+      icons.push("average");
+      remaining = 0;
+    } else {
+      icons.push("zero");
+    }
+  }
+  return icons;
+}
+
+interface DailyIcon {
+  level: GradeLevel;
+  isFullScore: boolean; // render as star instead of circle
+}
+
+const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?: string }) => {
+  if (icon.isFullScore) return <Star className={cn(size, "text-amber-500 fill-amber-400")} />;
+  if (icon.level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
+  if (icon.level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
+  return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
+};
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
@@ -28,6 +74,7 @@ interface SummaryRow {
   class_id: string;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
+  dailyIcons: Record<string, DailyIcon[]>; // accumulated icons from daily grades per category
 }
 
 interface ClassworkSummaryProps {
@@ -126,15 +173,29 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const students = studentsData || [];
     const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
+    const catIds = cats.map((c) => c.id);
 
     let allManualScores: any[] = [];
+    let allDailyGrades: any[] = [];
     if (studentIds.length > 0) {
-      const { data: manualData } = await supabase
-        .from("manual_category_scores" as any)
-        .select("id, student_id, category_id, score, period")
-        .in("student_id", studentIds)
-        .eq("period", selectedPeriod);
-      allManualScores = (manualData as any[]) || [];
+      const [manualRes, dailyRes] = await Promise.all([
+        supabase
+          .from("manual_category_scores" as any)
+          .select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds)
+          .eq("period", selectedPeriod),
+        catIds.length > 0
+          ? supabase
+              .from("grades")
+              .select("student_id, category_id, score, date")
+              .in("student_id", studentIds)
+              .in("category_id", catIds)
+              .eq("period", selectedPeriod)
+              .order("date")
+          : Promise.resolve({ data: [] }),
+      ]);
+      allManualScores = (manualRes.data as any[]) || [];
+      allDailyGrades = (dailyRes.data as any[]) || [];
     }
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
@@ -143,24 +204,50 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
     });
 
+    // Build daily icons map: student_id -> category_id -> DailyIcon[]
+    const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
+    allDailyGrades.forEach((g: any) => {
+      if (g.score === null || g.score === undefined) return;
+      const score = Number(g.score);
+      const cat = cats.find(c => c.id === g.category_id);
+      if (!cat) return;
+      
+      if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
+      const studentMap = dailyIconsMap.get(g.student_id)!;
+      if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
+      
+      const isFullScore = score >= Number(cat.max_score) && isParticipation(cat.name);
+      if (isFullScore) {
+        studentMap.get(g.category_id)!.push({ level: "excellent", isFullScore: true });
+      } else {
+        const levels = decomposeScoreToIcons(score, Number(cat.max_score), cat.name);
+        levels.forEach(level => {
+          studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+        });
+      }
+    });
+
     const classMap = new Map(cls.map((c) => [c.id, c.name]));
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id || c.class_id === null);
       const studentManualMap = manualMap.get(s.id) || new Map();
+      const studentDailyMap = dailyIconsMap.get(s.id) || new Map();
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
+      const dailyIcons: Record<string, DailyIcon[]> = {};
 
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
+        dailyIcons[c.id] = studentDailyMap.get(c.id) || [];
       });
 
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        manualScores, manualScoreIds,
+        manualScores, manualScoreIds, dailyIcons,
       };
     });
 
@@ -516,9 +603,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                       disabled={!!locked}
                                     />
                                   );
-                                })() : (
-                                  <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                )}
+                                })() : (() => {
+                                  const icons = sg.dailyIcons[cat.id] || [];
+                                  const manualScore = sg.manualScores[cat.id] ?? 0;
+                                  return (
+                                    <div className="flex flex-col items-center gap-1">
+                                      {icons.length > 0 && (
+                                        <div className={cn(
+                                          "flex flex-wrap justify-center gap-0.5",
+                                          icons.length > 8 ? "grid grid-cols-8 gap-0.5" : ""
+                                        )}>
+                                          {icons.map((icon, idx) => (
+                                            <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
+                                          ))}
+                                        </div>
+                                      )}
+                                      <span className="text-[10px] font-semibold text-muted-foreground">{manualScore}</span>
+                                    </div>
+                                  );
+                                })()}
                               </td>
                             );
                           })}
