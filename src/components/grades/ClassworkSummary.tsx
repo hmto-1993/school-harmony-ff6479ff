@@ -467,14 +467,36 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
                         });
-                        // Name column: allow wrapping so table doesn't overflow
+                        // Name column: wider; points columns: narrower
+                        clone.querySelectorAll("thead tr").forEach(row => {
+                          const ths = row.querySelectorAll("th");
+                          // ths order: #, الطالب, [cat_name, درجة]..., الإجمالي
+                          if (ths.length >= 2) {
+                            ths[1].style.minWidth = "110px";
+                          }
+                          // Points columns (every odd column after index 1) — make narrower
+                          for (let c = 2; c < ths.length - 1; c += 2) {
+                            ths[c].style.maxWidth = "45px";
+                            ths[c].style.fontSize = "8px";
+                          }
+                        });
                         clone.querySelectorAll("tbody tr").forEach(row => {
                           const cells = row.querySelectorAll("td");
                           if (cells.length >= 2) {
                             cells[1].style.whiteSpace = "normal";
                             cells[1].style.textAlign = "right";
-                            cells[1].style.minWidth = "80px";
+                            cells[1].style.minWidth = "110px";
                           }
+                          // Points cells narrower
+                          for (let c = 2; c < cells.length - 1; c += 2) {
+                            cells[c].style.maxWidth = "45px";
+                            cells[c].style.padding = "1px 2px";
+                          }
+                        });
+                        // Shrink SVG icons in print clone
+                        clone.querySelectorAll("svg").forEach(svg => {
+                          svg.style.width = "6px";
+                          svg.style.height = "6px";
                         });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
