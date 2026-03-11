@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BookOpen, CheckCircle2, Circle, Settings } from "lucide-react";
@@ -149,6 +150,15 @@ export default function WeekLessonsWidget() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+        )}
+        {/* Progress bar */}
+        {lessons.length > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <Progress value={lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0} className="h-2 flex-1 bg-muted/50 [&>div]:bg-gradient-to-l [&>div]:from-success [&>div]:to-success/70" />
+            <span className="text-[10px] font-semibold text-muted-foreground min-w-[32px] text-left">
+              {Math.round((completedCount / lessons.length) * 100)}%
+            </span>
           </div>
         )}
       </CardHeader>
