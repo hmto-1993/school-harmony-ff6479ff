@@ -548,33 +548,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 whitespace-nowrap w-0 bg-primary/10">الطالب</th>
-                      {classworkCats.map(cat => (
-                        <th key={cat.id} colSpan={2} className={cn(
-                          "text-center p-2 font-bold text-xs border-b border-primary/20 min-w-[100px]",
-                          isEditing
-                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600"
-                            : "bg-primary/8 text-primary"
-                        )}>
-                          <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
-                            ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
-                            : cat.name
-                          }</div>
-                        </th>
-                      ))}
-                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
-                    </tr>
-                    <tr className="bg-muted/30">
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 whitespace-nowrap w-0 bg-primary/10">الطالب</th>
                       {classworkCats.map(cat => (
                         <React.Fragment key={`sub-${cat.id}`}>
-                          <th className="text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
-                            {cat.name}
+                          <th className={cn(
+                            "text-center p-1.5 font-bold text-[10px] border-b-2 border-primary/20 min-w-[50px]",
+                            isEditing
+                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+                              : "text-primary"
+                          )}>
+                            <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
+                              ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
+                              : cat.name
+                            }</div>
                           </th>
                           <th className={cn(
                             "text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 min-w-[50px]",
                             isEditing
-                              ? "text-emerald-700 dark:text-emerald-400"
+                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                               : "text-muted-foreground"
                           )}>
                             <div>الدرجة</div>
@@ -582,6 +574,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           </th>
                         </React.Fragment>
                       ))}
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
                     </tr>
                   </thead>
                   <tbody>
