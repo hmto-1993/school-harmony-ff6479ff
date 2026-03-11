@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star, FileText, Printer } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import { safeSavePDF } from "@/lib/download-utils";
@@ -21,15 +21,11 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
-type SlotLevel = "excellent" | "average" | "zero";
-
 interface SummaryRow {
   student_id: string;
   full_name: string;
   class_name: string;
   class_id: string;
-  dailySlots: Record<string, SlotLevel[]>;
-  dailyCumulativeScore: Record<string, number>;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
 }
@@ -38,23 +34,6 @@ interface ClassworkSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
   selectedPeriod?: number;
-}
-
-/** Draw a filled star shape in jsPDF using triangles */
-function drawStar(doc: any, cx: number, cy: number, size: number) {
-  const pts = 5;
-  const outerR = size;
-  const innerR = size * 0.4;
-  const verts: [number, number][] = [];
-  for (let i = 0; i < pts * 2; i++) {
-    const r = i % 2 === 0 ? outerR : innerR;
-    const angle = (Math.PI / 2) + (i * Math.PI) / pts;
-    verts.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
-  }
-  doc.setFillColor(234, 179, 8);
-  for (let i = 1; i < verts.length - 1; i++) {
-    doc.triangle(verts[0][0], verts[0][1], verts[i][0], verts[i][1], verts[i + 1][0], verts[i + 1][1], "F");
-  }
 }
 
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
@@ -73,7 +52,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const exportTableAsPDF = async (classId: string, className: string) => {
-    // Find students and categories for this class
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
     try {
@@ -93,47 +71,20 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
       const classworkCats = group.categories;
 
-      // Build headers (reversed for RTL): الإجمالي | درجة | نقاط | ... | الطالب | #
       const headers: string[] = [];
       headers.push("الإجمالي");
       [...classworkCats].reverse().forEach(cat => {
         headers.push(`الدرجة (${cat.max_score})`);
-        headers.push(cat.name);
       });
       headers.push("الطالب");
       headers.push("#");
 
-      // Track which cells need dot/star drawing: { row, col, type, dots }
-      type DotInfo = { filledDots: number; partialDot: boolean; totalDots: number };
-      const dotCells = new Map<string, { type: "star" | "dots"; dots?: DotInfo }>();
-
-      // Build rows
       const rows: string[][] = group.students.map((sg, i) => {
         const sub = calcManualSubtotal(sg.manualScores, classworkCats);
         const row: string[] = [];
         row.push(`${sub.score} / ${sub.max}`);
-        let colOffset = 1; // start after الإجمالي
         [...classworkCats].reverse().forEach(cat => {
           row.push(String(sg.manualScores[cat.id] ?? 0));
-          const slots = sg.dailySlots[cat.id] || [];
-          const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
-          const max = Number(cat.max_score);
-          const pointsColIndex = colOffset + 1;
-          if (slots.length > 0) {
-            if (cumScore >= max) {
-              row.push(" ");
-              dotCells.set(`${i}_${pointsColIndex}`, { type: "star" });
-            } else {
-              const filledDots = slots.filter(s => s === "excellent").length;
-              const partialDots = slots.filter(s => s === "average").length;
-              const zeroDots = slots.filter(s => s === "zero").length;
-              row.push(" ");
-              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots: filledDots + partialDots, partialDot: false, totalDots: slots.length } });
-            }
-          } else {
-            row.push("—");
-          }
-          colOffset += 2;
         });
         row.push(sg.full_name);
         row.push(String(i + 1));
@@ -150,46 +101,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         headStyles: { ...tableStyles.headStyles, fontSize: 7 },
         columnStyles: {
           [nameColIndex]: { halign: "right" as const, cellWidth: 35 },
-        },
-        didDrawCell: (data: any) => {
-          if (data.section !== "body") return;
-          const key = `${data.row.index}_${data.column.index}`;
-          const info = dotCells.get(key);
-          if (!info) return;
-
-          const cellX = data.cell.x;
-          const cellY = data.cell.y;
-          const cellW = data.cell.width;
-          const cellH = data.cell.height;
-          const centerY = cellY + cellH / 2;
-          const r = 1.2; // dot radius
-          const gap = 0.8; // gap between dots
-
-          if (info.type === "star") {
-            // Draw a filled yellow star
-            doc.setFillColor(234, 179, 8);
-            const starX = cellX + cellW / 2;
-            drawStar(doc, starX, centerY, 2.5);
-          } else if (info.type === "dots" && info.dots) {
-            const { filledDots, partialDot, totalDots } = info.dots;
-            const totalWidth = totalDots * (r * 2) + (totalDots - 1) * gap;
-            let dotX = cellX + cellW / 2 + totalWidth / 2 - r; // RTL: start from right
-
-            for (let d = 0; d < totalDots; d++) {
-              if (d < filledDots) {
-                doc.setFillColor(16, 185, 129); // emerald
-                doc.circle(dotX, centerY, r, "F");
-              } else if (d === filledDots && partialDot) {
-                doc.setFillColor(245, 158, 11); // amber
-                doc.circle(dotX, centerY, r, "F");
-              } else {
-                doc.setDrawColor(220, 38, 38); // rose
-                doc.setLineWidth(0.3);
-                doc.circle(dotX, centerY, r, "S");
-              }
-              dotX -= (r * 2 + gap);
-            }
-          }
         },
       });
 
@@ -216,34 +127,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
 
-    let allGrades: any[] = [];
     let allManualScores: any[] = [];
     if (studentIds.length > 0) {
-      const [{ data: gradesData }, { data: manualData }] = await Promise.all([
-        supabase.from("grades").select("id, student_id, category_id, score, period, date")
-          .in("student_id", studentIds).eq("period", selectedPeriod)
-          .order("date", { ascending: true }),
-        supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
-          .in("student_id", studentIds).eq("period", selectedPeriod),
-      ]);
-      allGrades = gradesData || [];
+      const { data: manualData } = await supabase
+        .from("manual_category_scores" as any)
+        .select("id, student_id, category_id, score, period")
+        .in("student_id", studentIds)
+        .eq("period", selectedPeriod);
       allManualScores = (manualData as any[]) || [];
     }
-
-    // Decompose each grade record into individual slot levels
-    const MAX_PARTICIPATION_SLOTS = 3;
-    const isParticipation = (name: string) => name === "المشاركة";
-
-    // Map: student_id -> category_id -> array of individual scores (one per date)
-    const gradesListMap = new Map<string, Map<string, number[]>>();
-    allGrades.forEach((g) => {
-      if (!gradesListMap.has(g.student_id)) gradesListMap.set(g.student_id, new Map());
-      const studentMap = gradesListMap.get(g.student_id)!;
-      if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
-      if (g.score != null) {
-        studentMap.get(g.category_id)!.push(Number(g.score));
-      }
-    });
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
     allManualScores.forEach((m: any) => {
@@ -255,42 +147,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id || c.class_id === null);
-      const studentGradesList = gradesListMap.get(s.id) || new Map();
       const studentManualMap = manualMap.get(s.id) || new Map();
-      const dailySlots: Record<string, SlotLevel[]> = {};
-      const dailyCumulativeScore: Record<string, number> = {};
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
 
       classCats.forEach((c) => {
-        const scores = studentGradesList.get(c.id) || [];
-        const max = Number(c.max_score);
-        const isPartCat = isParticipation(c.name);
-        const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
-        const perSlot = Math.round(max / (isPartCat ? 15 : (max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5))));
-
-        // Decompose each daily score into slot levels
-        const slots: SlotLevel[] = [];
-        let cumulative = 0;
-        scores.forEach((score) => {
-          cumulative += score;
-          // Decompose this daily score into its individual slots
-          let remaining = score;
-          for (let si = 0; si < slotCount; si++) {
-            if (remaining >= perSlot) {
-              slots.push("excellent");
-              remaining -= perSlot;
-            } else if (remaining >= Math.round(perSlot / 2)) {
-              slots.push("average");
-              remaining -= Math.round(perSlot / 2);
-            } else {
-              slots.push("zero");
-            }
-          }
-        });
-
-        dailySlots[c.id] = slots;
-        dailyCumulativeScore[c.id] = cumulative;
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
@@ -299,7 +160,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        dailySlots, dailyCumulativeScore, manualScores, manualScoreIds,
+        manualScores, manualScoreIds,
       };
     });
 
@@ -391,7 +252,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         </div>
       </div>
 
-      {/* Print header - only visible in print */}
       <div className="hidden print:block">
         <ReportPrintHeader reportType="grades" />
       </div>
@@ -414,7 +274,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Export buttons */}
                   {!isEditing && (
                     <div className="flex items-center gap-0.5">
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => exportTableAsPDF(group.id, group.name)}>
@@ -427,7 +286,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         printArea.className = "print-area";
                         printArea.style.cssText = "display:none;direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;";
 
-                        // Fetch and render print header
                         try {
                           let headerConfig: any = null;
                           const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single();
@@ -439,7 +297,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           if (headerConfig) {
                             const headerDiv = document.createElement("div");
                             headerDiv.style.cssText = "margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;";
-                            // Right section
                             const rightDiv = document.createElement("div");
                             rightDiv.style.cssText = `flex:1;text-align:${headerConfig.rightSection?.align||"right"};font-size:${headerConfig.rightSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.rightSection?.color||"#1e293b"};`;
                             (headerConfig.rightSection?.lines||[]).forEach((line: string) => {
@@ -448,7 +305,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                               p.textContent = line;
                               rightDiv.appendChild(p);
                             });
-                            // Center images
                             const centerDiv = document.createElement("div");
                             centerDiv.style.cssText = "display:flex;align-items:center;gap:10px;flex-shrink:0;";
                             (headerConfig.centerSection?.images||[]).forEach((img: string, i: number) => {
@@ -459,7 +315,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                               imgEl.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
                               centerDiv.appendChild(imgEl);
                             });
-                            // Left section
                             const leftDiv = document.createElement("div");
                             leftDiv.style.cssText = `flex:1;text-align:${headerConfig.leftSection?.align||"left"};font-size:${headerConfig.leftSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.leftSection?.color||"#1e293b"};`;
                             (headerConfig.leftSection?.lines||[]).forEach((line: string) => {
@@ -486,7 +341,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
-                        // Print-friendly: fit all columns on landscape A4
                         clone.querySelectorAll("table").forEach(t => {
                           t.style.width = "100%";
                           t.style.tableLayout = "auto";
@@ -509,17 +363,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
                         });
-                        // Name column: wider; points columns: narrower
                         clone.querySelectorAll("thead tr").forEach(row => {
                           const ths = row.querySelectorAll("th");
-                          // ths order: #, الطالب, [cat_name, درجة]..., الإجمالي
                           if (ths.length >= 2) {
                             ths[1].style.minWidth = "110px";
-                          }
-                          // Points columns (every odd column after index 1) — make narrower
-                          for (let c = 2; c < ths.length - 1; c += 2) {
-                            ths[c].style.maxWidth = "45px";
-                            ths[c].style.fontSize = "8px";
                           }
                         });
                         clone.querySelectorAll("tbody tr").forEach(row => {
@@ -529,16 +376,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             cells[1].style.textAlign = "right";
                             cells[1].style.minWidth = "110px";
                           }
-                          // Points cells narrower
-                          for (let c = 2; c < cells.length - 1; c += 2) {
-                            cells[c].style.maxWidth = "45px";
-                            cells[c].style.padding = "1px 2px";
-                          }
-                        });
-                        // Shrink SVG icons in print clone
-                        clone.querySelectorAll("svg").forEach(svg => {
-                          svg.style.width = "6px";
-                          svg.style.height = "6px";
                         });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
@@ -627,23 +464,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 whitespace-nowrap w-0 bg-primary/10">الطالب</th>
                       {classworkCats.map(cat => (
-                        <React.Fragment key={cat.id}>
-                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
-                            <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
-                              ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
-                              : cat.name
-                            }</div>
-                          </th>
-                          <th className={cn(
-                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
-                            isEditing
-                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600"
-                              : "bg-primary/8 text-primary"
-                          )}>
-                            <div>الدرجة</div>
-                            <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
-                          </th>
-                        </React.Fragment>
+                        <th key={cat.id} className={cn(
+                          "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
+                          isEditing
+                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600"
+                            : "bg-primary/8 text-primary"
+                        )}>
+                          <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
+                            ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
+                            : cat.name
+                          }</div>
+                          <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
+                        </th>
                       ))}
                       <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
                     </tr>
@@ -664,62 +496,30 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
-                            const slots = sg.dailySlots[cat.id] || [];
-                            const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
-                            const max = Number(cat.max_score);
                             return (
-                              <React.Fragment key={cat.id}>
-                                {/* Daily points column — actual entered dots */}
-                                <td className="p-1.5 text-center border-l border-border/10">
-                                  {slots.length > 0 ? (() => {
-                                    if (cumScore >= max) {
-                                      return <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />;
-                                    }
-                                    const dots: React.ReactNode[] = slots.map((level, d) => {
-                                      if (level === "excellent") return <CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />;
-                                      if (level === "average") return <CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />;
-                                      return <CircleX key={d} className="h-4 w-4 text-rose-500 dark:text-rose-400 drop-shadow-sm print:h-2 print:w-2" />;
-                                    });
-                                    return (
-                                      <div
-                                        className="inline-grid gap-0.5 justify-items-center"
-                                        style={{
-                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(dots.length / 2) || 1)}, 1fr)`,
-                                          margin: '0 auto',
-                                        }}
-                                      >
-                                        {dots}
-                                      </div>
-                                    );
-                                  })() : (
-                                    <span className="text-muted-foreground opacity-40 text-xs">—</span>
-                                  )}
-                                </td>
-                                {/* Manual score (درجة) column */}
-                                <td className={cn(
-                                  "p-1.5 text-center border-l border-border/10",
-                                  isEditing ? "bg-emerald-500/10" : "bg-primary/5"
-                                )}>
-                                  {isEditing ? (() => {
-                                    const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
-                                    return (
-                                      <Input
-                                        type="number" min={0} max={Number(cat.max_score)}
-                                        value={tempEdits[cellKey] ?? ""}
-                                        onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                        className={cn(
-                                          "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                          locked && "opacity-40 pointer-events-none"
-                                        )}
-                                        dir="ltr"
-                                        disabled={!!locked}
-                                      />
-                                    );
-                                  })() : (
-                                    <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                  )}
-                                </td>
-                              </React.Fragment>
+                              <td key={cat.id} className={cn(
+                                "p-1.5 text-center border-l border-border/10",
+                                isEditing ? "bg-emerald-500/10" : "bg-primary/5"
+                              )}>
+                                {isEditing ? (() => {
+                                  const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                  return (
+                                    <Input
+                                      type="number" min={0} max={Number(cat.max_score)}
+                                      value={tempEdits[cellKey] ?? ""}
+                                      onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                      className={cn(
+                                        "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                        locked && "opacity-40 pointer-events-none"
+                                      )}
+                                      dir="ltr"
+                                      disabled={!!locked}
+                                    />
+                                  );
+                                })() : (
+                                  <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
+                                )}
+                              </td>
                             );
                           })}
 
