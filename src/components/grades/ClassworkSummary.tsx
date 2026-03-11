@@ -598,7 +598,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             return (
                               <React.Fragment key={cat.id}>
                                 {/* Icons column */}
-                                <td className="p-1.5 text-center border-l border-border/10">
+                                <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
                                   {icons.length > 0 && (
                                     <div className={cn(
                                       "flex flex-wrap justify-center gap-0.5",
