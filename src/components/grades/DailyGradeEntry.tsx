@@ -93,10 +93,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       .from("grade_categories").select("*").eq("class_id", selectedClass).order("sort_order");
     const { data: students } = await supabase
       .from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     const { data: grades } = await supabase
       .from("grades").select("id, student_id, category_id, score, period")
       .in("student_id", (students || []).map((s) => s.id))
-      .eq("period", selectedPeriod);
+      .eq("period", selectedPeriod)
+      .eq("date", dateStr);
 
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
     grades?.forEach((g) => {
