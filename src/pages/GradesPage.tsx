@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
+import ClassworkSummary from "@/components/grades/ClassworkSummary";
 import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import GradesImport from "@/components/grades/GradesImport";
