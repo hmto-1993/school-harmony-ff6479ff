@@ -36,6 +36,23 @@ interface ClassworkSummaryProps {
   selectedPeriod?: number;
 }
 
+/** Draw a filled star shape in jsPDF using triangles */
+function drawStar(doc: any, cx: number, cy: number, size: number) {
+  const pts = 5;
+  const outerR = size;
+  const innerR = size * 0.4;
+  const verts: [number, number][] = [];
+  for (let i = 0; i < pts * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / 2) + (i * Math.PI) / pts;
+    verts.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
+  }
+  doc.setFillColor(234, 179, 8);
+  for (let i = 1; i < verts.length - 1; i++) {
+    doc.triangle(verts[0][0], verts[0][1], verts[i][0], verts[i][1], verts[i + 1][0], verts[i + 1][1], "F");
+  }
+}
+
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
