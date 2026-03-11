@@ -237,16 +237,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       allManualScores = (manualData as any[]) || [];
     }
 
-    // Sum scores across all dates per student+category (cumulative progress)
-    const gradesMap = new Map<string, Map<string, number | null>>();
+    // Decompose each grade record into individual slot levels
+    const MAX_PARTICIPATION_SLOTS = 3;
+    const isParticipation = (name: string) => name === "المشاركة";
+
+    // Map: student_id -> category_id -> array of individual scores (one per date)
+    const gradesListMap = new Map<string, Map<string, number[]>>();
     allGrades.forEach((g) => {
-      if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      const studentMap = gradesMap.get(g.student_id)!;
+      if (!gradesListMap.has(g.student_id)) gradesListMap.set(g.student_id, new Map());
+      const studentMap = gradesListMap.get(g.student_id)!;
+      if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
       if (g.score != null) {
-        const prev = studentMap.get(g.category_id);
-        studentMap.set(g.category_id, (prev ?? 0) + Number(g.score));
-      } else if (!studentMap.has(g.category_id)) {
-        studentMap.set(g.category_id, null);
+        studentMap.get(g.category_id)!.push(Number(g.score));
       }
     });
 
@@ -260,14 +262,42 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id);
-      const studentGradesMap = gradesMap.get(s.id) || new Map();
+      const studentGradesList = gradesListMap.get(s.id) || new Map();
       const studentManualMap = manualMap.get(s.id) || new Map();
-      const dailyPoints: Record<string, number | null> = {};
+      const dailySlots: Record<string, SlotLevel[]> = {};
+      const dailyCumulativeScore: Record<string, number> = {};
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
 
       classCats.forEach((c) => {
-        dailyPoints[c.id] = studentGradesMap.get(c.id) ?? null;
+        const scores = studentGradesList.get(c.id) || [];
+        const max = Number(c.max_score);
+        const isPartCat = isParticipation(c.name);
+        const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+        const perSlot = Math.round(max / (isPartCat ? 15 : (max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5))));
+
+        // Decompose each daily score into slot levels
+        const slots: SlotLevel[] = [];
+        let cumulative = 0;
+        scores.forEach((score) => {
+          cumulative += score;
+          // Decompose this daily score into its individual slots
+          let remaining = score;
+          for (let si = 0; si < slotCount; si++) {
+            if (remaining >= perSlot) {
+              slots.push("excellent");
+              remaining -= perSlot;
+            } else if (remaining >= Math.round(perSlot / 2)) {
+              slots.push("average");
+              remaining -= Math.round(perSlot / 2);
+            } else {
+              slots.push("zero");
+            }
+          }
+        });
+
+        dailySlots[c.id] = slots;
+        dailyCumulativeScore[c.id] = cumulative;
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
@@ -276,7 +306,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        dailyPoints, manualScores, manualScoreIds,
+        dailySlots, dailyCumulativeScore, manualScores, manualScoreIds,
       };
     });
 
