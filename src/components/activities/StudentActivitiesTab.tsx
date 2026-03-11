@@ -208,18 +208,32 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       .eq("activity_id", activity.id)
       .order("sort_order");
 
+    // Restore saved answers from localStorage
+    const saved = loadSavedAnswers(activity.id, studentId);
     setSelectedQuiz({ ...activity, questions: questions || [] });
-    setQuizAnswers({});
+    setQuizAnswers(saved || {});
     setQuizResult(null);
     setTimerActive(activity.duration_minutes > 0);
+    if (saved && Object.keys(saved).length > 0) {
+      toast({ title: "تم استعادة إجاباتك السابقة", description: "يمكنك المتابعة من حيث توقفت" });
+    }
   };
+
+  // Auto-save answers to localStorage on change
+  useEffect(() => {
+    if (selectedQuiz && Object.keys(quizAnswers).length > 0) {
+      saveAnswersLocally(selectedQuiz.id, studentId, quizAnswers);
+    }
+  }, [quizAnswers, selectedQuiz, studentId]);
 
   const submitQuiz = useCallback(async () => {
     if (!selectedQuiz?.questions || submitting) return;
     setSubmitting(true);
     setTimerActive(false);
 
-    // Grade server-side via edge function
+    // Optimistic UI: show "saving" state immediately
+    toast({ title: "⏳ جاري حفظ الإجابات..." });
+
     const sessionToken = sessionStorage.getItem("student_session_token");
     const sessionIssuedAt = Number(sessionStorage.getItem("student_session_issued_at"));
 
@@ -239,9 +253,13 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       return;
     }
 
+    // Clear saved answers after successful submission
+    clearSavedAnswers(selectedQuiz.id, studentId);
+
     setQuizResult({ score: data.score, total: data.total });
     setCompletedQuizzes(prev => new Set(prev).add(selectedQuiz.id));
     setSubmitting(false);
+    toast({ title: "✅ تم تسليم الاختبار بنجاح!" });
   }, [selectedQuiz, quizAnswers, submitting, studentId, toast]);
 
   const handleTimerExpire = useCallback(() => {
