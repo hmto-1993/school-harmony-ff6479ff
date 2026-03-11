@@ -48,7 +48,9 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   if (level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
   if (level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
   if (level === "zero") return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
-  return <CircleMinus className={cn(size, "text-muted-foreground opacity-30")} />;
+  return (
+    <div className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />
+  );
 };
 
 const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
@@ -203,7 +205,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         if (sg.student_id !== studentId) return sg;
         const wasStarred = sg.starred[categoryId];
         const newStarred = !wasStarred;
-        const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, isParticipation("") ? 1 : 1);
+        const catName = categories.find(c => c.id === categoryId)?.name || "";
+        const slotCount = isParticipation(catName) ? MAX_PARTICIPATION_SLOTS : 1;
+        const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
         return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
       })
     );
