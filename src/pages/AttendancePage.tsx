@@ -372,6 +372,54 @@ export default function AttendancePage() {
     loadWeeklyProgress();
   };
 
+  const exportAttendanceExcel = async () => {
+    if (!records.length) return;
+    const XLSX = await import("xlsx");
+    const className = classes.find(c => c.id === selectedClass)?.name || "";
+    const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
+    const rows = records.map((r, i) => ({
+      "#": i + 1,
+      "الاسم": r.full_name,
+      "الحالة": statusLabel[r.status] || r.status,
+      "الملاحظات": r.notes || "",
+    }));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "الحضور");
+    XLSX.writeFile(wb, `حضور_${className}_${date}.xlsx`);
+    toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
+  };
+
+  const exportAttendancePDF = async () => {
+    if (!records.length) return;
+    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
+    const className = classes.find(c => c.id === selectedClass)?.name || "";
+    const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
+
+    const { doc, startY } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    doc.setFontSize(14);
+    doc.text(`تقرير الحضور — ${className} — ${date}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
+
+    const head = [["#", "الاسم", "الحالة", "الملاحظات"]];
+    const body = records.map((r, i) => [
+      String(i + 1),
+      r.full_name,
+      statusLabel[r.status] || r.status,
+      r.notes || "",
+    ]);
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: startY + 10,
+      ...getArabicTableStyles(),
+    });
+
+    doc.save(`حضور_${className}_${date}.pdf`);
+    toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
+  };
+
   const filteredRecords = useMemo(() => {
     let result = records;
     if (statusFilter !== "all") result = result.filter((r) => r.status === statusFilter);
