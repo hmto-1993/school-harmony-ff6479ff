@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface ClassOption {
   id: string;
