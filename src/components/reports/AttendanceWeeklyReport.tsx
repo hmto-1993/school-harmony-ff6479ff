@@ -216,7 +216,7 @@ export default function AttendanceWeeklyReport({
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور الأسبوعي");
-    XLSX.writeFile(wb, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const handleExportPDF = async () => {
