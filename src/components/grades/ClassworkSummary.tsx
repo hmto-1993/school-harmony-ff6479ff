@@ -236,7 +236,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const gradesMap = new Map<string, Map<string, number | null>>();
     allGrades.forEach((g) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      gradesMap.get(g.student_id)!.set(g.category_id, g.score != null ? Number(g.score) : null);
+      const studentMap = gradesMap.get(g.student_id)!;
+      const prev = studentMap.get(g.category_id);
+      if (g.score != null) {
+        studentMap.set(g.category_id, (prev ?? 0) + Number(g.score));
+      } else if (prev == null) {
+        studentMap.set(g.category_id, null);
+      }
     });
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
