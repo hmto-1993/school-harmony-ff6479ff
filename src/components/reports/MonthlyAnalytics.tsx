@@ -234,7 +234,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "المتميزون");
-    XLSX.writeFile(wb, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
   };
 
   const exportDisciplinaryExcel = async () => {
