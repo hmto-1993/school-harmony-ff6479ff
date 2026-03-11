@@ -173,15 +173,29 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const students = studentsData || [];
     const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
+    const catIds = cats.map((c) => c.id);
 
     let allManualScores: any[] = [];
+    let allDailyGrades: any[] = [];
     if (studentIds.length > 0) {
-      const { data: manualData } = await supabase
-        .from("manual_category_scores" as any)
-        .select("id, student_id, category_id, score, period")
-        .in("student_id", studentIds)
-        .eq("period", selectedPeriod);
-      allManualScores = (manualData as any[]) || [];
+      const [manualRes, dailyRes] = await Promise.all([
+        supabase
+          .from("manual_category_scores" as any)
+          .select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds)
+          .eq("period", selectedPeriod),
+        catIds.length > 0
+          ? supabase
+              .from("grades")
+              .select("student_id, category_id, score, date")
+              .in("student_id", studentIds)
+              .in("category_id", catIds)
+              .eq("period", selectedPeriod)
+              .order("date")
+          : Promise.resolve({ data: [] }),
+      ]);
+      allManualScores = (manualRes.data as any[]) || [];
+      allDailyGrades = (dailyRes.data as any[]) || [];
     }
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
@@ -190,24 +204,50 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
     });
 
+    // Build daily icons map: student_id -> category_id -> DailyIcon[]
+    const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
+    allDailyGrades.forEach((g: any) => {
+      if (g.score === null || g.score === undefined) return;
+      const score = Number(g.score);
+      const cat = cats.find(c => c.id === g.category_id);
+      if (!cat) return;
+      
+      if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
+      const studentMap = dailyIconsMap.get(g.student_id)!;
+      if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
+      
+      const isFullScore = score >= Number(cat.max_score) && isParticipation(cat.name);
+      if (isFullScore) {
+        studentMap.get(g.category_id)!.push({ level: "excellent", isFullScore: true });
+      } else {
+        const levels = decomposeScoreToIcons(score, Number(cat.max_score), cat.name);
+        levels.forEach(level => {
+          studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+        });
+      }
+    });
+
     const classMap = new Map(cls.map((c) => [c.id, c.name]));
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id || c.class_id === null);
       const studentManualMap = manualMap.get(s.id) || new Map();
+      const studentDailyMap = dailyIconsMap.get(s.id) || new Map();
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
+      const dailyIcons: Record<string, DailyIcon[]> = {};
 
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
+        dailyIcons[c.id] = studentDailyMap.get(c.id) || [];
       });
 
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        manualScores, manualScoreIds,
+        manualScores, manualScoreIds, dailyIcons,
       };
     });
 
