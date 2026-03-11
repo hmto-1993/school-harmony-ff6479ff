@@ -444,32 +444,41 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
-                        // Print-friendly table styling
+                        // Print-friendly: fit all columns on landscape A4
                         clone.querySelectorAll("table").forEach(t => {
                           t.style.width = "100%";
                           t.style.tableLayout = "auto";
-                          t.style.fontSize = "12px";
+                          t.style.fontSize = "11px";
                           t.style.borderCollapse = "collapse";
                         });
                         clone.querySelectorAll("th, td").forEach(el => {
                           const h = el as HTMLElement;
                           h.style.color = "#1a1a1a";
                           h.style.backgroundColor = "";
-                          h.style.padding = "4px 6px";
+                          h.style.padding = "3px 5px";
                           h.style.border = "1px solid #d1d5db";
-                          h.style.fontSize = "12px";
+                          h.style.fontSize = "11px";
                           h.style.lineHeight = "1.4";
                           h.style.textAlign = "center";
+                          h.style.overflow = "visible";
+                          h.style.whiteSpace = "nowrap";
                         });
                         clone.querySelectorAll("th").forEach(el => {
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
                         });
-                        // Ensure name cells are visible and not truncated
+                        // Name column: allow wrapping so table doesn't overflow
+                        clone.querySelectorAll("tbody tr").forEach(row => {
+                          const cells = row.querySelectorAll("td");
+                          if (cells.length >= 2) {
+                            cells[1].style.whiteSpace = "normal";
+                            cells[1].style.textAlign = "right";
+                            cells[1].style.minWidth = "80px";
+                          }
+                        });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
                           if (!h.style.color) h.style.color = "#1a1a1a";
-                          h.style.overflow = "visible";
                         });
                         printArea.appendChild(clone);
                         document.body.appendChild(printArea);
