@@ -56,7 +56,7 @@ const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(nam
 const isParticipation = (name: string) => name === "المشاركة";
 const isBookCategory = (name: string) => name === "الكتاب";
 const MAX_PARTICIPATION_SLOTS = 3;
-const BOOK_DOT_COUNT = 10;
+
 
 interface DailyGradeEntryProps {
   selectedClass: string;
@@ -124,8 +124,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
           // Restore slot/star state from saved score
           if (score === null) {
-            slots[c.id] = [null];
-            starred[c.id] = false;
+            if (isBookCategory(c.name)) {
+              slots[c.id] = ["zero"];
+              starred[c.id] = false;
+              gradeValues[c.id] = 0;
+            } else {
+              slots[c.id] = [null];
+              starred[c.id] = false;
+            }
           } else {
             const max = Number(c.max_score);
             const isPartCat = isParticipation(c.name);
@@ -366,9 +372,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز (الدرجة الكاملة)</span>
                </div>
-               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
-                 <div className="h-4 w-4 rounded-full bg-rose-500 dark:bg-rose-400 border-2 border-rose-500 dark:border-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">الكتاب</span>
-               </div>
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
                  <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
                </div>
@@ -405,41 +408,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
-
-                        if (isBookCategory(cat.name)) {
-                          // Book category: 10 red dots, click to toggle filled/empty
-                          const dotCount = BOOK_DOT_COUNT;
-                          const filledCount = currentScore != null ? Math.round((currentScore / maxScore) * dotCount) : 0;
-                          return (
-                            <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                              <div className="inline-grid gap-0.5 justify-items-center" style={{ gridTemplateColumns: `repeat(5, 1fr)`, margin: '0 auto' }}>
-                                {Array.from({ length: dotCount }, (_, di) => {
-                                  const isFilled = di < filledCount;
-                                  return (
-                                    <button
-                                      key={di}
-                                      type="button"
-                                      onClick={() => {
-                                        const newFilled = di < filledCount ? di : di + 1;
-                                        const newScore = Math.round((newFilled / dotCount) * maxScore);
-                                        setNumericGrade(sg.student_id, cat.id, String(newScore), maxScore);
-                                      }}
-                                      className="p-0 transition-transform hover:scale-125"
-                                      title={`${di + 1}/${dotCount}`}
-                                    >
-                                      <div className={cn(
-                                        "h-4 w-4 rounded-full border-2 transition-colors",
-                                        isFilled
-                                          ? "bg-rose-500 border-rose-500 dark:bg-rose-400 dark:border-rose-400"
-                                          : "bg-transparent border-rose-300 dark:border-rose-500/40"
-                                      )} />
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </td>
-                          );
-                        }
 
                         const isPartCat = isParticipation(cat.name);
                         const slotsArr = sg.slots[cat.id] || [null];
