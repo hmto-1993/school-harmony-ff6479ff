@@ -321,10 +321,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           </th>
                           <th className={cn(
                             "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
-                            isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
+                            isEditing
+                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600"
+                              : "bg-primary/8 text-primary"
                           )}>
                             <div>الدرجة</div>
-                            <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                            <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
                           </th>
                         </React.Fragment>
                       ))}
