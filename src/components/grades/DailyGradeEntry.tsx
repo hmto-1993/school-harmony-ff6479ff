@@ -51,10 +51,12 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   return <CircleMinus className={cn(size, "text-muted-foreground opacity-30")} />;
 };
 
-const NUMERIC_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
-const isNumericCategory = (name: string) => NUMERIC_CATEGORIES.includes(name);
+const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
+const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(name);
 const isParticipation = (name: string) => name === "المشاركة";
+const isBookCategory = (name: string) => name === "الكتاب";
 const MAX_PARTICIPATION_SLOTS = 3;
+const BOOK_DOT_COUNT = 10;
 
 interface DailyGradeEntryProps {
   selectedClass: string;
