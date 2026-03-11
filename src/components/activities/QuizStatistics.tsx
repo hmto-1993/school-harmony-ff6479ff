@@ -198,7 +198,7 @@ export default function QuizStatistics() {
       theme: "grid",
     });
 
-    doc.save(`إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     setExporting(false);
   };
 
