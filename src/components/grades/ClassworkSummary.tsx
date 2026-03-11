@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
@@ -189,7 +190,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         },
       });
 
-      doc.save(`المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      safeSavePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
     } catch (err) {
       console.error(err);

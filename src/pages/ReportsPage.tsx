@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { safePrint } from "@/lib/print-utils";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
@@ -307,7 +308,7 @@ export default function ReportsPage() {
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
-    XLSX.writeFile(wb, `تقرير_الحضور_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الحضور_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const exportGradesExcel = async () => {
@@ -323,7 +324,7 @@ export default function ReportsPage() {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الدرجات");
-    XLSX.writeFile(wb, `تقرير_الدرجات.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الدرجات.xlsx`);
   };
 
   const exportAttendancePDF = async () => {
@@ -352,7 +353,7 @@ export default function ReportsPage() {
       columnStyles: { 3: { halign: "right" } },
     });
 
-    doc.save(`تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
   };
 
   const exportGradesPDF = async () => {
@@ -379,7 +380,7 @@ export default function ReportsPage() {
       columnStyles: { [head.length - 1]: { halign: "right" } },
     });
 
-    doc.save(`تقرير_الدرجات.pdf`);
+    safeSavePDF(doc, `تقرير_الدرجات.pdf`);
   };
 
   // ============ Print & Send ============

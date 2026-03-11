@@ -8,6 +8,7 @@ import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
@@ -102,7 +103,7 @@ export default function ExportDialog({
       });
     }
 
-    XLSX.writeFile(wb, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
     setOpen(false);
   };
@@ -177,7 +178,7 @@ export default function ExportDialog({
       });
     }
 
-    doc.save(`سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { Badge } from "@/components/ui/badge";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
@@ -385,7 +386,7 @@ export default function AttendancePage() {
     }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "الحضور");
-    XLSX.writeFile(wb, `حضور_${className}_${date}.xlsx`);
+    safeWriteXLSX(wb, `حضور_${className}_${date}.xlsx`);
     toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
   };
 
@@ -416,7 +417,7 @@ export default function AttendancePage() {
       ...getArabicTableStyles(),
     });
 
-    doc.save(`حضور_${className}_${date}.pdf`);
+    safeSavePDF(doc, `حضور_${className}_${date}.pdf`);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 

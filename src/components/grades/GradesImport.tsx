@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface GradeCategory {
   id: string;
@@ -208,7 +209,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "الدرجات");
-    XLSX.writeFile(wb, `قالب_درجات_${cat?.name || "import"}.xlsx`);
+    safeWriteXLSX(wb, `قالب_درجات_${cat?.name || "import"}.xlsx`);
   };
 
   const matchedCount = importRows.filter(r => r.status === "matched").length;

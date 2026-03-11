@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
@@ -116,7 +117,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير السلوك");
-    XLSX.writeFile(wb, `تقرير_السلوك_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_السلوك_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const exportPDF = async () => {
@@ -137,7 +138,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ...tableStyles,
       columnStyles: { 3: { halign: "right" } },
     });
-    doc.save(`تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
   };
 
   return (

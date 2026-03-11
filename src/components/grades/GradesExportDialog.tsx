@@ -7,6 +7,7 @@ import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
@@ -55,7 +56,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet.data), sheet.name.substring(0, 31));
     });
 
-    XLSX.writeFile(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
     setOpen(false);
   };
@@ -98,7 +99,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       });
     });
 
-    doc.save(`${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

@@ -18,6 +18,7 @@ import type { TemplateType } from "@/components/whatsapp/WhatsAppMessageDialog";
 import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
 import { format } from "date-fns";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -462,7 +463,7 @@ export default function StudentsPage() {
       "جوال ولي الأمر": s.parent_phone || "",
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), "الطلاب");
-    XLSX.writeFile(wb, `طلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `طلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
   };
 
@@ -492,7 +493,7 @@ export default function StudentsPage() {
       ...tableStyles,
     });
 
-    doc.save(`طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 

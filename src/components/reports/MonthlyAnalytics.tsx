@@ -8,11 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import {
   Trophy, Star, AlertTriangle, Download, FileSpreadsheet, FileText, Users, GraduationCap,
+
   Shield, ShieldAlert, Award, TrendingUp, Loader2, Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { toast } from "@/hooks/use-toast";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
@@ -232,7 +234,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "المتميزون");
-    XLSX.writeFile(wb, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
   };
 
   const exportDisciplinaryExcel = async () => {
@@ -247,7 +249,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "إنذارات الغياب");
-    XLSX.writeFile(wb, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
   };
 
   // PDF exports
@@ -280,7 +282,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    doc.save(`تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
+    safeSavePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
   };
 
   const exportDisciplinaryPDF = async () => {
@@ -311,7 +313,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    doc.save(`تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
+    safeSavePDF(doc, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
   };
 
   const currentYear = new Date().getFullYear();

@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface ClassOption {
   id: string;
@@ -202,7 +203,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     ws["!cols"] = [{ wch: 14 }, { wch: 30 }, { wch: 25 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "خطة الدروس");
-    XLSX.writeFile(wb, "lesson_plan_template.xlsx");
+    safeWriteXLSX(wb, "lesson_plan_template.xlsx");
   };
 
   // Import from Excel/CSV

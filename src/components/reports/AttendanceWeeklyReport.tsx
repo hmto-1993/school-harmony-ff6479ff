@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import LessonSlotDialog from "./LessonSlotDialog";
 
 interface AttendanceRecord {
@@ -215,7 +216,7 @@ export default function AttendanceWeeklyReport({
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور الأسبوعي");
-    XLSX.writeFile(wb, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const handleExportPDF = async () => {
@@ -310,7 +311,7 @@ export default function AttendanceWeeklyReport({
       },
     });
 
-    doc.save(`تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
   };
 
   // Print removed per user request

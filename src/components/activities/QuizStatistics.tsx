@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Loader2, TrendingUp, Users, Award, BarChart3, Target, Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 
 interface QuizStats {
   activityId: string;
@@ -137,7 +138,7 @@ export default function QuizStatistics() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "الملخص");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), "التفاصيل");
-    XLSX.writeFile(wb, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     setExporting(false);
   };
 
@@ -197,7 +198,7 @@ export default function QuizStatistics() {
       theme: "grid",
     });
 
-    doc.save(`إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     setExporting(false);
   };
 

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface ActivityResultsProps {
   activityId: string;
@@ -58,7 +59,7 @@ export default function ActivityResults({ activityId, activityType, classId, cla
       });
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "النتائج");
-      XLSX.writeFile(wb, `نتائج_${clsName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      safeWriteXLSX(wb, `نتائج_${clsName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     });
   };
 

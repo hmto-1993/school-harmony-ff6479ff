@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX } from "@/lib/download-utils";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -303,7 +304,7 @@ export default function NoorExportDialog() {
 
       const periodLabel = selectedPeriod === "1" ? "ف1" : "ف2";
       const fileName = `نور_${cls?.name || "فصل"}_${category?.name || "مادة"}_${periodLabel}.xlsx`;
-      XLSX.writeFile(wb, fileName, { bookType: "xlsx", type: "binary" });
+      safeWriteXLSX(wb, fileName);
 
       toast.success("تم تصدير الملف بنجاح");
     } catch (err) {
