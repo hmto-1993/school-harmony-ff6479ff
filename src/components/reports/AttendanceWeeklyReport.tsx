@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
-import LessonSlotDialog from "./LessonSlotDialog";
+
 
 interface AttendanceRecord {
   student_name: string;
