@@ -23,6 +23,15 @@ type GradeLevel = "excellent" | "average" | "zero";
 const isParticipation = (name: string) => name === "المشاركة";
 const MAX_PARTICIPATION_SLOTS = 3;
 
+/** Maximum display icons per category in ClassworkSummary */
+function getMaxDisplayIcons(catName: string): number {
+  if (catName === "المشاركة") return 20;
+  if (catName === "الواجبات") return 8;
+  if (catName === "الكتاب") return 8;
+  if (catName === "الأعمال والمشاريع") return 8;
+  return 8; // default fallback
+}
+
 /** Decompose a daily score into colored icon levels */
 function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
   if (score <= 0) return ["zero"];
