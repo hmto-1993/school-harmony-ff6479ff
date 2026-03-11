@@ -19,6 +19,7 @@ interface SummaryRow {
   full_name: string;
   class_name: string;
   class_id: string;
+  dailyPoints: Record<string, number | null>;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
 }
@@ -58,13 +59,24 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
 
+    let allGrades: any[] = [];
     let allManualScores: any[] = [];
     if (studentIds.length > 0) {
-      const { data: manualData } = await supabase
-        .from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
-        .in("student_id", studentIds).eq("period", selectedPeriod);
+      const [{ data: gradesData }, { data: manualData }] = await Promise.all([
+        supabase.from("grades").select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds).eq("period", selectedPeriod),
+        supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
+          .in("student_id", studentIds).eq("period", selectedPeriod),
+      ]);
+      allGrades = gradesData || [];
       allManualScores = (manualData as any[]) || [];
     }
+
+    const gradesMap = new Map<string, Map<string, number | null>>();
+    allGrades.forEach((g) => {
+      if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
+      gradesMap.get(g.student_id)!.set(g.category_id, g.score != null ? Number(g.score) : null);
+    });
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
     allManualScores.forEach((m: any) => {
@@ -76,11 +88,14 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const rows: SummaryRow[] = students.filter((s) => s.class_id).map((s) => {
       const classCats = cats.filter((c) => c.class_id === s.class_id);
+      const studentGradesMap = gradesMap.get(s.id) || new Map();
       const studentManualMap = manualMap.get(s.id) || new Map();
+      const dailyPoints: Record<string, number | null> = {};
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
 
       classCats.forEach((c) => {
+        dailyPoints[c.id] = studentGradesMap.get(c.id) ?? null;
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
@@ -89,7 +104,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        manualScores, manualScoreIds,
+        dailyPoints, manualScores, manualScoreIds,
       };
     });
 
@@ -161,7 +176,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     }))
     .filter((g) => g.students.length > 0);
 
-  const calcSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
+  const calcManualSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
     let score = 0, max = 0;
     cats.forEach(cat => {
       max += Number(cat.max_score);
@@ -187,12 +202,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             title="المهام والمشاركة"
             fileName="المهام_والمشاركة"
             groups={groupedByClass.map((group) => {
-              const headers = ["#", "الطالب", ...group.categories.map(c => c.name), "الإجمالي"];
+              const headers = ["#", "الطالب",
+                ...group.categories.flatMap(c => [`${c.name} (نقاط)`, `${c.name} (درجة)`]),
+                "الإجمالي"];
               const rows = group.students.map((sg, i) => {
-                const sub = calcSubtotal(sg.manualScores, group.categories);
+                const sub = calcManualSubtotal(sg.manualScores, group.categories);
                 return [
                   String(i + 1), sg.full_name,
-                  ...group.categories.map(c => String(sg.manualScores[c.id] ?? 0)),
+                  ...group.categories.flatMap(c => [
+                    sg.dailyPoints[c.id] != null ? String(sg.dailyPoints[c.id]) : "—",
+                    String(sg.manualScores[c.id] ?? 0),
+                  ]),
                   `${sub.score} / ${sub.max}`,
                 ];
               });
@@ -291,26 +311,40 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
+                    {/* Row 1: category group headers */}
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
+                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
                       {classworkCats.map(cat => (
-                        <th key={cat.id} className={cn(
-                          "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                          isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
-                        )}>
+                        <th key={cat.id} colSpan={2} className="text-center p-2 font-bold text-xs border-b border-primary/20 text-primary">
                           <div>{cat.name}</div>
                           <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                         </th>
                       ))}
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
+                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
+                    </tr>
+                    {/* Row 2: sub-headers (نقاط / درجة) */}
+                    <tr className="bg-muted/30">
+                      {classworkCats.map(cat => (
+                        <React.Fragment key={cat.id}>
+                          <th className="text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
+                            النقاط
+                          </th>
+                          <th className={cn(
+                            "text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 min-w-[50px]",
+                            isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold" : "text-muted-foreground"
+                          )}>
+                            الدرجة
+                          </th>
+                        </React.Fragment>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
                     {group.students.map((sg, i) => {
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
-                      const sub = calcSubtotal(sg.manualScores, classworkCats);
+                      const sub = calcManualSubtotal(sg.manualScores, classworkCats);
 
                       return (
                         <tr key={sg.student_id} className={cn(
@@ -322,30 +356,42 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
+                            const points = sg.dailyPoints[cat.id];
                             return (
-                              <td key={cat.id} className={cn(
-                                "p-1.5 text-center border-l border-border/10",
-                                isEditing ? "bg-emerald-500/10" : ""
-                              )}>
-                                {isEditing ? (() => {
-                                  const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
-                                  return (
-                                    <Input
-                                      type="number" min={0} max={Number(cat.max_score)}
-                                      value={tempEdits[cellKey] ?? ""}
-                                      onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                      className={cn(
-                                        "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                        locked && "opacity-40 pointer-events-none"
-                                      )}
-                                      dir="ltr"
-                                      disabled={!!locked}
-                                    />
-                                  );
-                                })() : (
-                                  <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                )}
-                              </td>
+                              <React.Fragment key={cat.id}>
+                                {/* Daily points column */}
+                                <td className="p-1.5 text-center border-l border-border/10">
+                                  {points != null ? (
+                                    <span className="text-xs font-semibold text-muted-foreground">{points}</span>
+                                  ) : (
+                                    <span className="text-muted-foreground opacity-40 text-xs">—</span>
+                                  )}
+                                </td>
+                                {/* Manual score (درجة) column */}
+                                <td className={cn(
+                                  "p-1.5 text-center border-l border-border/10",
+                                  isEditing ? "bg-emerald-500/10" : ""
+                                )}>
+                                  {isEditing ? (() => {
+                                    const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                    return (
+                                      <Input
+                                        type="number" min={0} max={Number(cat.max_score)}
+                                        value={tempEdits[cellKey] ?? ""}
+                                        onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                        className={cn(
+                                          "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                          locked && "opacity-40 pointer-events-none"
+                                        )}
+                                        dir="ltr"
+                                        disabled={!!locked}
+                                      />
+                                    );
+                                  })() : (
+                                    <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
+                                  )}
+                                </td>
+                              </React.Fragment>
                             );
                           })}
 
