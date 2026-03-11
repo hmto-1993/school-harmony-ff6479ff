@@ -547,15 +547,6 @@ export default function AttendanceWeeklyReport({
           )}
         </CardContent>
 
-        <LessonSlotDialog
-          open={slotDialog.open}
-          onOpenChange={(open) => setSlotDialog((prev) => ({ ...prev, open }))}
-          lesson={slotDialog.lesson}
-          weekNum={slotDialog.weekNum}
-          dayIndex={slotDialog.dayIndex}
-          slotIndex={slotDialog.slotIndex}
-          onUpdated={() => onLessonUpdated?.()}
-        />
       </Card>
 
       {/* ===== LOGBOOK STYLES ===== */}
