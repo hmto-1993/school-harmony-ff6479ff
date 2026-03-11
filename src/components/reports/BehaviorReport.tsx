@@ -117,7 +117,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير السلوك");
-    XLSX.writeFile(wb, `تقرير_السلوك_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_السلوك_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const exportPDF = async () => {
