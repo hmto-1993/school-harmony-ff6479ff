@@ -426,6 +426,7 @@ export type Database = {
         Row: {
           category_id: string
           created_at: string
+          date: string
           id: string
           period: number
           recorded_by: string
@@ -436,6 +437,7 @@ export type Database = {
         Insert: {
           category_id: string
           created_at?: string
+          date?: string
           id?: string
           period?: number
           recorded_by: string
@@ -446,6 +448,7 @@ export type Database = {
         Update: {
           category_id?: string
           created_at?: string
+          date?: string
           id?: string
           period?: number
           recorded_by?: string
