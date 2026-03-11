@@ -367,7 +367,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     .map((cls) => ({
       ...cls,
       students: filteredRows.filter((r) => r.class_id === cls.id),
-      categories: allCategories.filter((c) => c.class_id === cls.id),
+      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
     }))
     .filter((g) => g.students.length > 0);
 
