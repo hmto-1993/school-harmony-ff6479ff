@@ -635,7 +635,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                 {/* Daily points column — dot visualization */}
                                 <td className="p-1.5 text-center border-l border-border/10">
                                   {points != null ? (
-                                    <div className="flex items-center justify-center gap-0.5 flex-wrap">
+                                    <div className="flex items-center justify-center gap-0.5 flex-wrap" style={{ maxWidth: totalDots > 8 ? `${Math.ceil(totalDots / 2) * 18}px` : undefined, margin: '0 auto' }}>
                                       {points >= Number(cat.max_score) ? (
                                         <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />
                                       ) : (() => {
