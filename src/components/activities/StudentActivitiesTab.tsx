@@ -394,9 +394,12 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
               ))}
               <Button onClick={submitQuiz}
                 disabled={submitting || Object.keys(quizAnswers).length < (selectedQuiz.questions?.length || 0)}
-                className="w-full gap-2 rounded-xl h-11">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                تسليم الاختبار
+                className={cn("w-full gap-2 rounded-xl h-11 transition-all", submitting && "opacity-80")}>
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> جاري الحفظ...</>
+                ) : (
+                  <><Send className="h-4 w-4" /> تسليم الاختبار</>
+                )}
               </Button>
               {Object.keys(quizAnswers).length < (selectedQuiz.questions?.length || 0) && (
                 <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
