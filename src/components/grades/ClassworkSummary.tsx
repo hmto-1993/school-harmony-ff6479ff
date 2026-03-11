@@ -115,27 +115,20 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         let colOffset = 1; // start after الإجمالي
         [...classworkCats].reverse().forEach(cat => {
           row.push(String(sg.manualScores[cat.id] ?? 0));
-          const points = sg.dailyPoints[cat.id];
+          const slots = sg.dailySlots[cat.id] || [];
+          const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
+          const max = Number(cat.max_score);
           const pointsColIndex = colOffset + 1;
-          if (points != null) {
-            const max = Number(cat.max_score);
-            if (points >= max) {
-              row.push(" "); // placeholder, will draw star
+          if (slots.length > 0) {
+            if (cumScore >= max) {
+              row.push(" ");
               dotCells.set(`${i}_${pointsColIndex}`, { type: "star" });
             } else {
-              const perDot = (() => {
-                const catNameLower = cat.name;
-                const targetDots = catNameLower.includes("مشاركة") ? 15
-                  : catNameLower.includes("كتاب") ? 10
-                  : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
-                  : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
-                return max / targetDots;
-              })();
-              const totalDots = Math.round(max / perDot);
-              const filledDots = Math.floor(points / perDot);
-              const hasPartial = points % perDot > 0;
-              row.push(" "); // placeholder, will draw dots
-              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots, partialDot: hasPartial, totalDots } });
+              const filledDots = slots.filter(s => s === "excellent").length;
+              const partialDots = slots.filter(s => s === "average").length;
+              const zeroDots = slots.filter(s => s === "zero").length;
+              row.push(" ");
+              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots: filledDots + partialDots, partialDot: false, totalDots: slots.length } });
             }
           } else {
             row.push("—");
