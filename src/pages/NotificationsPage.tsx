@@ -386,10 +386,7 @@ export default function NotificationsPage() {
                           <TableCell className="text-sm">{excuse.students?.classes?.name || "—"}</TableCell>
                           <TableCell className="text-sm max-w-[200px] truncate">{excuse.reason || "—"}</TableCell>
                           <TableCell>
-                            <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
-                              <FileImage className="h-3 w-3" />
-                              عرض
-                            </a>
+                            <ExcuseFileLink fileUrl={excuse.file_url} label="عرض" />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {new Date(excuse.created_at).toLocaleDateString("ar-SA")}
