@@ -664,41 +664,27 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
-                            const points = sg.dailyPoints[cat.id];
+                            const slots = sg.dailySlots[cat.id] || [];
+                            const cumScore = sg.dailyCumulativeScore[cat.id] ?? 0;
+                            const max = Number(cat.max_score);
                             return (
                               <React.Fragment key={cat.id}>
-                                {/* Daily points column — only earned dots */}
+                                {/* Daily points column — actual entered dots */}
                                 <td className="p-1.5 text-center border-l border-border/10">
-                                  {points != null ? (() => {
-                                    const max = Number(cat.max_score);
-                                    if (points >= max) {
+                                  {slots.length > 0 ? (() => {
+                                    if (cumScore >= max) {
                                       return <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />;
                                     }
-                                    const catNameLower = cat.name;
-                                    const targetDots = catNameLower.includes("مشاركة") ? 15
-                                      : catNameLower.includes("كتاب") ? 10
-                                      : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
-                                      : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
-                                    const perDot = max / targetDots;
-                                    const filledDots = Math.floor(points / perDot);
-                                    const hasPartial = points % perDot > 0;
-                                    const dots: React.ReactNode[] = [];
-
-                                    for (let d = 0; d < filledDots; d++) {
-                                      dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                    }
-                                    if (hasPartial) {
-                                      dots.push(<CircleMinus key="partial" className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                    }
-
-                                    if (dots.length === 0) {
-                                      return <span className="text-muted-foreground opacity-40 text-xs">0</span>;
-                                    }
+                                    const dots: React.ReactNode[] = slots.map((level, d) => {
+                                      if (level === "excellent") return <CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                      if (level === "average") return <CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                      return <CircleX key={d} className="h-4 w-4 text-rose-500 dark:text-rose-400 drop-shadow-sm print:h-2 print:w-2" />;
+                                    });
                                     return (
                                       <div
                                         className="inline-grid gap-0.5 justify-items-center"
                                         style={{
-                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(targetDots / 2))}, 1fr)`,
+                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(dots.length / 2) || 1)}, 1fr)`,
                                           margin: '0 auto',
                                         }}
                                       >
