@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
-import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
+import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toPng } from "html-to-image";
+import { createArabicPDF } from "@/lib/arabic-pdf";
+import { safePrint } from "@/lib/print-utils";
+import { format } from "date-fns";
+import { toast as sonnerToast } from "sonner";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
