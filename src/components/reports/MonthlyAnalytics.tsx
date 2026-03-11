@@ -282,7 +282,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    doc.save(`تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
+    safeSavePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
   };
 
   const exportDisciplinaryPDF = async () => {
