@@ -635,8 +635,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                       ) : (() => {
                                         const max = Number(cat.max_score);
                                         const dots: React.ReactNode[] = [];
-                                        const perDot = max <= 5 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
-                                        const totalDots = Math.ceil(max / perDot);
+                                        // Determine max dots based on category name
+                                        const catNameLower = cat.name;
+                                        const targetDots = catNameLower.includes("مشاركة") ? 15
+                                          : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
+                                          : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
+                                        const perDot = max / targetDots;
+                                        const totalDots = targetDots;
                                         const filledDots = Math.floor(points / perDot);
                                         const hasPartial = points % perDot > 0;
 
