@@ -545,7 +545,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             </CardHeader>
             <CardContent>
               <div ref={(el) => { if (el) tableRefs.current.set(group.id, el); }} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm print:overflow-visible" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
-                <table className="w-full text-sm border-separate border-spacing-0">
+                <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                       <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
@@ -553,7 +553,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       {classworkCats.map(cat => (
                         <React.Fragment key={`sub-${cat.id}`}>
                           <th className={cn(
-                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px]",
+                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px] border-r-2 border-r-border",
                             isEditing
                               ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                               : "bg-info/10 text-info dark:bg-info/20"
@@ -586,7 +586,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       return (
                         <tr key={sg.student_id} className={cn(
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          !isLast && "border-b border-border/20",
+                          "border-b border-border/40",
                         )}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">{sg.full_name}</td>
@@ -598,7 +598,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             return (
                               <React.Fragment key={cat.id}>
                                 {/* Icons column */}
-                                <td className="p-1.5 text-center border-l border-border/10">
+                                <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
                                   {icons.length > 0 && (
                                     <div className={cn(
                                       "flex flex-wrap justify-center gap-0.5",
