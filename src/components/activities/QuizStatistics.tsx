@@ -138,7 +138,7 @@ export default function QuizStatistics() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), "الملخص");
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), "التفاصيل");
-    XLSX.writeFile(wb, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     setExporting(false);
   };
 
