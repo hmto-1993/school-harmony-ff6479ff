@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,36 @@ import { SignedFileLink } from "@/components/activities/SignedFileLink";
 import { SignedImage } from "@/components/activities/SignedImage";
 import {
   ClipboardList, FileUp, Download, Loader2, Upload,
-  CheckCircle2, ArrowRight, AlertCircle, Send, Timer
+  CheckCircle2, ArrowRight, AlertCircle, Send, Timer, Wifi, WifiOff
 } from "lucide-react";
+
+// Auto-save helpers
+const AUTOSAVE_KEY = (activityId: string, studentId: string) =>
+  `quiz_answers_${activityId}_${studentId}`;
+
+function saveAnswersLocally(activityId: string, studentId: string, answers: Record<string, number>) {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY(activityId, studentId), JSON.stringify({ answers, savedAt: Date.now() }));
+  } catch { /* quota exceeded - ignore */ }
+}
+
+function loadSavedAnswers(activityId: string, studentId: string): Record<string, number> | null {
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY(activityId, studentId));
+    if (!raw) return null;
+    const { answers, savedAt } = JSON.parse(raw);
+    // Expire after 24h
+    if (Date.now() - savedAt > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(AUTOSAVE_KEY(activityId, studentId));
+      return null;
+    }
+    return answers;
+  } catch { return null; }
+}
+
+function clearSavedAnswers(activityId: string, studentId: string) {
+  try { localStorage.removeItem(AUTOSAVE_KEY(activityId, studentId)); } catch { /* */ }
+}
 
 interface StudentActivitiesTabProps {
   studentId: string;
@@ -180,18 +208,32 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       .eq("activity_id", activity.id)
       .order("sort_order");
 
+    // Restore saved answers from localStorage
+    const saved = loadSavedAnswers(activity.id, studentId);
     setSelectedQuiz({ ...activity, questions: questions || [] });
-    setQuizAnswers({});
+    setQuizAnswers(saved || {});
     setQuizResult(null);
     setTimerActive(activity.duration_minutes > 0);
+    if (saved && Object.keys(saved).length > 0) {
+      toast({ title: "تم استعادة إجاباتك السابقة", description: "يمكنك المتابعة من حيث توقفت" });
+    }
   };
+
+  // Auto-save answers to localStorage on change
+  useEffect(() => {
+    if (selectedQuiz && Object.keys(quizAnswers).length > 0) {
+      saveAnswersLocally(selectedQuiz.id, studentId, quizAnswers);
+    }
+  }, [quizAnswers, selectedQuiz, studentId]);
 
   const submitQuiz = useCallback(async () => {
     if (!selectedQuiz?.questions || submitting) return;
     setSubmitting(true);
     setTimerActive(false);
 
-    // Grade server-side via edge function
+    // Optimistic UI: show "saving" state immediately
+    toast({ title: "⏳ جاري حفظ الإجابات..." });
+
     const sessionToken = sessionStorage.getItem("student_session_token");
     const sessionIssuedAt = Number(sessionStorage.getItem("student_session_issued_at"));
 
@@ -211,9 +253,13 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       return;
     }
 
+    // Clear saved answers after successful submission
+    clearSavedAnswers(selectedQuiz.id, studentId);
+
     setQuizResult({ score: data.score, total: data.total });
     setCompletedQuizzes(prev => new Set(prev).add(selectedQuiz.id));
     setSubmitting(false);
+    toast({ title: "✅ تم تسليم الاختبار بنجاح!" });
   }, [selectedQuiz, quizAnswers, submitting, studentId, toast]);
 
   const handleTimerExpire = useCallback(() => {
@@ -260,6 +306,11 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
               {selectedQuiz.title}
             </CardTitle>
             <div className="flex items-center gap-2">
+              {!quizResult && Object.keys(quizAnswers).length > 0 && (
+                <Badge variant="outline" className="gap-1 text-xs rounded-full text-emerald-600 border-emerald-200 bg-emerald-50">
+                  <CheckCircle2 className="h-3 w-3" /> محفوظ محلياً
+                </Badge>
+              )}
               {timerActive && selectedQuiz.duration_minutes > 0 && !quizResult && (
                 <CountdownTimer totalSeconds={selectedQuiz.duration_minutes * 60} onExpire={handleTimerExpire} />
               )}
@@ -343,9 +394,12 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
               ))}
               <Button onClick={submitQuiz}
                 disabled={submitting || Object.keys(quizAnswers).length < (selectedQuiz.questions?.length || 0)}
-                className="w-full gap-2 rounded-xl h-11">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                تسليم الاختبار
+                className={cn("w-full gap-2 rounded-xl h-11 transition-all", submitting && "opacity-80")}>
+                {submitting ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> جاري الحفظ...</>
+                ) : (
+                  <><Send className="h-4 w-4" /> تسليم الاختبار</>
+                )}
               </Button>
               {Object.keys(quizAnswers).length < (selectedQuiz.questions?.length || 0) && (
                 <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
