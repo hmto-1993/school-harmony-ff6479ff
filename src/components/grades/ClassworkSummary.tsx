@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, FileText, Printer } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import { safeSavePDF } from "@/lib/download-utils";
@@ -17,6 +17,52 @@ import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+
+type GradeLevel = "excellent" | "average" | "zero";
+
+const isParticipation = (name: string) => name === "المشاركة";
+const MAX_PARTICIPATION_SLOTS = 3;
+
+/** Decompose a daily score into colored icon levels */
+function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
+  if (score <= 0) return ["zero"];
+  const isPartCat = isParticipation(catName);
+  const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+  const perSlot = Math.round(maxScore / slotCount);
+
+  // Full score on participation → single star (handled separately)
+  if (score >= maxScore && isPartCat) return ["excellent"]; // will render as star
+
+  const icons: GradeLevel[] = [];
+  let remaining = score;
+  for (let si = 0; si < slotCount; si++) {
+    if (remaining >= perSlot) {
+      icons.push("excellent");
+      remaining -= perSlot;
+    } else if (remaining >= Math.round(perSlot / 2)) {
+      icons.push("average");
+      remaining -= Math.round(perSlot / 2);
+    } else if (remaining > 0) {
+      icons.push("average");
+      remaining = 0;
+    } else {
+      icons.push("zero");
+    }
+  }
+  return icons;
+}
+
+interface DailyIcon {
+  level: GradeLevel;
+  isFullScore: boolean; // render as star instead of circle
+}
+
+const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?: string }) => {
+  if (icon.isFullScore) return <Star className={cn(size, "text-amber-500 fill-amber-400")} />;
+  if (icon.level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
+  if (icon.level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
+  return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
+};
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
