@@ -243,7 +243,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       <div className="hidden print:block">
         <ReportPrintHeader reportType="grades" />
       </div>
-      )
 
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات بعد</p>
