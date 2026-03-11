@@ -417,7 +417,7 @@ export default function AttendancePage() {
       ...getArabicTableStyles(),
     });
 
-    doc.save(`حضور_${className}_${date}.pdf`);
+    safeSavePDF(doc, `حضور_${className}_${date}.pdf`);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 

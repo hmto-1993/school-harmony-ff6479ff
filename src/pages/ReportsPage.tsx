@@ -380,7 +380,7 @@ export default function ReportsPage() {
       columnStyles: { [head.length - 1]: { halign: "right" } },
     });
 
-    doc.save(`تقرير_الدرجات.pdf`);
+    safeSavePDF(doc, `تقرير_الدرجات.pdf`);
   };
 
   // ============ Print & Send ============

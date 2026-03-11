@@ -493,7 +493,7 @@ export default function StudentsPage() {
       ...tableStyles,
     });
 
-    doc.save(`طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    safeSavePDF(doc, `طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 
