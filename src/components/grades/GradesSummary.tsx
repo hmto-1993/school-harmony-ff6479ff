@@ -195,11 +195,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     }))
     .filter((g) => g.students.length > 0);
 
-  const calcSubtotal = (grades: Record<string, number | null>, cats: CategoryInfo[]) => {
+  const calcSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
     let score = 0, max = 0;
     cats.forEach(cat => {
       max += Number(cat.max_score);
-      if (grades[cat.id] != null) score += grades[cat.id]!;
+      score += scores[cat.id] ?? 0;
     });
     return { score, max };
   };
