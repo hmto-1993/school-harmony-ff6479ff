@@ -234,12 +234,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       allManualScores = (manualData as any[]) || [];
     }
 
-    // Keep only the latest date's score per student+category
+    // Sum scores across all dates per student+category (cumulative progress)
     const gradesMap = new Map<string, Map<string, number | null>>();
     allGrades.forEach((g) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      // Since ordered by date ascending, later entries overwrite earlier ones → keeps latest
-      gradesMap.get(g.student_id)!.set(g.category_id, g.score != null ? Number(g.score) : null);
+      const studentMap = gradesMap.get(g.student_id)!;
+      if (g.score != null) {
+        const prev = studentMap.get(g.category_id);
+        studentMap.set(g.category_id, (prev ?? 0) + Number(g.score));
+      } else if (!studentMap.has(g.category_id)) {
+        studentMap.set(g.category_id, null);
+      }
     });
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
