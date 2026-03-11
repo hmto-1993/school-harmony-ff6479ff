@@ -603,9 +603,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                       disabled={!!locked}
                                     />
                                   );
-                                })() : (
-                                  <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                )}
+                                })() : (() => {
+                                  const icons = sg.dailyIcons[cat.id] || [];
+                                  const manualScore = sg.manualScores[cat.id] ?? 0;
+                                  return (
+                                    <div className="flex flex-col items-center gap-1">
+                                      {icons.length > 0 && (
+                                        <div className={cn(
+                                          "flex flex-wrap justify-center gap-0.5",
+                                          icons.length > 8 ? "grid grid-cols-8 gap-0.5" : ""
+                                        )}>
+                                          {icons.map((icon, idx) => (
+                                            <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
+                                          ))}
+                                        </div>
+                                      )}
+                                      <span className="text-[10px] font-semibold text-muted-foreground">{manualScore}</span>
+                                    </div>
+                                  );
+                                })()}
                               </td>
                             );
                           })}
