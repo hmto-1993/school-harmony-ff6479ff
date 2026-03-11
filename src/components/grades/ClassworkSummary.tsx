@@ -561,7 +561,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
                             : cat.name
                           }</div>
-                          <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
                         </th>
                       ))}
                       <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
@@ -569,13 +568,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                     <tr className="bg-muted/30">
                       {classworkCats.map(cat => (
                         <React.Fragment key={`sub-${cat.id}`}>
-                          <th className="text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">النقاط</th>
+                          <th className="text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
+                            {cat.name}
+                          </th>
                           <th className={cn(
                             "text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 min-w-[50px]",
                             isEditing
                               ? "text-emerald-700 dark:text-emerald-400"
                               : "text-muted-foreground"
-                          )}>الدرجة</th>
+                          )}>
+                            <div>الدرجة</div>
+                            <div className="text-[9px] opacity-70">من {Number(cat.max_score)}</div>
+                          </th>
                         </React.Fragment>
                       ))}
                     </tr>
