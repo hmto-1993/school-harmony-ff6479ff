@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { Badge } from "@/components/ui/badge";
 import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
