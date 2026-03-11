@@ -324,7 +324,7 @@ export default function ReportsPage() {
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الدرجات");
-    XLSX.writeFile(wb, `تقرير_الدرجات.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الدرجات.xlsx`);
   };
 
   const exportAttendancePDF = async () => {
