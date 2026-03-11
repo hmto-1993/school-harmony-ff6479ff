@@ -238,15 +238,15 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 "المجموع",
               ];
               const rows = group.students.map((sg, i) => {
-                const cwSub = calcSubtotal(sg.grades, classworkCats);
-                const exSub = calcSubtotal(sg.grades, examCats);
+                const cwSub = calcSubtotal(sg.manualScores, classworkCats);
+                const exSub = calcSubtotal(sg.manualScores, examCats);
                 return [
                   String(i + 1), sg.full_name,
                   ...classworkCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(classworkCats.length > 0 ? [`${cwSub.score} / ${cwSub.max}`] : []),
-                  ...examCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...examCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
-                  ...otherCats.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                  ...otherCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   sg.total,
                 ];
               });
