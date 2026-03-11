@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, FileText, FileSpreadsheet, Upload, BookOpen, ClipboardCheck, Settings2 } from "lucide-react";
+import { AlertTriangle, FileText, FileSpreadsheet, Upload, Settings2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
-import LessonSlotDialog from "./LessonSlotDialog";
+
 
 interface AttendanceRecord {
   student_name: string;
@@ -19,16 +19,6 @@ interface AttendanceRecord {
   notes: string | null;
 }
 
-interface LessonPlanData {
-  id: string;
-  week_number: number;
-  day_index: number;
-  slot_index: number;
-  lesson_title: string;
-  objectives: string;
-  teacher_reflection: string;
-  is_completed: boolean;
-}
 
 interface Props {
   attendanceData: AttendanceRecord[];
@@ -37,8 +27,6 @@ interface Props {
   dateFrom: string;
   dateTo: string;
   className?: string;
-  lessonPlans?: LessonPlanData[];
-  onLessonUpdated?: () => void;
 }
 
 const STATUS_CONFIG: Record<string, { color: string; printColor: string; label: string; dotChar: string }> = {
@@ -81,14 +69,10 @@ export default function AttendanceWeeklyReport({
   dateFrom,
   dateTo,
   className: classDisplayName,
-  lessonPlans = [],
-  onLessonUpdated,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
-  const [slotDialog, setSlotDialog] = useState<{ open: boolean; weekNum: number; dayIndex: number; slotIndex: number; lesson: LessonPlanData | null }>({ open: false, weekNum: 0, dayIndex: 0, slotIndex: 0, lesson: null });
 
   useEffect(() => {
     supabase
@@ -101,13 +85,6 @@ export default function AttendanceWeeklyReport({
       });
   }, []);
 
-  const lessonLookup = useMemo(() => {
-    const map = new Map<string, LessonPlanData>();
-    lessonPlans.forEach((lp) => {
-      map.set(`${lp.week_number}-${lp.day_index}-${lp.slot_index}`, lp);
-    });
-    return map;
-  }, [lessonPlans]);
 
   const { weeks, studentRows, totalPeriodsHeld } = useMemo(() => {
     const fromDate = new Date(dateFrom);
@@ -342,30 +319,6 @@ export default function AttendanceWeeklyReport({
                   {atRiskCount} طالب في خطر
                 </Badge>
               )}
-              {lessonPlans.length > 0 && (
-                <div className="flex rounded-lg border border-border/50 overflow-hidden">
-                  <button
-                    onClick={() => setViewMode("attendance")}
-                    className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                      viewMode === "attendance" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <ClipboardCheck className="h-3.5 w-3.5" />
-                    الحضور
-                  </button>
-                  <button
-                    onClick={() => setViewMode("lessons")}
-                    className={cn(
-                      "flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors",
-                      viewMode === "lessons" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted text-muted-foreground"
-                    )}
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    الدروس
-                  </button>
-                </div>
-              )}
               {/* Week selector popover */}
               <Popover>
                 <PopoverTrigger asChild>
@@ -535,43 +488,23 @@ export default function AttendanceWeeklyReport({
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
                         const cfg = status ? STATUS_CONFIG[status] : null;
-                        const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
-                        const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
-                        const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
-                        const lesson = lessonLookup.get(lessonKey);
-
-                        const handleSlotClick = () => {
-                          setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
-                        };
 
                         return (
                           <td
                             key={`${w.weekNum}-${i}`}
-                            className={cn("logbook-td logbook-td-dot", lessonPlans.length > 0 && "cursor-pointer")}
-                            onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
-                            title={lesson?.lesson_title || undefined}
+                            className="logbook-td logbook-td-dot"
                           >
-                            {viewMode === "attendance" ? (
-                              <span
-                                className="session-dot"
-                                style={{
-                                  backgroundColor: cfg ? cfg.color : "#e5e0d0",
-                                  borderColor: cfg ? cfg.color : "#ccc5b0",
-                                }}
-                              >
-                                {cfg ? (
-                                  status === "present" ? "✓" : status === "absent" ? "✕" : status === "late" ? "!" : "⏎"
-                                ) : ""}
-                              </span>
-                            ) : (
-                              lesson ? (
-                                <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "font-bold" : "")} style={{ color: lesson.is_completed ? "#22c55e" : "#333" }}>
-                                  {lesson.lesson_title}
-                                </span>
-                              ) : (
-                                <span style={{ color: "#bbb", fontSize: 10 }}>—</span>
-                              )
-                            )}
+                            <span
+                              className="session-dot"
+                              style={{
+                                backgroundColor: cfg ? cfg.color : "#e5e0d0",
+                                borderColor: cfg ? cfg.color : "#ccc5b0",
+                              }}
+                            >
+                              {cfg ? (
+                                status === "present" ? "✓" : status === "absent" ? "✕" : status === "late" ? "!" : "⏎"
+                              ) : ""}
+                            </span>
                           </td>
                         );
                       })
@@ -614,15 +547,6 @@ export default function AttendanceWeeklyReport({
           )}
         </CardContent>
 
-        <LessonSlotDialog
-          open={slotDialog.open}
-          onOpenChange={(open) => setSlotDialog((prev) => ({ ...prev, open }))}
-          lesson={slotDialog.lesson}
-          weekNum={slotDialog.weekNum}
-          dayIndex={slotDialog.dayIndex}
-          slotIndex={slotDialog.slotIndex}
-          onUpdated={() => onLessonUpdated?.()}
-        />
       </Card>
 
       {/* ===== LOGBOOK STYLES ===== */}

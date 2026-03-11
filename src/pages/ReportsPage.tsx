@@ -128,21 +128,15 @@ export default function ReportsPage() {
   // Periods per week for weekly report
   const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
 
-  // Lesson plans for weekly report
-  const [lessonPlans, setLessonPlans] = useState<any[]>([]);
 
   // Fetch periods per week when class changes
   useEffect(() => {
-    const fetchScheduleAndLessons = async () => {
+    const fetchSchedule = async () => {
       if (!selectedClass) return;
-      const [schedRes, lessonsRes] = await Promise.all([
-        supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClass).single(),
-        supabase.from("lesson_plans").select("*").eq("class_id", selectedClass),
-      ]);
-      setPeriodsPerWeek(schedRes.data?.periods_per_week || 5);
-      setLessonPlans(lessonsRes.data || []);
+      const { data } = await supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClass).single();
+      setPeriodsPerWeek(data?.periods_per_week || 5);
     };
-    fetchScheduleAndLessons();
+    fetchSchedule();
   }, [selectedClass]);
 
   // Fetch classes
@@ -1097,11 +1091,6 @@ export default function ReportsPage() {
                   dateFrom={dateFrom}
                   dateTo={dateTo}
                   className={className}
-                  lessonPlans={lessonPlans}
-                  onLessonUpdated={async () => {
-                    const { data } = await supabase.from("lesson_plans").select("*").eq("class_id", selectedClass);
-                    setLessonPlans(data || []);
-                  }}
                 />
               )}
             </div>
