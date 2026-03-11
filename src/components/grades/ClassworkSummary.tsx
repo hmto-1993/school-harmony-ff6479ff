@@ -677,7 +677,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                       <div
                                         className="inline-grid gap-0.5 justify-items-center"
                                         style={{
-                                          gridTemplateColumns: `repeat(${Math.min(totalShown, Math.ceil(targetDots / 2))}, 1fr)`,
+                                          gridTemplateColumns: `repeat(${Math.min(isEditing ? targetDots : totalShown, Math.ceil(targetDots / 2))}, 1fr)`,
                                           margin: '0 auto',
                                         }}
                                       >
