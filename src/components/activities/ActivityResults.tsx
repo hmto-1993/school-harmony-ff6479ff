@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Upload, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface ActivityResultsProps {
   activityId: string;
