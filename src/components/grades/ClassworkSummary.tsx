@@ -434,33 +434,39 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         } catch {}
 
                         const title = document.createElement("h2");
-                        title.style.cssText = "text-align:center;margin-bottom:8px;font-size:16px;font-weight:bold;";
+                        title.style.cssText = "text-align:center;margin-bottom:4px;font-size:14px;font-weight:bold;";
                         title.textContent = `المهام والمشاركة — ${group.name}`;
                         const periodLabel = document.createElement("p");
-                        periodLabel.style.cssText = "text-align:center;margin-bottom:12px;font-size:12px;color:#666;";
+                        periodLabel.style.cssText = "text-align:center;margin-bottom:8px;font-size:11px;color:#666;";
                         periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
                         printArea.appendChild(title);
                         printArea.appendChild(periodLabel);
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
-                        // Force light mode and fit table
+                        // Compact print: small font, tight padding to fit all columns & max rows
                         clone.querySelectorAll("table").forEach(t => {
                           t.style.width = "100%";
-                          t.style.tableLayout = "auto";
-                          t.style.fontSize = "11px";
+                          t.style.tableLayout = "fixed";
+                          t.style.fontSize = "9px";
                           t.style.borderCollapse = "collapse";
                         });
                         clone.querySelectorAll("th, td").forEach(el => {
-                          (el as HTMLElement).style.color = "#1a1a1a";
-                          (el as HTMLElement).style.backgroundColor = "";
-                          (el as HTMLElement).style.padding = "4px 6px";
-                          (el as HTMLElement).style.whiteSpace = "nowrap";
-                          (el as HTMLElement).style.border = "1px solid #d1d5db";
+                          const h = el as HTMLElement;
+                          h.style.color = "#1a1a1a";
+                          h.style.backgroundColor = "";
+                          h.style.padding = "2px 3px";
+                          h.style.whiteSpace = "nowrap";
+                          h.style.border = "1px solid #d1d5db";
+                          h.style.fontSize = "9px";
+                          h.style.lineHeight = "1.2";
+                          h.style.overflow = "hidden";
+                          h.style.textOverflow = "ellipsis";
                         });
                         clone.querySelectorAll("th").forEach(el => {
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
+                          (el as HTMLElement).style.fontSize = "8px";
                         });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
