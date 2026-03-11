@@ -57,7 +57,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     try {
       // Force light mode for capture
       el.classList.add("light-capture");
-      const dataUrl = await toPng(el, { backgroundColor: "#ffffff", pixelRatio: 2 });
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff", pixelRatio: 2, skipFonts: true });
       el.classList.remove("light-capture");
 
       const { doc, startY } = await createArabicPDF({
