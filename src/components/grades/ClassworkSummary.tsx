@@ -342,7 +342,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               </div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+              <div ref={(el) => { if (el) tableRefs.current.set(group.id, el); }} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm print:overflow-visible" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
