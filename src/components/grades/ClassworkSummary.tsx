@@ -553,10 +553,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       {classworkCats.map(cat => (
                         <React.Fragment key={`sub-${cat.id}`}>
                           <th className={cn(
-                            "text-center p-1.5 font-bold text-[10px] border-b-2 border-primary/20 min-w-[50px]",
+                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px]",
                             isEditing
                               ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                              : "text-primary"
+                              : "bg-info/10 text-info dark:bg-info/20"
                           )}>
                             <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
                               ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
@@ -564,13 +564,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             }</div>
                           </th>
                           <th className={cn(
-                            "text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 min-w-[50px]",
+                            "text-center p-2 font-semibold text-xs border-b-2 border-primary/20 min-w-[55px]",
                             isEditing
                               ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                              : "text-muted-foreground"
+                              : "bg-warning/10 text-warning dark:bg-warning/20"
                           )}>
                             <div>الدرجة</div>
-                            <div className="text-[9px] opacity-70">من {Number(cat.max_score)}</div>
+                            <div className="text-[10px] opacity-80">من {Number(cat.max_score)}</div>
                           </th>
                         </React.Fragment>
                       ))}
