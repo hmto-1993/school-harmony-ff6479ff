@@ -188,7 +188,7 @@ export default function GradesPage() {
             <BehaviorEntry selectedClass={selectedClass} onClassChange={setSelectedClass} />
           )}
           {activeType === "classwork" && (
-            <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} categoryGroupFilter="classwork" />
+            <ClassworkSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
           {activeType === "summary" && (
             <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
