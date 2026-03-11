@@ -52,33 +52,70 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
   const exportTableAsPDF = async (classId: string, className: string) => {
-    const el = tableRefs.current.get(classId);
-    if (!el) return;
+    // Find students and categories for this class
+    const group = groupedByClass.find(g => g.id === classId);
+    if (!group) return;
     try {
-      // Force light mode for capture
-      el.classList.add("light-capture");
-      const dataUrl = await toPng(el, { backgroundColor: "#ffffff", pixelRatio: 2, skipFonts: true });
-      el.classList.remove("light-capture");
-
       const { doc, startY } = await createArabicPDF({
         orientation: "landscape",
         reportType: "grades",
         includeHeader: true,
       });
       const pageWidth = doc.internal.pageSize.getWidth();
+      const tableStyles = getArabicTableStyles();
 
       doc.setFontSize(14);
       doc.text(`المهام والمشاركة — ${className}`, pageWidth / 2, startY, { align: "center" });
       doc.setFontSize(9);
       doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 6, { align: "center" });
+      doc.text(selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية", pageWidth / 2, startY + 11, { align: "center" });
 
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
+      const classworkCats = group.categories;
 
-      const imgWidth = pageWidth - 20;
-      const imgHeight = (img.height / img.width) * imgWidth;
-      doc.addImage(dataUrl, "PNG", 10, startY + 12, imgWidth, imgHeight);
+      // Build headers (reversed for RTL): الإجمالي | درجة | نقاط | ... | الطالب | #
+      const headers: string[] = [];
+      headers.push("الإجمالي");
+      [...classworkCats].reverse().forEach(cat => {
+        headers.push(`الدرجة (${cat.max_score})`);
+        headers.push(cat.name);
+      });
+      headers.push("الطالب");
+      headers.push("#");
+
+      // Build rows
+      const rows: string[][] = group.students.map((sg, i) => {
+        const sub = calcManualSubtotal(sg.manualScores, classworkCats);
+        const row: string[] = [];
+        row.push(`${sub.score} / ${sub.max}`);
+        [...classworkCats].reverse().forEach(cat => {
+          row.push(String(sg.manualScores[cat.id] ?? 0));
+          const points = sg.dailyPoints[cat.id];
+          if (points != null) {
+            if (points >= Number(cat.max_score)) {
+              row.push("★");
+            } else {
+              row.push(String(points));
+            }
+          } else {
+            row.push("—");
+          }
+        });
+        row.push(sg.full_name);
+        row.push(String(i + 1));
+        return row;
+      });
+
+      autoTable(doc, {
+        startY: startY + 15,
+        head: [headers],
+        body: rows,
+        ...tableStyles,
+        styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 2 },
+        headStyles: { ...tableStyles.headStyles, fontSize: 7 },
+        columnStyles: {
+          [headers.length - 2]: { halign: "right" as const, cellWidth: "auto" },
+        },
+      });
 
       doc.save(`المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
