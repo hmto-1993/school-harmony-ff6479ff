@@ -269,9 +269,23 @@
   .print\:block { display: block !important; }
   /* إخفاء زر العودة وأي عنصر no-print أثناء الطباعة الفعلية */
   .no-print, .print-close-btn { display: none !important; }
+  /* Preserve colors in print */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   @page {
-    size: A4;
+    size: A4 landscape;
     margin: 12mm;
-    /* Remove browser-injected header/footer (date, URL, title) */
   }
+}
+
+/* Light mode snapshot for html-to-image capture */
+.light-capture, .light-capture * {
+  color-scheme: light !important;
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --muted: 220 18% 94%;
+  --muted-foreground: 220 12% 46%;
+  --primary: 195 100% 42%;
+  --border: 220 13% 91%;
 }
