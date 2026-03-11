@@ -641,18 +641,45 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             const points = sg.dailyPoints[cat.id];
                             return (
                               <React.Fragment key={cat.id}>
-                                {/* Daily points column — accumulated number */}
+                                {/* Daily points column — only earned dots */}
                                 <td className="p-1.5 text-center border-l border-border/10">
-                                  {points != null ? (
-                                    <span className={cn(
-                                      "text-xs font-bold",
-                                      points >= Number(cat.max_score) ? "text-yellow-600 dark:text-yellow-400" :
-                                      points > 0 ? "text-emerald-600 dark:text-emerald-400" :
-                                      "text-muted-foreground"
-                                    )}>
-                                      {points}
-                                    </span>
-                                  ) : (
+                                  {points != null ? (() => {
+                                    const max = Number(cat.max_score);
+                                    if (points >= max) {
+                                      return <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />;
+                                    }
+                                    const catNameLower = cat.name;
+                                    const targetDots = catNameLower.includes("مشاركة") ? 15
+                                      : catNameLower.includes("كتاب") ? 10
+                                      : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
+                                      : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
+                                    const perDot = max / targetDots;
+                                    const filledDots = Math.floor(points / perDot);
+                                    const hasPartial = points % perDot > 0;
+                                    const dots: React.ReactNode[] = [];
+
+                                    for (let d = 0; d < filledDots; d++) {
+                                      dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
+                                    }
+                                    if (hasPartial) {
+                                      dots.push(<CircleMinus key="partial" className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
+                                    }
+
+                                    if (dots.length === 0) {
+                                      return <span className="text-muted-foreground opacity-40 text-xs">0</span>;
+                                    }
+                                    return (
+                                      <div
+                                        className="inline-grid gap-0.5 justify-items-center"
+                                        style={{
+                                          gridTemplateColumns: `repeat(${Math.min(dots.length, Math.ceil(targetDots / 2))}, 1fr)`,
+                                          margin: '0 auto',
+                                        }}
+                                      >
+                                        {dots}
+                                      </div>
+                                    );
+                                  })() : (
                                     <span className="text-muted-foreground opacity-40 text-xs">—</span>
                                   )}
                                 </td>
