@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
+import { safeWriteXLSX } from "@/lib/download-utils";
 
 interface GradeCategory {
   id: string;
