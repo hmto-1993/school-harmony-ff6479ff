@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 
@@ -359,23 +359,33 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             const points = sg.dailyPoints[cat.id];
                             return (
                               <React.Fragment key={cat.id}>
-                                {/* Daily points column — colored dot visualization */}
+                                {/* Daily points column — dot visualization */}
                                 <td className="p-1.5 text-center border-l border-border/10">
                                   {points != null ? (
-                                    <div className="flex items-center justify-center gap-1">
+                                    <div className="flex items-center justify-center gap-0.5 flex-wrap">
                                       {points >= Number(cat.max_score) ? (
-                                        <CircleCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                      ) : points > 0 ? (
-                                        <CircleMinus className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                                      ) : (
-                                        <CircleX className="h-4 w-4 text-rose-500 dark:text-rose-400" />
-                                      )}
-                                      <span className={cn(
-                                        "text-xs font-bold",
-                                        points >= Number(cat.max_score) ? "text-emerald-600 dark:text-emerald-400" :
-                                        points > 0 ? "text-amber-600 dark:text-amber-400" :
-                                        "text-rose-500 dark:text-rose-400"
-                                      )}>{points}</span>
+                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
+                                      ) : (() => {
+                                        const max = Number(cat.max_score);
+                                        const dots: React.ReactNode[] = [];
+                                        // Calculate how many green/amber/red dots to show
+                                        // Each dot = 1 point unit; green = earned full, red = not earned
+                                        const perDot = max <= 5 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
+                                        const totalDots = Math.ceil(max / perDot);
+                                        const filledDots = Math.floor(points / perDot);
+                                        const hasPartial = points % perDot > 0;
+
+                                        for (let d = 0; d < totalDots; d++) {
+                                          if (d < filledDots) {
+                                            dots.push(<CircleCheck key={d} className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />);
+                                          } else if (d === filledDots && hasPartial) {
+                                            dots.push(<CircleMinus key={d} className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />);
+                                          } else {
+                                            dots.push(<CircleX key={d} className="h-3.5 w-3.5 text-rose-500/40 dark:text-rose-400/40" />);
+                                          }
+                                        }
+                                        return dots;
+                                      })()}
                                     </div>
                                   ) : (
                                     <span className="text-muted-foreground opacity-40 text-xs">—</span>
