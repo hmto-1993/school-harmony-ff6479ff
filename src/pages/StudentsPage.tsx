@@ -463,7 +463,7 @@ export default function StudentsPage() {
       "جوال ولي الأمر": s.parent_phone || "",
     }));
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), "الطلاب");
-    XLSX.writeFile(wb, `طلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `طلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
   };
 
