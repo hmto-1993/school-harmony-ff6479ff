@@ -48,6 +48,44 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [saving, setSaving] = useState(false);
   const [fillAllValue, setFillAllValue] = useState("");
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
+  const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const exportTableAsPDF = async (classId: string, className: string) => {
+    const el = tableRefs.current.get(classId);
+    if (!el) return;
+    try {
+      // Force light mode for capture
+      el.classList.add("light-capture");
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff", pixelRatio: 2 });
+      el.classList.remove("light-capture");
+
+      const { doc, startY } = await createArabicPDF({
+        orientation: "landscape",
+        reportType: "grades",
+        includeHeader: true,
+      });
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(14);
+      doc.text(`المهام والمشاركة — ${className}`, pageWidth / 2, startY, { align: "center" });
+      doc.setFontSize(9);
+      doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 6, { align: "center" });
+
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (img.height / img.width) * imgWidth;
+      doc.addImage(dataUrl, "PNG", 10, startY + 12, imgWidth, imgHeight);
+
+      doc.save(`المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      sonnerToast.success("تم تصدير ملف PDF بنجاح");
+    } catch (err) {
+      console.error(err);
+      sonnerToast.error("حدث خطأ أثناء التصدير");
+    }
+  };
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
