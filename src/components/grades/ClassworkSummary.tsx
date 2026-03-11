@@ -36,6 +36,23 @@ interface ClassworkSummaryProps {
   selectedPeriod?: number;
 }
 
+/** Draw a filled star shape in jsPDF using triangles */
+function drawStar(doc: any, cx: number, cy: number, size: number) {
+  const pts = 5;
+  const outerR = size;
+  const innerR = size * 0.4;
+  const verts: [number, number][] = [];
+  for (let i = 0; i < pts * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (Math.PI / 2) + (i * Math.PI) / pts;
+    verts.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
+  }
+  doc.setFillColor(234, 179, 8);
+  for (let i = 1; i < verts.length - 1; i++) {
+    doc.triangle(verts[0][0], verts[0][1], verts[i][0], verts[i][1], verts[i + 1][0], verts[i + 1][1], "F");
+  }
+}
+
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -82,35 +99,37 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       headers.push("الطالب");
       headers.push("#");
 
+      // Track which cells need dot/star drawing: { row, col, type, dots }
+      type DotInfo = { filledDots: number; partialDot: boolean; totalDots: number };
+      const dotCells = new Map<string, { type: "star" | "dots"; dots?: DotInfo }>();
+
       // Build rows
       const rows: string[][] = group.students.map((sg, i) => {
         const sub = calcManualSubtotal(sg.manualScores, classworkCats);
         const row: string[] = [];
         row.push(`${sub.score} / ${sub.max}`);
+        let colOffset = 1; // start after الإجمالي
         [...classworkCats].reverse().forEach(cat => {
           row.push(String(sg.manualScores[cat.id] ?? 0));
           const points = sg.dailyPoints[cat.id];
+          const pointsColIndex = colOffset + 1;
           if (points != null) {
             const max = Number(cat.max_score);
             if (points >= max) {
-              row.push("★");
+              row.push(" "); // placeholder, will draw star
+              dotCells.set(`${i}_${pointsColIndex}`, { type: "star" });
             } else {
-              // Build dot representation: ● for earned, ◐ for partial, ○ for not earned
               const perDot = max <= 5 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
               const totalDots = Math.ceil(max / perDot);
               const filledDots = Math.floor(points / perDot);
               const hasPartial = points % perDot > 0;
-              let dotStr = "";
-              for (let d = 0; d < totalDots; d++) {
-                if (d < filledDots) dotStr += "●";
-                else if (d === filledDots && hasPartial) dotStr += "◐";
-                else dotStr += "○";
-              }
-              row.push(dotStr);
+              row.push(" "); // placeholder, will draw dots
+              dotCells.set(`${i}_${pointsColIndex}`, { type: "dots", dots: { filledDots, partialDot: hasPartial, totalDots } });
             }
           } else {
             row.push("—");
           }
+          colOffset += 2;
         });
         row.push(sg.full_name);
         row.push(String(i + 1));
@@ -128,14 +147,43 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         columnStyles: {
           [nameColIndex]: { halign: "right" as const, cellWidth: 35 },
         },
-        didParseCell: (data: any) => {
-          if (data.section === "body") {
-            const text = data.cell.text?.[0] || "";
-            // Color dots/stars
-            if (text === "★") {
-              data.cell.styles.textColor = [234, 179, 8]; // yellow
-            } else if (text.includes("●") || text.includes("◐") || text.includes("○")) {
-              data.cell.styles.textColor = [16, 185, 129]; // emerald
+        didDrawCell: (data: any) => {
+          if (data.section !== "body") return;
+          const key = `${data.row.index}_${data.column.index}`;
+          const info = dotCells.get(key);
+          if (!info) return;
+
+          const cellX = data.cell.x;
+          const cellY = data.cell.y;
+          const cellW = data.cell.width;
+          const cellH = data.cell.height;
+          const centerY = cellY + cellH / 2;
+          const r = 1.2; // dot radius
+          const gap = 0.8; // gap between dots
+
+          if (info.type === "star") {
+            // Draw a filled yellow star
+            doc.setFillColor(234, 179, 8);
+            const starX = cellX + cellW / 2;
+            drawStar(doc, starX, centerY, 2.5);
+          } else if (info.type === "dots" && info.dots) {
+            const { filledDots, partialDot, totalDots } = info.dots;
+            const totalWidth = totalDots * (r * 2) + (totalDots - 1) * gap;
+            let dotX = cellX + cellW / 2 + totalWidth / 2 - r; // RTL: start from right
+
+            for (let d = 0; d < totalDots; d++) {
+              if (d < filledDots) {
+                doc.setFillColor(16, 185, 129); // emerald
+                doc.circle(dotX, centerY, r, "F");
+              } else if (d === filledDots && partialDot) {
+                doc.setFillColor(245, 158, 11); // amber
+                doc.circle(dotX, centerY, r, "F");
+              } else {
+                doc.setDrawColor(220, 38, 38); // rose
+                doc.setLineWidth(0.3);
+                doc.circle(dotX, centerY, r, "S");
+              }
+              dotX -= (r * 2 + gap);
             }
           }
         },
