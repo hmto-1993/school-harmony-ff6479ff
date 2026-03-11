@@ -85,13 +85,6 @@ export default function AttendanceWeeklyReport({
       });
   }, []);
 
-  const lessonLookup = useMemo(() => {
-    const map = new Map<string, LessonPlanData>();
-    lessonPlans.forEach((lp) => {
-      map.set(`${lp.week_number}-${lp.day_index}-${lp.slot_index}`, lp);
-    });
-    return map;
-  }, [lessonPlans]);
 
   const { weeks, studentRows, totalPeriodsHeld } = useMemo(() => {
     const fromDate = new Date(dateFrom);
