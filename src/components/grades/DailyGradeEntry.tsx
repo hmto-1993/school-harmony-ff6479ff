@@ -403,16 +403,37 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
 
-                        if (isNumericCategory(cat.name)) {
+                        if (isBookCategory(cat.name)) {
+                          // Book category: 10 red dots, click to toggle filled/empty
+                          const dotCount = BOOK_DOT_COUNT;
+                          const filledCount = currentScore != null ? Math.round((currentScore / maxScore) * dotCount) : 0;
                           return (
-                            <td key={cat.id} className="p-3 text-center border-l border-border/10">
-                              <Input
-                                type="number" min={0} max={maxScore}
-                                value={currentScore ?? ""}
-                                onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                className="w-20 text-center h-8 mx-auto"
-                                placeholder={`/${maxScore}`}
-                              />
+                            <td key={cat.id} className="p-2 text-center border-l border-border/10">
+                              <div className="inline-grid gap-0.5 justify-items-center" style={{ gridTemplateColumns: `repeat(5, 1fr)`, margin: '0 auto' }}>
+                                {Array.from({ length: dotCount }, (_, di) => {
+                                  const isFilled = di < filledCount;
+                                  return (
+                                    <button
+                                      key={di}
+                                      type="button"
+                                      onClick={() => {
+                                        const newFilled = di < filledCount ? di : di + 1;
+                                        const newScore = Math.round((newFilled / dotCount) * maxScore);
+                                        setNumericGrade(sg.student_id, cat.id, String(newScore), maxScore);
+                                      }}
+                                      className="p-0 transition-transform hover:scale-125"
+                                      title={`${di + 1}/${dotCount}`}
+                                    >
+                                      <div className={cn(
+                                        "h-4 w-4 rounded-full border-2 transition-colors",
+                                        isFilled
+                                          ? "bg-rose-500 border-rose-500 dark:bg-rose-400 dark:border-rose-400"
+                                          : "bg-transparent border-rose-300 dark:border-rose-500/40"
+                                      )} />
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </td>
                           );
                         }
