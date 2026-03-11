@@ -308,7 +308,7 @@ export default function ReportsPage() {
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
-    XLSX.writeFile(wb, `تقرير_الحضور_${dateFrom}_${dateTo}.xlsx`);
+    safeWriteXLSX(wb, `تقرير_الحضور_${dateFrom}_${dateTo}.xlsx`);
   };
 
   const exportGradesExcel = async () => {
