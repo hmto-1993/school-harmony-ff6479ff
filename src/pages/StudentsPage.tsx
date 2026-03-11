@@ -18,6 +18,7 @@ import type { TemplateType } from "@/components/whatsapp/WhatsAppMessageDialog";
 import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
 import { format } from "date-fns";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
