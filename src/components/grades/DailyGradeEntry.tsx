@@ -251,7 +251,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           if (existingId) {
             updates.push(supabase.from("grades").update({ score }).eq("id", existingId).then());
           } else {
-            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
+            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") } as any);
           }
         }
       }
