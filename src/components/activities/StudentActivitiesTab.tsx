@@ -306,6 +306,11 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
               {selectedQuiz.title}
             </CardTitle>
             <div className="flex items-center gap-2">
+              {!quizResult && Object.keys(quizAnswers).length > 0 && (
+                <Badge variant="outline" className="gap-1 text-xs rounded-full text-emerald-600 border-emerald-200 bg-emerald-50">
+                  <CheckCircle2 className="h-3 w-3" /> محفوظ محلياً
+                </Badge>
+              )}
               {timerActive && selectedQuiz.duration_minutes > 0 && !quizResult && (
                 <CountdownTimer totalSeconds={selectedQuiz.duration_minutes * 60} onExpire={handleTimerExpire} />
               )}
