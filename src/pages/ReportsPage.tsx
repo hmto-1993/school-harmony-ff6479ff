@@ -353,7 +353,7 @@ export default function ReportsPage() {
       columnStyles: { 3: { halign: "right" } },
     });
 
-    doc.save(`تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
+    safeSavePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
   };
 
   const exportGradesPDF = async () => {
