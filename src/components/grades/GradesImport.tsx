@@ -166,12 +166,15 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
     const validRows = importRows.filter(r => r.status === "matched" && r.matchedStudent && r.score !== null);
 
+    const updates: Promise<any>[] = [];
+    const inserts: { student_id: string; category_id: string; score: number | null; recorded_by: string; period: number }[] = [];
+
     for (const row of validRows) {
       const existingId = existingGrades[row.matchedStudent!.id];
       if (existingId) {
-        await supabase.from("grades").update({ score: row.score }).eq("id", existingId);
+        updates.push(supabase.from("grades").update({ score: row.score }).eq("id", existingId));
       } else {
-        await supabase.from("grades").insert({
+        inserts.push({
           student_id: row.matchedStudent!.id,
           category_id: selectedCategory,
           score: row.score,
@@ -180,6 +183,12 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
         });
       }
     }
+
+    const ops: Promise<any>[] = [...updates];
+    if (inserts.length > 0) {
+      ops.push(supabase.from("grades").insert(inserts));
+    }
+    await Promise.all(ops);
 
     toast({ title: "تم الاستيراد", description: `تم استيراد درجات ${validRows.length} طالب بنجاح` });
     setSaving(false);

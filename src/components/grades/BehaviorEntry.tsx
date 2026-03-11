@@ -115,14 +115,17 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setSaving(true);
     const today = new Date().toISOString().split("T")[0];
 
+    const updates: Promise<any>[] = [];
+    const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
+
     for (const s of students) {
       if (s.type === null) continue;
       if (s.existingId) {
-        await supabase.from("behavior_records").update({
+        updates.push(supabase.from("behavior_records").update({
           type: s.type, note: s.note || null,
-        }).eq("id", s.existingId);
+        }).eq("id", s.existingId));
       } else {
-        await supabase.from("behavior_records").insert({
+        inserts.push({
           student_id: s.student_id,
           class_id: selectedClass,
           date: today,
@@ -132,6 +135,13 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
         });
       }
     }
+
+    const ops: Promise<any>[] = [...updates];
+    if (inserts.length > 0) {
+      ops.push(supabase.from("behavior_records").insert(inserts));
+    }
+    await Promise.all(ops);
+
     toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
     setSaving(false);
     loadData();
