@@ -139,7 +139,59 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     fetchLessons();
   };
 
-  // Download Excel template
+  // Broadcast current week's plan to all other classes
+  const handleBroadcast = async () => {
+    if (!user || !selectedClassId) return;
+    const otherClasses = classes.filter((c) => c.id !== selectedClassId);
+    if (otherClasses.length === 0) {
+      toast({ title: "تنبيه", description: "لا توجد فصول أخرى للتعميم عليها" });
+      return;
+    }
+    const filledSlots = Object.entries(slots).filter(([, s]) => s.lesson_title.trim());
+    if (filledSlots.length === 0) {
+      toast({ title: "تنبيه", description: "لا توجد دروس لتعميمها", variant: "destructive" });
+      return;
+    }
+
+    setSaving(true);
+    let totalInserted = 0;
+
+    for (const cls of otherClasses) {
+      // Delete existing for this week in target class
+      await supabase
+        .from("lesson_plans")
+        .delete()
+        .eq("class_id", cls.id)
+        .eq("week_number", weekNumber)
+        .eq("created_by", user.id);
+
+      const rows = filledSlots.map(([key, s]) => {
+        const [dayIdx, slotIdx] = key.split("-").map(Number);
+        return {
+          class_id: cls.id,
+          week_number: weekNumber,
+          day_index: dayIdx,
+          slot_index: slotIdx,
+          lesson_title: s.lesson_title,
+          objectives: s.objectives,
+          teacher_reflection: s.teacher_reflection,
+          is_completed: false,
+          created_by: user.id,
+        };
+      });
+
+      const { error } = await supabase.from("lesson_plans").insert(rows);
+      if (!error) totalInserted += rows.length;
+    }
+
+    toast({
+      title: "✅ تم التعميم",
+      description: `تم تعميم ${filledSlots.length} درس على ${otherClasses.length} فصل`,
+    });
+    setSaving(false);
+  };
+
+
   const handleDownloadTemplate = () => {
     const templateData = [
       { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الجمع", "اسم الوحدة": "الوحدة الأولى" },
