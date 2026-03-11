@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
-import { subDays, addDays, isToday } from "date-fns";
+import { subDays, addDays, isToday, format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 
 interface GradeCategory {
@@ -93,10 +93,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       .from("grade_categories").select("*").eq("class_id", selectedClass).order("sort_order");
     const { data: students } = await supabase
       .from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     const { data: grades } = await supabase
       .from("grades").select("id, student_id, category_id, score, period")
       .in("student_id", (students || []).map((s) => s.id))
-      .eq("period", selectedPeriod);
+      .eq("period", selectedPeriod)
+      .eq("date", dateStr);
 
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
     grades?.forEach((g) => {
@@ -249,7 +251,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           if (existingId) {
             updates.push(supabase.from("grades").update({ score }).eq("id", existingId).then());
           } else {
-            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod });
+            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") } as any);
           }
         }
       }
