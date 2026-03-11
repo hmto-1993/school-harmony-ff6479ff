@@ -488,43 +488,23 @@ export default function AttendanceWeeklyReport({
                       Array.from({ length: slotsPerWeek }, (_, i) => {
                         const status = s.weeks[w.weekNum]?.[i];
                         const cfg = status ? STATUS_CONFIG[status] : null;
-                        const dayIndex = Math.floor(i / Math.max(1, Math.ceil(periodsPerWeek / 5)));
-                        const slotInDay = i % Math.max(1, Math.ceil(periodsPerWeek / 5));
-                        const lessonKey = `${w.weekNum}-${dayIndex}-${slotInDay}`;
-                        const lesson = lessonLookup.get(lessonKey);
-
-                        const handleSlotClick = () => {
-                          setSlotDialog({ open: true, weekNum: w.weekNum, dayIndex, slotIndex: slotInDay, lesson: lesson || null });
-                        };
 
                         return (
                           <td
                             key={`${w.weekNum}-${i}`}
-                            className={cn("logbook-td logbook-td-dot", lessonPlans.length > 0 && "cursor-pointer")}
-                            onClick={lessonPlans.length > 0 ? handleSlotClick : undefined}
-                            title={lesson?.lesson_title || undefined}
+                            className="logbook-td logbook-td-dot"
                           >
-                            {viewMode === "attendance" ? (
-                              <span
-                                className="session-dot"
-                                style={{
-                                  backgroundColor: cfg ? cfg.color : "#e5e0d0",
-                                  borderColor: cfg ? cfg.color : "#ccc5b0",
-                                }}
-                              >
-                                {cfg ? (
-                                  status === "present" ? "✓" : status === "absent" ? "✕" : status === "late" ? "!" : "⏎"
-                                ) : ""}
-                              </span>
-                            ) : (
-                              lesson ? (
-                                <span className={cn("text-[10px] leading-tight block truncate max-w-[80px] mx-auto", lesson.is_completed ? "font-bold" : "")} style={{ color: lesson.is_completed ? "#22c55e" : "#333" }}>
-                                  {lesson.lesson_title}
-                                </span>
-                              ) : (
-                                <span style={{ color: "#bbb", fontSize: 10 }}>—</span>
-                              )
-                            )}
+                            <span
+                              className="session-dot"
+                              style={{
+                                backgroundColor: cfg ? cfg.color : "#e5e0d0",
+                                borderColor: cfg ? cfg.color : "#ccc5b0",
+                              }}
+                            >
+                              {cfg ? (
+                                status === "present" ? "✓" : status === "absent" ? "✕" : status === "late" ? "!" : "⏎"
+                              ) : ""}
+                            </span>
                           </td>
                         );
                       })
