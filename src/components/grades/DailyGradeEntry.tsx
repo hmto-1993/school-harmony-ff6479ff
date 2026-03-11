@@ -222,14 +222,31 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
     // Batch insert new grades in one call, run updates in parallel
     const ops: PromiseLike<any>[] = [...updates];
+    let insertedData: any[] = [];
     if (inserts.length > 0) {
-      ops.push(supabase.from("grades").insert(inserts).then());
+      ops.push(
+        supabase.from("grades").insert(inserts).select("id, student_id, category_id").then(res => {
+          insertedData = res.data || [];
+        })
+      );
     }
     await Promise.all(ops);
 
+    // Update grade_ids locally so icons are preserved without reload
+    if (insertedData.length > 0) {
+      setStudentGrades(prev => prev.map(sg => {
+        const newIds = { ...sg.grade_ids };
+        insertedData.forEach((ins: any) => {
+          if (ins.student_id === sg.student_id) {
+            newIds[ins.category_id] = ins.id;
+          }
+        });
+        return { ...sg, grade_ids: newIds };
+      }));
+    }
+
     toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
     setSaving(false);
-    loadData();
   };
 
   const visibleCategories = selectedCategory && selectedCategory !== "all"
