@@ -13,6 +13,7 @@ import AcademicCalendarWidget from "@/components/dashboard/AcademicCalendarWidge
 import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary";
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
+import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
 
 interface ClassStats {
   name: string;
@@ -130,6 +131,7 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-6">
           <AcademicCalendarWidget />
+          <WeekLessonsWidget />
           <SafeZoneCounter />
         </div>
       </div>
