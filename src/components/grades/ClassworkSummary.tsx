@@ -553,7 +553,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       {classworkCats.map(cat => (
                         <React.Fragment key={`sub-${cat.id}`}>
                           <th className={cn(
-                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px]",
+                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px] border-r-2 border-r-border",
                             isEditing
                               ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
                               : "bg-info/10 text-info dark:bg-info/20"
