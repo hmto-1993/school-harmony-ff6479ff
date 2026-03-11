@@ -152,6 +152,15 @@ export default function WeekLessonsWidget() {
             </Select>
           </div>
         )}
+        {/* Progress bar */}
+        {lessons.length > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <Progress value={lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0} className="h-2 flex-1 bg-muted/50 [&>div]:bg-gradient-to-l [&>div]:from-success [&>div]:to-success/70" />
+            <span className="text-[10px] font-semibold text-muted-foreground min-w-[32px] text-left">
+              {Math.round((completedCount / lessons.length) * 100)}%
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="px-4 pb-4 pt-1">
         {loading ? (
