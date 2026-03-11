@@ -69,8 +69,6 @@ export default function AttendanceWeeklyReport({
   dateFrom,
   dateTo,
   className: classDisplayName,
-  lessonPlans = [],
-  onLessonUpdated,
 }: Props) {
   const tableRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"attendance" | "lessons">("attendance");
