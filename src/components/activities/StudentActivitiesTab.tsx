@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,36 @@ import { SignedFileLink } from "@/components/activities/SignedFileLink";
 import { SignedImage } from "@/components/activities/SignedImage";
 import {
   ClipboardList, FileUp, Download, Loader2, Upload,
-  CheckCircle2, ArrowRight, AlertCircle, Send, Timer
+  CheckCircle2, ArrowRight, AlertCircle, Send, Timer, Wifi, WifiOff
 } from "lucide-react";
+
+// Auto-save helpers
+const AUTOSAVE_KEY = (activityId: string, studentId: string) =>
+  `quiz_answers_${activityId}_${studentId}`;
+
+function saveAnswersLocally(activityId: string, studentId: string, answers: Record<string, number>) {
+  try {
+    localStorage.setItem(AUTOSAVE_KEY(activityId, studentId), JSON.stringify({ answers, savedAt: Date.now() }));
+  } catch { /* quota exceeded - ignore */ }
+}
+
+function loadSavedAnswers(activityId: string, studentId: string): Record<string, number> | null {
+  try {
+    const raw = localStorage.getItem(AUTOSAVE_KEY(activityId, studentId));
+    if (!raw) return null;
+    const { answers, savedAt } = JSON.parse(raw);
+    // Expire after 24h
+    if (Date.now() - savedAt > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(AUTOSAVE_KEY(activityId, studentId));
+      return null;
+    }
+    return answers;
+  } catch { return null; }
+}
+
+function clearSavedAnswers(activityId: string, studentId: string) {
+  try { localStorage.removeItem(AUTOSAVE_KEY(activityId, studentId)); } catch { /* */ }
+}
 
 interface StudentActivitiesTabProps {
   studentId: string;
