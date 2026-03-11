@@ -124,8 +124,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
           // Restore slot/star state from saved score
           if (score === null) {
-            slots[c.id] = [null];
-            starred[c.id] = false;
+            if (isBookCategory(c.name)) {
+              slots[c.id] = ["zero"];
+              starred[c.id] = false;
+              gradeValues[c.id] = 0;
+            } else {
+              slots[c.id] = [null];
+              starred[c.id] = false;
+            }
           } else {
             const max = Number(c.max_score);
             const isPartCat = isParticipation(c.name);
