@@ -74,6 +74,7 @@ interface SummaryRow {
   class_id: string;
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
+  dailyIcons: Record<string, DailyIcon[]>; // accumulated icons from daily grades per category
 }
 
 interface ClassworkSummaryProps {
