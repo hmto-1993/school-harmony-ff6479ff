@@ -586,7 +586,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       return (
                         <tr key={sg.student_id} className={cn(
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          !isLast && "border-b border-border/20",
+                          "border-b border-border/40",
                         )}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">{sg.full_name}</td>
