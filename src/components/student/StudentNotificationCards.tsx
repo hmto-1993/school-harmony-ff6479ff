@@ -13,6 +13,17 @@ import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
+import { useSignedUrl } from "@/hooks/use-signed-url";
+
+function ExcuseFileLink({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+      <FileImage className="h-3 w-3" />
+      {fileName}
+    </a>
+  );
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
