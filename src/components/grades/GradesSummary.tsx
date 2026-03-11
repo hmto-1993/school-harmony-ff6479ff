@@ -30,10 +30,9 @@ interface GradesSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
   selectedPeriod?: number;
-  categoryGroupFilter?: string;
 }
 
-export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
+export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
