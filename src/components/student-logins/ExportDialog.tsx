@@ -103,7 +103,7 @@ export default function ExportDialog({
       });
     }
 
-    XLSX.writeFile(wb, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    safeWriteXLSX(wb, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
     setOpen(false);
   };
