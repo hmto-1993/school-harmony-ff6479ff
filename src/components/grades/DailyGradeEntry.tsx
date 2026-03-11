@@ -305,7 +305,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الفئات</SelectItem>
-                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                    {dailyCategories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
