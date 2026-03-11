@@ -321,10 +321,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           </th>
                           <th className={cn(
                             "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
-                            isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
+                            isEditing
+                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-600"
+                              : "bg-primary/8 text-primary"
                           )}>
                             <div>الدرجة</div>
-                            <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                            <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
                           </th>
                         </React.Fragment>
                       ))}
@@ -368,11 +370,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                                         for (let d = 0; d < totalDots; d++) {
                                           if (d < filledDots) {
-                                            dots.push(<CircleCheck key={d} className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />);
+                                            dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm" />);
                                           } else if (d === filledDots && hasPartial) {
-                                            dots.push(<CircleMinus key={d} className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />);
+                                            dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm" />);
                                           } else {
-                                            dots.push(<CircleX key={d} className="h-3.5 w-3.5 text-rose-500/40 dark:text-rose-400/40" />);
+                                            dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50" />);
                                           }
                                         }
                                         return dots;
@@ -385,7 +387,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                 {/* Manual score (درجة) column */}
                                 <td className={cn(
                                   "p-1.5 text-center border-l border-border/10",
-                                  isEditing ? "bg-emerald-500/10" : ""
+                                  isEditing ? "bg-emerald-500/10" : "bg-primary/5"
                                 )}>
                                   {isEditing ? (() => {
                                     const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
