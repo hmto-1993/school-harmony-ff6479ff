@@ -205,7 +205,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         if (sg.student_id !== studentId) return sg;
         const wasStarred = sg.starred[categoryId];
         const newStarred = !wasStarred;
-        const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, isParticipation("") ? 1 : 1);
+        const catName = categories.find(c => c.id === categoryId)?.name || "";
+        const slotCount = isParticipation(catName) ? MAX_PARTICIPATION_SLOTS : 1;
+        const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
         return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
       })
     );
