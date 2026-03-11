@@ -378,12 +378,61 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => exportTableAsPDF(group.id, group.name)}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => {
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={async () => {
                         const tableEl = tableRefs.current.get(group.id);
                         if (!tableEl) return;
                         const printArea = document.createElement("div");
                         printArea.className = "print-area";
                         printArea.style.cssText = "display:none;direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;";
+
+                        // Fetch and render print header
+                        try {
+                          let headerConfig: any = null;
+                          const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single();
+                          if (data?.value) { try { headerConfig = JSON.parse(data.value); } catch {} }
+                          if (!headerConfig) {
+                            const { data: def } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
+                            if (def?.value) { try { headerConfig = JSON.parse(def.value); } catch {} }
+                          }
+                          if (headerConfig) {
+                            const headerDiv = document.createElement("div");
+                            headerDiv.style.cssText = "margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;";
+                            // Right section
+                            const rightDiv = document.createElement("div");
+                            rightDiv.style.cssText = `flex:1;text-align:${headerConfig.rightSection?.align||"right"};font-size:${headerConfig.rightSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.rightSection?.color||"#1e293b"};`;
+                            (headerConfig.rightSection?.lines||[]).forEach((line: string) => {
+                              const p = document.createElement("p");
+                              p.style.cssText = "margin:0;font-weight:600;";
+                              p.textContent = line;
+                              rightDiv.appendChild(p);
+                            });
+                            // Center images
+                            const centerDiv = document.createElement("div");
+                            centerDiv.style.cssText = "display:flex;align-items:center;gap:10px;flex-shrink:0;";
+                            (headerConfig.centerSection?.images||[]).forEach((img: string, i: number) => {
+                              if (!img) return;
+                              const imgEl = document.createElement("img");
+                              imgEl.src = img;
+                              const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
+                              imgEl.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
+                              centerDiv.appendChild(imgEl);
+                            });
+                            // Left section
+                            const leftDiv = document.createElement("div");
+                            leftDiv.style.cssText = `flex:1;text-align:${headerConfig.leftSection?.align||"left"};font-size:${headerConfig.leftSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.leftSection?.color||"#1e293b"};`;
+                            (headerConfig.leftSection?.lines||[]).forEach((line: string) => {
+                              const p = document.createElement("p");
+                              p.style.cssText = "margin:0;font-weight:600;";
+                              p.textContent = line;
+                              leftDiv.appendChild(p);
+                            });
+                            headerDiv.appendChild(rightDiv);
+                            headerDiv.appendChild(centerDiv);
+                            headerDiv.appendChild(leftDiv);
+                            printArea.appendChild(headerDiv);
+                          }
+                        } catch {}
+
                         const title = document.createElement("h2");
                         title.style.cssText = "text-align:center;margin-bottom:8px;font-size:16px;font-weight:bold;";
                         title.textContent = `المهام والمشاركة — ${group.name}`;
@@ -395,10 +444,27 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
-                        // Remove dark mode classes for print clarity
-                        clone.querySelectorAll("*").forEach(el => {
-                          (el as HTMLElement).style.color = "";
+                        // Force light mode and fit table
+                        clone.querySelectorAll("table").forEach(t => {
+                          t.style.width = "100%";
+                          t.style.tableLayout = "auto";
+                          t.style.fontSize = "11px";
+                          t.style.borderCollapse = "collapse";
+                        });
+                        clone.querySelectorAll("th, td").forEach(el => {
+                          (el as HTMLElement).style.color = "#1a1a1a";
                           (el as HTMLElement).style.backgroundColor = "";
+                          (el as HTMLElement).style.padding = "4px 6px";
+                          (el as HTMLElement).style.whiteSpace = "nowrap";
+                          (el as HTMLElement).style.border = "1px solid #d1d5db";
+                        });
+                        clone.querySelectorAll("th").forEach(el => {
+                          (el as HTMLElement).style.backgroundColor = "#eff6ff";
+                          (el as HTMLElement).style.fontWeight = "700";
+                        });
+                        clone.querySelectorAll("*").forEach(el => {
+                          const h = el as HTMLElement;
+                          if (!h.style.color) h.style.color = "#1a1a1a";
                         });
                         printArea.appendChild(clone);
                         document.body.appendChild(printArea);
