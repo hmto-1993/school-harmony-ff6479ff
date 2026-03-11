@@ -635,42 +635,47 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                               <React.Fragment key={cat.id}>
                                 {/* Daily points column — dot visualization */}
                                 <td className="p-1.5 text-center border-l border-border/10">
-                                  {points != null ? (() => {
+                                {points != null ? (() => {
                                     const max = Number(cat.max_score);
-                                    const catNameLower = cat.name;
-                                    const targetDots = catNameLower.includes("مشاركة") ? 15
-                                      : catNameLower.includes("كتاب") ? 10
-                                      : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
-                                      : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
-                                    const perDot = max / targetDots;
+                                    const isPartCat = cat.name === "المشاركة";
+                                    const slotCount = isPartCat ? 3 : 1;
+                                    const perSlot = Math.round(max / slotCount);
 
-                                    if (points >= max) {
-                                      return <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />;
+                                    // Full score on participation → star
+                                    if (points >= max && isPartCat) {
+                                      return <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 mx-auto" />;
                                     }
 
-                                    const filledDots = Math.floor(points / perDot);
-                                    const hasPartial = points % perDot > 0;
-                                    const dots: React.ReactNode[] = [];
-
-                                    for (let d = 0; d < targetDots; d++) {
-                                      if (d < filledDots) {
-                                        dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                      } else if (d === filledDots && hasPartial) {
-                                        dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
-                                      } else {
-                                        dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50 print:h-2 print:w-2" />);
+                                    // Reverse-engineer slots from score (same as DailyGradeEntry)
+                                    const slots: ("excellent" | "average" | "zero" | null)[] = [];
+                                    if (points >= max && !isPartCat) {
+                                      slots.push("excellent");
+                                    } else {
+                                      let remaining = points;
+                                      for (let si = 0; si < slotCount; si++) {
+                                        if (remaining >= perSlot) {
+                                          slots.push("excellent");
+                                          remaining -= perSlot;
+                                        } else if (remaining >= Math.round(perSlot / 2)) {
+                                          slots.push("average");
+                                          remaining -= Math.round(perSlot / 2);
+                                        } else if (remaining > 0) {
+                                          slots.push("average");
+                                          remaining = 0;
+                                        } else {
+                                          slots.push(null);
+                                        }
                                       }
                                     }
+
                                     return (
-                                      <div
-                                        className="inline-grid gap-0.5 justify-items-center"
-                                        style={{
-                                          gridTemplateColumns: `repeat(${Math.ceil(targetDots / 2)}, 1fr)`,
-                                          gridTemplateRows: 'auto auto',
-                                          margin: '0 auto',
-                                        }}
-                                      >
-                                        {dots}
+                                      <div className="flex items-center justify-center gap-1">
+                                        {slots.map((level, si) => {
+                                          if (level === "excellent") return <CircleCheck key={si} className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
+                                          if (level === "average") return <CircleMinus key={si} className="h-5 w-5 text-amber-500 dark:text-amber-400" />;
+                                          if (level === "zero") return <CircleX key={si} className="h-5 w-5 text-rose-500 dark:text-rose-400" />;
+                                          return <CircleMinus key={si} className="h-5 w-5 text-muted-foreground opacity-30" />;
+                                        })}
                                       </div>
                                     );
                                   })() : (
