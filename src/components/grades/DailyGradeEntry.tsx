@@ -56,7 +56,7 @@ const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(nam
 const isParticipation = (name: string) => name === "المشاركة";
 const isBookCategory = (name: string) => name === "الكتاب";
 const MAX_PARTICIPATION_SLOTS = 3;
-const BOOK_DOT_COUNT = 10;
+
 
 interface DailyGradeEntryProps {
   selectedClass: string;
