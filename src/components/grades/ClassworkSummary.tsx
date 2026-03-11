@@ -613,7 +613,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                 {/* Score column */}
                                 <td className={cn(
                                   "p-1.5 text-center border-l border-border/10",
-                                  isEditing ? "bg-emerald-500/10" : ""
+                                  isEditing ? "bg-emerald-500/10" : "bg-warning/5 dark:bg-warning/10"
                                 )}>
                                   {isEditing ? (() => {
                                     const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
