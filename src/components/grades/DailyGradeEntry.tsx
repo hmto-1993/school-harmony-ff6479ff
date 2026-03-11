@@ -51,10 +51,12 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   return <CircleMinus className={cn(size, "text-muted-foreground opacity-30")} />;
 };
 
-const NUMERIC_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
-const isNumericCategory = (name: string) => NUMERIC_CATEGORIES.includes(name);
+const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
+const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(name);
 const isParticipation = (name: string) => name === "المشاركة";
+const isBookCategory = (name: string) => name === "الكتاب";
 const MAX_PARTICIPATION_SLOTS = 3;
+const BOOK_DOT_COUNT = 10;
 
 interface DailyGradeEntryProps {
   selectedClass: string;
@@ -238,7 +240,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     if (!user) return;
     setSaving(true);
     const catsToSave = selectedCategory && selectedCategory !== "all"
-      ? categories.filter((c) => c.id === selectedCategory) : categories;
+      ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
 
     const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
@@ -286,8 +288,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     setSaving(false);
   };
 
+  const dailyCategories = categories.filter(c => !isHiddenFromDaily(c.name));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
-    ? categories.filter((c) => c.id === selectedCategory) : categories;
+    ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
   return (
@@ -302,7 +305,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">جميع الفئات</SelectItem>
-                    {categories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                    {dailyCategories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
@@ -363,6 +366,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز (الدرجة الكاملة)</span>
                </div>
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                 <div className="h-4 w-4 rounded-full bg-rose-500 dark:bg-rose-400 border-2 border-rose-500 dark:border-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">الكتاب</span>
+               </div>
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
                  <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
                </div>
@@ -400,16 +406,37 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
 
-                        if (isNumericCategory(cat.name)) {
+                        if (isBookCategory(cat.name)) {
+                          // Book category: 10 red dots, click to toggle filled/empty
+                          const dotCount = BOOK_DOT_COUNT;
+                          const filledCount = currentScore != null ? Math.round((currentScore / maxScore) * dotCount) : 0;
                           return (
-                            <td key={cat.id} className="p-3 text-center border-l border-border/10">
-                              <Input
-                                type="number" min={0} max={maxScore}
-                                value={currentScore ?? ""}
-                                onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                className="w-20 text-center h-8 mx-auto"
-                                placeholder={`/${maxScore}`}
-                              />
+                            <td key={cat.id} className="p-2 text-center border-l border-border/10">
+                              <div className="inline-grid gap-0.5 justify-items-center" style={{ gridTemplateColumns: `repeat(5, 1fr)`, margin: '0 auto' }}>
+                                {Array.from({ length: dotCount }, (_, di) => {
+                                  const isFilled = di < filledCount;
+                                  return (
+                                    <button
+                                      key={di}
+                                      type="button"
+                                      onClick={() => {
+                                        const newFilled = di < filledCount ? di : di + 1;
+                                        const newScore = Math.round((newFilled / dotCount) * maxScore);
+                                        setNumericGrade(sg.student_id, cat.id, String(newScore), maxScore);
+                                      }}
+                                      className="p-0 transition-transform hover:scale-125"
+                                      title={`${di + 1}/${dotCount}`}
+                                    >
+                                      <div className={cn(
+                                        "h-4 w-4 rounded-full border-2 transition-colors",
+                                        isFilled
+                                          ? "bg-rose-500 border-rose-500 dark:bg-rose-400 dark:border-rose-400"
+                                          : "bg-transparent border-rose-300 dark:border-rose-500/40"
+                                      )} />
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </td>
                           );
                         }

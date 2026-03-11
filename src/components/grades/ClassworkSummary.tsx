@@ -123,6 +123,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               const perDot = (() => {
                 const catNameLower = cat.name;
                 const targetDots = catNameLower.includes("مشاركة") ? 15
+                  : catNameLower.includes("كتاب") ? 10
                   : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
                   : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
                 return max / targetDots;
@@ -638,6 +639,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                     const max = Number(cat.max_score);
                                     const catNameLower = cat.name;
                                     const targetDots = catNameLower.includes("مشاركة") ? 15
+                                      : catNameLower.includes("كتاب") ? 10
                                       : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
                                       : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
                                     const perDot = max / targetDots;
