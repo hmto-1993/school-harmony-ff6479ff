@@ -114,10 +114,45 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         const starred: Record<string, boolean> = {};
         (cats || []).forEach((c: any) => {
           const g = studentGradesMap.get(c.id);
-          gradeValues[c.id] = g?.score ?? null;
+          const score = g?.score ?? null;
+          gradeValues[c.id] = score;
           if (g?.id) gradeIds[c.id] = g.id;
-          slots[c.id] = [null]; // start with 1 slot
-          starred[c.id] = false;
+
+          // Restore slot/star state from saved score
+          if (score === null) {
+            slots[c.id] = [null];
+            starred[c.id] = false;
+          } else {
+            const max = Number(c.max_score);
+            const isPartCat = isParticipation(c.name);
+            const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+            const perSlot = Math.round(max / slotCount);
+
+            if (score >= max) {
+              // Full score → starred
+              starred[c.id] = true;
+              slots[c.id] = isPartCat ? [null, null, null] : [null];
+            } else {
+              starred[c.id] = false;
+              const restoredSlots: GradeLevel[] = [];
+              let remaining = score;
+              for (let si = 0; si < slotCount; si++) {
+                if (remaining >= perSlot) {
+                  restoredSlots.push("excellent");
+                  remaining -= perSlot;
+                } else if (remaining >= Math.round(perSlot / 2)) {
+                  restoredSlots.push("average");
+                  remaining -= Math.round(perSlot / 2);
+                } else if (remaining > 0) {
+                  restoredSlots.push("average");
+                  remaining = 0;
+                } else {
+                  restoredSlots.push("zero");
+                }
+              }
+              slots[c.id] = restoredSlots;
+            }
+          }
         });
         return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred };
       })
