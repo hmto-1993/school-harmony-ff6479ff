@@ -366,7 +366,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز (الدرجة الكاملة)</span>
                </div>
-               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
+               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                 <div className="h-4 w-4 rounded-full bg-rose-500 dark:bg-rose-400 border-2 border-rose-500 dark:border-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">الكتاب</span>
+               </div>
                  <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
                </div>
              </div>
