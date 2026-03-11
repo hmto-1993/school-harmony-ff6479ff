@@ -263,6 +263,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* Export buttons */}
+                  {!isEditing && (
+                    <div className="flex items-center gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => exportTableAsPDF(group.id, group.name)}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
