@@ -120,8 +120,14 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               row.push(" "); // placeholder, will draw star
               dotCells.set(`${i}_${pointsColIndex}`, { type: "star" });
             } else {
-              const perDot = max <= 5 ? 1 : max <= 10 ? 2 : max <= 20 ? 5 : 10;
-              const totalDots = Math.ceil(max / perDot);
+              const perDot = (() => {
+                const catNameLower = cat.name;
+                const targetDots = catNameLower.includes("مشاركة") ? 15
+                  : (catNameLower.includes("واجب") || catNameLower.includes("مشاريع") || catNameLower.includes("مشروع")) ? 5
+                  : max <= 5 ? max : max <= 10 ? Math.ceil(max / 2) : Math.ceil(max / 5);
+                return max / targetDots;
+              })();
+              const totalDots = Math.round(max / perDot);
               const filledDots = Math.floor(points / perDot);
               const hasPartial = points % perDot > 0;
               row.push(" "); // placeholder, will draw dots
