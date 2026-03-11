@@ -370,11 +370,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                                         for (let d = 0; d < totalDots; d++) {
                                           if (d < filledDots) {
-                                            dots.push(<CircleCheck key={d} className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />);
+                                            dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm" />);
                                           } else if (d === filledDots && hasPartial) {
-                                            dots.push(<CircleMinus key={d} className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />);
+                                            dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm" />);
                                           } else {
-                                            dots.push(<CircleX key={d} className="h-3.5 w-3.5 text-rose-500/40 dark:text-rose-400/40" />);
+                                            dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50" />);
                                           }
                                         }
                                         return dots;
