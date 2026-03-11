@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
-import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
+import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toPng } from "html-to-image";
+import { createArabicPDF } from "@/lib/arabic-pdf";
+import { safePrint } from "@/lib/print-utils";
+import { format } from "date-fns";
+import { toast as sonnerToast } from "sonner";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
@@ -43,6 +48,44 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [saving, setSaving] = useState(false);
   const [fillAllValue, setFillAllValue] = useState("");
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
+  const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const exportTableAsPDF = async (classId: string, className: string) => {
+    const el = tableRefs.current.get(classId);
+    if (!el) return;
+    try {
+      // Force light mode for capture
+      el.classList.add("light-capture");
+      const dataUrl = await toPng(el, { backgroundColor: "#ffffff", pixelRatio: 2 });
+      el.classList.remove("light-capture");
+
+      const { doc, startY } = await createArabicPDF({
+        orientation: "landscape",
+        reportType: "grades",
+        includeHeader: true,
+      });
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      doc.setFontSize(14);
+      doc.text(`المهام والمشاركة — ${className}`, pageWidth / 2, startY, { align: "center" });
+      doc.setFontSize(9);
+      doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 6, { align: "center" });
+
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const imgWidth = pageWidth - 20;
+      const imgHeight = (img.height / img.width) * imgWidth;
+      doc.addImage(dataUrl, "PNG", 10, startY + 12, imgWidth, imgHeight);
+
+      doc.save(`المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      sonnerToast.success("تم تصدير ملف PDF بنجاح");
+    } catch (err) {
+      console.error(err);
+      sonnerToast.error("حدث خطأ أثناء التصدير");
+    }
+  };
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
@@ -196,31 +239,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         </div>
       </div>
 
-      {groupedByClass.length > 0 && (
-        <div className="flex justify-end">
-          <GradesExportDialog
-            title="المهام والمشاركة"
-            fileName="المهام_والمشاركة"
-            groups={groupedByClass.map((group) => {
-              const headers = ["#", "الطالب",
-                ...group.categories.flatMap(c => [`${c.name} (نقاط)`, `${c.name} (درجة)`]),
-                "الإجمالي"];
-              const rows = group.students.map((sg, i) => {
-                const sub = calcManualSubtotal(sg.manualScores, group.categories);
-                return [
-                  String(i + 1), sg.full_name,
-                  ...group.categories.flatMap(c => [
-                    sg.dailyPoints[c.id] != null ? String(sg.dailyPoints[c.id]) : "—",
-                    String(sg.manualScores[c.id] ?? 0),
-                  ]),
-                  `${sub.score} / ${sub.max}`,
-                ];
-              });
-              return { className: group.name, headers, rows } as ExportTableGroup;
-            })}
-          />
-        </div>
-      )}
+      {/* Print header - only visible in print */}
+      <div className="hidden print:block">
+        <ReportPrintHeader reportType="grades" />
+      </div>
 
       {groupedByClass.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات بعد</p>
@@ -240,6 +262,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   </Badge>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  {/* Export buttons */}
+                  {!isEditing && (
+                    <div className="flex items-center gap-0.5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => exportTableAsPDF(group.id, group.name)}>
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
+                        <Printer className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
@@ -308,7 +341,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               </div>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+              <div ref={(el) => { if (el) tableRefs.current.set(group.id, el); }} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm print:overflow-visible" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
