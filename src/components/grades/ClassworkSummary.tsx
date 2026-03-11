@@ -605,7 +605,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                   {points != null ? (
                                     <div className="flex items-center justify-center gap-0.5 flex-wrap">
                                       {points >= Number(cat.max_score) ? (
-                                        <Star className="h-2 w-2 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
+                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />
                                       ) : (() => {
                                         const max = Number(cat.max_score);
                                         const dots: React.ReactNode[] = [];
@@ -616,11 +616,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                                         for (let d = 0; d < totalDots; d++) {
                                           if (d < filledDots) {
-                                            dots.push(<CircleCheck key={d} className="h-2 w-2 text-emerald-500 dark:text-emerald-400 drop-shadow-sm" />);
+                                            dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
                                           } else if (d === filledDots && hasPartial) {
-                                            dots.push(<CircleMinus key={d} className="h-2 w-2 text-amber-500 dark:text-amber-400 drop-shadow-sm" />);
+                                            dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
                                           } else {
-                                            dots.push(<CircleX key={d} className="h-2 w-2 text-rose-400/60 dark:text-rose-400/50" />);
+                                            dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50 print:h-2 print:w-2" />);
                                           }
                                         }
                                         return dots;
