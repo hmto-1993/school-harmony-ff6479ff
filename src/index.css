@@ -289,3 +289,15 @@
   --primary: 195 100% 42%;
   --border: 220 13% 91%;
 }
+
+/* PWA standalone mode: wrap tabs instead of horizontal scroll */
+@media (display-mode: standalone) {
+  [role="tablist"] {
+    flex-wrap: wrap !important;
+    height: auto !important;
+    overflow-x: visible !important;
+  }
+  [role="tablist"] > * {
+    white-space: nowrap;
+  }
+}
