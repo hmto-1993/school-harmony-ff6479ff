@@ -116,7 +116,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       let total = 0, maxTotal = 0;
       classCats.forEach((cat) => {
         maxTotal += Number(cat.max_score);
-        if (grades[cat.id] !== null && grades[cat.id] !== undefined) total += grades[cat.id]!;
+        total += manualScores[cat.id] ?? 0;
       });
 
       return {
