@@ -561,7 +561,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
                             : cat.name
                           }</div>
-                          <div className="text-[10px] font-normal opacity-70">من {Number(cat.max_score)}</div>
                         </th>
                       ))}
                       <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
