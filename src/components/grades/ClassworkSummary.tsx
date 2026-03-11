@@ -378,7 +378,32 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => exportTableAsPDF(group.id, group.name)}>
                         <FileText className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => {
+                        const tableEl = tableRefs.current.get(group.id);
+                        if (!tableEl) return;
+                        const printArea = document.createElement("div");
+                        printArea.className = "print-area";
+                        printArea.style.cssText = "display:none;direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;";
+                        const title = document.createElement("h2");
+                        title.style.cssText = "text-align:center;margin-bottom:8px;font-size:16px;font-weight:bold;";
+                        title.textContent = `المهام والمشاركة — ${group.name}`;
+                        const periodLabel = document.createElement("p");
+                        periodLabel.style.cssText = "text-align:center;margin-bottom:12px;font-size:12px;color:#666;";
+                        periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
+                        printArea.appendChild(title);
+                        printArea.appendChild(periodLabel);
+                        const clone = tableEl.cloneNode(true) as HTMLElement;
+                        clone.style.overflow = "visible";
+                        clone.style.width = "100%";
+                        // Remove dark mode classes for print clarity
+                        clone.querySelectorAll("*").forEach(el => {
+                          (el as HTMLElement).style.color = "";
+                          (el as HTMLElement).style.backgroundColor = "";
+                        });
+                        printArea.appendChild(clone);
+                        document.body.appendChild(printArea);
+                        safePrint(() => { printArea.remove(); });
+                      }}>
                         <Printer className="h-4 w-4" />
                       </Button>
                     </div>
