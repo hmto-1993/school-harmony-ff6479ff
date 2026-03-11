@@ -19,16 +19,6 @@ interface AttendanceRecord {
   notes: string | null;
 }
 
-interface LessonPlanData {
-  id: string;
-  week_number: number;
-  day_index: number;
-  slot_index: number;
-  lesson_title: string;
-  objectives: string;
-  teacher_reflection: string;
-  is_completed: boolean;
-}
 
 interface Props {
   attendanceData: AttendanceRecord[];
