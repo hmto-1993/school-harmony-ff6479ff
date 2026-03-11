@@ -30,10 +30,9 @@ interface GradesSummaryProps {
   selectedClass: string;
   onClassChange: (classId: string) => void;
   selectedPeriod?: number;
-  categoryGroupFilter?: string;
 }
 
-export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1, categoryGroupFilter }: GradesSummaryProps) {
+export default function GradesSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: GradesSummaryProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -264,9 +263,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         const examCats = group.categories.filter(c => c.category_group === 'exams');
         const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
 
-        const hasClasswork = !categoryGroupFilter ? classworkCats.length > 0 : categoryGroupFilter === 'classwork' && classworkCats.length > 0;
-        const hasExams = !categoryGroupFilter ? examCats.length > 0 : categoryGroupFilter === 'exams' && examCats.length > 0;
-        const hasOther = !categoryGroupFilter ? otherCats.length > 0 : false;
+        const hasClasswork = classworkCats.length > 0;
+        const hasExams = examCats.length > 0;
+        const hasOther = otherCats.length > 0;
         const isEditing = editingClassId === group.id;
 
         return (
