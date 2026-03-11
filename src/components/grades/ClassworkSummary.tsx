@@ -444,33 +444,32 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
-                        // Compact print: small font, tight padding to fit all columns & max rows
+                        // Print-friendly table styling
                         clone.querySelectorAll("table").forEach(t => {
                           t.style.width = "100%";
-                          t.style.tableLayout = "fixed";
-                          t.style.fontSize = "9px";
+                          t.style.tableLayout = "auto";
+                          t.style.fontSize = "12px";
                           t.style.borderCollapse = "collapse";
                         });
                         clone.querySelectorAll("th, td").forEach(el => {
                           const h = el as HTMLElement;
                           h.style.color = "#1a1a1a";
                           h.style.backgroundColor = "";
-                          h.style.padding = "2px 3px";
-                          h.style.whiteSpace = "nowrap";
+                          h.style.padding = "4px 6px";
                           h.style.border = "1px solid #d1d5db";
-                          h.style.fontSize = "9px";
-                          h.style.lineHeight = "1.2";
-                          h.style.overflow = "hidden";
-                          h.style.textOverflow = "ellipsis";
+                          h.style.fontSize = "12px";
+                          h.style.lineHeight = "1.4";
+                          h.style.textAlign = "center";
                         });
                         clone.querySelectorAll("th").forEach(el => {
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
-                          (el as HTMLElement).style.fontSize = "8px";
                         });
+                        // Ensure name cells are visible and not truncated
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
                           if (!h.style.color) h.style.color = "#1a1a1a";
+                          h.style.overflow = "visible";
                         });
                         printArea.appendChild(clone);
                         document.body.appendChild(printArea);
