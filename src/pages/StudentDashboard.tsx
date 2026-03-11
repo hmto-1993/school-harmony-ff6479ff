@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -199,6 +199,24 @@ export default function StudentDashboard() {
     setFilesLoading(false);
   };
 
+  // Print recovery: show a back button after printing to prevent blank screen
+  const [showPrintRecovery, setShowPrintRecovery] = useState(false);
+  useEffect(() => {
+    const onBefore = () => setShowPrintRecovery(true);
+    window.addEventListener("beforeprint", onBefore);
+    return () => {
+      window.removeEventListener("beforeprint", onBefore);
+    };
+  }, []);
+
+  const handlePrintRecovery = useCallback(() => {
+    setShowPrintRecovery(false);
+    document.body.style.display = "none";
+    void document.body.offsetHeight;
+    document.body.style.display = "";
+    window.scrollTo(0, 0);
+  }, []);
+
   if (!student) {
     navigate("/login");
     return null;
@@ -211,7 +229,6 @@ export default function StudentDashboard() {
 
   const vis = student.visibility || { grades: true, attendance: true, behavior: true };
 
-  // Calculate grade summary
   const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
@@ -234,6 +251,16 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20" dir="rtl">
+      {/* Print recovery button */}
+      {showPrintRecovery && (
+        <button
+          onClick={handlePrintRecovery}
+          className="no-print fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground shadow-2xl font-bold text-base hover:opacity-90 transition-opacity"
+        >
+          <ArrowRight className="h-5 w-5" />
+          العودة للصفحة
+        </button>
+      )}
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
