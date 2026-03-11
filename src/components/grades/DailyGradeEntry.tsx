@@ -203,19 +203,30 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     const catsToSave = selectedCategory && selectedCategory !== "all"
       ? categories.filter((c) => c.id === selectedCategory) : categories;
 
+    const updates: PromiseLike<any>[] = [];
+    const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
+
     for (const sg of studentGrades) {
       for (const cat of catsToSave) {
         const score = sg.grades[cat.id];
         const existingId = sg.grade_ids[cat.id];
         if (score !== null && score !== undefined) {
           if (existingId) {
-            await supabase.from("grades").update({ score }).eq("id", existingId);
+            updates.push(supabase.from("grades").update({ score }).eq("id", existingId).then());
           } else {
-            await supabase.from("grades").insert({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod });
+            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod });
           }
         }
       }
     }
+
+    // Batch insert new grades in one call, run updates in parallel
+    const ops: PromiseLike<any>[] = [...updates];
+    if (inserts.length > 0) {
+      ops.push(supabase.from("grades").insert(inserts).then());
+    }
+    await Promise.all(ops);
+
     toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
     setSaving(false);
     loadData();
