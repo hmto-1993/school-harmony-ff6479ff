@@ -7,6 +7,7 @@ import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
