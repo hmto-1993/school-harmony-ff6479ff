@@ -13,6 +13,17 @@ import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
+import { useSignedUrl } from "@/hooks/use-signed-url";
+
+function ExcuseFileLink({ fileUrl, fileName }: { fileUrl: string; fileName: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
+      <FileImage className="h-3 w-3" />
+      {fileName}
+    </a>
+  );
+}
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -247,16 +258,15 @@ export default function StudentNotificationCards({
     try {
       const ext = excuseFile.name.split(".").pop() || "jpg";
       const fileName = `excuse_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from("school-assets").upload(`excuses/${fileName}`, excuseFile);
+      const filePath = `excuses/${fileName}`;
+      const { error: uploadErr } = await supabase.storage.from("school-assets").upload(filePath, excuseFile);
       if (uploadErr) throw uploadErr;
-
-      const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(`excuses/${fileName}`);
 
       const { data: excuseResult, error: excuseErr } = await supabase.functions.invoke("submit-excuse", {
         body: {
           student_id: studentId,
           notification_id: selectedWarning.id,
-          file_url: urlData.publicUrl,
+          file_url: filePath,
           file_name: excuseFile.name,
           reason: excuseReason,
           session_token: authStudent?.session_token,
@@ -265,7 +275,7 @@ export default function StudentNotificationCards({
       });
       if (excuseErr || !excuseResult?.success) throw new Error(excuseResult?.error || excuseErr?.message || "Failed to submit excuse");
 
-      setExistingExcuses(prev => [{ file_url: urlData.publicUrl, file_name: excuseFile.name, reason: excuseReason, status: "pending", notification_id: selectedWarning.id, created_at: new Date().toISOString() }, ...prev]);
+      setExistingExcuses(prev => [{ file_url: filePath, file_name: excuseFile.name, reason: excuseReason, status: "pending", notification_id: selectedWarning.id, created_at: new Date().toISOString() }, ...prev]);
       toast({ title: "تم الإرسال", description: "تم رفع العذر بنجاح وسيتم مراجعته من المعلم" });
       setExcuseOpen(false);
       setExcuseFile(null);
@@ -619,10 +629,7 @@ export default function StudentNotificationCards({
                          excuse.status === "accepted" ? "✅ مقبول" : "❌ مرفوض"}
                       </Badge>
                     </div>
-                    <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
-                      <FileImage className="h-3 w-3" />
-                      {excuse.file_name}
-                    </a>
+                    <ExcuseFileLink fileUrl={excuse.file_url} fileName={excuse.file_name} />
                     {excuse.reason && <p className="text-xs text-muted-foreground mt-2">{excuse.reason}</p>}
                     {excuse.review_note && <p className="text-xs mt-2 text-foreground">ملاحظة المعلم: {excuse.review_note}</p>}
                   </div>

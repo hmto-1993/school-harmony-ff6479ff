@@ -36,6 +36,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSignedUrl } from "@/hooks/use-signed-url";
+
+function ExcuseFileLink({ fileUrl, label }: { fileUrl: string; label: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+      <FileImage className="h-3 w-3" />
+      {label}
+    </a>
+  );
+}
+
+function ExcuseImage({ fileUrl }: { fileUrl: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer">
+      <img src={signed || ""} alt="ملف العذر" className="w-full max-h-[300px] object-contain bg-muted" />
+    </a>
+  );
+}
 
 interface Notification {
   id: string;
@@ -366,10 +386,7 @@ export default function NotificationsPage() {
                           <TableCell className="text-sm">{excuse.students?.classes?.name || "—"}</TableCell>
                           <TableCell className="text-sm max-w-[200px] truncate">{excuse.reason || "—"}</TableCell>
                           <TableCell>
-                            <a href={excuse.file_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
-                              <FileImage className="h-3 w-3" />
-                              عرض
-                            </a>
+                            <ExcuseFileLink fileUrl={excuse.file_url} label="عرض" />
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {new Date(excuse.created_at).toLocaleDateString("ar-SA")}
@@ -680,9 +697,7 @@ export default function NotificationsPage() {
                 <p className="text-sm mt-1">{reviewingExcuse.reason || "لم يُذكر سبب"}</p>
               </div>
               <div className="border rounded-xl overflow-hidden">
-                <a href={reviewingExcuse.file_url} target="_blank" rel="noopener noreferrer">
-                  <img src={reviewingExcuse.file_url} alt="ملف العذر" className="w-full max-h-[300px] object-contain bg-muted" />
-                </a>
+                <ExcuseImage fileUrl={reviewingExcuse.file_url} />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">ملاحظة المعلم (اختياري)</Label>
