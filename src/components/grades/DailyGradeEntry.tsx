@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
-import { subDays, addDays, isToday } from "date-fns";
+import { subDays, addDays, isToday, format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 
 interface GradeCategory {
