@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 
@@ -359,10 +359,24 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             const points = sg.dailyPoints[cat.id];
                             return (
                               <React.Fragment key={cat.id}>
-                                {/* Daily points column */}
+                                {/* Daily points column — colored dot visualization */}
                                 <td className="p-1.5 text-center border-l border-border/10">
                                   {points != null ? (
-                                    <span className="text-xs font-semibold text-muted-foreground">{points}</span>
+                                    <div className="flex items-center justify-center gap-1">
+                                      {points >= Number(cat.max_score) ? (
+                                        <CircleCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                      ) : points > 0 ? (
+                                        <CircleMinus className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                                      ) : (
+                                        <CircleX className="h-4 w-4 text-rose-500 dark:text-rose-400" />
+                                      )}
+                                      <span className={cn(
+                                        "text-xs font-bold",
+                                        points >= Number(cat.max_score) ? "text-emerald-600 dark:text-emerald-400" :
+                                        points > 0 ? "text-amber-600 dark:text-amber-400" :
+                                        "text-rose-500 dark:text-rose-400"
+                                      )}>{points}</span>
+                                    </div>
                                   ) : (
                                     <span className="text-muted-foreground opacity-40 text-xs">—</span>
                                   )}
