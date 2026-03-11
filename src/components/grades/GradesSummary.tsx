@@ -412,10 +412,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     {group.students.map((sg, i) => {
                       const isEven = i % 2 === 0;
                       const isLast = i === group.students.length - 1;
-                      const currentGrades = sg.grades;
-                      const classworkSub = calcSubtotal(currentGrades, classworkCats);
-                      const examSub = calcSubtotal(currentGrades, examCats);
-                      const allSub = calcSubtotal(currentGrades, group.categories);
+                      const currentManual = sg.manualScores;
+                      const classworkSub = calcSubtotal(currentManual, classworkCats);
+                      const examSub = calcSubtotal(currentManual, examCats);
+                      const allSub = calcSubtotal(currentManual, group.categories);
 
                       return (
                         <tr key={sg.student_id} className={cn(
