@@ -23,6 +23,15 @@ type GradeLevel = "excellent" | "average" | "zero";
 const isParticipation = (name: string) => name === "المشاركة";
 const MAX_PARTICIPATION_SLOTS = 3;
 
+/** Maximum display icons per category in ClassworkSummary */
+function getMaxDisplayIcons(catName: string): number {
+  if (catName === "المشاركة") return 20;
+  if (catName === "الواجبات") return 8;
+  if (catName === "الكتاب") return 8;
+  if (catName === "الأعمال والمشاريع") return 8;
+  return 8; // default fallback
+}
+
 /** Decompose a daily score into colored icon levels */
 function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
   if (score <= 0) return ["zero"];
@@ -593,17 +602,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
-                            const icons = sg.dailyIcons[cat.id] || [];
+                            const allIcons = sg.dailyIcons[cat.id] || [];
+                            const maxDisplay = getMaxDisplayIcons(cat.name);
+                            const icons = allIcons.slice(0, maxDisplay);
                             const manualScore = sg.manualScores[cat.id] ?? 0;
                             return (
                               <React.Fragment key={cat.id}>
                                 {/* Icons column */}
                                 <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
                                   {icons.length > 0 && (
-                                    <div className={cn(
-                                      "flex flex-wrap justify-center gap-0.5",
-                                      icons.length > 8 ? "grid grid-cols-8 gap-0.5" : ""
-                                    )}>
+                                    <div className="flex flex-wrap justify-center gap-0.5">
                                       {icons.map((icon, idx) => (
                                         <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
                                       ))}
