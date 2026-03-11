@@ -596,46 +596,48 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                           {classworkCats.map(cat => {
                             const cellKey = `${sg.student_id}__${cat.id}`;
+                            const icons = sg.dailyIcons[cat.id] || [];
+                            const manualScore = sg.manualScores[cat.id] ?? 0;
                             return (
-                              <td key={cat.id} className={cn(
-                                "p-1.5 text-center border-l border-border/10",
-                                isEditing ? "bg-emerald-500/10" : "bg-primary/5"
-                              )}>
-                                {isEditing ? (() => {
-                                  const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
-                                  return (
-                                    <Input
-                                      type="number" min={0} max={Number(cat.max_score)}
-                                      value={tempEdits[cellKey] ?? ""}
-                                      onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                      className={cn(
-                                        "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                        locked && "opacity-40 pointer-events-none"
-                                      )}
-                                      dir="ltr"
-                                      disabled={!!locked}
-                                    />
-                                  );
-                                })() : (() => {
-                                  const icons = sg.dailyIcons[cat.id] || [];
-                                  const manualScore = sg.manualScores[cat.id] ?? 0;
-                                  return (
-                                    <div className="flex flex-col items-center gap-1">
-                                      {icons.length > 0 && (
-                                        <div className={cn(
-                                          "flex flex-wrap justify-center gap-0.5",
-                                          icons.length > 8 ? "grid grid-cols-8 gap-0.5" : ""
-                                        )}>
-                                          {icons.map((icon, idx) => (
-                                            <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
-                                          ))}
-                                        </div>
-                                      )}
-                                      <span className="text-[10px] font-semibold text-muted-foreground">{manualScore}</span>
+                              <React.Fragment key={cat.id}>
+                                {/* Icons column */}
+                                <td className="p-1.5 text-center border-l border-border/10">
+                                  {icons.length > 0 && (
+                                    <div className={cn(
+                                      "flex flex-wrap justify-center gap-0.5",
+                                      icons.length > 8 ? "grid grid-cols-8 gap-0.5" : ""
+                                    )}>
+                                      {icons.map((icon, idx) => (
+                                        <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
+                                      ))}
                                     </div>
-                                  );
-                                })()}
-                              </td>
+                                  )}
+                                </td>
+                                {/* Score column */}
+                                <td className={cn(
+                                  "p-1.5 text-center border-l border-border/10",
+                                  isEditing ? "bg-emerald-500/10" : ""
+                                )}>
+                                  {isEditing ? (() => {
+                                    const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
+                                    return (
+                                      <Input
+                                        type="number" min={0} max={Number(cat.max_score)}
+                                        value={tempEdits[cellKey] ?? ""}
+                                        onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                        className={cn(
+                                          "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
+                                          locked && "opacity-40 pointer-events-none"
+                                        )}
+                                        dir="ltr"
+                                        disabled={!!locked}
+                                      />
+                                    );
+                                  })() : (
+                                    <span className="text-xs font-semibold text-muted-foreground">{manualScore}</span>
+                                  )}
+                                </td>
+                              </React.Fragment>
                             );
                           })}
 
