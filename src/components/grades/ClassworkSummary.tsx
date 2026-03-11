@@ -467,14 +467,36 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           (el as HTMLElement).style.backgroundColor = "#eff6ff";
                           (el as HTMLElement).style.fontWeight = "700";
                         });
-                        // Name column: allow wrapping so table doesn't overflow
+                        // Name column: wider; points columns: narrower
+                        clone.querySelectorAll("thead tr").forEach(row => {
+                          const ths = row.querySelectorAll("th");
+                          // ths order: #, الطالب, [cat_name, درجة]..., الإجمالي
+                          if (ths.length >= 2) {
+                            ths[1].style.minWidth = "110px";
+                          }
+                          // Points columns (every odd column after index 1) — make narrower
+                          for (let c = 2; c < ths.length - 1; c += 2) {
+                            ths[c].style.maxWidth = "45px";
+                            ths[c].style.fontSize = "8px";
+                          }
+                        });
                         clone.querySelectorAll("tbody tr").forEach(row => {
                           const cells = row.querySelectorAll("td");
                           if (cells.length >= 2) {
                             cells[1].style.whiteSpace = "normal";
                             cells[1].style.textAlign = "right";
-                            cells[1].style.minWidth = "80px";
+                            cells[1].style.minWidth = "110px";
                           }
+                          // Points cells narrower
+                          for (let c = 2; c < cells.length - 1; c += 2) {
+                            cells[c].style.maxWidth = "45px";
+                            cells[c].style.padding = "1px 2px";
+                          }
+                        });
+                        // Shrink SVG icons in print clone
+                        clone.querySelectorAll("svg").forEach(svg => {
+                          svg.style.width = "6px";
+                          svg.style.height = "6px";
                         });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
@@ -605,7 +627,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                   {points != null ? (
                                     <div className="flex items-center justify-center gap-0.5 flex-wrap">
                                       {points >= Number(cat.max_score) ? (
-                                        <Star className="h-2 w-2 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" />
+                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400 print:h-2 print:w-2" />
                                       ) : (() => {
                                         const max = Number(cat.max_score);
                                         const dots: React.ReactNode[] = [];
@@ -616,11 +638,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
                                         for (let d = 0; d < totalDots; d++) {
                                           if (d < filledDots) {
-                                            dots.push(<CircleCheck key={d} className="h-2 w-2 text-emerald-500 dark:text-emerald-400 drop-shadow-sm" />);
+                                            dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
                                           } else if (d === filledDots && hasPartial) {
-                                            dots.push(<CircleMinus key={d} className="h-2 w-2 text-amber-500 dark:text-amber-400 drop-shadow-sm" />);
+                                            dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
                                           } else {
-                                            dots.push(<CircleX key={d} className="h-2 w-2 text-rose-400/60 dark:text-rose-400/50" />);
+                                            dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50 print:h-2 print:w-2" />);
                                           }
                                         }
                                         return dots;
