@@ -697,9 +697,7 @@ export default function NotificationsPage() {
                 <p className="text-sm mt-1">{reviewingExcuse.reason || "لم يُذكر سبب"}</p>
               </div>
               <div className="border rounded-xl overflow-hidden">
-                <a href={reviewingExcuse.file_url} target="_blank" rel="noopener noreferrer">
-                  <img src={reviewingExcuse.file_url} alt="ملف العذر" className="w-full max-h-[300px] object-contain bg-muted" />
-                </a>
+                <ExcuseImage fileUrl={reviewingExcuse.file_url} />
               </div>
               <div className="space-y-2">
                 <Label className="text-sm">ملاحظة المعلم (اختياري)</Label>
