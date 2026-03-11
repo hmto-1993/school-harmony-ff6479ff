@@ -311,33 +311,24 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
-                    {/* Row 1: category group headers */}
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                      <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
-                      {classworkCats.map(cat => (
-                        <th key={cat.id} colSpan={2} className="text-center p-2 font-bold text-xs border-b border-primary/20 text-primary">
-                          <div>{cat.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
-                        </th>
-                      ))}
-                      <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
-                    </tr>
-                    {/* Row 2: sub-headers (نقاط / درجة) */}
-                    <tr className="bg-muted/30">
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
                       {classworkCats.map(cat => (
                         <React.Fragment key={cat.id}>
-                          <th className="text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
-                            النقاط
+                          <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
+                            <div>{cat.name}</div>
                           </th>
                           <th className={cn(
-                            "text-center p-1.5 font-medium text-[10px] border-b-2 border-primary/20 min-w-[50px]",
-                            isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-bold" : "text-muted-foreground"
+                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
+                            isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
                           )}>
-                            الدرجة
+                            <div>الدرجة</div>
+                            <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                           </th>
                         </React.Fragment>
                       ))}
+                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
                     </tr>
                   </thead>
                   <tbody>
