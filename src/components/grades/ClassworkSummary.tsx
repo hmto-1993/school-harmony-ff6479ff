@@ -190,7 +190,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         },
       });
 
-      doc.save(`المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      safeSavePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
     } catch (err) {
       console.error(err);
