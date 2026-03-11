@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Loader2, TrendingUp, Users, Award, BarChart3, Target, Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 
 interface QuizStats {
   activityId: string;
