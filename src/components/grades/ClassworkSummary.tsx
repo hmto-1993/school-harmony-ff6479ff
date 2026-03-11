@@ -661,8 +661,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                     }
                                     return (
                                       <div
-                                        className="flex items-center justify-center gap-0.5 flex-wrap"
-                                        style={targetDots > 8 ? { maxWidth: `${Math.ceil(targetDots / 2) * 18}px`, margin: '0 auto' } : undefined}
+                                        className="inline-grid gap-0.5 justify-items-center"
+                                        style={{
+                                          gridTemplateColumns: `repeat(${Math.ceil(targetDots / 2)}, 1fr)`,
+                                          gridTemplateRows: 'auto auto',
+                                          margin: '0 auto',
+                                        }}
                                       >
                                         {dots}
                                       </div>
