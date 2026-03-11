@@ -665,6 +665,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                                         dots.push(<CircleCheck key={d} className="h-4 w-4 text-emerald-500 dark:text-emerald-400 drop-shadow-sm print:h-2 print:w-2" />);
                                       } else if (d === filledDots && hasPartial) {
                                         dots.push(<CircleMinus key={d} className="h-4 w-4 text-amber-500 dark:text-amber-400 drop-shadow-sm print:h-2 print:w-2" />);
+                                      } else {
+                                        dots.push(<CircleX key={d} className="h-4 w-4 text-rose-400/60 dark:text-rose-400/50 print:h-2 print:w-2" />);
                                       }
                                     }
                                     const totalShown = dots.length;
