@@ -199,6 +199,24 @@ export default function StudentDashboard() {
     setFilesLoading(false);
   };
 
+  // Print recovery: show a back button after printing to prevent blank screen
+  const [showPrintRecovery, setShowPrintRecovery] = useState(false);
+  useEffect(() => {
+    const onBefore = () => setShowPrintRecovery(true);
+    window.addEventListener("beforeprint", onBefore);
+    return () => {
+      window.removeEventListener("beforeprint", onBefore);
+    };
+  }, []);
+
+  const handlePrintRecovery = useCallback(() => {
+    setShowPrintRecovery(false);
+    document.body.style.display = "none";
+    void document.body.offsetHeight;
+    document.body.style.display = "";
+    window.scrollTo(0, 0);
+  }, []);
+
   if (!student) {
     navigate("/login");
     return null;
@@ -211,7 +229,6 @@ export default function StudentDashboard() {
 
   const vis = student.visibility || { grades: true, attendance: true, behavior: true };
 
-  // Calculate grade summary
   const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
     if (!cat || g.score === null) return sum;
@@ -231,30 +248,6 @@ export default function StudentDashboard() {
 
   const generalFolders = folders.filter(f => !f.class_id);
   const classFolders = folders.filter(f => !!f.class_id);
-
-  // Print recovery: show a back button after printing to prevent blank screen
-  const [showPrintRecovery, setShowPrintRecovery] = useState(false);
-  useEffect(() => {
-    const onBefore = () => setShowPrintRecovery(true);
-    const onAfter = () => {
-      // Keep recovery button visible after print ends
-    };
-    window.addEventListener("beforeprint", onBefore);
-    window.addEventListener("afterprint", onAfter);
-    return () => {
-      window.removeEventListener("beforeprint", onBefore);
-      window.removeEventListener("afterprint", onAfter);
-    };
-  }, []);
-
-  const handlePrintRecovery = useCallback(() => {
-    setShowPrintRecovery(false);
-    // Force reflow to fix blank screen on mobile
-    document.body.style.display = "none";
-    void document.body.offsetHeight;
-    document.body.style.display = "";
-    window.scrollTo(0, 0);
-  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20" dir="rtl">
