@@ -166,13 +166,13 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
     const validRows = importRows.filter(r => r.status === "matched" && r.matchedStudent && r.score !== null);
 
-    const updates: Promise<any>[] = [];
+    const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; category_id: string; score: number | null; recorded_by: string; period: number }[] = [];
 
     for (const row of validRows) {
       const existingId = existingGrades[row.matchedStudent!.id];
       if (existingId) {
-        updates.push(supabase.from("grades").update({ score: row.score }).eq("id", existingId));
+        updates.push(supabase.from("grades").update({ score: row.score }).eq("id", existingId).then());
       } else {
         inserts.push({
           student_id: row.matchedStudent!.id,
@@ -184,9 +184,9 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
       }
     }
 
-    const ops: Promise<any>[] = [...updates];
+    const ops: PromiseLike<any>[] = [...updates];
     if (inserts.length > 0) {
-      ops.push(supabase.from("grades").insert(inserts));
+      ops.push(supabase.from("grades").insert(inserts).then());
     }
     await Promise.all(ops);
 

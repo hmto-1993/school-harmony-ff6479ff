@@ -115,7 +115,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setSaving(true);
     const today = new Date().toISOString().split("T")[0];
 
-    const updates: Promise<any>[] = [];
+    const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
 
     for (const s of students) {
@@ -123,7 +123,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       if (s.existingId) {
         updates.push(supabase.from("behavior_records").update({
           type: s.type, note: s.note || null,
-        }).eq("id", s.existingId));
+        }).eq("id", s.existingId).then());
       } else {
         inserts.push({
           student_id: s.student_id,
@@ -136,9 +136,9 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       }
     }
 
-    const ops: Promise<any>[] = [...updates];
+    const ops: PromiseLike<any>[] = [...updates];
     if (inserts.length > 0) {
-      ops.push(supabase.from("behavior_records").insert(inserts));
+      ops.push(supabase.from("behavior_records").insert(inserts).then());
     }
     await Promise.all(ops);
 
