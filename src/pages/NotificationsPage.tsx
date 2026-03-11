@@ -36,6 +36,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useSignedUrl } from "@/hooks/use-signed-url";
+
+function ExcuseFileLink({ fileUrl, label }: { fileUrl: string; label: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline flex items-center gap-1 text-xs">
+      <FileImage className="h-3 w-3" />
+      {label}
+    </a>
+  );
+}
+
+function ExcuseImage({ fileUrl }: { fileUrl: string }) {
+  const signed = useSignedUrl("school-assets", fileUrl);
+  return (
+    <a href={signed || "#"} target="_blank" rel="noopener noreferrer">
+      <img src={signed || ""} alt="ملف العذر" className="w-full max-h-[300px] object-contain bg-muted" />
+    </a>
+  );
+}
 
 interface Notification {
   id: string;
