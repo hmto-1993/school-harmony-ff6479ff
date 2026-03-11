@@ -27,8 +27,6 @@ interface Props {
   dateFrom: string;
   dateTo: string;
   className?: string;
-  lessonPlans?: LessonPlanData[];
-  onLessonUpdated?: () => void;
 }
 
 const STATUS_CONFIG: Record<string, { color: string; printColor: string; label: string; dotChar: string }> = {
