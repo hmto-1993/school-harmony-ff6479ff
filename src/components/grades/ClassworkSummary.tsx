@@ -587,7 +587,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       {classworkCats.map(cat => (
                         <React.Fragment key={cat.id}>
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-muted-foreground min-w-[50px]">
-                            <div>{cat.name}</div>
+                            <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
+                              ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
+                              : cat.name
+                            }</div>
                           </th>
                           <th className={cn(
                             "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[50px]",
