@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, CircleCheck, CircleMinus, CircleX, Star, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
