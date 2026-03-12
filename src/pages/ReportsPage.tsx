@@ -104,6 +104,7 @@ export default function ReportsPage() {
   const [dateFromDate, setDateFromDate] = useState<Date>(new Date());
   const [dateToDate, setDateToDate] = useState<Date>(new Date());
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
+  const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const dateFrom = format(dateFromDate, "yyyy-MM-dd");
   const dateTo = format(dateToDate, "yyyy-MM-dd");
 
@@ -130,7 +131,6 @@ export default function ReportsPage() {
       prev.length === weeksInfo.length ? [] : weeksInfo.map(w => w.weekNumber)
     );
   }, [getWeeksInfo]);
-  const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
   const [sendingSMS, setSendingSMS] = useState(false);
