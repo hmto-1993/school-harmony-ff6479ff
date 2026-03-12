@@ -251,7 +251,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       const catsToSave = selectedCategory && selectedCategory !== "all"
         ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
 
-      const updateResults: Promise<{ error: any }>[] = [];
+      const updateOps: Promise<void>[] = [];
       const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
 
       for (const sg of studentGrades) {
@@ -260,7 +260,11 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           const existingId = sg.grade_ids[cat.id];
           if (score !== null && score !== undefined) {
             if (existingId) {
-              updateResults.push(supabase.from("grades").update({ score }).eq("id", existingId));
+              updateOps.push(
+                supabase.from("grades").update({ score }).eq("id", existingId).then(res => {
+                  if (res.error) throw new Error(res.error.message);
+                })
+              );
             } else {
               inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") } as any);
             }
@@ -268,12 +272,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         }
       }
 
-      // Check update errors
-      const updateResponses = await Promise.all(updateResults);
-      const updateError = updateResponses.find(r => r.error);
-      if (updateError?.error) {
-        throw new Error(updateError.error.message || "فشل تحديث الدرجات");
-      }
+      await Promise.all(updateOps);
 
       // Batch upsert new grades
       let insertedData: any[] = [];
