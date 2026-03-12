@@ -57,7 +57,12 @@ interface StudentRow {
   isAtRisk: boolean;
 }
 
-function getWeekNumber(date: Date, startDate: Date): number {
+function getWeekNumber(date: Date, startDate: Date, academicGetWeek?: (d: Date) => number | null): number {
+  // Use academic calendar week if available
+  if (academicGetWeek) {
+    const aw = academicGetWeek(date);
+    if (aw !== null) return aw;
+  }
   const diffTime = date.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return Math.floor(diffDays / 7) + 1;
