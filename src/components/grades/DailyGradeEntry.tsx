@@ -272,7 +272,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     let insertedData: any[] = [];
     if (inserts.length > 0) {
       ops.push(
-        supabase.from("grades").insert(inserts).select("id, student_id, category_id").then(res => {
+        supabase.from("grades").upsert(inserts, { onConflict: "student_id,category_id,date,period" }).select("id, student_id, category_id").then(res => {
           insertedData = res.data || [];
         })
       );
