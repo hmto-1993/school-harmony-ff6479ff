@@ -339,7 +339,7 @@ export default function AttendanceWeeklyReport({
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Settings2 className="h-4 w-4" />
-                    الأسابيع ({selectedWeeks.size}/{weeks.length})
+                    الأسابيع ({selectedWeeks.has("all") ? "الجميع" : `${selectedWeeks.size}/${academicWeeks.length || weeks.length}`})
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-56 p-3" dir="rtl">
@@ -351,13 +351,30 @@ export default function AttendanceWeeklyReport({
                     </div>
                   </div>
                   <div className="space-y-1.5 max-h-48 overflow-auto">
-                    {weeks.map(w => (
-                      <label key={w.weekNum} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                    {/* "All" option */}
+                    <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5 font-semibold border-b border-border pb-1.5 mb-1">
+                      <Checkbox
+                        checked={selectedWeeks.has("all")}
+                        onCheckedChange={() => selectAllWeeks()}
+                      />
+                      الجميع
+                    </label>
+                    {/* Show all academic weeks if available, otherwise data weeks */}
+                    {(academicWeeks.length > 0 ? academicWeeks.map(aw => ({
+                      weekNum: aw.weekNumber,
+                      hasData: weeks.some(w => w.weekNum === aw.weekNumber),
+                      label: aw.type !== "normal" ? aw.label : undefined,
+                    })) : weeks.map(w => ({ weekNum: w.weekNum, hasData: true, label: undefined }))).map(w => (
+                      <label key={w.weekNum} className={cn(
+                        "flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5",
+                        !w.hasData && "opacity-50"
+                      )}>
                         <Checkbox
-                          checked={selectedWeeks.has(w.weekNum)}
+                          checked={selectedWeeks.has("all") || selectedWeeks.has(w.weekNum)}
                           onCheckedChange={() => toggleWeek(w.weekNum)}
                         />
-                        الأسبوع {w.weekNum}
+                        <span>الأسبوع {w.weekNum}</span>
+                        {w.label && <span className="text-[10px] text-muted-foreground mr-auto">{w.label}</span>}
                       </label>
                     ))}
                   </div>
