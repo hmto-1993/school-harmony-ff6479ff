@@ -289,29 +289,34 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const saveEdits = async () => {
     if (!user?.id) return;
     setSaving(true);
-    const upserts: any[] = [];
+    try {
+      const upserts: any[] = [];
 
-    for (const [key, val] of Object.entries(tempEdits)) {
-      const [studentId, categoryId] = key.split("__");
-      const row = summaryRows.find(r => r.student_id === studentId);
-      if (!row) continue;
-      const cat = allCategories.find(c => c.id === categoryId);
-      if (!cat) continue;
-      const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
-      const existingId = row.manualScoreIds[categoryId];
+      for (const [key, val] of Object.entries(tempEdits)) {
+        const [studentId, categoryId] = key.split("__");
+        const row = summaryRows.find(r => r.student_id === studentId);
+        if (!row) continue;
+        const cat = allCategories.find(c => c.id === categoryId);
+        if (!cat) continue;
+        const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+        const existingId = row.manualScoreIds[categoryId];
 
-      if (existingId) {
-        upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId));
-      } else {
-        upserts.push(supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: user.id, period: selectedPeriod }));
+        if (existingId) {
+          upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
+        } else {
+          upserts.push(supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: user.id, period: selectedPeriod }).then(res => { if (res.error) throw res.error; }));
+        }
       }
-    }
 
-    await Promise.all(upserts);
-    setSaving(false);
-    cancelEdit();
-    toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
-    loadAllData();
+      await Promise.all(upserts);
+      setSaving(false);
+      cancelEdit();
+      toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
+      loadAllData();
+    } catch (err: any) {
+      setSaving(false);
+      toast({ title: "فشل حفظ الدرجات", description: err?.message || "حدث خطأ غير متوقع أثناء الحفظ.", variant: "destructive" });
+    }
   };
 
   const filteredRows = summaryRows.filter((r) => {
