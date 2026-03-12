@@ -343,34 +343,40 @@ export default function AttendancePage() {
   const handleSave = async () => {
     if (!user || !selectedClass) return;
     setSaving(true);
+    try {
+      const toUpdate = records.filter((r) => r.existing_id);
+      const toInsert = records.filter((r) => !r.existing_id);
 
-    const toUpdate = records.filter((r) => r.existing_id);
-    const toInsert = records.filter((r) => !r.existing_id);
+      for (const record of toUpdate) {
+        const { error } = await supabase
+          .from("attendance_records")
+          .update({ status: record.status, notes: record.notes })
+          .eq("id", record.existing_id!);
+        if (error) throw new Error(error.message || "فشل تحديث سجل الحضور");
+      }
 
-    for (const record of toUpdate) {
-      await supabase
-        .from("attendance_records")
-        .update({ status: record.status, notes: record.notes })
-        .eq("id", record.existing_id!);
+      if (toInsert.length > 0) {
+        const { error } = await supabase.from("attendance_records").insert(
+          toInsert.map((r) => ({
+            student_id: r.student_id,
+            class_id: selectedClass,
+            date,
+            status: r.status,
+            notes: r.notes,
+            recorded_by: user.id,
+          }))
+        );
+        if (error) throw new Error(error.message || "فشل إدخال سجلات الحضور");
+      }
+
+      toast({ title: "تم الحفظ", description: "تم حفظ سجلات الحضور بنجاح" });
+      loadStudents();
+      loadWeeklyProgress();
+    } catch (err: any) {
+      toast({ title: "فشل حفظ الحضور", description: err?.message || "حدث خطأ غير متوقع أثناء الحفظ.", variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-
-    if (toInsert.length > 0) {
-      await supabase.from("attendance_records").insert(
-        toInsert.map((r) => ({
-          student_id: r.student_id,
-          class_id: selectedClass,
-          date,
-          status: r.status,
-          notes: r.notes,
-          recorded_by: user.id,
-        }))
-      );
-    }
-
-    toast({ title: "تم الحفظ", description: "تم حفظ سجلات الحضور بنجاح" });
-    setSaving(false);
-    loadStudents();
-    loadWeeklyProgress();
   };
 
   const exportAttendanceExcel = async () => {
