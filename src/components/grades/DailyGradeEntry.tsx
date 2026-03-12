@@ -251,7 +251,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       const catsToSave = selectedCategory && selectedCategory !== "all"
         ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
 
-      const updateOps: Promise<void>[] = [];
+      const updateOps: PromiseLike<void>[] = [];
       const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
 
       for (const sg of studentGrades) {
