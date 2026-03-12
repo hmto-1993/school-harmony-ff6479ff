@@ -915,33 +915,68 @@ export default function ReportsPage() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">الأسبوع</Label>
-                <Select
-                  value={(() => {
-                    const weeksInfo = getWeeksInfo();
-                    const match = weeksInfo.find(w => format(w.startDate, "yyyy-MM-dd") === format(dateFromDate, "yyyy-MM-dd"));
-                    return match ? String(match.weekNumber) : "";
-                  })()}
-                  onValueChange={(v) => {
-                    const weeksInfo = getWeeksInfo();
-                    const week = weeksInfo.find(w => w.weekNumber === Number(v));
-                    if (week) {
-                      setDateFromDate(week.startDate);
-                      setDateToDate(week.endDate);
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-52" dir="rtl">
-                    <SelectValue placeholder="اختر الأسبوع" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-64" dir="rtl">
-                    {getWeeksInfo().map((w) => (
-                      <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
-                        أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}{w.weekNumber === currentWeek ? " (الحالي)" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-semibold text-muted-foreground">نطاق الأسابيع</Label>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={(() => {
+                      const weeksInfo = getWeeksInfo();
+                      const match = weeksInfo.find(w => format(w.startDate, "yyyy-MM-dd") === format(dateFromDate, "yyyy-MM-dd"));
+                      return match ? String(match.weekNumber) : "";
+                    })()}
+                    onValueChange={(v) => {
+                      const weeksInfo = getWeeksInfo();
+                      const fromWeek = weeksInfo.find(w => w.weekNumber === Number(v));
+                      if (fromWeek) {
+                        setDateFromDate(fromWeek.startDate);
+                        // If toDate is before new fromDate, update it too
+                        if (fromWeek.startDate > dateToDate) {
+                          setDateToDate(fromWeek.endDate);
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-44" dir="rtl">
+                      <SelectValue placeholder="من أسبوع" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64" dir="rtl">
+                      {getWeeksInfo().map((w) => (
+                        <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
+                          أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}{w.weekNumber === currentWeek ? " ●" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-muted-foreground text-sm">→</span>
+                  <Select
+                    value={(() => {
+                      const weeksInfo = getWeeksInfo();
+                      const match = weeksInfo.find(w => format(w.endDate, "yyyy-MM-dd") === format(dateToDate, "yyyy-MM-dd"));
+                      return match ? String(match.weekNumber) : "";
+                    })()}
+                    onValueChange={(v) => {
+                      const weeksInfo = getWeeksInfo();
+                      const toWeek = weeksInfo.find(w => w.weekNumber === Number(v));
+                      if (toWeek) {
+                        setDateToDate(toWeek.endDate);
+                        // If fromDate is after new toDate, update it too
+                        if (toWeek.endDate < dateFromDate) {
+                          setDateFromDate(toWeek.startDate);
+                        }
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-44" dir="rtl">
+                      <SelectValue placeholder="إلى أسبوع" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-64" dir="rtl">
+                      {getWeeksInfo().map((w) => (
+                        <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
+                          أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}{w.weekNumber === currentWeek ? " ●" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <p className="text-[11px] text-muted-foreground mt-1">
                   {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
                 </p>
