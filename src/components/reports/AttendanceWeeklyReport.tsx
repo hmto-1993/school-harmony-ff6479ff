@@ -100,7 +100,7 @@ export default function AttendanceWeeklyReport({
 
     const weekMap = new Map<number, string[]>();
     allDates.forEach((d) => {
-      const wn = getWeekNumber(new Date(d), fromDate);
+      const wn = getWeekNumber(new Date(d), fromDate, getWeekForDate);
       if (!weekMap.has(wn)) weekMap.set(wn, []);
       weekMap.get(wn)!.push(d);
     });
