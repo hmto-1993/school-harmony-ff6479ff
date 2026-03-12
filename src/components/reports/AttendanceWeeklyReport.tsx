@@ -76,9 +76,10 @@ export default function AttendanceWeeklyReport({
   dateTo,
   className: classDisplayName,
 }: Props) {
+  const { getWeekForDate, getWeeksInfo } = useAcademicWeek();
   const tableRef = useRef<HTMLDivElement>(null);
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
-  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set(["all"]));
 
   useEffect(() => {
     supabase
