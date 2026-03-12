@@ -950,9 +950,12 @@ export default function ReportsPage() {
                       <span className="truncate">
                         {selectedWeeks.length === 0
                           ? "اختر الأسابيع"
-                          : selectedWeeks.length === getWeeksInfo().length
-                            ? "الجميع (كل الأسابيع)"
-                            : `${selectedWeeks.length} أسبوع محدد`}
+                           : selectedWeeks.length === getWeeksInfo().length
+                             ? "الجميع (كل الأسابيع)"
+                             : (() => {
+                                 const sorted = [...selectedWeeks].sort((a, b) => a - b);
+                                 return `الأسبوع ${sorted[0]} - ${sorted[sorted.length - 1]}`;
+                               })()}
                       </span>
                       <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
                     </Button>
