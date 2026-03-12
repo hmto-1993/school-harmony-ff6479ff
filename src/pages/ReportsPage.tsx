@@ -910,11 +910,12 @@ export default function ReportsPage() {
                 setReportType(v);
                 if (v === "daily") {
                   setDateToDate(dateFromDate);
+                  setSelectedWeeks([]);
                 } else {
-                  // أسبوعي: اضبط التاريخ للأسبوع الحالي من التقويم الأكاديمي
                   const weeksInfo = getWeeksInfo();
                   const activeWeek = weeksInfo.find(w => w.weekNumber === currentWeek) || weeksInfo[0];
                   if (activeWeek) {
+                    setSelectedWeeks([activeWeek.weekNumber]);
                     setDateFromDate(activeWeek.startDate);
                     setDateToDate(activeWeek.endDate);
                   }
