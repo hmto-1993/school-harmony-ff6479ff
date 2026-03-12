@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { safePrint } from "@/lib/print-utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
