@@ -943,49 +943,57 @@ export default function ReportsPage() {
               </div>
             ) : (
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">الأسبوع</Label>
-                <Select
-                  value={(() => {
-                    const weeksInfo = getWeeksInfo();
-                    const fromMatch = weeksInfo.find(w => format(w.startDate, "yyyy-MM-dd") === format(dateFromDate, "yyyy-MM-dd"));
-                    const toMatch = weeksInfo.find(w => format(w.endDate, "yyyy-MM-dd") === format(dateToDate, "yyyy-MM-dd"));
-                    if (fromMatch && toMatch && fromMatch.weekNumber === 1 && toMatch.weekNumber === weeksInfo.length) return "all";
-                    if (fromMatch && toMatch && fromMatch.weekNumber === toMatch.weekNumber) return String(fromMatch.weekNumber);
-                    return fromMatch ? String(fromMatch.weekNumber) : "";
-                  })()}
-                  onValueChange={(v) => {
-                    const weeksInfo = getWeeksInfo();
-                    if (v === "all") {
-                      if (weeksInfo.length > 0) {
-                        setDateFromDate(weeksInfo[0].startDate);
-                        setDateToDate(weeksInfo[weeksInfo.length - 1].endDate);
-                      }
-                    } else {
-                      const week = weeksInfo.find(w => w.weekNumber === Number(v));
-                      if (week) {
-                        setDateFromDate(week.startDate);
-                        setDateToDate(week.endDate);
-                      }
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-56" dir="rtl">
-                    <SelectValue placeholder="اختر الأسبوع" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72" dir="rtl">
-                    <SelectItem value="all" dir="rtl">
-                      📋 الجميع (كل الأسابيع)
-                    </SelectItem>
-                    {getWeeksInfo().map((w) => (
-                      <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
-                        {w.weekNumber === currentWeek ? "● " : ""}أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
-                </p>
+                <Label className="text-xs font-semibold text-muted-foreground">الأسابيع</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-64 justify-between text-sm font-normal" dir="rtl">
+                      <span className="truncate">
+                        {selectedWeeks.length === 0
+                          ? "اختر الأسابيع"
+                          : selectedWeeks.length === getWeeksInfo().length
+                            ? "الجميع (كل الأسابيع)"
+                            : `${selectedWeeks.length} أسبوع محدد`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-0" align="start" dir="rtl">
+                    <div className="max-h-72 overflow-y-auto">
+                      {/* Select All */}
+                      <div
+                        className="flex items-center gap-2 px-3 py-2 border-b border-border cursor-pointer hover:bg-muted/50"
+                        onClick={toggleAllWeeks}
+                      >
+                        <Checkbox
+                          checked={selectedWeeks.length === getWeeksInfo().length && getWeeksInfo().length > 0}
+                          onCheckedChange={toggleAllWeeks}
+                        />
+                        <span className="text-sm font-medium">📋 الجميع</span>
+                      </div>
+                      {/* Individual weeks */}
+                      {getWeeksInfo().map((w) => (
+                        <div
+                          key={w.weekNumber}
+                          className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-muted/50"
+                          onClick={() => toggleWeek(w.weekNumber)}
+                        >
+                          <Checkbox
+                            checked={selectedWeeks.includes(w.weekNumber)}
+                            onCheckedChange={() => toggleWeek(w.weekNumber)}
+                          />
+                          <span className="text-sm">
+                            {w.weekNumber === currentWeek ? "● " : ""}أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                {selectedWeeks.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
+                  </p>
+                )}
               </div>
             )}
           </div>
