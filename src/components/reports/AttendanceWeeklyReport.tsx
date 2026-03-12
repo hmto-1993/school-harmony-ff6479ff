@@ -147,7 +147,7 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, getWeekForDate]);
 
   // Initialize selectedWeeks when weeks change
   useEffect(() => {
