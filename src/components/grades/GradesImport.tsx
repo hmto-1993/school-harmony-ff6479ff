@@ -187,7 +187,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
     const ops: PromiseLike<any>[] = [...updates];
     if (inserts.length > 0) {
-      ops.push(supabase.from("grades").insert(inserts).then());
+      ops.push(supabase.from("grades").upsert(inserts, { onConflict: "student_id,category_id,date,period" }).then());
     }
     await Promise.all(ops);
 
