@@ -1,0 +1,2 @@
+ALTER TABLE public.grades DROP CONSTRAINT grades_student_id_category_id_key;
+ALTER TABLE public.grades ADD CONSTRAINT grades_student_category_date_period_key UNIQUE (student_id, category_id, date, period);
