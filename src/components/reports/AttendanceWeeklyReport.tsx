@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
+import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 
 
 interface AttendanceRecord {
@@ -56,7 +57,12 @@ interface StudentRow {
   isAtRisk: boolean;
 }
 
-function getWeekNumber(date: Date, startDate: Date): number {
+function getWeekNumber(date: Date, startDate: Date, academicGetWeek?: (d: Date) => number | null): number {
+  // Use academic calendar week if available
+  if (academicGetWeek) {
+    const aw = academicGetWeek(date);
+    if (aw !== null) return aw;
+  }
   const diffTime = date.getTime() - startDate.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   return Math.floor(diffDays / 7) + 1;
@@ -70,9 +76,10 @@ export default function AttendanceWeeklyReport({
   dateTo,
   className: classDisplayName,
 }: Props) {
+  const { getWeekForDate, getWeeksInfo } = useAcademicWeek();
   const tableRef = useRef<HTMLDivElement>(null);
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
-  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set());
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set(["all"]));
 
   useEffect(() => {
     supabase
@@ -93,7 +100,7 @@ export default function AttendanceWeeklyReport({
 
     const weekMap = new Map<number, string[]>();
     allDates.forEach((d) => {
-      const wn = getWeekNumber(new Date(d), fromDate);
+      const wn = getWeekNumber(new Date(d), fromDate, getWeekForDate);
       if (!weekMap.has(wn)) weekMap.set(wn, []);
       weekMap.get(wn)!.push(d);
     });
@@ -140,30 +147,38 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, getWeekForDate]);
 
-  // Initialize selectedWeeks when weeks change
+  // All academic weeks for the selector
+  const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
+
+  // Initialize selectedWeeks to "all" when weeks change
   useEffect(() => {
     if (weeks.length > 0 && selectedWeeks.size === 0) {
-      setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+      setSelectedWeeks(new Set(["all"]));
     }
   }, [weeks]);
 
   const filteredWeeks = useMemo(() => {
-    if (selectedWeeks.size === 0) return weeks;
+    if (selectedWeeks.has("all") || selectedWeeks.size === 0) return weeks;
     return weeks.filter(w => selectedWeeks.has(w.weekNum));
   }, [weeks, selectedWeeks]);
 
   const toggleWeek = (weekNum: number) => {
     setSelectedWeeks(prev => {
       const next = new Set(prev);
+      next.delete("all"); // Remove "all" when toggling individual weeks
       if (next.has(weekNum)) next.delete(weekNum);
       else next.add(weekNum);
+      // If all data weeks are selected, switch back to "all"
+      if (weeks.every(w => next.has(w.weekNum))) {
+        return new Set<number | "all">(["all"]);
+      }
       return next;
     });
   };
 
-  const selectAllWeeks = () => setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+  const selectAllWeeks = () => setSelectedWeeks(new Set<number | "all">(["all"]));
   const deselectAllWeeks = () => setSelectedWeeks(new Set());
 
   const handleExportExcel = async () => {
@@ -324,7 +339,7 @@ export default function AttendanceWeeklyReport({
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Settings2 className="h-4 w-4" />
-                    الأسابيع ({selectedWeeks.size}/{weeks.length})
+                    الأسابيع ({selectedWeeks.has("all") ? "الجميع" : `${selectedWeeks.size}/${academicWeeks.length || weeks.length}`})
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-56 p-3" dir="rtl">
@@ -336,13 +351,30 @@ export default function AttendanceWeeklyReport({
                     </div>
                   </div>
                   <div className="space-y-1.5 max-h-48 overflow-auto">
-                    {weeks.map(w => (
-                      <label key={w.weekNum} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5">
+                    {/* "All" option */}
+                    <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5 font-semibold border-b border-border pb-1.5 mb-1">
+                      <Checkbox
+                        checked={selectedWeeks.has("all")}
+                        onCheckedChange={() => selectAllWeeks()}
+                      />
+                      الجميع
+                    </label>
+                    {/* Show all academic weeks if available, otherwise data weeks */}
+                    {(academicWeeks.length > 0 ? academicWeeks.map(aw => ({
+                      weekNum: aw.weekNumber,
+                      hasData: weeks.some(w => w.weekNum === aw.weekNumber),
+                      label: aw.type !== "normal" ? aw.label : undefined,
+                    })) : weeks.map(w => ({ weekNum: w.weekNum, hasData: true, label: undefined }))).map(w => (
+                      <label key={w.weekNum} className={cn(
+                        "flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 rounded px-1 py-0.5",
+                        !w.hasData && "opacity-50"
+                      )}>
                         <Checkbox
-                          checked={selectedWeeks.has(w.weekNum)}
+                          checked={selectedWeeks.has("all") || selectedWeeks.has(w.weekNum)}
                           onCheckedChange={() => toggleWeek(w.weekNum)}
                         />
-                        الأسبوع {w.weekNum}
+                        <span>الأسبوع {w.weekNum}</span>
+                        {w.label && <span className="text-[10px] text-muted-foreground mr-auto">{w.label}</span>}
                       </label>
                     ))}
                   </div>

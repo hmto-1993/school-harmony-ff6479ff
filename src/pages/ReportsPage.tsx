@@ -937,7 +937,7 @@ export default function ReportsPage() {
                   <SelectContent className="max-h-64" dir="rtl">
                     {getWeeksInfo().map((w) => (
                       <SelectItem key={w.weekNumber} value={String(w.weekNumber)} dir="rtl">
-                        {w.label}{w.weekNumber === currentWeek ? " (الحالي)" : ""}
+                        أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}{w.weekNumber === currentWeek ? " (الحالي)" : ""}
                       </SelectItem>
                     ))}
                   </SelectContent>
