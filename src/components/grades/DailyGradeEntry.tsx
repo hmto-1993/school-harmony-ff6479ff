@@ -247,53 +247,66 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    const catsToSave = selectedCategory && selectedCategory !== "all"
-      ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
+    try {
+      const catsToSave = selectedCategory && selectedCategory !== "all"
+        ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
 
-    const updates: PromiseLike<any>[] = [];
-    const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
+      const updateResults: Promise<{ error: any }>[] = [];
+      const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
 
-    for (const sg of studentGrades) {
-      for (const cat of catsToSave) {
-        const score = sg.grades[cat.id];
-        const existingId = sg.grade_ids[cat.id];
-        if (score !== null && score !== undefined) {
-          if (existingId) {
-            updates.push(supabase.from("grades").update({ score }).eq("id", existingId).then());
-          } else {
-            inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") } as any);
+      for (const sg of studentGrades) {
+        for (const cat of catsToSave) {
+          const score = sg.grades[cat.id];
+          const existingId = sg.grade_ids[cat.id];
+          if (score !== null && score !== undefined) {
+            if (existingId) {
+              updateResults.push(supabase.from("grades").update({ score }).eq("id", existingId));
+            } else {
+              inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") } as any);
+            }
           }
         }
       }
-    }
 
-    // Batch insert new grades in one call, run updates in parallel
-    const ops: PromiseLike<any>[] = [...updates];
-    let insertedData: any[] = [];
-    if (inserts.length > 0) {
-      ops.push(
-        supabase.from("grades").upsert(inserts, { onConflict: "student_id,category_id,date,period" }).select("id, student_id, category_id").then(res => {
-          insertedData = res.data || [];
-        })
-      );
-    }
-    await Promise.all(ops);
+      // Check update errors
+      const updateResponses = await Promise.all(updateResults);
+      const updateError = updateResponses.find(r => r.error);
+      if (updateError?.error) {
+        throw new Error(updateError.error.message || "فشل تحديث الدرجات");
+      }
 
-    // Update grade_ids locally so icons are preserved without reload
-    if (insertedData.length > 0) {
-      setStudentGrades(prev => prev.map(sg => {
-        const newIds = { ...sg.grade_ids };
-        insertedData.forEach((ins: any) => {
-          if (ins.student_id === sg.student_id) {
-            newIds[ins.category_id] = ins.id;
-          }
-        });
-        return { ...sg, grade_ids: newIds };
-      }));
-    }
+      // Batch upsert new grades
+      let insertedData: any[] = [];
+      if (inserts.length > 0) {
+        const { data, error } = await supabase.from("grades").upsert(inserts, { onConflict: "student_id,category_id,date,period" }).select("id, student_id, category_id");
+        if (error) throw new Error(error.message || "فشل إدخال الدرجات");
+        insertedData = data || [];
+      }
 
-    toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
-    setSaving(false);
+      // Update grade_ids locally so icons are preserved without reload
+      if (insertedData.length > 0) {
+        setStudentGrades(prev => prev.map(sg => {
+          const newIds = { ...sg.grade_ids };
+          insertedData.forEach((ins: any) => {
+            if (ins.student_id === sg.student_id) {
+              newIds[ins.category_id] = ins.id;
+            }
+          });
+          return { ...sg, grade_ids: newIds };
+        }));
+      }
+
+      toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
+    } catch (err: any) {
+      console.error("Grade save error:", err);
+      toast({
+        title: "فشل حفظ الدرجات",
+        description: err?.message || "حدث خطأ غير متوقع أثناء الحفظ. حاول مرة أخرى.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const dailyCategories = categories.filter(c => !isHiddenFromDaily(c.name));
