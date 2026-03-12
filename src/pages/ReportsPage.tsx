@@ -103,8 +103,33 @@ export default function ReportsPage() {
   const [selectedClass, setSelectedClass] = useState<string>("");
   const [dateFromDate, setDateFromDate] = useState<Date>(new Date());
   const [dateToDate, setDateToDate] = useState<Date>(new Date());
+  const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
   const dateFrom = format(dateFromDate, "yyyy-MM-dd");
   const dateTo = format(dateToDate, "yyyy-MM-dd");
+
+  // Sync dateFromDate/dateToDate when selectedWeeks changes
+  useEffect(() => {
+    if (reportType !== "periodic" || selectedWeeks.length === 0) return;
+    const weeksInfo = getWeeksInfo();
+    const sorted = [...selectedWeeks].sort((a, b) => a - b);
+    const firstWeek = weeksInfo.find(w => w.weekNumber === sorted[0]);
+    const lastWeek = weeksInfo.find(w => w.weekNumber === sorted[sorted.length - 1]);
+    if (firstWeek) setDateFromDate(firstWeek.startDate);
+    if (lastWeek) setDateToDate(lastWeek.endDate);
+  }, [selectedWeeks, reportType, getWeeksInfo]);
+
+  const toggleWeek = useCallback((weekNum: number) => {
+    setSelectedWeeks(prev => 
+      prev.includes(weekNum) ? prev.filter(w => w !== weekNum) : [...prev, weekNum].sort((a, b) => a - b)
+    );
+  }, []);
+
+  const toggleAllWeeks = useCallback(() => {
+    const weeksInfo = getWeeksInfo();
+    setSelectedWeeks(prev => 
+      prev.length === weeksInfo.length ? [] : weeksInfo.map(w => w.weekNumber)
+    );
+  }, [getWeeksInfo]);
   const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
