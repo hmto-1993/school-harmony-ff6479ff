@@ -149,28 +149,36 @@ export default function AttendanceWeeklyReport({
     return { weeks, studentRows, totalPeriodsHeld };
   }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, getWeekForDate]);
 
-  // Initialize selectedWeeks when weeks change
+  // All academic weeks for the selector
+  const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
+
+  // Initialize selectedWeeks to "all" when weeks change
   useEffect(() => {
     if (weeks.length > 0 && selectedWeeks.size === 0) {
-      setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+      setSelectedWeeks(new Set(["all"]));
     }
   }, [weeks]);
 
   const filteredWeeks = useMemo(() => {
-    if (selectedWeeks.size === 0) return weeks;
+    if (selectedWeeks.has("all") || selectedWeeks.size === 0) return weeks;
     return weeks.filter(w => selectedWeeks.has(w.weekNum));
   }, [weeks, selectedWeeks]);
 
   const toggleWeek = (weekNum: number) => {
     setSelectedWeeks(prev => {
       const next = new Set(prev);
+      next.delete("all"); // Remove "all" when toggling individual weeks
       if (next.has(weekNum)) next.delete(weekNum);
       else next.add(weekNum);
+      // If all data weeks are selected, switch back to "all"
+      if (weeks.every(w => next.has(w.weekNum))) {
+        return new Set<number | "all">(["all"]);
+      }
       return next;
     });
   };
 
-  const selectAllWeeks = () => setSelectedWeeks(new Set(weeks.map(w => w.weekNum)));
+  const selectAllWeeks = () => setSelectedWeeks(new Set<number | "all">(["all"]));
   const deselectAllWeeks = () => setSelectedWeeks(new Set());
 
   const handleExportExcel = async () => {
