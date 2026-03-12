@@ -17,8 +17,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدرسة");
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
   const navigate = useNavigate();
