@@ -124,6 +124,7 @@ export default function SharedViewPage() {
 
       const { doc, startY, watermark } = pdfSetup;
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       const tableStyles = getArabicTableStyles();
       const today = format(new Date(), "yyyy/MM/dd");
 
