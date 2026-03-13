@@ -102,7 +102,6 @@ export default function GradesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ShareDialog />
           <NoorExportDialog />
         </div>
       </div>
