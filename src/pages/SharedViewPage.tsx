@@ -124,6 +124,7 @@ export default function SharedViewPage() {
 
       const { doc, startY, watermark } = pdfSetup;
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       const tableStyles = getArabicTableStyles();
       const today = format(new Date(), "yyyy/MM/dd");
 
@@ -324,12 +325,12 @@ export default function SharedViewPage() {
         });
       }
 
-      // --- Top/Bottom students by grades ---
-      // Helper to compute student average
+      // ============================================================
+      // Helper: compute student average percentage
+      // ============================================================
       const computeStudentAvg = (cls: ClassSummary, studentId: string) => {
         const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
         let totalScore = 0, totalMax = 0;
-
         const gradesBySt: Record<string, { sum: number; count: number; max: number }> = {};
         cls.grades.filter((g: any) => g.student_id === studentId).forEach((g: any) => {
           const cat = classCategories.find((c: any) => c.id === g.category_id);
@@ -343,36 +344,164 @@ export default function SharedViewPage() {
           if (!cat) return;
           gradesBySt[m.category_id] = { sum: Number(m.score), count: 1, max: cat.max_score };
         });
-
         Object.values(gradesBySt).forEach(v => {
-          if (v.count > 0) {
-            totalScore += (v.sum / v.count);
-            totalMax += v.max;
-          }
+          if (v.count > 0) { totalScore += (v.sum / v.count); totalMax += v.max; }
         });
-
         return totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : null;
       };
 
-      // Global top/bottom 10
-      doc.addPage("a4", "landscape");
-      doc.setFontSize(13);
-      doc.text("أفضل وأدنى 10 طلاب — جميع الفصول", pageWidth / 2, 15, { align: "center" });
+      // ============================================================
+      // Helper: classify grade level
+      // ============================================================
+      const getLevel = (avg: number) => {
+        if (avg >= 90) return 0; // ممتاز
+        if (avg >= 80) return 1; // جيد جداً
+        if (avg >= 70) return 2; // جيد
+        if (avg >= 60) return 3; // مقبول
+        return 4; // ضعيف
+      };
+      const levelLabels = ["ممتاز", "جيد جداً", "جيد", "مقبول", "ضعيف"];
+      const levelColors: [number, number, number][] = [
+        [16, 185, 129],   // emerald
+        [59, 130, 246],   // blue
+        [251, 191, 36],   // amber
+        [249, 115, 22],   // orange
+        [239, 68, 68],    // red
+      ];
 
-      const allStudentAvgs: { name: string; className: string; avg: number }[] = [];
+      // ============================================================
+      // Build all student averages
+      // ============================================================
+      const allStudentAvgs: { name: string; className: string; avg: number; classId: string }[] = [];
       data.classes.forEach(cls => {
         cls.students.forEach(s => {
           const avg = computeStudentAvg(cls, s.id);
-          if (avg !== null) allStudentAvgs.push({ name: s.full_name, className: cls.name, avg });
+          if (avg !== null) allStudentAvgs.push({ name: s.full_name, className: cls.name, avg, classId: cls.id });
         });
       });
       allStudentAvgs.sort((a, b) => b.avg - a.avg);
 
+      // ============================================================
+      // PAGE: Grade Distribution Chart — All Classes
+      // ============================================================
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
+      doc.text("📊 توزيع مستويات الدرجات — جميع الفصول", pageWidth / 2, 15, { align: "center" });
+
+      // Draw legend
+      const legendY = 22;
+      const legendStartX = pageWidth / 2 + (levelLabels.length * 25) / 2;
+      levelLabels.forEach((label, i) => {
+        const lx = legendStartX - i * 32;
+        doc.setFillColor(...levelColors[i]);
+        doc.rect(lx, legendY - 3, 5, 5, "F");
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(8);
+        doc.text(label, lx - 1, legendY + 1, { align: "right" });
+      });
+
+      // Compute distribution per class
+      const classDistributions = data.classes.map(cls => {
+        const counts = [0, 0, 0, 0, 0];
+        const classAvgs = allStudentAvgs.filter(s => s.classId === cls.id);
+        classAvgs.forEach(s => { counts[getLevel(s.avg)]++; });
+        return { name: cls.name, counts, total: classAvgs.length };
+      });
+
+      // Draw horizontal stacked bar chart
+      const chartX = 20;
+      const chartY = 30;
+      const chartW = pageWidth - 60;
+      const barH = Math.min(12, (pageHeight - chartY - 30) / data.classes.length - 2);
+      const barGap = 3;
+
+      classDistributions.forEach((cd, idx) => {
+        const by = chartY + idx * (barH + barGap);
+        // Class name (right-aligned)
+        doc.setFont("Amiri", "bold");
+        doc.setFontSize(9);
+        doc.text(cd.name, pageWidth - 15, by + barH / 2 + 1.5, { align: "right" });
+
+        // Stacked bars
+        let cx = chartX;
+        cd.counts.forEach((count, li) => {
+          if (count === 0) return;
+          const bw = cd.total > 0 ? (count / cd.total) * chartW : 0;
+          doc.setFillColor(...levelColors[li]);
+          doc.roundedRect(cx, by, bw, barH, 1, 1, "F");
+          // Count label inside bar if wide enough
+          if (bw > 10) {
+            doc.setFontSize(7);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(255, 255, 255);
+            doc.text(String(count), cx + bw / 2, by + barH / 2 + 1.5, { align: "center" });
+            doc.setTextColor(0, 0, 0);
+          }
+          cx += bw;
+        });
+
+        // Percentage labels
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(7);
+        const totalStr = cd.total > 0 ? `(${cd.total} طالب)` : "";
+        doc.text(totalStr, chartX - 2, by + barH / 2 + 1.5, { align: "right" });
+      });
+
+      // Overall distribution pie-like summary below
+      const overallCounts = [0, 0, 0, 0, 0];
+      allStudentAvgs.forEach(s => { overallCounts[getLevel(s.avg)]++; });
+      const totalStudentsWithGrades = allStudentAvgs.length;
+
+      const summaryY = chartY + classDistributions.length * (barH + barGap) + 10;
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(11);
+      doc.text("الإحصاء العام", pageWidth / 2, summaryY, { align: "center" });
+
+      // Draw circular percentage indicators
+      const circleR = 8;
+      const circleGap = 38;
+      const circlesStartX = pageWidth / 2 + ((levelLabels.length - 1) * circleGap) / 2;
+      levelLabels.forEach((label, i) => {
+        const cx = circlesStartX - i * circleGap;
+        const cy = summaryY + 15;
+        const pct = totalStudentsWithGrades > 0 ? Math.round((overallCounts[i] / totalStudentsWithGrades) * 100) : 0;
+
+        // Background circle
+        doc.setFillColor(245, 245, 245);
+        doc.circle(cx, cy, circleR, "F");
+        // Colored arc (simplified as filled circle with opacity effect)
+        doc.setFillColor(...levelColors[i]);
+        doc.circle(cx, cy, circleR - 1.5, "F");
+        // White inner
+        doc.setFillColor(255, 255, 255);
+        doc.circle(cx, cy, circleR - 3.5, "F");
+        // Percentage text
+        doc.setFontSize(8);
+        doc.setFont("Amiri", "bold");
+        doc.setTextColor(...levelColors[i]);
+        doc.text(`${pct}%`, cx, cy + 1.5, { align: "center" });
+        doc.setTextColor(0, 0, 0);
+        // Label below
+        doc.setFontSize(7);
+        doc.setFont("Amiri", "normal");
+        doc.text(label, cx, cy + circleR + 5, { align: "center" });
+        doc.text(`${overallCounts[i]}`, cx, cy + circleR + 9, { align: "center" });
+      });
+
+      // ============================================================
+      // PAGE: Top 10 / Bottom 10 — All Classes (Grades)
+      // ============================================================
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
+      doc.text("⭐ أفضل وأدنى 10 طلاب — الدرجات", pageWidth / 2, 15, { align: "center" });
+
       const top10 = allStudentAvgs.slice(0, 10);
       const bottom10 = allStudentAvgs.slice(-10).reverse();
 
-      // Top 10 table
       doc.setFontSize(11);
+      doc.setFont("Amiri", "bold");
       doc.text("⭐ أفضل 10 طلاب", pageWidth - 14, 22, { align: "right" });
       autoTable(doc, {
         startY: 26,
@@ -383,8 +512,8 @@ export default function SharedViewPage() {
         margin: { left: pageWidth / 2 + 5 },
       });
 
-      // Bottom 10 table
       doc.setFontSize(11);
+      doc.setFont("Amiri", "bold");
       doc.text("⚠ أدنى 10 طلاب", pageWidth / 2 - 10, 22, { align: "right" });
       autoTable(doc, {
         startY: 26,
@@ -395,7 +524,9 @@ export default function SharedViewPage() {
         margin: { right: pageWidth / 2 + 5 },
       });
 
-      // Per-class top/bottom 5
+      // ============================================================
+      // PAGES: Per-class Top 5 / Bottom 5 (Grades)
+      // ============================================================
       data.classes.forEach(cls => {
         const classAvgs = cls.students
           .map(s => ({ name: s.full_name, avg: computeStudentAvg(cls, s.id) }))
@@ -405,15 +536,38 @@ export default function SharedViewPage() {
 
         doc.addPage("a4", "landscape");
         doc.setFontSize(13);
+        doc.setFont("Amiri", "bold");
         doc.text(`ترتيب الطلاب: ${cls.name}`, pageWidth / 2, 15, { align: "center" });
+
+        // Mini distribution bar for this class
+        const classCounts = [0, 0, 0, 0, 0];
+        classAvgs.forEach(s => { classCounts[getLevel(s.avg)]++; });
+        const miniBarY = 20;
+        let mbx = 30;
+        const mbw = pageWidth - 60;
+        classCounts.forEach((count, li) => {
+          if (count === 0) return;
+          const bw = (count / classAvgs.length) * mbw;
+          doc.setFillColor(...levelColors[li]);
+          doc.roundedRect(mbx, miniBarY, bw, 6, 1, 1, "F");
+          if (bw > 12) {
+            doc.setFontSize(6);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(255, 255, 255);
+            doc.text(`${levelLabels[li]} (${count})`, mbx + bw / 2, miniBarY + 4, { align: "center" });
+            doc.setTextColor(0, 0, 0);
+          }
+          mbx += bw;
+        });
 
         const classTop5 = classAvgs.slice(0, 5);
         const classBottom5 = classAvgs.slice(-5).reverse();
 
         doc.setFontSize(11);
-        doc.text("⭐ أفضل 5", pageWidth - 14, 22, { align: "right" });
+        doc.setFont("Amiri", "bold");
+        doc.text("⭐ أفضل 5", pageWidth - 14, 32, { align: "right" });
         autoTable(doc, {
-          startY: 26,
+          startY: 36,
           head: [["المعدل %", "الطالب", "#"]],
           body: classTop5.map((s, i) => [`${s.avg}%`, s.name, String(i + 1)]),
           ...tableStyles,
@@ -422,9 +576,10 @@ export default function SharedViewPage() {
         });
 
         doc.setFontSize(11);
-        doc.text("⚠ أدنى 5", pageWidth / 2 - 10, 22, { align: "right" });
+        doc.setFont("Amiri", "bold");
+        doc.text("⚠ أدنى 5", pageWidth / 2 - 10, 32, { align: "right" });
         autoTable(doc, {
-          startY: 26,
+          startY: 36,
           head: [["المعدل %", "الطالب", "#"]],
           body: classBottom5.map((s, i) => [`${s.avg}%`, s.name, String(i + 1)]),
           ...tableStyles,
@@ -433,19 +588,186 @@ export default function SharedViewPage() {
         });
       });
 
-      // --- Lessons ---
+      // ============================================================
+      // PAGE: Attendance Distribution Chart — All Classes
+      // ============================================================
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
+      doc.text("📊 ملخص الحضور والغياب — جميع الفصول", pageWidth / 2, 15, { align: "center" });
+
+      const attColors: [number, number, number][] = [
+        [16, 185, 129],   // present - emerald
+        [239, 68, 68],    // absent - red
+        [251, 191, 36],   // late - amber
+        [156, 163, 175],  // not recorded - gray
+      ];
+      const attLabels = ["حاضر", "غائب", "متأخر", "لم يُسجل"];
+
+      // Legend
+      const attLegY = 22;
+      const attLegX = pageWidth / 2 + 50;
+      attLabels.forEach((label, i) => {
+        const lx = attLegX - i * 30;
+        doc.setFillColor(...attColors[i]);
+        doc.rect(lx, attLegY - 3, 5, 5, "F");
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(8);
+        doc.text(label, lx - 1, attLegY + 1, { align: "right" });
+      });
+
+      // Bar chart
+      const attChartY = 30;
+      const attBarH = Math.min(12, (pageHeight - attChartY - 40) / data.classes.length - 2);
+
+      data.classes.forEach((cls, idx) => {
+        const by = attChartY + idx * (attBarH + barGap);
+        doc.setFont("Amiri", "bold");
+        doc.setFontSize(9);
+        doc.text(cls.name, pageWidth - 15, by + attBarH / 2 + 1.5, { align: "right" });
+
+        const vals = [cls.attendance.present, cls.attendance.absent, cls.attendance.late, cls.attendance.notRecorded];
+        const total = cls.studentCount;
+        let cx = chartX;
+        vals.forEach((count, li) => {
+          if (count === 0) return;
+          const bw = total > 0 ? (count / total) * chartW : 0;
+          doc.setFillColor(...attColors[li]);
+          doc.roundedRect(cx, by, bw, attBarH, 1, 1, "F");
+          if (bw > 10) {
+            doc.setFontSize(7);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(255, 255, 255);
+            doc.text(String(count), cx + bw / 2, by + attBarH / 2 + 1.5, { align: "center" });
+            doc.setTextColor(0, 0, 0);
+          }
+          cx += bw;
+        });
+
+        // Rate
+        const rate = total > 0 ? Math.round((cls.attendance.present / total) * 100) : 0;
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(7);
+        doc.text(`${rate}%`, chartX - 2, by + attBarH / 2 + 1.5, { align: "right" });
+      });
+
+      // Overall attendance stats circles
+      const totalPresent = data.classes.reduce((s, c) => s + c.attendance.present, 0);
+      const totalAbsent = data.classes.reduce((s, c) => s + c.attendance.absent, 0);
+      const totalLate = data.classes.reduce((s, c) => s + c.attendance.late, 0);
+      const totalAll = data.totalStudents;
+
+      const attSummY = attChartY + data.classes.length * (attBarH + barGap) + 10;
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(11);
+      doc.text("الإحصاء العام للحضور", pageWidth / 2, attSummY, { align: "center" });
+
+      const attStats = [
+        { label: "حاضر", count: totalPresent, color: attColors[0], pct: totalAll > 0 ? Math.round((totalPresent / totalAll) * 100) : 0 },
+        { label: "غائب", count: totalAbsent, color: attColors[1], pct: totalAll > 0 ? Math.round((totalAbsent / totalAll) * 100) : 0 },
+        { label: "متأخر", count: totalLate, color: attColors[2], pct: totalAll > 0 ? Math.round((totalLate / totalAll) * 100) : 0 },
+      ];
+
+      const attCirclesX = pageWidth / 2 + ((attStats.length - 1) * circleGap) / 2;
+      attStats.forEach((st, i) => {
+        const cx = attCirclesX - i * circleGap;
+        const cy = attSummY + 15;
+        doc.setFillColor(245, 245, 245);
+        doc.circle(cx, cy, circleR, "F");
+        doc.setFillColor(...st.color);
+        doc.circle(cx, cy, circleR - 1.5, "F");
+        doc.setFillColor(255, 255, 255);
+        doc.circle(cx, cy, circleR - 3.5, "F");
+        doc.setFontSize(8);
+        doc.setFont("Amiri", "bold");
+        doc.setTextColor(...st.color);
+        doc.text(`${st.pct}%`, cx, cy + 1.5, { align: "center" });
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(7);
+        doc.setFont("Amiri", "normal");
+        doc.text(st.label, cx, cy + circleR + 5, { align: "center" });
+        doc.text(`${st.count}`, cx, cy + circleR + 9, { align: "center" });
+      });
+
+      // ============================================================
+      // PAGE: Top Absentees — Global + Per Class
+      // ============================================================
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
+      doc.text("⚠ أكثر الطلاب غياباً", pageWidth / 2, 15, { align: "center" });
+
+      // Global top absentees
+      const globalAbsentees: { name: string; className: string; count: number }[] = [];
+      data.classes.forEach(cls => {
+        cls.topAbsentees.forEach(ta => {
+          globalAbsentees.push({ name: ta.name, className: cls.name, count: ta.count });
+        });
+      });
+      globalAbsentees.sort((a, b) => b.count - a.count);
+      const topAbsentees10 = globalAbsentees.slice(0, 10);
+
+      doc.setFontSize(11);
+      doc.setFont("Amiri", "bold");
+      doc.text("أكثر 10 طلاب غياباً — جميع الفصول", pageWidth / 2, 22, { align: "center" });
+      autoTable(doc, {
+        startY: 26,
+        head: [["عدد الغيابات", "الفصل", "الطالب", "#"]],
+        body: topAbsentees10.map((s, i) => [String(s.count), s.className, s.name, String(i + 1)]),
+        ...tableStyles,
+        headStyles: { ...tableStyles.headStyles, fillColor: [239, 68, 68] as [number, number, number] },
+      });
+
+      // Per-class top 5 absentees
+      data.classes.forEach(cls => {
+        if (cls.topAbsentees.length === 0) return;
+        doc.addPage("a4", "landscape");
+        doc.setFontSize(13);
+        doc.setFont("Amiri", "bold");
+        doc.text(`أكثر الطلاب غياباً: ${cls.name}`, pageWidth / 2, 15, { align: "center" });
+
+        // Attendance mini bar
+        const attMiniY = 20;
+        const attMiniW = pageWidth - 60;
+        let amx = 30;
+        const attVals = [cls.attendance.present, cls.attendance.absent, cls.attendance.late];
+        const attTotal = cls.studentCount;
+        attVals.forEach((count, li) => {
+          if (count === 0) return;
+          const bw = attTotal > 0 ? (count / attTotal) * attMiniW : 0;
+          doc.setFillColor(...attColors[li]);
+          doc.roundedRect(amx, attMiniY, bw, 6, 1, 1, "F");
+          if (bw > 12) {
+            doc.setFontSize(6);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(255, 255, 255);
+            doc.text(`${attLabels[li]} (${count})`, amx + bw / 2, attMiniY + 4, { align: "center" });
+            doc.setTextColor(0, 0, 0);
+          }
+          amx += bw;
+        });
+
+        const top5Absent = cls.topAbsentees.slice(0, 5);
+        autoTable(doc, {
+          startY: 30,
+          head: [["عدد الغيابات", "الطالب", "#"]],
+          body: top5Absent.map((s, i) => [String(s.count), s.name, String(i + 1)]),
+          ...tableStyles,
+          headStyles: { ...tableStyles.headStyles, fillColor: [239, 68, 68] as [number, number, number] },
+        });
+      });
+
+      // ============================================================
+      // PAGE: Lessons
+      // ============================================================
       doc.addPage("a4", "landscape");
       doc.setFontSize(13);
+      doc.setFont("Amiri", "bold");
       doc.text("خطط الدروس", pageWidth / 2, 15, { align: "center" });
 
       const lessonRows = data.classes.map(cls => {
         const pct = cls.lessonPlans.total > 0 ? Math.round((cls.lessonPlans.completed / cls.lessonPlans.total) * 100) : 0;
-        return [
-          `${pct}%`,
-          String(cls.lessonPlans.completed),
-          String(cls.lessonPlans.total),
-          cls.name,
-        ];
+        return [`${pct}%`, String(cls.lessonPlans.completed), String(cls.lessonPlans.total), cls.name];
       });
 
       autoTable(doc, {
