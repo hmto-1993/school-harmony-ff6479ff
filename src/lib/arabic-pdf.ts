@@ -278,21 +278,6 @@ export async function createArabicPDF(
 
   return { doc, startY, watermark };
 }
-  const doc = new jsPDF({
-    orientation: options.orientation || "portrait",
-    unit: "mm",
-    format: options.format || "a4",
-  });
-
-  await registerArabicFont(doc);
-
-  let startY = 15;
-  if (options.includeHeader !== false) {
-    startY = await renderPrintHeader(doc, options.reportType);
-  }
-
-  return { doc, startY };
-}
 
 /** Get autoTable styles pre-configured for Arabic font */
 export function getArabicTableStyles() {
