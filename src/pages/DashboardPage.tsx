@@ -28,6 +28,7 @@ interface ClassStats {
 
 export default function DashboardPage() {
   const { role } = useAuth();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
   const [todayPresent, setTodayPresent] = useState(0);
