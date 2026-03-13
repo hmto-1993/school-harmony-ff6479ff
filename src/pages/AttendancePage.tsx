@@ -52,8 +52,9 @@ interface AbsenceAlert {
 }
 
 export default function AttendancePage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { calendarData, getWeekForDate } = useAcademicWeek();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
