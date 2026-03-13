@@ -181,6 +181,189 @@ export default function SharedViewPage() {
         });
       });
 
+      // --- Weekly Attendance per class ---
+      const cal = data.academicCalendar;
+      if (cal) {
+        data.classes.forEach(cls => {
+          doc.addPage("a4", "landscape");
+          doc.setFontSize(13);
+          doc.text(`الحضور الأسبوعي: ${cls.name}`, pageWidth / 2, 15, { align: "center" });
+
+          const classRecords = data.weeklyAttendance.filter(r => r.class_id === cls.id);
+          
+          // Build week data
+          const weekAbsences: Record<number, Record<string, number>> = {};
+          const weekLates: Record<number, Record<string, number>> = {};
+          const studentTotals: Record<string, { absent: number; late: number }> = {};
+          
+          cls.students.forEach(s => { studentTotals[s.id] = { absent: 0, late: 0 }; });
+          
+          classRecords.forEach(r => {
+            const diff = Math.floor((new Date(r.date).getTime() - new Date(cal.start_date).getTime()) / 86400000);
+            const wk = Math.floor(diff / 7) + 1;
+            if (wk < 1 || wk > cal.total_weeks) return;
+            if (r.status === 'absent') {
+              if (!weekAbsences[wk]) weekAbsences[wk] = {};
+              weekAbsences[wk][r.student_id] = (weekAbsences[wk][r.student_id] || 0) + 1;
+              if (studentTotals[r.student_id]) studentTotals[r.student_id].absent++;
+            }
+            if (r.status === 'late') {
+              if (!weekLates[wk]) weekLates[wk] = {};
+              weekLates[wk][r.student_id] = (weekLates[wk][r.student_id] || 0) + 1;
+              if (studentTotals[r.student_id]) studentTotals[r.student_id].late++;
+            }
+          });
+
+          // Determine active weeks (have data or up to current week)
+          const currentWk = Math.floor((Date.now() - new Date(cal.start_date).getTime()) / 86400000 / 7) + 1;
+          const maxWeek = Math.min(cal.total_weeks, Math.max(currentWk, ...Object.keys(weekAbsences).map(Number), ...Object.keys(weekLates).map(Number)));
+          const weekNums: number[] = [];
+          for (let w = 1; w <= maxWeek; w++) weekNums.push(w);
+
+          const headers = ["الطالب", ...weekNums.map(w => `ع${w}`), "غ", "تأخر"];
+          const rows = cls.students.map(s => {
+            const row = [s.full_name];
+            weekNums.forEach(w => {
+              const ab = weekAbsences[w]?.[s.id] || 0;
+              const lt = weekLates[w]?.[s.id] || 0;
+              if (ab > 0 && lt > 0) row.push(`${ab}غ ${lt}ت`);
+              else if (ab > 0) row.push(`${ab}غ`);
+              else if (lt > 0) row.push(`${lt}ت`);
+              else row.push("✓");
+            });
+            row.push(String(studentTotals[s.id]?.absent || 0));
+            row.push(String(studentTotals[s.id]?.late || 0));
+            return row.reverse();
+          });
+
+          autoTable(doc, {
+            startY: 20,
+            head: [[...headers].reverse()],
+            body: rows,
+            ...tableStyles,
+            styles: { ...tableStyles.styles, fontSize: 7 },
+            columnStyles: { 0: { cellWidth: 'auto' } },
+            didParseCell: (hookData: any) => {
+              if (hookData.section === 'body') {
+                const text = hookData.cell.text?.[0] || '';
+                if (text.includes('غ')) hookData.cell.styles.textColor = [229, 57, 53];
+                else if (text.includes('ت')) hookData.cell.styles.textColor = [251, 192, 45];
+                else if (text === '✓') hookData.cell.styles.textColor = [76, 175, 80];
+              }
+            },
+          });
+        });
+      }
+
+      // --- Top/Bottom students by grades ---
+      // Helper to compute student average
+      const computeStudentAvg = (cls: ClassSummary, studentId: string) => {
+        const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
+        let totalScore = 0, totalMax = 0;
+
+        const gradesBySt: Record<string, { sum: number; count: number; max: number }> = {};
+        cls.grades.filter((g: any) => g.student_id === studentId).forEach((g: any) => {
+          const cat = classCategories.find((c: any) => c.id === g.category_id);
+          if (!cat || g.score === null) return;
+          if (!gradesBySt[g.category_id]) gradesBySt[g.category_id] = { sum: 0, count: 0, max: cat.max_score };
+          gradesBySt[g.category_id].sum += Number(g.score);
+          gradesBySt[g.category_id].count++;
+        });
+        cls.manualScores.filter((m: any) => m.student_id === studentId).forEach((m: any) => {
+          const cat = classCategories.find((c: any) => c.id === m.category_id);
+          if (!cat) return;
+          gradesBySt[m.category_id] = { sum: Number(m.score), count: 1, max: cat.max_score };
+        });
+
+        Object.values(gradesBySt).forEach(v => {
+          if (v.count > 0) {
+            totalScore += (v.sum / v.count);
+            totalMax += v.max;
+          }
+        });
+
+        return totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : null;
+      };
+
+      // Global top/bottom 10
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(13);
+      doc.text("أفضل وأدنى 10 طلاب — جميع الفصول", pageWidth / 2, 15, { align: "center" });
+
+      const allStudentAvgs: { name: string; className: string; avg: number }[] = [];
+      data.classes.forEach(cls => {
+        cls.students.forEach(s => {
+          const avg = computeStudentAvg(cls, s.id);
+          if (avg !== null) allStudentAvgs.push({ name: s.full_name, className: cls.name, avg });
+        });
+      });
+      allStudentAvgs.sort((a, b) => b.avg - a.avg);
+
+      const top10 = allStudentAvgs.slice(0, 10);
+      const bottom10 = allStudentAvgs.slice(-10).reverse();
+
+      // Top 10 table
+      doc.setFontSize(11);
+      doc.text("⭐ أفضل 10 طلاب", pageWidth - 14, 22, { align: "right" });
+      autoTable(doc, {
+        startY: 26,
+        head: [["المعدل %", "الفصل", "الطالب", "#"]],
+        body: top10.map((s, i) => [`${s.avg}%`, s.className, s.name, String(i + 1)]),
+        ...tableStyles,
+        headStyles: { ...tableStyles.headStyles, fillColor: [16, 185, 129] as [number, number, number] },
+        margin: { left: pageWidth / 2 + 5 },
+      });
+
+      // Bottom 10 table
+      doc.setFontSize(11);
+      doc.text("⚠ أدنى 10 طلاب", pageWidth / 2 - 10, 22, { align: "right" });
+      autoTable(doc, {
+        startY: 26,
+        head: [["المعدل %", "الفصل", "الطالب", "#"]],
+        body: bottom10.map((s, i) => [`${s.avg}%`, s.className, s.name, String(i + 1)]),
+        ...tableStyles,
+        headStyles: { ...tableStyles.headStyles, fillColor: [239, 68, 68] as [number, number, number] },
+        margin: { right: pageWidth / 2 + 5 },
+      });
+
+      // Per-class top/bottom 5
+      data.classes.forEach(cls => {
+        const classAvgs = cls.students
+          .map(s => ({ name: s.full_name, avg: computeStudentAvg(cls, s.id) }))
+          .filter(s => s.avg !== null) as { name: string; avg: number }[];
+        classAvgs.sort((a, b) => b.avg - a.avg);
+        if (classAvgs.length === 0) return;
+
+        doc.addPage("a4", "landscape");
+        doc.setFontSize(13);
+        doc.text(`ترتيب الطلاب: ${cls.name}`, pageWidth / 2, 15, { align: "center" });
+
+        const classTop5 = classAvgs.slice(0, 5);
+        const classBottom5 = classAvgs.slice(-5).reverse();
+
+        doc.setFontSize(11);
+        doc.text("⭐ أفضل 5", pageWidth - 14, 22, { align: "right" });
+        autoTable(doc, {
+          startY: 26,
+          head: [["المعدل %", "الطالب", "#"]],
+          body: classTop5.map((s, i) => [`${s.avg}%`, s.name, String(i + 1)]),
+          ...tableStyles,
+          headStyles: { ...tableStyles.headStyles, fillColor: [16, 185, 129] as [number, number, number] },
+          margin: { left: pageWidth / 2 + 5 },
+        });
+
+        doc.setFontSize(11);
+        doc.text("⚠ أدنى 5", pageWidth / 2 - 10, 22, { align: "right" });
+        autoTable(doc, {
+          startY: 26,
+          head: [["المعدل %", "الطالب", "#"]],
+          body: classBottom5.map((s, i) => [`${s.avg}%`, s.name, String(i + 1)]),
+          ...tableStyles,
+          headStyles: { ...tableStyles.headStyles, fillColor: [239, 68, 68] as [number, number, number] },
+          margin: { right: pageWidth / 2 + 5 },
+        });
+      });
+
       // --- Lessons ---
       doc.addPage("a4", "landscape");
       doc.setFontSize(13);
