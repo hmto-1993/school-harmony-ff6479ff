@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
@@ -18,6 +18,8 @@ import AttendanceStats from "@/components/attendance/AttendanceStats";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useAcademicWeek } from "@/hooks/useAcademicWeek";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
