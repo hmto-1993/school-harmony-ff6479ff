@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
+import { createArabicPDF, getArabicTableStyles, finalizePDF, finalizePDFAsBlob } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { safeDownload } from "@/lib/download-utils";
 
 // ============ Types ============
 interface ClassSummary {
@@ -74,10 +75,12 @@ export default function SharedViewPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [exporting, setExporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
+  /** Build PDF doc (shared between download and WhatsApp share) */
+  const buildPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
     if (!data) return;
     setExporting(true);
     try {
@@ -433,15 +436,66 @@ export default function SharedViewPage() {
         ...tableStyles,
       });
 
-      finalizePDF(doc, `shared-report_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
-      toast.success("تم تصدير التقرير بنجاح");
+      return { doc, watermark };
     } catch (err) {
       console.error(err);
+      throw err;
+    }
+  }, [data, summaryFocus]);
+
+  /** Export PDF (download) */
+  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      const { doc, watermark } = await buildPDF(focus);
+      finalizePDF(doc, `shared-report_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+      toast.success("تم تصدير التقرير بنجاح");
+    } catch {
       toast.error("حدث خطأ أثناء التصدير");
     }
     setExporting(false);
-  }, [data, summaryFocus]);
+  }, [data, summaryFocus, buildPDF]);
 
+  /** Share via WhatsApp: generate PDF, upload via edge function, open WhatsApp */
+  const shareViaWhatsApp = useCallback(async () => {
+    if (!data || !token) return;
+    setSharing(true);
+    try {
+      const { doc, watermark } = await buildPDF(summaryFocus);
+      const blob = finalizePDFAsBlob(doc, watermark);
+
+      // Upload via edge function (shared view is unauthenticated)
+      const formData = new FormData();
+      formData.append("token", token);
+      formData.append("file", blob, "report.pdf");
+
+      const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-shared-report`;
+      const uploadResp = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: formData,
+      });
+
+      const uploadResult = await uploadResp.json();
+      if (!uploadResp.ok || !uploadResult.url) throw new Error(uploadResult.error || "Upload failed");
+
+      const shareLink = window.location.href;
+      const message = `📊 *تقرير أعمال المعلم: ${data.teacherName}*\n\n` +
+        `🏫 ${data.schoolName || ''}\n` +
+        `👥 عدد الطلاب: ${data.totalStudents}\n` +
+        `✅ نسبة الحضور: ${data.attendanceRate}%\n\n` +
+        `📄 تحميل التقرير PDF:\n${uploadResult.url}\n\n` +
+        `🔗 رابط العرض المباشر:\n${shareLink}`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+      toast.success("تم فتح واتساب للمشاركة");
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء المشاركة");
+    }
+    setSharing(false);
+  }, [data, token, summaryFocus, buildPDF]);
   useEffect(() => {
     if (!token) return;
     setLoading(true);
@@ -550,6 +604,21 @@ export default function SharedViewPage() {
                           {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-blue-500" />}
                         </button>
                       ))}
+                      <div className="border-t border-slate-100 mt-1 pt-1">
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            shareViaWhatsApp();
+                          }}
+                          disabled={sharing}
+                          className="w-full text-right px-3 py-2 text-sm flex items-center gap-2 hover:bg-green-50 transition-colors text-green-700"
+                        >
+                          <span>💬</span>
+                          <span>{sharing ? "جارٍ المشاركة..." : "مشاركة عبر واتساب"}</span>
+                          {sharing && <Loader2 className="h-3 w-3 mr-auto animate-spin" />}
+                          {!sharing && <Share2 className="h-3 w-3 mr-auto text-green-500" />}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

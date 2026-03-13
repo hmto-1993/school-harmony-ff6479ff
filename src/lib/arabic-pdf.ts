@@ -293,6 +293,14 @@ export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkC
   safeDownload(blob, fileName);
 }
 
+/** Apply watermark and return the blob without downloading */
+export function finalizePDFAsBlob(doc: jsPDF, watermark?: WatermarkConfig): Blob {
+  if (watermark?.enabled) {
+    renderWatermarkOnAllPages(doc, watermark);
+  }
+  return doc.output("blob") as Blob;
+}
+
 /** Get autoTable styles pre-configured for Arabic font */
 export function getArabicTableStyles() {
   return {
