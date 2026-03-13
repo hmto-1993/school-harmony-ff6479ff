@@ -436,12 +436,19 @@ export default function AttendancePage() {
     return result;
   }, [records, statusFilter, searchQuery]);
 
+  if (permsLoaded && !perms.can_view_attendance && role !== "admin") {
+    return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الحضور" description="تواصل مع المسؤول لتفعيل صلاحية عرض الحضور" />;
+  }
+
+  const isViewOnly = !perms.can_manage_attendance;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
           <ClipboardCheck className="h-7 w-7 text-primary" />
           التحضير
+          {isViewOnly && <Badge variant="secondary" className="text-[10px] gap-1"><Eye className="h-3 w-3" /> عرض فقط</Badge>}
         </h1>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="text-muted-foreground">التاريخ:</span>
