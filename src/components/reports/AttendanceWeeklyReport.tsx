@@ -203,7 +203,10 @@ export default function AttendanceWeeklyReport({
     const exportWeeks = filteredWeeks;
     const headers = [
       "م", "اسم الطالب",
-      ...exportWeeks.flatMap((w) => Array.from({ length: periodsPerWeek }, (_, i) => `أ${w.weekNum}-${i + 1}`)),
+      ...exportWeeks.flatMap((w) => {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        return Array.from({ length: colCount }, (_, i) => `أ${w.weekNum}-${i + 1}`);
+      }),
       "حاضر", "غائب", "متأخر", "معذور", "تنبيه",
     ];
     const rows = studentRows.map((s, idx) => {
