@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -712,12 +713,26 @@ export default function ResourceLibraryPage() {
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                   </a>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, folder.id); }}
-                                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <button
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent dir="rtl">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>حذف الملف؟</AlertDialogTitle>
+                                        <AlertDialogDescription>سيتم حذف الملف نهائياً.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFile(file.id, folder.id)}>حذف</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </div>
                             );
@@ -876,12 +891,26 @@ export default function ResourceLibraryPage() {
                               >
                                 <Download className="h-4 w-4" />
                               </a>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, selectedFolder?.id); }}
-                                className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف الملف؟</AlertDialogTitle>
+                                    <AlertDialogDescription>سيتم حذف الملف نهائياً.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFile(file.id, selectedFolder?.id)}>حذف</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         );
@@ -891,15 +920,28 @@ export default function ResourceLibraryPage() {
 
                   {/* Delete folder */}
                   <div className="mt-6 pt-4 border-t border-border">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full rounded-xl gap-2"
-                      onClick={() => handleDeleteFolder(selectedFolder.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      حذف الحقيبة
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full rounded-xl gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          حذف الحقيبة
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent dir="rtl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>حذف الحقيبة؟</AlertDialogTitle>
+                          <AlertDialogDescription>سيتم حذف الحقيبة وجميع الملفات بداخلها نهائياً.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFolder(selectedFolder.id)}>حذف</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </>
               )}

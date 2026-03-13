@@ -2124,15 +2124,28 @@ export default function SettingsPage() {
                           <RotateCcw className="h-3 w-3" />
                           تفعيل
                         </Button>
-                        <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-destructive hover:text-destructive"
-                          onClick={async () => {
-                            await supabase.from("popup_messages").delete().eq("id", msg.id);
-                            setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
-                            toast({ title: "تم الحذف" });
-                          }}>
-                          <Trash2 className="h-3 w-3" />
-                          حذف
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="gap-1 text-xs h-7 text-destructive hover:text-destructive">
+                              <Trash2 className="h-3 w-3" />
+                              حذف
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent dir="rtl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>حذف الرسالة المنبثقة؟</AlertDialogTitle>
+                              <AlertDialogDescription>سيتم حذف الرسالة نهائياً. لا يمكن التراجع عن هذا الإجراء.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
+                                await supabase.from("popup_messages").delete().eq("id", msg.id);
+                                setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
+                                toast({ title: "تم الحذف" });
+                              }}>حذف</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   ))}
