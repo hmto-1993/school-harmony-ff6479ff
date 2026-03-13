@@ -436,31 +436,64 @@ export default function SharedViewPage() {
         ...tableStyles,
       });
 
-      finalizePDF(doc, `shared-report_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
-      toast.success("تم تصدير التقرير بنجاح");
+      return { doc, watermark };
     } catch (err) {
       console.error(err);
+      throw err;
+    }
+  }, [data, summaryFocus]);
+
+  /** Export PDF (download) */
+  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      const { doc, watermark } = await buildPDF(focus);
+      finalizePDF(doc, `shared-report_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+      toast.success("تم تصدير التقرير بنجاح");
+    } catch {
       toast.error("حدث خطأ أثناء التصدير");
     }
     setExporting(false);
-  }, [data, summaryFocus]);
+  }, [data, summaryFocus, buildPDF]);
 
   /** Share via WhatsApp: generate PDF, upload to storage, open WhatsApp */
   const shareViaWhatsApp = useCallback(async () => {
     if (!data || !token) return;
     setSharing(true);
     try {
-      // Generate PDF with current focus settings (reuse same logic but get blob)
-      const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
-      // We need the blob, so we finalize without downloading
+      const { doc, watermark } = await buildPDF(summaryFocus);
       const blob = finalizePDFAsBlob(doc, watermark);
 
-      // But we need the full PDF - let's just run exportPDF logic inline to get blob
-      // Actually, simpler: re-generate and get blob
-      // For efficiency, let's just upload a minimal version
-    } catch {}
+      const fileName = `shared-report_${Date.now()}.pdf`;
+      const filePath = `shared/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("reports")
+        .upload(filePath, blob, { contentType: "application/pdf", upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from("reports")
+        .createSignedUrl(filePath, 60 * 60 * 24 * 7);
+      if (signedError || !signedData?.signedUrl) throw signedError || new Error("Failed to get signed URL");
+
+      const shareLink = window.location.href;
+      const message = `📊 *تقرير أعمال المعلم: ${data.teacherName}*\n\n` +
+        `🏫 ${data.schoolName || ''}\n` +
+        `👥 عدد الطلاب: ${data.totalStudents}\n` +
+        `✅ نسبة الحضور: ${data.attendanceRate}%\n\n` +
+        `📄 تحميل التقرير PDF:\n${signedData.signedUrl}\n\n` +
+        `🔗 رابط العرض المباشر:\n${shareLink}`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+      toast.success("تم فتح واتساب للمشاركة");
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء المشاركة");
+    }
     setSharing(false);
-  }, [data, token, summaryFocus]);
+  }, [data, token, summaryFocus, buildPDF]);
   useEffect(() => {
     if (!token) return;
     setLoading(true);
