@@ -5,8 +5,15 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Trash2, Pencil, UserCircle } from "lucide-react";
+import { Save, Trash2, Pencil, UserCircle, Shield } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +71,24 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState(teacher.full_name);
   const [editNationalId, setEditNationalId] = useState(teacher.national_id || "");
+  const [editRole, setEditRole] = useState<"admin" | "teacher">("teacher");
   const [savingEdit, setSavingEdit] = useState(false);
+  const [currentRole, setCurrentRole] = useState<"admin" | "teacher">("teacher");
+
+  // Fetch current role
+  useEffect(() => {
+    supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", teacher.user_id)
+      .single()
+      .then(({ data }) => {
+        if (data?.role) {
+          setCurrentRole(data.role as "admin" | "teacher");
+          setEditRole(data.role as "admin" | "teacher");
+        }
+      });
+  }, [teacher.user_id]);
 
   const hasChanges = loaded && JSON.stringify(perms) !== JSON.stringify(originalPerms);
 
@@ -137,6 +161,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
         user_id: teacher.user_id,
         full_name: editName.trim(),
         national_id: editNationalId.trim(),
+        role: editRole,
       },
     });
     setSavingEdit(false);
@@ -145,6 +170,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
       toast({ title: "خطأ", description: data?.error || "فشل تحديث البيانات", variant: "destructive" });
     } else {
       toast({ title: "تم التحديث", description: "تم تحديث بيانات المعلم بنجاح" });
+      setCurrentRole(editRole);
       onUpdated?.(teacher.user_id, editName.trim(), editNationalId.trim());
       setEditOpen(false);
     }
@@ -171,6 +197,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             if (open) {
               setEditName(teacher.full_name);
               setEditNationalId(teacher.national_id || "");
+              setEditRole(currentRole);
             }
           }}>
             <DialogTrigger asChild>
@@ -221,6 +248,26 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
                     dir="ltr"
                     className="h-9"
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5 text-primary" />
+                    الصلاحية
+                  </Label>
+                  <Select value={editRole} onValueChange={(v: "admin" | "teacher") => setEditRole(v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="teacher">معلم</SelectItem>
+                      <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {editRole !== currentRole && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      ⚠️ سيتم تغيير صلاحية المستخدم من {currentRole === "admin" ? "مدير" : "معلم"} إلى {editRole === "admin" ? "مدير" : "معلم"}
+                    </p>
+                  )}
                 </div>
               </div>
               <DialogFooter className="gap-2 sm:gap-0">

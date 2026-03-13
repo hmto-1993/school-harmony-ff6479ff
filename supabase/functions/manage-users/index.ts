@@ -171,6 +171,15 @@ serve(async (req) => {
         if (updateError) throw updateError;
       }
 
+      // Update role if provided
+      if (role && (role === "admin" || role === "teacher")) {
+        const { error: roleError } = await supabaseAdmin
+          .from("user_roles")
+          .update({ role })
+          .eq("user_id", targetUserId);
+        if (roleError) throw roleError;
+      }
+
       return new Response(
         JSON.stringify({ success: true, message: "تم تحديث بيانات المعلم بنجاح" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
