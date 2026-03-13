@@ -234,16 +234,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20" dir="rtl">
-      {/* Print recovery button */}
-      {showPrintRecovery && (
-        <button
-          onClick={handlePrintRecovery}
-          className="no-print fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground shadow-2xl font-bold text-base hover:opacity-90 transition-opacity"
-        >
-          <ArrowRight className="h-5 w-5" />
-          العودة للصفحة
-        </button>
-      )}
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
