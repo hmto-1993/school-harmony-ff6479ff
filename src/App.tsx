@@ -29,6 +29,7 @@ const StudentLoginsPage = lazy(() => import("@/pages/StudentLoginsPage"));
 const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const InstallPage = lazy(() => import("@/pages/InstallPage"));
+const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 
 const queryClient = new QueryClient();
 
