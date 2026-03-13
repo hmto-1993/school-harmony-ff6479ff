@@ -727,8 +727,8 @@ function StatCard({ label, value, icon: Icon, gradient }: { label: string; value
 function Row({ label, value, valueColor }: { label: string; value: string | number; valueColor?: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-slate-500">{label}</span>
-      <span className={cn("font-semibold", valueColor || "text-slate-800")}>{value}</span>
+      <span className="text-white/40">{label}</span>
+      <span className={cn("font-semibold", valueColor || "text-white/90")}>{value}</span>
     </div>
   );
 }
