@@ -79,7 +79,21 @@ export default function SharedViewPage() {
     if (!data) return;
     setExporting(true);
     try {
-      const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
+      // Fetch AI summary in parallel with PDF setup
+      const [pdfSetup, summaryResult] = await Promise.all([
+        createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true }),
+        supabase.functions.invoke("summarize-teacher", {
+          body: {
+            teacherName: data.teacherName,
+            schoolName: data.schoolName,
+            classes: data.classes,
+            attendanceRate: data.attendanceRate,
+            totalStudents: data.totalStudents,
+          },
+        }).then(r => r.data?.summary || "").catch(() => ""),
+      ]);
+
+      const { doc, startY, watermark } = pdfSetup;
       const pageWidth = doc.internal.pageSize.getWidth();
       const tableStyles = getArabicTableStyles();
       const today = format(new Date(), "yyyy/MM/dd");
@@ -89,8 +103,34 @@ export default function SharedViewPage() {
       doc.setFontSize(10);
       doc.text(today, pageWidth / 2, startY + 7, { align: "center" });
 
-      // --- Overview ---
+      // --- AI Summary ---
       let curY = startY + 15;
+      if (summaryResult) {
+        doc.setFontSize(12);
+        doc.setFont("Amiri", "bold");
+        doc.text("✦ ملخص ذكي لأداء المعلم", pageWidth / 2, curY, { align: "center" });
+        curY += 6;
+
+        // Draw summary box
+        const margin = 14;
+        const boxWidth = pageWidth - margin * 2;
+        doc.setFillColor(240, 245, 255);
+        doc.setDrawColor(59, 130, 246);
+        doc.setLineWidth(0.3);
+
+        // Split text to fit in box
+        doc.setFont("Amiri", "normal");
+        doc.setFontSize(10);
+        const lines = doc.splitTextToSize(summaryResult, boxWidth - 10);
+        const boxHeight = lines.length * 5 + 8;
+
+        doc.roundedRect(margin, curY - 2, boxWidth, boxHeight, 2, 2, "FD");
+        doc.text(lines, pageWidth - margin - 5, curY + 4, { align: "right", maxWidth: boxWidth - 10 });
+        curY += boxHeight + 6;
+      }
+
+      // --- Overview ---
+      doc.setFont("Amiri", "bold");
       doc.setFontSize(13);
       doc.text("ملخص عام", pageWidth / 2, curY, { align: "center" });
 
