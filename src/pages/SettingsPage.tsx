@@ -133,6 +133,8 @@ export default function SettingsPage() {
   const [newTeacherNationalId, setNewTeacherNationalId] = useState("");
   const [creatingTeacher, setCreatingTeacher] = useState(false);
   const [newTeacherRole, setNewTeacherRole] = useState<"admin" | "teacher">("teacher");
+  const [showNewTeacherPass, setShowNewTeacherPass] = useState(false);
+  const [showChangePass, setShowChangePass] = useState(false);
 
   // Letterhead
   const [letterheadUrl, setLetterheadUrl] = useState("");
