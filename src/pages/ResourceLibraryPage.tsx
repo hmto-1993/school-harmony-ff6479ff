@@ -712,12 +712,26 @@ export default function ResourceLibraryPage() {
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                   </a>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, folder.id); }}
-                                    className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <button
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-1 rounded hover:bg-destructive/10 text-destructive transition-colors"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent dir="rtl">
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>حذف الملف؟</AlertDialogTitle>
+                                        <AlertDialogDescription>سيتم حذف الملف نهائياً.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFile(file.id, folder.id)}>حذف</AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
                                 </div>
                               </div>
                             );
