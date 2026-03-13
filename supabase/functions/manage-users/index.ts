@@ -113,6 +113,13 @@ serve(async (req) => {
       );
     }
 
+    if (action === "update_teacher") {
+      const { user_id: targetUserId, full_name: newName, national_id: newNationalId } = await req.clone().then(() => ({ user_id: undefined, full_name: undefined, national_id: undefined })).catch(() => ({ user_id: undefined, full_name: undefined, national_id: undefined }));
+      // Re-parse since we already parsed above
+      const body = { action, email, password, full_name, role, user_id: undefined as string | undefined, national_id: undefined as string | undefined };
+      // We need user_id from the original parse - let's handle it differently
+    }
+
     if (action === "delete_user") {
       if (!email) {
         return new Response(
