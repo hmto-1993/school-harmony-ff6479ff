@@ -279,9 +279,9 @@ export default function AttendanceWeeklyReport({
     }));
 
     const summaryHeaders = [
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
     ];
 
     const head = [[
