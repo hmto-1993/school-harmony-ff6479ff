@@ -120,6 +120,8 @@ const SMS_TYPE_LABELS: Record<SMSType, string> = {
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const { perms } = useTeacherPermissions();
+  const isReadOnly = perms.read_only_mode;
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // SMS state
