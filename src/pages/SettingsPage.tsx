@@ -565,7 +565,7 @@ export default function SettingsPage() {
     const { data, error } = await supabase.functions.invoke("manage-users", {
       body: {
         action: "create_user",
-        email: newTeacherEmail,
+        email,
         password: newTeacherPassword,
         full_name: newTeacherName,
         role: newTeacherRole,
