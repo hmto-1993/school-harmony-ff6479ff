@@ -16,7 +16,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, FileUp, ClipboardList, Eye, EyeOff, Trash2, Upload, Loader2,
-  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer, ChevronDown, Bell
+  Send, BarChart3, FileText, Users, Search, ArrowRight, BookOpen, Pencil, Timer, ChevronDown, Bell, Lock
 } from "lucide-react";
 import { sendPushNotification } from "@/lib/push-notifications";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -24,6 +24,8 @@ import { format } from "date-fns";
 import QuizBuilder, { type QuizQuestion } from "@/components/activities/QuizBuilder";
 import ActivityResults from "@/components/activities/ActivityResults";
 import { SignedFileLink } from "@/components/activities/SignedFileLink";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import EmptyState from "@/components/EmptyState";
 
 interface ClassInfo { id: string; name: string; grade: string; section: string; }
 interface Activity {
