@@ -1134,33 +1134,32 @@ function ReportsTab({ data }: { data: SharedData }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-bold text-slate-800">التقارير والإحصائيات</h2>
+      <h2 className="text-lg font-bold text-white">التقارير والإحصائيات</h2>
 
-      {/* Summary stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="إجمالي الغياب (30 يوم)" value={totalAbsences} icon={TrendingDown} color="red" />
-        <StatCard label="سلوك إيجابي" value={totalBehaviorPositive} icon={UserCheck} color="emerald" />
-        <StatCard label="سلوك سلبي" value={totalBehaviorNegative} icon={AlertTriangle} color="amber" />
-        <StatCard label="عدد المشاهدات" value={data.viewCount} icon={Eye} color="blue" />
+        <StatCard label="إجمالي الغياب (30 يوم)" value={totalAbsences} icon={TrendingDown} gradient="from-[hsl(0,84%,60%)] to-[hsl(350,80%,55%)]" />
+        <StatCard label="سلوك إيجابي" value={totalBehaviorPositive} icon={UserCheck} gradient="from-[hsl(160,84%,39%)] to-[hsl(145,70%,42%)]" />
+        <StatCard label="سلوك سلبي" value={totalBehaviorNegative} icon={AlertTriangle} gradient="from-[hsl(38,92%,50%)] to-[hsl(25,90%,52%)]" />
+        <StatCard label="عدد المشاهدات" value={data.viewCount} icon={Eye} gradient="from-[hsl(195,100%,50%)] to-[hsl(210,90%,55%)]" />
       </div>
 
-      {/* Attendance trend chart (simple bar) */}
       {data.attendanceReport.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-          <h3 className="font-bold text-slate-800 mb-4">اتجاه الحضور (آخر 30 يوم)</h3>
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5">
+          <h3 className="font-bold text-white mb-4">اتجاه الحضور (آخر 30 يوم)</h3>
           <div className="overflow-x-auto">
             <div className="flex items-end gap-1 min-w-[600px] h-40">
               {data.attendanceReport.slice(0, 30).reverse().map((day) => {
                 const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
                 return (
                   <div key={day.date} className="flex-1 flex flex-col items-center gap-1" title={`${day.date}: ${rate}%`}>
-                    <span className="text-[9px] text-slate-400 font-medium">{rate}%</span>
-                    <div className="w-full rounded-t" style={{
+                    <span className="text-[9px] text-white/30 font-medium">{rate}%</span>
+                    <div className="w-full rounded-t transition-all duration-300" style={{
                       height: `${rate}%`,
-                      backgroundColor: rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444',
+                      background: rate >= 80 ? 'linear-gradient(to top, hsl(160,84%,39%), hsl(160,84%,50%))' : rate >= 60 ? 'linear-gradient(to top, hsl(38,92%,50%), hsl(38,92%,60%))' : 'linear-gradient(to top, hsl(0,84%,50%), hsl(0,84%,60%))',
                       minHeight: '2px',
+                      boxShadow: rate >= 80 ? '0 0 8px hsl(160,84%,39%,0.3)' : rate >= 60 ? '0 0 8px hsl(38,92%,50%,0.3)' : '0 0 8px hsl(0,84%,50%,0.3)',
                     }} />
-                    <span className="text-[8px] text-slate-400 -rotate-45 origin-center whitespace-nowrap">
+                    <span className="text-[8px] text-white/20 -rotate-45 origin-center whitespace-nowrap">
                       {day.date.slice(5)}
                     </span>
                   </div>
@@ -1171,16 +1170,15 @@ function ReportsTab({ data }: { data: SharedData }) {
         </div>
       )}
 
-      {/* Top absentees per class */}
       {data.classes.map((cls) => (
         cls.topAbsentees.length > 0 && (
-          <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="font-bold text-slate-800 mb-3">{cls.name} — الأكثر غياباً</h3>
+          <div key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5">
+            <h3 className="font-bold text-white mb-3">{cls.name} — الأكثر غياباً</h3>
             <div className="space-y-2">
               {cls.topAbsentees.map((s, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-700 font-medium">{s.name}</span>
-                  <span className="text-red-500 font-bold">{s.count} غياب</span>
+                  <span className="text-white/70 font-medium">{s.name}</span>
+                  <span className="text-[hsl(0,84%,65%)] font-bold">{s.count} غياب</span>
                 </div>
               ))}
             </div>
@@ -1188,32 +1186,31 @@ function ReportsTab({ data }: { data: SharedData }) {
         )
       ))}
 
-      {/* Attendance daily report table */}
       {data.attendanceReport.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="px-4 py-3 bg-slate-50 border-b font-bold text-slate-700">سجل الحضور اليومي</div>
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/[0.06] font-bold text-white/70">سجل الحضور اليومي</div>
           <div className="overflow-x-auto max-h-96">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-slate-50">
-                <tr>
-                  <th className="text-right px-4 py-2 font-semibold text-slate-600">التاريخ</th>
-                  <th className="text-center px-4 py-2 font-semibold text-emerald-600">حاضر</th>
-                  <th className="text-center px-4 py-2 font-semibold text-red-500">غائب</th>
-                  <th className="text-center px-4 py-2 font-semibold text-amber-500">متأخر</th>
-                  <th className="text-center px-4 py-2 font-semibold text-slate-600">النسبة</th>
+              <thead className="sticky top-0 bg-[hsl(228,50%,8%)]">
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-right px-4 py-2 font-semibold text-white/50">التاريخ</th>
+                  <th className="text-center px-4 py-2 font-semibold text-[hsl(160,84%,55%)]">حاضر</th>
+                  <th className="text-center px-4 py-2 font-semibold text-[hsl(0,84%,65%)]">غائب</th>
+                  <th className="text-center px-4 py-2 font-semibold text-[hsl(38,92%,60%)]">متأخر</th>
+                  <th className="text-center px-4 py-2 font-semibold text-white/50">النسبة</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-white/[0.03]">
                 {data.attendanceReport.map((day) => {
                   const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
                   return (
-                    <tr key={day.date} className="hover:bg-slate-50/50">
-                      <td className="px-4 py-2 font-medium text-slate-800">{day.date}</td>
-                      <td className="text-center px-4 py-2 text-emerald-600 font-semibold">{day.present}</td>
-                      <td className="text-center px-4 py-2 text-red-500 font-semibold">{day.absent}</td>
-                      <td className="text-center px-4 py-2 text-amber-500 font-semibold">{day.late}</td>
+                    <tr key={day.date} className="hover:bg-white/[0.03] transition-colors">
+                      <td className="px-4 py-2 font-medium text-white/80">{day.date}</td>
+                      <td className="text-center px-4 py-2 text-[hsl(160,84%,55%)] font-semibold">{day.present}</td>
+                      <td className="text-center px-4 py-2 text-[hsl(0,84%,65%)] font-semibold">{day.absent}</td>
+                      <td className="text-center px-4 py-2 text-[hsl(38,92%,60%)] font-semibold">{day.late}</td>
                       <td className="text-center px-4 py-2">
-                        <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", rate >= 80 ? "bg-emerald-100 text-emerald-700" : rate >= 60 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}>
+                        <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", rate >= 80 ? "bg-[hsl(160,84%,39%)/0.15] text-[hsl(160,84%,55%)]" : rate >= 60 ? "bg-[hsl(38,92%,50%)/0.15] text-[hsl(38,92%,60%)]" : "bg-[hsl(0,84%,60%)/0.15] text-[hsl(0,84%,65%)]")}>
                           {rate}%
                         </span>
                       </td>
@@ -1234,26 +1231,33 @@ function ReportsTab({ data }: { data: SharedData }) {
 function LessonsTab({ classes }: { classes: ClassSummary[] }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-800">خطط الدروس</h2>
+      <h2 className="text-lg font-bold text-white">خطط الدروس</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {classes.map((cls) => {
+        {classes.map((cls, i) => {
           const pct = cls.lessonPlans.total > 0 ? Math.round((cls.lessonPlans.completed / cls.lessonPlans.total) * 100) : 0;
+          const color = pct >= 80 ? 'hsl(160,84%,45%)' : pct >= 50 ? 'hsl(38,92%,55%)' : 'hsl(0,84%,60%)';
           return (
-            <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-              <h3 className="font-bold text-slate-800 mb-3">{cls.name}</h3>
-              <div className="space-y-3">
+            <div key={cls.id} className="relative overflow-hidden bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5 transition-all duration-300 hover:bg-white/[0.07] group animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+              <h3 className="font-bold text-white mb-4">{cls.name}</h3>
+              <div className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-500">الإنجاز</span>
-                  <span className="font-bold text-slate-800">{cls.lessonPlans.completed}/{cls.lessonPlans.total}</span>
+                  <span className="text-white/40">الإنجاز</span>
+                  <span className="font-bold text-white/90">{cls.lessonPlans.completed}/{cls.lessonPlans.total}</span>
                 </div>
-                <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full transition-all", pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-400" : "bg-red-400")}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <div className="text-center text-lg font-bold" style={{ color: pct >= 80 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#ef4444' }}>
-                  {pct}%
+                {/* Circular progress */}
+                <div className="flex justify-center">
+                  <div className="relative w-24 h-24">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeOpacity="0.06" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
+                        strokeDasharray={`${pct * 2.64} 264`}
+                        style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: 'stroke-dasharray 0.8s ease' }}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-2xl font-black text-white">{pct}%</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
