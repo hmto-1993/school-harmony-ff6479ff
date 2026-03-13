@@ -2644,7 +2644,7 @@ export default function SettingsPage() {
                                 <TableHead className="text-center text-xs">الحذف</TableHead>
                                 <TableHead className="text-center text-xs">الدرجات</TableHead>
                                 <TableHead className="text-center text-xs">التحضير</TableHead>
-                                <TableHead className="text-center text-xs">الحالة</TableHead>
+                                <TableHead className="text-center text-xs">حفظ</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
