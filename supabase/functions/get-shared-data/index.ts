@@ -37,10 +37,16 @@ Deno.serve(async (req) => {
     const classIds = share.class_ids || [];
     if (classIds.length === 0) return ok({ error: 'لا توجد فصول مشتركة' });
 
+    // 2. Track view — increment view_count and update last_viewed_at
+    await supabase
+      .from('shared_views')
+      .update({ view_count: (share.view_count || 0) + 1, last_viewed_at: new Date().toISOString() })
+      .eq('id', share.id);
+
     const today = new Date().toISOString().split('T')[0];
     const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
-    // 2. Phase 1 - parallel queries
+    // 3. Phase 1 - parallel queries
     const [
       { data: profile },
       { data: classes },
@@ -50,20 +56,23 @@ Deno.serve(async (req) => {
       { data: behavior },
       { data: lessonPlans },
       { data: schoolSetting },
+      { data: attendanceHistory },
     ] = await Promise.all([
       supabase.from('profiles').select('full_name').eq('user_id', share.teacher_id).single(),
       supabase.from('classes').select('id, name, grade, section').in('id', classIds),
       supabase.from('students').select('id, full_name, class_id').in('class_id', classIds).order('full_name'),
       supabase.from('attendance_records').select('student_id, status, class_id').in('class_id', classIds).eq('date', today),
       supabase.from('grade_categories').select('id, name, max_score, category_group, sort_order, class_id'),
-      supabase.from('behavior_records').select('student_id, type, class_id, date').in('class_id', classIds).gte('date', thirtyDaysAgo),
+      supabase.from('behavior_records').select('student_id, type, class_id, date, note').in('class_id', classIds).gte('date', thirtyDaysAgo),
       supabase.from('lesson_plans').select('class_id, week_number, is_completed, lesson_title, day_index, slot_index').in('class_id', classIds).eq('created_by', share.teacher_id),
       supabase.from('site_settings').select('value').eq('id', 'school_name').single(),
+      // Attendance history for reports (last 30 days)
+      supabase.from('attendance_records').select('student_id, status, class_id, date').in('class_id', classIds).gte('date', thirtyDaysAgo).order('date', { ascending: false }),
     ]);
 
     const studentIds = (students || []).map((s: any) => s.id);
 
-    // 3. Phase 2 - grades (depend on student IDs)
+    // 4. Phase 2 - grades (depend on student IDs)
     let grades: any[] = [];
     let manualScores: any[] = [];
     if (studentIds.length > 0) {
@@ -75,7 +84,21 @@ Deno.serve(async (req) => {
       manualScores = m.data || [];
     }
 
-    // 4. Build per-class summaries
+    // 5. Build attendance report summary per date
+    const attendanceByDate: Record<string, { present: number; absent: number; late: number; total: number }> = {};
+    (attendanceHistory || []).forEach((r: any) => {
+      if (!attendanceByDate[r.date]) attendanceByDate[r.date] = { present: 0, absent: 0, late: 0, total: 0 };
+      attendanceByDate[r.date].total++;
+      if (r.status === 'present') attendanceByDate[r.date].present++;
+      else if (r.status === 'absent') attendanceByDate[r.date].absent++;
+      else if (r.status === 'late') attendanceByDate[r.date].late++;
+    });
+
+    const attendanceReport = Object.entries(attendanceByDate)
+      .map(([date, stats]) => ({ date, ...stats }))
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    // 6. Build per-class summaries
     const classSummaries = (classes || []).map((c: any) => {
       const classStudents = (students || []).filter((s: any) => s.class_id === c.id);
       const classStudentIds = classStudents.map((s: any) => s.id);
@@ -92,6 +115,23 @@ Deno.serve(async (req) => {
       const positiveCount = classBehavior.filter((b: any) => b.type === 'positive').length;
       const negativeCount = classBehavior.filter((b: any) => b.type === 'negative').length;
 
+      // Attendance history per class
+      const classAttHistory = (attendanceHistory || []).filter((a: any) => a.class_id === c.id);
+      const totalAbsences = classAttHistory.filter((a: any) => a.status === 'absent').length;
+
+      // Students with most absences
+      const absencesByStudent: Record<string, number> = {};
+      classAttHistory.filter((a: any) => a.status === 'absent').forEach((a: any) => {
+        absencesByStudent[a.student_id] = (absencesByStudent[a.student_id] || 0) + 1;
+      });
+      const topAbsentees = Object.entries(absencesByStudent)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([studentId, count]) => {
+          const student = classStudents.find((s: any) => s.id === studentId);
+          return { name: student?.full_name || '', count };
+        });
+
       return {
         id: c.id,
         name: c.name,
@@ -107,6 +147,8 @@ Deno.serve(async (req) => {
           completed: classLessons.filter((l: any) => l.is_completed).length,
         },
         behavior: { positive: positiveCount, negative: negativeCount },
+        totalAbsences,
+        topAbsentees,
       };
     });
 
@@ -125,6 +167,8 @@ Deno.serve(async (req) => {
       attendanceRate,
       classes: classSummaries,
       categories: categories || [],
+      attendanceReport,
+      viewCount: (share.view_count || 0) + 1,
     });
   } catch (e) {
     console.error('get-shared-data error:', e);

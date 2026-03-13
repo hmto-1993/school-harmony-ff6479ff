@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, FileDown, AlertTriangle, Eye, Shield } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { safePrint } from "@/lib/print-utils";
 
+// ============ Types ============
 interface ClassSummary {
   id: string;
   name: string;
@@ -17,6 +18,16 @@ interface ClassSummary {
   manualScores: any[];
   lessonPlans: { total: number; completed: number };
   behavior: { positive: number; negative: number };
+  totalAbsences: number;
+  topAbsentees: { name: string; count: number }[];
+}
+
+interface AttendanceReportDay {
+  date: string;
+  present: number;
+  absent: number;
+  late: number;
+  total: number;
 }
 
 interface SharedData {
@@ -30,12 +41,15 @@ interface SharedData {
   attendanceRate: number;
   classes: ClassSummary[];
   categories: any[];
+  attendanceReport: AttendanceReportDay[];
+  viewCount: number;
 }
 
 const TABS = [
   { id: "overview", label: "نظرة عامة", icon: BarChart3 },
   { id: "attendance", label: "الحضور", icon: UserCheck },
   { id: "grades", label: "الدرجات", icon: BookOpen },
+  { id: "reports", label: "التقارير", icon: FileBarChart },
   { id: "lessons", label: "خطط الدروس", icon: Clock },
 ] as const;
 
@@ -100,6 +114,11 @@ export default function SharedViewPage() {
                 <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
                   <Shield className="h-3 w-3" /> متبقي {daysLeft} يوم
                 </span>
+                {data.viewCount > 1 && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                    <Eye className="h-3 w-3" /> {data.viewCount} مشاهدة
+                  </span>
+                )}
                 {data.label && <span className="text-xs text-slate-400">{data.label}</span>}
               </div>
             </div>
@@ -157,6 +176,7 @@ export default function SharedViewPage() {
         {activeTab === "overview" && <OverviewTab data={data} />}
         {activeTab === "attendance" && <AttendanceTab classes={data.classes} />}
         {activeTab === "grades" && <GradesTab classes={data.classes} categories={data.categories} />}
+        {activeTab === "reports" && <ReportsTab data={data} />}
         {activeTab === "lessons" && <LessonsTab classes={data.classes} />}
 
         {/* Print: show all */}
@@ -164,6 +184,7 @@ export default function SharedViewPage() {
           <OverviewTab data={data} />
           <AttendanceTab classes={data.classes} />
           <GradesTab classes={data.classes} categories={data.categories} />
+          <ReportsTab data={data} />
           <LessonsTab classes={data.classes} />
         </div>
       </main>
@@ -171,12 +192,16 @@ export default function SharedViewPage() {
   );
 }
 
+// ============ Shared Components ============
+
 function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: any; color: string }) {
   const colors: Record<string, string> = {
     blue: "bg-blue-50 text-blue-600 border-blue-100",
     indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
     emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
     purple: "bg-purple-50 text-purple-600 border-purple-100",
+    red: "bg-red-50 text-red-600 border-red-100",
+    amber: "bg-amber-50 text-amber-600 border-amber-100",
   };
   return (
     <div className={cn("rounded-2xl border p-4 text-center", colors[color] || colors.blue)}>
@@ -186,6 +211,17 @@ function StatCard({ label, value, icon: Icon, color }: { label: string; value: s
     </div>
   );
 }
+
+function Row({ label, value, valueColor }: { label: string; value: string | number; valueColor?: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-slate-500">{label}</span>
+      <span className={cn("font-semibold", valueColor || "text-slate-800")}>{value}</span>
+    </div>
+  );
+}
+
+// ============ Overview Tab ============
 
 function OverviewTab({ data }: { data: SharedData }) {
   return (
@@ -213,14 +249,7 @@ function OverviewTab({ data }: { data: SharedData }) {
   );
 }
 
-function Row({ label, value, valueColor }: { label: string; value: string | number; valueColor?: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-slate-500">{label}</span>
-      <span className={cn("font-semibold", valueColor || "text-slate-800")}>{value}</span>
-    </div>
-  );
-}
+// ============ Attendance Tab ============
 
 function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
   return (
@@ -262,7 +291,6 @@ function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
         </table>
       </div>
 
-      {/* Per-class student attendance */}
       {classes.map((cls) => (
         <details key={cls.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm">
           <summary className="px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:bg-slate-50">{cls.name} — قائمة الطلاب</summary>
@@ -274,6 +302,8 @@ function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
     </div>
   );
 }
+
+// ============ Grades Tab ============
 
 function GradesTab({ classes, categories }: { classes: ClassSummary[]; categories: any[] }) {
   return (
@@ -297,7 +327,6 @@ function GradesTab({ classes, categories }: { classes: ClassSummary[]; categorie
           }
         });
 
-        // Also include manual scores
         cls.manualScores.forEach((m: any) => {
           if (!gradesByStudent[m.student_id]) return;
           gradesByStudent[m.student_id][m.category_id] = { sum: Number(m.score), count: 1 };
@@ -350,6 +379,112 @@ function GradesTab({ classes, categories }: { classes: ClassSummary[]; categorie
     </div>
   );
 }
+
+// ============ Reports Tab ============
+
+function ReportsTab({ data }: { data: SharedData }) {
+  const totalAbsences = data.classes.reduce((a, c) => a + c.totalAbsences, 0);
+  const totalBehaviorPositive = data.classes.reduce((a, c) => a + c.behavior.positive, 0);
+  const totalBehaviorNegative = data.classes.reduce((a, c) => a + c.behavior.negative, 0);
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-bold text-slate-800">التقارير والإحصائيات</h2>
+
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard label="إجمالي الغياب (30 يوم)" value={totalAbsences} icon={TrendingDown} color="red" />
+        <StatCard label="سلوك إيجابي" value={totalBehaviorPositive} icon={UserCheck} color="emerald" />
+        <StatCard label="سلوك سلبي" value={totalBehaviorNegative} icon={AlertTriangle} color="amber" />
+        <StatCard label="عدد المشاهدات" value={data.viewCount} icon={Eye} color="blue" />
+      </div>
+
+      {/* Attendance trend chart (simple bar) */}
+      {data.attendanceReport.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <h3 className="font-bold text-slate-800 mb-4">اتجاه الحضور (آخر 30 يوم)</h3>
+          <div className="overflow-x-auto">
+            <div className="flex items-end gap-1 min-w-[600px] h-40">
+              {data.attendanceReport.slice(0, 30).reverse().map((day) => {
+                const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
+                return (
+                  <div key={day.date} className="flex-1 flex flex-col items-center gap-1" title={`${day.date}: ${rate}%`}>
+                    <span className="text-[9px] text-slate-400 font-medium">{rate}%</span>
+                    <div className="w-full rounded-t" style={{
+                      height: `${rate}%`,
+                      backgroundColor: rate >= 80 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444',
+                      minHeight: '2px',
+                    }} />
+                    <span className="text-[8px] text-slate-400 -rotate-45 origin-center whitespace-nowrap">
+                      {day.date.slice(5)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Top absentees per class */}
+      {data.classes.map((cls) => (
+        cls.topAbsentees.length > 0 && (
+          <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <h3 className="font-bold text-slate-800 mb-3">{cls.name} — الأكثر غياباً</h3>
+            <div className="space-y-2">
+              {cls.topAbsentees.map((s, i) => (
+                <div key={i} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-700 font-medium">{s.name}</span>
+                  <span className="text-red-500 font-bold">{s.count} غياب</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ))}
+
+      {/* Attendance daily report table */}
+      {data.attendanceReport.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="px-4 py-3 bg-slate-50 border-b font-bold text-slate-700">سجل الحضور اليومي</div>
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-slate-50">
+                <tr>
+                  <th className="text-right px-4 py-2 font-semibold text-slate-600">التاريخ</th>
+                  <th className="text-center px-4 py-2 font-semibold text-emerald-600">حاضر</th>
+                  <th className="text-center px-4 py-2 font-semibold text-red-500">غائب</th>
+                  <th className="text-center px-4 py-2 font-semibold text-amber-500">متأخر</th>
+                  <th className="text-center px-4 py-2 font-semibold text-slate-600">النسبة</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {data.attendanceReport.map((day) => {
+                  const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
+                  return (
+                    <tr key={day.date} className="hover:bg-slate-50/50">
+                      <td className="px-4 py-2 font-medium text-slate-800">{day.date}</td>
+                      <td className="text-center px-4 py-2 text-emerald-600 font-semibold">{day.present}</td>
+                      <td className="text-center px-4 py-2 text-red-500 font-semibold">{day.absent}</td>
+                      <td className="text-center px-4 py-2 text-amber-500 font-semibold">{day.late}</td>
+                      <td className="text-center px-4 py-2">
+                        <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", rate >= 80 ? "bg-emerald-100 text-emerald-700" : rate >= 60 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}>
+                          {rate}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============ Lessons Tab ============
 
 function LessonsTab({ classes }: { classes: ClassSummary[] }) {
   return (

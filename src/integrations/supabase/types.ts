@@ -900,8 +900,10 @@ export type Database = {
           expires_at: string
           id: string
           label: string
+          last_viewed_at: string | null
           teacher_id: string
           token: string
+          view_count: number
         }
         Insert: {
           can_export?: boolean
@@ -911,8 +913,10 @@ export type Database = {
           expires_at?: string
           id?: string
           label?: string
+          last_viewed_at?: string | null
           teacher_id: string
           token?: string
+          view_count?: number
         }
         Update: {
           can_export?: boolean
@@ -922,8 +926,10 @@ export type Database = {
           expires_at?: string
           id?: string
           label?: string
+          last_viewed_at?: string | null
           teacher_id?: string
           token?: string
+          view_count?: number
         }
         Relationships: []
       }

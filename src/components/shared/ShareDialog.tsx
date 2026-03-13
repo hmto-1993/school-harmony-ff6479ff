@@ -27,6 +27,8 @@ interface ShareLink {
   can_export: boolean;
   label: string;
   created_at: string;
+  view_count: number;
+  last_viewed_at: string | null;
 }
 
 export default function ShareDialog() {
@@ -214,15 +216,28 @@ export default function ShareDialog() {
               <h3 className="text-sm font-semibold text-muted-foreground">الروابط النشطة ({activeLinks.length})</h3>
               {activeLinks.map((link) => {
                 const daysLeft = Math.max(0, Math.ceil((new Date(link.expires_at).getTime() - Date.now()) / 86400000));
+                const hasViews = link.view_count > 0;
                 return (
                   <div key={link.id} className="bg-muted/50 rounded-xl p-3 space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate max-w-[200px]">{link.label || "رابط مشاركة"}</span>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">{daysLeft} يوم</span>
+                      <div className="flex items-center gap-2">
+                        {hasViews && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                            👁 {link.view_count}
+                          </span>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">{daysLeft} يوم</span>
+                        </div>
                       </div>
                     </div>
+                    {link.last_viewed_at && (
+                      <p className="text-[11px] text-muted-foreground">
+                        آخر مشاهدة: {new Date(link.last_viewed_at).toLocaleString("ar-SA")}
+                      </p>
+                    )}
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="flex-1 gap-1 text-xs" onClick={() => copyLink(link.token, link.id)}>
                         {copiedId === link.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
