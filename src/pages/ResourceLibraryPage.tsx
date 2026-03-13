@@ -109,6 +109,8 @@ const CLASS_COLORS = [
 export default function ResourceLibraryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { perms } = useTeacherPermissions();
+  const isViewOnly = perms.read_only_mode;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
   const [loading, setLoading] = useState(true);
