@@ -738,20 +738,21 @@ function Row({ label, value, valueColor }: { label: string; value: string | numb
 function OverviewTab({ data }: { data: SharedData }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-800">ملخص الفصول</h2>
+      <h2 className="text-lg font-bold text-white">ملخص الفصول</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {data.classes.map((cls) => (
-          <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="font-bold text-slate-800 text-lg mb-3">{cls.name}</h3>
+        {data.classes.map((cls, i) => (
+          <div key={cls.id} className="relative overflow-hidden bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5 transition-all duration-300 hover:bg-white/[0.07] hover:border-white/10 group animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-l from-[hsl(195,100%,50%)] to-[hsl(270,75%,55%)] opacity-60 group-hover:opacity-100 transition-opacity" />
+            <h3 className="font-bold text-white text-lg mb-3">{cls.name}</h3>
             <div className="space-y-2 text-sm">
               <Row label="عدد الطلاب" value={cls.studentCount} />
-              <Row label="حاضرون اليوم" value={cls.attendance.present} valueColor="text-emerald-600" />
-              <Row label="غائبون" value={cls.attendance.absent} valueColor="text-red-500" />
-              <Row label="متأخرون" value={cls.attendance.late} valueColor="text-amber-500" />
-              <div className="border-t pt-2 mt-2">
+              <Row label="حاضرون اليوم" value={cls.attendance.present} valueColor="text-[hsl(160,84%,55%)]" />
+              <Row label="غائبون" value={cls.attendance.absent} valueColor="text-[hsl(0,84%,65%)]" />
+              <Row label="متأخرون" value={cls.attendance.late} valueColor="text-[hsl(38,92%,60%)]" />
+              <div className="border-t border-white/[0.06] pt-2 mt-2">
                 <Row label="خطط الدروس" value={`${cls.lessonPlans.completed}/${cls.lessonPlans.total}`} />
-                <Row label="سلوك إيجابي" value={cls.behavior.positive} valueColor="text-emerald-600" />
-                <Row label="سلوك سلبي" value={cls.behavior.negative} valueColor="text-red-500" />
+                <Row label="سلوك إيجابي" value={cls.behavior.positive} valueColor="text-[hsl(160,84%,55%)]" />
+                <Row label="سلوك سلبي" value={cls.behavior.negative} valueColor="text-[hsl(0,84%,65%)]" />
               </div>
             </div>
           </div>
