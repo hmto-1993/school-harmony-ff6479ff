@@ -74,6 +74,7 @@ export default function DashboardPrintView({
         fontSize: "12px",
         lineHeight: 1.6,
       }}
+    >
       <PrintWatermark />
       {/* Header / Letterhead */}
       {headerConfig ? (
