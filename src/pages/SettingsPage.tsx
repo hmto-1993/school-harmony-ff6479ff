@@ -2636,6 +2636,7 @@ export default function SettingsPage() {
                               <TableRow className="bg-muted/50">
                                 <TableHead className="text-right">المعلم</TableHead>
                                 <TableHead className="text-right">رقم الهوية</TableHead>
+                                <TableHead className="text-center text-xs font-bold text-primary">عرض فقط</TableHead>
                                 <TableHead className="text-center text-xs">الطباعة</TableHead>
                                 <TableHead className="text-center text-xs">التصدير</TableHead>
                                 <TableHead className="text-center text-xs">الإشعارات</TableHead>

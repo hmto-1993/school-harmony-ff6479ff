@@ -198,6 +198,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   if (!loaded) return null;
 
   const permKeys: (keyof Permissions)[] = [
+    "read_only_mode",
     "can_print",
     "can_export",
     "can_send_notifications",
