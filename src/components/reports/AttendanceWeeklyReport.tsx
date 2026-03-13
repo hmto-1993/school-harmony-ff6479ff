@@ -339,6 +339,33 @@ export default function AttendanceWeeklyReport({
           data.cell.styles.fillColor = [254, 242, 242];
         }
       },
+      didDrawCell: (data: any) => {
+        if (data.section === "body") {
+          const key = `${data.row.index}-${data.column.index}`;
+          const color = dotColorMap.get(key);
+          if (color) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height / 2;
+            doc.setFillColor(color[0], color[1], color[2]);
+            doc.circle(cx, cy, 1.3, "F");
+          }
+        }
+        // Draw colored dots in header summary columns too
+        if (data.section === "head" && data.row.index === 0) {
+          const headerDotColors: Record<number, [number, number, number]> = {
+            0: hexToRgb("#fbc02d"),
+            1: hexToRgb("#e53935"),
+            2: hexToRgb("#4caf50"),
+          };
+          const hColor = headerDotColors[data.column.index];
+          if (hColor) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height / 2;
+            doc.setFillColor(hColor[0], hColor[1], hColor[2]);
+            doc.circle(cx, cy, 1.5, "F");
+          }
+        }
+      },
     });
 
     safeSavePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
