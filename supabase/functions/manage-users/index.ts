@@ -54,7 +54,7 @@ serve(async (req) => {
     }
 
     // --- Process actions (seed action removed) ---
-    const { action, email, password, full_name, role } = await req.json();
+    const { action, email, password, full_name, role, user_id: targetUserId, national_id } = await req.json();
 
     if (action === "create_user") {
       const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
