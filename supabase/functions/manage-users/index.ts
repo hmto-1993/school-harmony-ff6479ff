@@ -114,10 +114,29 @@ serve(async (req) => {
     }
 
     if (action === "update_teacher") {
-      const { user_id: targetUserId, full_name: newName, national_id: newNationalId } = await req.clone().then(() => ({ user_id: undefined, full_name: undefined, national_id: undefined })).catch(() => ({ user_id: undefined, full_name: undefined, national_id: undefined }));
-      // Re-parse since we already parsed above
-      const body = { action, email, password, full_name, role, user_id: undefined as string | undefined, national_id: undefined as string | undefined };
-      // We need user_id from the original parse - let's handle it differently
+      if (!targetUserId) {
+        return new Response(
+          JSON.stringify({ error: "معرف المستخدم مطلوب" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const updates: Record<string, string> = {};
+      if (full_name !== undefined) updates.full_name = full_name;
+      if (national_id !== undefined) updates.national_id = national_id;
+
+      if (Object.keys(updates).length > 0) {
+        const { error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", targetUserId);
+        if (updateError) throw updateError;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "تم تحديث بيانات المعلم بنجاح" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     if (action === "delete_user") {
