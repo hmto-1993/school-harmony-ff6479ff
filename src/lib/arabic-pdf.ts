@@ -19,10 +19,21 @@ interface CenterSectionConfig {
   imagesSizes: number[];
 }
 
+interface WatermarkConfig {
+  enabled: boolean;
+  text: string;
+  fontSize: number;
+  color: string;
+  opacity: number;
+  angle: number;
+  repeat: boolean;
+}
+
 interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
+  watermark?: WatermarkConfig;
 }
 
 async function fetchFontAsBase64(url: string): Promise<string> {

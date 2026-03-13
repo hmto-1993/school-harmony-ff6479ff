@@ -43,10 +43,21 @@ interface CenterSectionConfig {
   imagesSizes: number[];
 }
 
+export interface WatermarkConfig {
+  enabled: boolean;
+  text: string;
+  fontSize: number;
+  color: string;
+  opacity: number;
+  angle: number;
+  repeat: boolean;
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
+  watermark?: WatermarkConfig;
 }
 
 const defaultConfig: PrintHeaderConfig = {
