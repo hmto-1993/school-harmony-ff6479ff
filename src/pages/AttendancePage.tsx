@@ -440,7 +440,7 @@ export default function AttendancePage() {
     return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الحضور" description="تواصل مع المسؤول لتفعيل صلاحية عرض الحضور" />;
   }
 
-  const isViewOnly = !perms.can_manage_attendance;
+  const isViewOnly = !perms.can_manage_attendance || perms.read_only_mode;
 
   return (
     <div className="space-y-6 animate-fade-in">

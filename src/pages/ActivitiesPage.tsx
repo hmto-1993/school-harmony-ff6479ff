@@ -402,7 +402,7 @@ export default function ActivitiesPage() {
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <BookOpen className="h-7 w-7 text-primary" />
             الأنشطة والاختبارات
-            {perms.can_view_activities && !perms.can_manage_grades && <Badge variant="secondary" className="text-[10px] gap-1"><Eye className="h-3 w-3" /> عرض فقط</Badge>}
+            {perms.can_view_activities && (!perms.can_manage_grades || perms.read_only_mode) && <Badge variant="secondary" className="text-[10px] gap-1"><Eye className="h-3 w-3" /> عرض فقط</Badge>}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">إنشاء ونشر الملفات والاختبارات للفصول</p>
         </div>
