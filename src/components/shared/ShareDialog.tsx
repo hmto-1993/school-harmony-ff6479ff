@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Share2, Copy, Check, Trash2, Link, Clock, RefreshCw, Sun, Moon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -35,6 +36,7 @@ export default function ShareDialog() {
   const { user, role } = useAuth();
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [expiryDays, setExpiryDays] = useState(7);
   const [canPrint, setCanPrint] = useState(true);
   const [canExport, setCanExport] = useState(true);
@@ -48,6 +50,13 @@ export default function ShareDialog() {
     if (!open || !user) return;
     loadData();
   }, [open, user]);
+
+  // Select all classes by default when loaded
+  useEffect(() => {
+    if (classes.length > 0 && selectedClassIds.length === 0) {
+      setSelectedClassIds(classes.map(c => c.id));
+    }
+  }, [classes]);
 
   const loadData = async () => {
     if (!user) return;
@@ -69,9 +78,21 @@ export default function ShareDialog() {
     setActiveLinks((links as ShareLink[]) || []);
   };
 
+  const toggleClass = (classId: string) => {
+    setSelectedClassIds(prev =>
+      prev.includes(classId) ? prev.filter(id => id !== classId) : [...prev, classId]
+    );
+  };
+
+  const toggleAllClasses = () => {
+    setSelectedClassIds(prev =>
+      prev.length === classes.length ? [] : classes.map(c => c.id)
+    );
+  };
+
   const handleCreate = async () => {
-    if (!user || classes.length === 0) {
-      toast.error("لا توجد فصول لمشاركتها");
+    if (!user || selectedClassIds.length === 0) {
+      toast.error("اختر فصلاً واحداً على الأقل");
       return;
     }
     setCreating(true);
@@ -79,7 +100,7 @@ export default function ShareDialog() {
 
     const { error } = await supabase.from("shared_views").insert({
       teacher_id: user.id,
-      class_ids: classes.map(c => c.id),
+      class_ids: selectedClassIds,
       expires_at: expiresAt,
       can_print: canPrint,
       can_export: canExport,
@@ -120,6 +141,10 @@ export default function ShareDialog() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const getClassNames = (classIds: string[]) => {
+    return classIds.map(id => classes.find(c => c.id === id)?.name || id).join("، ");
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -135,9 +160,41 @@ export default function ShareDialog() {
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
-          {/* Info */}
-          <div className="bg-muted/50 rounded-xl p-3 text-sm text-muted-foreground">
-            سيتم إنشاء رابط واحد يعرض جميع فصولك ({classes.length} فصل) بما فيها الدرجات والحضور والتقارير وخطط الدروس.
+          {/* Class Selection */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-medium">اختيار الفصول</Label>
+              <button
+                onClick={toggleAllClasses}
+                className="text-xs text-primary hover:underline font-medium"
+              >
+                {selectedClassIds.length === classes.length ? "إلغاء الكل" : "تحديد الكل"}
+              </button>
+            </div>
+            <div className="rounded-xl border bg-muted/30 p-2.5 max-h-36 overflow-y-auto space-y-1.5 scrollbar-thin">
+              {classes.map(cls => (
+                <label
+                  key={cls.id}
+                  className={cn(
+                    "flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg cursor-pointer transition-colors text-sm",
+                    selectedClassIds.includes(cls.id) ? "bg-primary/10 text-foreground" : "hover:bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Checkbox
+                    checked={selectedClassIds.includes(cls.id)}
+                    onCheckedChange={() => toggleClass(cls.id)}
+                    className="h-4 w-4"
+                  />
+                  <span className="font-medium">{cls.name}</span>
+                </label>
+              ))}
+              {classes.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-2">لا توجد فصول</p>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              تم اختيار {selectedClassIds.length} من {classes.length} فصل
+            </p>
           </div>
 
           {/* Label */}
@@ -231,9 +288,9 @@ export default function ShareDialog() {
           </div>
 
           {/* Create Button */}
-          <Button onClick={handleCreate} disabled={creating || classes.length === 0} className="w-full gap-2">
+          <Button onClick={handleCreate} disabled={creating || selectedClassIds.length === 0} className="w-full gap-2">
             <Link className="h-4 w-4" />
-            {creating ? "جاري الإنشاء..." : "إنشاء رابط مشاركة شامل"}
+            {creating ? "جاري الإنشاء..." : `إنشاء رابط مشاركة (${selectedClassIds.length} فصل)`}
           </Button>
 
           {/* Active Links */}
@@ -265,6 +322,9 @@ export default function ShareDialog() {
                         </div>
                       </div>
                     </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      الفصول: {link.class_ids.length} فصل
+                    </p>
                     {link.last_viewed_at && (
                       <p className="text-[11px] text-muted-foreground">
                         آخر مشاهدة: {new Date(link.last_viewed_at).toLocaleString("ar-SA")}
