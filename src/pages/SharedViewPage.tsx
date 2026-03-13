@@ -58,6 +58,7 @@ interface SharedData {
 const TABS = [
   { id: "overview", label: "نظرة عامة", icon: BarChart3 },
   { id: "attendance", label: "الحضور", icon: UserCheck },
+  { id: "weekly", label: "الأسبوعي", icon: CalendarDays },
   { id: "grades", label: "الدرجات", icon: BookOpen },
   { id: "reports", label: "التقارير", icon: FileBarChart },
   { id: "lessons", label: "خطط الدروس", icon: Clock },
