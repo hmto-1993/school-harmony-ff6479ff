@@ -483,6 +483,7 @@ export default function ActivitiesPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Edit Dialog */}
