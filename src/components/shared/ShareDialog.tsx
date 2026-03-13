@@ -36,7 +36,6 @@ export default function ShareDialog() {
   const { user, role } = useAuth();
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [expiryDays, setExpiryDays] = useState(7);
   const [canPrint, setCanPrint] = useState(true);
   const [canExport, setCanExport] = useState(true);
@@ -53,7 +52,6 @@ export default function ShareDialog() {
   const loadData = async () => {
     if (!user) return;
 
-    // Load teacher's classes
     if (role === "admin") {
       const { data } = await supabase.from("classes").select("id, name").order("name");
       setClasses(data || []);
@@ -62,7 +60,6 @@ export default function ShareDialog() {
       setClasses((data || []).map((tc: any) => ({ id: tc.classes.id, name: tc.classes.name })));
     }
 
-    // Load active share links
     const { data: links } = await supabase
       .from("shared_views")
       .select("*")
@@ -73,16 +70,16 @@ export default function ShareDialog() {
   };
 
   const handleCreate = async () => {
-    if (!user || selectedClasses.length === 0) {
-      toast.error("اختر فصلاً واحداً على الأقل");
+    if (!user || classes.length === 0) {
+      toast.error("لا توجد فصول لمشاركتها");
       return;
     }
     setCreating(true);
     const expiresAt = new Date(Date.now() + expiryDays * 86400000).toISOString();
 
-    const { data, error } = await supabase.from("shared_views").insert({
+    const { error } = await supabase.from("shared_views").insert({
       teacher_id: user.id,
-      class_ids: selectedClasses,
+      class_ids: classes.map(c => c.id),
       expires_at: expiresAt,
       can_print: canPrint,
       can_export: canExport,
@@ -93,7 +90,6 @@ export default function ShareDialog() {
       toast.error("فشل إنشاء رابط المشاركة");
     } else {
       toast.success("تم إنشاء رابط المشاركة");
-      setSelectedClasses([]);
       setShareLabel("");
       loadData();
     }
@@ -122,15 +118,6 @@ export default function ShareDialog() {
     setCopiedId(id);
     toast.success("تم نسخ الرابط");
     setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const toggleClass = (classId: string) => {
-    setSelectedClasses((prev) => prev.includes(classId) ? prev.filter((c) => c !== classId) : [...prev, classId]);
-  };
-
-  const selectAll = () => {
-    if (selectedClasses.length === classes.length) setSelectedClasses([]);
-    else setSelectedClasses(classes.map((c) => c.id));
   };
 
   return (
