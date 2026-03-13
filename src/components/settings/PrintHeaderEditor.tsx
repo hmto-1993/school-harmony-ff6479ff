@@ -154,6 +154,7 @@ export default function PrintHeaderEditor() {
           const parsed = JSON.parse(defData.value);
           if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
           if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
+          if (!parsed.watermark) parsed.watermark = defaultWatermark;
           setConfig(parsed);
         } catch {
           setConfig(defaultConfig);
