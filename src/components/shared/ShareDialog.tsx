@@ -106,6 +106,16 @@ export default function ShareDialog() {
     loadData();
   };
 
+  const handleExtend = async (id: string, days: number) => {
+    const link = activeLinks.find(l => l.id === id);
+    if (!link) return;
+    const currentExpiry = new Date(link.expires_at);
+    const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()) + days * 86400000);
+    await supabase.from("shared_views").update({ expires_at: newExpiry.toISOString() } as any).eq("id", id);
+    toast.success(`تم تمديد الرابط ${days} يوم`);
+    loadData();
+  };
+
   const copyLink = (token: string, id: string) => {
     const url = `${window.location.origin}/shared/${token}`;
     navigator.clipboard.writeText(url);
