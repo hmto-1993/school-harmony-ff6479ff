@@ -606,7 +606,13 @@ export default function SettingsPage() {
     setNewTeacherPassword("");
     setNewTeacherNationalId("");
     setCreatingTeacher(false);
-    fetchData();
+    // Refresh only teachers list to avoid collapsing the settings panel
+    const { data: teachersData } = await supabase.functions.invoke("manage-users", {
+      body: { action: "list_teachers" },
+    });
+    if (teachersData?.teachers) {
+      setTeachers(teachersData.teachers);
+    }
   };
 
   const handleUploadLetterhead = async (e: React.ChangeEvent<HTMLInputElement>) => {
