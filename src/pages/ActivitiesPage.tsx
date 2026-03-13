@@ -390,7 +390,7 @@ export default function ActivitiesPage() {
     </Card>
   );
 
-  if (permsLoaded && !perms.can_view_activities && role !== "admin") {
+  if (permsLoaded && !perms.can_view_activities && !perms.read_only_mode && role !== "admin") {
     return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الأنشطة" description="تواصل مع المسؤول لتفعيل صلاحية عرض الأنشطة" />;
   }
 

@@ -436,7 +436,7 @@ export default function AttendancePage() {
     return result;
   }, [records, statusFilter, searchQuery]);
 
-  if (permsLoaded && !perms.can_view_attendance && role !== "admin") {
+  if (permsLoaded && !perms.can_view_attendance && !perms.read_only_mode && role !== "admin") {
     return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الحضور" description="تواصل مع المسؤول لتفعيل صلاحية عرض الحضور" />;
   }
 
