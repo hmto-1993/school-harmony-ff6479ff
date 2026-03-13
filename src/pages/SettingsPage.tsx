@@ -2659,6 +2659,7 @@ export default function SettingsPage() {
                                   key={t.user_id}
                                   teacher={t}
                                   onDeleted={() => setTeachers(prev => prev.filter(tr => tr.user_id !== t.user_id))}
+                                  onUpdated={(userId, newName, newNationalId) => setTeachers(prev => prev.map(tr => tr.user_id === userId ? { ...tr, full_name: newName, national_id: newNationalId } : tr))}
                                 />
                               ))}
                             </TableBody>
