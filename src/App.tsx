@@ -57,6 +57,7 @@ const App = () => (
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/install" element={<InstallPage />} />
                     <Route path="/student" element={<StudentDashboard />} />
+                    <Route path="/shared/:token" element={<SharedViewPage />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route
                       element={

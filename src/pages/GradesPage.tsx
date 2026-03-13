@@ -101,7 +101,10 @@ export default function GradesPage() {
             <AcademicWeekBadge />
           </div>
         </div>
-        <NoorExportDialog />
+        <div className="flex items-center gap-2">
+          <ShareDialog />
+          <NoorExportDialog />
+        </div>
       </div>
 
       {/* Class Cards — Cosmic Cyan palette */}
