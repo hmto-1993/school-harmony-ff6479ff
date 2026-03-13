@@ -29,7 +29,10 @@ import {
   ArrowRight,
   Palette,
   Copy,
+  Droplets,
+  RotateCcw,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface SectionConfig {
   lines: string[];
