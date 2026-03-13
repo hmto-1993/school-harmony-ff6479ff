@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { format, subDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, UserX, BookOpen, FileWarning,
-  TrendingUp, TrendingDown, Minus, Activity, Award, ThumbsUp, ThumbsDown
+  TrendingUp, TrendingDown, Minus, Activity, Award, ThumbsUp, ThumbsDown,
+  ChevronDown, ChevronUp, BarChart3
 } from "lucide-react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
@@ -15,6 +17,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface AbsentStudent {
   id: string;
