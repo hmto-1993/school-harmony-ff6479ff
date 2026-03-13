@@ -121,7 +121,7 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Teacher password management
-  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string }[]>([]);
+  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
