@@ -65,15 +65,12 @@ serve(async (req) => {
 
       if (error) {
         const msg = error.message || "";
-        if (msg.toLowerCase().includes("weak") || msg.toLowerCase().includes("password")) {
-          return new Response(
-            JSON.stringify({ error: "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+        const arabicMsg = (msg.toLowerCase().includes("weak") || msg.toLowerCase().includes("password"))
+          ? "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)"
+          : msg.includes("already been registered") ? "البريد الإلكتروني مسجل مسبقاً" : msg;
         return new Response(
-          JSON.stringify({ error: msg }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          JSON.stringify({ error: arabicMsg }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
