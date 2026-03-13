@@ -1218,6 +1218,7 @@ export type Database = {
           can_view_dashboard: boolean
           can_view_grades: boolean
           can_view_reports: boolean
+          can_view_students: boolean
           created_at: string
           id: string
           updated_at: string
@@ -1235,6 +1236,7 @@ export type Database = {
           can_view_dashboard?: boolean
           can_view_grades?: boolean
           can_view_reports?: boolean
+          can_view_students?: boolean
           created_at?: string
           id?: string
           updated_at?: string
@@ -1252,6 +1254,7 @@ export type Database = {
           can_view_dashboard?: boolean
           can_view_grades?: boolean
           can_view_reports?: boolean
+          can_view_students?: boolean
           created_at?: string
           id?: string
           updated_at?: string

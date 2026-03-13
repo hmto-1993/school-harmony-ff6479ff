@@ -60,6 +60,7 @@ export function useTeacherPermissions() {
             can_view_attendance: (data as any).can_view_attendance ?? true,
             can_view_activities: (data as any).can_view_activities ?? true,
             can_view_dashboard: (data as any).can_view_dashboard ?? true,
+            can_view_students: (data as any).can_view_students ?? true,
           });
         }
         setLoaded(true);

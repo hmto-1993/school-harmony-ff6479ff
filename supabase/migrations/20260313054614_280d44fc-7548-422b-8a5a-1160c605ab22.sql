@@ -1,0 +1,1 @@
+ALTER TABLE public.teacher_permissions ADD COLUMN IF NOT EXISTS can_view_students boolean NOT NULL DEFAULT true;

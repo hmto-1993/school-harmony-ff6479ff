@@ -206,6 +206,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
     "can_view_attendance",
     "can_view_activities",
     "can_view_dashboard",
+    "can_view_students",
   ];
 
   return (
