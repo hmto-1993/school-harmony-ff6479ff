@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Share2, Copy, Check, Trash2, Link, Clock, RefreshCw } from "lucide-react";
+import { Share2, Copy, Check, Trash2, Link, Clock, RefreshCw, Sun, Moon } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ export default function ShareDialog() {
   const [creating, setCreating] = useState(false);
   const [activeLinks, setActiveLinks] = useState<ShareLink[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareTheme, setShareTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     if (!open || !user) return;
@@ -112,7 +113,7 @@ export default function ShareDialog() {
   };
 
   const copyLink = (token: string, id: string) => {
-    const url = `${window.location.origin}/shared/${token}`;
+    const url = `${window.location.origin}/shared/${token}?theme=${shareTheme}`;
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     toast.success("تم نسخ الرابط");
@@ -166,6 +167,53 @@ export default function ShareDialog() {
                   {opt.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Theme Selection */}
+          <div>
+            <Label className="text-sm font-medium mb-2 block">مظهر العرض الافتراضي</Label>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShareTheme("dark")}
+                className={cn(
+                  "flex-1 rounded-xl border-2 p-3 transition-all duration-300 group",
+                  shareTheme === "dark" ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-muted-foreground/30"
+                )}
+              >
+                <div className="rounded-lg overflow-hidden mb-2 h-16 bg-[hsl(228,50%,8%)] flex items-center justify-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(195,100%,50%/0.1)] to-[hsl(270,75%,55%/0.1)]" />
+                  <div className="flex gap-1.5 relative">
+                    <div className="w-6 h-4 rounded-sm bg-white/10 border border-white/20" />
+                    <div className="w-6 h-4 rounded-sm bg-white/10 border border-white/20" />
+                    <div className="w-6 h-4 rounded-sm bg-white/10 border border-white/20" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 text-xs font-semibold">
+                  <Moon className="h-3.5 w-3.5" />
+                  <span>داكن</span>
+                </div>
+              </button>
+              <button
+                onClick={() => setShareTheme("light")}
+                className={cn(
+                  "flex-1 rounded-xl border-2 p-3 transition-all duration-300 group",
+                  shareTheme === "light" ? "border-primary ring-2 ring-primary/20" : "border-border hover:border-muted-foreground/30"
+                )}
+              >
+                <div className="rounded-lg overflow-hidden mb-2 h-16 bg-[hsl(220,30%,97%)] flex items-center justify-center relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[hsl(195,100%,50%/0.06)] to-[hsl(270,75%,55%/0.06)]" />
+                  <div className="flex gap-1.5 relative">
+                    <div className="w-6 h-4 rounded-sm bg-white border border-gray-200 shadow-sm" />
+                    <div className="w-6 h-4 rounded-sm bg-white border border-gray-200 shadow-sm" />
+                    <div className="w-6 h-4 rounded-sm bg-white border border-gray-200 shadow-sm" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-1.5 text-xs font-semibold">
+                  <Sun className="h-3.5 w-3.5" />
+                  <span>فاتح</span>
+                </div>
+              </button>
             </div>
           </div>
 

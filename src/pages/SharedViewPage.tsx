@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles, Share2, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -70,6 +70,7 @@ const TABS = [
 
 export default function SharedViewPage() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState<SharedData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,7 +81,11 @@ export default function SharedViewPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('shared-view-theme') !== 'light';
+      const urlTheme = new URLSearchParams(window.location.search).get('theme');
+      if (urlTheme === 'light') return false;
+      if (urlTheme === 'dark') return true;
+      const saved = localStorage.getItem('shared-view-theme');
+      if (saved) return saved !== 'light';
     }
     return true;
   });
@@ -797,33 +802,36 @@ function OverviewTab({ data }: { data: SharedData }) {
 function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-white">تفاصيل الحضور اليوم</h2>
-      <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
+      <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>تفاصيل الحضور اليوم</h2>
+      <div className="backdrop-blur-sm rounded-2xl overflow-hidden" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="text-right px-4 py-3 font-semibold text-white/60">الفصل</th>
-              <th className="text-center px-4 py-3 font-semibold text-white/60">الطلاب</th>
-              <th className="text-center px-4 py-3 font-semibold text-[hsl(160,84%,55%)]">حاضر</th>
-              <th className="text-center px-4 py-3 font-semibold text-[hsl(0,84%,65%)]">غائب</th>
-              <th className="text-center px-4 py-3 font-semibold text-[hsl(38,92%,60%)]">متأخر</th>
-              <th className="text-center px-4 py-3 font-semibold text-white/30">لم يُسجل</th>
-              <th className="text-center px-4 py-3 font-semibold text-white/60">النسبة</th>
+            <tr style={{ borderBottom: '1px solid var(--sv-divider)' }}>
+              <th className="text-right px-4 py-3 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>الفصل</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>الطلاب</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-green)' }}>حاضر</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-red)' }}>غائب</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-amber)' }}>متأخر</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-text-dim)' }}>لم يُسجل</th>
+              <th className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>النسبة</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/[0.04]">
+          <tbody>
             {classes.map((cls) => {
               const rate = cls.attendance.total > 0 ? Math.round((cls.attendance.present / cls.attendance.total) * 100) : 0;
               return (
-                <tr key={cls.id} className="hover:bg-white/[0.03] transition-colors">
-                  <td className="px-4 py-3 font-medium text-white/90">{cls.name}</td>
-                  <td className="text-center px-4 py-3 text-white/60">{cls.studentCount}</td>
-                  <td className="text-center px-4 py-3 text-[hsl(160,84%,55%)] font-semibold">{cls.attendance.present}</td>
-                  <td className="text-center px-4 py-3 text-[hsl(0,84%,65%)] font-semibold">{cls.attendance.absent}</td>
-                  <td className="text-center px-4 py-3 text-[hsl(38,92%,60%)] font-semibold">{cls.attendance.late}</td>
-                  <td className="text-center px-4 py-3 text-white/30">{cls.attendance.notRecorded}</td>
+                <tr key={cls.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)' }}>
+                  <td className="px-4 py-3 font-medium" style={{ color: 'var(--sv-text-secondary)' }}>{cls.name}</td>
+                  <td className="text-center px-4 py-3" style={{ color: 'var(--sv-text-muted)' }}>{cls.studentCount}</td>
+                  <td className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-green)' }}>{cls.attendance.present}</td>
+                  <td className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-red)' }}>{cls.attendance.absent}</td>
+                  <td className="text-center px-4 py-3 font-semibold" style={{ color: 'var(--sv-amber)' }}>{cls.attendance.late}</td>
+                  <td className="text-center px-4 py-3" style={{ color: 'var(--sv-text-dim)' }}>{cls.attendance.notRecorded}</td>
                   <td className="text-center px-4 py-3">
-                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", rate >= 80 ? "bg-[hsl(160,84%,39%)/0.15] text-[hsl(160,84%,55%)]" : rate >= 60 ? "bg-[hsl(38,92%,50%)/0.15] text-[hsl(38,92%,60%)]" : "bg-[hsl(0,84%,60%)/0.15] text-[hsl(0,84%,65%)]")}>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold" style={{
+                      background: rate >= 80 ? 'var(--sv-rate-good-bg)' : rate >= 60 ? 'var(--sv-rate-mid-bg)' : 'var(--sv-rate-bad-bg)',
+                      color: rate >= 80 ? 'var(--sv-rate-good-text)' : rate >= 60 ? 'var(--sv-rate-mid-text)' : 'var(--sv-rate-bad-text)',
+                    }}>
                       {rate}%
                     </span>
                   </td>
@@ -835,9 +843,9 @@ function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
       </div>
 
       {classes.map((cls) => (
-        <details key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06]">
-          <summary className="px-4 py-3 font-semibold text-white/70 cursor-pointer hover:bg-white/[0.03] transition-colors">{cls.name} — قائمة الطلاب</summary>
-          <div className="px-4 pb-3 text-sm text-white/40">
+        <details key={cls.id} className="backdrop-blur-sm rounded-2xl" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+          <summary className="px-4 py-3 font-semibold cursor-pointer transition-colors" style={{ color: 'var(--sv-text-muted)' }}>{cls.name} — قائمة الطلاب</summary>
+          <div className="px-4 pb-3 text-sm" style={{ color: 'var(--sv-text-dim)' }}>
             <p>عدد الطلاب: {cls.studentCount} | حاضر: {cls.attendance.present} | غائب: {cls.attendance.absent}</p>
           </div>
         </details>
@@ -857,7 +865,7 @@ function GradesTab({ classes, categories, isPrint }: { classes: ClassSummary[]; 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-white">ملخص الدرجات</h2>
+      <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>ملخص الدرجات</h2>
       {classes.map((cls) => {
         const isExpanded = isPrint || expandedClasses[cls.id] || false;
         const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
@@ -885,42 +893,43 @@ function GradesTab({ classes, categories, isPrint }: { classes: ClassSummary[]; 
         const sortedCats = classCategories.sort((a: any, b: any) => a.sort_order - b.sort_order).slice(0, 6);
 
         return (
-          <div key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
+          <div key={cls.id} className="backdrop-blur-sm rounded-2xl overflow-hidden" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
             <button
               onClick={() => toggleClass(cls.id)}
-              className="w-full px-4 py-3 bg-white/[0.02] border-b border-white/[0.06] font-bold text-white/80 flex items-center justify-between hover:bg-white/[0.05] transition-colors"
+              className="w-full px-4 py-3 font-bold flex items-center justify-between transition-colors"
+              style={{ background: 'var(--sv-card-subtle)', borderBottom: '1px solid var(--sv-divider)', color: 'var(--sv-text-secondary)' }}
             >
               <span>{cls.name} ({cls.studentCount} طالب)</span>
-              <ChevronDown className={cn("h-5 w-5 text-white/30 transition-transform", isExpanded && "rotate-180")} />
+              <ChevronDown className={cn("h-5 w-5 transition-transform", isExpanded && "rotate-180")} style={{ color: 'var(--sv-text-dim)' }} />
             </button>
             {isExpanded && (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/[0.06]">
-                      <th className="text-right px-3 py-2 text-white/50 font-semibold">الطالب</th>
+                    <tr style={{ borderBottom: '1px solid var(--sv-divider)' }}>
+                      <th className="text-right px-3 py-2 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>الطالب</th>
                       {sortedCats.map((cat: any) => (
-                        <th key={cat.id} className="text-center px-2 py-2 text-white/40 font-medium text-xs max-w-[80px] truncate" title={cat.name}>
+                        <th key={cat.id} className="text-center px-2 py-2 font-medium text-xs max-w-[80px] truncate" title={cat.name} style={{ color: 'var(--sv-text-dim)' }}>
                           {cat.name}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody>
                     {cls.students.map((s) => (
-                      <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
-                        <td className="px-3 py-2 font-medium text-white/80 whitespace-nowrap">{s.full_name}</td>
+                      <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)' }}>
+                        <td className="px-3 py-2 font-medium whitespace-nowrap" style={{ color: 'var(--sv-text-secondary)' }}>{s.full_name}</td>
                         {sortedCats.map((cat: any) => {
                           const entry = gradesByStudent[s.id]?.[cat.id];
                           const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
                           return (
                             <td key={cat.id} className="text-center px-2 py-2">
                               {avg !== null ? (
-                                <span className={cn("text-xs font-semibold", avg >= cat.max_score * 0.8 ? "text-[hsl(160,84%,55%)]" : avg >= cat.max_score * 0.5 ? "text-[hsl(38,92%,60%)]" : "text-[hsl(0,84%,65%)]")}>
+                                <span className="text-xs font-semibold" style={{ color: avg >= cat.max_score * 0.8 ? 'var(--sv-green)' : avg >= cat.max_score * 0.5 ? 'var(--sv-amber)' : 'var(--sv-red)' }}>
                                   {avg}
                                 </span>
                               ) : (
-                                <span className="text-white/15">—</span>
+                                <span style={{ color: 'var(--sv-text-ghost)' }}>—</span>
                               )}
                             </td>
                           );
@@ -1033,9 +1042,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
 
   if (!cal) {
     return (
-      <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-8 text-center">
-        <CalendarDays className="h-12 w-12 text-white/20 mx-auto mb-3" />
-        <p className="text-white/40 font-medium">لا يوجد تقويم أكاديمي محدد</p>
+      <div className="backdrop-blur-sm rounded-2xl p-8 text-center" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+        <CalendarDays className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--sv-text-ghost)' }} />
+        <p className="font-medium" style={{ color: 'var(--sv-text-dim)' }}>لا يوجد تقويم أكاديمي محدد</p>
       </div>
     );
   }
@@ -1043,17 +1052,18 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-white">تقرير الحضور الأسبوعي</h2>
+        <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>تقرير الحضور الأسبوعي</h2>
         <div className="flex gap-2 flex-wrap">
-          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 border border-white/[0.06]">
+          <div className="flex gap-1 rounded-lg p-0.5" style={{ background: 'var(--sv-tab-inactive)', border: '1px solid var(--sv-card-border)' }}>
             <button
               onClick={() => setWeekFilter("current")}
               className={cn(
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "current"
                   ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
-                  : "text-white/40 hover:text-white/60"
+                  : ""
               )}
+              style={weekFilter !== "current" ? { color: 'var(--sv-text-dim)' } : undefined}
             >
               الأسبوع الحالي (ع{currentWeek})
             </button>
@@ -1063,8 +1073,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "all"
                   ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
-                  : "text-white/40 hover:text-white/60"
+                  : ""
               )}
+              style={weekFilter !== "all" ? { color: 'var(--sv-text-dim)' } : undefined}
             >
               جميع الأسابيع
             </button>
@@ -1077,8 +1088,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                 "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                 selectedClassId === cls.id
                   ? "bg-gradient-to-l from-[hsl(270,75%,55%)] to-[hsl(290,70%,50%)] text-white shadow-sm"
-                  : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
+                  : ""
               )}
+              style={selectedClassId !== cls.id ? { background: 'var(--sv-tab-inactive)', color: 'var(--sv-text-dim)', border: '1px solid var(--sv-card-border)' } : undefined}
             >
               {cls.name}
             </button>
@@ -1091,43 +1103,43 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: STATUS_COLORS[key] }} />
-            <span className="text-white/50">{label}</span>
+            <span style={{ color: 'var(--sv-text-muted)' }}>{label}</span>
           </div>
         ))}
       </div>
 
       {weeklyData && (
-        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
+        <div className="backdrop-blur-sm rounded-2xl overflow-hidden" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-right px-3 py-2 font-semibold text-white/50 sticky right-0 bg-[hsl(228,50%,8%)] z-10 min-w-[120px]">الطالب</th>
+                <tr style={{ borderBottom: '1px solid var(--sv-divider)' }}>
+                  <th className="text-right px-3 py-2 font-semibold sticky right-0 z-10 min-w-[120px]" style={{ color: 'var(--sv-text-muted)', background: 'var(--sv-sticky)' }}>الطالب</th>
                   {weeklyData.weeks.map(w => (
-                    <th key={w.weekNum} className={cn("text-center px-1 py-2 font-medium min-w-[36px]", w.weekNum === currentWeek ? "text-[hsl(195,100%,60%)] bg-[hsl(195,100%,50%)/0.05]" : "text-white/30")}>
+                    <th key={w.weekNum} className="text-center px-1 py-2 font-medium min-w-[36px]" style={{ color: w.weekNum === currentWeek ? 'var(--sv-current-week-text)' : 'var(--sv-text-dim)', background: w.weekNum === currentWeek ? 'var(--sv-current-week-bg)' : undefined }}>
                       <div className="writing-mode-vertical text-[10px]">ع{w.weekNum}</div>
                     </th>
                   ))}
-                  <th className="text-center px-2 py-2 font-semibold text-[hsl(0,84%,65%)] min-w-[40px]">غ</th>
-                  <th className="text-center px-2 py-2 font-semibold text-[hsl(38,92%,60%)] min-w-[40px]">تأخر</th>
+                  <th className="text-center px-2 py-2 font-semibold min-w-[40px]" style={{ color: 'var(--sv-red)' }}>غ</th>
+                  <th className="text-center px-2 py-2 font-semibold min-w-[40px]" style={{ color: 'var(--sv-amber)' }}>تأخر</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.03]">
+              <tbody>
                 {weeklyData.studentRows.map((student) => (
-                  <tr key={student.id} className={cn("hover:bg-white/[0.03] transition-colors", student.isAtRisk && "bg-[hsl(0,84%,60%)/0.05]")}>
-                    <td className="px-3 py-1.5 font-medium text-white/80 whitespace-nowrap sticky right-0 bg-[hsl(228,50%,8%)] z-10">
+                  <tr key={student.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)', background: student.isAtRisk ? 'var(--sv-at-risk-bg)' : undefined }}>
+                    <td className="px-3 py-1.5 font-medium whitespace-nowrap sticky right-0 z-10" style={{ color: 'var(--sv-text-secondary)', background: 'var(--sv-sticky)' }}>
                       <div className="flex items-center gap-1">
-                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 text-[hsl(0,84%,65%)] flex-shrink-0" />}
+                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 flex-shrink-0" style={{ color: 'var(--sv-red)' }} />}
                         <span className="truncate max-w-[100px]">{student.name}</span>
                       </div>
                     </td>
                     {weeklyData.weeks.map(w => {
                       const statuses = student.weekStatuses[w.weekNum] || [];
                       return (
-                        <td key={w.weekNum} className={cn("text-center px-0.5 py-1", w.weekNum === currentWeek && "bg-[hsl(195,100%,50%)/0.03]")}>
+                        <td key={w.weekNum} className="text-center px-0.5 py-1" style={{ background: w.weekNum === currentWeek ? 'var(--sv-current-week-bg)' : undefined }}>
                           <div className="flex flex-wrap justify-center gap-0.5">
                             {statuses.length === 0 ? (
-                              <span className="text-white/10">·</span>
+                              <span style={{ color: 'var(--sv-text-invisible)' }}>·</span>
                             ) : (
                               statuses.map((s, i) => (
                                 <span
@@ -1142,8 +1154,8 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                         </td>
                       );
                     })}
-                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(0,84%,65%)]">{student.totalAbsent || '—'}</td>
-                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(38,92%,60%)]">{student.totalLate || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold" style={{ color: 'var(--sv-red)' }}>{student.totalAbsent || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold" style={{ color: 'var(--sv-amber)' }}>{student.totalLate || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1164,7 +1176,7 @@ function ReportsTab({ data }: { data: SharedData }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-bold text-white">التقارير والإحصائيات</h2>
+      <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>التقارير والإحصائيات</h2>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard label="إجمالي الغياب (30 يوم)" value={totalAbsences} icon={TrendingDown} gradient="from-[hsl(0,84%,60%)] to-[hsl(350,80%,55%)]" />
@@ -1174,22 +1186,22 @@ function ReportsTab({ data }: { data: SharedData }) {
       </div>
 
       {data.attendanceReport.length > 0 && (
-        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5">
-          <h3 className="font-bold text-white mb-4">اتجاه الحضور (آخر 30 يوم)</h3>
+        <div className="backdrop-blur-sm rounded-2xl p-5" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+          <h3 className="font-bold mb-4" style={{ color: 'var(--sv-text)' }}>اتجاه الحضور (آخر 30 يوم)</h3>
           <div className="overflow-x-auto">
             <div className="flex items-end gap-1 min-w-[600px] h-40">
               {data.attendanceReport.slice(0, 30).reverse().map((day) => {
                 const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
                 return (
                   <div key={day.date} className="flex-1 flex flex-col items-center gap-1" title={`${day.date}: ${rate}%`}>
-                    <span className="text-[9px] text-white/30 font-medium">{rate}%</span>
+                    <span className="text-[9px] font-medium" style={{ color: 'var(--sv-text-dim)' }}>{rate}%</span>
                     <div className="w-full rounded-t transition-all duration-300" style={{
                       height: `${rate}%`,
                       background: rate >= 80 ? 'linear-gradient(to top, hsl(160,84%,39%), hsl(160,84%,50%))' : rate >= 60 ? 'linear-gradient(to top, hsl(38,92%,50%), hsl(38,92%,60%))' : 'linear-gradient(to top, hsl(0,84%,50%), hsl(0,84%,60%))',
                       minHeight: '2px',
                       boxShadow: rate >= 80 ? '0 0 8px hsl(160,84%,39%,0.3)' : rate >= 60 ? '0 0 8px hsl(38,92%,50%,0.3)' : '0 0 8px hsl(0,84%,50%,0.3)',
                     }} />
-                    <span className="text-[8px] text-white/20 -rotate-45 origin-center whitespace-nowrap">
+                    <span className="text-[8px] -rotate-45 origin-center whitespace-nowrap" style={{ color: 'var(--sv-text-ghost)' }}>
                       {day.date.slice(5)}
                     </span>
                   </div>
@@ -1202,13 +1214,13 @@ function ReportsTab({ data }: { data: SharedData }) {
 
       {data.classes.map((cls) => (
         cls.topAbsentees.length > 0 && (
-          <div key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5">
-            <h3 className="font-bold text-white mb-3">{cls.name} — الأكثر غياباً</h3>
+          <div key={cls.id} className="backdrop-blur-sm rounded-2xl p-5" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+            <h3 className="font-bold mb-3" style={{ color: 'var(--sv-text)' }}>{cls.name} — الأكثر غياباً</h3>
             <div className="space-y-2">
               {cls.topAbsentees.map((s, i) => (
                 <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-white/70 font-medium">{s.name}</span>
-                  <span className="text-[hsl(0,84%,65%)] font-bold">{s.count} غياب</span>
+                  <span className="font-medium" style={{ color: 'var(--sv-text-muted)' }}>{s.name}</span>
+                  <span className="font-bold" style={{ color: 'var(--sv-red)' }}>{s.count} غياب</span>
                 </div>
               ))}
             </div>
@@ -1217,30 +1229,33 @@ function ReportsTab({ data }: { data: SharedData }) {
       ))}
 
       {data.attendanceReport.length > 0 && (
-        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
-          <div className="px-4 py-3 border-b border-white/[0.06] font-bold text-white/70">سجل الحضور اليومي</div>
+        <div className="backdrop-blur-sm rounded-2xl overflow-hidden" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+          <div className="px-4 py-3 font-bold" style={{ borderBottom: '1px solid var(--sv-divider)', color: 'var(--sv-text-muted)' }}>سجل الحضور اليومي</div>
           <div className="overflow-x-auto max-h-96">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-[hsl(228,50%,8%)]">
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-right px-4 py-2 font-semibold text-white/50">التاريخ</th>
-                  <th className="text-center px-4 py-2 font-semibold text-[hsl(160,84%,55%)]">حاضر</th>
-                  <th className="text-center px-4 py-2 font-semibold text-[hsl(0,84%,65%)]">غائب</th>
-                  <th className="text-center px-4 py-2 font-semibold text-[hsl(38,92%,60%)]">متأخر</th>
-                  <th className="text-center px-4 py-2 font-semibold text-white/50">النسبة</th>
+              <thead className="sticky top-0" style={{ background: 'var(--sv-sticky)' }}>
+                <tr style={{ borderBottom: '1px solid var(--sv-divider)' }}>
+                  <th className="text-right px-4 py-2 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>التاريخ</th>
+                  <th className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-green)' }}>حاضر</th>
+                  <th className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-red)' }}>غائب</th>
+                  <th className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-amber)' }}>متأخر</th>
+                  <th className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-text-muted)' }}>النسبة</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.03]">
+              <tbody>
                 {data.attendanceReport.map((day) => {
                   const rate = day.total > 0 ? Math.round((day.present / day.total) * 100) : 0;
                   return (
-                    <tr key={day.date} className="hover:bg-white/[0.03] transition-colors">
-                      <td className="px-4 py-2 font-medium text-white/80">{day.date}</td>
-                      <td className="text-center px-4 py-2 text-[hsl(160,84%,55%)] font-semibold">{day.present}</td>
-                      <td className="text-center px-4 py-2 text-[hsl(0,84%,65%)] font-semibold">{day.absent}</td>
-                      <td className="text-center px-4 py-2 text-[hsl(38,92%,60%)] font-semibold">{day.late}</td>
+                    <tr key={day.date} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)' }}>
+                      <td className="px-4 py-2 font-medium" style={{ color: 'var(--sv-text-secondary)' }}>{day.date}</td>
+                      <td className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-green)' }}>{day.present}</td>
+                      <td className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-red)' }}>{day.absent}</td>
+                      <td className="text-center px-4 py-2 font-semibold" style={{ color: 'var(--sv-amber)' }}>{day.late}</td>
                       <td className="text-center px-4 py-2">
-                        <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", rate >= 80 ? "bg-[hsl(160,84%,39%)/0.15] text-[hsl(160,84%,55%)]" : rate >= 60 ? "bg-[hsl(38,92%,50%)/0.15] text-[hsl(38,92%,60%)]" : "bg-[hsl(0,84%,60%)/0.15] text-[hsl(0,84%,65%)]")}>
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold" style={{
+                          background: rate >= 80 ? 'var(--sv-rate-good-bg)' : rate >= 60 ? 'var(--sv-rate-mid-bg)' : 'var(--sv-rate-bad-bg)',
+                          color: rate >= 80 ? 'var(--sv-rate-good-text)' : rate >= 60 ? 'var(--sv-rate-mid-text)' : 'var(--sv-rate-bad-text)',
+                        }}>
                           {rate}%
                         </span>
                       </td>
@@ -1261,31 +1276,31 @@ function ReportsTab({ data }: { data: SharedData }) {
 function LessonsTab({ classes }: { classes: ClassSummary[] }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-white">خطط الدروس</h2>
+      <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>خطط الدروس</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {classes.map((cls, i) => {
           const pct = cls.lessonPlans.total > 0 ? Math.round((cls.lessonPlans.completed / cls.lessonPlans.total) * 100) : 0;
           const color = pct >= 80 ? 'hsl(160,84%,45%)' : pct >= 50 ? 'hsl(38,92%,55%)' : 'hsl(0,84%,60%)';
           return (
-            <div key={cls.id} className="relative overflow-hidden bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-5 transition-all duration-300 hover:bg-white/[0.07] group animate-fade-in" style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
-              <h3 className="font-bold text-white mb-4">{cls.name}</h3>
+            <div key={cls.id} className="relative overflow-hidden backdrop-blur-sm rounded-2xl p-5 transition-all duration-300 group animate-fade-in" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)', animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}>
+              <h3 className="font-bold mb-4" style={{ color: 'var(--sv-text)' }}>{cls.name}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-white/40">الإنجاز</span>
-                  <span className="font-bold text-white/90">{cls.lessonPlans.completed}/{cls.lessonPlans.total}</span>
+                  <span style={{ color: 'var(--sv-text-dim)' }}>الإنجاز</span>
+                  <span className="font-bold" style={{ color: 'var(--sv-text-secondary)' }}>{cls.lessonPlans.completed}/{cls.lessonPlans.total}</span>
                 </div>
                 {/* Circular progress */}
                 <div className="flex justify-center">
                   <div className="relative w-24 h-24">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="white" strokeOpacity="0.06" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="42" fill="none" strokeWidth="8" style={{ stroke: 'var(--sv-divider)' }} />
                       <circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
                         strokeDasharray={`${pct * 2.64} 264`}
                         style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: 'stroke-dasharray 0.8s ease' }}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-black text-white">{pct}%</span>
+                      <span className="text-2xl font-black" style={{ color: 'var(--sv-text)' }}>{pct}%</span>
                     </div>
                   </div>
                 </div>
