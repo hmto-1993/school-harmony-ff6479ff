@@ -440,7 +440,7 @@ export default function SharedViewPage() {
       toast.error("حدث خطأ أثناء التصدير");
     }
     setExporting(false);
-  }, [data]);
+  }, [data, summaryFocus]);
 
   useEffect(() => {
     if (!token) return;
