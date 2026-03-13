@@ -1003,9 +1003,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
 
   if (!cal) {
     return (
-      <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
-        <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-        <p className="text-slate-500 font-medium">لا يوجد تقويم أكاديمي محدد</p>
+      <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-8 text-center">
+        <CalendarDays className="h-12 w-12 text-white/20 mx-auto mb-3" />
+        <p className="text-white/40 font-medium">لا يوجد تقويم أكاديمي محدد</p>
       </div>
     );
   }
