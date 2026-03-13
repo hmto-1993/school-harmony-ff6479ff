@@ -827,7 +827,7 @@ function GradesTab({ classes, categories, isPrint }: { classes: ClassSummary[]; 
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-800">ملخص الدرجات</h2>
+      <h2 className="text-lg font-bold text-white">ملخص الدرجات</h2>
       {classes.map((cls) => {
         const isExpanded = isPrint || expandedClasses[cls.id] || false;
         const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
@@ -855,42 +855,42 @@ function GradesTab({ classes, categories, isPrint }: { classes: ClassSummary[]; 
         const sortedCats = classCategories.sort((a: any, b: any) => a.sort_order - b.sort_order).slice(0, 6);
 
         return (
-          <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
             <button
               onClick={() => toggleClass(cls.id)}
-              className="w-full px-4 py-3 bg-slate-50 border-b font-bold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors"
+              className="w-full px-4 py-3 bg-white/[0.02] border-b border-white/[0.06] font-bold text-white/80 flex items-center justify-between hover:bg-white/[0.05] transition-colors"
             >
               <span>{cls.name} ({cls.studentCount} طالب)</span>
-              <ChevronDown className={cn("h-5 w-5 text-slate-400 transition-transform", isExpanded && "rotate-180")} />
+              <ChevronDown className={cn("h-5 w-5 text-white/30 transition-transform", isExpanded && "rotate-180")} />
             </button>
             {isExpanded && (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b">
-                      <th className="text-right px-3 py-2 text-slate-600 font-semibold">الطالب</th>
+                    <tr className="border-b border-white/[0.06]">
+                      <th className="text-right px-3 py-2 text-white/50 font-semibold">الطالب</th>
                       {sortedCats.map((cat: any) => (
-                        <th key={cat.id} className="text-center px-2 py-2 text-slate-500 font-medium text-xs max-w-[80px] truncate" title={cat.name}>
+                        <th key={cat.id} className="text-center px-2 py-2 text-white/40 font-medium text-xs max-w-[80px] truncate" title={cat.name}>
                           {cat.name}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-50">
+                  <tbody className="divide-y divide-white/[0.03]">
                     {cls.students.map((s) => (
-                      <tr key={s.id} className="hover:bg-slate-50/50">
-                        <td className="px-3 py-2 font-medium text-slate-800 whitespace-nowrap">{s.full_name}</td>
+                      <tr key={s.id} className="hover:bg-white/[0.03] transition-colors">
+                        <td className="px-3 py-2 font-medium text-white/80 whitespace-nowrap">{s.full_name}</td>
                         {sortedCats.map((cat: any) => {
                           const entry = gradesByStudent[s.id]?.[cat.id];
                           const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
                           return (
                             <td key={cat.id} className="text-center px-2 py-2">
                               {avg !== null ? (
-                                <span className={cn("text-xs font-semibold", avg >= cat.max_score * 0.8 ? "text-emerald-600" : avg >= cat.max_score * 0.5 ? "text-amber-600" : "text-red-500")}>
+                                <span className={cn("text-xs font-semibold", avg >= cat.max_score * 0.8 ? "text-[hsl(160,84%,55%)]" : avg >= cat.max_score * 0.5 ? "text-[hsl(38,92%,60%)]" : "text-[hsl(0,84%,65%)]")}>
                                   {avg}
                                 </span>
                               ) : (
-                                <span className="text-slate-300">—</span>
+                                <span className="text-white/15">—</span>
                               )}
                             </td>
                           );
