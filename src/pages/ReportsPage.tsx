@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import {
   BarChart3,
   ClipboardCheck,
