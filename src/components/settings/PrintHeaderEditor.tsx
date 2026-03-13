@@ -456,9 +456,9 @@ export default function PrintHeaderEditor() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, flex: 1, minWidth: 0, color: config.leftSection.color || "#1e293b" }}>
+                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, flex: 1, minWidth: 0, color: config.leftSection.color || "#1e293b", display: 'flex', flexDirection: 'column', alignItems: config.leftSection.align === 'center' ? 'center' : config.leftSection.align === 'left' ? 'flex-start' : 'flex-end' }}>
                     {config.leftSection.lines.map((line, i) => (
-                      <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
+                      <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: 'nowrap' }}>{line || "\u00A0"}</p>
                     ))}
                   </div>
                 </div>
