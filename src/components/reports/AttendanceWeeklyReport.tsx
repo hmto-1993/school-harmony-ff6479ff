@@ -187,8 +187,11 @@ export default function AttendanceWeeklyReport({
       next.delete("all"); // Remove "all" when toggling individual weeks
       if (next.has(weekNum)) next.delete(weekNum);
       else next.add(weekNum);
-      // If all data weeks are selected, switch back to "all"
-      if (weeks.every(w => next.has(w.weekNum))) {
+      // If all academic/data weeks are selected, switch back to "all"
+      const allWeekNums = academicWeeks.length > 0
+        ? academicWeeks.map(aw => aw.weekNumber)
+        : weeks.map(w => w.weekNum);
+      if (allWeekNums.length > 0 && allWeekNums.every(wn => next.has(wn))) {
         return new Set<number | "all">(["all"]);
       }
       return next;
