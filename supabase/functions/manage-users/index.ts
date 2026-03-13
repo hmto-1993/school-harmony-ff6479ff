@@ -113,6 +113,48 @@ serve(async (req) => {
       );
     }
 
+    if (action === "delete_user") {
+      if (!email) {
+        return new Response(
+          JSON.stringify({ error: "البريد الإلكتروني مطلوب" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+      if (listError) throw listError;
+
+      const targetUser = users.find((u) => u.email === email);
+      if (!targetUser) {
+        return new Response(
+          JSON.stringify({ error: "المستخدم غير موجود" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Prevent deleting yourself
+      if (targetUser.id === callerId) {
+        return new Response(
+          JSON.stringify({ error: "لا يمكنك حذف حسابك الخاص" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Delete related data first
+      await supabaseAdmin.from("teacher_permissions").delete().eq("user_id", targetUser.id);
+      await supabaseAdmin.from("teacher_classes").delete().eq("teacher_id", targetUser.id);
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", targetUser.id);
+      await supabaseAdmin.from("profiles").delete().eq("user_id", targetUser.id);
+
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUser.id);
+      if (deleteError) throw deleteError;
+
+      return new Response(
+        JSON.stringify({ success: true, message: "تم حذف المعلم بنجاح" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "list_teachers") {
       const { data: roles } = await supabaseAdmin
         .from("user_roles")

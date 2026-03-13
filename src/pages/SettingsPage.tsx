@@ -2658,6 +2658,7 @@ export default function SettingsPage() {
                                 <TeacherPermissionRow
                                   key={t.user_id}
                                   teacher={t}
+                                  onDeleted={() => setTeachers(prev => prev.filter(tr => tr.user_id !== t.user_id))}
                                 />
                               ))}
                             </TableBody>
