@@ -269,6 +269,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
                     </p>
                   )}
                 </div>
+              </div>
               <DialogFooter className="gap-2 sm:gap-0">
                 <DialogClose asChild>
                   <Button variant="outline" size="sm">إلغاء</Button>
