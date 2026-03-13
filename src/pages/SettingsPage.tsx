@@ -584,6 +584,7 @@ export default function SettingsPage() {
         password: newTeacherPassword,
         full_name: newTeacherName,
         role: newTeacherRole,
+        national_id: newTeacherNationalId.trim() || null,
       },
     });
 
@@ -591,13 +592,6 @@ export default function SettingsPage() {
       toast({ title: "خطأ", description: data?.error || "فشل في إنشاء الحساب", variant: "destructive" });
       setCreatingTeacher(false);
       return;
-    }
-
-    if (newTeacherNationalId.trim() && data?.user_id) {
-      await supabase
-        .from("profiles")
-        .update({ national_id: newTeacherNationalId })
-        .eq("user_id", data.user_id);
     }
 
     toast({ title: "تم الإنشاء", description: `تم إنشاء حساب ${newTeacherName} بنجاح` });
