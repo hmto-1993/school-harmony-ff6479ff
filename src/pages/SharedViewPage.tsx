@@ -30,6 +30,13 @@ interface AttendanceReportDay {
   total: number;
 }
 
+interface WeeklyAttendanceRecord {
+  student_id: string;
+  status: string;
+  class_id: string;
+  date: string;
+}
+
 interface SharedData {
   teacherName: string;
   schoolName: string;
@@ -43,6 +50,9 @@ interface SharedData {
   categories: any[];
   attendanceReport: AttendanceReportDay[];
   viewCount: number;
+  weeklyAttendance: WeeklyAttendanceRecord[];
+  academicCalendar: { start_date: string; total_weeks: number; semester: string } | null;
+  classSchedules: { class_id: string; periods_per_week: number; days_of_week: number[] }[];
 }
 
 const TABS = [
