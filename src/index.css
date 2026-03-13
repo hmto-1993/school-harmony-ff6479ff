@@ -269,6 +269,8 @@
   .print\:block { display: block !important; }
   /* إخفاء زر العودة وأي عنصر no-print أثناء الطباعة الفعلية */
   .no-print, .print-close-btn { display: none !important; }
+  /* Show watermark overlay on print */
+  .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
   /* Preserve colors in print */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   @page {
