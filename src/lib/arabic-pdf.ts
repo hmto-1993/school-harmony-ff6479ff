@@ -271,9 +271,7 @@ export async function createArabicPDF(
   let watermark: WatermarkConfig | undefined;
 
   // Fetch config once for both header and watermark
-  const config = options.includeHeader !== false
-    ? await fetchPrintHeaderConfig(options.reportType)
-    : await fetchPrintHeaderConfig(options.reportType);
+  const config = await fetchPrintHeaderConfig(options.reportType);
 
   if (options.includeHeader !== false && config) {
     startY = await renderPrintHeaderFromConfig(doc, config);
