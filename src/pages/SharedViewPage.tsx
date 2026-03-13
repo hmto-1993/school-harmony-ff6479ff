@@ -457,7 +457,7 @@ export default function SharedViewPage() {
     setExporting(false);
   }, [data, summaryFocus, buildPDF]);
 
-  /** Share via WhatsApp: generate PDF, upload to storage, open WhatsApp */
+  /** Share via WhatsApp: generate PDF, upload via edge function, open WhatsApp */
   const shareViaWhatsApp = useCallback(async () => {
     if (!data || !token) return;
     setSharing(true);
@@ -465,25 +465,27 @@ export default function SharedViewPage() {
       const { doc, watermark } = await buildPDF(summaryFocus);
       const blob = finalizePDFAsBlob(doc, watermark);
 
-      const fileName = `shared-report_${Date.now()}.pdf`;
-      const filePath = `shared/${fileName}`;
+      // Upload via edge function (shared view is unauthenticated)
+      const formData = new FormData();
+      formData.append("token", token);
+      formData.append("file", blob, "report.pdf");
 
-      const { error: uploadError } = await supabase.storage
-        .from("reports")
-        .upload(filePath, blob, { contentType: "application/pdf", upsert: true });
-      if (uploadError) throw uploadError;
+      const uploadUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-shared-report`;
+      const uploadResp = await fetch(uploadUrl, {
+        method: "POST",
+        headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: formData,
+      });
 
-      const { data: signedData, error: signedError } = await supabase.storage
-        .from("reports")
-        .createSignedUrl(filePath, 60 * 60 * 24 * 7);
-      if (signedError || !signedData?.signedUrl) throw signedError || new Error("Failed to get signed URL");
+      const uploadResult = await uploadResp.json();
+      if (!uploadResp.ok || !uploadResult.url) throw new Error(uploadResult.error || "Upload failed");
 
       const shareLink = window.location.href;
       const message = `📊 *تقرير أعمال المعلم: ${data.teacherName}*\n\n` +
         `🏫 ${data.schoolName || ''}\n` +
         `👥 عدد الطلاب: ${data.totalStudents}\n` +
         `✅ نسبة الحضور: ${data.attendanceRate}%\n\n` +
-        `📄 تحميل التقرير PDF:\n${signedData.signedUrl}\n\n` +
+        `📄 تحميل التقرير PDF:\n${uploadResult.url}\n\n` +
         `🔗 رابط العرض المباشر:\n${shareLink}`;
 
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
