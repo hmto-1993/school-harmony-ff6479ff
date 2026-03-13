@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { safePrint } from "@/lib/print-utils";
 
@@ -146,7 +146,7 @@ export default function SharedViewPage() {
 
       <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:hidden">
           <StatCard label="الفصول" value={data.classes.length} icon={Users} color="blue" />
           <StatCard label="الطلاب" value={data.totalStudents} icon={Users} color="indigo" />
           <StatCard label="نسبة الحضور اليوم" value={`${data.attendanceRate}%`} icon={UserCheck} color="emerald" />
@@ -183,20 +183,22 @@ export default function SharedViewPage() {
           })}
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "overview" && <OverviewTab data={data} />}
-        {activeTab === "attendance" && <AttendanceTab classes={data.classes} />}
-        {activeTab === "weekly" && <WeeklyAttendanceTab data={data} />}
-        {activeTab === "grades" && <GradesTab classes={data.classes} categories={data.categories} />}
-        {activeTab === "reports" && <ReportsTab data={data} />}
-        {activeTab === "lessons" && <LessonsTab classes={data.classes} />}
+        {/* Tab Content - keep all mounted, hide inactive with CSS to preserve state */}
+        <div className="print:hidden">
+          <div className={activeTab === "overview" ? "" : "hidden"}><OverviewTab data={data} /></div>
+          <div className={activeTab === "attendance" ? "" : "hidden"}><AttendanceTab classes={data.classes} /></div>
+          <div className={activeTab === "weekly" ? "" : "hidden"}><WeeklyAttendanceTab data={data} /></div>
+          <div className={activeTab === "grades" ? "" : "hidden"}><GradesTab classes={data.classes} categories={data.categories} /></div>
+          <div className={activeTab === "reports" ? "" : "hidden"}><ReportsTab data={data} /></div>
+          <div className={activeTab === "lessons" ? "" : "hidden"}><LessonsTab classes={data.classes} /></div>
+        </div>
 
         {/* Print: show all */}
         <div className="hidden print:block space-y-8">
           <OverviewTab data={data} />
           <AttendanceTab classes={data.classes} />
-          <WeeklyAttendanceTab data={data} />
-          <GradesTab classes={data.classes} categories={data.categories} />
+          <WeeklyAttendanceTab data={data} isPrint />
+          <GradesTab classes={data.classes} categories={data.categories} isPrint />
           <ReportsTab data={data} />
           <LessonsTab classes={data.classes} />
         </div>
@@ -316,13 +318,20 @@ function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
   );
 }
 
-// ============ Grades Tab ============
+// ============ Grades Tab (collapsible classes) ============
 
-function GradesTab({ classes, categories }: { classes: ClassSummary[]; categories: any[] }) {
+function GradesTab({ classes, categories, isPrint }: { classes: ClassSummary[]; categories: any[]; isPrint?: boolean }) {
+  const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
+
+  const toggleClass = (classId: string) => {
+    setExpandedClasses(prev => ({ ...prev, [classId]: !prev[classId] }));
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h2 className="text-lg font-bold text-slate-800">ملخص الدرجات</h2>
       {classes.map((cls) => {
+        const isExpanded = isPrint || expandedClasses[cls.id] || false;
         const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
         const gradesByStudent: Record<string, Record<string, { sum: number; count: number }>> = {};
 
@@ -349,43 +358,51 @@ function GradesTab({ classes, categories }: { classes: ClassSummary[]; categorie
 
         return (
           <div key={cls.id} className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-            <div className="px-4 py-3 bg-slate-50 border-b font-bold text-slate-700">{cls.name}</div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-right px-3 py-2 text-slate-600 font-semibold">الطالب</th>
-                    {sortedCats.map((cat: any) => (
-                      <th key={cat.id} className="text-center px-2 py-2 text-slate-500 font-medium text-xs max-w-[80px] truncate" title={cat.name}>
-                        {cat.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {cls.students.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50">
-                      <td className="px-3 py-2 font-medium text-slate-800 whitespace-nowrap">{s.full_name}</td>
-                      {sortedCats.map((cat: any) => {
-                        const entry = gradesByStudent[s.id]?.[cat.id];
-                        const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
-                        return (
-                          <td key={cat.id} className="text-center px-2 py-2">
-                            {avg !== null ? (
-                              <span className={cn("text-xs font-semibold", avg >= cat.max_score * 0.8 ? "text-emerald-600" : avg >= cat.max_score * 0.5 ? "text-amber-600" : "text-red-500")}>
-                                {avg}
-                              </span>
-                            ) : (
-                              <span className="text-slate-300">—</span>
-                            )}
-                          </td>
-                        );
-                      })}
+            <button
+              onClick={() => toggleClass(cls.id)}
+              className="w-full px-4 py-3 bg-slate-50 border-b font-bold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition-colors"
+            >
+              <span>{cls.name} ({cls.studentCount} طالب)</span>
+              <ChevronDown className={cn("h-5 w-5 text-slate-400 transition-transform", isExpanded && "rotate-180")} />
+            </button>
+            {isExpanded && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-right px-3 py-2 text-slate-600 font-semibold">الطالب</th>
+                      {sortedCats.map((cat: any) => (
+                        <th key={cat.id} className="text-center px-2 py-2 text-slate-500 font-medium text-xs max-w-[80px] truncate" title={cat.name}>
+                          {cat.name}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {cls.students.map((s) => (
+                      <tr key={s.id} className="hover:bg-slate-50/50">
+                        <td className="px-3 py-2 font-medium text-slate-800 whitespace-nowrap">{s.full_name}</td>
+                        {sortedCats.map((cat: any) => {
+                          const entry = gradesByStudent[s.id]?.[cat.id];
+                          const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
+                          return (
+                            <td key={cat.id} className="text-center px-2 py-2">
+                              {avg !== null ? (
+                                <span className={cn("text-xs font-semibold", avg >= cat.max_score * 0.8 ? "text-emerald-600" : avg >= cat.max_score * 0.5 ? "text-amber-600" : "text-red-500")}>
+                                  {avg}
+                                </span>
+                              ) : (
+                                <span className="text-slate-300">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         );
       })}
@@ -418,9 +435,16 @@ function getWeekNum(dateStr: string, startDate: string): number {
   return Math.floor(diff / 7) + 1;
 }
 
-function WeeklyAttendanceTab({ data }: { data: SharedData }) {
+function getCurrentWeekNum(startDate: string): number {
+  return getWeekNum(new Date().toISOString().split("T")[0], startDate);
+}
+
+function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: boolean }) {
   const [selectedClassId, setSelectedClassId] = useState(data.classes[0]?.id || "");
+  const [weekFilter, setWeekFilter] = useState<"current" | "all">("current");
   const cal = data.academicCalendar;
+
+  const currentWeek = cal ? getCurrentWeekNum(cal.start_date) : 1;
 
   const weeklyData = useMemo(() => {
     if (!cal || !selectedClassId) return null;
@@ -433,9 +457,7 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
     const periodsPerWeek = schedule?.periods_per_week || 5;
 
     // Build weeks
-    const weeks: { weekNum: number; dates: string[] }[] = [];
     const weekDatesMap: Record<number, string[]> = {};
-
     classRecords.forEach(r => {
       const wk = getWeekNum(r.date, cal.start_date);
       if (wk < 1 || wk > cal.total_weeks) return;
@@ -443,9 +465,14 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
       if (!weekDatesMap[wk].includes(r.date)) weekDatesMap[wk].push(r.date);
     });
 
+    const allWeeks: { weekNum: number; dates: string[] }[] = [];
     for (let w = 1; w <= cal.total_weeks; w++) {
-      weeks.push({ weekNum: w, dates: (weekDatesMap[w] || []).sort() });
+      allWeeks.push({ weekNum: w, dates: (weekDatesMap[w] || []).sort() });
     }
+
+    // Filter weeks based on selection
+    const showAll = isPrint || weekFilter === "all";
+    const weeks = showAll ? allWeeks : allWeeks.filter(w => w.weekNum === currentWeek);
 
     // Build student rows
     const studentRows = cls.students.map(s => {
@@ -474,7 +501,7 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
     });
 
     return { weeks, studentRows, periodsPerWeek };
-  }, [data, selectedClassId, cal]);
+  }, [data, selectedClassId, cal, weekFilter, isPrint, currentWeek]);
 
   if (!cal) {
     return (
@@ -489,7 +516,33 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-lg font-bold text-slate-800">تقرير الحضور الأسبوعي</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {/* Week filter */}
+          <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setWeekFilter("current")}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+                weekFilter === "current"
+                  ? "bg-white text-blue-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              الأسبوع الحالي (ع{currentWeek})
+            </button>
+            <button
+              onClick={() => setWeekFilter("all")}
+              className={cn(
+                "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
+                weekFilter === "all"
+                  ? "bg-white text-blue-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              جميع الأسابيع
+            </button>
+          </div>
+          {/* Class filter */}
           {data.classes.map(cls => (
             <button
               key={cls.id}
@@ -525,7 +578,7 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
                 <tr className="bg-slate-50">
                   <th className="text-right px-3 py-2 font-semibold text-slate-600 sticky right-0 bg-slate-50 z-10 min-w-[120px]">الطالب</th>
                   {weeklyData.weeks.map(w => (
-                    <th key={w.weekNum} className="text-center px-1 py-2 font-medium text-slate-500 min-w-[36px]">
+                    <th key={w.weekNum} className={cn("text-center px-1 py-2 font-medium min-w-[36px]", w.weekNum === currentWeek ? "text-blue-600 bg-blue-50/50" : "text-slate-500")}>
                       <div className="writing-mode-vertical text-[10px]">ع{w.weekNum}</div>
                     </th>
                   ))}
@@ -534,7 +587,7 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {weeklyData.studentRows.map((student, idx) => (
+                {weeklyData.studentRows.map((student) => (
                   <tr key={student.id} className={cn("hover:bg-slate-50/50", student.isAtRisk && "bg-red-50/30")}>
                     <td className="px-3 py-1.5 font-medium text-slate-800 whitespace-nowrap sticky right-0 bg-white z-10">
                       <div className="flex items-center gap-1">
@@ -545,7 +598,7 @@ function WeeklyAttendanceTab({ data }: { data: SharedData }) {
                     {weeklyData.weeks.map(w => {
                       const statuses = student.weekStatuses[w.weekNum] || [];
                       return (
-                        <td key={w.weekNum} className="text-center px-0.5 py-1">
+                        <td key={w.weekNum} className={cn("text-center px-0.5 py-1", w.weekNum === currentWeek && "bg-blue-50/30")}>
                           <div className="flex flex-wrap justify-center gap-0.5">
                             {statuses.length === 0 ? (
                               <span className="text-slate-200">·</span>
