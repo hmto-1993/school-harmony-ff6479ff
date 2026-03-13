@@ -153,12 +153,23 @@ export default function AttendanceWeeklyReport({
   // All academic weeks for the selector
   const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
 
-  // Initialize selectedWeeks to "all" when weeks change
+  // Initialize filter to current week on first load
   useEffect(() => {
-    if (weeks.length > 0 && selectedWeeks.size === 0) {
-      setSelectedWeeks(new Set(["all"]));
-    }
-  }, [weeks]);
+    if (didInitializeWeekSelectionRef.current) return;
+
+    const availableWeekNums = academicWeeks.length > 0
+      ? academicWeeks.map((aw) => aw.weekNumber)
+      : weeks.map((w) => w.weekNum);
+
+    if (availableWeekNums.length === 0) return;
+
+    const initialWeek = currentWeek && availableWeekNums.includes(currentWeek)
+      ? currentWeek
+      : availableWeekNums[0];
+
+    setSelectedWeeks(new Set<number | "all">([initialWeek]));
+    didInitializeWeekSelectionRef.current = true;
+  }, [academicWeeks, weeks, currentWeek]);
 
   // When "all" is selected, show ALL academic calendar weeks (even without data)
   const filteredWeeks = useMemo(() => {
