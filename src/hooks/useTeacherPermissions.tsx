@@ -14,6 +14,7 @@ export interface TeacherPerms {
   can_view_attendance: boolean;
   can_view_activities: boolean;
   can_view_dashboard: boolean;
+  can_view_students: boolean;
 }
 
 const allTrue: TeacherPerms = {
@@ -28,6 +29,7 @@ const allTrue: TeacherPerms = {
   can_view_attendance: true,
   can_view_activities: true,
   can_view_dashboard: true,
+  can_view_students: true,
 };
 
 export function useTeacherPermissions() {

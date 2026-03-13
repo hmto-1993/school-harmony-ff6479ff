@@ -54,6 +54,7 @@ interface Permissions {
   can_view_attendance: boolean;
   can_view_activities: boolean;
   can_view_dashboard: boolean;
+  can_view_students: boolean;
 }
 
 const defaultPerms: Permissions = {
