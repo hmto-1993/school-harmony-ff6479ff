@@ -437,13 +437,11 @@ export default function PrintHeaderEditor() {
                 </Button>
               </div>
               <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "16px", alignItems: "start" }}>
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", width: "fit-content" }}>
-                      {config.rightSection.lines.map((line, i) => (
-                        <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
-                      ))}
-                    </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
+                    {config.rightSection.lines.map((line, i) => (
+                      <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
+                    ))}
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {config.centerSection.images.map((img, i) => (
@@ -458,12 +456,10 @@ export default function PrintHeaderEditor() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                    <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", width: "fit-content" }}>
-                      {config.leftSection.lines.map((line, i) => (
-                        <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
-                      ))}
-                    </div>
+                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
+                    {config.leftSection.lines.map((line, i) => (
+                      <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
+                    ))}
                   </div>
                 </div>
               </div>
