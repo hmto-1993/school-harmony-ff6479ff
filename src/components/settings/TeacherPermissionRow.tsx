@@ -161,6 +161,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
         user_id: teacher.user_id,
         full_name: editName.trim(),
         national_id: editNationalId.trim(),
+        role: editRole,
       },
     });
     setSavingEdit(false);
@@ -169,6 +170,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
       toast({ title: "خطأ", description: data?.error || "فشل تحديث البيانات", variant: "destructive" });
     } else {
       toast({ title: "تم التحديث", description: "تم تحديث بيانات المعلم بنجاح" });
+      setCurrentRole(editRole);
       onUpdated?.(teacher.user_id, editName.trim(), editNationalId.trim());
       setEditOpen(false);
     }
