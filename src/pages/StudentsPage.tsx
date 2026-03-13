@@ -537,10 +537,13 @@ export default function StudentsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">إدارة الطلاب</h1>
+          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
+            إدارة الطلاب
+            {perms.read_only_mode && <Badge variant="secondary" className="text-[10px] gap-1"><Lock className="h-3 w-3" /> عرض فقط</Badge>}
+          </h1>
           <p className="text-muted-foreground">عرض وإدارة بيانات الطلاب</p>
         </div>
-        {role === "admin" && (
+        {(role === "admin" && !perms.read_only_mode) && (
           <div className="flex gap-2">
             {/* Export Dropdown */}
             <DropdownMenu>
