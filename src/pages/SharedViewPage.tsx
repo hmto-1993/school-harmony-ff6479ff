@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
+import { createArabicPDF, getArabicTableStyles, finalizePDF, finalizePDFAsBlob } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { safeDownload } from "@/lib/download-utils";
 
 // ============ Types ============
 interface ClassSummary {
