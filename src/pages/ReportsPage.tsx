@@ -203,6 +203,13 @@ export default function ReportsPage() {
 
   // ============ Attendance Report ============
 
+  // Auto-fetch attendance when filters change
+  useEffect(() => {
+    if (selectedClass && dateFrom && dateTo) {
+      fetchAttendance();
+    }
+  }, [selectedClass, dateFrom, dateTo, selectedStudent]);
+
   const fetchAttendance = async () => {
     if (!selectedClass) return;
     setLoadingAttendance(true);
