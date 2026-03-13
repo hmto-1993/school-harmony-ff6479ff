@@ -159,10 +159,27 @@ export default function AttendanceWeeklyReport({
     }
   }, [weeks]);
 
+  // When "all" is selected, show ALL academic calendar weeks (even without data)
   const filteredWeeks = useMemo(() => {
-    if (selectedWeeks.has("all") || selectedWeeks.size === 0) return weeks;
-    return weeks.filter(w => selectedWeeks.has(w.weekNum));
-  }, [weeks, selectedWeeks]);
+    if (selectedWeeks.has("all") || selectedWeeks.size === 0) {
+      // Use all academic weeks if available
+      if (academicWeeks.length > 0) {
+        return academicWeeks.map(aw => {
+          const existing = weeks.find(w => w.weekNum === aw.weekNumber);
+          return existing || { weekNum: aw.weekNumber, dates: [] };
+        });
+      }
+      return weeks;
+    }
+    // For individual selection, include weeks even without data
+    const result: WeekData[] = [];
+    const sortedSelected = Array.from(selectedWeeks).filter((v): v is number => typeof v === "number").sort((a, b) => a - b);
+    for (const wn of sortedSelected) {
+      const existing = weeks.find(w => w.weekNum === wn);
+      result.push(existing || { weekNum: wn, dates: [] });
+    }
+    return result;
+  }, [weeks, selectedWeeks, academicWeeks]);
 
   const toggleWeek = (weekNum: number) => {
     setSelectedWeeks(prev => {
