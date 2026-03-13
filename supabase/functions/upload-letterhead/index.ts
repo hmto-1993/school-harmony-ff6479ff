@@ -67,7 +67,8 @@ Deno.serve(async (req) => {
     }
 
     const ext = file.name.split(".").pop() || "png";
-    const filePath = `letterhead.${ext}`;
+    const uniqueId = crypto.randomUUID().slice(0, 8);
+    const filePath = `letterhead-${uniqueId}.${ext}`;
 
     // Upload (overwrite existing)
     const { error: uploadError } = await supabase.storage
