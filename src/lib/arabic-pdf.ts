@@ -115,24 +115,16 @@ async function imageUrlToBase64(url: string): Promise<string | null> {
 }
 
 /**
- * Render the school print header into a PDF document.
- * Returns the Y position after the header for content to start.
+ * Render print header from a pre-fetched config.
  */
-export async function renderPrintHeader(
+async function renderPrintHeaderFromConfig(
   doc: jsPDF,
-  reportType?: string
+  config: PrintHeaderConfig
 ): Promise<number> {
-  const config = await fetchPrintHeaderConfig(reportType);
-  if (!config) return 15;
-
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
-  const usableWidth = pageWidth - margin * 2;
 
   let currentY = 12;
-
-  // === Layout: [Right Text] [Center Images] [Left Text] ===
-  const sectionWidth = usableWidth / 3;
 
   // --- Right section text ---
   doc.setFont("Amiri", "bold");
@@ -189,10 +181,8 @@ export async function renderPrintHeader(
     }
   }
 
-  // Use the max Y from both text sections
   const maxY = Math.max(currentY, leftY);
 
-  // Draw separator line
   doc.setDrawColor(59, 130, 246);
   doc.setLineWidth(0.5);
   doc.line(margin, maxY + 2, pageWidth - margin, maxY + 2);
@@ -200,6 +190,19 @@ export async function renderPrintHeader(
   doc.setFont("Amiri", "normal");
 
   return maxY + 8;
+}
+
+/**
+ * Render the school print header into a PDF document.
+ * Returns the Y position after the header for content to start.
+ */
+export async function renderPrintHeader(
+  doc: jsPDF,
+  reportType?: string
+): Promise<number> {
+  const config = await fetchPrintHeaderConfig(reportType);
+  if (!config) return 15;
+  return renderPrintHeaderFromConfig(doc, config);
 }
 
 /** Render watermark on all pages of the PDF */
