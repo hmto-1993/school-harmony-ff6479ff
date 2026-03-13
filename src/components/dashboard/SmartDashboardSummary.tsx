@@ -210,9 +210,10 @@ export default function SmartDashboardSummary() {
     });
     setDailyAttendance(dailyArr);
 
-    // ── Grade Distribution Pie ──
-    const grades = (gradesRes.data || []) as any[];
-    const distribution = [
+    const allGrades = (gradesRes.data || []) as any[];
+    // Filter grades by teacher's students if applicable
+    const studentIds = (classesRes.data || []).map((s: any) => s.id);
+    const grades = teacherClassIds ? allGrades.filter((g: any) => studentIds.includes(g.student_id)) : allGrades;
       { label: "ممتاز", count: 0, color: GRADE_COLORS[0] },
       { label: "جيد جداً", count: 0, color: GRADE_COLORS[1] },
       { label: "جيد", count: 0, color: GRADE_COLORS[2] },
