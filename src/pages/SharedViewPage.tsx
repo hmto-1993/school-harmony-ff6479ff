@@ -70,6 +70,7 @@ const TABS = [
 
 export default function SharedViewPage() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState<SharedData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
@@ -80,7 +81,11 @@ export default function SharedViewPage() {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('shared-view-theme') !== 'light';
+      const urlTheme = new URLSearchParams(window.location.search).get('theme');
+      if (urlTheme === 'light') return false;
+      if (urlTheme === 'dark') return true;
+      const saved = localStorage.getItem('shared-view-theme');
+      if (saved) return saved !== 'light';
     }
     return true;
   });
