@@ -648,7 +648,8 @@ export default function ResourceLibraryPage() {
                       isHidden && "opacity-60"
                     )}
                   >
-                    {/* Eye toggle */}
+                    {/* Eye toggle - only for non-read-only */}
+                    {!isViewOnly && (
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleVisibility(folder.id, folder.visible_to_students); }}
                       className={cn(
@@ -661,6 +662,7 @@ export default function ResourceLibraryPage() {
                     >
                       {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
+                    )}
 
                     {/* Folder Header - clickable to open detail */}
                     <div
