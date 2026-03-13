@@ -287,7 +287,8 @@ export default function AttendanceWeeklyReport({
     const body = studentRows.map((s, idx) => {
       const statusCells = exportWeeks.slice().reverse().flatMap((w) => {
         const slots = s.weeks[w.weekNum] || [];
-        return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        return Array.from({ length: colCount }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
           return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
