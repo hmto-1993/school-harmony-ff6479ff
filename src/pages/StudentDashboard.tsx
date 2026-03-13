@@ -199,23 +199,6 @@ export default function StudentDashboard() {
     setFilesLoading(false);
   };
 
-  // Print recovery: show a back button after printing to prevent blank screen
-  const [showPrintRecovery, setShowPrintRecovery] = useState(false);
-  useEffect(() => {
-    const onBefore = () => setShowPrintRecovery(true);
-    window.addEventListener("beforeprint", onBefore);
-    return () => {
-      window.removeEventListener("beforeprint", onBefore);
-    };
-  }, []);
-
-  const handlePrintRecovery = useCallback(() => {
-    setShowPrintRecovery(false);
-    document.body.style.display = "none";
-    void document.body.offsetHeight;
-    document.body.style.display = "";
-    window.scrollTo(0, 0);
-  }, []);
 
   if (!student) {
     navigate("/login");
