@@ -602,6 +602,21 @@ export default function SharedViewPage() {
                           {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-blue-500" />}
                         </button>
                       ))}
+                      <div className="border-t border-slate-100 mt-1 pt-1">
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            shareViaWhatsApp();
+                          }}
+                          disabled={sharing}
+                          className="w-full text-right px-3 py-2 text-sm flex items-center gap-2 hover:bg-green-50 transition-colors text-green-700"
+                        >
+                          <span>💬</span>
+                          <span>{sharing ? "جارٍ المشاركة..." : "مشاركة عبر واتساب"}</span>
+                          {sharing && <Loader2 className="h-3 w-3 mr-auto animate-spin" />}
+                          {!sharing && <Share2 className="h-3 w-3 mr-auto text-green-500" />}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
