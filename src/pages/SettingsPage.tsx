@@ -2631,7 +2631,7 @@ export default function SettingsPage() {
                                 <TableHead className="text-center text-xs">الحذف</TableHead>
                                 <TableHead className="text-center text-xs">الدرجات</TableHead>
                                 <TableHead className="text-center text-xs">التحضير</TableHead>
-                                <TableHead className="text-center">إجراءات</TableHead>
+                                <TableHead className="text-center text-xs">الحالة</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -2639,10 +2639,6 @@ export default function SettingsPage() {
                                 <TeacherPermissionRow
                                   key={t.user_id}
                                   teacher={t}
-                                  onPasswordChange={(email, password) => {
-                                    setSelectedTeacher(t.user_id);
-                                    setNewPassword(password);
-                                  }}
                                 />
                               ))}
                             </TableBody>
