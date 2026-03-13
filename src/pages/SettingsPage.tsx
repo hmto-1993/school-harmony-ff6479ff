@@ -133,6 +133,8 @@ export default function SettingsPage() {
   const [newTeacherNationalId, setNewTeacherNationalId] = useState("");
   const [creatingTeacher, setCreatingTeacher] = useState(false);
   const [newTeacherRole, setNewTeacherRole] = useState<"admin" | "teacher">("teacher");
+  const [showNewTeacherPass, setShowNewTeacherPass] = useState(false);
+  const [showChangePass, setShowChangePass] = useState(false);
 
   // Letterhead
   const [letterheadUrl, setLetterheadUrl] = useState("");
@@ -558,13 +560,14 @@ export default function SettingsPage() {
   };
 
   const handleCreateTeacher = async () => {
-    if (!newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()) return;
+    if (!newTeacherName.trim() || !newTeacherPassword.trim()) return;
+    const email = newTeacherEmail.trim() || `teacher_${Date.now()}@auto.local`;
     setCreatingTeacher(true);
 
     const { data, error } = await supabase.functions.invoke("manage-users", {
       body: {
         action: "create_user",
-        email: newTeacherEmail,
+        email,
         password: newTeacherPassword,
         full_name: newTeacherName,
         role: newTeacherRole,
@@ -2648,6 +2651,59 @@ export default function SettingsPage() {
                       </div>
                     )}
 
+                    {/* إضافة معلم جديد */}
+                    <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Plus className="h-4 w-4 text-primary" />
+                        إضافة معلم جديد
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">الاسم الكامل</Label>
+                          <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">البريد الإلكتروني <span className="text-muted-foreground">(اختياري)</span></Label>
+                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">رقم الهوية الوطنية</Label>
+                          <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
+                            placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">كلمة المرور</Label>
+                          <div className="relative">
+                            <Input type={showNewTeacherPass ? "text" : "password"} value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
+                              placeholder="كلمة مرور قوية" dir="ltr" className="h-9 pl-9" />
+                            <button type="button" onClick={() => setShowNewTeacherPass(!showNewTeacherPass)}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                              {showNewTeacherPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">الصلاحية</Label>
+                          <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
+                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="teacher">معلم</SelectItem>
+                              <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-end">
+                          <Button onClick={handleCreateTeacher}
+                            disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherPassword.trim()}
+                            className="gap-1.5 h-9 w-full" size="sm">
+                            <Plus className="h-3.5 w-3.5" />
+                            {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* تغيير كلمة مرور معلم */}
                     <div className="space-y-3 rounded-xl border border-border/30 bg-muted/20 p-4">
                       <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
@@ -2668,61 +2724,20 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs">كلمة المرور الجديدة</Label>
-                          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="كلمة مرور جديدة" dir="ltr" className="h-9" />
+                          <div className="relative">
+                            <Input type={showChangePass ? "text" : "password"} value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="كلمة مرور جديدة" dir="ltr" className="h-9 pl-9" />
+                            <button type="button" onClick={() => setShowChangePass(!showChangePass)}
+                              className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                              {showChangePass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
                         </div>
                         <Button onClick={handleChangePassword}
                           disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5 h-9" size="sm">
                           <KeyRound className="h-3.5 w-3.5" />
                           {changingPassword ? "جارٍ التغيير..." : "تغيير"}
                         </Button>
-                      </div>
-                    </div>
-
-                    {/* إضافة معلم جديد */}
-                    <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                      <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
-                        <Plus className="h-4 w-4 text-primary" />
-                        إضافة معلم جديد
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">الاسم الكامل</Label>
-                          <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" className="h-9" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">البريد الإلكتروني</Label>
-                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
-                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">رقم الهوية الوطنية</Label>
-                          <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
-                            placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">كلمة المرور</Label>
-                          <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
-                            placeholder="كلمة مرور قوية" dir="ltr" className="h-9" />
-                        </div>
-                        <div className="space-y-1.5">
-                          <Label className="text-xs">الصلاحية</Label>
-                          <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
-                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="teacher">معلم</SelectItem>
-                              <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="flex items-end">
-                          <Button onClick={handleCreateTeacher}
-                            disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
-                            className="gap-1.5 h-9 w-full" size="sm">
-                            <Plus className="h-3.5 w-3.5" />
-                            {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </CardContent>
