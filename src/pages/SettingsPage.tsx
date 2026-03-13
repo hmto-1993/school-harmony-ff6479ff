@@ -551,16 +551,13 @@ export default function SettingsPage() {
     setChangingPassword(true);
     try {
       const { data, error } = await supabase.functions.invoke("manage-users", {
-        body: { action: "change_password", email: teacher.email, password: newPassword },
+        body: { action: "change_password", user_id: teacher.user_id, password: newPassword },
       });
       setChangingPassword(false);
 
       const errMsg = data?.error || (error as any)?.message || (typeof error === "string" ? error : null);
       if (errMsg) {
-        const friendlyMsg = errMsg.includes("weak") || errMsg.includes("Weak")
-          ? "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)"
-          : errMsg;
-        toast({ title: "خطأ", description: friendlyMsg, variant: "destructive" });
+        toast({ title: "خطأ", description: errMsg, variant: "destructive" });
       } else {
         toast({ title: "تم التغيير", description: `تم تغيير كلمة المرور لـ ${teacher.full_name}` });
         setNewPassword("");
@@ -584,6 +581,7 @@ export default function SettingsPage() {
         password: newTeacherPassword,
         full_name: newTeacherName,
         role: newTeacherRole,
+        national_id: newTeacherNationalId.trim() || null,
       },
     });
 
@@ -591,13 +589,6 @@ export default function SettingsPage() {
       toast({ title: "خطأ", description: data?.error || "فشل في إنشاء الحساب", variant: "destructive" });
       setCreatingTeacher(false);
       return;
-    }
-
-    if (newTeacherNationalId.trim() && data?.user_id) {
-      await supabase
-        .from("profiles")
-        .update({ national_id: newTeacherNationalId })
-        .eq("user_id", data.user_id);
     }
 
     toast({ title: "تم الإنشاء", description: `تم إنشاء حساب ${newTeacherName} بنجاح` });

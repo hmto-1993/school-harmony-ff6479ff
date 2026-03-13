@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -53,7 +53,7 @@ serve(async (req) => {
       );
     }
 
-    // --- Process actions (seed action removed) ---
+    // --- Process actions ---
     const { action, email, password, full_name, role, user_id: targetUserId, national_id } = await req.json();
 
     if (action === "create_user") {
@@ -63,12 +63,26 @@ serve(async (req) => {
         email_confirm: true,
       });
 
-      if (error) throw error;
+      if (error) {
+        const msg = error.message || "";
+        if (msg.toLowerCase().includes("weak") || msg.toLowerCase().includes("password")) {
+          return new Response(
+            JSON.stringify({ error: "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: msg }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       if (newUser?.user) {
+        // Insert profile with national_id included
         await supabaseAdmin.from("profiles").insert({
           user_id: newUser.user.id,
           full_name: full_name || email,
+          national_id: national_id || null,
         });
         await supabaseAdmin.from("user_roles").insert({
           user_id: newUser.user.id,
@@ -83,29 +97,53 @@ serve(async (req) => {
     }
 
     if (action === "change_password") {
-      if (!email || !password) {
+      if (!targetUserId && !email) {
         return new Response(
-          JSON.stringify({ error: "البريد الإلكتروني وكلمة المرور مطلوبان" }),
+          JSON.stringify({ error: "معرف المستخدم أو البريد الإلكتروني مطلوب" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!password) {
+        return new Response(
+          JSON.stringify({ error: "كلمة المرور مطلوبة" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
-      const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
-      if (listError) throw listError;
+      let userId = targetUserId;
 
-      const targetUser = users.find((u) => u.email === email);
-      if (!targetUser) {
-        return new Response(
-          JSON.stringify({ error: "المستخدم غير موجود" }),
-          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      // If no user_id provided, find by email
+      if (!userId && email) {
+        const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
+        if (listError) throw listError;
+        const targetUser = users.find((u) => u.email === email);
+        if (!targetUser) {
+          return new Response(
+            JSON.stringify({ error: "المستخدم غير موجود" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        userId = targetUser.id;
       }
 
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-        targetUser.id,
+        userId,
         { password }
       );
-      if (updateError) throw updateError;
+
+      if (updateError) {
+        const msg = updateError.message || "";
+        if (msg.toLowerCase().includes("weak") || msg.toLowerCase().includes("password")) {
+          return new Response(
+            JSON.stringify({ error: "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        return new Response(
+          JSON.stringify({ error: msg }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "تم تغيير كلمة المرور بنجاح" }),
@@ -166,14 +204,27 @@ serve(async (req) => {
         );
       }
 
-      // Delete related data first
+      // Nullify references in attendance_records, grades, behavior_records, etc.
+      await supabaseAdmin.from("attendance_records").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
+      await supabaseAdmin.from("grades").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
+      await supabaseAdmin.from("manual_category_scores").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
+      await supabaseAdmin.from("behavior_records").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
+      await supabaseAdmin.from("lesson_plans").update({ created_by: callerId }).eq("created_by", targetUser.id);
+      await supabaseAdmin.from("notifications").update({ created_by: callerId }).eq("created_by", targetUser.id);
+
+      // Delete owned data
       await supabaseAdmin.from("teacher_permissions").delete().eq("user_id", targetUser.id);
       await supabaseAdmin.from("teacher_classes").delete().eq("teacher_id", targetUser.id);
       await supabaseAdmin.from("user_roles").delete().eq("user_id", targetUser.id);
       await supabaseAdmin.from("profiles").delete().eq("user_id", targetUser.id);
 
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUser.id);
-      if (deleteError) throw deleteError;
+      if (deleteError) {
+        return new Response(
+          JSON.stringify({ error: "فشل حذف المستخدم: " + deleteError.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, message: "تم حذف المعلم بنجاح" }),
