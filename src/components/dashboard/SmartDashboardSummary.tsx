@@ -272,8 +272,10 @@ export default function SmartDashboardSummary() {
         if (r.status === "absent") studentDays[r.student_id].absent++;
       });
 
-      // Need full attendance for at-risk calc - fetch all
-      const { data: fullAtt } = await supabase.from("attendance_records").select("student_id, status, date");
+      // Need full attendance for at-risk calc - fetch with class filter
+      let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date");
+      if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
+      const { data: fullAtt } = await fullAttQuery;
       const fullDays: Record<string, { absent: number; total: Set<string> }> = {};
       (fullAtt || []).forEach((r: any) => {
         if (!fullDays[r.student_id]) {
