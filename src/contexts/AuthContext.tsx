@@ -116,7 +116,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error && data?.user) {
+      // Record staff login (fire and forget)
+      supabase.from("staff_logins").insert({ user_id: data.user.id }).then(() => {});
+    }
     return { error: error as Error | null };
   };
 
