@@ -319,6 +319,8 @@ export default function ActivitiesPage() {
     </div>
   );
 
+  const isViewOnly = perms.read_only_mode && role !== "admin";
+
   const ActivityCard = ({ activity, ai }: { activity: Activity; ai: number }) => (
     <Card className={cn("border-0 shadow-md rounded-2xl overflow-hidden transition-all hover:shadow-lg", !activity.is_visible && "opacity-60")}
       style={{ animationDelay: `${ai * 50}ms` }}>
@@ -351,6 +353,7 @@ export default function ActivitiesPage() {
               </div>
             </div>
           </div>
+          {!isViewOnly && (
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => openEdit(activity)} title="تعديل">
               <Pencil className="h-4 w-4 text-primary" />
@@ -377,6 +380,7 @@ export default function ActivitiesPage() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+          )}
         </div>
         <div className="mt-4 pt-4 border-t border-border/20">
           <div className="flex items-center gap-2 mb-2">
