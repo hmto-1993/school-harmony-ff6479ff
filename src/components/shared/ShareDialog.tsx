@@ -42,6 +42,7 @@ export default function ShareDialog() {
   const [creating, setCreating] = useState(false);
   const [activeLinks, setActiveLinks] = useState<ShareLink[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [shareTheme, setShareTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     if (!open || !user) return;
