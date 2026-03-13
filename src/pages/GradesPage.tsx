@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import ClassworkSummary from "@/components/grades/ClassworkSummary";
@@ -11,6 +11,7 @@ import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -27,11 +28,21 @@ const PERIODS = [
 ];
 
 export default function GradesPage() {
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+
+  const canEdit = perms.can_manage_grades;
+  // If can't view grades at all, show restricted message
+  const canView = perms.can_view_grades;
+
+  // Filter entry types based on edit permissions
+  const availableTypes = canEdit
+    ? ENTRY_TYPES
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester");
 
   useEffect(() => {
     const load = async () => {
@@ -51,6 +62,25 @@ export default function GradesPage() {
 
   const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 
+  // Set default active type to summary if can't edit
+  useEffect(() => {
+    if (permsLoaded && !canEdit && (activeType === "daily" || activeType === "behavior" || activeType === "classwork" || activeType === "import")) {
+      setActiveType("summary");
+    }
+  }, [permsLoaded, canEdit]);
+
+  if (permsLoaded && !canView) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <EmptyState
+          icon={Lock}
+          title="لا تملك صلاحية عرض الدرجات"
+          description="تواصل مع المدير لتفعيل صلاحية مشاهدة الدرجات"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -60,6 +90,12 @@ export default function GradesPage() {
             الدرجات والتقييمات
           </h1>
           <div className="flex items-center gap-2 flex-wrap">
+            {!canEdit && canView && (
+              <span className="inline-flex items-center gap-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-medium">
+                <Eye className="h-3 w-3" />
+                عرض فقط
+              </span>
+            )}
             <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
             <AcademicWeekBadge />
           </div>
@@ -113,7 +149,7 @@ export default function GradesPage() {
         <div className="animate-fade-in">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {ENTRY_TYPES.map((type, i) => {
+            {availableTypes.map((type, i) => {
               const Icon = type.icon;
               const isActive = activeType === type.id;
               return (

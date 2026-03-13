@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import {
   BarChart3,
   ClipboardCheck,
@@ -42,6 +43,7 @@ import {
   MessageCircle,
   Users2,
   Trophy,
+  Lock,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -100,6 +102,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function ReportsPage() {
   const { role, user } = useAuth();
+  const { perms: teacherPerms, loaded: permsLoaded } = useTeacherPermissions();
   const { getWeeksInfo, currentWeek } = useAcademicWeek();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("");
@@ -769,6 +772,20 @@ export default function ReportsPage() {
   // ============ Render ============
 
   const className = classes.find((c) => c.id === selectedClass)?.name || "";
+
+  if (permsLoaded && !teacherPerms.can_view_reports) {
+    return (
+      <div className="space-y-6 animate-fade-in flex items-center justify-center min-h-[50vh]">
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center h-16 w-16 rounded-2xl bg-muted mx-auto">
+            <Lock className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground">لا تملك صلاحية عرض التقارير</h2>
+          <p className="text-muted-foreground text-sm">تواصل مع المدير لتفعيل صلاحية مشاهدة التقارير</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
