@@ -2754,6 +2754,35 @@ export default function SettingsPage() {
               </Card>
             </Collapsible>
 
+            {/* ===== سجل دخول المعلمين ===== */}
+            <Collapsible>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white">
+                        <History className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">سجل الدخول</h3>
+                        <p className="text-xs text-muted-foreground">استعراض تاريخ دخول المعلمين والمديرين</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-5 px-5">
+                    <StaffLoginHistory
+                      teachers={teachers}
+                      currentUserId={user?.id || ""}
+                      currentUserName={profileName || "المدير"}
+                    />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
             {/* ===== نسبة الغياب للإنذار ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
