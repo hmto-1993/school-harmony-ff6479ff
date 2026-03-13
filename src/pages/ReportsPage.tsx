@@ -43,6 +43,7 @@ import {
   MessageCircle,
   Users2,
   Trophy,
+  Lock,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
