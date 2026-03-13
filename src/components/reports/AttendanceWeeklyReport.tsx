@@ -173,7 +173,7 @@ export default function AttendanceWeeklyReport({
 
   // When "all" is selected, show ALL academic calendar weeks (even without data)
   const filteredWeeks = useMemo(() => {
-    if (selectedWeeks.has("all") || selectedWeeks.size === 0) {
+    if (selectedWeeks.has("all")) {
       // Use all academic weeks if available
       if (academicWeeks.length > 0) {
         return academicWeeks.map(aw => {
