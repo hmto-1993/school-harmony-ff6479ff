@@ -125,6 +125,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_view_activities: (data as any).can_view_activities ?? true,
             can_view_dashboard: (data as any).can_view_dashboard ?? true,
             can_view_students: (data as any).can_view_students ?? true,
+            read_only_mode: (data as any).read_only_mode ?? false,
           };
           setPerms(p);
           setOriginalPerms(p);
