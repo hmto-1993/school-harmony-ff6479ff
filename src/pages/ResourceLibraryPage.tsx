@@ -720,6 +720,7 @@ export default function ResourceLibraryPage() {
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                   </a>
+                                  {!isViewOnly && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <button
@@ -740,6 +741,7 @@ export default function ResourceLibraryPage() {
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>
+                                  )}
                                 </div>
                               </div>
                             );
