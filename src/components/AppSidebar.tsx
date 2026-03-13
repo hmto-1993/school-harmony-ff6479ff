@@ -57,6 +57,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut } = useAuth();
+  const { perms } = useTeacherPermissions();
   const location = useLocation();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
@@ -73,7 +74,11 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
     });
   }, []);
 
-  const links = role === "admin" ? adminLinks : teacherLinks;
+  const baseLinks = role === "admin" ? adminLinks : teacherLinks;
+  // Hide settings for read-only teachers
+  const links = perms.read_only_mode && role !== "admin"
+    ? baseLinks.filter(l => l.to !== "/settings")
+    : baseLinks;
   const isCollapsed = !isMobile && collapsed;
 
   return (
