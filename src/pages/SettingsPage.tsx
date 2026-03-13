@@ -541,21 +541,35 @@ export default function SettingsPage() {
 
   const handleChangePassword = async () => {
     if (!selectedTeacher || !newPassword.trim()) return;
+    if (newPassword.trim().length < 8) {
+      toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 8 أحرف على الأقل", variant: "destructive" });
+      return;
+    }
     const teacher = teachers.find((t) => t.user_id === selectedTeacher);
     if (!teacher) return;
 
     setChangingPassword(true);
-    const { data, error } = await supabase.functions.invoke("manage-users", {
-      body: { action: "change_password", email: teacher.email, password: newPassword },
-    });
-    setChangingPassword(false);
+    try {
+      const { data, error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "change_password", email: teacher.email, password: newPassword },
+      });
+      setChangingPassword(false);
 
-    if (error || data?.error) {
-      toast({ title: "خطأ", description: data?.error || "فشل في تغيير كلمة المرور", variant: "destructive" });
-    } else {
-      toast({ title: "تم التغيير", description: `تم تغيير كلمة المرور لـ ${teacher.full_name}` });
-      setNewPassword("");
-      setSelectedTeacher("");
+      const errMsg = data?.error || (error as any)?.message || (typeof error === "string" ? error : null);
+      if (errMsg) {
+        const friendlyMsg = errMsg.includes("weak") || errMsg.includes("Weak")
+          ? "كلمة المرور ضعيفة، استخدم أحرف وأرقام ورموز (مثال: Teacher@2026)"
+          : errMsg;
+        toast({ title: "خطأ", description: friendlyMsg, variant: "destructive" });
+      } else {
+        toast({ title: "تم التغيير", description: `تم تغيير كلمة المرور لـ ${teacher.full_name}` });
+        setNewPassword("");
+        setSelectedTeacher("");
+      }
+    } catch {
+      setChangingPassword(false);
+      toast({ title: "خطأ", description: "فشل في الاتصال بالخادم", variant: "destructive" });
+    }
     }
   };
 
