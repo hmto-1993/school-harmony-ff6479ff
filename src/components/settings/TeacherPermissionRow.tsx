@@ -49,6 +49,8 @@ interface Permissions {
   can_delete_records: boolean;
   can_manage_grades: boolean;
   can_manage_attendance: boolean;
+  can_view_grades: boolean;
+  can_view_reports: boolean;
 }
 
 const defaultPerms: Permissions = {
@@ -58,6 +60,8 @@ const defaultPerms: Permissions = {
   can_delete_records: true,
   can_manage_grades: true,
   can_manage_attendance: true,
+  can_view_grades: true,
+  can_view_reports: true,
 };
 
 export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: TeacherPermissionRowProps) {
