@@ -519,7 +519,7 @@ export default function NotificationsPage() {
                     size="sm"
                     className="gap-1.5"
                     onClick={sendSMS}
-                    disabled={sending || selectedStudents.length === 0}
+                    disabled={sending || selectedStudents.length === 0 || isReadOnly}
                   >
                     <Send className="h-4 w-4" />
                     {sending ? "جارٍ الإرسال..." : `إرسال (${selectedStudents.length})`}
