@@ -129,17 +129,21 @@ serve(async (req) => {
       const teacherIds = roles.map((r) => r.user_id);
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, full_name, national_id")
         .in("user_id", teacherIds);
 
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
       const teacherUsers = users.filter((u) => teacherIds.includes(u.id));
 
-      const teachers = teacherUsers.map((u) => ({
-        user_id: u.id,
-        email: u.email,
-        full_name: profiles?.find((p) => p.user_id === u.id)?.full_name || u.email,
-      }));
+      const teachers = teacherUsers.map((u) => {
+        const profile = profiles?.find((p) => p.user_id === u.id);
+        return {
+          user_id: u.id,
+          email: u.email,
+          full_name: profile?.full_name || u.email,
+          national_id: profile?.national_id || "",
+        };
+      });
 
       return new Response(
         JSON.stringify({ teachers }),

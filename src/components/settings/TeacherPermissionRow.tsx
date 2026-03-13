@@ -7,7 +7,7 @@ import { Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface TeacherPermissionRowProps {
-  teacher: { user_id: string; email: string; full_name: string };
+  teacher: { user_id: string; email: string; full_name: string; national_id?: string };
 }
 
 interface Permissions {
@@ -95,7 +95,7 @@ export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowPr
   return (
     <TableRow className="group">
       <TableCell className="font-medium text-sm">{teacher.full_name}</TableCell>
-      <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.email}</TableCell>
+      <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.national_id || "—"}</TableCell>
       {permKeys.map((key) => (
         <TableCell key={key} className="text-center">
           <Switch

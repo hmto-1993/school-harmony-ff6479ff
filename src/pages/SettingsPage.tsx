@@ -121,7 +121,7 @@ export default function SettingsPage() {
   const [savingProfile, setSavingProfile] = useState(false);
 
   // Teacher password management
-  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string }[]>([]);
+  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
@@ -2637,7 +2637,7 @@ export default function SettingsPage() {
                             <TableHeader>
                               <TableRow className="bg-muted/50">
                                 <TableHead className="text-right">المعلم</TableHead>
-                                <TableHead className="text-right">البريد</TableHead>
+                                <TableHead className="text-right">رقم الهوية</TableHead>
                                 <TableHead className="text-center text-xs">الطباعة</TableHead>
                                 <TableHead className="text-center text-xs">التصدير</TableHead>
                                 <TableHead className="text-center text-xs">الإشعارات</TableHead>
@@ -2672,14 +2672,14 @@ export default function SettingsPage() {
                           <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" className="h-9" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs">البريد الإلكتروني <span className="text-muted-foreground">(اختياري)</span></Label>
-                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
-                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
-                        </div>
-                        <div className="space-y-1.5">
                           <Label className="text-xs">رقم الهوية الوطنية</Label>
                           <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
                             placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">البريد الإلكتروني <span className="text-muted-foreground">(اختياري)</span></Label>
+                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs">كلمة المرور</Label>
