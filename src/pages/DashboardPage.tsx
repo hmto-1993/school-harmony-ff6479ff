@@ -102,7 +102,7 @@ export default function DashboardPage() {
     safePrint();
   }, []);
 
-  if (permsLoaded && !perms.can_view_dashboard && role !== "admin") {
+  if (permsLoaded && !perms.can_view_dashboard && !perms.read_only_mode && role !== "admin") {
     return <EmptyState icon={Lock} title="لا تملك صلاحية عرض لوحة التحكم" description="تواصل مع المسؤول لتفعيل صلاحية عرض لوحة التحكم" />;
   }
 

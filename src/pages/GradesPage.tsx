@@ -38,7 +38,7 @@ export default function GradesPage() {
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
   // If can't view grades at all, show restricted message
-  const canView = perms.can_view_grades;
+  const canView = perms.can_view_grades || perms.read_only_mode;
 
   // Filter entry types based on edit permissions
   const availableTypes = canEdit
