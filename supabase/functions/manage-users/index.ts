@@ -54,7 +54,7 @@ serve(async (req) => {
     }
 
     // --- Process actions (seed action removed) ---
-    const { action, email, password, full_name, role } = await req.json();
+    const { action, email, password, full_name, role, user_id: targetUserId, national_id } = await req.json();
 
     if (action === "create_user") {
       const { data: newUser, error } = await supabaseAdmin.auth.admin.createUser({
@@ -109,6 +109,32 @@ serve(async (req) => {
 
       return new Response(
         JSON.stringify({ success: true, message: "تم تغيير كلمة المرور بنجاح" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "update_teacher") {
+      if (!targetUserId) {
+        return new Response(
+          JSON.stringify({ error: "معرف المستخدم مطلوب" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const updates: Record<string, string> = {};
+      if (full_name !== undefined) updates.full_name = full_name;
+      if (national_id !== undefined) updates.national_id = national_id;
+
+      if (Object.keys(updates).length > 0) {
+        const { error: updateError } = await supabaseAdmin
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", targetUserId);
+        if (updateError) throw updateError;
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "تم تحديث بيانات المعلم بنجاح" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
