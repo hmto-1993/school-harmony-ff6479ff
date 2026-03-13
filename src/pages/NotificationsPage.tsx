@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { toast } from "@/hooks/use-toast";
 import {
   Select,
@@ -119,6 +120,8 @@ const SMS_TYPE_LABELS: Record<SMSType, string> = {
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const { perms } = useTeacherPermissions();
+  const isReadOnly = perms.read_only_mode;
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   // SMS state
@@ -516,7 +519,7 @@ export default function NotificationsPage() {
                     size="sm"
                     className="gap-1.5"
                     onClick={sendSMS}
-                    disabled={sending || selectedStudents.length === 0}
+                    disabled={sending || selectedStudents.length === 0 || isReadOnly}
                   >
                     <Send className="h-4 w-4" />
                     {sending ? "جارٍ الإرسال..." : `إرسال (${selectedStudents.length})`}

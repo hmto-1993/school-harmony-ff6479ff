@@ -36,7 +36,7 @@ export default function GradesPage() {
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
-  const canEdit = perms.can_manage_grades;
+  const canEdit = perms.can_manage_grades && !perms.read_only_mode;
   // If can't view grades at all, show restricted message
   const canView = perms.can_view_grades;
 

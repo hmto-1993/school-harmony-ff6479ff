@@ -1221,6 +1221,7 @@ export type Database = {
           can_view_students: boolean
           created_at: string
           id: string
+          read_only_mode: boolean
           updated_at: string
           user_id: string
         }
@@ -1239,6 +1240,7 @@ export type Database = {
           can_view_students?: boolean
           created_at?: string
           id?: string
+          read_only_mode?: boolean
           updated_at?: string
           user_id: string
         }
@@ -1257,6 +1259,7 @@ export type Database = {
           can_view_students?: boolean
           created_at?: string
           id?: string
+          read_only_mode?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -1329,6 +1332,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_viewer: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "teacher"

@@ -55,6 +55,7 @@ interface Permissions {
   can_view_activities: boolean;
   can_view_dashboard: boolean;
   can_view_students: boolean;
+  read_only_mode: boolean;
 }
 
 const defaultPerms: Permissions = {
@@ -70,6 +71,7 @@ const defaultPerms: Permissions = {
   can_view_activities: true,
   can_view_dashboard: true,
   can_view_students: true,
+  read_only_mode: false,
 };
 
 export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: TeacherPermissionRowProps) {
@@ -123,6 +125,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_view_activities: (data as any).can_view_activities ?? true,
             can_view_dashboard: (data as any).can_view_dashboard ?? true,
             can_view_students: (data as any).can_view_students ?? true,
+            read_only_mode: (data as any).read_only_mode ?? false,
           };
           setPerms(p);
           setOriginalPerms(p);
@@ -195,6 +198,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   if (!loaded) return null;
 
   const permKeys: (keyof Permissions)[] = [
+    "read_only_mode",
     "can_print",
     "can_export",
     "can_send_notifications",

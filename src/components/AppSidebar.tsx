@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/hooks/use-theme";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -40,6 +41,7 @@ const adminLinks = [
 
 const teacherLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+  { to: "/students", label: "الطلاب", icon: Users },
   { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
@@ -55,6 +57,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut } = useAuth();
+  const { perms } = useTeacherPermissions();
   const location = useLocation();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
@@ -71,7 +74,11 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
     });
   }, []);
 
-  const links = role === "admin" ? adminLinks : teacherLinks;
+  const baseLinks = role === "admin" ? adminLinks : teacherLinks;
+  // Hide settings for read-only teachers
+  const links = perms.read_only_mode && role !== "admin"
+    ? baseLinks.filter(l => l.to !== "/settings")
+    : baseLinks;
   const isCollapsed = !isMobile && collapsed;
 
   return (
