@@ -890,12 +890,26 @@ export default function ResourceLibraryPage() {
                               >
                                 <Download className="h-4 w-4" />
                               </a>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteFile(file.id, selectedFolder?.id); }}
-                                className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <button
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent dir="rtl">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>حذف الملف؟</AlertDialogTitle>
+                                    <AlertDialogDescription>سيتم حذف الملف نهائياً.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFile(file.id, selectedFolder?.id)}>حذف</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         );
