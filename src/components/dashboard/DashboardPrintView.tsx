@@ -89,9 +89,9 @@ export default function DashboardPrintView({
           }}
         >
           {/* Right text */}
-          <div style={{ flex: 1, fontSize: `${headerConfig.rightSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.rightSection.color || "#1e293b", display: "flex", flexDirection: "column", alignItems: headerConfig.rightSection.align === "center" ? "center" : headerConfig.rightSection.align === "left" ? "flex-start" : "flex-end" }}>
+          <div style={{ flex: 1, textAlign: headerConfig.rightSection.align, fontSize: `${headerConfig.rightSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.rightSection.color || "#1e293b" }}>
             {headerConfig.rightSection.lines.map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
           {/* Center images */}
@@ -112,9 +112,9 @@ export default function DashboardPrintView({
             )}
           </div>
           {/* Left text */}
-          <div style={{ flex: 1, fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.leftSection.color || "#1e293b", display: "flex", flexDirection: "column", alignItems: headerConfig.leftSection.align === "center" ? "center" : headerConfig.leftSection.align === "left" ? "flex-start" : "flex-end" }}>
+          <div style={{ flex: 1, textAlign: headerConfig.leftSection.align, fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.leftSection.color || "#1e293b" }}>
             {headerConfig.leftSection.lines.map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
         </div>
