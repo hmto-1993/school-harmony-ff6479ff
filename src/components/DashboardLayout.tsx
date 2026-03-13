@@ -1,10 +1,10 @@
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect, useCallback } from "react";
-import { Menu, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { AnimatePresence } from "framer-motion";
@@ -12,32 +12,12 @@ import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [showPrintClose, setShowPrintClose] = useState(false);
 
-  // Show a back button when print preview is triggered, hide after print
   useEffect(() => {
-    const onBeforePrint = () => setShowPrintClose(true);
-    const onAfterPrint = () => setShowPrintClose(false);
-    window.addEventListener("beforeprint", onBeforePrint);
-    window.addEventListener("afterprint", onAfterPrint);
-    return () => {
-      window.removeEventListener("beforeprint", onBeforePrint);
-      window.removeEventListener("afterprint", onAfterPrint);
-    };
-  }, []);
-
-  const handleBackToDashboard = useCallback(() => {
-    setShowPrintClose(false);
-    // Force exit print mode on mobile
-    document.body.style.display = "none";
-    // eslint-disable-next-line no-unused-expressions
-    document.body.offsetHeight;
-    document.body.style.display = "";
-    navigate("/reports");
-  }, [navigate]);
+    setMobileOpen(false);
+  }, [useLocation().pathname]);
 
   return (
     <div className="flex min-h-screen w-full bg-background" dir="rtl">
