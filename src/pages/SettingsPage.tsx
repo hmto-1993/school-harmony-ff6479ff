@@ -3088,6 +3088,7 @@ export default function SettingsPage() {
                       <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* تفريغ الدرجات */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" className="gap-2 h-12 rounded-xl">
@@ -3102,7 +3103,7 @@ export default function SettingsPage() {
                               تأكيد تفريغ جميع الدرجات
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              سيتم حذف <strong>جميع</strong> سجلات الدرجات لكل الطلاب والفصول بشكل نهائي. هل أنت متأكد؟
+                              سيتم حذف <strong>جميع</strong> سجلات الدرجات (اليومية والتراكمية) لكل الطلاب والفصول بشكل نهائي. هل أنت متأكد؟
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter className="flex-row-reverse gap-2">
@@ -3110,9 +3111,10 @@ export default function SettingsPage() {
                             <AlertDialogAction
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               onClick={async () => {
-                                const { error } = await supabase.from("grades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-                                if (error) {
-                                  toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                                const r1 = await supabase.from("grades").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const r2 = await supabase.from("manual_category_scores").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                if (r1.error || r2.error) {
+                                  toast({ title: "خطأ", description: r1.error?.message || r2.error?.message, variant: "destructive" });
                                 } else {
                                   toast({ title: "تم التفريغ ✅", description: "تم حذف جميع سجلات الدرجات بنجاح" });
                                 }
@@ -3124,6 +3126,7 @@ export default function SettingsPage() {
                         </AlertDialogContent>
                       </AlertDialog>
 
+                      {/* تفريغ الحضور */}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="destructive" className="gap-2 h-12 rounded-xl">
@@ -3155,6 +3158,159 @@ export default function SettingsPage() {
                               }}
                             >
                               نعم، تفريغ الحضور
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* تفريغ السلوك */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="gap-2 h-12 rounded-xl">
+                            <Trash2 className="h-4 w-4" />
+                            تفريغ سجلات السلوك
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              تأكيد تفريغ سجلات السلوك
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف <strong>جميع</strong> سجلات السلوك (الإيجابية والسلبية) لكل الطلاب بشكل نهائي.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="flex-row-reverse gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={async () => {
+                                const { error } = await supabase.from("behavior_records").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                if (error) {
+                                  toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                                } else {
+                                  toast({ title: "تم التفريغ ✅", description: "تم حذف جميع سجلات السلوك بنجاح" });
+                                }
+                              }}
+                            >
+                              نعم، تفريغ السلوك
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* تفريغ الإشعارات */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="gap-2 h-12 rounded-xl">
+                            <Trash2 className="h-4 w-4" />
+                            تفريغ الإشعارات
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              تأكيد تفريغ جميع الإشعارات
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف <strong>جميع</strong> الإشعارات المرسلة لأولياء الأمور بشكل نهائي.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="flex-row-reverse gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={async () => {
+                                const { error } = await supabase.from("notifications").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                if (error) {
+                                  toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                                } else {
+                                  toast({ title: "تم التفريغ ✅", description: "تم حذف جميع الإشعارات بنجاح" });
+                                }
+                              }}
+                            >
+                              نعم، تفريغ الإشعارات
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* تفريغ الأنشطة */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="gap-2 h-12 rounded-xl">
+                            <Trash2 className="h-4 w-4" />
+                            تفريغ الأنشطة والاختبارات
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              تأكيد تفريغ الأنشطة والاختبارات
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف <strong>جميع</strong> الأنشطة والاختبارات وتسليمات الطلاب بشكل نهائي.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="flex-row-reverse gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={async () => {
+                                const r1 = await supabase.from("quiz_submissions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const r2 = await supabase.from("student_file_submissions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const r3 = await supabase.from("quiz_questions").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const r4 = await supabase.from("activity_class_targets").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const r5 = await supabase.from("teacher_activities").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                const err = r1.error || r2.error || r3.error || r4.error || r5.error;
+                                if (err) {
+                                  toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                                } else {
+                                  toast({ title: "تم التفريغ ✅", description: "تم حذف جميع الأنشطة والاختبارات بنجاح" });
+                                }
+                              }}
+                            >
+                              نعم، تفريغ الأنشطة
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
+                      {/* تفريغ الإعلانات */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" className="gap-2 h-12 rounded-xl">
+                            <Trash2 className="h-4 w-4" />
+                            تفريغ الإعلانات
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="flex items-center gap-2">
+                              <AlertTriangle className="h-5 w-5 text-destructive" />
+                              تأكيد تفريغ الإعلانات
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              سيتم حذف <strong>جميع</strong> الإعلانات المنشورة بشكل نهائي.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter className="flex-row-reverse gap-2">
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              onClick={async () => {
+                                const { error } = await supabase.from("announcements").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+                                if (error) {
+                                  toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                                } else {
+                                  toast({ title: "تم التفريغ ✅", description: "تم حذف جميع الإعلانات بنجاح" });
+                                }
+                              }}
+                            >
+                              نعم، تفريغ الإعلانات
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
