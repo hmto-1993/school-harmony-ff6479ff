@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
+import { safeDownload } from "@/lib/download-utils";
 
 const FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf";
 const FONT_BOLD_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf";
