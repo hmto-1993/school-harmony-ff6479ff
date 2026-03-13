@@ -333,7 +333,23 @@ export default function SmartDashboardSummary() {
   const trendDir = lastRate > prevRate ? "up" : lastRate < prevRate ? "down" : "stable";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <Collapsible open={isOpen} onOpenChange={toggleOpen}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-md">
+            <BarChart3 className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground">الملخص الذكي</h3>
+        </div>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground">
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? "إخفاء" : "إظهار"}
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
       {/* ── 1. Attendance Trend Chart ── */}
       <Card className="border-0 ring-1 ring-primary/15 bg-gradient-to-br from-primary/5 via-card to-primary/10 overflow-hidden">
