@@ -62,6 +62,25 @@ export default function GradesPage() {
 
   const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 
+  // Set default active type to summary if can't edit
+  useEffect(() => {
+    if (permsLoaded && !canEdit && (activeType === "daily" || activeType === "behavior" || activeType === "classwork" || activeType === "import")) {
+      setActiveType("summary");
+    }
+  }, [permsLoaded, canEdit]);
+
+  if (permsLoaded && !canView) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <EmptyState
+          icon={Lock}
+          title="لا تملك صلاحية عرض الدرجات"
+          description="تواصل مع المدير لتفعيل صلاحية مشاهدة الدرجات"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
