@@ -289,16 +289,9 @@ export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkC
   if (watermark?.enabled) {
     renderWatermarkOnAllPages(doc, watermark);
   }
-  // Use safeSavePDF from download-utils
   const blob = doc.output("blob") as Blob;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  safeDownload(blob, fileName);
+}
 }
 
 /** Get autoTable styles pre-configured for Arabic font */
