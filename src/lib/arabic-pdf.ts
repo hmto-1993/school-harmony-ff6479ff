@@ -292,7 +292,6 @@ export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkC
   const blob = doc.output("blob") as Blob;
   safeDownload(blob, fileName);
 }
-}
 
 /** Get autoTable styles pre-configured for Arabic font */
 export function getArabicTableStyles() {
