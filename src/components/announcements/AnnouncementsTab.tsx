@@ -319,6 +319,7 @@ export default function AnnouncementsTab({ readOnly = false }: { readOnly?: bool
                     </div>
                   </div>
                 </div>
+                {!readOnly && (
                 <div className="flex items-center gap-1">
                   <div className="flex items-center gap-2 ml-2" title={ann.is_active ? "إيقاف الإعلان" : "تفعيل الإعلان"}>
                     <Switch
@@ -347,6 +348,7 @@ export default function AnnouncementsTab({ readOnly = false }: { readOnly?: bool
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
+                )}
               </div>
             </CardContent>
           </Card>
