@@ -1042,9 +1042,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
 
   if (!cal) {
     return (
-      <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] p-8 text-center">
-        <CalendarDays className="h-12 w-12 text-white/20 mx-auto mb-3" />
-        <p className="text-white/40 font-medium">لا يوجد تقويم أكاديمي محدد</p>
+      <div className="backdrop-blur-sm rounded-2xl p-8 text-center" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
+        <CalendarDays className="h-12 w-12 mx-auto mb-3" style={{ color: 'var(--sv-text-ghost)' }} />
+        <p className="font-medium" style={{ color: 'var(--sv-text-dim)' }}>لا يوجد تقويم أكاديمي محدد</p>
       </div>
     );
   }
@@ -1052,17 +1052,18 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-white">تقرير الحضور الأسبوعي</h2>
+        <h2 className="text-lg font-bold" style={{ color: 'var(--sv-text)' }}>تقرير الحضور الأسبوعي</h2>
         <div className="flex gap-2 flex-wrap">
-          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 border border-white/[0.06]">
+          <div className="flex gap-1 rounded-lg p-0.5" style={{ background: 'var(--sv-tab-inactive)', border: '1px solid var(--sv-card-border)' }}>
             <button
               onClick={() => setWeekFilter("current")}
               className={cn(
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "current"
                   ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
-                  : "text-white/40 hover:text-white/60"
+                  : ""
               )}
+              style={weekFilter !== "current" ? { color: 'var(--sv-text-dim)' } : undefined}
             >
               الأسبوع الحالي (ع{currentWeek})
             </button>
@@ -1072,8 +1073,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "all"
                   ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
-                  : "text-white/40 hover:text-white/60"
+                  : ""
               )}
+              style={weekFilter !== "all" ? { color: 'var(--sv-text-dim)' } : undefined}
             >
               جميع الأسابيع
             </button>
@@ -1086,8 +1088,9 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                 "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                 selectedClassId === cls.id
                   ? "bg-gradient-to-l from-[hsl(270,75%,55%)] to-[hsl(290,70%,50%)] text-white shadow-sm"
-                  : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
+                  : ""
               )}
+              style={selectedClassId !== cls.id ? { background: 'var(--sv-tab-inactive)', color: 'var(--sv-text-dim)', border: '1px solid var(--sv-card-border)' } : undefined}
             >
               {cls.name}
             </button>
@@ -1100,43 +1103,43 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: STATUS_COLORS[key] }} />
-            <span className="text-white/50">{label}</span>
+            <span style={{ color: 'var(--sv-text-muted)' }}>{label}</span>
           </div>
         ))}
       </div>
 
       {weeklyData && (
-        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
+        <div className="backdrop-blur-sm rounded-2xl overflow-hidden" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-right px-3 py-2 font-semibold text-white/50 sticky right-0 bg-[hsl(228,50%,8%)] z-10 min-w-[120px]">الطالب</th>
+                <tr style={{ borderBottom: '1px solid var(--sv-divider)' }}>
+                  <th className="text-right px-3 py-2 font-semibold sticky right-0 z-10 min-w-[120px]" style={{ color: 'var(--sv-text-muted)', background: 'var(--sv-sticky)' }}>الطالب</th>
                   {weeklyData.weeks.map(w => (
-                    <th key={w.weekNum} className={cn("text-center px-1 py-2 font-medium min-w-[36px]", w.weekNum === currentWeek ? "text-[hsl(195,100%,60%)] bg-[hsl(195,100%,50%)/0.05]" : "text-white/30")}>
+                    <th key={w.weekNum} className="text-center px-1 py-2 font-medium min-w-[36px]" style={{ color: w.weekNum === currentWeek ? 'var(--sv-current-week-text)' : 'var(--sv-text-dim)', background: w.weekNum === currentWeek ? 'var(--sv-current-week-bg)' : undefined }}>
                       <div className="writing-mode-vertical text-[10px]">ع{w.weekNum}</div>
                     </th>
                   ))}
-                  <th className="text-center px-2 py-2 font-semibold text-[hsl(0,84%,65%)] min-w-[40px]">غ</th>
-                  <th className="text-center px-2 py-2 font-semibold text-[hsl(38,92%,60%)] min-w-[40px]">تأخر</th>
+                  <th className="text-center px-2 py-2 font-semibold min-w-[40px]" style={{ color: 'var(--sv-red)' }}>غ</th>
+                  <th className="text-center px-2 py-2 font-semibold min-w-[40px]" style={{ color: 'var(--sv-amber)' }}>تأخر</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.03]">
+              <tbody>
                 {weeklyData.studentRows.map((student) => (
-                  <tr key={student.id} className={cn("hover:bg-white/[0.03] transition-colors", student.isAtRisk && "bg-[hsl(0,84%,60%)/0.05]")}>
-                    <td className="px-3 py-1.5 font-medium text-white/80 whitespace-nowrap sticky right-0 bg-[hsl(228,50%,8%)] z-10">
+                  <tr key={student.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)', background: student.isAtRisk ? 'var(--sv-at-risk-bg)' : undefined }}>
+                    <td className="px-3 py-1.5 font-medium whitespace-nowrap sticky right-0 z-10" style={{ color: 'var(--sv-text-secondary)', background: 'var(--sv-sticky)' }}>
                       <div className="flex items-center gap-1">
-                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 text-[hsl(0,84%,65%)] flex-shrink-0" />}
+                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 flex-shrink-0" style={{ color: 'var(--sv-red)' }} />}
                         <span className="truncate max-w-[100px]">{student.name}</span>
                       </div>
                     </td>
                     {weeklyData.weeks.map(w => {
                       const statuses = student.weekStatuses[w.weekNum] || [];
                       return (
-                        <td key={w.weekNum} className={cn("text-center px-0.5 py-1", w.weekNum === currentWeek && "bg-[hsl(195,100%,50%)/0.03]")}>
+                        <td key={w.weekNum} className="text-center px-0.5 py-1" style={{ background: w.weekNum === currentWeek ? 'var(--sv-current-week-bg)' : undefined }}>
                           <div className="flex flex-wrap justify-center gap-0.5">
                             {statuses.length === 0 ? (
-                              <span className="text-white/10">·</span>
+                              <span style={{ color: 'var(--sv-text-invisible)' }}>·</span>
                             ) : (
                               statuses.map((s, i) => (
                                 <span
@@ -1151,8 +1154,8 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                         </td>
                       );
                     })}
-                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(0,84%,65%)]">{student.totalAbsent || '—'}</td>
-                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(38,92%,60%)]">{student.totalLate || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold" style={{ color: 'var(--sv-red)' }}>{student.totalAbsent || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold" style={{ color: 'var(--sv-amber)' }}>{student.totalLate || '—'}</td>
                   </tr>
                 ))}
               </tbody>
