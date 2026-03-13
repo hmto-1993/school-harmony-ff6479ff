@@ -78,6 +78,20 @@ export default function SharedViewPage() {
   const [sharing, setSharing] = useState(false);
   const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('shared-view-theme') !== 'light';
+    }
+    return true;
+  });
+
+  const toggleTheme = useCallback(() => {
+    setIsDark(prev => {
+      const next = !prev;
+      localStorage.setItem('shared-view-theme', next ? 'dark' : 'light');
+      return next;
+    });
+  }, []);
 
   /** Build PDF doc (shared between download and WhatsApp share) */
   const buildPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
