@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2 } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, FileText, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays, ChevronDown, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
@@ -74,23 +74,30 @@ export default function SharedViewPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [exporting, setExporting] = useState(false);
+  const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const exportPDF = useCallback(async () => {
+  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
     if (!data) return;
     setExporting(true);
     try {
       // Fetch AI summary in parallel with PDF setup
+      const summaryPromise = focus !== "none"
+        ? supabase.functions.invoke("summarize-teacher", {
+            body: {
+              teacherName: data.teacherName,
+              schoolName: data.schoolName,
+              classes: data.classes,
+              attendanceRate: data.attendanceRate,
+              totalStudents: data.totalStudents,
+              focus,
+            },
+          }).then(r => r.data?.summary || "").catch(() => "")
+        : Promise.resolve("");
+
       const [pdfSetup, summaryResult] = await Promise.all([
         createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true }),
-        supabase.functions.invoke("summarize-teacher", {
-          body: {
-            teacherName: data.teacherName,
-            schoolName: data.schoolName,
-            classes: data.classes,
-            attendanceRate: data.attendanceRate,
-            totalStudents: data.totalStudents,
-          },
-        }).then(r => r.data?.summary || "").catch(() => ""),
+        summaryPromise,
       ]);
 
       const { doc, startY, watermark } = pdfSetup;
@@ -433,7 +440,7 @@ export default function SharedViewPage() {
       toast.error("حدث خطأ أثناء التصدير");
     }
     setExporting(false);
-  }, [data]);
+  }, [data, summaryFocus]);
 
   useEffect(() => {
     if (!token) return;
@@ -499,10 +506,53 @@ export default function SharedViewPage() {
             </div>
             <div className="flex items-center gap-2 print:hidden">
               {data.canPrint && (
-                <button onClick={exportPDF} disabled={exporting} className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors text-slate-700 disabled:opacity-50">
-                  {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                  {exporting ? "جارٍ التصدير..." : "تصدير PDF"}
-                </button>
+                <div className="relative">
+                  <div className="flex">
+                    <button
+                      onClick={() => exportPDF()}
+                      disabled={exporting}
+                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 rounded-r-lg transition-colors text-slate-700 disabled:opacity-50 border-l border-slate-200"
+                    >
+                      {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                      {exporting ? "جارٍ التصدير..." : "تصدير PDF"}
+                    </button>
+                    <button
+                      onClick={() => setShowExportMenu(prev => !prev)}
+                      disabled={exporting}
+                      className="flex items-center px-2 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 rounded-l-lg transition-colors text-slate-700 disabled:opacity-50"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                  </div>
+                  {showExportMenu && (
+                    <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20 min-w-[200px]">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-slate-400">الملخص الذكي</div>
+                      {([
+                        { key: "comprehensive", label: "شامل", icon: "📊" },
+                        { key: "attendance", label: "التركيز على الحضور", icon: "📋" },
+                        { key: "grades", label: "التركيز على الدرجات", icon: "📝" },
+                        { key: "none", label: "بدون ملخص ذكي", icon: "⏭️" },
+                      ] as const).map(opt => (
+                        <button
+                          key={opt.key}
+                          onClick={() => {
+                            setSummaryFocus(opt.key);
+                            setShowExportMenu(false);
+                            exportPDF(opt.key);
+                          }}
+                          className={cn(
+                            "w-full text-right px-3 py-2 text-sm flex items-center gap-2 hover:bg-slate-50 transition-colors",
+                            summaryFocus === opt.key && "bg-blue-50 text-blue-700 font-semibold"
+                          )}
+                        >
+                          <span>{opt.icon}</span>
+                          <span>{opt.label}</span>
+                          {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-blue-500" />}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

@@ -18,14 +18,28 @@ serve(async (req) => {
       });
     }
 
-    const { teacherName, schoolName, classes, attendanceRate, totalStudents } = await req.json();
+    const { teacherName, schoolName, classes, attendanceRate, totalStudents, focus = 'comprehensive' } = await req.json();
 
-    // Build a concise data summary for the AI
+    // Build data summary based on focus
     const classDetails = (classes || []).map((c: any) => {
       const attRate = c.studentCount > 0 ? Math.round((c.attendance.present / c.studentCount) * 100) : 0;
       const lessonPct = c.lessonPlans.total > 0 ? Math.round((c.lessonPlans.completed / c.lessonPlans.total) * 100) : 0;
-      return `- ${c.name}: ${c.studentCount} طالب، حضور ${attRate}%، خطط دروس ${lessonPct}% (${c.lessonPlans.completed}/${c.lessonPlans.total})، سلوك إيجابي ${c.behavior.positive} / سلبي ${c.behavior.negative}، غيابات كلية ${c.totalAbsences}`;
+
+      if (focus === 'attendance') {
+        return `- ${c.name}: ${c.studentCount} طالب، حضور اليوم ${attRate}%، حاضر ${c.attendance.present}، غائب ${c.attendance.absent}، متأخر ${c.attendance.late}، غيابات كلية (30 يوم) ${c.totalAbsences}، أكثر الطلاب غياباً: ${(c.topAbsentees || []).slice(0, 3).map((s: any) => `${s.name} (${s.count})`).join('، ') || 'لا يوجد'}`;
+      }
+      if (focus === 'grades') {
+        return `- ${c.name}: ${c.studentCount} طالب، سلوك إيجابي ${c.behavior.positive} / سلبي ${c.behavior.negative}`;
+      }
+      // comprehensive
+      return `- ${c.name}: ${c.studentCount} طالب، حضور ${attRate}%، خطط دروس ${lessonPct}% (${c.lessonPlans.completed}/${c.lessonPlans.total})، سلوك إيجابي ${c.behavior.positive} / سلبي ${c.behavior.negative}، غيابات ${c.totalAbsences}`;
     }).join('\n');
+
+    const focusInstructions: Record<string, string> = {
+      attendance: `ركّز تحليلك بالكامل على الحضور والغياب والتأخر. حلل أنماط الغياب، وحدد الفصول الأكثر تأثراً، واقترح إجراءات لتحسين نسب الحضور. لا تتحدث عن الدرجات أو خطط الدروس.`,
+      grades: `ركّز تحليلك بالكامل على مستوى الطلاب الأكاديمي والسلوك. حلل التوزيع بين السلوك الإيجابي والسلبي وأثره على الأداء، واقترح استراتيجيات لرفع المستوى. لا تتحدث عن الحضور أو خطط الدروس.`,
+      comprehensive: `قدم تحليلاً شاملاً يغطي الحضور والدرجات وخطط الدروس والسلوك. حدد نقاط القوة والضعف واقترح توصية واحدة ذات أولوية.`,
+    };
 
     const prompt = `أنت محلل تعليمي خبير. لخّص أداء المعلم "${teacherName}" في مدرسة "${schoolName || 'غير محدد'}" بناءً على البيانات التالية:
 
@@ -35,12 +49,9 @@ serve(async (req) => {
 تفاصيل الفصول:
 ${classDetails}
 
-اكتب ملخصاً مهنياً موجزاً (3-5 جمل فقط) يغطي:
-1. نقاط القوة البارزة
-2. المجالات التي تحتاج تحسين
-3. توصية واحدة محددة
+${focusInstructions[focus] || focusInstructions.comprehensive}
 
-الملخص يجب أن يكون بالعربية، مهني، ومباشر. لا تستخدم عناوين أو نقاط، اكتب فقرة واحدة متصلة.`;
+اكتب ملخصاً مهنياً موجزاً (3-5 جمل فقط). الملخص يجب أن يكون بالعربية، مهني، ومباشر. لا تستخدم عناوين أو نقاط، اكتب فقرة واحدة متصلة.`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
