@@ -62,6 +62,7 @@ export default function DashboardHeader({ onPrint }: Props) {
         </div>
         <div className="hidden sm:flex flex-col items-end gap-2 text-left">
           <div className="flex items-center gap-2">
+            <ShareDialog />
             {onPrint && (
               <Button
                 size="sm"
