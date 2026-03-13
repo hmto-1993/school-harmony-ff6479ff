@@ -74,8 +74,10 @@ export default function SharedViewPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [exporting, setExporting] = useState(false);
+  const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const exportPDF = useCallback(async () => {
+  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
     if (!data) return;
     setExporting(true);
     try {
