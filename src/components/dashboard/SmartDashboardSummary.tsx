@@ -63,11 +63,13 @@ const GRADE_COLORS = [
 ];
 
 export default function SmartDashboardSummary() {
+  const { role, user } = useAuth();
   const [absentToday, setAbsentToday] = useState<AbsentStudent[]>([]);
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [currentLesson, setCurrentLesson] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentWeek } = useAcademicWeek();
+  const [isOpen, setIsOpen] = useState(() => localStorage.getItem('smart-summary-open') !== 'false');
 
   // Chart data
   const [dailyAttendance, setDailyAttendance] = useState<DailyAttendance[]>([]);
@@ -83,6 +85,11 @@ export default function SmartDashboardSummary() {
     setWarningOpen(true);
   };
 
+  const toggleOpen = (open: boolean) => {
+    setIsOpen(open);
+    localStorage.setItem('smart-summary-open', String(open));
+  };
+
   useEffect(() => {
     fetchSummary();
   }, [currentWeek]);
@@ -93,20 +100,51 @@ export default function SmartDashboardSummary() {
     const dayIndex = new Date().getDay();
     const last7Days = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), "yyyy-MM-dd"));
 
+    // Get teacher's class IDs if teacher role
+    let teacherClassIds: string[] | null = null;
+    if (role === "teacher" && user) {
+      const { data: tc } = await supabase
+        .from("teacher_classes")
+        .select("class_id")
+        .eq("teacher_id", user.id);
+      teacherClassIds = (tc || []).map((t: any) => t.class_id);
+      if (teacherClassIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Build queries with optional class filter
+    let absQuery = supabase
+      .from("attendance_records")
+      .select("student_id, students!inner(full_name, class_id, classes!inner(name))")
+      .eq("date", today)
+      .eq("status", "absent");
+    if (teacherClassIds) absQuery = absQuery.in("class_id", teacherClassIds);
+
+    let allAttQuery = supabase
+      .from("attendance_records")
+      .select("student_id, status, date")
+      .gte("date", last7Days[0])
+      .lte("date", last7Days[6]);
+    if (teacherClassIds) allAttQuery = allAttQuery.in("class_id", teacherClassIds);
+
+    let studentsQuery = supabase
+      .from("students")
+      .select("id, full_name, class_id, classes!inner(name)");
+    if (teacherClassIds) studentsQuery = studentsQuery.in("class_id", teacherClassIds);
+
+    let behaviorQuery = supabase
+      .from("behavior_records")
+      .select("type, date")
+      .gte("date", last7Days[0])
+      .lte("date", last7Days[6]);
+    if (teacherClassIds) behaviorQuery = behaviorQuery.in("class_id", teacherClassIds);
+
     const [absRes, allAttRes, classesRes, lessonRes, settingsRes, gradesRes, behaviorRes] = await Promise.all([
-      supabase
-        .from("attendance_records")
-        .select("student_id, students!inner(full_name, class_id, classes!inner(name))")
-        .eq("date", today)
-        .eq("status", "absent"),
-      supabase
-        .from("attendance_records")
-        .select("student_id, status, date")
-        .gte("date", last7Days[0])
-        .lte("date", last7Days[6]),
-      supabase
-        .from("students")
-        .select("id, full_name, class_id, classes!inner(name)"),
+      absQuery,
+      allAttQuery,
+      studentsQuery,
       currentWeek
         ? supabase
             .from("lesson_plans")
@@ -123,13 +161,9 @@ export default function SmartDashboardSummary() {
         .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]),
       supabase
         .from("grades")
-        .select("score, category_id, grade_categories!inner(max_score)")
+        .select("score, category_id, student_id, grade_categories!inner(max_score)")
         .not("score", "is", null),
-      supabase
-        .from("behavior_records")
-        .select("type, date")
-        .gte("date", last7Days[0])
-        .lte("date", last7Days[6]),
+      behaviorQuery,
     ]);
 
     // Parse settings
