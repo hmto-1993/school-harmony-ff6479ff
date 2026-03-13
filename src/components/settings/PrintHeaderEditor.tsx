@@ -462,8 +462,52 @@ export default function PrintHeaderEditor() {
                   {exporting ? "جارٍ التصدير..." : "تصدير PNG"}
                 </Button>
               </div>
-              <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px" }}>
+              <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white relative overflow-hidden" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+                {/* Watermark preview overlay */}
+                {config.watermark?.enabled && config.watermark.text && (
+                  <div style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: config.watermark.repeat ? "stretch" : "center",
+                    justifyContent: "center",
+                    pointerEvents: "none",
+                    zIndex: 1,
+                    overflow: "hidden",
+                  }}>
+                    {config.watermark.repeat ? (
+                      <div style={{
+                        position: "absolute",
+                        inset: "-100%",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        alignContent: "center",
+                        justifyContent: "center",
+                        gap: "30px 60px",
+                        transform: `rotate(${config.watermark.angle}deg)`,
+                      }}>
+                        {Array.from({ length: 20 }).map((_, i) => (
+                          <span key={i} style={{
+                            fontSize: `${config.watermark!.fontSize * 0.4}px`,
+                            color: config.watermark!.color,
+                            opacity: config.watermark!.opacity,
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                          }}>{config.watermark!.text}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span style={{
+                        fontSize: `${config.watermark.fontSize * 0.5}px`,
+                        color: config.watermark.color,
+                        opacity: config.watermark.opacity,
+                        fontWeight: 700,
+                        transform: `rotate(${config.watermark.angle}deg)`,
+                      }}>{config.watermark.text}</span>
+                    )}
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", position: "relative", zIndex: 2 }}>
                   <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
                     {config.rightSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
@@ -475,8 +519,8 @@ export default function PrintHeaderEditor() {
                         {img ? (
                           <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
                         ) : (
-                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-gray-50" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
-                            <ImageIcon className="h-4 w-4 text-gray-300" />
+                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
+                            <ImageIcon className="h-4 w-4 text-muted-foreground/40" />
                           </div>
                         )}
                       </div>
