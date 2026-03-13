@@ -891,6 +891,42 @@ export type Database = {
           },
         ]
       }
+      shared_views: {
+        Row: {
+          can_export: boolean
+          can_print: boolean
+          class_ids: string[]
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          teacher_id: string
+          token: string
+        }
+        Insert: {
+          can_export?: boolean
+          can_print?: boolean
+          class_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          teacher_id: string
+          token?: string
+        }
+        Update: {
+          can_export?: boolean
+          can_print?: boolean
+          class_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          teacher_id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string

@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap } from "lucide-react";
+import ShareDialog from "@/components/shared/ShareDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useMemo, useEffect, useState } from "react";
@@ -61,6 +62,7 @@ export default function DashboardHeader({ onPrint }: Props) {
         </div>
         <div className="hidden sm:flex flex-col items-end gap-2 text-left">
           <div className="flex items-center gap-2">
+            <ShareDialog />
             {onPrint && (
               <Button
                 size="sm"
