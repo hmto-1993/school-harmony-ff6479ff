@@ -148,7 +148,7 @@ export default function ShareDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
+        <Button variant="ghost" size="sm" className="gap-1.5 bg-transparent border-0 text-white/80 hover:text-white hover:bg-transparent hover:border hover:border-white/30 active:border-white/50 transition-all">
           <Share2 className="h-4 w-4" /> مشاركة
         </Button>
       </DialogTrigger>

@@ -8,7 +8,7 @@ import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
-import ShareDialog from "@/components/shared/ShareDialog";
+
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
@@ -102,7 +102,6 @@ export default function GradesPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <ShareDialog />
           <NoorExportDialog />
         </div>
       </div>
