@@ -767,33 +767,33 @@ function OverviewTab({ data }: { data: SharedData }) {
 function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-slate-800">تفاصيل الحضور اليوم</h2>
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <h2 className="text-lg font-bold text-white">تفاصيل الحضور اليوم</h2>
+      <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="text-right px-4 py-3 font-semibold text-slate-600">الفصل</th>
-              <th className="text-center px-4 py-3 font-semibold text-slate-600">الطلاب</th>
-              <th className="text-center px-4 py-3 font-semibold text-emerald-600">حاضر</th>
-              <th className="text-center px-4 py-3 font-semibold text-red-500">غائب</th>
-              <th className="text-center px-4 py-3 font-semibold text-amber-500">متأخر</th>
-              <th className="text-center px-4 py-3 font-semibold text-slate-400">لم يُسجل</th>
-              <th className="text-center px-4 py-3 font-semibold text-slate-600">النسبة</th>
+          <thead>
+            <tr className="border-b border-white/[0.06]">
+              <th className="text-right px-4 py-3 font-semibold text-white/60">الفصل</th>
+              <th className="text-center px-4 py-3 font-semibold text-white/60">الطلاب</th>
+              <th className="text-center px-4 py-3 font-semibold text-[hsl(160,84%,55%)]">حاضر</th>
+              <th className="text-center px-4 py-3 font-semibold text-[hsl(0,84%,65%)]">غائب</th>
+              <th className="text-center px-4 py-3 font-semibold text-[hsl(38,92%,60%)]">متأخر</th>
+              <th className="text-center px-4 py-3 font-semibold text-white/30">لم يُسجل</th>
+              <th className="text-center px-4 py-3 font-semibold text-white/60">النسبة</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-white/[0.04]">
             {classes.map((cls) => {
               const rate = cls.attendance.total > 0 ? Math.round((cls.attendance.present / cls.attendance.total) * 100) : 0;
               return (
-                <tr key={cls.id} className="hover:bg-slate-50/50">
-                  <td className="px-4 py-3 font-medium text-slate-800">{cls.name}</td>
-                  <td className="text-center px-4 py-3">{cls.studentCount}</td>
-                  <td className="text-center px-4 py-3 text-emerald-600 font-semibold">{cls.attendance.present}</td>
-                  <td className="text-center px-4 py-3 text-red-500 font-semibold">{cls.attendance.absent}</td>
-                  <td className="text-center px-4 py-3 text-amber-500 font-semibold">{cls.attendance.late}</td>
-                  <td className="text-center px-4 py-3 text-slate-400">{cls.attendance.notRecorded}</td>
+                <tr key={cls.id} className="hover:bg-white/[0.03] transition-colors">
+                  <td className="px-4 py-3 font-medium text-white/90">{cls.name}</td>
+                  <td className="text-center px-4 py-3 text-white/60">{cls.studentCount}</td>
+                  <td className="text-center px-4 py-3 text-[hsl(160,84%,55%)] font-semibold">{cls.attendance.present}</td>
+                  <td className="text-center px-4 py-3 text-[hsl(0,84%,65%)] font-semibold">{cls.attendance.absent}</td>
+                  <td className="text-center px-4 py-3 text-[hsl(38,92%,60%)] font-semibold">{cls.attendance.late}</td>
+                  <td className="text-center px-4 py-3 text-white/30">{cls.attendance.notRecorded}</td>
                   <td className="text-center px-4 py-3">
-                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-bold", rate >= 80 ? "bg-emerald-100 text-emerald-700" : rate >= 60 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700")}>
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-bold", rate >= 80 ? "bg-[hsl(160,84%,39%)/0.15] text-[hsl(160,84%,55%)]" : rate >= 60 ? "bg-[hsl(38,92%,50%)/0.15] text-[hsl(38,92%,60%)]" : "bg-[hsl(0,84%,60%)/0.15] text-[hsl(0,84%,65%)]")}>
                       {rate}%
                     </span>
                   </td>
@@ -805,9 +805,9 @@ function AttendanceTab({ classes }: { classes: ClassSummary[] }) {
       </div>
 
       {classes.map((cls) => (
-        <details key={cls.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <summary className="px-4 py-3 font-semibold text-slate-700 cursor-pointer hover:bg-slate-50">{cls.name} — قائمة الطلاب</summary>
-          <div className="px-4 pb-3 text-sm text-slate-500">
+        <details key={cls.id} className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06]">
+          <summary className="px-4 py-3 font-semibold text-white/70 cursor-pointer hover:bg-white/[0.03] transition-colors">{cls.name} — قائمة الطلاب</summary>
+          <div className="px-4 pb-3 text-sm text-white/40">
             <p>عدد الطلاب: {cls.studentCount} | حاضر: {cls.attendance.present} | غائب: {cls.attendance.absent}</p>
           </div>
         </details>
