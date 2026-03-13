@@ -60,6 +60,18 @@ export default function DashboardHeader({ onPrint }: Props) {
   }, [user]);
 
   return (
+    <div className="space-y-2">
+      {/* Expiring links warning */}
+      {expiringLinks.length > 0 && (
+        <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-sm print:hidden">
+          <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+          <span className="text-amber-800 font-medium">
+            {expiringLinks.length === 1
+              ? `رابط المشاركة "${expiringLinks[0].label}" ينتهي خلال ${expiringLinks[0].daysLeft === 0 ? "اليوم" : expiringLinks[0].daysLeft + " يوم"} — قم بتمديده من زر المشاركة`
+              : `${expiringLinks.length} روابط مشاركة تنتهي قريباً — قم بتمديدها من زر المشاركة`}
+          </span>
+        </div>
+      )}
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-white/5 rounded-full -translate-x-1/2 -translate-y-1/2" />
