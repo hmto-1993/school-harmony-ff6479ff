@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning, MessageCircle } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning, MessageCircle, Lock } from "lucide-react";
 import WhatsAppMessageDialog from "@/components/whatsapp/WhatsAppMessageDialog";
 import type { TemplateType } from "@/components/whatsapp/WhatsAppMessageDialog";
 import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
