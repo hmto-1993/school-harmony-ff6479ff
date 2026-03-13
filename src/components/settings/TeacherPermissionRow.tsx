@@ -69,6 +69,7 @@ const defaultPerms: Permissions = {
   can_view_attendance: true,
   can_view_activities: true,
   can_view_dashboard: true,
+  can_view_students: true,
 };
 
 export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: TeacherPermissionRowProps) {
