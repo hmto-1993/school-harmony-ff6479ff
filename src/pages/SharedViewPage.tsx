@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { safePrint } from "@/lib/print-utils";
 
@@ -30,6 +30,13 @@ interface AttendanceReportDay {
   total: number;
 }
 
+interface WeeklyAttendanceRecord {
+  student_id: string;
+  status: string;
+  class_id: string;
+  date: string;
+}
+
 interface SharedData {
   teacherName: string;
   schoolName: string;
@@ -43,11 +50,15 @@ interface SharedData {
   categories: any[];
   attendanceReport: AttendanceReportDay[];
   viewCount: number;
+  weeklyAttendance: WeeklyAttendanceRecord[];
+  academicCalendar: { start_date: string; total_weeks: number; semester: string } | null;
+  classSchedules: { class_id: string; periods_per_week: number; days_of_week: number[] }[];
 }
 
 const TABS = [
   { id: "overview", label: "نظرة عامة", icon: BarChart3 },
   { id: "attendance", label: "الحضور", icon: UserCheck },
+  { id: "weekly", label: "الأسبوعي", icon: CalendarDays },
   { id: "grades", label: "الدرجات", icon: BookOpen },
   { id: "reports", label: "التقارير", icon: FileBarChart },
   { id: "lessons", label: "خطط الدروس", icon: Clock },
@@ -175,6 +186,7 @@ export default function SharedViewPage() {
         {/* Tab Content */}
         {activeTab === "overview" && <OverviewTab data={data} />}
         {activeTab === "attendance" && <AttendanceTab classes={data.classes} />}
+        {activeTab === "weekly" && <WeeklyAttendanceTab data={data} />}
         {activeTab === "grades" && <GradesTab classes={data.classes} categories={data.categories} />}
         {activeTab === "reports" && <ReportsTab data={data} />}
         {activeTab === "lessons" && <LessonsTab classes={data.classes} />}
@@ -183,6 +195,7 @@ export default function SharedViewPage() {
         <div className="hidden print:block space-y-8">
           <OverviewTab data={data} />
           <AttendanceTab classes={data.classes} />
+          <WeeklyAttendanceTab data={data} />
           <GradesTab classes={data.classes} categories={data.categories} />
           <ReportsTab data={data} />
           <LessonsTab classes={data.classes} />
@@ -376,6 +389,189 @@ function GradesTab({ classes, categories }: { classes: ClassSummary[]; categorie
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// ============ Weekly Attendance Tab ============
+
+const STATUS_COLORS: Record<string, string> = {
+  present: "#4caf50",
+  absent: "#e53935",
+  late: "#fbc02d",
+  sick_leave: "#1e88e5",
+  early_leave: "#1e88e5",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  present: "حاضر",
+  absent: "غائب",
+  late: "متأخر",
+  sick_leave: "مستأذن",
+  early_leave: "خروج مبكر",
+};
+
+function getWeekNum(dateStr: string, startDate: string): number {
+  const d = new Date(dateStr);
+  const s = new Date(startDate);
+  const diff = Math.floor((d.getTime() - s.getTime()) / 86400000);
+  return Math.floor(diff / 7) + 1;
+}
+
+function WeeklyAttendanceTab({ data }: { data: SharedData }) {
+  const [selectedClassId, setSelectedClassId] = useState(data.classes[0]?.id || "");
+  const cal = data.academicCalendar;
+
+  const weeklyData = useMemo(() => {
+    if (!cal || !selectedClassId) return null;
+
+    const cls = data.classes.find(c => c.id === selectedClassId);
+    if (!cls) return null;
+
+    const classRecords = data.weeklyAttendance.filter(r => r.class_id === selectedClassId);
+    const schedule = data.classSchedules.find(s => s.class_id === selectedClassId);
+    const periodsPerWeek = schedule?.periods_per_week || 5;
+
+    // Build weeks
+    const weeks: { weekNum: number; dates: string[] }[] = [];
+    const weekDatesMap: Record<number, string[]> = {};
+
+    classRecords.forEach(r => {
+      const wk = getWeekNum(r.date, cal.start_date);
+      if (wk < 1 || wk > cal.total_weeks) return;
+      if (!weekDatesMap[wk]) weekDatesMap[wk] = [];
+      if (!weekDatesMap[wk].includes(r.date)) weekDatesMap[wk].push(r.date);
+    });
+
+    for (let w = 1; w <= cal.total_weeks; w++) {
+      weeks.push({ weekNum: w, dates: (weekDatesMap[w] || []).sort() });
+    }
+
+    // Build student rows
+    const studentRows = cls.students.map(s => {
+      const studentRecords = classRecords.filter(r => r.student_id === s.id);
+      const weekStatuses: Record<number, string[]> = {};
+      let totalAbsent = 0;
+      let totalLate = 0;
+
+      studentRecords.forEach(r => {
+        const wk = getWeekNum(r.date, cal.start_date);
+        if (wk < 1 || wk > cal.total_weeks) return;
+        if (!weekStatuses[wk]) weekStatuses[wk] = [];
+        weekStatuses[wk].push(r.status);
+        if (r.status === 'absent') totalAbsent++;
+        if (r.status === 'late') totalLate++;
+      });
+
+      return {
+        id: s.id,
+        name: s.full_name,
+        weekStatuses,
+        totalAbsent,
+        totalLate,
+        isAtRisk: totalAbsent >= 3,
+      };
+    });
+
+    return { weeks, studentRows, periodsPerWeek };
+  }, [data, selectedClassId, cal]);
+
+  if (!cal) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center shadow-sm">
+        <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-3" />
+        <p className="text-slate-500 font-medium">لا يوجد تقويم أكاديمي محدد</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h2 className="text-lg font-bold text-slate-800">تقرير الحضور الأسبوعي</h2>
+        <div className="flex gap-2">
+          {data.classes.map(cls => (
+            <button
+              key={cls.id}
+              onClick={() => setSelectedClassId(cls.id)}
+              className={cn(
+                "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+                selectedClassId === cls.id
+                  ? "bg-blue-600 text-white"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              )}
+            >
+              {cls.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Legend */}
+      <div className="flex gap-4 flex-wrap text-xs">
+        {Object.entries(STATUS_LABELS).map(([key, label]) => (
+          <div key={key} className="flex items-center gap-1.5">
+            <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: STATUS_COLORS[key] }} />
+            <span className="text-slate-600">{label}</span>
+          </div>
+        ))}
+      </div>
+
+      {weeklyData && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-slate-50">
+                  <th className="text-right px-3 py-2 font-semibold text-slate-600 sticky right-0 bg-slate-50 z-10 min-w-[120px]">الطالب</th>
+                  {weeklyData.weeks.map(w => (
+                    <th key={w.weekNum} className="text-center px-1 py-2 font-medium text-slate-500 min-w-[36px]">
+                      <div className="writing-mode-vertical text-[10px]">ع{w.weekNum}</div>
+                    </th>
+                  ))}
+                  <th className="text-center px-2 py-2 font-semibold text-red-500 min-w-[40px]">غ</th>
+                  <th className="text-center px-2 py-2 font-semibold text-amber-500 min-w-[40px]">تأخر</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {weeklyData.studentRows.map((student, idx) => (
+                  <tr key={student.id} className={cn("hover:bg-slate-50/50", student.isAtRisk && "bg-red-50/30")}>
+                    <td className="px-3 py-1.5 font-medium text-slate-800 whitespace-nowrap sticky right-0 bg-white z-10">
+                      <div className="flex items-center gap-1">
+                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />}
+                        <span className="truncate max-w-[100px]">{student.name}</span>
+                      </div>
+                    </td>
+                    {weeklyData.weeks.map(w => {
+                      const statuses = student.weekStatuses[w.weekNum] || [];
+                      return (
+                        <td key={w.weekNum} className="text-center px-0.5 py-1">
+                          <div className="flex flex-wrap justify-center gap-0.5">
+                            {statuses.length === 0 ? (
+                              <span className="text-slate-200">·</span>
+                            ) : (
+                              statuses.map((s, i) => (
+                                <span
+                                  key={i}
+                                  className="w-2.5 h-2.5 rounded-full inline-block"
+                                  style={{ backgroundColor: STATUS_COLORS[s] || '#ccc' }}
+                                  title={STATUS_LABELS[s] || s}
+                                />
+                              ))
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                    <td className="text-center px-2 py-1.5 font-bold text-red-500">{student.totalAbsent || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold text-amber-500">{student.totalLate || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
