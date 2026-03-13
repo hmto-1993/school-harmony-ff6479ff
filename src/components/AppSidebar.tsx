@@ -41,6 +41,7 @@ const adminLinks = [
 
 const teacherLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+  { to: "/students", label: "الطلاب", icon: Users },
   { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
