@@ -38,8 +38,9 @@ interface Activity {
 }
 
 export default function ActivitiesPage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
