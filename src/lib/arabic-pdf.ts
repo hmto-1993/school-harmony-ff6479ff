@@ -279,6 +279,23 @@ export async function createArabicPDF(
   return { doc, startY, watermark };
 }
 
+/** Apply watermark to all pages and save the PDF */
+export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkConfig) {
+  if (watermark?.enabled) {
+    renderWatermarkOnAllPages(doc, watermark);
+  }
+  // Use safeSavePDF from download-utils
+  const blob = doc.output("blob") as Blob;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 /** Get autoTable styles pre-configured for Arabic font */
 export function getArabicTableStyles() {
   return {
