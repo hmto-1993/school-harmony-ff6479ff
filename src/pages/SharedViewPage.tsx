@@ -523,16 +523,18 @@ export default function SharedViewPage() {
     });
   }, [token]);
 
+  const themeClass = isDark ? 'sv-dark' : 'sv-light';
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(228,50%,8%)] via-[hsl(260,40%,12%)] to-[hsl(195,60%,10%)]">
+      <div className={cn("min-h-screen flex items-center justify-center", themeClass)} style={{ background: 'var(--sv-page-from)' }}>
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-16 h-16">
             <div className="absolute inset-0 rounded-full border-4 border-[hsl(195,100%,50%)/0.2]" />
             <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[hsl(195,100%,50%)] animate-spin" />
             <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-[hsl(270,75%,55%)] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
           </div>
-          <p className="text-white/60 text-sm font-medium animate-pulse">جارٍ تحميل التقرير...</p>
+          <p className="text-sm font-medium animate-pulse" style={{ color: 'var(--sv-text-muted)' }}>جارٍ تحميل التقرير...</p>
         </div>
       </div>
     );
@@ -540,13 +542,13 @@ export default function SharedViewPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(228,50%,8%)] to-[hsl(0,40%,12%)] p-6">
-        <div className="text-center space-y-4 max-w-md bg-white/5 backdrop-blur-xl rounded-3xl p-10 border border-white/10">
+      <div className={cn("min-h-screen flex items-center justify-center p-6", themeClass)} style={{ background: 'var(--sv-page-from)' }}>
+        <div className="text-center space-y-4 max-w-md rounded-3xl p-10" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
           <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">
             <AlertTriangle className="h-10 w-10 text-red-400" />
           </div>
-          <h1 className="text-2xl font-bold text-white">{error}</h1>
-          <p className="text-white/40">تأكد من صحة الرابط أو تواصل مع المعلم للحصول على رابط جديد</p>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--sv-text)' }}>{error}</h1>
+          <p style={{ color: 'var(--sv-text-faint)' }}>تأكد من صحة الرابط أو تواصل مع المعلم للحصول على رابط جديد</p>
         </div>
       </div>
     );
@@ -567,37 +569,47 @@ export default function SharedViewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(228,50%,6%)] via-[hsl(240,35%,9%)] to-[hsl(260,30%,8%)] print:bg-white" dir="rtl">
+    <div className={cn("min-h-screen print:bg-white transition-colors duration-500", themeClass)} style={{ background: `linear-gradient(to bottom right, var(--sv-page-from), var(--sv-page-via), var(--sv-page-to))` }} dir="rtl">
       {/* Ambient glow effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none print:hidden">
-        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[hsl(195,100%,50%)/0.04] blur-[100px]" />
-        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[hsl(270,75%,55%)/0.04] blur-[100px]" />
+        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'var(--sv-glow1)' }} />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[100px]" style={{ background: 'var(--sv-glow2)' }} />
       </div>
 
       {/* Header */}
-      <header className="relative bg-white/[0.03] backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-10 print:static">
-        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(195,100%,50%)/0.03] via-transparent to-[hsl(270,75%,55%)/0.03]" />
+      <header className="relative backdrop-blur-xl sticky top-0 z-10 print:static transition-colors duration-500" style={{ background: 'var(--sv-header)', borderBottom: '1px solid var(--sv-header-border)' }}>
+        <div className="absolute inset-0" style={{ background: `linear-gradient(to right, var(--sv-header-overlay-l), transparent, var(--sv-header-overlay-r))` }} />
         <div className="relative max-w-6xl mx-auto px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              {data.schoolName && <p className="text-sm text-white/40 font-medium">{data.schoolName}</p>}
-              <h1 className="text-xl font-bold text-white">عرض أعمال: <span className="bg-gradient-to-l from-[hsl(195,100%,60%)] to-[hsl(270,75%,65%)] bg-clip-text text-transparent">{data.teacherName}</span></h1>
+              {data.schoolName && <p className="text-sm font-medium" style={{ color: 'var(--sv-text-faint)' }}>{data.schoolName}</p>}
+              <h1 className="text-xl font-bold" style={{ color: 'var(--sv-text)' }}>عرض أعمال: <span className="bg-gradient-to-l from-[hsl(195,100%,60%)] to-[hsl(270,75%,65%)] bg-clip-text text-transparent">{data.teacherName}</span></h1>
               <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <span className="inline-flex items-center gap-1 text-xs bg-[hsl(195,100%,50%)/0.12] text-[hsl(195,100%,70%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(195,100%,50%)/0.15]">
+                <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: 'var(--sv-badge-view-bg)', color: 'var(--sv-badge-view-text)', border: '1px solid var(--sv-badge-view-border)' }}>
                   <Eye className="h-3 w-3" /> عرض فقط
                 </span>
-                <span className="inline-flex items-center gap-1 text-xs bg-[hsl(38,92%,50%)/0.12] text-[hsl(38,92%,70%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(38,92%,50%)/0.15]">
+                <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: 'var(--sv-badge-exp-bg)', color: 'var(--sv-badge-exp-text)', border: '1px solid var(--sv-badge-exp-border)' }}>
                   <Shield className="h-3 w-3" /> متبقي {daysLeft} يوم
                 </span>
                 {data.viewCount > 1 && (
-                  <span className="inline-flex items-center gap-1 text-xs bg-[hsl(160,84%,39%)/0.12] text-[hsl(160,84%,60%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(160,84%,39%)/0.15]">
+                  <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium" style={{ background: 'var(--sv-badge-count-bg)', color: 'var(--sv-badge-count-text)', border: '1px solid var(--sv-badge-count-border)' }}>
                     <Eye className="h-3 w-3" /> {data.viewCount} مشاهدة
                   </span>
                 )}
-                {data.label && <span className="text-xs text-white/30">{data.label}</span>}
+                {data.label && <span className="text-xs" style={{ color: 'var(--sv-text-dim)' }}>{data.label}</span>}
               </div>
             </div>
             <div className="flex items-center gap-2 print:hidden">
+              {/* Theme toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2.5 rounded-xl transition-all duration-300 hover:scale-110"
+                style={{ background: 'var(--sv-toggle-bg)', color: 'var(--sv-toggle-text)' }}
+                title={isDark ? "الوضع الفاتح" : "الوضع الداكن"}
+              >
+                {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+
               {data.canPrint && (
                 <div className="relative">
                   <div className="flex">
@@ -618,8 +630,8 @@ export default function SharedViewPage() {
                     </button>
                   </div>
                   {showExportMenu && (
-                    <div className="absolute left-0 top-full mt-2 bg-[hsl(228,45%,12%)] backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 py-2 z-20 min-w-[220px]">
-                      <div className="px-4 py-1.5 text-xs font-semibold text-white/30">الملخص الذكي</div>
+                    <div className="absolute left-0 top-full mt-2 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-20 min-w-[220px]" style={{ background: 'var(--sv-dropdown)', border: '1px solid var(--sv-dropdown-border)' }}>
+                      <div className="px-4 py-1.5 text-xs font-semibold" style={{ color: 'var(--sv-dropdown-label)' }}>الملخص الذكي</div>
                       {([
                         { key: "comprehensive", label: "شامل", icon: "📊" },
                         { key: "attendance", label: "التركيز على الحضور", icon: "📋" },
@@ -633,24 +645,27 @@ export default function SharedViewPage() {
                             setShowExportMenu(false);
                             exportPDF(opt.key);
                           }}
-                          className={cn(
-                            "w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-white/5 transition-colors text-white/70",
-                            summaryFocus === opt.key && "bg-[hsl(195,100%,50%)/0.1] text-[hsl(195,100%,70%)] font-semibold"
-                          )}
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
+                          style={{
+                            color: summaryFocus === opt.key ? 'var(--sv-selected-text)' : 'var(--sv-dropdown-text)',
+                            background: summaryFocus === opt.key ? 'var(--sv-selected-bg)' : 'transparent',
+                            fontWeight: summaryFocus === opt.key ? 600 : 400,
+                          }}
                         >
                           <span>{opt.icon}</span>
                           <span>{opt.label}</span>
-                          {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-[hsl(195,100%,60%)]" />}
+                          {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto" style={{ color: 'var(--sv-blue-accent)' }} />}
                         </button>
                       ))}
-                      <div className="border-t border-white/5 mt-1 pt-1">
+                      <div style={{ borderTop: '1px solid var(--sv-divider-subtle)' }} className="mt-1 pt-1">
                         <button
                           onClick={() => {
                             setShowExportMenu(false);
                             shareViaWhatsApp();
                           }}
                           disabled={sharing}
-                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-[hsl(160,84%,39%)/0.1] transition-colors text-[hsl(160,84%,60%)]"
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors"
+                          style={{ color: 'var(--sv-wa-text)' }}
                         >
                           <span>💬</span>
                           <span>{sharing ? "جارٍ المشاركة..." : "مشاركة عبر واتساب"}</span>
@@ -698,8 +713,9 @@ export default function SharedViewPage() {
                   "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-300",
                   activeTab === tab.id
                     ? `bg-gradient-to-l ${colors.active} text-white shadow-lg ${colors.gradient}`
-                    : "bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]"
+                    : ""
                 )}
+                style={activeTab !== tab.id ? { background: 'var(--sv-tab-inactive)', color: 'var(--sv-tab-inactive-text)', border: '1px solid var(--sv-tab-inactive-border)' } : undefined}
               >
                 <Icon className="h-4 w-4" /> {tab.label}
               </button>
@@ -725,14 +741,14 @@ export default function SharedViewPage() {
 
 function StatCard({ label, value, icon: Icon, gradient }: { label: string; value: string | number; icon: any; gradient: string }) {
   return (
-    <div className="relative group overflow-hidden rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] p-5 text-center transition-all duration-500 hover:bg-white/[0.07] hover:border-white/10 hover:scale-[1.02]">
+    <div className="relative group overflow-hidden rounded-2xl p-5 text-center transition-all duration-500 hover:scale-[1.02]" style={{ background: 'var(--sv-card)', border: '1px solid var(--sv-card-border)' }}>
       <div className={cn("absolute inset-0 bg-gradient-to-br opacity-[0.07] group-hover:opacity-[0.12] transition-opacity duration-500", gradient)} />
       <div className="relative">
         <div className={cn("w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg", gradient)}>
           <Icon className="h-5 w-5 text-white" />
         </div>
-        <div className="text-3xl font-black text-white tabular-nums">{value}</div>
-        <div className="text-xs font-medium text-white/40 mt-1.5">{label}</div>
+        <div className="text-3xl font-black tabular-nums" style={{ color: 'var(--sv-text)' }}>{value}</div>
+        <div className="text-xs font-medium mt-1.5" style={{ color: 'var(--sv-text-faint)' }}>{label}</div>
       </div>
     </div>
   );
