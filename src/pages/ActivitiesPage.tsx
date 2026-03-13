@@ -391,11 +391,14 @@ export default function ActivitiesPage() {
             {activity.targets.map(target => (
               <div key={target.class_id} className="flex items-center gap-1.5 bg-muted/30 rounded-xl px-3 py-1.5 border border-border/20">
                 <span className="text-sm font-medium">{target.classes?.name || "—"}</span>
+                {!isViewOnly && (
                 <div className="flex items-center gap-1 mr-2">
                   <span className="text-[10px] text-muted-foreground">رفع ملفات</span>
                   <Switch checked={target.allow_student_uploads}
                     onCheckedChange={() => toggleStudentUploads(activity.id, target.class_id, target.allow_student_uploads)}
                     className="scale-75" />
+                </div>
+                )}
                 </div>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:bg-primary/10 rounded-lg"
                   onClick={() => { setResultsActivity(activity); setResultsClassId(target.class_id); }}>
