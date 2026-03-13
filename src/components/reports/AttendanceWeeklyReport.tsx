@@ -213,7 +213,8 @@ export default function AttendanceWeeklyReport({
       const row: Record<string, any> = { "م": idx + 1, "اسم الطالب": s.name };
       exportWeeks.forEach((w) => {
         const slots = s.weeks[w.weekNum] || [];
-        for (let i = 0; i < periodsPerWeek; i++) {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        for (let i = 0; i < colCount; i++) {
           const st = slots[i];
           row[`أ${w.weekNum}-${i + 1}`] = st ? STATUS_CONFIG[st]?.label || st : "";
         }
