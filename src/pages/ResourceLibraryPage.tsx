@@ -933,7 +933,8 @@ export default function ResourceLibraryPage() {
                     )}
                   </div>
 
-                  {/* Delete folder */}
+                  {/* Delete folder - only for non-read-only */}
+                  {!isViewOnly && (
                   <div className="mt-6 pt-4 border-t border-border">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -958,6 +959,7 @@ export default function ResourceLibraryPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
+                  )}
                 </>
               )}
             </>
