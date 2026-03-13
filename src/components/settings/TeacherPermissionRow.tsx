@@ -7,7 +7,7 @@ import { Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface TeacherPermissionRowProps {
-  teacher: { user_id: string; email: string; full_name: string };
+  teacher: { user_id: string; email: string; full_name: string; national_id?: string };
 }
 
 interface Permissions {
