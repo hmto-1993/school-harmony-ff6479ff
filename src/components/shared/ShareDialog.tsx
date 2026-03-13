@@ -27,6 +27,8 @@ interface ShareLink {
   can_export: boolean;
   label: string;
   created_at: string;
+  view_count: number;
+  last_viewed_at: string | null;
 }
 
 export default function ShareDialog() {
