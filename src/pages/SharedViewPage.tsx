@@ -211,6 +211,11 @@ export default function SharedViewPage() {
     }
     setExporting(false);
   }, [data]);
+
+  useEffect(() => {
+    if (!token) return;
+    setLoading(true);
+    supabase.functions.invoke("get-shared-data", { body: { token } }).then(({ data: res, error: err }) => {
       if (err || res?.error) {
         setError(res?.error || "حدث خطأ في تحميل البيانات");
       } else {
