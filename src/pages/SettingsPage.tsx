@@ -2586,105 +2586,144 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <>
-            {/* ===== إضافة معلم ===== */}
+            {/* ===== إدارة المعلمين ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
                 <CollapsibleTrigger className="w-full group">
                   <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 shadow-lg shadow-violet-500/20 text-white">
-                        <Plus className="h-5 w-5" />
+                        <Users className="h-5 w-5" />
                       </div>
                       <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">إضافة معلم</h3>
-                        <p className="text-xs text-muted-foreground">إنشاء حساب جديد للمعلمين</p>
+                        <h3 className="text-base font-bold text-foreground">إدارة المعلمين</h3>
+                        <p className="text-xs text-muted-foreground">إنشاء حسابات وإدارة كلمات المرور والصلاحيات</p>
                       </div>
                     </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">{teachers.length} معلم</Badge>
+                      <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    </div>
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                    <div className="space-y-2">
-                      <Label>الاسم الكامل</Label>
-                      <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>البريد الإلكتروني</Label>
-                      <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
-                        placeholder="teacher@school.edu.sa" dir="ltr" className="text-right" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>رقم الهوية الوطنية</Label>
-                      <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
-                        placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>كلمة المرور</Label>
-                      <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
-                        placeholder="كلمة مرور قوية" dir="ltr" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>الصلاحية</Label>
-                      <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="teacher">معلم</SelectItem>
-                          <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <Button onClick={handleCreateTeacher}
-                      disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
-                      className="gap-1.5">
-                      <Plus className="h-4 w-4" />
-                      {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                  <CardContent className="px-5 pb-5 pt-0 space-y-6">
+                    {/* قائمة المعلمين مع الصلاحيات */}
+                    {teachers.length > 0 && (
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <UserCircle className="h-4 w-4 text-primary" />
+                          المعلمون الحاليون
+                        </h4>
+                        <div className="rounded-xl border border-border/50 overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow className="bg-muted/50">
+                                <TableHead className="text-right">المعلم</TableHead>
+                                <TableHead className="text-right">البريد</TableHead>
+                                <TableHead className="text-center text-xs">الطباعة</TableHead>
+                                <TableHead className="text-center text-xs">التصدير</TableHead>
+                                <TableHead className="text-center text-xs">الإشعارات</TableHead>
+                                <TableHead className="text-center text-xs">الحذف</TableHead>
+                                <TableHead className="text-center text-xs">الدرجات</TableHead>
+                                <TableHead className="text-center text-xs">التحضير</TableHead>
+                                <TableHead className="text-center">إجراءات</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {teachers.map((t) => (
+                                <TeacherPermissionRow
+                                  key={t.user_id}
+                                  teacher={t}
+                                  onPasswordChange={(email, password) => {
+                                    setSelectedTeacher(t.user_id);
+                                    setNewPassword(password);
+                                  }}
+                                />
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
 
-            {/* ===== كلمات المرور ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/20 text-white">
-                        <KeyRound className="h-5 w-5" />
+                    {/* تغيير كلمة مرور معلم */}
+                    <div className="space-y-3 rounded-xl border border-border/30 bg-muted/20 p-4">
+                      <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <KeyRound className="h-4 w-4 text-destructive" />
+                        تغيير كلمة مرور معلم
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">اختر المعلم</Label>
+                          <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
+                            <SelectTrigger className="h-9"><SelectValue placeholder="اختر المعلم" /></SelectTrigger>
+                            <SelectContent>
+                              {teachers.map((t) => (
+                                <SelectItem key={t.user_id} value={t.user_id}>{t.full_name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">كلمة المرور الجديدة</Label>
+                          <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="كلمة مرور جديدة" dir="ltr" className="h-9" />
+                        </div>
+                        <Button onClick={handleChangePassword}
+                          disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5 h-9" size="sm">
+                          <KeyRound className="h-3.5 w-3.5" />
+                          {changingPassword ? "جارٍ التغيير..." : "تغيير"}
+                        </Button>
                       </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">تغيير كلمة مرور المعلم</h3>
-                        <p className="text-xs text-muted-foreground">إعادة تعيين كلمات مرور المعلمين</p>
+                    </div>
+
+                    {/* إضافة معلم جديد */}
+                    <div className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                      <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                        <Plus className="h-4 w-4 text-primary" />
+                        إضافة معلم جديد
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">الاسم الكامل</Label>
+                          <Input value={newTeacherName} onChange={(e) => setNewTeacherName(e.target.value)} placeholder="اسم المعلم" className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">البريد الإلكتروني</Label>
+                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">رقم الهوية الوطنية</Label>
+                          <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
+                            placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">كلمة المرور</Label>
+                          <Input type="password" value={newTeacherPassword} onChange={(e) => setNewTeacherPassword(e.target.value)}
+                            placeholder="كلمة مرور قوية" dir="ltr" className="h-9" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs">الصلاحية</Label>
+                          <Select value={newTeacherRole} onValueChange={(v: "admin" | "teacher") => setNewTeacherRole(v)}>
+                            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="teacher">معلم</SelectItem>
+                              <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-end">
+                          <Button onClick={handleCreateTeacher}
+                            disabled={creatingTeacher || !newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()}
+                            className="gap-1.5 h-9 w-full" size="sm">
+                            <Plus className="h-3.5 w-3.5" />
+                            {creatingTeacher ? "جارٍ الإنشاء..." : "إنشاء الحساب"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                    <div className="space-y-2">
-                      <Label>اختر المعلم</Label>
-                      <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
-                        <SelectTrigger><SelectValue placeholder="اختر المعلم" /></SelectTrigger>
-                        <SelectContent>
-                          {teachers.map((t) => (
-                            <SelectItem key={t.user_id} value={t.user_id}>{t.full_name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>كلمة المرور الجديدة</Label>
-                      <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
-                    </div>
-                    <Button onClick={handleChangePassword}
-                      disabled={changingPassword || !selectedTeacher || !newPassword.trim()} className="gap-1.5">
-                      <KeyRound className="h-4 w-4" />
-                      {changingPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-                    </Button>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
