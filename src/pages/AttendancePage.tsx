@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
@@ -19,6 +19,7 @@ import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
@@ -50,8 +51,9 @@ interface AbsenceAlert {
 }
 
 export default function AttendancePage() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { toast } = useToast();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { calendarData, getWeekForDate } = useAcademicWeek();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
@@ -434,12 +436,19 @@ export default function AttendancePage() {
     return result;
   }, [records, statusFilter, searchQuery]);
 
+  if (permsLoaded && !perms.can_view_attendance && role !== "admin") {
+    return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الحضور" description="تواصل مع المسؤول لتفعيل صلاحية عرض الحضور" />;
+  }
+
+  const isViewOnly = !perms.can_manage_attendance;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
           <ClipboardCheck className="h-7 w-7 text-primary" />
           التحضير
+          {isViewOnly && <Badge variant="secondary" className="text-[10px] gap-1"><Eye className="h-3 w-3" /> عرض فقط</Badge>}
         </h1>
         <div className="flex items-center gap-2 mt-1 flex-wrap">
           <span className="text-muted-foreground">التاريخ:</span>
@@ -795,9 +804,9 @@ export default function AttendancePage() {
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving || isClassLocked} className="shadow-md shadow-primary/20">
+                <Button onClick={handleSave} disabled={saving || isClassLocked || isViewOnly} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
-                  {isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
+                  {isViewOnly ? "عرض فقط" : isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
                 </Button>
               </div>
             </>

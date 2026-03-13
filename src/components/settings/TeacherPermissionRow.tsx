@@ -51,6 +51,9 @@ interface Permissions {
   can_manage_attendance: boolean;
   can_view_grades: boolean;
   can_view_reports: boolean;
+  can_view_attendance: boolean;
+  can_view_activities: boolean;
+  can_view_dashboard: boolean;
 }
 
 const defaultPerms: Permissions = {
@@ -62,6 +65,9 @@ const defaultPerms: Permissions = {
   can_manage_attendance: true,
   can_view_grades: true,
   can_view_reports: true,
+  can_view_attendance: true,
+  can_view_activities: true,
+  can_view_dashboard: true,
 };
 
 export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: TeacherPermissionRowProps) {
@@ -71,7 +77,6 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Edit state
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState(teacher.full_name);
   const [editNationalId, setEditNationalId] = useState(teacher.national_id || "");
@@ -79,7 +84,6 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   const [savingEdit, setSavingEdit] = useState(false);
   const [currentRole, setCurrentRole] = useState<"admin" | "teacher">("teacher");
 
-  // Fetch current role
   useEffect(() => {
     supabase
       .from("user_roles")
@@ -113,6 +117,9 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_manage_attendance: data.can_manage_attendance,
             can_view_grades: (data as any).can_view_grades ?? true,
             can_view_reports: (data as any).can_view_reports ?? true,
+            can_view_attendance: (data as any).can_view_attendance ?? true,
+            can_view_activities: (data as any).can_view_activities ?? true,
+            can_view_dashboard: (data as any).can_view_dashboard ?? true,
           };
           setPerms(p);
           setOriginalPerms(p);
@@ -193,6 +200,9 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
     "can_manage_attendance",
     "can_view_grades",
     "can_view_reports",
+    "can_view_attendance",
+    "can_view_activities",
+    "can_view_dashboard",
   ];
 
   return (
@@ -221,7 +231,6 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-2">
-                {/* Teacher info display */}
                 <div className="rounded-lg border border-border/40 bg-muted/30 p-3 space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">البريد الإلكتروني</span>
@@ -237,7 +246,6 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
                   </div>
                 </div>
 
-                {/* Editable fields */}
                 <div className="space-y-1.5">
                   <Label className="text-sm">الاسم الكامل</Label>
                   <Input

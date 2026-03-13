@@ -11,6 +11,9 @@ export interface TeacherPerms {
   can_manage_attendance: boolean;
   can_view_grades: boolean;
   can_view_reports: boolean;
+  can_view_attendance: boolean;
+  can_view_activities: boolean;
+  can_view_dashboard: boolean;
 }
 
 const allTrue: TeacherPerms = {
@@ -22,6 +25,9 @@ const allTrue: TeacherPerms = {
   can_manage_attendance: true,
   can_view_grades: true,
   can_view_reports: true,
+  can_view_attendance: true,
+  can_view_activities: true,
+  can_view_dashboard: true,
 };
 
 export function useTeacherPermissions() {
@@ -31,7 +37,6 @@ export function useTeacherPermissions() {
 
   useEffect(() => {
     if (!user) { setLoaded(true); return; }
-    // Admins always get full permissions
     if (role === "admin") { setPerms(allTrue); setLoaded(true); return; }
 
     supabase
@@ -50,6 +55,9 @@ export function useTeacherPermissions() {
             can_manage_attendance: data.can_manage_attendance,
             can_view_grades: (data as any).can_view_grades ?? true,
             can_view_reports: (data as any).can_view_reports ?? true,
+            can_view_attendance: (data as any).can_view_attendance ?? true,
+            can_view_activities: (data as any).can_view_activities ?? true,
+            can_view_dashboard: (data as any).can_view_dashboard ?? true,
           });
         }
         setLoaded(true);

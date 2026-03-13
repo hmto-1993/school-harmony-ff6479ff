@@ -14,6 +14,9 @@ import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary"
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
 import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import EmptyState from "@/components/EmptyState";
+import { Lock } from "lucide-react";
 
 interface ClassStats {
   name: string;
@@ -25,6 +28,7 @@ interface ClassStats {
 
 export default function DashboardPage() {
   const { role } = useAuth();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [totalStudents, setTotalStudents] = useState(0);
   const [totalClasses, setTotalClasses] = useState(0);
   const [todayPresent, setTodayPresent] = useState(0);
@@ -97,6 +101,10 @@ export default function DashboardPage() {
   const handlePrint = useCallback(() => {
     safePrint();
   }, []);
+
+  if (permsLoaded && !perms.can_view_dashboard && role !== "admin") {
+    return <EmptyState icon={Lock} title="لا تملك صلاحية عرض لوحة التحكم" description="تواصل مع المسؤول لتفعيل صلاحية عرض لوحة التحكم" />;
+  }
 
   return (
     <div className="space-y-8">
