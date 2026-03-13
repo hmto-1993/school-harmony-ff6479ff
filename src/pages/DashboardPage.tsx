@@ -14,6 +14,9 @@ import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary"
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
 import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import EmptyState from "@/components/EmptyState";
+import { Lock } from "lucide-react";
 
 interface ClassStats {
   name: string;
