@@ -119,13 +119,13 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_delete_records: data.can_delete_records,
             can_manage_grades: data.can_manage_grades,
             can_manage_attendance: data.can_manage_attendance,
-            can_view_grades: (data as any).can_view_grades ?? true,
-            can_view_reports: (data as any).can_view_reports ?? true,
-            can_view_attendance: (data as any).can_view_attendance ?? true,
-            can_view_activities: (data as any).can_view_activities ?? true,
-            can_view_dashboard: (data as any).can_view_dashboard ?? true,
-            can_view_students: (data as any).can_view_students ?? true,
-            read_only_mode: (data as any).read_only_mode ?? false,
+            can_view_grades: data.can_view_grades,
+            can_view_reports: data.can_view_reports,
+            can_view_attendance: data.can_view_attendance,
+            can_view_activities: data.can_view_activities,
+            can_view_dashboard: data.can_view_dashboard,
+            can_view_students: data.can_view_students,
+            read_only_mode: data.read_only_mode,
           };
           setPerms(p);
           setOriginalPerms(p);

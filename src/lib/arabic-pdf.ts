@@ -1,5 +1,6 @@
 import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
+import { safeDownload } from "@/lib/download-utils";
 
 const FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf";
 const FONT_BOLD_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf";
@@ -114,24 +115,16 @@ async function imageUrlToBase64(url: string): Promise<string | null> {
 }
 
 /**
- * Render the school print header into a PDF document.
- * Returns the Y position after the header for content to start.
+ * Render print header from a pre-fetched config.
  */
-export async function renderPrintHeader(
+async function renderPrintHeaderFromConfig(
   doc: jsPDF,
-  reportType?: string
+  config: PrintHeaderConfig
 ): Promise<number> {
-  const config = await fetchPrintHeaderConfig(reportType);
-  if (!config) return 15;
-
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
-  const usableWidth = pageWidth - margin * 2;
 
   let currentY = 12;
-
-  // === Layout: [Right Text] [Center Images] [Left Text] ===
-  const sectionWidth = usableWidth / 3;
 
   // --- Right section text ---
   doc.setFont("Amiri", "bold");
@@ -188,10 +181,8 @@ export async function renderPrintHeader(
     }
   }
 
-  // Use the max Y from both text sections
   const maxY = Math.max(currentY, leftY);
 
-  // Draw separator line
   doc.setDrawColor(59, 130, 246);
   doc.setLineWidth(0.5);
   doc.line(margin, maxY + 2, pageWidth - margin, maxY + 2);
@@ -199,6 +190,19 @@ export async function renderPrintHeader(
   doc.setFont("Amiri", "normal");
 
   return maxY + 8;
+}
+
+/**
+ * Render the school print header into a PDF document.
+ * Returns the Y position after the header for content to start.
+ */
+export async function renderPrintHeader(
+  doc: jsPDF,
+  reportType?: string
+): Promise<number> {
+  const config = await fetchPrintHeaderConfig(reportType);
+  if (!config) return 15;
+  return renderPrintHeaderFromConfig(doc, config);
 }
 
 /** Render watermark on all pages of the PDF */
@@ -265,13 +269,14 @@ export async function createArabicPDF(
 
   let startY = 15;
   let watermark: WatermarkConfig | undefined;
-  
-  if (options.includeHeader !== false) {
-    startY = await renderPrintHeader(doc, options.reportType);
+
+  // Fetch config once for both header and watermark
+  const config = await fetchPrintHeaderConfig(options.reportType);
+
+  if (options.includeHeader !== false && config) {
+    startY = await renderPrintHeaderFromConfig(doc, config);
   }
 
-  // Fetch watermark config
-  const config = await fetchPrintHeaderConfig(options.reportType);
   if (config?.watermark?.enabled) {
     watermark = config.watermark;
   }
@@ -284,16 +289,8 @@ export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkC
   if (watermark?.enabled) {
     renderWatermarkOnAllPages(doc, watermark);
   }
-  // Use safeSavePDF from download-utils
   const blob = doc.output("blob") as Blob;
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  safeDownload(blob, fileName);
 }
 
 /** Get autoTable styles pre-configured for Arabic font */
