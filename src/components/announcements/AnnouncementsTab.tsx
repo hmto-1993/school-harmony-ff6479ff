@@ -38,7 +38,7 @@ interface ClassOption {
   name: string;
 }
 
-export default function AnnouncementsTab() {
+export default function AnnouncementsTab({ readOnly = false }: { readOnly?: boolean }) {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
