@@ -57,6 +57,8 @@ Deno.serve(async (req) => {
       { data: lessonPlans },
       { data: schoolSetting },
       { data: attendanceHistory },
+      { data: academicCalendar },
+      { data: classSchedules },
     ] = await Promise.all([
       supabase.from('profiles').select('full_name').eq('user_id', share.teacher_id).single(),
       supabase.from('classes').select('id, name, grade, section').in('id', classIds),
@@ -66,8 +68,12 @@ Deno.serve(async (req) => {
       supabase.from('behavior_records').select('student_id, type, class_id, date, note').in('class_id', classIds).gte('date', thirtyDaysAgo),
       supabase.from('lesson_plans').select('class_id, week_number, is_completed, lesson_title, day_index, slot_index').in('class_id', classIds).eq('created_by', share.teacher_id),
       supabase.from('site_settings').select('value').eq('id', 'school_name').single(),
-      // Attendance history for reports (last 30 days)
-      supabase.from('attendance_records').select('student_id, status, class_id, date').in('class_id', classIds).gte('date', thirtyDaysAgo).order('date', { ascending: false }),
+      // Full attendance history for weekly report
+      supabase.from('attendance_records').select('student_id, status, class_id, date').in('class_id', classIds).order('date', { ascending: false }).limit(5000),
+      // Academic calendar for week calculation
+      supabase.from('academic_calendar').select('start_date, total_weeks, semester, academic_year').order('created_at', { ascending: false }).limit(1).single(),
+      // Class schedules for periods per week
+      supabase.from('class_schedules').select('class_id, periods_per_week, days_of_week').in('class_id', classIds),
     ]);
 
     const studentIds = (students || []).map((s: any) => s.id);
