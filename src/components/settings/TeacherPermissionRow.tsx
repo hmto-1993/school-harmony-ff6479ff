@@ -95,7 +95,7 @@ export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowPr
   return (
     <TableRow className="group">
       <TableCell className="font-medium text-sm">{teacher.full_name}</TableCell>
-      <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.email}</TableCell>
+      <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.national_id || "—"}</TableCell>
       {permKeys.map((key) => (
         <TableCell key={key} className="text-center">
           <Switch

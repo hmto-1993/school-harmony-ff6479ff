@@ -2677,9 +2677,9 @@ export default function SettingsPage() {
                             placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-xs">رقم الهوية الوطنية</Label>
-                          <Input value={newTeacherNationalId} onChange={(e) => setNewTeacherNationalId(e.target.value)}
-                            placeholder="1XXXXXXXXX" dir="ltr" className="text-right h-9" inputMode="numeric" />
+                          <Label className="text-xs">البريد الإلكتروني <span className="text-muted-foreground">(اختياري)</span></Label>
+                          <Input type="email" value={newTeacherEmail} onChange={(e) => setNewTeacherEmail(e.target.value)}
+                            placeholder="teacher@school.edu.sa" dir="ltr" className="text-right h-9" />
                         </div>
                         <div className="space-y-1.5">
                           <Label className="text-xs">كلمة المرور</Label>
