@@ -570,7 +570,6 @@ export default function SettingsPage() {
       setChangingPassword(false);
       toast({ title: "خطأ", description: "فشل في الاتصال بالخادم", variant: "destructive" });
     }
-    }
   };
 
   const handleCreateTeacher = async () => {
