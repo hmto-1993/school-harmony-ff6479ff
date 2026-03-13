@@ -319,6 +319,8 @@ export default function ActivitiesPage() {
     </div>
   );
 
+  const isViewOnly = perms.read_only_mode && role !== "admin";
+
   const ActivityCard = ({ activity, ai }: { activity: Activity; ai: number }) => (
     <Card className={cn("border-0 shadow-md rounded-2xl overflow-hidden transition-all hover:shadow-lg", !activity.is_visible && "opacity-60")}
       style={{ animationDelay: `${ai * 50}ms` }}>
@@ -351,6 +353,7 @@ export default function ActivitiesPage() {
               </div>
             </div>
           </div>
+          {!isViewOnly && (
           <div className="flex items-center gap-1 shrink-0">
             <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl" onClick={() => openEdit(activity)} title="تعديل">
               <Pencil className="h-4 w-4 text-primary" />
@@ -377,6 +380,7 @@ export default function ActivitiesPage() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+          )}
         </div>
         <div className="mt-4 pt-4 border-t border-border/20">
           <div className="flex items-center gap-2 mb-2">
@@ -387,12 +391,14 @@ export default function ActivitiesPage() {
             {activity.targets.map(target => (
               <div key={target.class_id} className="flex items-center gap-1.5 bg-muted/30 rounded-xl px-3 py-1.5 border border-border/20">
                 <span className="text-sm font-medium">{target.classes?.name || "—"}</span>
+                {!isViewOnly && (
                 <div className="flex items-center gap-1 mr-2">
                   <span className="text-[10px] text-muted-foreground">رفع ملفات</span>
                   <Switch checked={target.allow_student_uploads}
                     onCheckedChange={() => toggleStudentUploads(activity.id, target.class_id, target.allow_student_uploads)}
                     className="scale-75" />
                 </div>
+                )}
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:bg-primary/10 rounded-lg"
                   onClick={() => { setResultsActivity(activity); setResultsClassId(target.class_id); }}>
                   <BarChart3 className="h-3 w-3" /> النتائج
@@ -421,7 +427,7 @@ export default function ActivitiesPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">إنشاء ونشر الملفات والاختبارات للفصول</p>
         </div>
-        {!perms.read_only_mode && (
+        {!isViewOnly && (
         <Dialog open={createOpen} onOpenChange={v => { if (!v) resetCreate(); else setCreateOpen(true); }}>
           <DialogTrigger asChild>
             <Button className="gap-2 rounded-xl shadow-lg"><Plus className="h-4 w-4" /> نشاط جديد</Button>

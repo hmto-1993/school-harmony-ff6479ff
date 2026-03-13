@@ -38,7 +38,7 @@ interface ClassOption {
   name: string;
 }
 
-export default function AnnouncementsTab() {
+export default function AnnouncementsTab({ readOnly = false }: { readOnly?: boolean }) {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -190,10 +190,12 @@ export default function AnnouncementsTab() {
       {/* New Announcement Button */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">إرسال إعلان عام للطلاب وأولياء الأمور</p>
+        {!readOnly && (
         <Button className="gap-2" onClick={openCreateDialog}>
           <Megaphone className="h-4 w-4" />
           إعلان جديد
         </Button>
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
@@ -317,6 +319,7 @@ export default function AnnouncementsTab() {
                     </div>
                   </div>
                 </div>
+                {!readOnly && (
                 <div className="flex items-center gap-1">
                   <div className="flex items-center gap-2 ml-2" title={ann.is_active ? "إيقاف الإعلان" : "تفعيل الإعلان"}>
                     <Switch
@@ -345,6 +348,7 @@ export default function AnnouncementsTab() {
                     </AlertDialogContent>
                   </AlertDialog>
                 </div>
+                )}
               </div>
             </CardContent>
           </Card>

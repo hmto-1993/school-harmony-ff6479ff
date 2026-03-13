@@ -338,10 +338,12 @@ export default function NotificationsPage() {
               </Badge>
             )}
           </TabsTrigger>
+          {!isReadOnly && (
           <TabsTrigger value="send-sms" className="gap-1.5">
             <MessageSquare className="h-4 w-4" />
             إرسال رسالة SMS
           </TabsTrigger>
+          )}
           <TabsTrigger value="history" className="gap-1.5">
             <Bell className="h-4 w-4" />
             سجل الإشعارات
@@ -350,7 +352,7 @@ export default function NotificationsPage() {
 
         {/* ===== Announcements ===== */}
         <TabsContent value="announcements">
-          <AnnouncementsTab />
+          <AnnouncementsTab readOnly={isReadOnly} />
         </TabsContent>
 
         {/* ===== Excuses Review ===== */}
@@ -407,7 +409,7 @@ export default function NotificationsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {excuse.status === "pending" ? (
+                            {excuse.status === "pending" && !isReadOnly ? (
                               <div className="flex items-center gap-1 justify-center">
                                 <Button
                                   size="sm"

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,8 @@ const CLASS_COLORS = [
 export default function ResourceLibraryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { perms } = useTeacherPermissions();
+  const isViewOnly = perms.read_only_mode;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -481,6 +484,7 @@ export default function ResourceLibraryPage() {
             </>
           )}
         </div>
+        {!isViewOnly && (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 rounded-xl" onClick={() => { if (selectedClassId) setNewClassId(selectedClassId); }}>
@@ -531,6 +535,7 @@ export default function ResourceLibraryPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {loading ? (
@@ -643,7 +648,8 @@ export default function ResourceLibraryPage() {
                       isHidden && "opacity-60"
                     )}
                   >
-                    {/* Eye toggle */}
+                    {/* Eye toggle - only for non-read-only */}
+                    {!isViewOnly && (
                     <button
                       onClick={(e) => { e.stopPropagation(); toggleVisibility(folder.id, folder.visible_to_students); }}
                       className={cn(
@@ -656,6 +662,7 @@ export default function ResourceLibraryPage() {
                     >
                       {isHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
+                    )}
 
                     {/* Folder Header - clickable to open detail */}
                     <div
@@ -713,6 +720,7 @@ export default function ResourceLibraryPage() {
                                   >
                                     <Download className="h-3.5 w-3.5" />
                                   </a>
+                                  {!isViewOnly && (
                                   <AlertDialog>
                                     <AlertDialogTrigger asChild>
                                       <button
@@ -733,6 +741,7 @@ export default function ResourceLibraryPage() {
                                       </AlertDialogFooter>
                                     </AlertDialogContent>
                                   </AlertDialog>
+                                  )}
                                 </div>
                               </div>
                             );
@@ -802,6 +811,7 @@ export default function ResourceLibraryPage() {
                         </div>
                       </div>
                     </div>
+                    {!isViewOnly && (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => toggleVisibility(selectedFolder.id, selectedFolder.visible_to_students)}
@@ -819,13 +829,15 @@ export default function ResourceLibraryPage() {
                         <Pen className="h-3.5 w-3.5" /> تعديل
                       </Button>
                     </div>
+                    )}
                   </div>
                 )}
               </DialogHeader>
 
               {!editing && (
                 <>
-                  {/* Upload with Drag & Drop */}
+                  {/* Upload with Drag & Drop - only for non-read-only */}
+                  {!isViewOnly && (
                   <div
                     className="mt-4"
                     onDrop={handleDrop}
@@ -849,6 +861,7 @@ export default function ResourceLibraryPage() {
                       <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
                     </label>
                   </div>
+                  )}
 
                   {/* File List */}
                   <div className="mt-4 space-y-2">
@@ -891,6 +904,7 @@ export default function ResourceLibraryPage() {
                               >
                                 <Download className="h-4 w-4" />
                               </a>
+                              {!isViewOnly && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <button
@@ -911,6 +925,7 @@ export default function ResourceLibraryPage() {
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
+                              )}
                             </div>
                           </div>
                         );
@@ -918,7 +933,8 @@ export default function ResourceLibraryPage() {
                     )}
                   </div>
 
-                  {/* Delete folder */}
+                  {/* Delete folder - only for non-read-only */}
+                  {!isViewOnly && (
                   <div className="mt-6 pt-4 border-t border-border">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -943,6 +959,7 @@ export default function ResourceLibraryPage() {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
+                  )}
                 </>
               )}
             </>
