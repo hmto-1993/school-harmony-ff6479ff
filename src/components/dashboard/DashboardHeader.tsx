@@ -79,7 +79,7 @@ export default function DashboardHeader({ onPrint }: Props) {
       <div className="absolute top-4 left-1/3 w-2 h-2 bg-white/20 rounded-full animate-pulse" />
       <div className="absolute bottom-6 left-1/4 w-1.5 h-1.5 bg-white/30 rounded-full animate-pulse delay-300" />
       
-      <div className="relative flex items-start justify-between">
+      <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
@@ -87,10 +87,35 @@ export default function DashboardHeader({ onPrint }: Props) {
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{dashboardTitle}</h1>
-              <p className="text-sm text-white/70 mt-0.5">نظرة شاملة على أداء الطلاب اليوم</p>
+              <p className="text-sm text-white/70 mt-0.5 hidden sm:block">نظرة شاملة على أداء الطلاب اليوم</p>
             </div>
           </div>
         </div>
+
+        {/* Mobile: compact row with date + actions */}
+        <div className="flex sm:hidden items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-white/70">
+            <span>{dayName}</span>
+            <span className="text-white/40">•</span>
+            <span>{today}</span>
+            {currentWeek && (
+              <>
+                <span className="text-white/40">•</span>
+                <span>أسبوع {currentWeek}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1 print:hidden">
+            <ShareDialog />
+            {onPrint && (
+              <Button size="sm" variant="ghost" onClick={onPrint} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0">
+                <Printer className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop: full info column */}
         <div className="hidden sm:flex flex-col items-end gap-2 text-left">
           <div className="flex items-center gap-2">
             <ShareDialog />
