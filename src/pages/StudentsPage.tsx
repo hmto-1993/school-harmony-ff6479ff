@@ -47,6 +47,7 @@ interface ImportRow {
 export default function StudentsPage() {
   const { role } = useAuth();
   const { toast } = useToast();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [search, setSearch] = useState("");
