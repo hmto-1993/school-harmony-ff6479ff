@@ -113,7 +113,7 @@ export default function ShareDialog() {
   };
 
   const copyLink = (token: string, id: string) => {
-    const url = `${window.location.origin}/shared/${token}`;
+    const url = `${window.location.origin}/shared/${token}?theme=${shareTheme}`;
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     toast.success("تم نسخ الرابط");
