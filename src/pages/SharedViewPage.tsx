@@ -1067,37 +1067,37 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
       </div>
 
       {weeklyData && (
-        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-white/[0.04] backdrop-blur-sm rounded-2xl border border-white/[0.06] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-slate-50">
-                  <th className="text-right px-3 py-2 font-semibold text-slate-600 sticky right-0 bg-slate-50 z-10 min-w-[120px]">الطالب</th>
+                <tr className="border-b border-white/[0.06]">
+                  <th className="text-right px-3 py-2 font-semibold text-white/50 sticky right-0 bg-[hsl(228,50%,8%)] z-10 min-w-[120px]">الطالب</th>
                   {weeklyData.weeks.map(w => (
-                    <th key={w.weekNum} className={cn("text-center px-1 py-2 font-medium min-w-[36px]", w.weekNum === currentWeek ? "text-blue-600 bg-blue-50/50" : "text-slate-500")}>
+                    <th key={w.weekNum} className={cn("text-center px-1 py-2 font-medium min-w-[36px]", w.weekNum === currentWeek ? "text-[hsl(195,100%,60%)] bg-[hsl(195,100%,50%)/0.05]" : "text-white/30")}>
                       <div className="writing-mode-vertical text-[10px]">ع{w.weekNum}</div>
                     </th>
                   ))}
-                  <th className="text-center px-2 py-2 font-semibold text-red-500 min-w-[40px]">غ</th>
-                  <th className="text-center px-2 py-2 font-semibold text-amber-500 min-w-[40px]">تأخر</th>
+                  <th className="text-center px-2 py-2 font-semibold text-[hsl(0,84%,65%)] min-w-[40px]">غ</th>
+                  <th className="text-center px-2 py-2 font-semibold text-[hsl(38,92%,60%)] min-w-[40px]">تأخر</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-white/[0.03]">
                 {weeklyData.studentRows.map((student) => (
-                  <tr key={student.id} className={cn("hover:bg-slate-50/50", student.isAtRisk && "bg-red-50/30")}>
-                    <td className="px-3 py-1.5 font-medium text-slate-800 whitespace-nowrap sticky right-0 bg-white z-10">
+                  <tr key={student.id} className={cn("hover:bg-white/[0.03] transition-colors", student.isAtRisk && "bg-[hsl(0,84%,60%)/0.05]")}>
+                    <td className="px-3 py-1.5 font-medium text-white/80 whitespace-nowrap sticky right-0 bg-[hsl(228,50%,8%)] z-10">
                       <div className="flex items-center gap-1">
-                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />}
+                        {student.isAtRisk && <AlertTriangle className="h-3 w-3 text-[hsl(0,84%,65%)] flex-shrink-0" />}
                         <span className="truncate max-w-[100px]">{student.name}</span>
                       </div>
                     </td>
                     {weeklyData.weeks.map(w => {
                       const statuses = student.weekStatuses[w.weekNum] || [];
                       return (
-                        <td key={w.weekNum} className={cn("text-center px-0.5 py-1", w.weekNum === currentWeek && "bg-blue-50/30")}>
+                        <td key={w.weekNum} className={cn("text-center px-0.5 py-1", w.weekNum === currentWeek && "bg-[hsl(195,100%,50%)/0.03]")}>
                           <div className="flex flex-wrap justify-center gap-0.5">
                             {statuses.length === 0 ? (
-                              <span className="text-slate-200">·</span>
+                              <span className="text-white/10">·</span>
                             ) : (
                               statuses.map((s, i) => (
                                 <span
@@ -1112,8 +1112,8 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
                         </td>
                       );
                     })}
-                    <td className="text-center px-2 py-1.5 font-bold text-red-500">{student.totalAbsent || '—'}</td>
-                    <td className="text-center px-2 py-1.5 font-bold text-amber-500">{student.totalLate || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(0,84%,65%)]">{student.totalAbsent || '—'}</td>
+                    <td className="text-center px-2 py-1.5 font-bold text-[hsl(38,92%,60%)]">{student.totalLate || '—'}</td>
                   </tr>
                 ))}
               </tbody>
