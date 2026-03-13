@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning, MessageCircle } from "lucide-react";
+import { Plus, Search, Trash2, Upload, FileSpreadsheet, FileText, AlertCircle, CheckCircle2, Users, GraduationCap, Loader2, Pencil, ArrowRightLeft, Download, FileWarning, MessageCircle, Lock } from "lucide-react";
 import WhatsAppMessageDialog from "@/components/whatsapp/WhatsAppMessageDialog";
 import type { TemplateType } from "@/components/whatsapp/WhatsAppMessageDialog";
 import AbsenceWarningSlip from "@/components/reports/AbsenceWarningSlip";
@@ -22,6 +22,8 @@ import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import EmptyState from "@/components/EmptyState";
 
 interface Student {
   id: string;
@@ -45,6 +47,7 @@ interface ImportRow {
 export default function StudentsPage() {
   const { role } = useAuth();
   const { toast } = useToast();
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [search, setSearch] = useState("");
@@ -525,6 +528,10 @@ export default function StudentsPage() {
     "bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400",
     "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
   ];
+
+  if (permsLoaded && !perms.can_view_students && role !== "admin") {
+    return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الطلاب" description="تواصل مع المسؤول لتفعيل صلاحية عرض صفحة الطلاب" />;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">

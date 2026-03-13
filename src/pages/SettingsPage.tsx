@@ -2647,6 +2647,7 @@ export default function SettingsPage() {
                                 <TableHead className="text-center text-xs">عرض الحضور</TableHead>
                                 <TableHead className="text-center text-xs">عرض الأنشطة</TableHead>
                                 <TableHead className="text-center text-xs">عرض لوحة التحكم</TableHead>
+                                <TableHead className="text-center text-xs">عرض الطلاب</TableHead>
                                 <TableHead className="text-center text-xs">حفظ</TableHead>
                               </TableRow>
                             </TableHeader>

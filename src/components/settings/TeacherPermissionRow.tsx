@@ -54,6 +54,7 @@ interface Permissions {
   can_view_attendance: boolean;
   can_view_activities: boolean;
   can_view_dashboard: boolean;
+  can_view_students: boolean;
 }
 
 const defaultPerms: Permissions = {
@@ -68,6 +69,7 @@ const defaultPerms: Permissions = {
   can_view_attendance: true,
   can_view_activities: true,
   can_view_dashboard: true,
+  can_view_students: true,
 };
 
 export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: TeacherPermissionRowProps) {
@@ -120,6 +122,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_view_attendance: (data as any).can_view_attendance ?? true,
             can_view_activities: (data as any).can_view_activities ?? true,
             can_view_dashboard: (data as any).can_view_dashboard ?? true,
+            can_view_students: (data as any).can_view_students ?? true,
           };
           setPerms(p);
           setOriginalPerms(p);
@@ -203,6 +206,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
     "can_view_attendance",
     "can_view_activities",
     "can_view_dashboard",
+    "can_view_students",
   ];
 
   return (
