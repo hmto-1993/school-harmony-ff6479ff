@@ -201,6 +201,51 @@ export async function renderPrintHeader(
   return maxY + 8;
 }
 
+/** Render watermark on all pages of the PDF */
+export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig) {
+  if (!watermark?.enabled || !watermark.text) return;
+  const totalPages = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.saveGraphicsState();
+    
+    // Parse hex color to RGB
+    const hex = watermark.color || "#94a3b8";
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    
+    doc.setTextColor(r, g, b);
+    doc.setFontSize(watermark.fontSize || 48);
+    doc.setFont("Amiri", "bold");
+    // @ts-ignore - jsPDF supports GState
+    const gState = new (doc as any).GState({ opacity: watermark.opacity || 0.1 });
+    // @ts-ignore
+    doc.setGState(gState);
+
+    const angle = watermark.angle || -30;
+
+    if (watermark.repeat) {
+      // Tile watermark across the page
+      const stepX = pageWidth * 0.45;
+      const stepY = pageHeight * 0.25;
+      for (let y = -pageHeight * 0.2; y < pageHeight * 1.2; y += stepY) {
+        for (let x = -pageWidth * 0.2; x < pageWidth * 1.2; x += stepX) {
+          doc.text(watermark.text, x, y, { angle, align: "center" });
+        }
+      }
+    } else {
+      // Single centered watermark
+      doc.text(watermark.text, pageWidth / 2, pageHeight / 2, { angle, align: "center" });
+    }
+
+    doc.restoreGraphicsState();
+  }
+}
+
 /** Create a pre-configured Arabic PDF document with optional print header */
 export async function createArabicPDF(
   options: {
@@ -209,7 +254,30 @@ export async function createArabicPDF(
     reportType?: string;
     includeHeader?: boolean;
   } = {}
-): Promise<{ doc: jsPDF; startY: number }> {
+): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig }> {
+  const doc = new jsPDF({
+    orientation: options.orientation || "portrait",
+    unit: "mm",
+    format: options.format || "a4",
+  });
+
+  await registerArabicFont(doc);
+
+  let startY = 15;
+  let watermark: WatermarkConfig | undefined;
+  
+  if (options.includeHeader !== false) {
+    startY = await renderPrintHeader(doc, options.reportType);
+  }
+
+  // Fetch watermark config
+  const config = await fetchPrintHeaderConfig(options.reportType);
+  if (config?.watermark?.enabled) {
+    watermark = config.watermark;
+  }
+
+  return { doc, startY, watermark };
+}
   const doc = new jsPDF({
     orientation: options.orientation || "portrait",
     unit: "mm",
