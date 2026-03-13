@@ -836,7 +836,8 @@ export default function ResourceLibraryPage() {
 
               {!editing && (
                 <>
-                  {/* Upload with Drag & Drop */}
+                  {/* Upload with Drag & Drop - only for non-read-only */}
+                  {!isViewOnly && (
                   <div
                     className="mt-4"
                     onDrop={handleDrop}
@@ -860,6 +861,7 @@ export default function ResourceLibraryPage() {
                       <input type="file" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
                     </label>
                   </div>
+                  )}
 
                   {/* File List */}
                   <div className="mt-4 space-y-2">
