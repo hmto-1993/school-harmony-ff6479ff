@@ -135,39 +135,20 @@ export default function ShareDialog() {
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
+          {/* Info */}
+          <div className="bg-muted/50 rounded-xl p-3 text-sm text-muted-foreground">
+            سيتم إنشاء رابط واحد يعرض جميع فصولك ({classes.length} فصل) بما فيها الدرجات والحضور والتقارير وخطط الدروس.
+          </div>
+
           {/* Label */}
           <div>
             <Label className="text-sm font-medium">وصف الرابط (اختياري)</Label>
             <Input
-              placeholder="مثال: عرض درجات الفصل الأول"
+              placeholder="مثال: عرض أعمالي للمدير"
               value={shareLabel}
               onChange={(e) => setShareLabel(e.target.value)}
               className="mt-1"
             />
-          </div>
-
-          {/* Classes */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">اختر الفصول</Label>
-              <button onClick={selectAll} className="text-xs text-primary hover:underline">
-                {selectedClasses.length === classes.length ? "إلغاء الكل" : "تحديد الكل"}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
-              {classes.map((cls) => (
-                <label
-                  key={cls.id}
-                  className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all text-sm",
-                    selectedClasses.includes(cls.id) ? "bg-primary/10 border-primary" : "border-border hover:bg-muted"
-                  )}
-                >
-                  <Checkbox checked={selectedClasses.includes(cls.id)} onCheckedChange={() => toggleClass(cls.id)} />
-                  <span className="font-medium">{cls.name}</span>
-                </label>
-              ))}
-            </div>
           </div>
 
           {/* Expiry */}
@@ -203,9 +184,9 @@ export default function ShareDialog() {
           </div>
 
           {/* Create Button */}
-          <Button onClick={handleCreate} disabled={creating || selectedClasses.length === 0} className="w-full gap-2">
+          <Button onClick={handleCreate} disabled={creating || classes.length === 0} className="w-full gap-2">
             <Link className="h-4 w-4" />
-            {creating ? "جاري الإنشاء..." : "إنشاء رابط المشاركة"}
+            {creating ? "جاري الإنشاء..." : "إنشاء رابط مشاركة شامل"}
           </Button>
 
           {/* Active Links */}
