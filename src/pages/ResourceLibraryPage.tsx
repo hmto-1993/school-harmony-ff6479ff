@@ -811,6 +811,7 @@ export default function ResourceLibraryPage() {
                         </div>
                       </div>
                     </div>
+                    {!isViewOnly && (
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => toggleVisibility(selectedFolder.id, selectedFolder.visible_to_students)}
@@ -828,6 +829,7 @@ export default function ResourceLibraryPage() {
                         <Pen className="h-3.5 w-3.5" /> تعديل
                       </Button>
                     </div>
+                    )}
                   </div>
                 )}
               </DialogHeader>
