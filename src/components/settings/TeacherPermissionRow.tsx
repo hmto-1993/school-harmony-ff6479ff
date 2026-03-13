@@ -191,6 +191,8 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
     "can_delete_records",
     "can_manage_grades",
     "can_manage_attendance",
+    "can_view_grades",
+    "can_view_reports",
   ];
 
   return (
