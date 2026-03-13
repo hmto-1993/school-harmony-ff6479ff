@@ -22,6 +22,8 @@ import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import EmptyState from "@/components/EmptyState";
 
 interface Student {
   id: string;
