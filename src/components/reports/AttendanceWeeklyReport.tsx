@@ -76,10 +76,11 @@ export default function AttendanceWeeklyReport({
   dateTo,
   className: classDisplayName,
 }: Props) {
-  const { getWeekForDate, getWeeksInfo } = useAcademicWeek();
+  const { getWeekForDate, getWeeksInfo, currentWeek } = useAcademicWeek();
   const tableRef = useRef<HTMLDivElement>(null);
+  const didInitializeWeekSelectionRef = useRef(false);
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
-  const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set(["all"]));
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set());
 
   useEffect(() => {
     supabase
@@ -152,16 +153,27 @@ export default function AttendanceWeeklyReport({
   // All academic weeks for the selector
   const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
 
-  // Initialize selectedWeeks to "all" when weeks change
+  // Initialize filter to current week on first load
   useEffect(() => {
-    if (weeks.length > 0 && selectedWeeks.size === 0) {
-      setSelectedWeeks(new Set(["all"]));
-    }
-  }, [weeks]);
+    if (didInitializeWeekSelectionRef.current) return;
+
+    const availableWeekNums = academicWeeks.length > 0
+      ? academicWeeks.map((aw) => aw.weekNumber)
+      : weeks.map((w) => w.weekNum);
+
+    if (availableWeekNums.length === 0) return;
+
+    const initialWeek = currentWeek && availableWeekNums.includes(currentWeek)
+      ? currentWeek
+      : availableWeekNums[0];
+
+    setSelectedWeeks(new Set<number | "all">([initialWeek]));
+    didInitializeWeekSelectionRef.current = true;
+  }, [academicWeeks, weeks, currentWeek]);
 
   // When "all" is selected, show ALL academic calendar weeks (even without data)
   const filteredWeeks = useMemo(() => {
-    if (selectedWeeks.has("all") || selectedWeeks.size === 0) {
+    if (selectedWeeks.has("all")) {
       // Use all academic weeks if available
       if (academicWeeks.length > 0) {
         return academicWeeks.map(aw => {
@@ -187,11 +199,12 @@ export default function AttendanceWeeklyReport({
       next.delete("all"); // Remove "all" when toggling individual weeks
       if (next.has(weekNum)) next.delete(weekNum);
       else next.add(weekNum);
-      // If all academic/data weeks are selected, switch back to "all"
+      // If user selected all weeks manually, switch to "all" (only when there are 2+ weeks)
       const allWeekNums = academicWeeks.length > 0
-        ? academicWeeks.map(aw => aw.weekNumber)
-        : weeks.map(w => w.weekNum);
-      if (allWeekNums.length > 0 && allWeekNums.every(wn => next.has(wn))) {
+        ? academicWeeks.map((aw) => aw.weekNumber)
+        : weeks.map((w) => w.weekNum);
+      const selectedWeekCount = Array.from(next).filter((v): v is number => typeof v === "number").length;
+      if (allWeekNums.length > 1 && selectedWeekCount === allWeekNums.length && allWeekNums.every((wn) => next.has(wn))) {
         return new Set<number | "all">(["all"]);
       }
       return next;
