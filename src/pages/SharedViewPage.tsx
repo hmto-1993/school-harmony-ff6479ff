@@ -1013,17 +1013,16 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <h2 className="text-lg font-bold text-slate-800">تقرير الحضور الأسبوعي</h2>
+        <h2 className="text-lg font-bold text-white">تقرير الحضور الأسبوعي</h2>
         <div className="flex gap-2 flex-wrap">
-          {/* Week filter */}
-          <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+          <div className="flex gap-1 bg-white/[0.04] rounded-lg p-0.5 border border-white/[0.06]">
             <button
               onClick={() => setWeekFilter("current")}
               className={cn(
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "current"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
+                  : "text-white/40 hover:text-white/60"
               )}
             >
               الأسبوع الحالي (ع{currentWeek})
@@ -1033,14 +1032,13 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
               className={cn(
                 "px-3 py-1.5 rounded-md text-xs font-semibold transition-all",
                 weekFilter === "all"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  ? "bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] text-white shadow-sm"
+                  : "text-white/40 hover:text-white/60"
               )}
             >
               جميع الأسابيع
             </button>
           </div>
-          {/* Class filter */}
           {data.classes.map(cls => (
             <button
               key={cls.id}
@@ -1048,8 +1046,8 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
                 selectedClassId === cls.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                  ? "bg-gradient-to-l from-[hsl(270,75%,55%)] to-[hsl(290,70%,50%)] text-white shadow-sm"
+                  : "bg-white/[0.04] text-white/40 border border-white/[0.06] hover:bg-white/[0.08]"
               )}
             >
               {cls.name}
@@ -1063,7 +1061,7 @@ function WeeklyAttendanceTab({ data, isPrint }: { data: SharedData; isPrint?: bo
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
           <div key={key} className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: STATUS_COLORS[key] }} />
-            <span className="text-slate-600">{label}</span>
+            <span className="text-white/50">{label}</span>
           </div>
         ))}
       </div>
