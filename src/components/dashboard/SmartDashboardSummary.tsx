@@ -598,7 +598,6 @@ export default function SmartDashboardSummary() {
         </CardContent>
       </Card>
 
-      {/* Warning Slip Dialog */}
       {selectedStudent && (
         <AbsenceWarningSlip
           open={warningOpen}
@@ -611,6 +610,8 @@ export default function SmartDashboardSummary() {
           totalDays={selectedStudent.totalDays}
         />
       )}
-    </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
