@@ -399,7 +399,6 @@ export default function ActivitiesPage() {
                     className="scale-75" />
                 </div>
                 )}
-                </div>
                 <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1 text-primary hover:bg-primary/10 rounded-lg"
                   onClick={() => { setResultsActivity(activity); setResultsClassId(target.class_id); }}>
                   <BarChart3 className="h-3 w-3" /> النتائج
