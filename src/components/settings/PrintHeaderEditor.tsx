@@ -60,6 +60,16 @@ export interface PrintHeaderConfig {
   watermark?: WatermarkConfig;
 }
 
+const defaultWatermark: WatermarkConfig = {
+  enabled: false,
+  text: "سري",
+  fontSize: 48,
+  color: "#94a3b8",
+  opacity: 0.08,
+  angle: -30,
+  repeat: true,
+};
+
 const defaultConfig: PrintHeaderConfig = {
   rightSection: {
     lines: ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "مدرسة ..."],
@@ -77,6 +87,7 @@ const defaultConfig: PrintHeaderConfig = {
     align: "left",
     color: "#1e293b",
   },
+  watermark: defaultWatermark,
 };
 
 interface ReportTypeOption {
