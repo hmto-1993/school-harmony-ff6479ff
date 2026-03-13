@@ -91,12 +91,6 @@ export default function GradesPage() {
             الدرجات والتقييمات
           </h1>
           <div className="flex items-center gap-2 flex-wrap">
-            {!canEdit && canView && (
-              <span className="inline-flex items-center gap-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full font-medium">
-                <Eye className="h-3 w-3" />
-                عرض فقط
-              </span>
-            )}
             <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
             <AcademicWeekBadge />
           </div>
