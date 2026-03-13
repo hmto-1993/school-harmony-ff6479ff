@@ -133,5 +133,6 @@ export default function DashboardHeader({ onPrint }: Props) {
         </div>
       </div>
     </div>
+    </div>
   );
 }
