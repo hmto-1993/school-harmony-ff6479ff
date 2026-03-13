@@ -28,18 +28,36 @@ function toHijri(date: Date): string {
 }
 
 export default function DashboardHeader({ onPrint }: Props) {
+  const { user } = useAuth();
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
   const hijriDate = useMemo(() => toHijri(new Date()), []);
   const { currentWeek, calendarData, isExamWeek } = useAcademicWeek();
   const todayExam = isExamWeek(new Date());
   const [dashboardTitle, setDashboardTitle] = useState("لوحة التحكم");
+  const [expiringLinks, setExpiringLinks] = useState<{ label: string; daysLeft: number }[]>([]);
 
   useEffect(() => {
     supabase.from("site_settings").select("value").eq("id", "dashboard_title").maybeSingle().then(({ data }) => {
       if (data?.value) setDashboardTitle(data.value);
     });
-  }, []);
+
+    // Check for expiring shared links
+    if (user) {
+      supabase
+        .from("shared_views")
+        .select("label, expires_at")
+        .eq("teacher_id", user.id)
+        .gte("expires_at", new Date().toISOString())
+        .then(({ data: links }) => {
+          if (!links) return;
+          const expiring = links
+            .map(l => ({ label: l.label || "رابط مشاركة", daysLeft: Math.ceil((new Date(l.expires_at).getTime() - Date.now()) / 86400000) }))
+            .filter(l => l.daysLeft <= 2);
+          setExpiringLinks(expiring);
+        });
+    }
+  }, [user]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl gradient-primary p-6 md:p-8 text-primary-foreground">
