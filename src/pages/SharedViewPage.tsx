@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown } from "lucide-react";
+import { Users, BarChart3, BookOpen, UserCheck, Clock, Printer, AlertTriangle, Eye, Shield, FileBarChart, TrendingDown, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { safePrint } from "@/lib/print-utils";
 
