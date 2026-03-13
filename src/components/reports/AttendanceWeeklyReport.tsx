@@ -203,14 +203,18 @@ export default function AttendanceWeeklyReport({
     const exportWeeks = filteredWeeks;
     const headers = [
       "م", "اسم الطالب",
-      ...exportWeeks.flatMap((w) => Array.from({ length: periodsPerWeek }, (_, i) => `أ${w.weekNum}-${i + 1}`)),
+      ...exportWeeks.flatMap((w) => {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        return Array.from({ length: colCount }, (_, i) => `أ${w.weekNum}-${i + 1}`);
+      }),
       "حاضر", "غائب", "متأخر", "معذور", "تنبيه",
     ];
     const rows = studentRows.map((s, idx) => {
       const row: Record<string, any> = { "م": idx + 1, "اسم الطالب": s.name };
       exportWeeks.forEach((w) => {
         const slots = s.weeks[w.weekNum] || [];
-        for (let i = 0; i < periodsPerWeek; i++) {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        for (let i = 0; i < colCount; i++) {
           const st = slots[i];
           row[`أ${w.weekNum}-${i + 1}`] = st ? STATUS_CONFIG[st]?.label || st : "";
         }
@@ -267,7 +271,7 @@ export default function AttendanceWeeklyReport({
     const exportWeeks = filteredWeeks;
     const weekGroupHeaders = exportWeeks.map((w) => ({
       content: `الأسبوع ${w.weekNum}`,
-      colSpan: Math.min(w.dates.length, periodsPerWeek),
+      colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
       styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
     }));
 
@@ -287,7 +291,8 @@ export default function AttendanceWeeklyReport({
     const body = studentRows.map((s, idx) => {
       const statusCells = exportWeeks.slice().reverse().flatMap((w) => {
         const slots = s.weeks[w.weekNum] || [];
-        return Array.from({ length: Math.min(w.dates.length, periodsPerWeek) }, (_, i) => {
+        const colCount = w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1;
+        return Array.from({ length: colCount }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
           return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
