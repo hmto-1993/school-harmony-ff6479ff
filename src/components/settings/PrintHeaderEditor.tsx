@@ -438,7 +438,7 @@ export default function PrintHeaderEditor() {
               </div>
               <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
                 <div className="flex items-start justify-between gap-4">
-                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, flex: 1, color: config.rightSection.color || "#1e293b" }}>
+                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, flex: 1, minWidth: 0, color: config.rightSection.color || "#1e293b" }}>
                     {config.rightSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
                     ))}
