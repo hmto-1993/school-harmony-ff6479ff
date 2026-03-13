@@ -773,7 +773,7 @@ export default function ReportsPage() {
 
   const className = classes.find((c) => c.id === selectedClass)?.name || "";
 
-  if (permsLoaded && !teacherPerms.can_view_reports) {
+  if (permsLoaded && !teacherPerms.can_view_reports && !teacherPerms.read_only_mode) {
     return (
       <div className="space-y-6 animate-fade-in flex items-center justify-center min-h-[50vh]">
         <div className="text-center space-y-3">
