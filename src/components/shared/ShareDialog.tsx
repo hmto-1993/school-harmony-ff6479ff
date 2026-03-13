@@ -7,7 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Share2, Copy, Check, Trash2, Link, Clock } from "lucide-react";
+import { Share2, Copy, Check, Trash2, Link, Clock, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +103,16 @@ export default function ShareDialog() {
   const handleDelete = async (id: string) => {
     await supabase.from("shared_views").delete().eq("id", id);
     toast.success("تم حذف الرابط");
+    loadData();
+  };
+
+  const handleExtend = async (id: string, days: number) => {
+    const link = activeLinks.find(l => l.id === id);
+    if (!link) return;
+    const currentExpiry = new Date(link.expires_at);
+    const newExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()) + days * 86400000);
+    await supabase.from("shared_views").update({ expires_at: newExpiry.toISOString() } as any).eq("id", id);
+    toast.success(`تم تمديد الرابط ${days} يوم`);
     loadData();
   };
 
@@ -217,8 +228,14 @@ export default function ShareDialog() {
               {activeLinks.map((link) => {
                 const daysLeft = Math.max(0, Math.ceil((new Date(link.expires_at).getTime() - Date.now()) / 86400000));
                 const hasViews = link.view_count > 0;
+                const isExpiringSoon = daysLeft <= 2;
                 return (
-                  <div key={link.id} className="bg-muted/50 rounded-xl p-3 space-y-2">
+                  <div key={link.id} className={cn("rounded-xl p-3 space-y-2", isExpiringSoon ? "bg-red-50 border border-red-200" : "bg-muted/50")}>
+                    {isExpiringSoon && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-red-600 font-semibold bg-red-100 rounded-lg px-2 py-1">
+                        <Clock className="h-3 w-3" /> ⚠️ ينتهي قريباً! قم بتمديد الرابط
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium truncate max-w-[200px]">{link.label || "رابط مشاركة"}</span>
                       <div className="flex items-center gap-2">
@@ -229,7 +246,7 @@ export default function ShareDialog() {
                         )}
                         <div className="flex items-center gap-1">
                           <Clock className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">{daysLeft} يوم</span>
+                          <span className={cn("text-xs font-medium", isExpiringSoon ? "text-red-600" : "text-muted-foreground")}>{daysLeft} يوم</span>
                         </div>
                       </div>
                     </div>
@@ -243,6 +260,18 @@ export default function ShareDialog() {
                         {copiedId === link.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                         {copiedId === link.id ? "تم النسخ" : "نسخ الرابط"}
                       </Button>
+                      <Select onValueChange={(v) => handleExtend(link.id, Number(v))}>
+                        <SelectTrigger className="w-auto h-8 text-xs gap-1 px-2">
+                          <RefreshCw className="h-3 w-3" />
+                          <span>تمديد</span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">يوم</SelectItem>
+                          <SelectItem value="3">3 أيام</SelectItem>
+                          <SelectItem value="7">أسبوع</SelectItem>
+                          <SelectItem value="30">شهر</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(link.id)}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
