@@ -75,6 +75,7 @@ export default function SharedViewPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [exporting, setExporting] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
   const [showExportMenu, setShowExportMenu] = useState(false);
 
