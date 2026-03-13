@@ -79,7 +79,8 @@ export default function SharedViewPage() {
   const [summaryFocus, setSummaryFocus] = useState<"comprehensive" | "attendance" | "grades" | "none">("comprehensive");
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const exportPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
+  /** Build PDF doc (shared between download and WhatsApp share) */
+  const buildPDF = useCallback(async (focus: "comprehensive" | "attendance" | "grades" | "none" = summaryFocus) => {
     if (!data) return;
     setExporting(true);
     try {
