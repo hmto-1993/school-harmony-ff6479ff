@@ -438,10 +438,12 @@ export default function PrintHeaderEditor() {
               </div>
               <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", gap: "16px", alignItems: "start" }}>
-                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
-                    {config.rightSection.lines.map((line, i) => (
-                      <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
-                    ))}
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", width: "fit-content" }}>
+                      {config.rightSection.lines.map((line, i) => (
+                        <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
+                      ))}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     {config.centerSection.images.map((img, i) => (
@@ -456,10 +458,12 @@ export default function PrintHeaderEditor() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
-                    {config.leftSection.lines.map((line, i) => (
-                      <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
-                    ))}
+                  <div style={{ display: "flex", justifyContent: "flex-start" }}>
+                    <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", width: "fit-content" }}>
+                      {config.leftSection.lines.map((line, i) => (
+                        <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line || "\u00A0"}</p>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
