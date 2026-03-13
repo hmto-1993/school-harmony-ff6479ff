@@ -190,10 +190,12 @@ export default function AnnouncementsTab({ readOnly = false }: { readOnly?: bool
       {/* New Announcement Button */}
       <div className="flex justify-between items-center">
         <p className="text-sm text-muted-foreground">إرسال إعلان عام للطلاب وأولياء الأمور</p>
+        {!readOnly && (
         <Button className="gap-2" onClick={openCreateDialog}>
           <Megaphone className="h-4 w-4" />
           إعلان جديد
         </Button>
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
