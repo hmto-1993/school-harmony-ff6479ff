@@ -65,7 +65,7 @@ export default function GradesPage() {
 
   // Set default active type to summary if can't edit
   useEffect(() => {
-    if (permsLoaded && !canEdit && (activeType === "daily" || activeType === "behavior" || activeType === "classwork" || activeType === "import")) {
+    if (permsLoaded && !canEdit && (activeType === "daily" || activeType === "behavior" || activeType === "import")) {
       setActiveType("summary");
     }
   }, [permsLoaded, canEdit]);
