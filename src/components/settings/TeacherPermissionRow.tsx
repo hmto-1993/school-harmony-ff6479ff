@@ -249,7 +249,26 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
                     className="h-9"
                   />
                 </div>
-              </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm flex items-center gap-1.5">
+                    <Shield className="h-3.5 w-3.5 text-primary" />
+                    الصلاحية
+                  </Label>
+                  <Select value={editRole} onValueChange={(v: "admin" | "teacher") => setEditRole(v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="teacher">معلم</SelectItem>
+                      <SelectItem value="admin">مدير (صلاحيات كاملة)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {editRole !== currentRole && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      ⚠️ سيتم تغيير صلاحية المستخدم من {currentRole === "admin" ? "مدير" : "معلم"} إلى {editRole === "admin" ? "مدير" : "معلم"}
+                    </p>
+                  )}
+                </div>
               <DialogFooter className="gap-2 sm:gap-0">
                 <DialogClose asChild>
                   <Button variant="outline" size="sm">إلغاء</Button>
