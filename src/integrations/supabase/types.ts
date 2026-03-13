@@ -1171,6 +1171,8 @@ export type Database = {
           can_manage_grades: boolean
           can_print: boolean
           can_send_notifications: boolean
+          can_view_grades: boolean
+          can_view_reports: boolean
           created_at: string
           id: string
           updated_at: string
@@ -1183,6 +1185,8 @@ export type Database = {
           can_manage_grades?: boolean
           can_print?: boolean
           can_send_notifications?: boolean
+          can_view_grades?: boolean
+          can_view_reports?: boolean
           created_at?: string
           id?: string
           updated_at?: string
@@ -1195,6 +1199,8 @@ export type Database = {
           can_manage_grades?: boolean
           can_print?: boolean
           can_send_notifications?: boolean
+          can_view_grades?: boolean
+          can_view_reports?: boolean
           created_at?: string
           id?: string
           updated_at?: string
