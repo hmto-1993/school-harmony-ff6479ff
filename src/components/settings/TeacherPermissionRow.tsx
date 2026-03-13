@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { KeyRound } from "lucide-react";
+import { Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface TeacherPermissionRowProps {
   teacher: { user_id: string; email: string; full_name: string };
-  onPasswordChange: (email: string, password: string) => void;
 }
 
 interface Permissions {
@@ -29,9 +27,10 @@ const defaultPerms: Permissions = {
   can_manage_attendance: true,
 };
 
-export default function TeacherPermissionRow({ teacher, onPasswordChange }: TeacherPermissionRowProps) {
+export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowProps) {
   const [perms, setPerms] = useState<Permissions>(defaultPerms);
   const [loaded, setLoaded] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     supabase
@@ -57,6 +56,7 @@ export default function TeacherPermissionRow({ teacher, onPasswordChange }: Teac
   const togglePerm = async (key: keyof Permissions) => {
     const newVal = !perms[key];
     setPerms((p) => ({ ...p, [key]: newVal }));
+    setSaved(false);
 
     const { error } = await supabase
       .from("teacher_permissions")
@@ -68,6 +68,9 @@ export default function TeacherPermissionRow({ teacher, onPasswordChange }: Teac
     if (error) {
       setPerms((p) => ({ ...p, [key]: !newVal }));
       toast({ title: "خطأ", description: "فشل تحديث الصلاحية", variant: "destructive" });
+    } else {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
     }
   };
 
@@ -96,15 +99,7 @@ export default function TeacherPermissionRow({ teacher, onPasswordChange }: Teac
         </TableCell>
       ))}
       <TableCell className="text-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-          onClick={() => onPasswordChange(teacher.email, "")}
-          title="تغيير كلمة المرور"
-        >
-          <KeyRound className="h-3.5 w-3.5" />
-        </Button>
+        {saved && <Check className="h-4 w-4 text-emerald-500 mx-auto animate-in fade-in" />}
       </TableCell>
     </TableRow>
   );
