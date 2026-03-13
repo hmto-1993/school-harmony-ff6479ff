@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
-
+import PrintWatermark from "@/components/shared/PrintWatermark";
 interface ClassStats {
   name: string;
   present: number;
