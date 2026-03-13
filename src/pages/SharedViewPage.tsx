@@ -1312,4 +1312,3 @@ function LessonsTab({ classes }: { classes: ClassSummary[] }) {
     </div>
   );
 }
-}
