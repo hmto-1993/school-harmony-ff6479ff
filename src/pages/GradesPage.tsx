@@ -28,11 +28,21 @@ const PERIODS = [
 ];
 
 export default function GradesPage() {
+  const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+
+  const canEdit = perms.can_manage_grades;
+  // If can't view grades at all, show restricted message
+  const canView = perms.can_view_grades;
+
+  // Filter entry types based on edit permissions
+  const availableTypes = canEdit
+    ? ENTRY_TYPES
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester");
 
   useEffect(() => {
     const load = async () => {
