@@ -279,9 +279,9 @@ export default function AttendanceWeeklyReport({
     }));
 
     const summaryHeaders = [
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#fbc02d") as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#e53935") as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "●", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: hexToRgb("#4caf50") as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
     ];
 
     const head = [[
@@ -291,6 +291,9 @@ export default function AttendanceWeeklyReport({
       { content: "م", styles: { halign: "center" as const } },
     ]];
 
+    // Build a map of cell positions to dot colors for didDrawCell
+    const dotColorMap = new Map<string, [number, number, number]>();
+
     const body = studentRows.map((s, idx) => {
       const statusCells = exportWeeks.slice().reverse().flatMap((w) => {
         const slots = s.weeks[w.weekNum] || [];
@@ -298,13 +301,13 @@ export default function AttendanceWeeklyReport({
         return Array.from({ length: colCount }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
-          return { content: cfg ? "●" : "●", styles: { halign: "center" as const, fontSize: 10, textColor: cfg ? hexToRgb(cfg.printColor) as [number, number, number] : [210, 215, 220] as [number, number, number] } };
+          return { content: "", styles: { halign: "center" as const, fontSize: 7 }, _dotColor: cfg ? hexToRgb(cfg.printColor) : [210, 215, 220] as [number, number, number] };
         });
       });
 
       const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
 
-      return [
+      const row = [
         { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
         { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
         { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
@@ -312,6 +315,16 @@ export default function AttendanceWeeklyReport({
         { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
       ];
+
+      // Store dot colors by row/col for drawing later
+      // Summary cols (0,1,2) are numbers, status cells start at col 3
+      statusCells.forEach((cell: any, ci: number) => {
+        if (cell._dotColor) {
+          dotColorMap.set(`${idx}-${ci + 3}`, cell._dotColor);
+        }
+      });
+
+      return row;
     });
 
     autoTable(doc, {
@@ -324,6 +337,33 @@ export default function AttendanceWeeklyReport({
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
           data.cell.styles.fillColor = [254, 242, 242];
+        }
+      },
+      didDrawCell: (data: any) => {
+        if (data.section === "body") {
+          const key = `${data.row.index}-${data.column.index}`;
+          const color = dotColorMap.get(key);
+          if (color) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height / 2;
+            doc.setFillColor(color[0], color[1], color[2]);
+            doc.circle(cx, cy, 1.3, "F");
+          }
+        }
+        // Draw colored dots in header summary columns too
+        if (data.section === "head" && data.row.index === 0) {
+          const headerDotColors: Record<number, [number, number, number]> = {
+            0: hexToRgb("#fbc02d"),
+            1: hexToRgb("#e53935"),
+            2: hexToRgb("#4caf50"),
+          };
+          const hColor = headerDotColors[data.column.index];
+          if (hColor) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height / 2;
+            doc.setFillColor(hColor[0], hColor[1], hColor[2]);
+            doc.circle(cx, cy, 1.5, "F");
+          }
         }
       },
     });
