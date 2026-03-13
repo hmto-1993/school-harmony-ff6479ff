@@ -335,15 +335,6 @@ export default function SharedViewPage() {
           <div className={activeTab === "lessons" ? "" : "hidden"}><LessonsTab classes={data.classes} /></div>
         </div>
 
-        {/* Print: show all */}
-        <div className="hidden print:block space-y-8">
-          <OverviewTab data={data} />
-          <AttendanceTab classes={data.classes} />
-          <WeeklyAttendanceTab data={data} isPrint />
-          <GradesTab classes={data.classes} categories={data.categories} isPrint />
-          <ReportsTab data={data} />
-          <LessonsTab classes={data.classes} />
-        </div>
       </main>
     </div>
   );
