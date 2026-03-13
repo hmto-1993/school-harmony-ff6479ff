@@ -558,7 +558,8 @@ export default function SettingsPage() {
   };
 
   const handleCreateTeacher = async () => {
-    if (!newTeacherName.trim() || !newTeacherEmail.trim() || !newTeacherPassword.trim()) return;
+    if (!newTeacherName.trim() || !newTeacherPassword.trim()) return;
+    const email = newTeacherEmail.trim() || `teacher_${Date.now()}@auto.local`;
     setCreatingTeacher(true);
 
     const { data, error } = await supabase.functions.invoke("manage-users", {
