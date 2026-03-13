@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import ClassworkSummary from "@/components/grades/ClassworkSummary";
@@ -11,6 +11,7 @@ import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
+import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
