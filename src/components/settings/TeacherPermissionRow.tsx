@@ -197,6 +197,7 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             if (open) {
               setEditName(teacher.full_name);
               setEditNationalId(teacher.national_id || "");
+              setEditRole(currentRole);
             }
           }}>
             <DialogTrigger asChild>
