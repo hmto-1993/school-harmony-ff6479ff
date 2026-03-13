@@ -409,7 +409,7 @@ export default function NotificationsPage() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {excuse.status === "pending" ? (
+                            {excuse.status === "pending" && !isReadOnly ? (
                               <div className="flex items-center gap-1 justify-center">
                                 <Button
                                   size="sm"
