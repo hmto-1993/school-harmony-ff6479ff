@@ -98,14 +98,16 @@ export default function ReportPrintHeader({ reportType }: Props) {
         <div
           style={{
             flex: 1,
-            textAlign: config.leftSection.align,
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: config.leftSection.align === "center" ? "center" : config.leftSection.align === "left" ? "flex-start" : "flex-end",
           }}
         >
           {config.leftSection.lines.map((line, i) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
           ))}
         </div>
       </div>
