@@ -511,19 +511,28 @@ export default function SharedViewPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(228,50%,8%)] via-[hsl(260,40%,12%)] to-[hsl(195,60%,10%)]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-[hsl(195,100%,50%)/0.2]" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[hsl(195,100%,50%)] animate-spin" />
+            <div className="absolute inset-2 rounded-full border-4 border-transparent border-b-[hsl(270,75%,55%)] animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+          </div>
+          <p className="text-white/60 text-sm font-medium animate-pulse">جارٍ تحميل التقرير...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-red-50 p-6">
-        <div className="text-center space-y-4 max-w-md">
-          <AlertTriangle className="h-16 w-16 text-red-400 mx-auto" />
-          <h1 className="text-2xl font-bold text-red-600">{error}</h1>
-          <p className="text-gray-500">تأكد من صحة الرابط أو تواصل مع المعلم للحصول على رابط جديد</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[hsl(228,50%,8%)] to-[hsl(0,40%,12%)] p-6">
+        <div className="text-center space-y-4 max-w-md bg-white/5 backdrop-blur-xl rounded-3xl p-10 border border-white/10">
+          <div className="w-20 h-20 mx-auto rounded-full bg-red-500/10 flex items-center justify-center">
+            <AlertTriangle className="h-10 w-10 text-red-400" />
+          </div>
+          <h1 className="text-2xl font-bold text-white">{error}</h1>
+          <p className="text-white/40">تأكد من صحة الرابط أو تواصل مع المعلم للحصول على رابط جديد</p>
         </div>
       </div>
     );
@@ -534,28 +543,44 @@ export default function SharedViewPage() {
   const expiryDate = new Date(data.expiresAt);
   const daysLeft = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / 86400000));
 
+  const TAB_COLORS: Record<string, { active: string; gradient: string }> = {
+    overview: { active: "from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)]", gradient: "shadow-[hsl(195,100%,50%)/0.3]" },
+    attendance: { active: "from-[hsl(160,84%,39%)] to-[hsl(145,70%,42%)]", gradient: "shadow-[hsl(160,84%,39%)/0.3]" },
+    weekly: { active: "from-[hsl(210,80%,55%)] to-[hsl(230,70%,55%)]", gradient: "shadow-[hsl(210,80%,55%)/0.3]" },
+    grades: { active: "from-[hsl(270,75%,55%)] to-[hsl(290,70%,50%)]", gradient: "shadow-[hsl(270,75%,55%)/0.3]" },
+    reports: { active: "from-[hsl(38,92%,50%)] to-[hsl(25,90%,52%)]", gradient: "shadow-[hsl(38,92%,50%)/0.3]" },
+    lessons: { active: "from-[hsl(340,75%,55%)] to-[hsl(320,70%,50%)]", gradient: "shadow-[hsl(340,75%,55%)/0.3]" },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 print:bg-white" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(228,50%,6%)] via-[hsl(240,35%,9%)] to-[hsl(260,30%,8%)] print:bg-white" dir="rtl">
+      {/* Ambient glow effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none print:hidden">
+        <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[hsl(195,100%,50%)/0.04] blur-[100px]" />
+        <div className="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[hsl(270,75%,55%)/0.04] blur-[100px]" />
+      </div>
+
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-10 print:static">
-        <div className="max-w-6xl mx-auto px-4 py-4 sm:px-6">
+      <header className="relative bg-white/[0.03] backdrop-blur-xl border-b border-white/[0.06] sticky top-0 z-10 print:static">
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(195,100%,50%)/0.03] via-transparent to-[hsl(270,75%,55%)/0.03]" />
+        <div className="relative max-w-6xl mx-auto px-4 py-4 sm:px-6">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              {data.schoolName && <p className="text-sm text-slate-500 font-medium">{data.schoolName}</p>}
-              <h1 className="text-xl font-bold text-slate-800">عرض أعمال: {data.teacherName}</h1>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+              {data.schoolName && <p className="text-sm text-white/40 font-medium">{data.schoolName}</p>}
+              <h1 className="text-xl font-bold text-white">عرض أعمال: <span className="bg-gradient-to-l from-[hsl(195,100%,60%)] to-[hsl(270,75%,65%)] bg-clip-text text-transparent">{data.teacherName}</span></h1>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-xs bg-[hsl(195,100%,50%)/0.12] text-[hsl(195,100%,70%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(195,100%,50%)/0.15]">
                   <Eye className="h-3 w-3" /> عرض فقط
                 </span>
-                <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
+                <span className="inline-flex items-center gap-1 text-xs bg-[hsl(38,92%,50%)/0.12] text-[hsl(38,92%,70%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(38,92%,50%)/0.15]">
                   <Shield className="h-3 w-3" /> متبقي {daysLeft} يوم
                 </span>
                 {data.viewCount > 1 && (
-                  <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                  <span className="inline-flex items-center gap-1 text-xs bg-[hsl(160,84%,39%)/0.12] text-[hsl(160,84%,60%)] px-2.5 py-1 rounded-full font-medium border border-[hsl(160,84%,39%)/0.15]">
                     <Eye className="h-3 w-3" /> {data.viewCount} مشاهدة
                   </span>
                 )}
-                {data.label && <span className="text-xs text-slate-400">{data.label}</span>}
+                {data.label && <span className="text-xs text-white/30">{data.label}</span>}
               </div>
             </div>
             <div className="flex items-center gap-2 print:hidden">
@@ -565,7 +590,7 @@ export default function SharedViewPage() {
                     <button
                       onClick={() => exportPDF()}
                       disabled={exporting}
-                      className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 rounded-r-lg transition-colors text-slate-700 disabled:opacity-50 border-l border-slate-200"
+                      className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium bg-gradient-to-l from-[hsl(195,100%,45%)] to-[hsl(210,90%,50%)] hover:from-[hsl(195,100%,50%)] hover:to-[hsl(210,90%,55%)] rounded-r-xl transition-all text-white disabled:opacity-50 shadow-lg shadow-[hsl(195,100%,50%)/0.2]"
                     >
                       {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                       {exporting ? "جارٍ التصدير..." : "تصدير PDF"}
@@ -573,14 +598,14 @@ export default function SharedViewPage() {
                     <button
                       onClick={() => setShowExportMenu(prev => !prev)}
                       disabled={exporting}
-                      className="flex items-center px-2 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 rounded-l-lg transition-colors text-slate-700 disabled:opacity-50"
+                      className="flex items-center px-2.5 py-2.5 text-sm font-medium bg-gradient-to-l from-[hsl(210,90%,50%)] to-[hsl(230,80%,50%)] hover:from-[hsl(210,90%,55%)] rounded-l-xl transition-all text-white disabled:opacity-50 border-r border-white/20"
                     >
                       <ChevronDown className="h-4 w-4" />
                     </button>
                   </div>
                   {showExportMenu && (
-                    <div className="absolute left-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-20 min-w-[200px]">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-slate-400">الملخص الذكي</div>
+                    <div className="absolute left-0 top-full mt-2 bg-[hsl(228,45%,12%)] backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 py-2 z-20 min-w-[220px]">
+                      <div className="px-4 py-1.5 text-xs font-semibold text-white/30">الملخص الذكي</div>
                       {([
                         { key: "comprehensive", label: "شامل", icon: "📊" },
                         { key: "attendance", label: "التركيز على الحضور", icon: "📋" },
@@ -595,28 +620,28 @@ export default function SharedViewPage() {
                             exportPDF(opt.key);
                           }}
                           className={cn(
-                            "w-full text-right px-3 py-2 text-sm flex items-center gap-2 hover:bg-slate-50 transition-colors",
-                            summaryFocus === opt.key && "bg-blue-50 text-blue-700 font-semibold"
+                            "w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-white/5 transition-colors text-white/70",
+                            summaryFocus === opt.key && "bg-[hsl(195,100%,50%)/0.1] text-[hsl(195,100%,70%)] font-semibold"
                           )}
                         >
                           <span>{opt.icon}</span>
                           <span>{opt.label}</span>
-                          {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-blue-500" />}
+                          {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto text-[hsl(195,100%,60%)]" />}
                         </button>
                       ))}
-                      <div className="border-t border-slate-100 mt-1 pt-1">
+                      <div className="border-t border-white/5 mt-1 pt-1">
                         <button
                           onClick={() => {
                             setShowExportMenu(false);
                             shareViaWhatsApp();
                           }}
                           disabled={sharing}
-                          className="w-full text-right px-3 py-2 text-sm flex items-center gap-2 hover:bg-green-50 transition-colors text-green-700"
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 hover:bg-[hsl(160,84%,39%)/0.1] transition-colors text-[hsl(160,84%,60%)]"
                         >
                           <span>💬</span>
                           <span>{sharing ? "جارٍ المشاركة..." : "مشاركة عبر واتساب"}</span>
                           {sharing && <Loader2 className="h-3 w-3 mr-auto animate-spin" />}
-                          {!sharing && <Share2 className="h-3 w-3 mr-auto text-green-500" />}
+                          {!sharing && <Share2 className="h-3 w-3 mr-auto" />}
                         </button>
                       </div>
                     </div>
@@ -628,12 +653,12 @@ export default function SharedViewPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 sm:px-6 space-y-6">
+      <main className="relative max-w-6xl mx-auto px-4 py-6 sm:px-6 space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 print:hidden">
-          <StatCard label="الفصول" value={data.classes.length} icon={Users} color="blue" />
-          <StatCard label="الطلاب" value={data.totalStudents} icon={Users} color="indigo" />
-          <StatCard label="نسبة الحضور اليوم" value={`${data.attendanceRate}%`} icon={UserCheck} color="emerald" />
+          <StatCard label="الفصول" value={data.classes.length} icon={Users} gradient="from-[hsl(195,100%,50%)] to-[hsl(210,90%,55%)]" />
+          <StatCard label="الطلاب" value={data.totalStudents} icon={Users} gradient="from-[hsl(270,75%,55%)] to-[hsl(290,70%,50%)]" />
+          <StatCard label="نسبة الحضور اليوم" value={`${data.attendanceRate}%`} icon={UserCheck} gradient="from-[hsl(160,84%,39%)] to-[hsl(145,70%,42%)]" />
           <StatCard
             label="خطط الدروس"
             value={(() => {
@@ -642,23 +667,24 @@ export default function SharedViewPage() {
               return t > 0 ? `${Math.round((d / t) * 100)}%` : "—";
             })()}
             icon={BookOpen}
-            color="purple"
+            gradient="from-[hsl(340,75%,55%)] to-[hsl(320,70%,50%)]"
           />
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1 print:hidden">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none print:hidden">
           {TABS.map((tab) => {
             const Icon = tab.icon;
+            const colors = TAB_COLORS[tab.id];
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all",
+                  "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-300",
                   activeTab === tab.id
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                    ? `bg-gradient-to-l ${colors.active} text-white shadow-lg ${colors.gradient}`
+                    : "bg-white/[0.04] text-white/50 hover:bg-white/[0.08] hover:text-white/70 border border-white/[0.06]"
                 )}
               >
                 <Icon className="h-4 w-4" /> {tab.label}
@@ -667,7 +693,7 @@ export default function SharedViewPage() {
           })}
         </div>
 
-        {/* Tab Content - keep all mounted, hide inactive with CSS to preserve state */}
+        {/* Tab Content */}
         <div className="print:hidden">
           <div className={activeTab === "overview" ? "" : "hidden"}><OverviewTab data={data} /></div>
           <div className={activeTab === "attendance" ? "" : "hidden"}><AttendanceTab classes={data.classes} /></div>
@@ -676,7 +702,6 @@ export default function SharedViewPage() {
           <div className={activeTab === "reports" ? "" : "hidden"}><ReportsTab data={data} /></div>
           <div className={activeTab === "lessons" ? "" : "hidden"}><LessonsTab classes={data.classes} /></div>
         </div>
-
       </main>
     </div>
   );
@@ -684,20 +709,17 @@ export default function SharedViewPage() {
 
 // ============ Shared Components ============
 
-function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: any; color: string }) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    red: "bg-red-50 text-red-600 border-red-100",
-    amber: "bg-amber-50 text-amber-600 border-amber-100",
-  };
+function StatCard({ label, value, icon: Icon, gradient }: { label: string; value: string | number; icon: any; gradient: string }) {
   return (
-    <div className={cn("rounded-2xl border p-4 text-center", colors[color] || colors.blue)}>
-      <Icon className="h-6 w-6 mx-auto mb-2 opacity-70" />
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs font-medium opacity-70 mt-1">{label}</div>
+    <div className="relative group overflow-hidden rounded-2xl bg-white/[0.04] backdrop-blur-sm border border-white/[0.06] p-5 text-center transition-all duration-500 hover:bg-white/[0.07] hover:border-white/10 hover:scale-[1.02]">
+      <div className={cn("absolute inset-0 bg-gradient-to-br opacity-[0.07] group-hover:opacity-[0.12] transition-opacity duration-500", gradient)} />
+      <div className="relative">
+        <div className={cn("w-12 h-12 mx-auto mb-3 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg", gradient)}>
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+        <div className="text-3xl font-black text-white tabular-nums">{value}</div>
+        <div className="text-xs font-medium text-white/40 mt-1.5">{label}</div>
+      </div>
     </div>
   );
 }
