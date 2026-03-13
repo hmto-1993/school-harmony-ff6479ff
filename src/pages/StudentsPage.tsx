@@ -539,7 +539,7 @@ export default function StudentsPage() {
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
             إدارة الطلاب
-            {perms.read_only_mode && <Badge variant="secondary" className="text-[10px] gap-1"><Lock className="h-3 w-3" /> عرض فقط</Badge>}
+            
           </h1>
           <p className="text-muted-foreground">عرض وإدارة بيانات الطلاب</p>
         </div>
