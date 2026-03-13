@@ -186,6 +186,7 @@ export default function SharedViewPage() {
         {/* Tab Content */}
         {activeTab === "overview" && <OverviewTab data={data} />}
         {activeTab === "attendance" && <AttendanceTab classes={data.classes} />}
+        {activeTab === "weekly" && <WeeklyAttendanceTab data={data} />}
         {activeTab === "grades" && <GradesTab classes={data.classes} categories={data.categories} />}
         {activeTab === "reports" && <ReportsTab data={data} />}
         {activeTab === "lessons" && <LessonsTab classes={data.classes} />}
@@ -194,6 +195,7 @@ export default function SharedViewPage() {
         <div className="hidden print:block space-y-8">
           <OverviewTab data={data} />
           <AttendanceTab classes={data.classes} />
+          <WeeklyAttendanceTab data={data} />
           <GradesTab classes={data.classes} categories={data.categories} />
           <ReportsTab data={data} />
           <LessonsTab classes={data.classes} />
