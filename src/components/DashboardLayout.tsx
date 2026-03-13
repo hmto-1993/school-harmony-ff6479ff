@@ -2,7 +2,6 @@ import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
-import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -11,13 +10,13 @@ import { AnimatePresence } from "framer-motion";
 import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
-  const { user } = useAuth();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [useLocation().pathname]);
+  }, [location.pathname]);
 
   return (
     <div className="flex min-h-screen w-full bg-background" dir="rtl">
