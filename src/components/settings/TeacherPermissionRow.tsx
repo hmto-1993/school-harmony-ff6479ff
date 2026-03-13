@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 interface TeacherPermissionRowProps {
@@ -29,8 +30,11 @@ const defaultPerms: Permissions = {
 
 export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowProps) {
   const [perms, setPerms] = useState<Permissions>(defaultPerms);
+  const [originalPerms, setOriginalPerms] = useState<Permissions>(defaultPerms);
   const [loaded, setLoaded] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const hasChanges = loaded && JSON.stringify(perms) !== JSON.stringify(originalPerms);
 
   useEffect(() => {
     supabase
@@ -40,37 +44,40 @@ export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowPr
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setPerms({
+          const p: Permissions = {
             can_print: data.can_print,
             can_export: data.can_export,
             can_send_notifications: data.can_send_notifications,
             can_delete_records: data.can_delete_records,
             can_manage_grades: data.can_manage_grades,
             can_manage_attendance: data.can_manage_attendance,
-          });
+          };
+          setPerms(p);
+          setOriginalPerms(p);
         }
         setLoaded(true);
       });
   }, [teacher.user_id]);
 
-  const togglePerm = async (key: keyof Permissions) => {
-    const newVal = !perms[key];
-    setPerms((p) => ({ ...p, [key]: newVal }));
-    setSaved(false);
+  const togglePerm = (key: keyof Permissions) => {
+    setPerms((p) => ({ ...p, [key]: !p[key] }));
+  };
 
+  const handleSave = async () => {
+    setSaving(true);
     const { error } = await supabase
       .from("teacher_permissions")
       .upsert(
-        { user_id: teacher.user_id, ...perms, [key]: newVal },
+        { user_id: teacher.user_id, ...perms },
         { onConflict: "user_id" }
       );
+    setSaving(false);
 
     if (error) {
-      setPerms((p) => ({ ...p, [key]: !newVal }));
-      toast({ title: "خطأ", description: "فشل تحديث الصلاحية", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل حفظ الصلاحيات", variant: "destructive" });
     } else {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      setOriginalPerms({ ...perms });
+      toast({ title: "تم الحفظ", description: `تم تحديث صلاحيات ${teacher.full_name}` });
     }
   };
 
@@ -99,7 +106,16 @@ export default function TeacherPermissionRow({ teacher }: TeacherPermissionRowPr
         </TableCell>
       ))}
       <TableCell className="text-center">
-        {saved && <Check className="h-4 w-4 text-emerald-500 mx-auto animate-in fade-in" />}
+        <Button
+          variant={hasChanges ? "default" : "ghost"}
+          size="sm"
+          className="h-7 gap-1 text-xs"
+          disabled={!hasChanges || saving}
+          onClick={handleSave}
+        >
+          <Save className="h-3.5 w-3.5" />
+          {saving ? "..." : "حفظ"}
+        </Button>
       </TableCell>
     </TableRow>
   );
