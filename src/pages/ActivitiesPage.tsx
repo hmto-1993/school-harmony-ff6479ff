@@ -359,9 +359,23 @@ export default function ActivitiesPage() {
               title={activity.is_visible ? "مرئي" : "مخفي"}>
               {activity.is_visible ? <Eye className="h-4 w-4 text-emerald-500" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
             </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => deleteActivity(activity.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>حذف النشاط؟</AlertDialogTitle>
+                  <AlertDialogDescription>سيتم حذف النشاط نهائياً. لا يمكن التراجع عن هذا الإجراء.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => deleteActivity(activity.id)}>حذف</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
         <div className="mt-4 pt-4 border-t border-border/20">

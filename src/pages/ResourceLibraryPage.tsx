@@ -919,15 +919,28 @@ export default function ResourceLibraryPage() {
 
                   {/* Delete folder */}
                   <div className="mt-6 pt-4 border-t border-border">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="w-full rounded-xl gap-2"
-                      onClick={() => handleDeleteFolder(selectedFolder.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      حذف الحقيبة
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-full rounded-xl gap-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          حذف الحقيبة
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent dir="rtl">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>حذف الحقيبة؟</AlertDialogTitle>
+                          <AlertDialogDescription>سيتم حذف الحقيبة وجميع الملفات بداخلها نهائياً.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                          <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDeleteFolder(selectedFolder.id)}>حذف</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </>
               )}

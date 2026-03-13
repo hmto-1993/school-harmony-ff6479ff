@@ -348,9 +348,23 @@ export default function ShareDialog() {
                           <SelectItem value="30">شهر</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => handleDelete(link.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent dir="rtl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>حذف رابط المشاركة؟</AlertDialogTitle>
+                            <AlertDialogDescription>سيتم حذف الرابط ولن يتمكن أحد من الوصول إليه.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDelete(link.id)}>حذف</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 );
