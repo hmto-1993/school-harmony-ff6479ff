@@ -73,11 +73,144 @@ export default function SharedViewPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const [exporting, setExporting] = useState(false);
 
-  useEffect(() => {
-    if (!token) return;
-    setLoading(true);
-    supabase.functions.invoke("get-shared-data", { body: { token } }).then(({ data: res, error: err }) => {
+  const exportPDF = useCallback(async () => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const tableStyles = getArabicTableStyles();
+      const today = format(new Date(), "yyyy/MM/dd");
+
+      doc.setFontSize(16);
+      doc.text(`عرض أعمال: ${data.teacherName}`, pageWidth / 2, startY, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(today, pageWidth / 2, startY + 7, { align: "center" });
+
+      // --- Overview ---
+      let curY = startY + 15;
+      doc.setFontSize(13);
+      doc.text("ملخص عام", pageWidth / 2, curY, { align: "center" });
+
+      const overviewRows = data.classes.map(cls => [
+        `${cls.lessonPlans.completed}/${cls.lessonPlans.total}`,
+        String(cls.behavior.negative),
+        String(cls.behavior.positive),
+        String(cls.attendance.late),
+        String(cls.attendance.absent),
+        String(cls.attendance.present),
+        String(cls.studentCount),
+        cls.name,
+      ]);
+
+      autoTable(doc, {
+        startY: curY + 4,
+        head: [["خطط الدروس", "سلوك سلبي", "سلوك إيجابي", "متأخر", "غائب", "حاضر", "الطلاب", "الفصل"].reverse().reverse()],
+        body: overviewRows,
+        ...tableStyles,
+      });
+
+      // --- Attendance ---
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(13);
+      doc.text("تفاصيل الحضور اليوم", pageWidth / 2, 15, { align: "center" });
+
+      const attRows = data.classes.map(cls => {
+        const rate = cls.attendance.total > 0 ? Math.round((cls.attendance.present / cls.attendance.total) * 100) : 0;
+        return [
+          `${rate}%`,
+          String(cls.attendance.notRecorded),
+          String(cls.attendance.late),
+          String(cls.attendance.absent),
+          String(cls.attendance.present),
+          String(cls.studentCount),
+          cls.name,
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 20,
+        head: [["النسبة", "لم يُسجل", "متأخر", "غائب", "حاضر", "الطلاب", "الفصل"]],
+        body: attRows,
+        ...tableStyles,
+      });
+
+      // --- Grades per class ---
+      const categories = data.categories || [];
+      data.classes.forEach(cls => {
+        doc.addPage("a4", "landscape");
+        doc.setFontSize(13);
+        doc.text(`درجات: ${cls.name}`, pageWidth / 2, 15, { align: "center" });
+
+        const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null)
+          .sort((a: any, b: any) => a.sort_order - b.sort_order).slice(0, 8);
+
+        const gradesByStudent: Record<string, Record<string, { sum: number; count: number }>> = {};
+        cls.students.forEach(s => { gradesByStudent[s.id] = {}; });
+        cls.grades.forEach((g: any) => {
+          if (!gradesByStudent[g.student_id]) return;
+          if (!gradesByStudent[g.student_id][g.category_id]) gradesByStudent[g.student_id][g.category_id] = { sum: 0, count: 0 };
+          if (g.score !== null) {
+            gradesByStudent[g.student_id][g.category_id].sum += Number(g.score);
+            gradesByStudent[g.student_id][g.category_id].count++;
+          }
+        });
+        cls.manualScores.forEach((m: any) => {
+          if (!gradesByStudent[m.student_id]) return;
+          gradesByStudent[m.student_id][m.category_id] = { sum: Number(m.score), count: 1 };
+        });
+
+        const headers = ["الطالب", ...classCategories.map((c: any) => c.name)];
+        const rows = cls.students.map(s => {
+          const row = [s.full_name];
+          classCategories.forEach((cat: any) => {
+            const entry = gradesByStudent[s.id]?.[cat.id];
+            row.push(entry && entry.count > 0 ? String(Math.round(entry.sum / entry.count)) : "—");
+          });
+          return row.reverse();
+        });
+
+        autoTable(doc, {
+          startY: 20,
+          head: [[...headers].reverse()],
+          body: rows,
+          ...tableStyles,
+          styles: { ...tableStyles.styles, fontSize: 8 },
+        });
+      });
+
+      // --- Lessons ---
+      doc.addPage("a4", "landscape");
+      doc.setFontSize(13);
+      doc.text("خطط الدروس", pageWidth / 2, 15, { align: "center" });
+
+      const lessonRows = data.classes.map(cls => {
+        const pct = cls.lessonPlans.total > 0 ? Math.round((cls.lessonPlans.completed / cls.lessonPlans.total) * 100) : 0;
+        return [
+          `${pct}%`,
+          String(cls.lessonPlans.completed),
+          String(cls.lessonPlans.total),
+          cls.name,
+        ];
+      });
+
+      autoTable(doc, {
+        startY: 20,
+        head: [["نسبة الإنجاز", "المنجز", "الإجمالي", "الفصل"]],
+        body: lessonRows,
+        ...tableStyles,
+      });
+
+      finalizePDF(doc, `shared-report_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+      toast.success("تم تصدير التقرير بنجاح");
+    } catch (err) {
+      console.error(err);
+      toast.error("حدث خطأ أثناء التصدير");
+    }
+    setExporting(false);
+  }, [data]);
       if (err || res?.error) {
         setError(res?.error || "حدث خطأ في تحميل البيانات");
       } else {
