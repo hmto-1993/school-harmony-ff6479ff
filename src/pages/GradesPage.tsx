@@ -43,7 +43,7 @@ export default function GradesPage() {
   // Filter entry types based on edit permissions
   const availableTypes = canEdit
     ? ENTRY_TYPES
-    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester");
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "classwork");
 
   useEffect(() => {
     const load = async () => {
