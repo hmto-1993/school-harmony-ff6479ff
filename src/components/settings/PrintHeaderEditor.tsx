@@ -135,9 +135,9 @@ export default function PrintHeaderEditor() {
     if (data?.value) {
       try {
         const parsed = JSON.parse(data.value);
-        // Ensure color field exists
         if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
         if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
+        if (!parsed.watermark) parsed.watermark = defaultWatermark;
         setConfig(parsed);
       } catch {
         setConfig(defaultConfig);
