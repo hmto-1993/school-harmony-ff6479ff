@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { format, subDays } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AlertTriangle, UserX, BookOpen, FileWarning,
-  TrendingUp, TrendingDown, Minus, Activity, Award, ThumbsUp, ThumbsDown
+  TrendingUp, TrendingDown, Minus, Activity, Award, ThumbsUp, ThumbsDown,
+  ChevronDown, ChevronUp, BarChart3
 } from "lucide-react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
@@ -15,6 +17,7 @@ import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   ResponsiveContainer, Tooltip, XAxis, YAxis
 } from "recharts";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface AbsentStudent {
   id: string;
@@ -60,11 +63,13 @@ const GRADE_COLORS = [
 ];
 
 export default function SmartDashboardSummary() {
+  const { role, user } = useAuth();
   const [absentToday, setAbsentToday] = useState<AbsentStudent[]>([]);
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [currentLesson, setCurrentLesson] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { currentWeek } = useAcademicWeek();
+  const [isOpen, setIsOpen] = useState(() => localStorage.getItem('smart-summary-open') !== 'false');
 
   // Chart data
   const [dailyAttendance, setDailyAttendance] = useState<DailyAttendance[]>([]);
@@ -80,6 +85,11 @@ export default function SmartDashboardSummary() {
     setWarningOpen(true);
   };
 
+  const toggleOpen = (open: boolean) => {
+    setIsOpen(open);
+    localStorage.setItem('smart-summary-open', String(open));
+  };
+
   useEffect(() => {
     fetchSummary();
   }, [currentWeek]);
@@ -90,20 +100,51 @@ export default function SmartDashboardSummary() {
     const dayIndex = new Date().getDay();
     const last7Days = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), 6 - i), "yyyy-MM-dd"));
 
+    // Get teacher's class IDs if teacher role
+    let teacherClassIds: string[] | null = null;
+    if (role === "teacher" && user) {
+      const { data: tc } = await supabase
+        .from("teacher_classes")
+        .select("class_id")
+        .eq("teacher_id", user.id);
+      teacherClassIds = (tc || []).map((t: any) => t.class_id);
+      if (teacherClassIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+    }
+
+    // Build queries with optional class filter
+    let absQuery = supabase
+      .from("attendance_records")
+      .select("student_id, students!inner(full_name, class_id, classes!inner(name))")
+      .eq("date", today)
+      .eq("status", "absent");
+    if (teacherClassIds) absQuery = absQuery.in("class_id", teacherClassIds);
+
+    let allAttQuery = supabase
+      .from("attendance_records")
+      .select("student_id, status, date")
+      .gte("date", last7Days[0])
+      .lte("date", last7Days[6]);
+    if (teacherClassIds) allAttQuery = allAttQuery.in("class_id", teacherClassIds);
+
+    let studentsQuery = supabase
+      .from("students")
+      .select("id, full_name, class_id, classes!inner(name)");
+    if (teacherClassIds) studentsQuery = studentsQuery.in("class_id", teacherClassIds);
+
+    let behaviorQuery = supabase
+      .from("behavior_records")
+      .select("type, date")
+      .gte("date", last7Days[0])
+      .lte("date", last7Days[6]);
+    if (teacherClassIds) behaviorQuery = behaviorQuery.in("class_id", teacherClassIds);
+
     const [absRes, allAttRes, classesRes, lessonRes, settingsRes, gradesRes, behaviorRes] = await Promise.all([
-      supabase
-        .from("attendance_records")
-        .select("student_id, students!inner(full_name, class_id, classes!inner(name))")
-        .eq("date", today)
-        .eq("status", "absent"),
-      supabase
-        .from("attendance_records")
-        .select("student_id, status, date")
-        .gte("date", last7Days[0])
-        .lte("date", last7Days[6]),
-      supabase
-        .from("students")
-        .select("id, full_name, class_id, classes!inner(name)"),
+      absQuery,
+      allAttQuery,
+      studentsQuery,
       currentWeek
         ? supabase
             .from("lesson_plans")
@@ -120,13 +161,9 @@ export default function SmartDashboardSummary() {
         .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]),
       supabase
         .from("grades")
-        .select("score, category_id, grade_categories!inner(max_score)")
+        .select("score, category_id, student_id, grade_categories!inner(max_score)")
         .not("score", "is", null),
-      supabase
-        .from("behavior_records")
-        .select("type, date")
-        .gte("date", last7Days[0])
-        .lte("date", last7Days[6]),
+      behaviorQuery,
     ]);
 
     // Parse settings
@@ -173,8 +210,10 @@ export default function SmartDashboardSummary() {
     });
     setDailyAttendance(dailyArr);
 
-    // ── Grade Distribution Pie ──
-    const grades = (gradesRes.data || []) as any[];
+    const allGrades = (gradesRes.data || []) as any[];
+    // Filter grades by teacher's students if applicable
+    const studentIds = (classesRes.data || []).map((s: any) => s.id);
+    const grades = teacherClassIds ? allGrades.filter((g: any) => studentIds.includes(g.student_id)) : allGrades;
     const distribution = [
       { label: "ممتاز", count: 0, color: GRADE_COLORS[0] },
       { label: "جيد جداً", count: 0, color: GRADE_COLORS[1] },
@@ -233,8 +272,10 @@ export default function SmartDashboardSummary() {
         if (r.status === "absent") studentDays[r.student_id].absent++;
       });
 
-      // Need full attendance for at-risk calc - fetch all
-      const { data: fullAtt } = await supabase.from("attendance_records").select("student_id, status, date");
+      // Need full attendance for at-risk calc - fetch with class filter
+      let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date");
+      if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
+      const { data: fullAtt } = await fullAttQuery;
       const fullDays: Record<string, { absent: number; total: Set<string> }> = {};
       (fullAtt || []).forEach((r: any) => {
         if (!fullDays[r.student_id]) {
@@ -292,7 +333,23 @@ export default function SmartDashboardSummary() {
   const trendDir = lastRate > prevRate ? "up" : lastRate < prevRate ? "down" : "stable";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <Collapsible open={isOpen} onOpenChange={toggleOpen}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="p-2 rounded-xl bg-gradient-to-br from-primary to-primary/70 shadow-md">
+            <BarChart3 className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <h3 className="text-sm font-bold text-foreground">الملخص الذكي</h3>
+        </div>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground">
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? "إخفاء" : "إظهار"}
+          </Button>
+        </CollapsibleTrigger>
+      </div>
+      <CollapsibleContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
       {/* ── 1. Attendance Trend Chart ── */}
       <Card className="border-0 ring-1 ring-primary/15 bg-gradient-to-br from-primary/5 via-card to-primary/10 overflow-hidden">
@@ -541,7 +598,6 @@ export default function SmartDashboardSummary() {
         </CardContent>
       </Card>
 
-      {/* Warning Slip Dialog */}
       {selectedStudent && (
         <AbsenceWarningSlip
           open={warningOpen}
@@ -554,6 +610,8 @@ export default function SmartDashboardSummary() {
           totalDays={selectedStudent.totalDays}
         />
       )}
-    </div>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
