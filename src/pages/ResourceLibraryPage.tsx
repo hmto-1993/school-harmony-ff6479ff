@@ -484,6 +484,7 @@ export default function ResourceLibraryPage() {
             </>
           )}
         </div>
+        {!isViewOnly && (
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 rounded-xl" onClick={() => { if (selectedClassId) setNewClassId(selectedClassId); }}>
@@ -534,6 +535,7 @@ export default function ResourceLibraryPage() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {loading ? (
