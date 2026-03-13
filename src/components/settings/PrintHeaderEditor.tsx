@@ -588,6 +588,164 @@ export default function PrintHeaderEditor() {
             <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />)}</CardContent></Card>
           </div>
 
+          {/* Watermark settings */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 font-semibold text-sm">
+                  <Droplets className="h-4 w-4" />
+                  العلامة المائية
+                </Label>
+                <Switch
+                  checked={config.watermark?.enabled || false}
+                  onCheckedChange={(v) => setConfig((prev) => ({
+                    ...prev,
+                    watermark: { ...(prev.watermark || defaultWatermark), enabled: v },
+                  }))}
+                />
+              </div>
+
+              {config.watermark?.enabled && (
+                <div className="space-y-4 pt-2 border-t">
+                  {/* Text */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">نص العلامة المائية</Label>
+                    <Input
+                      value={config.watermark.text}
+                      onChange={(e) => setConfig((prev) => ({
+                        ...prev,
+                        watermark: { ...prev.watermark!, text: e.target.value },
+                      }))}
+                      className="h-8 text-sm"
+                      dir="rtl"
+                      placeholder="مثال: سري، مسودة، نسخة..."
+                    />
+                  </div>
+
+                  {/* Quick presets */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Label className="text-xs text-muted-foreground">اقتراحات:</Label>
+                    {["سري", "مسودة", "نسخة أصلية", "غير رسمي", "للاطلاع فقط"].map((t) => (
+                      <Button
+                        key={t}
+                        type="button"
+                        variant={config.watermark?.text === t ? "default" : "outline"}
+                        size="sm"
+                        className="h-6 text-[10px] px-2"
+                        onClick={() => setConfig((prev) => ({
+                          ...prev,
+                          watermark: { ...prev.watermark!, text: t },
+                        }))}
+                      >
+                        {t}
+                      </Button>
+                    ))}
+                  </div>
+
+                  {/* Font size */}
+                  <div className="flex items-center gap-3">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">حجم الخط:</Label>
+                    <Slider
+                      min={20}
+                      max={100}
+                      step={2}
+                      value={[config.watermark.fontSize]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        watermark: { ...prev.watermark!, fontSize: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-8 text-center">{config.watermark.fontSize}</span>
+                  </div>
+
+                  {/* Opacity */}
+                  <div className="flex items-center gap-3">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">الشفافية:</Label>
+                    <Slider
+                      min={0.02}
+                      max={0.3}
+                      step={0.01}
+                      value={[config.watermark.opacity]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        watermark: { ...prev.watermark!, opacity: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-8 text-center">{Math.round(config.watermark.opacity * 100)}%</span>
+                  </div>
+
+                  {/* Angle */}
+                  <div className="flex items-center gap-3">
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap flex items-center gap-1">
+                      <RotateCcw className="h-3 w-3" />
+                      الزاوية:
+                    </Label>
+                    <Slider
+                      min={-90}
+                      max={0}
+                      step={5}
+                      value={[config.watermark.angle]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        watermark: { ...prev.watermark!, angle: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-8 text-center">{config.watermark.angle}°</span>
+                  </div>
+
+                  {/* Color */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Palette className="h-3 w-3" />
+                      اللون:
+                    </Label>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {["#94a3b8", "#64748b", "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#1e293b"].map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={`w-5 h-5 rounded-full border-2 transition-all ${
+                            config.watermark?.color === c ? "border-primary scale-110 ring-2 ring-primary/30" : "border-transparent hover:scale-105"
+                          }`}
+                          style={{ backgroundColor: c }}
+                          onClick={() => setConfig((prev) => ({
+                            ...prev,
+                            watermark: { ...prev.watermark!, color: c },
+                          }))}
+                        />
+                      ))}
+                      <Input
+                        type="color"
+                        value={config.watermark.color}
+                        onChange={(e) => setConfig((prev) => ({
+                          ...prev,
+                          watermark: { ...prev.watermark!, color: e.target.value },
+                        }))}
+                        className="w-7 h-7 p-0 border-0 cursor-pointer rounded"
+                        title="لون مخصص"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Repeat toggle */}
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">تكرار العلامة على كامل الصفحة</Label>
+                    <Switch
+                      checked={config.watermark.repeat}
+                      onCheckedChange={(v) => setConfig((prev) => ({
+                        ...prev,
+                        watermark: { ...prev.watermark!, repeat: v },
+                      }))}
+                    />
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Save */}
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving} className="gap-1.5">
