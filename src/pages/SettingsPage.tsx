@@ -57,6 +57,7 @@ import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
 import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
+import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
@@ -2748,6 +2749,35 @@ export default function SettingsPage() {
                         </Button>
                       </div>
                     </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+
+            {/* ===== سجل دخول المعلمين ===== */}
+            <Collapsible>
+              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+                <CollapsibleTrigger className="w-full group">
+                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white">
+                        <History className="h-5 w-5" />
+                      </div>
+                      <div className="text-right">
+                        <h3 className="text-base font-bold text-foreground">سجل الدخول</h3>
+                        <p className="text-xs text-muted-foreground">استعراض تاريخ دخول المعلمين والمديرين</p>
+                      </div>
+                    </div>
+                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                  </div>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="pt-0 pb-5 px-5">
+                    <StaffLoginHistory
+                      teachers={teachers}
+                      currentUserId={user?.id || ""}
+                      currentUserName={profileName || "المدير"}
+                    />
                   </CardContent>
                 </CollapsibleContent>
               </Card>

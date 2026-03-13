@@ -909,6 +909,27 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_logins: {
+        Row: {
+          id: string
+          ip_address: string | null
+          logged_in_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          ip_address?: string | null
+          logged_in_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          ip_address?: string | null
+          logged_in_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_file_submissions: {
         Row: {
           activity_id: string
