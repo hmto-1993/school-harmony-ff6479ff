@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -36,7 +35,6 @@ export default function ShareDialog() {
   const { user, role } = useAuth();
   const [open, setOpen] = useState(false);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [expiryDays, setExpiryDays] = useState(7);
   const [canPrint, setCanPrint] = useState(true);
   const [canExport, setCanExport] = useState(true);
@@ -53,7 +51,6 @@ export default function ShareDialog() {
   const loadData = async () => {
     if (!user) return;
 
-    // Load teacher's classes
     if (role === "admin") {
       const { data } = await supabase.from("classes").select("id, name").order("name");
       setClasses(data || []);
@@ -62,7 +59,6 @@ export default function ShareDialog() {
       setClasses((data || []).map((tc: any) => ({ id: tc.classes.id, name: tc.classes.name })));
     }
 
-    // Load active share links
     const { data: links } = await supabase
       .from("shared_views")
       .select("*")
@@ -73,16 +69,16 @@ export default function ShareDialog() {
   };
 
   const handleCreate = async () => {
-    if (!user || selectedClasses.length === 0) {
-      toast.error("اختر فصلاً واحداً على الأقل");
+    if (!user || classes.length === 0) {
+      toast.error("لا توجد فصول لمشاركتها");
       return;
     }
     setCreating(true);
     const expiresAt = new Date(Date.now() + expiryDays * 86400000).toISOString();
 
-    const { data, error } = await supabase.from("shared_views").insert({
+    const { error } = await supabase.from("shared_views").insert({
       teacher_id: user.id,
-      class_ids: selectedClasses,
+      class_ids: classes.map(c => c.id),
       expires_at: expiresAt,
       can_print: canPrint,
       can_export: canExport,
@@ -93,7 +89,6 @@ export default function ShareDialog() {
       toast.error("فشل إنشاء رابط المشاركة");
     } else {
       toast.success("تم إنشاء رابط المشاركة");
-      setSelectedClasses([]);
       setShareLabel("");
       loadData();
     }
@@ -124,15 +119,6 @@ export default function ShareDialog() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const toggleClass = (classId: string) => {
-    setSelectedClasses((prev) => prev.includes(classId) ? prev.filter((c) => c !== classId) : [...prev, classId]);
-  };
-
-  const selectAll = () => {
-    if (selectedClasses.length === classes.length) setSelectedClasses([]);
-    else setSelectedClasses(classes.map((c) => c.id));
-  };
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -148,39 +134,20 @@ export default function ShareDialog() {
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
+          {/* Info */}
+          <div className="bg-muted/50 rounded-xl p-3 text-sm text-muted-foreground">
+            سيتم إنشاء رابط واحد يعرض جميع فصولك ({classes.length} فصل) بما فيها الدرجات والحضور والتقارير وخطط الدروس.
+          </div>
+
           {/* Label */}
           <div>
             <Label className="text-sm font-medium">وصف الرابط (اختياري)</Label>
             <Input
-              placeholder="مثال: عرض درجات الفصل الأول"
+              placeholder="مثال: عرض أعمالي للمدير"
               value={shareLabel}
               onChange={(e) => setShareLabel(e.target.value)}
               className="mt-1"
             />
-          </div>
-
-          {/* Classes */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium">اختر الفصول</Label>
-              <button onClick={selectAll} className="text-xs text-primary hover:underline">
-                {selectedClasses.length === classes.length ? "إلغاء الكل" : "تحديد الكل"}
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-1">
-              {classes.map((cls) => (
-                <label
-                  key={cls.id}
-                  className={cn(
-                    "flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all text-sm",
-                    selectedClasses.includes(cls.id) ? "bg-primary/10 border-primary" : "border-border hover:bg-muted"
-                  )}
-                >
-                  <Checkbox checked={selectedClasses.includes(cls.id)} onCheckedChange={() => toggleClass(cls.id)} />
-                  <span className="font-medium">{cls.name}</span>
-                </label>
-              ))}
-            </div>
           </div>
 
           {/* Expiry */}
@@ -216,9 +183,9 @@ export default function ShareDialog() {
           </div>
 
           {/* Create Button */}
-          <Button onClick={handleCreate} disabled={creating || selectedClasses.length === 0} className="w-full gap-2">
+          <Button onClick={handleCreate} disabled={creating || classes.length === 0} className="w-full gap-2">
             <Link className="h-4 w-4" />
-            {creating ? "جاري الإنشاء..." : "إنشاء رابط المشاركة"}
+            {creating ? "جاري الإنشاء..." : "إنشاء رابط مشاركة شامل"}
           </Button>
 
           {/* Active Links */}
