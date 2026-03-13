@@ -1142,6 +1142,45 @@ export type Database = {
           },
         ]
       }
+      teacher_permissions: {
+        Row: {
+          can_delete_records: boolean
+          can_export: boolean
+          can_manage_attendance: boolean
+          can_manage_grades: boolean
+          can_print: boolean
+          can_send_notifications: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_delete_records?: boolean
+          can_export?: boolean
+          can_manage_attendance?: boolean
+          can_manage_grades?: boolean
+          can_print?: boolean
+          can_send_notifications?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_delete_records?: boolean
+          can_export?: boolean
+          can_manage_attendance?: boolean
+          can_manage_grades?: boolean
+          can_print?: boolean
+          can_send_notifications?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
