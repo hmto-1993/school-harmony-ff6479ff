@@ -175,6 +175,23 @@ Deno.serve(async (req) => {
       categories: categories || [],
       attendanceReport,
       viewCount: (share.view_count || 0) + 1,
+      // Weekly report data
+      weeklyAttendance: (attendanceHistory || []).map((r: any) => ({
+        student_id: r.student_id,
+        status: r.status,
+        class_id: r.class_id,
+        date: r.date,
+      })),
+      academicCalendar: academicCalendar ? {
+        start_date: academicCalendar.start_date,
+        total_weeks: academicCalendar.total_weeks,
+        semester: academicCalendar.semester,
+      } : null,
+      classSchedules: (classSchedules || []).map((cs: any) => ({
+        class_id: cs.class_id,
+        periods_per_week: cs.periods_per_week,
+        days_of_week: cs.days_of_week,
+      })),
     });
   } catch (e) {
     console.error('get-shared-data error:', e);
