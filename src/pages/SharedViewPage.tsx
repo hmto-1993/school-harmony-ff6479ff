@@ -82,17 +82,22 @@ export default function SharedViewPage() {
     setExporting(true);
     try {
       // Fetch AI summary in parallel with PDF setup
+      const summaryPromise = focus !== "none"
+        ? supabase.functions.invoke("summarize-teacher", {
+            body: {
+              teacherName: data.teacherName,
+              schoolName: data.schoolName,
+              classes: data.classes,
+              attendanceRate: data.attendanceRate,
+              totalStudents: data.totalStudents,
+              focus,
+            },
+          }).then(r => r.data?.summary || "").catch(() => "")
+        : Promise.resolve("");
+
       const [pdfSetup, summaryResult] = await Promise.all([
         createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true }),
-        supabase.functions.invoke("summarize-teacher", {
-          body: {
-            teacherName: data.teacherName,
-            schoolName: data.schoolName,
-            classes: data.classes,
-            attendanceRate: data.attendanceRate,
-            totalStudents: data.totalStudents,
-          },
-        }).then(r => r.data?.summary || "").catch(() => ""),
+        summaryPromise,
       ]);
 
       const { doc, startY, watermark } = pdfSetup;
