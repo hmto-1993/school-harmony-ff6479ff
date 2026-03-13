@@ -529,6 +529,10 @@ export default function StudentsPage() {
     "bg-cyan-100 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
   ];
 
+  if (permsLoaded && !perms.can_view_students && role !== "admin") {
+    return <EmptyState icon={Lock} title="لا تملك صلاحية عرض الطلاب" description="تواصل مع المسؤول لتفعيل صلاحية عرض صفحة الطلاب" />;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-2">
