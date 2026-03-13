@@ -111,6 +111,8 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             can_delete_records: data.can_delete_records,
             can_manage_grades: data.can_manage_grades,
             can_manage_attendance: data.can_manage_attendance,
+            can_view_grades: (data as any).can_view_grades ?? true,
+            can_view_reports: (data as any).can_view_reports ?? true,
           };
           setPerms(p);
           setOriginalPerms(p);
