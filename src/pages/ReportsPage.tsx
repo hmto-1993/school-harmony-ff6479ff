@@ -171,8 +171,14 @@ export default function ReportsPage() {
 
   // Fetch classes
   useEffect(() => {
+    if (!permsLoaded) return;
     const fetchClasses = async () => {
-      if (role === "teacher" && user) {
+      // Admins and read-only viewers see all classes
+      if (role === "admin" || teacherPerms.read_only_mode) {
+        const { data } = await supabase.from("classes").select("id, name").order("name");
+        setClasses(data || []);
+        if (data && data.length > 0) setSelectedClass(data[0].id);
+      } else if (role === "teacher" && user) {
         const { data: tc } = await supabase
           .from("teacher_classes")
           .select("class_id, classes(id, name)")
@@ -180,14 +186,10 @@ export default function ReportsPage() {
         const cls = (tc || []).map((t: any) => t.classes).filter(Boolean);
         setClasses(cls);
         if (cls.length > 0) setSelectedClass(cls[0].id);
-      } else {
-        const { data } = await supabase.from("classes").select("id, name").order("name");
-        setClasses(data || []);
-        if (data && data.length > 0) setSelectedClass(data[0].id);
       }
     };
     fetchClasses();
-  }, [role, user]);
+  }, [role, user, permsLoaded, teacherPerms.read_only_mode]);
 
   // Fetch students when class changes
   useEffect(() => {
