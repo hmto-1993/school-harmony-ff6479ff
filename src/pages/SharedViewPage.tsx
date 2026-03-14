@@ -988,6 +988,34 @@ export default function SharedViewPage() {
     setExporting(false);
   }, [data, summaryFocus, buildPDF]);
 
+  /** Export compact summary PDF */
+  const exportSummaryPDF = useCallback(async (withAI: boolean) => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      let aiText = "";
+      if (withAI) {
+        const { data: aiRes } = await supabase.functions.invoke("summarize-teacher", {
+          body: {
+            teacherName: data.teacherName,
+            schoolName: data.schoolName,
+            classes: data.classes,
+            attendanceRate: data.attendanceRate,
+            totalStudents: data.totalStudents,
+            focus: "comprehensive",
+          },
+        });
+        aiText = aiRes?.summary || "";
+      }
+      const { doc, watermark } = await buildSummaryPDF(data, { includeAISummary: withAI, aiSummaryText: aiText });
+      finalizePDF(doc, `ملخص-مستويات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+      toast.success("تم تصدير الملخص بنجاح");
+    } catch {
+      toast.error("حدث خطأ أثناء التصدير");
+    }
+    setExporting(false);
+  }, [data]);
+
   /** Share via WhatsApp: generate PDF, upload via edge function, open WhatsApp */
   const shareViaWhatsApp = useCallback(async () => {
     if (!data || !token) return;
