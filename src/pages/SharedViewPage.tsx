@@ -1203,6 +1203,34 @@ export default function SharedViewPage() {
                         </button>
                       ))}
                       <div style={{ borderTop: '1px solid var(--sv-divider-subtle)' }} className="mt-1 pt-1">
+                        <div className="px-4 py-1.5 text-xs font-semibold" style={{ color: 'var(--sv-dropdown-label)' }}>ملخص مختصر</div>
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            exportSummaryPDF(true);
+                          }}
+                          disabled={exporting}
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:opacity-80"
+                          style={{ color: 'var(--sv-dropdown-text)' }}
+                        >
+                          <span>📋</span>
+                          <span>ملخص مختصر + ذكي</span>
+                          <Sparkles className="h-3 w-3 mr-auto" style={{ color: 'var(--sv-blue-accent)' }} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            exportSummaryPDF(false);
+                          }}
+                          disabled={exporting}
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:opacity-80"
+                          style={{ color: 'var(--sv-dropdown-text)' }}
+                        >
+                          <span>📋</span>
+                          <span>ملخص مختصر بدون ذكي</span>
+                        </button>
+                      </div>
+                      <div style={{ borderTop: '1px solid var(--sv-divider-subtle)' }} className="mt-1 pt-1">
                         <button
                           onClick={() => {
                             setShowExportMenu(false);
