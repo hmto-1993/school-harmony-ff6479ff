@@ -8,6 +8,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { safeDownload } from "@/lib/download-utils";
+import { buildSummaryPDF } from "@/lib/summary-pdf";
 
 // ============ Types ============
 interface ClassSummary {
