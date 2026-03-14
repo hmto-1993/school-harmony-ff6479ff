@@ -8,6 +8,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { safeDownload } from "@/lib/download-utils";
+import { buildSummaryPDF } from "@/lib/summary-pdf";
 
 // ============ Types ============
 interface ClassSummary {
@@ -987,6 +988,34 @@ export default function SharedViewPage() {
     setExporting(false);
   }, [data, summaryFocus, buildPDF]);
 
+  /** Export compact summary PDF */
+  const exportSummaryPDF = useCallback(async (withAI: boolean) => {
+    if (!data) return;
+    setExporting(true);
+    try {
+      let aiText = "";
+      if (withAI) {
+        const { data: aiRes } = await supabase.functions.invoke("summarize-teacher", {
+          body: {
+            teacherName: data.teacherName,
+            schoolName: data.schoolName,
+            classes: data.classes,
+            attendanceRate: data.attendanceRate,
+            totalStudents: data.totalStudents,
+            focus: "comprehensive",
+          },
+        });
+        aiText = aiRes?.summary || "";
+      }
+      const { doc, watermark } = await buildSummaryPDF(data, { includeAISummary: withAI, aiSummaryText: aiText });
+      finalizePDF(doc, `ملخص-مستويات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+      toast.success("تم تصدير الملخص بنجاح");
+    } catch {
+      toast.error("حدث خطأ أثناء التصدير");
+    }
+    setExporting(false);
+  }, [data]);
+
   /** Share via WhatsApp: generate PDF, upload via edge function, open WhatsApp */
   const shareViaWhatsApp = useCallback(async () => {
     if (!data || !token) return;
@@ -1173,6 +1202,34 @@ export default function SharedViewPage() {
                           {summaryFocus === opt.key && <Sparkles className="h-3 w-3 mr-auto" style={{ color: 'var(--sv-blue-accent)' }} />}
                         </button>
                       ))}
+                      <div style={{ borderTop: '1px solid var(--sv-divider-subtle)' }} className="mt-1 pt-1">
+                        <div className="px-4 py-1.5 text-xs font-semibold" style={{ color: 'var(--sv-dropdown-label)' }}>ملخص مختصر</div>
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            exportSummaryPDF(true);
+                          }}
+                          disabled={exporting}
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:opacity-80"
+                          style={{ color: 'var(--sv-dropdown-text)' }}
+                        >
+                          <span>📋</span>
+                          <span>ملخص مختصر + ذكي</span>
+                          <Sparkles className="h-3 w-3 mr-auto" style={{ color: 'var(--sv-blue-accent)' }} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowExportMenu(false);
+                            exportSummaryPDF(false);
+                          }}
+                          disabled={exporting}
+                          className="w-full text-right px-4 py-2.5 text-sm flex items-center gap-2 transition-colors hover:opacity-80"
+                          style={{ color: 'var(--sv-dropdown-text)' }}
+                        >
+                          <span>📋</span>
+                          <span>ملخص مختصر بدون ذكي</span>
+                        </button>
+                      </div>
                       <div style={{ borderTop: '1px solid var(--sv-divider-subtle)' }} className="mt-1 pt-1">
                         <button
                           onClick={() => {
