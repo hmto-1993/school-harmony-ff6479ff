@@ -471,7 +471,8 @@ export default function StudentsPage() {
   };
 
   const exportPDF = async () => {
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "students", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "students", includeHeader: true });
+    const { finalizePDF } = await import("@/lib/arabic-pdf");
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
@@ -496,7 +497,7 @@ export default function StudentsPage() {
       ...tableStyles,
     });
 
-    safeSavePDF(doc, `طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    finalizePDF(doc, `طلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 

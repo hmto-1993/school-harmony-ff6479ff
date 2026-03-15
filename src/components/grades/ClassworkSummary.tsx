@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
-import { safeSavePDF } from "@/lib/download-utils";
+import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
@@ -111,7 +110,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
     try {
-      const { doc, startY } = await createArabicPDF({
+      const { doc, startY, watermark } = await createArabicPDF({
         orientation: "landscape",
         reportType: "grades",
         includeHeader: true,
@@ -238,7 +237,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         },
       });
 
-      safeSavePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      finalizePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
     } catch (err) {
       console.error(err);

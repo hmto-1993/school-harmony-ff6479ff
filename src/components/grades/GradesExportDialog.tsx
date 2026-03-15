@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
-import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
-import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
+import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
+import { safeWriteXLSX } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
@@ -62,7 +62,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   };
 
   const exportPDF = async () => {
-    const { doc, startY: headerEndY } = await createArabicPDF({
+    const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       orientation: "landscape",
       reportType: "grades",
       includeHeader: true,
@@ -99,7 +99,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       });
     });
 
-    safeSavePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    finalizePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

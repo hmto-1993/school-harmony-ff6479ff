@@ -8,8 +8,8 @@ import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
-import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
-import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
+import { safeWriteXLSX } from "@/lib/download-utils";
+import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 
@@ -109,7 +109,7 @@ export default function ExportDialog({
   };
 
   const exportPDF = async () => {
-    const { doc, startY: headerEndY } = await createArabicPDF({ reportType: "student_logins", includeHeader: true });
+    const { doc, startY: headerEndY, watermark } = await createArabicPDF({ reportType: "student_logins", includeHeader: true });
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
@@ -178,7 +178,7 @@ export default function ExportDialog({
       });
     }
 
-    safeSavePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    finalizePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

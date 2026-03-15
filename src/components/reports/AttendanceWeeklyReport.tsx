@@ -249,10 +249,10 @@ export default function AttendanceWeeklyReport({
   };
 
   const handleExportPDF = async () => {
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -381,7 +381,7 @@ export default function AttendanceWeeklyReport({
       },
     });
 
-    safeSavePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
+    finalizePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`, watermark);
   };
 
   // Print removed per user request
