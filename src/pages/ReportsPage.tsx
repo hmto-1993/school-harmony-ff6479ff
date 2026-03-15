@@ -1083,7 +1083,7 @@ export default function ReportsPage() {
               <ReportPrintHeader reportType="attendance" />
               <PrintWatermark reportType="attendance" />
               {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
                 <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
                   <CardContent className="p-4 text-center">
                     <div className="mx-auto mb-2 w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">
