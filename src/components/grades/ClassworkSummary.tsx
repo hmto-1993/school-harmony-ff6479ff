@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
-import { safeSavePDF } from "@/lib/download-utils";
+import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
 import { safePrint } from "@/lib/print-utils";
 import { format } from "date-fns";
