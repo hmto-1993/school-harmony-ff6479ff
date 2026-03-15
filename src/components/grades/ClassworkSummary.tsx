@@ -127,20 +127,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
       const classworkCats = group.categories;
 
+      // Build headers: # | الطالب | [for each cat: icons col | score col] | الإجمالي
+      // Reversed for RTL display
       const headers: string[] = [];
       headers.push("الإجمالي");
       [...classworkCats].reverse().forEach(cat => {
         headers.push(`الدرجة (${cat.max_score})`);
+        headers.push(cat.name); // icons column header
       });
       headers.push("الطالب");
       headers.push("#");
 
+      // Build rows with placeholder text for icon cells
       const rows: string[][] = group.students.map((sg, i) => {
         const sub = calcManualSubtotal(sg.manualScores, classworkCats);
         const row: string[] = [];
         row.push(`${sub.score} / ${sub.max}`);
         [...classworkCats].reverse().forEach(cat => {
           row.push(String(sg.manualScores[cat.id] ?? 0));
+          row.push(""); // placeholder for icons - will be drawn manually
         });
         row.push(sg.full_name);
         row.push(String(i + 1));
@@ -148,6 +153,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       });
 
       const nameColIndex = headers.length - 2;
+
+      // Store icon data for each row/category to draw after table
+      const reversedCats = [...classworkCats].reverse();
+      const iconCellPositions: { rowIdx: number; catIdx: number; icons: DailyIcon[]; }[] = [];
+      group.students.forEach((sg, rowIdx) => {
+        reversedCats.forEach((cat, catIdx) => {
+          const allIcons = sg.dailyIcons[cat.id] || [];
+          const maxDisplay = getMaxDisplayIcons(cat.name);
+          const icons = allIcons.slice(0, maxDisplay);
+          if (icons.length > 0) {
+            iconCellPositions.push({ rowIdx, catIdx, icons });
+          }
+        });
+      });
+
+      // Icon column indices in the headers array (after "الإجمالي", each cat has 2 cols: score at even, icons at odd)
+      // icons col index for catIdx = 1 + catIdx * 2 + 1 = 2 + catIdx * 2
+      const iconColIndices = reversedCats.map((_, ci) => 1 + ci * 2 + 1);
+
       autoTable(doc, {
         startY: startY + 15,
         head: [headers],
@@ -157,6 +181,60 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         headStyles: { ...tableStyles.headStyles, fontSize: 7 },
         columnStyles: {
           [nameColIndex]: { halign: "right" as const, cellWidth: 35 },
+          ...Object.fromEntries(iconColIndices.map(ci => [ci, { cellWidth: 28, halign: "center" as const }])),
+        },
+        didDrawCell: (data: any) => {
+          if (data.section !== "body") return;
+          const rowIdx = data.row.index;
+          // Check if this column is an icon column
+          const colIdx = data.column.index;
+          const catLocalIdx = iconColIndices.indexOf(colIdx);
+          if (catLocalIdx === -1) return;
+
+          const entry = iconCellPositions.find(e => e.rowIdx === rowIdx && e.catIdx === catLocalIdx);
+          if (!entry || entry.icons.length === 0) return;
+
+          const cellX = data.cell.x;
+          const cellY = data.cell.y;
+          const cellW = data.cell.width;
+          const cellH = data.cell.height;
+          const r = 1.2; // icon radius
+          const gap = 0.6;
+          const iconsPerRow = Math.floor(cellW / (r * 2 + gap));
+          const totalIcons = entry.icons.length;
+          const rowCount = Math.ceil(totalIcons / iconsPerRow);
+          const startYIcon = cellY + (cellH - rowCount * (r * 2 + gap)) / 2 + r;
+
+          entry.icons.forEach((icon, idx) => {
+            const rowI = Math.floor(idx / iconsPerRow);
+            const colI = idx % iconsPerRow;
+            const iconsInThisRow = Math.min(iconsPerRow, totalIcons - rowI * iconsPerRow);
+            const rowWidth = iconsInThisRow * (r * 2 + gap) - gap;
+            const offsetX = cellX + (cellW - rowWidth) / 2 + colI * (r * 2 + gap) + r;
+            const offsetY = startYIcon + rowI * (r * 2 + gap);
+
+            if (icon.isFullScore) {
+              // Draw star shape in amber
+              doc.setFillColor(245, 158, 11);
+              drawPDFStar(doc, offsetX, offsetY, r * 1.1);
+            } else if (icon.level === "excellent") {
+              doc.setFillColor(16, 185, 129); // emerald
+              doc.circle(offsetX, offsetY, r, "F");
+            } else if (icon.level === "average") {
+              doc.setFillColor(245, 158, 11); // amber
+              doc.circle(offsetX, offsetY, r, "F");
+            } else {
+              doc.setFillColor(239, 68, 68); // rose
+              doc.circle(offsetX, offsetY, r, "F");
+              // Draw X mark
+              doc.setDrawColor(255, 255, 255);
+              doc.setLineWidth(0.3);
+              doc.line(offsetX - r * 0.5, offsetY - r * 0.5, offsetX + r * 0.5, offsetY + r * 0.5);
+              doc.line(offsetX + r * 0.5, offsetY - r * 0.5, offsetX - r * 0.5, offsetY + r * 0.5);
+              doc.setDrawColor(0, 0, 0);
+              doc.setLineWidth(0.1);
+            }
+          });
         },
       });
 
@@ -165,6 +243,25 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     } catch (err) {
       console.error(err);
       sonnerToast.error("حدث خطأ أثناء التصدير");
+    }
+  };
+
+  /** Draw a simple 5-point star using filled polygon */
+  const drawPDFStar = (doc: any, cx: number, cy: number, size: number) => {
+    const points: [number, number][] = [];
+    for (let i = 0; i < 10; i++) {
+      const angle = (Math.PI / 2) + (i * Math.PI / 5);
+      const r = i % 2 === 0 ? size : size * 0.45;
+      points.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
+    }
+    // Draw filled polygon using triangle fan
+    for (let i = 1; i < points.length - 1; i++) {
+      doc.triangle(
+        points[0][0], points[0][1],
+        points[i][0], points[i][1],
+        points[i + 1][0], points[i + 1][1],
+        "F"
+      );
     }
   };
 
