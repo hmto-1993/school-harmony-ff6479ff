@@ -8,6 +8,8 @@ import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import PrintWatermark from "@/components/shared/PrintWatermark";
 
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
