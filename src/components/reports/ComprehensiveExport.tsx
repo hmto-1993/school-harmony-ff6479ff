@@ -633,26 +633,20 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
         legY += 6;
       });
 
-      // Level zone backgrounds
+      // Level zone backgrounds - use light colors directly instead of GState opacity
       const zones = [
-        { min: 90, max: 100, color: [16, 185, 129] as [number, number, number], label: "ممتاز" },
-        { min: 80, max: 90, color: [59, 130, 246] as [number, number, number], label: "جيد جداً" },
-        { min: 70, max: 80, color: [251, 191, 36] as [number, number, number], label: "جيد" },
-        { min: 60, max: 70, color: [249, 115, 22] as [number, number, number], label: "مقبول" },
-        { min: 0, max: 60, color: [239, 68, 68] as [number, number, number], label: "ضعيف" },
+        { min: 90, max: 100, color: [230, 247, 240] as [number, number, number], label: "ممتاز", labelColor: [16, 185, 129] as [number, number, number] },
+        { min: 80, max: 90, color: [235, 242, 254] as [number, number, number], label: "جيد جداً", labelColor: [59, 130, 246] as [number, number, number] },
+        { min: 70, max: 80, color: [254, 249, 232] as [number, number, number], label: "جيد", labelColor: [251, 191, 36] as [number, number, number] },
+        { min: 60, max: 70, color: [254, 243, 232] as [number, number, number], label: "مقبول", labelColor: [249, 115, 22] as [number, number, number] },
+        { min: 0, max: 60, color: [254, 236, 236] as [number, number, number], label: "ضعيف", labelColor: [239, 68, 68] as [number, number, number] },
       ];
-      doc.saveGraphicsState();
-      // @ts-ignore
-      const zoneGState = new (doc as any).GState({ opacity: 0.07 });
-      // @ts-ignore
-      doc.setGState(zoneGState);
       zones.forEach(zone => {
         const y1 = lcBottom - (zone.max / 100) * lcHeight;
         const y2 = lcBottom - (zone.min / 100) * lcHeight;
         doc.setFillColor(...zone.color);
         doc.rect(lcMarginL, y1, lcWidth, y2 - y1, "F");
       });
-      doc.restoreGraphicsState();
       zones.forEach(zone => {
         const midY = lcBottom - ((zone.min + zone.max) / 2 / 100) * lcHeight;
         doc.setFont("Amiri", "normal");
