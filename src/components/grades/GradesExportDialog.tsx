@@ -62,7 +62,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   };
 
   const exportPDF = async () => {
-    const { doc, startY: headerEndY } = await createArabicPDF({
+    const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       orientation: "landscape",
       reportType: "grades",
       includeHeader: true,
