@@ -242,7 +242,18 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
       doc.setFont("Amiri", "normal");
       doc.setFontSize(10);
       const lines = doc.splitTextToSize(summaryResult, boxWidth - 10);
-      const boxHeight = lines.length * 5 + 8;
+      const boxHeight = lines.length * 5 + 12;
+      
+      // Check if AI summary fits on current page, if not start a new page
+      if (curY + boxHeight > pageHeight - 20) {
+        doc.addPage("a4", "landscape");
+        curY = 15;
+        doc.setFontSize(12);
+        doc.setFont("Amiri", "bold");
+        doc.text("✦ ملخص ذكي لأداء المعلم (تابع)", pageWidth / 2, curY, { align: "center" });
+        curY += 6;
+      }
+      
       doc.roundedRect(margin, curY - 2, boxWidth, boxHeight, 2, 2, "FD");
       doc.text(lines, pageWidth - margin - 5, curY + 4, { align: "right", maxWidth: boxWidth - 10 });
       curY += boxHeight + 6;

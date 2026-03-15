@@ -352,7 +352,14 @@ export async function buildSummaryPDF(
     doc.setFont("Amiri", "normal");
     doc.setFontSize(9);
     const lines = doc.splitTextToSize(options.aiSummaryText, boxWidth - 14);
-    const boxHeight = Math.min(lines.length * 4.5 + 10, 50);
+    const boxHeight = lines.length * 4.5 + 14;
+    
+    // Check if AI summary fits on current page, if not start a new page
+    if (curY + boxHeight > ph - 20) {
+      doc.addPage("a4", "landscape");
+      curY = 15;
+    }
+    
     doc.roundedRect(margin, curY, boxWidth, boxHeight, 3, 3, "FD");
     // Icon
     doc.setFontSize(10);
@@ -366,7 +373,12 @@ export async function buildSummaryPDF(
     curY += boxHeight + 6;
   }
 
-  // Grade Distribution Chart
+  // Grade Distribution Chart - check if enough space, otherwise new page
+  const minChartSpace = 80;
+  if (curY + minChartSpace > ph - 20) {
+    doc.addPage("a4", "landscape");
+    curY = 15;
+  }
   curY = drawSectionTitle(doc, "توزيع مستويات الدرجات — جميع الفصول", curY, pw);
 
   const classDistributions = data.classes.map(cls => {
