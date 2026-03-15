@@ -1052,6 +1052,7 @@ export default function ReportsPage() {
             <FileText className="h-4 w-4" />
             تقارير شاملة
           </TabsTrigger>
+        </TabsList>
 
         {/* ===== Attendance Report ===== */}
         <TabsContent value="attendance" className="space-y-4">
