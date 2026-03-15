@@ -19,12 +19,27 @@ export function safePrint(onCleanup?: PrintCleanup): void {
   const container = document.createElement("div");
   container.id = "print-container";
 
+  const appDir =
+    document.documentElement.getAttribute("dir") ||
+    document.body.getAttribute("dir") ||
+    "rtl";
+  container.setAttribute("dir", appDir);
+  container.style.direction = appDir;
+
   printAreas.forEach((area) => {
     const clone = area.cloneNode(true) as HTMLElement;
+    const areaDir =
+      (area as HTMLElement).closest("[dir]")?.getAttribute("dir") || appDir;
+
+    // Keep the same reading direction as the source view
+    clone.setAttribute("dir", areaDir);
+    clone.style.direction = areaDir;
+
     // Unhide elements that are hidden but should show in print
     clone.classList.remove("hidden");
     clone.style.display = "block";
     clone.style.visibility = "visible";
+
     // Also unhide print:block children
     clone.querySelectorAll(".hidden").forEach((el) => {
       if (el.classList.contains("print:block") || el.classList.contains("print-watermark")) {
@@ -33,10 +48,12 @@ export function safePrint(onCleanup?: PrintCleanup): void {
         el.classList.remove("hidden");
       }
     });
+
     // Remove no-print / print:hidden elements from clone
     clone.querySelectorAll(".no-print, .print\\:hidden, [class*='print:hidden']").forEach((el) => {
       el.remove();
     });
+
     container.appendChild(clone);
   });
 

@@ -273,9 +273,14 @@
     background: white !important;
     color: #1e293b !important;
     font-family: 'IBM Plex Sans Arabic', sans-serif;
+    direction: rtl !important;
   }
   #print-container * { visibility: visible !important; }
-  #print-container .print-area { display: block !important; }
+  #print-container .print-area {
+    display: block !important;
+    direction: rtl !important;
+    unicode-bidi: embed;
+  }
   #print-container .no-print { display: none !important; }
 
   /* Remove scroll/height constraints for full content */
@@ -286,7 +291,10 @@
   #print-container [class*="overflow-y-"] { overflow: visible !important; }
 
   /* Reasonable print font sizes */
-  #print-container table { font-size: 11px !important; }
+  #print-container table {
+    font-size: 11px !important;
+    direction: rtl !important;
+  }
   #print-container th, #print-container td { padding: 6px 8px !important; }
 
   /* Watermark overlay */
