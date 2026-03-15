@@ -226,7 +226,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       </div>
 
       {groupedByClass.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-end no-print">
           <GradesExportDialog
             title="التقييم النهائي"
             fileName="التقييم_النهائي"

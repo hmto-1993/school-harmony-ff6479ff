@@ -155,7 +155,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       </div>
 
       {grouped.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-end no-print">
           <GradesExportDialog
             title="ملخص الفصل"
             fileName="ملخص_الفصل"
