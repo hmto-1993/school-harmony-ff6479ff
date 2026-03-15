@@ -254,10 +254,10 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
 
   // PDF exports
   const exportExcellencePDF = async () => {
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY } = await createArabicPDF({ orientation: "portrait", reportType: "grades", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "grades", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -282,7 +282,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    safeSavePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`);
+    finalizePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark);
   };
 
   const exportDisciplinaryPDF = async () => {
