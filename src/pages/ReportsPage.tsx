@@ -1280,6 +1280,11 @@ export default function ReportsPage() {
         <TabsContent value="analytics" className="space-y-4">
           <MonthlyAnalytics selectedClass={selectedClass} classes={classes} />
         </TabsContent>
+
+        {/* ===== Comprehensive Export ===== */}
+        <TabsContent value="comprehensive" className="space-y-4">
+          <ComprehensiveExport classes={classes} />
+        </TabsContent>
       </Tabs>
 
       {/* Print Preview Dialog */}
