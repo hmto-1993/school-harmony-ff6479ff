@@ -1080,6 +1080,7 @@ export default function ReportsPage() {
           {attendanceData.length > 0 && (
             <div className="print-area space-y-4">
               <ReportPrintHeader reportType="attendance" />
+              <PrintWatermark reportType="attendance" />
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
