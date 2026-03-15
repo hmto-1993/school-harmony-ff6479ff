@@ -1123,7 +1123,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Attendance Chart */}
-              <div className="no-print"><AttendanceChart data={attendanceData} /></div>
+              <AttendanceChart data={attendanceData} />
 
               {/* Data Table */}
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
@@ -1221,7 +1221,7 @@ export default function ReportsPage() {
               <ReportPrintHeader reportType="grades" />
               <PrintWatermark reportType="grades" />
               {/* Grades Chart */}
-              <div className="no-print"><GradesChart data={gradeData} categoryNames={categoryNames} /></div>
+              <GradesChart data={gradeData} categoryNames={categoryNames} />
 
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardContent className="pt-4">
