@@ -1218,6 +1218,7 @@ export default function ReportsPage() {
           {gradeData.length > 0 && (
             <div className="print-area space-y-4">
               <ReportPrintHeader reportType="grades" />
+              <PrintWatermark reportType="grades" />
               {/* Grades Chart */}
               <GradesChart data={gradeData} categoryNames={categoryNames} />
 
