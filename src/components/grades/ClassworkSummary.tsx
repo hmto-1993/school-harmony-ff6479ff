@@ -237,7 +237,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         },
       });
 
-      safeSavePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+      finalizePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
     } catch (err) {
       console.error(err);

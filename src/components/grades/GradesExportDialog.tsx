@@ -99,7 +99,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       });
     });
 
-    safeSavePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    finalizePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

@@ -406,16 +406,17 @@ export default function AttendancePage() {
     const className = classes.find(c => c.id === selectedClass)?.name || "";
     const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
 
-    const { doc, startY } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const { finalizePDF } = await import("@/lib/arabic-pdf");
     doc.setFontSize(14);
     doc.text(`تقرير الحضور — ${className} — ${date}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
 
-    const head = [["#", "الاسم", "الحالة", "الملاحظات"]];
+    const head = [["الملاحظات", "الحالة", "الاسم", "#"]];
     const body = records.map((r, i) => [
-      String(i + 1),
-      r.full_name,
-      statusLabel[r.status] || r.status,
       r.notes || "",
+      statusLabel[r.status] || r.status,
+      r.full_name,
+      String(i + 1),
     ]);
 
     autoTable(doc, {
@@ -423,9 +424,10 @@ export default function AttendancePage() {
       body,
       startY: startY + 10,
       ...getArabicTableStyles(),
+      columnStyles: { 2: { halign: "right" as const } },
     });
 
-    safeSavePDF(doc, `حضور_${className}_${date}.pdf`);
+    finalizePDF(doc, `حضور_${className}_${date}.pdf`, watermark);
     toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
   };
 
