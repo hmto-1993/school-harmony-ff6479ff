@@ -44,6 +44,7 @@ import {
   Users2,
   Trophy,
   Lock,
+  FileText,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
