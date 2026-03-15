@@ -89,8 +89,8 @@ export default function DashboardPrintView({
             gap: "16px",
           }}
         >
-          {/* Right text */}
-          <div style={{ flex: 1, textAlign: headerConfig.rightSection.align, fontSize: `${headerConfig.rightSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.rightSection.color || "#1e293b" }}>
+          {/* Right text — anchored to right edge */}
+          <div style={{ maxWidth: "40%", textAlign: "center", fontSize: `${headerConfig.rightSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.rightSection.color || "#1e293b" }}>
             {headerConfig.rightSection.lines.map((line, i) => (
               <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
