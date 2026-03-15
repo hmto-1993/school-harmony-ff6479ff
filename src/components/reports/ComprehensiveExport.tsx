@@ -651,7 +651,7 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
         const midY = lcBottom - ((zone.min + zone.max) / 2 / 100) * lcHeight;
         doc.setFont("Amiri", "normal");
         doc.setFontSize(6);
-        doc.setTextColor(...zone.color);
+        doc.setTextColor(...zone.labelColor);
         doc.text(zone.label, lcMarginL + lcWidth + 2, midY + 1, { align: "left" });
       });
       doc.setTextColor(0, 0, 0);
