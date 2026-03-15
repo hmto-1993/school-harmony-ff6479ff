@@ -1221,7 +1221,7 @@ export default function ReportsPage() {
               <ReportPrintHeader reportType="grades" />
               <PrintWatermark reportType="grades" />
               {/* Grades Chart */}
-              <div className="no-print"><GradesChart data={gradeData} categoryNames={categoryNames} /></div>
+              <GradesChart data={gradeData} categoryNames={categoryNames} />
 
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardContent className="pt-4">
