@@ -1,8 +1,7 @@
 /**
- * Async print utility that prevents UI freeze and handles cleanup.
- * - Runs print asynchronously via requestAnimationFrame
- * - Listens for afterprint to clean up overlay state
- * - Shows a recovery "back" button on mobile after print completes
+ * Clone-based print utility.
+ * Clones all .print-area elements into a body-level #print-container,
+ * hides #root via CSS, prints, then cleans up.
  */
 
 type PrintCleanup = () => void;
@@ -12,34 +11,61 @@ let activePrintCleanup: PrintCleanup | null = null;
 export function safePrint(onCleanup?: PrintCleanup): void {
   activePrintCleanup = onCleanup ?? null;
 
+  // Remove any leftover container
+  document.getElementById("print-container")?.remove();
+
+  // Clone all print areas into a body-level container
+  const printAreas = document.querySelectorAll(".print-area, #absence-print-area");
+  const container = document.createElement("div");
+  container.id = "print-container";
+
+  printAreas.forEach((area) => {
+    const clone = area.cloneNode(true) as HTMLElement;
+    // Unhide elements that are hidden but should show in print
+    clone.classList.remove("hidden");
+    clone.style.display = "block";
+    clone.style.visibility = "visible";
+    // Also unhide print:block children
+    clone.querySelectorAll(".hidden").forEach((el) => {
+      if (el.classList.contains("print:block") || el.classList.contains("print-watermark")) {
+        (el as HTMLElement).style.display = "block";
+        (el as HTMLElement).style.visibility = "visible";
+        el.classList.remove("hidden");
+      }
+    });
+    // Remove no-print / print:hidden elements from clone
+    clone.querySelectorAll(".no-print, .print\\:hidden, [class*='print:hidden']").forEach((el) => {
+      el.remove();
+    });
+    container.appendChild(clone);
+  });
+
+  document.body.appendChild(container);
+
+  const cleanup = () => {
+    container.remove();
+    if (activePrintCleanup) {
+      activePrintCleanup();
+      activePrintCleanup = null;
+    }
+  };
+
   const handleAfterPrint = () => {
     window.removeEventListener("afterprint", handleAfterPrint);
-    performCleanup();
+    clearTimeout(fallbackTimeout);
+    cleanup();
   };
-  window.removeEventListener("afterprint", handleAfterPrint);
+
   window.addEventListener("afterprint", handleAfterPrint);
 
   const fallbackTimeout = setTimeout(() => {
     window.removeEventListener("afterprint", handleAfterPrint);
-    performCleanup();
+    cleanup();
   }, 60_000);
-
-  const originalCleanup = activePrintCleanup;
-  activePrintCleanup = () => {
-    clearTimeout(fallbackTimeout);
-    originalCleanup?.();
-  };
 
   requestAnimationFrame(() => {
     setTimeout(() => {
       window.print();
-    }, 100);
+    }, 150);
   });
-}
-
-function performCleanup() {
-  if (activePrintCleanup) {
-    activePrintCleanup();
-    activePrintCleanup = null;
-  }
 }

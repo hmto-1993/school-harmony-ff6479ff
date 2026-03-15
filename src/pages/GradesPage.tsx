@@ -8,6 +8,8 @@ import BehaviorEntry from "@/components/grades/BehaviorEntry";
 import SemesterSummary from "@/components/grades/SemesterSummary";
 import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
+import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import PrintWatermark from "@/components/shared/PrintWatermark";
 
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
@@ -213,7 +215,9 @@ export default function GradesPage() {
 
       {/* Content or Empty State */}
       {selectedClass ? (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in print-area">
+          <ReportPrintHeader reportType="grades" />
+          <PrintWatermark reportType="grades" />
           {activeType === "daily" && (
             <DailyGradeEntry selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}

@@ -164,8 +164,8 @@ function ReportPrintHeaderInline({
       >
         <div
           style={{
-            flex: 1,
-            textAlign: config.rightSection?.align || "right",
+            maxWidth: "40%",
+            textAlign: "center",
             fontSize: `${config.rightSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.rightSection?.color || "#1e293b",
@@ -195,8 +195,8 @@ function ReportPrintHeaderInline({
 
         <div
           style={{
-            flex: 1,
-            textAlign: config.leftSection?.align || "left",
+            maxWidth: "40%",
+            textAlign: "center",
             fontSize: `${config.leftSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.leftSection?.color || "#1e293b",

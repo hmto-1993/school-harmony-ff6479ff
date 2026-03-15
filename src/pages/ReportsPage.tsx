@@ -56,6 +56,7 @@ import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport"
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import PrintWatermark from "@/components/shared/PrintWatermark";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
@@ -1080,6 +1081,7 @@ export default function ReportsPage() {
           {attendanceData.length > 0 && (
             <div className="print-area space-y-4">
               <ReportPrintHeader reportType="attendance" />
+              <PrintWatermark reportType="attendance" />
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
@@ -1217,6 +1219,7 @@ export default function ReportsPage() {
           {gradeData.length > 0 && (
             <div className="print-area space-y-4">
               <ReportPrintHeader reportType="grades" />
+              <PrintWatermark reportType="grades" />
               {/* Grades Chart */}
               <GradesChart data={gradeData} categoryNames={categoryNames} />
 

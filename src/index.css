@@ -260,37 +260,42 @@
     color-scheme: light;
   }
 
-  body, html { background: white !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
+  body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
 
-  /* Hide everything, then reveal only print areas */
-  body * { visibility: hidden !important; overflow: visible !important; }
-  
-  /* Keep #root in layout flow but invisible */
-  #root { display: block !important; position: static !important; width: 100% !important; height: auto !important; padding: 0 !important; margin: 0 !important; }
+  /* Hide the entire app during print — only the cloned #print-container shows */
+  body > #root { display: none !important; }
 
-  /* Show print areas and their contents */
-  .print-area, #absence-print-area {
+  #print-container {
     display: block !important;
     visibility: visible !important;
-    position: relative !important;
     width: 100% !important;
     padding: 20px 28px !important;
     background: white !important;
+    color: #1e293b !important;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
   }
-  .print-area *, #absence-print-area * { visibility: visible !important; }
-  .print\:hidden { display: none !important; }
-  .print\:shadow-none { box-shadow: none !important; }
-  .print\:block { display: block !important; }
-  /* إخفاء زر العودة وأي عنصر no-print أثناء الطباعة الفعلية */
-  .no-print, .print-close-btn { display: none !important; }
-  /* Show watermark overlay on print */
+  #print-container * { visibility: visible !important; }
+  #print-container .print-area { display: block !important; }
+  #print-container .no-print { display: none !important; }
+
+  /* Remove scroll/height constraints for full content */
+  #print-container [class*="max-h-"] { max-height: none !important; }
+  #print-container [class*="overflow-auto"],
+  #print-container [class*="overflow-hidden"],
+  #print-container [class*="overflow-x-"],
+  #print-container [class*="overflow-y-"] { overflow: visible !important; }
+
+  /* Reasonable print font sizes */
+  #print-container table { font-size: 11px !important; }
+  #print-container th, #print-container td { padding: 6px 8px !important; }
+
+  /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
-  /* Preserve colors in print */
+
+  /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-  @page {
-    size: A4 landscape;
-    margin: 12mm;
-  }
+
+  @page { size: A4 landscape; margin: 12mm; }
 }
 
 /* Light mode snapshot for html-to-image capture */
