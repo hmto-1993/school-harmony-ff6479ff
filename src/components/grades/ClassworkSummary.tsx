@@ -479,9 +479,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                       <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={async () => {
                         const tableEl = tableRefs.current.get(group.id);
                         if (!tableEl) return;
-                        const printArea = document.createElement("div");
-                        printArea.className = "print-area";
-                        printArea.style.cssText = "display:none;direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;";
+
+                        // Remove any leftover print container
+                        document.getElementById("print-container")?.remove();
+
+                        const container = document.createElement("div");
+                        container.id = "print-container";
+                        container.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;";
 
                         try {
                           let headerConfig: any = null;
@@ -495,7 +499,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             const headerDiv = document.createElement("div");
                             headerDiv.style.cssText = "margin-bottom:16px;padding-bottom:12px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;";
                             const rightDiv = document.createElement("div");
-                            rightDiv.style.cssText = `flex:1;text-align:${headerConfig.rightSection?.align||"right"};font-size:${headerConfig.rightSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.rightSection?.color||"#1e293b"};`;
+                            rightDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.rightSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.rightSection?.color||"#1e293b"};`;
                             (headerConfig.rightSection?.lines||[]).forEach((line: string) => {
                               const p = document.createElement("p");
                               p.style.cssText = "margin:0;font-weight:600;";
@@ -513,7 +517,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                               centerDiv.appendChild(imgEl);
                             });
                             const leftDiv = document.createElement("div");
-                            leftDiv.style.cssText = `flex:1;text-align:${headerConfig.leftSection?.align||"left"};font-size:${headerConfig.leftSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.leftSection?.color||"#1e293b"};`;
+                            leftDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.leftSection?.fontSize||12}px;line-height:1.8;color:${headerConfig.leftSection?.color||"#1e293b"};`;
                             (headerConfig.leftSection?.lines||[]).forEach((line: string) => {
                               const p = document.createElement("p");
                               p.style.cssText = "margin:0;font-weight:600;";
@@ -523,7 +527,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                             headerDiv.appendChild(rightDiv);
                             headerDiv.appendChild(centerDiv);
                             headerDiv.appendChild(leftDiv);
-                            printArea.appendChild(headerDiv);
+                            container.appendChild(headerDiv);
                           }
                         } catch {}
 
@@ -533,8 +537,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         const periodLabel = document.createElement("p");
                         periodLabel.style.cssText = "text-align:center;margin-bottom:8px;font-size:11px;color:#666;";
                         periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
-                        printArea.appendChild(title);
-                        printArea.appendChild(periodLabel);
+                        container.appendChild(title);
+                        container.appendChild(periodLabel);
+
                         const clone = tableEl.cloneNode(true) as HTMLElement;
                         clone.style.overflow = "visible";
                         clone.style.width = "100%";
@@ -578,9 +583,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           const h = el as HTMLElement;
                           if (!h.style.color) h.style.color = "#1a1a1a";
                         });
-                        printArea.appendChild(clone);
-                        document.body.appendChild(printArea);
-                        safePrint(() => { printArea.remove(); });
+                        container.appendChild(clone);
+                        document.body.appendChild(container);
+
+                        const cleanup = () => { container.remove(); };
+                        const handleAfterPrint = () => {
+                          window.removeEventListener("afterprint", handleAfterPrint);
+                          cleanup();
+                        };
+                        window.addEventListener("afterprint", handleAfterPrint);
+                        setTimeout(() => window.print(), 200);
                       }}>
                         <Printer className="h-4 w-4" />
                       </Button>
