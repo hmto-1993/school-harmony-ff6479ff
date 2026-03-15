@@ -44,6 +44,7 @@ import {
   Users2,
   Trophy,
   Lock,
+  FileText,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
@@ -58,6 +59,7 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
+import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -1047,6 +1049,10 @@ export default function ReportsPage() {
             <Trophy className="h-4 w-4" />
             التحليل الشهري
           </TabsTrigger>
+          <TabsTrigger value="comprehensive" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400">
+            <FileText className="h-4 w-4" />
+            تقارير شاملة
+          </TabsTrigger>
         </TabsList>
 
         {/* ===== Attendance Report ===== */}
@@ -1273,6 +1279,11 @@ export default function ReportsPage() {
         {/* ===== Monthly Analytics ===== */}
         <TabsContent value="analytics" className="space-y-4">
           <MonthlyAnalytics selectedClass={selectedClass} classes={classes} />
+        </TabsContent>
+
+        {/* ===== Comprehensive Export ===== */}
+        <TabsContent value="comprehensive" className="space-y-4">
+          <ComprehensiveExport classes={classes} />
         </TabsContent>
       </Tabs>
 
