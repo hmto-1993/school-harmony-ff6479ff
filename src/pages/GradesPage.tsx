@@ -87,7 +87,7 @@ export default function GradesPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-3 no-print">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
             الدرجات والتقييمات
@@ -103,7 +103,7 @@ export default function GradesPage() {
       </div>
 
       {/* Class Cards — Cosmic Cyan palette */}
-      <div>
+      <div className="no-print">
         <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
           <Users className="h-4 w-4" />
           اختر الفصل
@@ -145,7 +145,7 @@ export default function GradesPage() {
 
       {/* Entry Type Cards — green active, colorful icons */}
       {selectedClass && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {availableTypes.map((type, i) => {
@@ -181,7 +181,7 @@ export default function GradesPage() {
 
       {/* Period Cards — unified amber tint, active = primary */}
       {selectedClass && showPeriodSelector && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">الفترة</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg">
             {PERIODS.map((period, i) => {
