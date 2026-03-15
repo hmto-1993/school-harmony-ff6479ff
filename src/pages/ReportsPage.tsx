@@ -58,6 +58,7 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
+import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
 import {
   AlertDialog,
   AlertDialogContent,
