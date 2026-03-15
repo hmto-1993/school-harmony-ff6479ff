@@ -1123,7 +1123,7 @@ export default function ReportsPage() {
               </div>
 
               {/* Attendance Chart */}
-              <AttendanceChart data={attendanceData} />
+              <div className="no-print"><AttendanceChart data={attendanceData} /></div>
 
               {/* Data Table */}
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
