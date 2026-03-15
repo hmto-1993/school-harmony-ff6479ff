@@ -103,7 +103,7 @@ export default function GradesPage() {
       </div>
 
       {/* Class Cards — Cosmic Cyan palette */}
-      <div>
+      <div className="no-print">
         <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
           <Users className="h-4 w-4" />
           اختر الفصل
