@@ -145,7 +145,7 @@ export default function GradesPage() {
 
       {/* Entry Type Cards — green active, colorful icons */}
       {selectedClass && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             {availableTypes.map((type, i) => {
