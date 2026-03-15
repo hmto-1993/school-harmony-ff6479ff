@@ -11,12 +11,25 @@ function isStandalone(): boolean {
 }
 
 /**
- * Safe file download that works in PWA standalone mode on iOS/Android.
- * Falls back to navigator.share on mobile, then window.open, then anchor download.
+ * Detect mobile vs desktop
+ */
+function isMobileDevice(): boolean {
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+/**
+ * Safe file download that works in PWA standalone mode on iOS/Android/Desktop.
+ * Strategy:
+ * - Mobile PWA: try Web Share API first, then window.open
+ * - Desktop PWA: use anchor download (works reliably), fallback to window.open
+ * - Normal browser: standard anchor download
  */
 export async function safeDownload(blob: Blob, fileName: string) {
-  // Try Web Share API (best for mobile PWA)
-  if (isStandalone() && navigator.share && navigator.canShare) {
+  const standalone = isStandalone();
+  const mobile = isMobileDevice();
+
+  // Mobile PWA: try Web Share API first (best UX on mobile)
+  if (standalone && mobile && navigator.share && navigator.canShare) {
     try {
       const file = new File([blob], fileName, { type: blob.type });
       if (navigator.canShare({ files: [file] })) {
@@ -28,19 +41,28 @@ export async function safeDownload(blob: Blob, fileName: string) {
     }
   }
 
-  // Try opening blob URL (works on iOS standalone)
   const url = URL.createObjectURL(blob);
 
-  if (isStandalone()) {
-    // On iOS standalone, <a download> doesn't work; use window.open
-    const w = window.open(url, "_blank");
-    if (w) {
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-      return;
-    }
+  // Desktop PWA or normal browser: anchor download works reliably
+  if (!mobile || !standalone) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    return;
   }
 
-  // Standard anchor download (works in normal browsers)
+  // Mobile standalone fallback: window.open for iOS
+  const w = window.open(url, "_blank");
+  if (w) {
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    return;
+  }
+
+  // Final fallback: anchor
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
