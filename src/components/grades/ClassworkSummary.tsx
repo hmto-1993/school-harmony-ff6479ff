@@ -110,7 +110,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
     try {
-      const { doc, startY } = await createArabicPDF({
+      const { doc, startY, watermark } = await createArabicPDF({
         orientation: "landscape",
         reportType: "grades",
         includeHeader: true,
