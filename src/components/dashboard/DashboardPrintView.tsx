@@ -112,8 +112,8 @@ export default function DashboardPrintView({
               ) : null
             )}
           </div>
-          {/* Left text */}
-          <div style={{ flex: 1, textAlign: headerConfig.leftSection.align, fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.leftSection.color || "#1e293b" }}>
+          {/* Left text — anchored to left edge */}
+          <div style={{ maxWidth: "40%", textAlign: "center", fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.leftSection.color || "#1e293b" }}>
             {headerConfig.leftSection.lines.map((line, i) => (
               <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}

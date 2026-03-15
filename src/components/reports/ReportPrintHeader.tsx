@@ -92,11 +92,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
           )}
         </div>
 
-        {/* Left text */}
+        {/* Left text — anchored to left edge */}
         <div
           style={{
-            flex: 1,
-            textAlign: config.leftSection.align,
+            maxWidth: "40%",
+            textAlign: "center",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",

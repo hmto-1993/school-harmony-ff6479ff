@@ -215,7 +215,9 @@ export default function GradesPage() {
 
       {/* Content or Empty State */}
       {selectedClass ? (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in print-area">
+          <ReportPrintHeader reportType="grades" />
+          <PrintWatermark reportType="grades" />
           {activeType === "daily" && (
             <DailyGradeEntry selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
