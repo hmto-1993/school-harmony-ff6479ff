@@ -12,7 +12,7 @@ import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, Ci
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import autoTable from "jspdf-autotable";
-import { safePrint } from "@/lib/print-utils";
+
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
