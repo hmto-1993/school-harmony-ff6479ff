@@ -1048,7 +1048,10 @@ export default function ReportsPage() {
             <Trophy className="h-4 w-4" />
             التحليل الشهري
           </TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="comprehensive" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400">
+            <FileText className="h-4 w-4" />
+            تقارير شاملة
+          </TabsTrigger>
 
         {/* ===== Attendance Report ===== */}
         <TabsContent value="attendance" className="space-y-4">
