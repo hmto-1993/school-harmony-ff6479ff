@@ -56,6 +56,7 @@ import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport"
 import GradesChart from "@/components/reports/GradesChart";
 import BehaviorReport from "@/components/reports/BehaviorReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import PrintWatermark from "@/components/shared/PrintWatermark";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
