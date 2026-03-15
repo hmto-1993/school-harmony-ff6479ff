@@ -218,7 +218,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 no-print">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="بحث باسم الطالب..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="pr-9" />
@@ -226,7 +226,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       </div>
 
       {groupedByClass.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-end no-print">
           <GradesExportDialog
             title="التقييم النهائي"
             fileName="التقييم_النهائي"
@@ -286,7 +286,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 </div>
                 {/* Edit / Save / Cancel buttons */}
                 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 no-print">
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
