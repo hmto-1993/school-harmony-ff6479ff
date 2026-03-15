@@ -286,7 +286,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 </div>
                 {/* Edit / Save / Cancel buttons */}
                 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 no-print">
                   {!isEditing ? (
                     <Button
                       size="sm" variant="outline"
