@@ -181,7 +181,7 @@ export default function GradesPage() {
 
       {/* Period Cards — unified amber tint, active = primary */}
       {selectedClass && showPeriodSelector && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">الفترة</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg">
             {PERIODS.map((period, i) => {
