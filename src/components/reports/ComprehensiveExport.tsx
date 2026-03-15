@@ -766,7 +766,7 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
                       <ChevronDown className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56" dir="rtl">
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="text-xs text-muted-foreground">التقرير الشامل + ملخص ذكي</DropdownMenuLabel>
                     {([
                       { key: "comprehensive" as const, label: "📊 شامل", desc: "ملخص ذكي شامل" },
