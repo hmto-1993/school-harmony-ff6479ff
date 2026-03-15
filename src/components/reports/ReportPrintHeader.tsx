@@ -59,11 +59,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
           gap: "16px",
         }}
       >
-        {/* Right text */}
+        {/* Right text — anchored to right edge */}
         <div
           style={{
-            flex: 1,
-            textAlign: config.rightSection.align,
+            maxWidth: "40%",
+            textAlign: "center",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.rightSection.color || "#1e293b",
