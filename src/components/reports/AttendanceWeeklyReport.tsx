@@ -381,7 +381,7 @@ export default function AttendanceWeeklyReport({
       },
     });
 
-    safeSavePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`);
+    finalizePDF(doc, `تقرير_الحضور_الأسبوعي_${dateFrom}_${dateTo}.pdf`, watermark);
   };
 
   // Print removed per user request

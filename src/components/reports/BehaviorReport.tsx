@@ -121,8 +121,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   };
 
   const exportPDF = async () => {
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "behavior", includeHeader: true });
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "behavior", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -133,12 +133,12 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
     (doc as any).autoTable({
       startY: startY + 12,
-      head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب"]],
-      body: data.map((r) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name]),
+      head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
+      body: data.map((r, i) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
       ...tableStyles,
       columnStyles: { 3: { halign: "right" } },
     });
-    safeSavePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`);
+    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark);
   };
 
   return (

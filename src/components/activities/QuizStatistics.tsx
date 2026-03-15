@@ -144,10 +144,10 @@ export default function QuizStatistics() {
 
   const exportPDF = async () => {
     setExporting(true);
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTable = (await import("jspdf-autotable")).default;
 
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
     const pageWidth = doc.internal.pageSize.getWidth();
 
     // Title
@@ -198,7 +198,7 @@ export default function QuizStatistics() {
       theme: "grid",
     });
 
-    safeSavePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    finalizePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
     setExporting(false);
   };
 
