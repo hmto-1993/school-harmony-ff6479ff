@@ -373,7 +373,12 @@ export async function buildSummaryPDF(
     curY += boxHeight + 6;
   }
 
-  // Grade Distribution Chart
+  // Grade Distribution Chart - check if enough space, otherwise new page
+  const minChartSpace = 80;
+  if (curY + minChartSpace > ph - 20) {
+    doc.addPage("a4", "landscape");
+    curY = 15;
+  }
   curY = drawSectionTitle(doc, "توزيع مستويات الدرجات — جميع الفصول", curY, pw);
 
   const classDistributions = data.classes.map(cls => {
