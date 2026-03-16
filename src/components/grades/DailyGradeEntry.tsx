@@ -315,7 +315,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 no-print">
         <div className="flex flex-col gap-3">
            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
