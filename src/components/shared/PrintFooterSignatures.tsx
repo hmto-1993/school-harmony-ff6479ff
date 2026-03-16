@@ -44,7 +44,7 @@ export default function PrintFooterSignatures({ reportType }: Props) {
 
   return (
     <div className="hidden print:block" style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1" }}>
-      <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", direction: "rtl", paddingInline: "32px" }}>
         {signatures.signatures.map((sig, i) => (
           <div key={i} style={{ textAlign: "center", minWidth: "120px" }}>
             <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: "#1e293b" }}>{sig.label}</p>
