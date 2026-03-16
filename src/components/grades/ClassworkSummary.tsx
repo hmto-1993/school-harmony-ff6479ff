@@ -666,6 +666,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               </div>
             </CardHeader>
             <CardContent>
+              <div className="hidden print:block text-center mb-2">
+                <h2 className="text-sm font-bold">{group.name} — المهام والمشاركة — {selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"}</h2>
+              </div>
               <div ref={(el) => { if (el) tableRefs.current.set(group.id, el); }} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm print:overflow-visible" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
                 <table className="w-full text-sm border-collapse">
                   <thead>
