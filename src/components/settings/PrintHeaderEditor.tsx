@@ -780,6 +780,96 @@ export default function PrintHeaderEditor() {
             </CardContent>
           </Card>
 
+          {/* Footer Signatures settings */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 font-semibold text-sm">
+                  ✍️ توقيعات نهاية الجدول
+                </Label>
+                <Switch
+                  checked={config.footerSignatures?.enabled || false}
+                  onCheckedChange={(v) => setConfig((prev) => ({
+                    ...prev,
+                    footerSignatures: { ...(prev.footerSignatures || defaultFooterSignatures), enabled: v },
+                  }))}
+                />
+              </div>
+
+              {config.footerSignatures?.enabled && (
+                <div className="space-y-3 pt-2 border-t">
+                  {config.footerSignatures.signatures.map((sig, i) => (
+                    <div key={i} className="flex items-center gap-2 border rounded-lg p-2.5">
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap w-14">المسمى:</Label>
+                          <Input
+                            value={sig.label}
+                            onChange={(e) => setConfig((prev) => {
+                              const sigs = [...(prev.footerSignatures?.signatures || [])];
+                              sigs[i] = { ...sigs[i], label: e.target.value };
+                              return { ...prev, footerSignatures: { ...prev.footerSignatures!, signatures: sigs } };
+                            })}
+                            className="h-8 text-sm"
+                            dir="rtl"
+                            placeholder="مثال: معلم المادة"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap w-14">الاسم:</Label>
+                          <Input
+                            value={sig.name}
+                            onChange={(e) => setConfig((prev) => {
+                              const sigs = [...(prev.footerSignatures?.signatures || [])];
+                              sigs[i] = { ...sigs[i], name: e.target.value };
+                              return { ...prev, footerSignatures: { ...prev.footerSignatures!, signatures: sigs } };
+                            })}
+                            className="h-8 text-sm"
+                            dir="rtl"
+                            placeholder="اسم الشخص (اختياري)"
+                          />
+                        </div>
+                      </div>
+                      {config.footerSignatures!.signatures.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
+                          onClick={() => setConfig((prev) => ({
+                            ...prev,
+                            footerSignatures: {
+                              ...prev.footerSignatures!,
+                              signatures: prev.footerSignatures!.signatures.filter((_, idx) => idx !== i),
+                            },
+                          }))}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs w-full"
+                    onClick={() => setConfig((prev) => ({
+                      ...prev,
+                      footerSignatures: {
+                        ...prev.footerSignatures!,
+                        signatures: [...prev.footerSignatures!.signatures, { label: "التوقيع", name: "" }],
+                      },
+                    }))}
+                  >
+                    <Plus className="h-3 w-3" />
+                    إضافة توقيع
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Save */}
           <div className="flex justify-end">
             <Button onClick={handleSave} disabled={saving} className="gap-1.5">
