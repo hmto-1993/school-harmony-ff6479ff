@@ -20,6 +20,7 @@ import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import PrintFooterSignatures from "@/components/shared/PrintFooterSignatures";
 
 type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
