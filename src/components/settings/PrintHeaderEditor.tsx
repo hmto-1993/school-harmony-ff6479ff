@@ -56,11 +56,22 @@ export interface WatermarkConfig {
   repeat: boolean;
 }
 
+export interface FooterSignature {
+  label: string;
+  name: string;
+}
+
+export interface FooterSignaturesConfig {
+  enabled: boolean;
+  signatures: FooterSignature[];
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
   watermark?: WatermarkConfig;
+  footerSignatures?: FooterSignaturesConfig;
 }
 
 const defaultWatermark: WatermarkConfig = {
