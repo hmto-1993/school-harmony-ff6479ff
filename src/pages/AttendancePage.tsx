@@ -816,6 +816,7 @@ export default function AttendancePage() {
           )}
         </CardContent>
       </Card>
+      <PrintFooterSignatures reportType="attendance" />
     </div>
   );
 }
