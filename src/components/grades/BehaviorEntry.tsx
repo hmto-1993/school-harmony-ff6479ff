@@ -202,6 +202,9 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                  </div>
                </div>
 
+              <div className="hidden print:block text-center mb-2">
+                <h2 className="text-sm font-bold">{classes.find(c => c.id === selectedClass)?.name} — سجل السلوك اليومي</h2>
+              </div>
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
                   <thead>
