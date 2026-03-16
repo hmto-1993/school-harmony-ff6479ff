@@ -10,6 +10,7 @@ import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintWatermark from "@/components/shared/PrintWatermark";
+import PrintFooterSignatures from "@/components/shared/PrintFooterSignatures";
 
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
