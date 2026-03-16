@@ -179,6 +179,7 @@ export default function PrintHeaderEditor() {
           if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
           if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
           if (!parsed.watermark) parsed.watermark = defaultWatermark;
+          if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
           setConfig(parsed);
         } catch {
           setConfig(defaultConfig);
