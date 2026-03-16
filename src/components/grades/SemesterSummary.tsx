@@ -227,7 +227,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : grouped.map(group => (
         <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 no-print">
             <div className="flex items-center gap-2">
               <CardTitle className="text-lg">{group.name}</CardTitle>
               <Badge variant="secondary">{group.students.length} طالب</Badge>

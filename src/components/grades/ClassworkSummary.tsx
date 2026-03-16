@@ -442,7 +442,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 no-print">
         <div className="relative flex-1">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="بحث باسم الطالب..." value={searchName} onChange={(e) => setSearchName(e.target.value)} className="pr-9" />
@@ -461,7 +461,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
         return (
           <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 no-print">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-lg">{group.name}</CardTitle>

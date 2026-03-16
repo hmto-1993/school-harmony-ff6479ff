@@ -180,7 +180,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   return (
     <>
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 no-print">
           <CardTitle className="text-lg">سجل السلوك اليومي</CardTitle>
         </CardHeader>
         <CardContent>
