@@ -358,6 +358,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               </div>
             </CardHeader>
             <CardContent>
+              <div className="hidden print:block text-center mb-2">
+                <h2 className="text-sm font-bold">{group.name} — التقييم النهائي — {selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"}</h2>
+              </div>
               <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm" dir="rtl">
                 <table className="w-full text-sm border-separate border-spacing-0" dir="rtl">
                   <thead>
