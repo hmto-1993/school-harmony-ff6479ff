@@ -237,6 +237,7 @@ export default function GradesPage() {
           {activeType === "import" && (
             <GradesImport selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
+          <PrintFooterSignatures reportType={activeType === "behavior" ? "behavior" : "grades"} />
         </div>
       ) : (
         <EmptyState
