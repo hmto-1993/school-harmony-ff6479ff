@@ -373,7 +373,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
            <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
-             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm">
+             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print">
                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
                  <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
                </div>
