@@ -10,6 +10,7 @@ import GradesImport from "@/components/grades/GradesImport";
 import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintWatermark from "@/components/shared/PrintWatermark";
+import PrintFooterSignatures from "@/components/shared/PrintFooterSignatures";
 
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
@@ -236,6 +237,7 @@ export default function GradesPage() {
           {activeType === "import" && (
             <GradesImport selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
+          <PrintFooterSignatures reportType={activeType === "behavior" ? "behavior" : "grades"} />
         </div>
       ) : (
         <EmptyState

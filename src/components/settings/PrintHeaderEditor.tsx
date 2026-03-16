@@ -56,11 +56,22 @@ export interface WatermarkConfig {
   repeat: boolean;
 }
 
+export interface FooterSignature {
+  label: string;
+  name: string;
+}
+
+export interface FooterSignaturesConfig {
+  enabled: boolean;
+  signatures: FooterSignature[];
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
   watermark?: WatermarkConfig;
+  footerSignatures?: FooterSignaturesConfig;
 }
 
 const defaultWatermark: WatermarkConfig = {
@@ -71,6 +82,14 @@ const defaultWatermark: WatermarkConfig = {
   opacity: 0.08,
   angle: -30,
   repeat: true,
+};
+
+const defaultFooterSignatures: FooterSignaturesConfig = {
+  enabled: false,
+  signatures: [
+    { label: "معلم المادة", name: "" },
+    { label: "مدير المدرسة", name: "" },
+  ],
 };
 
 const defaultConfig: PrintHeaderConfig = {
@@ -91,6 +110,7 @@ const defaultConfig: PrintHeaderConfig = {
     color: "#1e293b",
   },
   watermark: defaultWatermark,
+  footerSignatures: defaultFooterSignatures,
 };
 
 interface ReportTypeOption {
@@ -141,6 +161,7 @@ export default function PrintHeaderEditor() {
         if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
         if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
         if (!parsed.watermark) parsed.watermark = defaultWatermark;
+        if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
         setConfig(parsed);
       } catch {
         setConfig(defaultConfig);
@@ -158,6 +179,7 @@ export default function PrintHeaderEditor() {
           if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
           if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
           if (!parsed.watermark) parsed.watermark = defaultWatermark;
+          if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
           setConfig(parsed);
         } catch {
           setConfig(defaultConfig);
@@ -532,6 +554,18 @@ export default function PrintHeaderEditor() {
                     ))}
                   </div>
                 </div>
+                {/* Footer signatures preview */}
+                {config.footerSignatures?.enabled && config.footerSignatures.signatures.length > 0 && (
+                  <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1", position: "relative", zIndex: 2 }}>
+                    {config.footerSignatures.signatures.map((sig, i) => (
+                      <div key={i} style={{ textAlign: "center", minWidth: "120px" }}>
+                        <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: "#1e293b" }}>{sig.label}</p>
+                        <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#475569" }}>{sig.name || "........................"}</p>
+                        <div style={{ marginTop: "20px", borderBottom: "1px solid #94a3b8", width: "100px", marginInline: "auto" }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -741,6 +775,96 @@ export default function PrintHeaderEditor() {
                       }))}
                     />
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Footer Signatures settings */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 font-semibold text-sm">
+                  ✍️ توقيعات نهاية الجدول
+                </Label>
+                <Switch
+                  checked={config.footerSignatures?.enabled || false}
+                  onCheckedChange={(v) => setConfig((prev) => ({
+                    ...prev,
+                    footerSignatures: { ...(prev.footerSignatures || defaultFooterSignatures), enabled: v },
+                  }))}
+                />
+              </div>
+
+              {config.footerSignatures?.enabled && (
+                <div className="space-y-3 pt-2 border-t">
+                  {config.footerSignatures.signatures.map((sig, i) => (
+                    <div key={i} className="flex items-center gap-2 border rounded-lg p-2.5">
+                      <div className="flex-1 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap w-14">المسمى:</Label>
+                          <Input
+                            value={sig.label}
+                            onChange={(e) => setConfig((prev) => {
+                              const sigs = [...(prev.footerSignatures?.signatures || [])];
+                              sigs[i] = { ...sigs[i], label: e.target.value };
+                              return { ...prev, footerSignatures: { ...prev.footerSignatures!, signatures: sigs } };
+                            })}
+                            className="h-8 text-sm"
+                            dir="rtl"
+                            placeholder="مثال: معلم المادة"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground whitespace-nowrap w-14">الاسم:</Label>
+                          <Input
+                            value={sig.name}
+                            onChange={(e) => setConfig((prev) => {
+                              const sigs = [...(prev.footerSignatures?.signatures || [])];
+                              sigs[i] = { ...sigs[i], name: e.target.value };
+                              return { ...prev, footerSignatures: { ...prev.footerSignatures!, signatures: sigs } };
+                            })}
+                            className="h-8 text-sm"
+                            dir="rtl"
+                            placeholder="اسم الشخص (اختياري)"
+                          />
+                        </div>
+                      </div>
+                      {config.footerSignatures!.signatures.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
+                          onClick={() => setConfig((prev) => ({
+                            ...prev,
+                            footerSignatures: {
+                              ...prev.footerSignatures!,
+                              signatures: prev.footerSignatures!.signatures.filter((_, idx) => idx !== i),
+                            },
+                          }))}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs w-full"
+                    onClick={() => setConfig((prev) => ({
+                      ...prev,
+                      footerSignatures: {
+                        ...prev.footerSignatures!,
+                        signatures: [...prev.footerSignatures!.signatures, { label: "التوقيع", name: "" }],
+                      },
+                    }))}
+                  >
+                    <Plus className="h-3 w-3" />
+                    إضافة توقيع
+                  </Button>
                 </div>
               )}
             </CardContent>
