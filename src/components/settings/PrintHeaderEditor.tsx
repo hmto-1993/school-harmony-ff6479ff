@@ -84,6 +84,14 @@ const defaultWatermark: WatermarkConfig = {
   repeat: true,
 };
 
+const defaultFooterSignatures: FooterSignaturesConfig = {
+  enabled: false,
+  signatures: [
+    { label: "معلم المادة", name: "" },
+    { label: "مدير المدرسة", name: "" },
+  ],
+};
+
 const defaultConfig: PrintHeaderConfig = {
   rightSection: {
     lines: ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "مدرسة ..."],
@@ -102,6 +110,7 @@ const defaultConfig: PrintHeaderConfig = {
     color: "#1e293b",
   },
   watermark: defaultWatermark,
+  footerSignatures: defaultFooterSignatures,
 };
 
 interface ReportTypeOption {
