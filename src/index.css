@@ -306,16 +306,17 @@
 
   /* Tables: full width, compact, all columns visible */
   #print-container table {
-    font-size: 9px !important;
+    font-size: 11px !important;
     direction: rtl !important;
     width: 100% !important;
     table-layout: auto !important;
     border-collapse: collapse !important;
+    line-height: 1.4 !important;
   }
   #print-container th, #print-container td { 
-    padding: 3px 4px !important; 
+    padding: 6px 8px !important; 
     white-space: nowrap !important;
-    font-size: 9px !important;
+    font-size: 11px !important;
   }
   #print-container td[class*="min-w-"], #print-container th[class*="min-w-"] { min-width: 0 !important; }
   
