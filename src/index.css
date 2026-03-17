@@ -312,7 +312,10 @@
     table-layout: auto !important;
     border-collapse: collapse !important;
     line-height: 1.4 !important;
+    page-break-inside: auto !important;
   }
+  #print-container thead { display: table-header-group !important; }
+  #print-container tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   #print-container th, #print-container td { 
     padding: 6px 8px !important; 
     white-space: nowrap !important;
