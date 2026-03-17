@@ -44,18 +44,22 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
       // If groupHeaders exist, add the merged group header row first
       if (group.groupHeaders && group.groupHeaders.length > 0) {
-        const groupRow = group.groupHeaders.map(gh => gh.label);
-        XLSX.utils.sheet_add_aoa(ws, [groupRow], { origin: { r: 0, c: 0 } });
-        // Set up merges for colSpan > 1
+        // Expand group header row to full column count (one cell per column)
+        const expandedRow: (string)[] = [];
         const merges: XLSX.Range[] = [];
         let col = 0;
         group.groupHeaders.forEach(gh => {
+          expandedRow.push(gh.label);
           if (gh.colSpan > 1) {
             merges.push({ s: { r: 0, c: col }, e: { r: 0, c: col + gh.colSpan - 1 } });
+            for (let j = 1; j < gh.colSpan; j++) {
+              expandedRow.push('');
+            }
           }
           col += gh.colSpan;
         });
-        ws["!merges"] = merges;
+        XLSX.utils.sheet_add_aoa(ws, [expandedRow], { origin: { r: 0, c: 0 } });
+        if (merges.length > 0) ws["!merges"] = merges;
         startRow = 1;
       }
 
@@ -113,9 +117,16 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       // Build head rows: if groupHeaders exist, add them as the first head row
       const headRows: string[][] = [];
       if (group.groupHeaders && group.groupHeaders.length > 0) {
-        // Reverse groupHeaders for RTL
+        // Reverse groupHeaders for RTL and expand to full column count
         const reversedGroupHeaders = [...group.groupHeaders].reverse();
-        headRows.push(reversedGroupHeaders.map(gh => gh.label));
+        const expandedRow: string[] = [];
+        reversedGroupHeaders.forEach(gh => {
+          expandedRow.push(gh.label);
+          for (let j = 1; j < gh.colSpan; j++) {
+            expandedRow.push('');
+          }
+        });
+        headRows.push(expandedRow);
       }
       headRows.push(reversedHeaders);
 

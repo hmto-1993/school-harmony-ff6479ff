@@ -253,11 +253,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
               const headers = [
                 "#", "الطالب",
-                ...classworkCats.map(c => c.name),
+                ...classworkCats.map(c => `${c.name}\nمن ${Number(c.max_score)}`),
                 ...(classworkCats.length > 0 ? ["الإجمالي"] : []),
-                ...examCats.map(c => c.name),
+                ...examCats.map(c => `${c.name}\nمن ${Number(c.max_score)}`),
                 ...(examCats.length > 0 ? ["المجموع"] : []),
-                ...otherCats.map(c => c.name),
+                ...otherCats.map(c => `${c.name}\nمن ${Number(c.max_score)}`),
                 "المجموع",
               ];
               const rows = group.students.map((sg, i) => {
