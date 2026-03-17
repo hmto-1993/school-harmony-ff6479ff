@@ -336,16 +336,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   groups={(() => {
                     const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
                     const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "✓" : l === "average" ? "~" : l === "zero" ? "✗" : "";
+                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "ص" : l === "average" ? "و" : l === "zero" ? "خ" : "";
                     const rows = studentGrades.map((sg, i) => [
                       String(i + 1),
                       sg.full_name,
                       ...visibleCategories.map(c => {
                         const slotsArr = sg.slots[c.id] || [null];
                         const isStarred = sg.starred[c.id] || false;
-                        if (isStarred) return "★";
+                        if (isStarred) return "نجمة";
                         const symbols = slotsArr.map(levelSymbol).filter(Boolean).join(" ");
-                        return symbols || "—";
+                        return symbols || "-";
                       }),
                       ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
                     ]);
