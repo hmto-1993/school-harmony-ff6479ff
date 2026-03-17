@@ -63,7 +63,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     }
 
     const gradesMap = new Map<string, Map<number, Map<string, number | null>>>();
-    allGrades.forEach(g => {
+    allManualScores.forEach((g: any) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
       const periodMap = gradesMap.get(g.student_id)!;
       if (!periodMap.has(g.period)) periodMap.set(g.period, new Map());
