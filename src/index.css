@@ -347,7 +347,8 @@
 
 /* Print orientation — applied via body class before printing */
 @page { size: A4 portrait; margin: 0; }
-body.print-landscape @page { size: A4 landscape; margin: 0; }
+@page landscape { size: A4 landscape; margin: 0; }
+body.print-landscape #print-container { page: landscape; }
 
 /* Light mode snapshot for html-to-image capture */
 .light-capture, .light-capture * {
