@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
