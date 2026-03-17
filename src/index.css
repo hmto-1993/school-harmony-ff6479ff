@@ -269,7 +269,7 @@
     display: block !important;
     visibility: visible !important;
     width: 100% !important;
-    padding: 4px 0 !important;
+    padding: 12mm !important;
     margin: 0 !important;
     background: white !important;
     color: #1e293b !important;
@@ -342,12 +342,12 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { margin: 12mm; }
+  @page { margin: 0; }
 }
 
 /* Print orientation — applied via body class before printing */
-@page { size: A4 portrait; margin: 8mm; }
-body.print-landscape @page { size: A4 landscape; }
+@page { size: A4 portrait; margin: 0; }
+body.print-landscape @page { size: A4 landscape; margin: 0; }
 
 /* Light mode snapshot for html-to-image capture */
 .light-capture, .light-capture * {
