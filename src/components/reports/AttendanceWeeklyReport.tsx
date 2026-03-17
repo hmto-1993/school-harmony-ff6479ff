@@ -293,7 +293,7 @@ export default function AttendanceWeeklyReport({
       const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
       return nameText.length > max.length ? nameText : max;
     }, "");
-    const nameColWidth = Math.min(doc.getTextWidth(longestName) + 6, 70);
+    const nameColWidth = Math.min(doc.getTextWidth(longestName) + 12, 80);
     doc.setFont("Amiri", "normal");
 
     // Use vertical headers only when there are many columns (>8 weeks)
