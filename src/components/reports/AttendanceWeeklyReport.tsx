@@ -529,11 +529,12 @@ export default function AttendanceWeeklyReport({
           {/* ===== TABLE ===== */}
           <div ref={tableRef} className="overflow-auto rounded-md max-h-[600px] print:max-h-none print:overflow-visible attendance-table-wrapper">
             <table
-              className="w-full attendance-logbook-table"
+              className="attendance-logbook-table"
               dir="rtl"
               style={{
                 borderCollapse: "collapse",
                 fontSize: 13,
+                width: "auto",
               }}
             >
               <thead className="sticky top-0 z-10 print:sticky-none">
@@ -547,7 +548,7 @@ export default function AttendanceWeeklyReport({
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ textAlign: "right", whiteSpace: "nowrap" }}
+                    style={{ textAlign: "right", whiteSpace: "nowrap", width: "auto" }}
                   >اسم الطالب</th>
                   {filteredWeeks.map((w) => (
                     <th
@@ -727,7 +728,7 @@ export default function AttendanceWeeklyReport({
           white-space: nowrap;
           background: #f8f9fa;
           font-size: 13px;
-          width: 1%;
+          width: auto;
           line-height: 1.3;
         }
         .logbook-td-dot {
