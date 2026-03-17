@@ -230,6 +230,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
           <GradesExportDialog
             title="التقييم النهائي"
             fileName="التقييم_النهائي"
+            orientation="landscape"
             groups={groupedByClass.map((group) => {
               const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
               const examCats = group.categories.filter(c => c.category_group === 'exams');

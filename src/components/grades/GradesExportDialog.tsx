@@ -32,10 +32,12 @@ interface GradesExportDialogProps {
   extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
   tableRef?: React.RefObject<HTMLDivElement>;
+  orientation?: "portrait" | "landscape";
 }
 
-export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
+export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef, orientation: propOrientation }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
+  const pdfOrientation = propOrientation || "portrait";
 
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
@@ -274,6 +276,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       reportType: "grades",
       includeHeader: true,
+      orientation: pdfOrientation,
     });
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
@@ -284,7 +287,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
     groups.forEach((group, gIdx) => {
-      if (gIdx > 0) doc.addPage("a4", "landscape");
+      if (gIdx > 0) doc.addPage("a4", pdfOrientation);
       const startY = gIdx === 0 ? headerEndY + 15 : 15;
 
       doc.setFontSize(13);
@@ -310,9 +313,21 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         head: headRows,
         body: reversedRows,
         ...tableStyles,
-        styles: { ...tableStyles.styles, fontSize: 8 },
+        styles: { ...tableStyles.styles, fontSize: 9, cellPadding: 3 },
+        columnStyles: {
+          [reversedHeaders.length - 1]: { cellWidth: 28 },
+          [reversedHeaders.length - 2]: { cellWidth: 35 },
+        },
         didParseCell: (data: any) => {
+          // Alternating row colors
+          if (data.section === 'body' && data.row.index % 2 === 0) {
+            data.cell.styles.fillColor = [248, 250, 252];
+          }
+          // Group header row styling
           if (group.groupHeaders && group.groupHeaders.length > 0 && data.section === 'head' && data.row.index === 0) {
+            data.cell.styles.fillColor = [30, 64, 175];
+            data.cell.styles.textColor = [255, 255, 255];
+            data.cell.styles.fontStyle = 'bold';
             const reversedGH = [...group.groupHeaders!].reverse();
             let colOffset = 0;
             for (let i = 0; i < reversedGH.length; i++) {
@@ -329,6 +344,14 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
                 break;
               }
               checkCol += reversedGH[i].colSpan;
+            }
+          }
+          // Subtotal/total columns bold
+          if (data.section === 'body') {
+            const cellText = String(data.cell.raw || '');
+            if (cellText.includes('/')) {
+              data.cell.styles.fontStyle = 'bold';
+              data.cell.styles.fillColor = [239, 246, 255];
             }
           }
         },
