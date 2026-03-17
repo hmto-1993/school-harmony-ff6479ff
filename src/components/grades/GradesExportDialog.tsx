@@ -281,17 +281,18 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
+    const margin = 14;
     groups.forEach((group, gIdx) => {
       if (gIdx > 0) doc.addPage("a4", pdfOrientation);
-      const startY = gIdx === 0 ? headerEndY + 15 : 15;
+      const startY = gIdx === 0 ? headerEndY + 10 : 15;
 
-      doc.setFontSize(13);
-      doc.text(group.className, pageWidth / 2, startY, { align: "center" });
+      doc.setFontSize(11);
+      doc.text(group.className, pageWidth - margin, startY, { align: "right" });
+      doc.setFontSize(9);
+      doc.text(format(new Date(), "yyyy/MM/dd"), margin, startY, { align: "left" });
 
       const reversedHeaders = [...group.headers].reverse();
       const reversedRows = group.rows.map((r) => [...r].reverse());
