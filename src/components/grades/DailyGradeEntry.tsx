@@ -440,7 +440,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const isStarred = sg.starred[cat.id] || false;
 
                         return (
-                          <td key={cat.id} className="p-3 text-center border-l border-border/10">
+                          <td key={cat.id} className="p-3 text-center border border-border/40">
                             <div className="flex items-center justify-center gap-1">
                               {/* Cycling icons */}
                               {slotsArr.map((slotLevel, si) => (
