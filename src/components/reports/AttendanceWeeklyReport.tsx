@@ -297,9 +297,10 @@ export default function AttendanceWeeklyReport({
     doc.setFont("Amiri", "normal");
 
     const weekGroupHeaders = exportWeeks.map((w) => ({
-      content: `الأسبوع ${w.weekNum}`,
+      content: "",
+      _weekLabel: `الأسبوع ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
-      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, minCellHeight: 18 },
     }));
 
     const summaryHeaders = [
@@ -308,9 +309,25 @@ export default function AttendanceWeeklyReport({
       { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
     ];
 
+    // Store reversed week headers for vertical text rendering
+    const reversedWeekHeaders = weekGroupHeaders.slice().reverse();
+    
+    // Build a map of header cell column indices to week labels
+    const weekLabelMap = new Map<number, string>();
+    {
+      // First 3 cols are summary dots, then week cols, then name + #
+      // In the head array: summaryHeaders(3) + reversedWeekHeaders + name + #
+      // Column indices: 0,1,2 = summary; 3..3+reversedWeekHeaders.length-1 = weeks
+      let colIdx = 3;
+      reversedWeekHeaders.forEach((wh: any) => {
+        weekLabelMap.set(colIdx, wh._weekLabel);
+        colIdx += wh.colSpan;
+      });
+    }
+
     const head = [[
       ...summaryHeaders,
-      ...weekGroupHeaders.slice().reverse(),
+      ...reversedWeekHeaders,
       { content: "اسم الطالب", styles: { halign: "right" as const, cellWidth: nameColWidth } },
       { content: "م", styles: { halign: "center" as const, cellWidth: 8 } },
     ]];
@@ -388,6 +405,18 @@ export default function AttendanceWeeklyReport({
             const cy = data.cell.y + data.cell.height / 2;
             doc.setFillColor(hColor[0], hColor[1], hColor[2]);
             doc.circle(cx, cy, 1.5, "F");
+          }
+          // Draw vertical week labels
+          const weekLabel = weekLabelMap.get(data.column.index);
+          if (weekLabel) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height - 2;
+            doc.setFontSize(6);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(73, 80, 87);
+            doc.text(weekLabel, cx, cy, { angle: 90, align: "left" });
+            doc.setFont("Amiri", "normal");
+            doc.setTextColor(0, 0, 0);
           }
         }
       },
