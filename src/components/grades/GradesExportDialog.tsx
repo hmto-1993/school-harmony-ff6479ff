@@ -16,9 +16,7 @@ export interface ExportTableGroup {
   className: string;
   headers: string[];
   rows: string[][];
-  /** Optional top-level grouped header row */
   groupHeaders?: { label: string; colSpan: number }[];
-  /** Optional cell text colors: key = "rowIdx-colIdx" (0-based data row & col), value = hex color */
   cellColors?: Record<string, string>;
 }
 
@@ -33,7 +31,6 @@ interface GradesExportDialogProps {
   groups: ExportTableGroup[];
   extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
-  /** Optional ref to a DOM element to capture as-is for PDF (html2canvas) */
   tableRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -47,9 +44,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       const ws = XLSX.utils.aoa_to_sheet([]);
       let startRow = 0;
 
-      // If groupHeaders exist, add the merged group header row first
       if (group.groupHeaders && group.groupHeaders.length > 0) {
-        // Expand group header row to full column count (one cell per column)
         const expandedRow: (string)[] = [];
         const merges: XLSX.Range[] = [];
         let col = 0;
@@ -68,10 +63,8 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         startRow = 1;
       }
 
-      // Add detail headers
       XLSX.utils.sheet_add_aoa(ws, [group.headers], { origin: { r: startRow, c: 0 } });
 
-      // Add data rows
       const dataRows = group.rows.map((row) =>
         row.map((val) => {
           const num = Number(val);
@@ -84,7 +77,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
 
-    // Add extra sheets (e.g. statistics)
     extraSheets?.forEach((sheet) => {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet.data), sheet.name.substring(0, 31));
     });
@@ -95,35 +87,46 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   };
 
   const exportPDF = async () => {
-    // If tableRef is provided, use html2canvas to capture the exact table appearance
+    // html2canvas path: capture the exact visible table
     if (tableRef?.current) {
       try {
         const { doc, startY: headerEndY, watermark } = await createArabicPDF({
           reportType: "grades",
           includeHeader: true,
+          orientation: "landscape",
         });
         const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
 
         doc.setFontSize(16);
         doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
         doc.setFontSize(10);
         doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
-        // Temporarily expand container to full width so all columns are captured
         const el = tableRef.current;
-        const origOverflow = el.style.overflow;
-        const origWidth = el.style.width;
-        const origMaxWidth = el.style.maxWidth;
+        // Save original styles
+        const origStyles = {
+          overflow: el.style.overflow,
+          width: el.style.width,
+          maxWidth: el.style.maxWidth,
+        };
+        // Expand to full scrollable width
         el.style.overflow = 'visible';
         el.style.width = `${el.scrollWidth}px`;
         el.style.maxWidth = 'none';
 
-        // Hide interactive elements (buttons)
+        // Hide buttons and separators
         const buttons = el.querySelectorAll('button');
+        const seps = el.querySelectorAll('span.w-px');
         buttons.forEach(btn => (btn as HTMLElement).style.display = 'none');
-        // Hide separators
-        const separators = el.querySelectorAll('span.w-px');
-        separators.forEach(sep => (sep as HTMLElement).style.display = 'none');
+        seps.forEach(s => (s as HTMLElement).style.display = 'none');
+
+        // Measure row boundaries before capture
+        const elRect = el.getBoundingClientRect();
+        const thead = el.querySelector('thead');
+        const theadH = thead ? thead.getBoundingClientRect().bottom - elRect.top : 0;
+        const tbodyRows = Array.from(el.querySelectorAll('tbody tr'));
+        const rowBottomsCss = tbodyRows.map(r => (r as HTMLElement).getBoundingClientRect().bottom - elRect.top);
 
         const canvas = await html2canvas(el, {
           scale: 2,
@@ -133,46 +136,69 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           width: el.scrollWidth,
         });
 
-        // Restore everything
-        el.style.overflow = origOverflow;
-        el.style.width = origWidth;
-        el.style.maxWidth = origMaxWidth;
+        // Restore styles
+        el.style.overflow = origStyles.overflow;
+        el.style.width = origStyles.width;
+        el.style.maxWidth = origStyles.maxWidth;
         buttons.forEach(btn => (btn as HTMLElement).style.display = '');
-        separators.forEach(sep => (sep as HTMLElement).style.display = '');
+        seps.forEach(s => (s as HTMLElement).style.display = '');
 
-        const imgData = canvas.toDataURL("image/png");
-        const imgWidth = pageWidth - 20; // 10mm margins
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        // Calculations
+        const cssToPx = canvas.height / elRect.height;
+        const imgWidth = pageWidth - 20;
+        const pxPerMm = canvas.width / imgWidth;
         const startImgY = headerEndY + 15;
+        const availFirst = pageHeight - startImgY - 10;
+        const availNext = pageHeight - 20;
+        const totalImgH = canvas.height / pxPerMm;
 
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const availableHeight = pageHeight - startImgY - 10;
-
-        if (imgHeight <= availableHeight) {
-          doc.addImage(imgData, "PNG", 10, startImgY, imgWidth, imgHeight);
+        if (totalImgH <= availFirst) {
+          doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, startImgY, imgWidth, totalImgH);
         } else {
-          // Multi-page: slice the canvas
-          const pageImgHeight = availableHeight;
-          const sourcePageHeight = (pageImgHeight / imgWidth) * canvas.width;
+          const headerPx = theadH * cssToPx;
+          const headerMm = headerPx / pxPerMm;
           let srcY = 0;
-          let isFirstPage = true;
+          let isFirst = true;
 
-          while (srcY < canvas.height) {
-            const sliceHeight = Math.min(sourcePageHeight, canvas.height - srcY);
+          while (srcY < canvas.height - 1) {
+            const availMm = isFirst ? availFirst : availNext;
+            const dataAvailMm = isFirst ? availMm : availMm - headerMm;
+            const maxDataPx = dataAvailMm * pxPerMm;
+
+            // Find last row boundary that fits
+            let cutY = Math.min(srcY + maxDataPx, canvas.height);
+            for (let i = rowBottomsCss.length - 1; i >= 0; i--) {
+              const rowPx = rowBottomsCss[i] * cssToPx;
+              if (rowPx > srcY + 1 && rowPx <= srcY + maxDataPx) {
+                cutY = rowPx;
+                break;
+              }
+            }
+            cutY = Math.min(cutY, canvas.height);
+            const sliceH = cutY - srcY;
+            if (sliceH <= 1) break;
+
+            const addHeader = !isFirst && headerPx > 0;
+            const totalH = addHeader ? headerPx + sliceH : sliceH;
+
             const sliceCanvas = document.createElement('canvas');
             sliceCanvas.width = canvas.width;
-            sliceCanvas.height = sliceHeight;
+            sliceCanvas.height = Math.ceil(totalH);
             const ctx = sliceCanvas.getContext('2d')!;
-            ctx.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
 
-            const sliceData = sliceCanvas.toDataURL("image/png");
-            const sliceImgH = (sliceHeight * imgWidth) / canvas.width;
+            if (addHeader) {
+              ctx.drawImage(canvas, 0, 0, canvas.width, headerPx, 0, 0, canvas.width, headerPx);
+              ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, headerPx, canvas.width, sliceH);
+            } else {
+              ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+            }
 
-            if (!isFirstPage) doc.addPage();
-            doc.addImage(sliceData, "PNG", 10, isFirstPage ? startImgY : 10, imgWidth, sliceImgH);
+            if (!isFirst) doc.addPage("a4", "landscape");
+            const sliceImgH = totalH / pxPerMm;
+            doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 10, isFirst ? startImgY : 10, imgWidth, sliceImgH);
 
-            srcY += sliceHeight;
-            isFirstPage = false;
+            srcY = cutY;
+            isFirst = false;
           }
         }
 
@@ -187,7 +213,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       }
     }
 
-    // Fallback: use autoTable for PDF generation
+    // Fallback: autoTable
     const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       reportType: "grades",
       includeHeader: true,
@@ -202,7 +228,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
     groups.forEach((group, gIdx) => {
       if (gIdx > 0) doc.addPage("a4", "landscape");
-
       const startY = gIdx === 0 ? headerEndY + 15 : 15;
 
       doc.setFontSize(13);
@@ -217,9 +242,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const expandedRow: string[] = [];
         reversedGroupHeaders.forEach(gh => {
           expandedRow.push(gh.label);
-          for (let j = 1; j < gh.colSpan; j++) {
-            expandedRow.push('');
-          }
+          for (let j = 1; j < gh.colSpan; j++) expandedRow.push('');
         });
         headRows.push(expandedRow);
       }
@@ -237,9 +260,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
             let colOffset = 0;
             for (let i = 0; i < reversedGH.length; i++) {
               if (data.column.index === colOffset) {
-                if (reversedGH[i].colSpan > 1) {
-                  data.cell.colSpan = reversedGH[i].colSpan;
-                }
+                if (reversedGH[i].colSpan > 1) data.cell.colSpan = reversedGH[i].colSpan;
                 break;
               }
               colOffset += reversedGH[i].colSpan;
