@@ -159,6 +159,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
           <GradesExportDialog
             title="ملخص الفصل"
             fileName="ملخص_الفصل"
+            orientation="landscape"
             groups={grouped.map((group) => {
               const groupHeaders: { label: string; colSpan: number }[] = [
                 { label: "#", colSpan: 1 },
