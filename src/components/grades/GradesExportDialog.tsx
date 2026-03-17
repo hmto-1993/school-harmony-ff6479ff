@@ -287,7 +287,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
     groups.forEach((group, gIdx) => {
-      if (gIdx > 0) doc.addPage("a4", "landscape");
+      if (gIdx > 0) doc.addPage("a4", pdfOrientation);
       const startY = gIdx === 0 ? headerEndY + 15 : 15;
 
       doc.setFontSize(13);
