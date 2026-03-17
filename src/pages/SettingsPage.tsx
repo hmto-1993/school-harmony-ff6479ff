@@ -365,9 +365,9 @@ export default function SettingsPage() {
 
     if (lhRes.data?.value) setLetterheadUrl(lhRes.data.value);
 
-    // Process admin data (indices 5-11)
-    if (isAdmin) {
-      const [teachersRes, smsRes, loginRes, qcRes, historyRes, overrideRes, schedulesRes] = results.slice(5);
+    // Process admin data
+    if (isAdmin && adminResults) {
+      const [teachersRes, smsRes, loginRes, qcRes, historyRes, overrideRes, schedulesRes] = adminResults;
 
       if (teachersRes.data?.teachers) setTeachers(teachersRes.data.teachers);
 
