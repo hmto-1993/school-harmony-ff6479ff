@@ -71,6 +71,7 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
 
 // ============ Types ============
 
