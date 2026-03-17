@@ -53,13 +53,13 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     const cats = (catsData || []) as CategoryInfo[];
     const studentIds = students.map(s => s.id);
 
-    let allGrades: any[] = [];
+    let allManualScores: any[] = [];
     if (studentIds.length > 0) {
       const { data } = await supabase
-        .from("grades")
+        .from("manual_category_scores" as any)
         .select("student_id, category_id, score, period")
         .in("student_id", studentIds);
-      allGrades = data || [];
+      allManualScores = (data as any[]) || [];
     }
 
     const gradesMap = new Map<string, Map<number, Map<string, number | null>>>();
