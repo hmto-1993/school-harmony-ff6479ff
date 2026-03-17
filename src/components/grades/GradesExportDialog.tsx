@@ -32,6 +32,7 @@ interface GradesExportDialogProps {
   extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
   tableRef?: React.RefObject<HTMLDivElement>;
+  orientation?: "portrait" | "landscape";
 }
 
 export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
