@@ -269,7 +269,7 @@
     display: block !important;
     visibility: visible !important;
     width: 100% !important;
-    padding: 6mm 12mm 28mm !important;
+    padding: 6mm 12mm 12mm !important;
     margin: 0 !important;
     background: white !important;
     color: #1e293b !important;
@@ -312,7 +312,10 @@
     table-layout: auto !important;
     border-collapse: collapse !important;
     line-height: 1.4 !important;
+    page-break-inside: auto !important;
   }
+  #print-container thead { display: table-header-group !important; }
+  #print-container tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   #print-container th, #print-container td { 
     padding: 6px 8px !important; 
     white-space: nowrap !important;
