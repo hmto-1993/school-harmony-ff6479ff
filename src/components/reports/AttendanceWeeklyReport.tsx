@@ -309,9 +309,25 @@ export default function AttendanceWeeklyReport({
       { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
     ];
 
+    // Store reversed week headers for vertical text rendering
+    const reversedWeekHeaders = weekGroupHeaders.slice().reverse();
+    
+    // Build a map of header cell column indices to week labels
+    const weekLabelMap = new Map<number, string>();
+    {
+      // First 3 cols are summary dots, then week cols, then name + #
+      // In the head array: summaryHeaders(3) + reversedWeekHeaders + name + #
+      // Column indices: 0,1,2 = summary; 3..3+reversedWeekHeaders.length-1 = weeks
+      let colIdx = 3;
+      reversedWeekHeaders.forEach((wh: any) => {
+        weekLabelMap.set(colIdx, wh._weekLabel);
+        colIdx += wh.colSpan;
+      });
+    }
+
     const head = [[
       ...summaryHeaders,
-      ...weekGroupHeaders.slice().reverse(),
+      ...reversedWeekHeaders,
       { content: "اسم الطالب", styles: { halign: "right" as const, cellWidth: nameColWidth } },
       { content: "م", styles: { halign: "center" as const, cellWidth: 8 } },
     ]];
