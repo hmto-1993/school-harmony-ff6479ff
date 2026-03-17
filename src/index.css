@@ -323,6 +323,13 @@
   #print-container .relative.w-full.overflow-auto { overflow: visible !important; }
   #print-container .overflow-x-auto { overflow: visible !important; }
 
+  /* Hide empty grade icons and non-starred stars in print */
+  #print-container .grade-empty { display: none !important; }
+  #print-container .star-empty { display: none !important; }
+  #print-container span.w-px { display: none !important; }
+  #print-container button[title="تراجع"] { display: none !important; }
+  #print-container button[title="إضافة تقييم"] { display: none !important; }
+
   /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
 
