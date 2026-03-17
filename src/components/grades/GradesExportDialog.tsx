@@ -129,14 +129,14 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           fontSize: tableEl?.style.fontSize,
           lineHeight: tableEl?.style.lineHeight,
           cells: Array.from(allCells).map(c => ({ padding: (c as HTMLElement).style.padding })),
-          icons: Array.from(allIcons).map(ic => ({ width: (ic as HTMLElement).style.width, height: (ic as HTMLElement).style.height })),
+          icons: Array.from(allIcons).map(ic => ({ width: (ic as SVGElement).style.width, height: (ic as SVGElement).style.height })),
         };
         if (tableEl) {
           tableEl.style.fontSize = '11px';
           tableEl.style.lineHeight = '1.2';
         }
         allCells.forEach(c => { (c as HTMLElement).style.padding = '2px 4px'; });
-        allIcons.forEach(ic => { (ic as HTMLElement).style.width = '14px'; (ic as HTMLElement).style.height = '14px'; });
+        allIcons.forEach(ic => { (ic as SVGElement).style.width = '14px'; (ic as SVGElement).style.height = '14px'; });
 
         // Measure row boundaries before capture
         const elRect = el.getBoundingClientRect();
