@@ -93,7 +93,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const { doc, startY: headerEndY, watermark } = await createArabicPDF({
           reportType: "grades",
           includeHeader: true,
-          orientation: "landscape",
+          orientation: "portrait",
         });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
