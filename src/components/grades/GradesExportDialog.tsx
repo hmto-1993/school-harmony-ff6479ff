@@ -33,9 +33,11 @@ interface GradesExportDialogProps {
   groups: ExportTableGroup[];
   extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
+  /** Optional ref to a DOM element to capture as-is for PDF (html2canvas) */
+  tableRef?: React.RefObject<HTMLDivElement>;
 }
 
-export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger }: GradesExportDialogProps) {
+export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
 
   const exportExcel = () => {
