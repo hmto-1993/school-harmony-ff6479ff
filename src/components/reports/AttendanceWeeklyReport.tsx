@@ -288,7 +288,7 @@ export default function AttendanceWeeklyReport({
 
     // Calculate optimal name column width based on longest name
     doc.setFont("Amiri", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     const longestName = studentRows.reduce((max, s) => {
       const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
       return nameText.length > max.length ? nameText : max;
@@ -303,13 +303,13 @@ export default function AttendanceWeeklyReport({
       content: useVerticalHeaders ? "" : `الأسبوع ${w.weekNum}`,
       _weekLabel: `أ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
-      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, ...(useVerticalHeaders ? { minCellHeight: 12 } : {}) },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 11, ...(useVerticalHeaders ? { minCellHeight: 12 } : {}) },
     }));
 
     const summaryHeaders = [
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
     ];
 
     // Store reversed week headers for vertical text rendering
@@ -345,18 +345,18 @@ export default function AttendanceWeeklyReport({
         return Array.from({ length: colCount }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
-          return { content: "", styles: { halign: "center" as const, fontSize: 7 }, _dotColor: cfg ? hexToRgb(cfg.printColor) : [210, 215, 220] as [number, number, number] };
+          return { content: "", styles: { halign: "center" as const, fontSize: 11 }, _dotColor: cfg ? hexToRgb(cfg.printColor) : [210, 215, 220] as [number, number, number] };
         });
       });
 
       const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
 
       const row = [
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#d97706") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
-        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: nameColWidth } },
+        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 11, cellWidth: nameColWidth } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 8 } },
       ];
 
@@ -376,8 +376,8 @@ export default function AttendanceWeeklyReport({
       ...tableStyles,
       margin: { left: 10, right: 10 },
       tableWidth: "auto",
-      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
-      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
+      styles: { ...tableStyles.styles, fontSize: 11, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
+      headStyles: { ...tableStyles.headStyles, fontSize: 11, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
       alternateRowStyles: { fillColor: [248, 249, 250] },
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
@@ -415,7 +415,7 @@ export default function AttendanceWeeklyReport({
             if (weekLabel) {
               const cx = data.cell.x + data.cell.width / 2 + 1;
               const cy = data.cell.y + data.cell.height - 1.5;
-              doc.setFontSize(6);
+              doc.setFontSize(8);
               doc.setFont("Amiri", "bold");
               doc.setTextColor(73, 80, 87);
               doc.text(weekLabel, cx, cy, { angle: 90, align: "left" });
