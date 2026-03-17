@@ -366,6 +366,8 @@ export default function ReportsPage() {
 
   const exportAttendancePDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
     const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -382,7 +384,7 @@ export default function ReportsPage() {
       r.student_name,
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startY + 12,
       head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
       body: tableData,
@@ -395,6 +397,8 @@ export default function ReportsPage() {
 
   const exportGradesPDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
     const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -409,7 +413,7 @@ export default function ReportsPage() {
       r.student_name,
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startY + 6,
       head: [head],
       body,
