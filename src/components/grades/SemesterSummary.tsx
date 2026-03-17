@@ -160,7 +160,16 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
             title="ملخص الفصل"
             fileName="ملخص_الفصل"
             groups={grouped.map((group) => {
-              const headers = ["#", "الطالب", "المهام والمشاركة (ف1)", "الاختبارات (ف1)", "المهام والمشاركة (ف2)", "الاختبارات (ف2)", "الإجمالي", "النسبة", "التقدير"];
+              const groupHeaders: { label: string; colSpan: number }[] = [
+                { label: "#", colSpan: 1 },
+                { label: "الطالب", colSpan: 1 },
+                { label: "الفترة الأولى", colSpan: 2 },
+                { label: "الفترة الثانية", colSpan: 2 },
+                { label: "الإجمالي", colSpan: 1 },
+                { label: "النسبة", colSpan: 1 },
+                { label: "التقدير", colSpan: 1 },
+              ];
+              const headers = ["#", "الطالب", "المهام والمشاركة", "الاختبارات", "المهام والمشاركة", "الاختبارات", "الإجمالي", "النسبة", "التقدير"];
               const rows = group.students.map((sg, i) => {
                 const pct = getPercentage(sg.grandTotal, sg.grandMax);
                 const grade = getGradeLabel(pct);
@@ -175,7 +184,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                   grade.label,
                 ];
               });
-              return { className: group.name, headers, rows } as ExportTableGroup;
+              return { className: group.name, headers, rows, groupHeaders } as ExportTableGroup;
             })}
             extraSheets={(() => {
               const sheets: ExportExtraSheet[] = [];
