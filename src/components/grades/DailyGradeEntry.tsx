@@ -334,12 +334,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   title="الإدخال اليومي"
                   fileName="الإدخال_اليومي"
                   groups={(() => {
-                    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+                    const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
                     const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
+                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "✓" : l === "average" ? "~" : l === "zero" ? "✗" : "○";
                     const rows = studentGrades.map((sg, i) => [
                       String(i + 1),
                       sg.full_name,
-                      ...visibleCategories.map(c => sg.grades[c.id] != null ? String(sg.grades[c.id]) : "—"),
+                      ...visibleCategories.map(c => {
+                        const slotsArr = sg.slots[c.id] || [null];
+                        const isStarred = sg.starred[c.id] || false;
+                        const symbols = slotsArr.map(levelSymbol).join(" ");
+                        const star = isStarred ? " ★" : "";
+                        const score = sg.grades[c.id];
+                        return `${symbols}${star}  (${score ?? 0})`;
+                      }),
                       ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
                     ]);
                     return [{ className, headers, rows }] as ExportTableGroup[];
