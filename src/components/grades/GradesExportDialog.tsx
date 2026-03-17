@@ -15,8 +15,10 @@ export interface ExportTableGroup {
   className: string;
   headers: string[];
   rows: string[][];
-  /** Optional top-level grouped header row: each entry is "label::colSpan" or just "label" (colSpan=1). Use "" to skip (rowSpan from headers). */
+  /** Optional top-level grouped header row */
   groupHeaders?: { label: string; colSpan: number }[];
+  /** Optional cell text colors: key = "rowIdx-colIdx" (0-based data row & col), value = hex color */
+  cellColors?: Record<string, string>;
 }
 
 export interface ExportExtraSheet {
