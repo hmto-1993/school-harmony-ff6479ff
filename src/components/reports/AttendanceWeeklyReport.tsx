@@ -548,7 +548,7 @@ export default function AttendanceWeeklyReport({
                   <th
                     className="logbook-th"
                     rowSpan={2}
-                    style={{ textAlign: "right", whiteSpace: "nowrap" }}
+                    style={{ textAlign: "right", whiteSpace: "nowrap", width: "auto" }}
                   >اسم الطالب</th>
                   {filteredWeeks.map((w) => (
                     <th
