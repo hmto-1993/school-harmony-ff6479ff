@@ -505,7 +505,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         );
                       })}
                       {!isSingleCategory && (
-                        <td className={cn("p-3 text-center font-bold border border-border/40")}>{calcTotal(sg.grades)}</td>
+                        <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>
                       )}
                     </tr>
                     );
