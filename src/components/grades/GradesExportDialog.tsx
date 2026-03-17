@@ -109,19 +109,36 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         doc.setFontSize(10);
         doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
-        // Hide no-print elements temporarily
-        const noPrintEls = tableRef.current.querySelectorAll('.no-print, button');
-        noPrintEls.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+        // Temporarily expand container to full width so all columns are captured
+        const el = tableRef.current;
+        const origOverflow = el.style.overflow;
+        const origWidth = el.style.width;
+        const origMaxWidth = el.style.maxWidth;
+        el.style.overflow = 'visible';
+        el.style.width = `${el.scrollWidth}px`;
+        el.style.maxWidth = 'none';
 
-        const canvas = await html2canvas(tableRef.current, {
+        // Hide interactive elements (buttons)
+        const buttons = el.querySelectorAll('button');
+        buttons.forEach(btn => (btn as HTMLElement).style.display = 'none');
+        // Hide separators
+        const separators = el.querySelectorAll('span.w-px');
+        separators.forEach(sep => (sep as HTMLElement).style.display = 'none');
+
+        const canvas = await html2canvas(el, {
           scale: 2,
           useCORS: true,
           logging: false,
           backgroundColor: '#ffffff',
+          width: el.scrollWidth,
         });
 
-        // Restore hidden elements
-        noPrintEls.forEach(el => (el as HTMLElement).style.visibility = '');
+        // Restore everything
+        el.style.overflow = origOverflow;
+        el.style.width = origWidth;
+        el.style.maxWidth = origMaxWidth;
+        buttons.forEach(btn => (btn as HTMLElement).style.display = '');
+        separators.forEach(sep => (sep as HTMLElement).style.display = '');
 
         const imgData = canvas.toDataURL("image/png");
         const imgWidth = pageWidth - 20; // 10mm margins
