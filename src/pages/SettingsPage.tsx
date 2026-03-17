@@ -314,31 +314,28 @@ export default function SettingsPage() {
     setLoading(true);
 
     // Build all queries in parallel based on role
-    const queries: Promise<any>[] = [
-      supabase.from("classes").select("*").order("name"),
-      supabase.from("grade_categories").select("*, classes(name)").order("sort_order"),
-      supabase.from("students").select("id, class_id"),
-      user ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single() : Promise.resolve({ data: null }),
-      supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single(),
-    ];
+    const coreQueries = Promise.all([
+      supabase.from("classes").select("*").order("name").then(r => r),
+      supabase.from("grade_categories").select("*, classes(name)").order("sort_order").then(r => r),
+      supabase.from("students").select("id, class_id").then(r => r),
+      user ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single().then(r => r) : Promise.resolve({ data: null }),
+      supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single().then(r => r),
+    ]);
 
-    // Admin-only queries
-    if (isAdmin) {
-      queries.push(
-        supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } }),
-        supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]),
-        supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]),
-        supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]),
-        supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20),
-        supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
-        supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week"),
-      );
-    }
+    const adminQueries = isAdmin ? Promise.all([
+      supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } }),
+      supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]).then(r => r),
+      supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]).then(r => r),
+      supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]).then(r => r),
+      supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20).then(r => r),
+      supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(r => r),
+      supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week").then(r => r),
+    ]) : Promise.resolve(null);
 
-    const results = await Promise.all(queries);
+    const [coreResults, adminResults] = await Promise.all([coreQueries, adminQueries]);
 
-    // Process core data (indices 0-4)
-    const [classesRes, catsRes, studentsRes, profileRes, lhRes] = results;
+    // Process core data
+    const [classesRes, catsRes, studentsRes, profileRes, lhRes] = coreResults;
 
     const classData = (classesRes.data || []) as ClassRow[];
     const studentCounts: Record<string, number> = {};
