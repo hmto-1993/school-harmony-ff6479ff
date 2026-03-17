@@ -182,7 +182,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.width = origStyles.width;
         el.style.maxWidth = origStyles.maxWidth;
         if (!hadLightCapture) el.classList.remove('light-capture');
-        undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
+        hideEls.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
         if (tableEl) {
           tableEl.style.fontSize = origStyles2.fontSize || '';
