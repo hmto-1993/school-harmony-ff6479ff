@@ -152,7 +152,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           tableEl.style.direction = 'rtl';
         }
         allCells.forEach(c => { 
-          (c as HTMLElement).style.padding = '5px 6px'; 
+          (c as HTMLElement).style.padding = '6px 8px'; 
           (c as HTMLElement).style.fontSize = '11px';
           (c as HTMLElement).style.whiteSpace = 'nowrap';
         });
