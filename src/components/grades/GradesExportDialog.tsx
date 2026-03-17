@@ -199,17 +199,18 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         allIcons.forEach((ic, i) => { (ic as SVGElement).style.width = origStyles2.icons[i]?.width || ''; (ic as SVGElement).style.height = origStyles2.icons[i]?.height || ''; });
         allMinWCells.forEach((c, i) => { (c as HTMLElement).style.minWidth = origStyles2.minWCells[i]?.minWidth || ''; });
 
-        // Calculations
+        // Calculations - use minimal margins to fill page
+        const margin = 5;
         const cssToPx = canvas.height / elRect.height;
-        const imgWidth = pageWidth - 20;
+        const imgWidth = pageWidth - (margin * 2);
         const pxPerMm = canvas.width / imgWidth;
-        const startImgY = headerEndY + 15;
-        const availFirst = pageHeight - startImgY - 10;
-        const availNext = pageHeight - 20;
+        const startImgY = headerEndY + 12;
+        const availFirst = pageHeight - startImgY - margin;
+        const availNext = pageHeight - (margin * 2);
         const totalImgH = canvas.height / pxPerMm;
 
         if (totalImgH <= availFirst) {
-          doc.addImage(canvas.toDataURL("image/png"), "PNG", 10, startImgY, imgWidth, totalImgH);
+          doc.addImage(canvas.toDataURL("image/png"), "PNG", margin, startImgY, imgWidth, totalImgH);
         } else {
           const headerPx = theadH * cssToPx;
           const headerMm = headerPx / pxPerMm;
@@ -251,7 +252,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
             if (!isFirst) doc.addPage("a4", "portrait");
             const sliceImgH = totalH / pxPerMm;
-            doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 10, isFirst ? startImgY : 10, imgWidth, sliceImgH);
+            doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", margin, isFirst ? startImgY : margin, imgWidth, sliceImgH);
 
             srcY = cutY;
             isFirst = false;

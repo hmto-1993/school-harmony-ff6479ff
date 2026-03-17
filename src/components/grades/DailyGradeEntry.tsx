@@ -404,17 +404,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               <h2 className="text-sm font-bold">{classes.find(c => c.id === selectedClass)?.name} — إدخال الدرجات اليومية — {format(selectedDate, "yyyy/MM/dd")}</h2>
             </div>
             <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
-              <table className="w-full text-sm border-separate border-spacing-0">
+              <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[180px]">الطالب</th>
+                     <th className="text-right p-3 font-semibold text-primary text-xs border border-border/40 first:rounded-tr-xl">#</th>
+                     <th className="text-right p-3 font-semibold text-primary text-xs border border-border/40 min-w-[180px]">الطالب</th>
                     {visibleCategories.map((cat) => (
-                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[100px]">
+                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border border-border/40 min-w-[100px]">
                         <div>{cat.name}</div>
                       </th>
                     ))}
-                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border border-border/40 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -429,8 +429,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         !isLast && "border-b border-border/20"
                       )}
                     >
-                      <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
+                      <td className={cn("p-3 text-muted-foreground font-medium border border-border/40")}>{i + 1}</td>
+                      <td className="p-3 font-semibold border border-border/40">{sg.full_name}</td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
@@ -440,7 +440,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const isStarred = sg.starred[cat.id] || false;
 
                         return (
-                          <td key={cat.id} className="p-3 text-center border-l border-border/10">
+                          <td key={cat.id} className="p-3 text-center border border-border/40">
                             <div className="flex items-center justify-center gap-1">
                               {/* Cycling icons */}
                               {slotsArr.map((slotLevel, si) => (
@@ -505,7 +505,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         );
                       })}
                       {!isSingleCategory && (
-                        <td className={cn("p-3 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{calcTotal(sg.grades)}</td>
+                        <td className={cn("p-3 text-center font-bold border border-border/40")}>{calcTotal(sg.grades)}</td>
                       )}
                     </tr>
                     );
