@@ -152,7 +152,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           tableEl.style.direction = 'rtl';
         }
         allCells.forEach(c => { 
-          (c as HTMLElement).style.padding = '5px 6px'; 
+          (c as HTMLElement).style.padding = '6px 8px'; 
           (c as HTMLElement).style.fontSize = '11px';
           (c as HTMLElement).style.whiteSpace = 'nowrap';
         });
@@ -200,7 +200,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         allMinWCells.forEach((c, i) => { (c as HTMLElement).style.minWidth = origStyles2.minWCells[i]?.minWidth || ''; });
 
         // Calculations - use minimal margins to fill page
-        const margin = 5;
+        const margin = 12;
         const cssToPx = canvas.height / elRect.height;
         const imgWidth = pageWidth - (margin * 2);
         const pxPerMm = canvas.width / imgWidth;
