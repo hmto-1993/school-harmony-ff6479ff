@@ -234,17 +234,36 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
               const examCats = group.categories.filter(c => c.category_group === 'exams');
               const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
+
+              // Build group headers (first row with colSpan)
+              const groupHeaders: { label: string; colSpan: number }[] = [
+                { label: "#", colSpan: 1 },
+                { label: "الطالب", colSpan: 1 },
+              ];
+              if (classworkCats.length > 0) {
+                groupHeaders.push({ label: "المهام الادائية والمشاركة والتفاعل", colSpan: classworkCats.length + 1 });
+              }
+              if (examCats.length > 0) {
+                groupHeaders.push({ label: "الاختبارات", colSpan: examCats.length + 1 });
+              }
+              otherCats.forEach(cat => {
+                groupHeaders.push({ label: cat.name, colSpan: 1 });
+              });
+              groupHeaders.push({ label: "المجموع", colSpan: 1 });
+
               const headers = [
                 "#", "الطالب",
                 ...classworkCats.map(c => c.name),
-                ...(classworkCats.length > 0 ? ["إجمالي المهام"] : []),
-                ...examCats.map(c => c.name), ...(examCats.length > 0 ? ["مجموع الاختبارات"] : []),
+                ...(classworkCats.length > 0 ? ["الإجمالي"] : []),
+                ...examCats.map(c => c.name),
+                ...(examCats.length > 0 ? ["المجموع"] : []),
                 ...otherCats.map(c => c.name),
                 "المجموع",
               ];
               const rows = group.students.map((sg, i) => {
                 const cwSub = calcSubtotal(sg.manualScores, classworkCats);
                 const exSub = calcSubtotal(sg.manualScores, examCats);
+                const allSub = calcSubtotal(sg.manualScores, group.categories);
                 return [
                   String(i + 1), sg.full_name,
                   ...classworkCats.map(c => String(sg.manualScores[c.id] ?? 0)),
@@ -252,10 +271,10 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                   ...examCats.map(c => String(sg.manualScores[c.id] ?? 0)),
                   ...(examCats.length > 0 ? [`${exSub.score} / ${exSub.max}`] : []),
                   ...otherCats.map(c => String(sg.manualScores[c.id] ?? 0)),
-                  sg.total,
+                  `${allSub.score} / ${allSub.max}`,
                 ];
               });
-              return { className: group.name, headers, rows } as ExportTableGroup;
+              return { className: group.name, headers, rows, groupHeaders } as ExportTableGroup;
             })}
           />
         </div>
