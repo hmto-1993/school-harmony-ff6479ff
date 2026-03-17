@@ -329,7 +329,11 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { size: A4; margin: 8mm; }
+  @page { margin: 8mm; }
+  /* Default: portrait */
+  body:not(.print-landscape) { }
+  body:not(.print-landscape) @page { size: A4 portrait; }
+  body.print-landscape @page { size: A4 landscape; }
 }
 
 /* Light mode snapshot for html-to-image capture */
