@@ -249,7 +249,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
             }
 
-            if (!isFirst) doc.addPage("a4", "landscape");
+            if (!isFirst) doc.addPage("a4", "portrait");
             const sliceImgH = totalH / pxPerMm;
             doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 10, isFirst ? startImgY : 10, imgWidth, sliceImgH);
 
