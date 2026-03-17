@@ -138,34 +138,44 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         body: reversedRows,
         ...tableStyles,
         styles: { ...tableStyles.styles, fontSize: 8 },
-        ...(group.groupHeaders && group.groupHeaders.length > 0 ? {
-          didParseCell: (data: any) => {
-            // Merge cells in the group header row (row index 0)
-            if (data.section === 'head' && data.row.index === 0) {
-              const reversedGH = [...group.groupHeaders!].reverse();
-              // Calculate column spans for merged cells
-              let colOffset = 0;
-              for (let i = 0; i < reversedGH.length; i++) {
-                if (data.column.index === colOffset) {
-                  if (reversedGH[i].colSpan > 1) {
-                    data.cell.colSpan = reversedGH[i].colSpan;
-                  }
-                  break;
+        didParseCell: (data: any) => {
+          // Handle group header merges
+          if (group.groupHeaders && group.groupHeaders.length > 0 && data.section === 'head' && data.row.index === 0) {
+            const reversedGH = [...group.groupHeaders!].reverse();
+            let colOffset = 0;
+            for (let i = 0; i < reversedGH.length; i++) {
+              if (data.column.index === colOffset) {
+                if (reversedGH[i].colSpan > 1) {
+                  data.cell.colSpan = reversedGH[i].colSpan;
                 }
-                colOffset += reversedGH[i].colSpan;
+                break;
               }
-              // Hide cells that are merged into the previous one
-              let checkCol = 0;
-              for (let i = 0; i < reversedGH.length; i++) {
-                if (data.column.index > checkCol && data.column.index < checkCol + reversedGH[i].colSpan) {
-                  data.cell.colSpan = 0;
-                  break;
-                }
-                checkCol += reversedGH[i].colSpan;
+              colOffset += reversedGH[i].colSpan;
+            }
+            let checkCol = 0;
+            for (let i = 0; i < reversedGH.length; i++) {
+              if (data.column.index > checkCol && data.column.index < checkCol + reversedGH[i].colSpan) {
+                data.cell.colSpan = 0;
+                break;
               }
+              checkCol += reversedGH[i].colSpan;
             }
           }
-        } : {}),
+          // Apply cell text colors (reversed columns for RTL)
+          if (group.cellColors && data.section === 'body') {
+            const totalCols = group.headers.length;
+            const originalCol = totalCols - 1 - data.column.index;
+            const key = `${data.row.index}-${originalCol}`;
+            const color = group.cellColors[key];
+            if (color) {
+              const r = parseInt(color.slice(1, 3), 16);
+              const g = parseInt(color.slice(3, 5), 16);
+              const b = parseInt(color.slice(5, 7), 16);
+              data.cell.styles.textColor = [r, g, b];
+              data.cell.styles.fontStyle = 'bold';
+            }
+          }
+        },
       });
     });
 
