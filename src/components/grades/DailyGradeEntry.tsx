@@ -429,8 +429,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         !isLast && "border-b border-border/20"
                       )}
                     >
-                      <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
+                      <td className={cn("p-3 text-muted-foreground font-medium border border-border/40")}>{i + 1}</td>
+                      <td className="p-3 font-semibold border border-border/40">{sg.full_name}</td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
