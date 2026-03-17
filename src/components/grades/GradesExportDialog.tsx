@@ -39,17 +39,40 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     const wb = XLSX.utils.book_new();
 
     groups.forEach((group) => {
-      const sheetData = group.rows.map((row) => {
-        const obj: Record<string, string | number> = {};
-        group.headers.forEach((h, i) => {
-          const val = row[i] ?? "";
-          const num = Number(val);
-          obj[h] = !isNaN(num) && val !== "" && !val.includes("/") ? num : val;
+      const ws = XLSX.utils.aoa_to_sheet([]);
+      let startRow = 0;
+
+      // If groupHeaders exist, add the merged group header row first
+      if (group.groupHeaders && group.groupHeaders.length > 0) {
+        const groupRow = group.groupHeaders.map(gh => gh.label);
+        XLSX.utils.sheet_add_aoa(ws, [groupRow], { origin: { r: 0, c: 0 } });
+        // Set up merges for colSpan > 1
+        const merges: XLSX.Range[] = [];
+        let col = 0;
+        group.groupHeaders.forEach(gh => {
+          if (gh.colSpan > 1) {
+            merges.push({ s: { r: 0, c: col }, e: { r: 0, c: col + gh.colSpan - 1 } });
+          }
+          col += gh.colSpan;
         });
-        return obj;
-      });
+        ws["!merges"] = merges;
+        startRow = 1;
+      }
+
+      // Add detail headers
+      XLSX.utils.sheet_add_aoa(ws, [group.headers], { origin: { r: startRow, c: 0 } });
+
+      // Add data rows
+      const dataRows = group.rows.map((row) =>
+        row.map((val) => {
+          const num = Number(val);
+          return !isNaN(num) && val !== "" && !val.includes("/") ? num : val;
+        })
+      );
+      XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: { r: startRow + 1, c: 0 } });
+
       const sheetName = group.className.substring(0, 31);
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheetData), sheetName);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
     });
 
     // Add extra sheets (e.g. statistics)
