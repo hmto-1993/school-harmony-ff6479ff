@@ -285,6 +285,17 @@ export default function AttendanceWeeklyReport({
     doc.setTextColor(0, 0, 0);
 
     const exportWeeks = filteredWeeks;
+
+    // Calculate optimal name column width based on longest name
+    doc.setFont("Amiri", "bold");
+    doc.setFontSize(9);
+    const longestName = studentRows.reduce((max, s) => {
+      const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+      return nameText.length > max.length ? nameText : max;
+    }, "");
+    const nameColWidth = Math.min(doc.getTextWidth(longestName) + 6, 70);
+    doc.setFont("Amiri", "normal");
+
     const weekGroupHeaders = exportWeeks.map((w) => ({
       content: `الأسبوع ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
@@ -300,8 +311,8 @@ export default function AttendanceWeeklyReport({
     const head = [[
       ...summaryHeaders,
       ...weekGroupHeaders.slice().reverse(),
-      { content: "اسم الطالب", styles: { halign: "right" as const } },
-      { content: "م", styles: { halign: "center" as const } },
+      { content: "اسم الطالب", styles: { halign: "right" as const, cellWidth: nameColWidth } },
+      { content: "م", styles: { halign: "center" as const, cellWidth: 8 } },
     ]];
 
     // Build a map of cell positions to dot colors for didDrawCell
@@ -325,12 +336,11 @@ export default function AttendanceWeeklyReport({
         { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
         { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
-        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: "wrap" as const } },
-        { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const } },
+        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: nameColWidth } },
+        { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 8 } },
       ];
 
       // Store dot colors by row/col for drawing later
-      // Summary cols (0,1,2) are numbers, status cells start at col 3
       statusCells.forEach((cell: any, ci: number) => {
         if (cell._dotColor) {
           dotColorMap.set(`${idx}-${ci + 3}`, cell._dotColor);
@@ -344,6 +354,8 @@ export default function AttendanceWeeklyReport({
       startY: legendY + 5,
       head, body,
       ...tableStyles,
+      margin: { left: 10, right: 10 },
+      tableWidth: "auto",
       styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
       headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
       alternateRowStyles: { fillColor: [248, 249, 250] },
