@@ -297,9 +297,10 @@ export default function AttendanceWeeklyReport({
     doc.setFont("Amiri", "normal");
 
     const weekGroupHeaders = exportWeeks.map((w) => ({
-      content: `الأسبوع ${w.weekNum}`,
+      content: "",
+      _weekLabel: `الأسبوع ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
-      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7 },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, minCellHeight: 18 },
     }));
 
     const summaryHeaders = [
