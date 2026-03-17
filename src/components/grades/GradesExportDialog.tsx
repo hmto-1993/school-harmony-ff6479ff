@@ -146,8 +146,11 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.overflow = origStyles.overflow;
         el.style.width = origStyles.width;
         el.style.maxWidth = origStyles.maxWidth;
-        buttons.forEach(btn => (btn as HTMLElement).style.display = '');
+        undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
+        if (el.querySelector('table') && origFontSize !== undefined) {
+          (el.querySelector('table') as HTMLElement).style.fontSize = origFontSize || '';
+        }
 
         // Calculations
         const cssToPx = canvas.height / elRect.height;
