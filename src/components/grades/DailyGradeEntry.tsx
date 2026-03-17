@@ -75,6 +75,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
   const goToNextDay = () => {
