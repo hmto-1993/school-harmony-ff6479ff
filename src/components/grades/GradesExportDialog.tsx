@@ -159,9 +159,12 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.maxWidth = origStyles.maxWidth;
         undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
-        if (el.querySelector('table') && origFontSize !== undefined) {
-          (el.querySelector('table') as HTMLElement).style.fontSize = origFontSize || '';
+        if (tableEl) {
+          tableEl.style.fontSize = origStyles2.fontSize || '';
+          tableEl.style.lineHeight = origStyles2.lineHeight || '';
         }
+        allCells.forEach((c, i) => { (c as HTMLElement).style.padding = origStyles2.cells[i]?.padding || ''; });
+        allIcons.forEach((ic, i) => { (ic as SVGElement).style.width = origStyles2.icons[i]?.width || ''; (ic as SVGElement).style.height = origStyles2.icons[i]?.height || ''; });
 
         // Calculations
         const cssToPx = canvas.height / elRect.height;
