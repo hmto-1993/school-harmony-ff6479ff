@@ -117,9 +117,16 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       // Build head rows: if groupHeaders exist, add them as the first head row
       const headRows: string[][] = [];
       if (group.groupHeaders && group.groupHeaders.length > 0) {
-        // Reverse groupHeaders for RTL
+        // Reverse groupHeaders for RTL and expand to full column count
         const reversedGroupHeaders = [...group.groupHeaders].reverse();
-        headRows.push(reversedGroupHeaders.map(gh => gh.label));
+        const expandedRow: string[] = [];
+        reversedGroupHeaders.forEach(gh => {
+          expandedRow.push(gh.label);
+          for (let j = 1; j < gh.colSpan; j++) {
+            expandedRow.push('');
+          }
+        });
+        headRows.push(expandedRow);
       }
       headRows.push(reversedHeaders);
 
