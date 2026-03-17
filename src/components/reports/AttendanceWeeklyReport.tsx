@@ -259,7 +259,7 @@ export default function AttendanceWeeklyReport({
     doc.setFontSize(14);
     doc.setFont("Amiri", "bold");
     doc.text("تقرير الحضور الأسبوعي", pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(11);
+    doc.setFontSize(9);
     doc.setFont("Amiri", "normal");
     doc.text(`${classDisplayName || ""} | من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
