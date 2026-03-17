@@ -415,7 +415,7 @@ export default function AttendanceWeeklyReport({
             if (weekLabel) {
               const cx = data.cell.x + data.cell.width / 2 + 1;
               const cy = data.cell.y + data.cell.height - 1.5;
-              doc.setFontSize(6);
+              doc.setFontSize(8);
               doc.setFont("Amiri", "bold");
               doc.setTextColor(73, 80, 87);
               doc.text(weekLabel, cx, cy, { angle: 90, align: "left" });
