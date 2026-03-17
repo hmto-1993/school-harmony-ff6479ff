@@ -8,11 +8,29 @@ type PrintCleanup = () => void;
 
 let activePrintCleanup: PrintCleanup | null = null;
 
+/** Get stored print orientation preference */
+export function getPrintOrientation(): "portrait" | "landscape" {
+  return (localStorage.getItem("print-orientation") as "portrait" | "landscape") || "portrait";
+}
+
+/** Set print orientation preference */
+export function setPrintOrientation(orientation: "portrait" | "landscape") {
+  localStorage.setItem("print-orientation", orientation);
+}
+
 export function safePrint(onCleanup?: PrintCleanup): void {
   activePrintCleanup = onCleanup ?? null;
 
   // Remove any leftover container
   document.getElementById("print-container")?.remove();
+
+  // Apply orientation class
+  const orientation = getPrintOrientation();
+  if (orientation === "landscape") {
+    document.body.classList.add("print-landscape");
+  } else {
+    document.body.classList.remove("print-landscape");
+  }
 
   // Clone all print areas into a body-level container
   const printAreas = document.querySelectorAll(".print-area, #absence-print-area");
@@ -61,6 +79,7 @@ export function safePrint(onCleanup?: PrintCleanup): void {
 
   const cleanup = () => {
     container.remove();
+    document.body.classList.remove("print-landscape");
     if (activePrintCleanup) {
       activePrintCleanup();
       activePrintCleanup = null;
