@@ -20,8 +20,8 @@ function isMobileDevice(): boolean {
 /**
  * Safe file download that works in PWA standalone mode on iOS/Android/Desktop.
  * Strategy:
+ * - Desktop PWA: open blob in new browser tab so user can view/save
  * - Mobile PWA: try Web Share API first, then window.open
- * - Desktop PWA: use anchor download (works reliably), fallback to window.open
  * - Normal browser: standard anchor download
  */
 export async function safeDownload(blob: Blob, fileName: string) {
@@ -43,8 +43,20 @@ export async function safeDownload(blob: Blob, fileName: string) {
 
   const url = URL.createObjectURL(blob);
 
-  // Desktop PWA or normal browser: anchor download works reliably
-  if (!mobile || !standalone) {
+  // Desktop PWA: anchor download often silently fails in standalone window.
+  // Open in a real browser tab so the user can view/save the file.
+  if (standalone && !mobile) {
+    // Try window.open first – this opens in the default browser outside the PWA shell
+    const w = window.open(url, "_blank");
+    if (w) {
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+      return;
+    }
+    // If window.open was blocked, fall through to anchor
+  }
+
+  // Normal browser: standard anchor download
+  if (!standalone) {
     const a = document.createElement("a");
     a.href = url;
     a.download = fileName;
