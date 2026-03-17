@@ -366,6 +366,8 @@ export default function ReportsPage() {
 
   const exportAttendancePDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
     const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
