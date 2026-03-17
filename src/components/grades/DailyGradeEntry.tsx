@@ -336,7 +336,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   groups={(() => {
                     const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
                     const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "ص" : l === "average" ? "و" : l === "zero" ? "خ" : "";
+                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "●" : l === "average" ? "●" : l === "zero" ? "●" : "";
                     const levelColor = (l: GradeLevel) => l === "excellent" ? "#059669" : l === "average" ? "#d97706" : l === "zero" ? "#e11d48" : undefined;
                     const cellColors: Record<string, string> = {};
                     const rows = studentGrades.map((sg, i) => [
@@ -345,17 +345,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       ...visibleCategories.map((c, ci) => {
                         const slotsArr = sg.slots[c.id] || [null];
                         const isStarred = sg.starred[c.id] || false;
-                        const colIdx = ci + 2; // offset for # and name columns
+                        const colIdx = ci + 2;
                         if (isStarred) {
                           cellColors[`${i}-${colIdx}`] = "#d97706";
-                          return "نجمة";
+                          return "★";
                         }
                         const filled = slotsArr.filter(l => l !== null);
                         if (filled.length === 1) {
                           const color = levelColor(filled[0]);
                           if (color) cellColors[`${i}-${colIdx}`] = color;
                         } else if (filled.length > 0) {
-                          // Use the color of the first slot for mixed
                           const color = levelColor(filled[0]);
                           if (color) cellColors[`${i}-${colIdx}`] = color;
                         }
