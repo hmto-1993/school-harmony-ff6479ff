@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
+import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
@@ -157,7 +158,11 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               تصدير PDF
             </Button>
           </TabsContent>
-          <TabsContent value="print" className="pt-4">
+          <TabsContent value="print" className="pt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">اتجاه الورقة:</span>
+              <PrintOrientationToggle />
+            </div>
             <Button onClick={handlePrint} className="w-full gap-2">
               <Printer className="h-4 w-4" />
               طباعة الصفحة
