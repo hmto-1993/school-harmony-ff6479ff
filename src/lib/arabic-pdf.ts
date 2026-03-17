@@ -260,8 +260,9 @@ export async function createArabicPDF(
     includeHeader?: boolean;
   } = {}
 ): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig }> {
+  const orientation = options.orientation || getPrintOrientation();
   const doc = new jsPDF({
-    orientation: options.orientation || "portrait",
+    orientation,
     unit: "mm",
     format: options.format || "a4",
   });

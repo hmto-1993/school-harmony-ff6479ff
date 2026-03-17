@@ -801,7 +801,7 @@ export default function ReportsPage() {
           <p className="text-muted-foreground">تقارير يومية وأسبوعية للحضور والدرجات مع إمكانية التصدير</p>
         </div>
         <div className="flex items-center gap-2">
-          <PrintOrientationToggle />
+          
           <Button
             size="sm"
             onClick={handlePrint}

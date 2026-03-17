@@ -157,11 +157,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               تصدير PDF
             </Button>
           </TabsContent>
-          <TabsContent value="print" className="pt-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">اتجاه الورقة:</span>
-              <PrintOrientationToggle />
-            </div>
+          <TabsContent value="print" className="pt-4">
             <Button onClick={handlePrint} className="w-full gap-2">
               <Printer className="h-4 w-4" />
               طباعة الصفحة

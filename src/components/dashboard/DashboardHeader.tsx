@@ -120,18 +120,15 @@ export default function DashboardHeader({ onPrint }: Props) {
           <div className="flex items-center gap-2">
             <ShareDialog />
             {onPrint && (
-              <>
-                <PrintOrientationToggle className="print:hidden" />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onPrint}
-                  className="text-white/80 hover:text-white hover:bg-white/15 gap-1.5 print:hidden"
-                >
-                  <Printer className="h-4 w-4" />
-                  <span className="text-xs font-medium">طباعة التقرير</span>
-                </Button>
-              </>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onPrint}
+                className="text-white/80 hover:text-white hover:bg-white/15 gap-1.5 print:hidden"
+              >
+                <Printer className="h-4 w-4" />
+                <span className="text-xs font-medium">طباعة التقرير</span>
+              </Button>
             )}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
               <Sparkles className="h-3.5 w-3.5 text-white/70" />
