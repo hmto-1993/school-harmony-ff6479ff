@@ -483,9 +483,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                  onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
                                  className={cn(
                                    "p-1 rounded-lg transition-all hover:scale-110",
-                                   isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70"
+                                   isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty"
                                  )}
                                  title="متميز"
+                                 data-starred={isStarred ? "true" : "false"}
                                >
                                  <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
                                </button>
