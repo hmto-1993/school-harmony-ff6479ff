@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,6 +75,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
   const goToNextDay = () => {
@@ -329,44 +330,31 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   </SelectContent>
                 </Select>
               )}
-              {selectedClass && categories.length > 0 && (
-                <GradesExportDialog
-                  title="الإدخال اليومي"
-                  fileName="الإدخال_اليومي"
-                  groups={(() => {
-                    const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
-                    const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                    const levelSymbol = (l: GradeLevel) => l === "excellent" ? "●" : l === "average" ? "●" : l === "zero" ? "●" : "";
-                    const levelColor = (l: GradeLevel) => l === "excellent" ? "#059669" : l === "average" ? "#d97706" : l === "zero" ? "#e11d48" : undefined;
-                    const cellColors: Record<string, string> = {};
-                    const rows = studentGrades.map((sg, i) => [
-                      String(i + 1),
-                      sg.full_name,
-                      ...visibleCategories.map((c, ci) => {
-                        const slotsArr = sg.slots[c.id] || [null];
-                        const isStarred = sg.starred[c.id] || false;
-                        const colIdx = ci + 2;
-                        if (isStarred) {
-                          cellColors[`${i}-${colIdx}`] = "#d97706";
-                          return "★";
-                        }
-                        const filled = slotsArr.filter(l => l !== null);
-                        if (filled.length === 1) {
-                          const color = levelColor(filled[0]);
-                          if (color) cellColors[`${i}-${colIdx}`] = color;
-                        } else if (filled.length > 0) {
-                          const color = levelColor(filled[0]);
-                          if (color) cellColors[`${i}-${colIdx}`] = color;
-                        }
-                        const symbols = slotsArr.map(levelSymbol).filter(Boolean).join(" ");
-                        return symbols || "-";
-                      }),
-                      ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
-                    ]);
-                    return [{ className, headers, rows, cellColors }] as ExportTableGroup[];
-                  })()}
-                />
-              )}
+               {selectedClass && categories.length > 0 && (
+                 <GradesExportDialog
+                   title="الإدخال اليومي"
+                   fileName="الإدخال_اليومي"
+                   tableRef={tableRef}
+                   groups={(() => {
+                     const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
+                     const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
+                     const rows = studentGrades.map((sg, i) => [
+                       String(i + 1),
+                       sg.full_name,
+                       ...visibleCategories.map(c => {
+                         const slotsArr = sg.slots[c.id] || [null];
+                         const isStarred = sg.starred[c.id] || false;
+                         if (isStarred) return "★";
+                         const levelSymbol = (l: GradeLevel) => l === "excellent" ? "✓" : l === "average" ? "~" : l === "zero" ? "✗" : "";
+                         const symbols = slotsArr.map(levelSymbol).filter(Boolean).join(" ");
+                         return symbols || "-";
+                       }),
+                       ...(!isSingleCategory ? [calcTotal(sg.grades)] : []),
+                     ]);
+                     return [{ className, headers, rows }] as ExportTableGroup[];
+                   })()}
+                 />
+               )}
             </div>
           </div>
           {/* Date Navigation */}
@@ -415,7 +403,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             <div className="hidden print:block text-center mb-2">
               <h2 className="text-sm font-bold">{classes.find(c => c.id === selectedClass)?.name} — إدخال الدرجات اليومية — {format(selectedDate, "yyyy/MM/dd")}</h2>
             </div>
-            <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
