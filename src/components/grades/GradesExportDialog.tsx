@@ -98,13 +98,10 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     doc.setFontSize(10);
     doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
-    let isFirst = true;
+    groups.forEach((group, gIdx) => {
+      if (gIdx > 0) doc.addPage("a4", "landscape");
 
-    groups.forEach((group) => {
-      if (!isFirst) doc.addPage("a4", "landscape");
-      isFirst = false;
-
-      const startY = isFirst ? headerEndY + 15 : 15;
+      const startY = gIdx === 0 ? headerEndY + 15 : 15;
 
       doc.setFontSize(13);
       doc.text(group.className, pageWidth / 2, startY, { align: "center" });
@@ -113,12 +110,49 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       const reversedHeaders = [...group.headers].reverse();
       const reversedRows = group.rows.map((r) => [...r].reverse());
 
+      // Build head rows: if groupHeaders exist, add them as the first head row
+      const headRows: string[][] = [];
+      if (group.groupHeaders && group.groupHeaders.length > 0) {
+        // Reverse groupHeaders for RTL
+        const reversedGroupHeaders = [...group.groupHeaders].reverse();
+        headRows.push(reversedGroupHeaders.map(gh => gh.label));
+      }
+      headRows.push(reversedHeaders);
+
       autoTable(doc, {
         startY: startY + 5,
-        head: [reversedHeaders],
+        head: headRows,
         body: reversedRows,
         ...tableStyles,
         styles: { ...tableStyles.styles, fontSize: 8 },
+        ...(group.groupHeaders && group.groupHeaders.length > 0 ? {
+          didParseCell: (data: any) => {
+            // Merge cells in the group header row (row index 0)
+            if (data.section === 'head' && data.row.index === 0) {
+              const reversedGH = [...group.groupHeaders!].reverse();
+              // Calculate column spans for merged cells
+              let colOffset = 0;
+              for (let i = 0; i < reversedGH.length; i++) {
+                if (data.column.index === colOffset) {
+                  if (reversedGH[i].colSpan > 1) {
+                    data.cell.colSpan = reversedGH[i].colSpan;
+                  }
+                  break;
+                }
+                colOffset += reversedGH[i].colSpan;
+              }
+              // Hide cells that are merged into the previous one
+              let checkCol = 0;
+              for (let i = 0; i < reversedGH.length; i++) {
+                if (data.column.index > checkCol && data.column.index < checkCol + reversedGH[i].colSpan) {
+                  data.cell.colSpan = 0;
+                  break;
+                }
+                checkCol += reversedGH[i].colSpan;
+              }
+            }
+          }
+        } : {}),
       });
     });
 
