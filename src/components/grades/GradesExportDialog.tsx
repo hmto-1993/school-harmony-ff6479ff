@@ -204,7 +204,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const cssToPx = canvas.height / elRect.height;
         const imgWidth = pageWidth - (margin * 2);
         const pxPerMm = canvas.width / imgWidth;
-        const startImgY = headerEndY + 12;
+        const startImgY = headerEndY + 8;
         const availFirst = pageHeight - startImgY - margin;
         const availNext = pageHeight - (margin * 2);
         const totalImgH = canvas.height / pxPerMm;
