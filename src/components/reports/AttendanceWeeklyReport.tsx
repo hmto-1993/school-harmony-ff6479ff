@@ -352,11 +352,11 @@ export default function AttendanceWeeklyReport({
       const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
 
       const row = [
-        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
-        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#e53935") as [number, number, number] } },
-        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#4caf50") as [number, number, number] } },
+        { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#d97706") as [number, number, number] } },
+        { content: String(s.totalAbsent), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#e53935") as [number, number, number] } },
+        { content: String(s.totalPresent), styles: { halign: "center" as const, fontSize: 11, textColor: hexToRgb("#4caf50") as [number, number, number] } },
         ...statusCells,
-        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 9, cellWidth: nameColWidth } },
+        { content: nameContent, styles: { halign: "right" as const, fontStyle: "bold" as const, fontSize: 11, cellWidth: nameColWidth } },
         { content: String(idx + 1), styles: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 8 } },
       ];
 
