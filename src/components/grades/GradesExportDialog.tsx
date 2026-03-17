@@ -15,7 +15,8 @@ export interface ExportTableGroup {
   className: string;
   headers: string[];
   rows: string[][];
-  groupHeaders?: string[];
+  /** Optional top-level grouped header row: each entry is "label::colSpan" or just "label" (colSpan=1). Use "" to skip (rowSpan from headers). */
+  groupHeaders?: { label: string; colSpan: number }[];
 }
 
 export interface ExportExtraSheet {
