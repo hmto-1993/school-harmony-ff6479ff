@@ -316,7 +316,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         styles: { ...tableStyles.styles, fontSize: 9, cellPadding: 3 },
         columnStyles: {
           [reversedHeaders.length - 1]: { cellWidth: 14 },
-          [reversedHeaders.length - 2]: { cellWidth: 45 },
+          [reversedHeaders.length - 2]: { cellWidth: 55 },
         },
         didParseCell: (data: any) => {
           // Alternating row colors
