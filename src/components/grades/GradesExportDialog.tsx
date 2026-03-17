@@ -35,8 +35,9 @@ interface GradesExportDialogProps {
   orientation?: "portrait" | "landscape";
 }
 
-export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
+export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef, orientation: propOrientation }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
+  const pdfOrientation = propOrientation || "portrait";
 
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
