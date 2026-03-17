@@ -9,6 +9,7 @@ import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import { safeWriteXLSX } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
+import html2canvas from "html2canvas";
 import { toast } from "sonner";
 
 export interface ExportTableGroup {
