@@ -119,10 +119,10 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const hadLightCapture = el.classList.contains('light-capture');
         el.classList.add('light-capture');
 
-        // Hide only interactive buttons (Undo, Plus, Add) but keep grade icons & stars visible
-        const undoButtons = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"]');
+        // Hide interactive buttons, empty grade icons, and non-starred stars
+        const hideEls = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"], button[data-grade-level="empty"], button[data-starred="false"]');
         const seps = el.querySelectorAll('span.w-px');
-        undoButtons.forEach(btn => (btn as HTMLElement).style.display = 'none');
+        hideEls.forEach(btn => (btn as HTMLElement).style.display = 'none');
         seps.forEach(s => (s as HTMLElement).style.display = 'none');
 
         // Match print styles exactly: font 9px, padding 3px 4px, compact icons
