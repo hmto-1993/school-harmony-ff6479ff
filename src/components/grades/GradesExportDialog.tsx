@@ -145,18 +145,18 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           minWCells: Array.from(allMinWCells).map(c => ({ minWidth: (c as HTMLElement).style.minWidth })),
         };
         if (tableEl) {
-          tableEl.style.fontSize = '9px';
-          tableEl.style.lineHeight = '1.3';
+          tableEl.style.fontSize = '11px';
+          tableEl.style.lineHeight = '1.4';
           tableEl.style.tableLayout = 'auto';
           tableEl.style.borderCollapse = 'collapse';
           tableEl.style.direction = 'rtl';
         }
         allCells.forEach(c => { 
-          (c as HTMLElement).style.padding = '3px 4px'; 
-          (c as HTMLElement).style.fontSize = '9px';
+          (c as HTMLElement).style.padding = '5px 6px'; 
+          (c as HTMLElement).style.fontSize = '11px';
           (c as HTMLElement).style.whiteSpace = 'nowrap';
         });
-        allIcons.forEach(ic => { (ic as SVGElement).style.width = '12px'; (ic as SVGElement).style.height = '12px'; });
+        allIcons.forEach(ic => { (ic as SVGElement).style.width = '14px'; (ic as SVGElement).style.height = '14px'; });
         allMinWCells.forEach(c => { (c as HTMLElement).style.minWidth = '0'; });
 
         // Recalculate width after style changes
