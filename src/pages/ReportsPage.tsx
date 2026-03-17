@@ -384,7 +384,7 @@ export default function ReportsPage() {
       r.student_name,
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startY + 12,
       head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
       body: tableData,
