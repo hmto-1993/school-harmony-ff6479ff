@@ -303,7 +303,7 @@ export default function AttendanceWeeklyReport({
       content: useVerticalHeaders ? "" : `الأسبوع ${w.weekNum}`,
       _weekLabel: `أ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
-      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, ...(useVerticalHeaders ? { minCellHeight: 12 } : {}) },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 11, ...(useVerticalHeaders ? { minCellHeight: 12 } : {}) },
     }));
 
     const summaryHeaders = [
