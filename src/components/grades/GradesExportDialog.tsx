@@ -115,28 +115,52 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.width = `${el.scrollWidth}px`;
         el.style.maxWidth = 'none';
 
+        // Apply light-capture class for light mode colors (same as print)
+        const hadLightCapture = el.classList.contains('light-capture');
+        el.classList.add('light-capture');
+
         // Hide only interactive buttons (Undo, Plus, Add) but keep grade icons & stars visible
         const undoButtons = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"]');
         const seps = el.querySelectorAll('span.w-px');
         undoButtons.forEach(btn => (btn as HTMLElement).style.display = 'none');
         seps.forEach(s => (s as HTMLElement).style.display = 'none');
 
-        // Shrink font & compact rows for PDF
+        // Match print styles exactly: font 9px, padding 3px 4px, compact icons
         const tableEl = el.querySelector('table') as HTMLElement;
         const allCells = el.querySelectorAll('td, th');
         const allIcons = el.querySelectorAll('svg');
+        const allMinWCells = el.querySelectorAll('td[class*="min-w-"], th[class*="min-w-"]');
         const origStyles2 = {
           fontSize: tableEl?.style.fontSize,
           lineHeight: tableEl?.style.lineHeight,
-          cells: Array.from(allCells).map(c => ({ padding: (c as HTMLElement).style.padding })),
+          tableLayout: tableEl?.style.tableLayout,
+          borderCollapse: tableEl?.style.borderCollapse,
+          direction: tableEl?.style.direction,
+          cells: Array.from(allCells).map(c => ({ 
+            padding: (c as HTMLElement).style.padding, 
+            fontSize: (c as HTMLElement).style.fontSize,
+            whiteSpace: (c as HTMLElement).style.whiteSpace,
+          })),
           icons: Array.from(allIcons).map(ic => ({ width: (ic as SVGElement).style.width, height: (ic as SVGElement).style.height })),
+          minWCells: Array.from(allMinWCells).map(c => ({ minWidth: (c as HTMLElement).style.minWidth })),
         };
         if (tableEl) {
-          tableEl.style.fontSize = '11px';
-          tableEl.style.lineHeight = '1.2';
+          tableEl.style.fontSize = '9px';
+          tableEl.style.lineHeight = '1.3';
+          tableEl.style.tableLayout = 'auto';
+          tableEl.style.borderCollapse = 'collapse';
+          tableEl.style.direction = 'rtl';
         }
-        allCells.forEach(c => { (c as HTMLElement).style.padding = '2px 4px'; });
-        allIcons.forEach(ic => { (ic as SVGElement).style.width = '14px'; (ic as SVGElement).style.height = '14px'; });
+        allCells.forEach(c => { 
+          (c as HTMLElement).style.padding = '3px 4px'; 
+          (c as HTMLElement).style.fontSize = '9px';
+          (c as HTMLElement).style.whiteSpace = 'nowrap';
+        });
+        allIcons.forEach(ic => { (ic as SVGElement).style.width = '12px'; (ic as SVGElement).style.height = '12px'; });
+        allMinWCells.forEach(c => { (c as HTMLElement).style.minWidth = '0'; });
+
+        // Recalculate width after style changes
+        el.style.width = `${el.scrollWidth}px`;
 
         // Measure row boundaries before capture
         const elRect = el.getBoundingClientRect();
@@ -153,18 +177,27 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           width: el.scrollWidth,
         });
 
-        // Restore styles
+        // Restore all styles
         el.style.overflow = origStyles.overflow;
         el.style.width = origStyles.width;
         el.style.maxWidth = origStyles.maxWidth;
+        if (!hadLightCapture) el.classList.remove('light-capture');
         undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
         if (tableEl) {
           tableEl.style.fontSize = origStyles2.fontSize || '';
           tableEl.style.lineHeight = origStyles2.lineHeight || '';
+          tableEl.style.tableLayout = origStyles2.tableLayout || '';
+          tableEl.style.borderCollapse = origStyles2.borderCollapse || '';
+          tableEl.style.direction = origStyles2.direction || '';
         }
-        allCells.forEach((c, i) => { (c as HTMLElement).style.padding = origStyles2.cells[i]?.padding || ''; });
+        allCells.forEach((c, i) => { 
+          (c as HTMLElement).style.padding = origStyles2.cells[i]?.padding || ''; 
+          (c as HTMLElement).style.fontSize = origStyles2.cells[i]?.fontSize || '';
+          (c as HTMLElement).style.whiteSpace = origStyles2.cells[i]?.whiteSpace || '';
+        });
         allIcons.forEach((ic, i) => { (ic as SVGElement).style.width = origStyles2.icons[i]?.width || ''; (ic as SVGElement).style.height = origStyles2.icons[i]?.height || ''; });
+        allMinWCells.forEach((c, i) => { (c as HTMLElement).style.minWidth = origStyles2.minWCells[i]?.minWidth || ''; });
 
         // Calculations
         const cssToPx = canvas.height / elRect.height;
