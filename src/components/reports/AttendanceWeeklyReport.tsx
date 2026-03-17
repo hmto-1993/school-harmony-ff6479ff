@@ -296,11 +296,14 @@ export default function AttendanceWeeklyReport({
     const nameColWidth = Math.min(doc.getTextWidth(longestName) + 6, 70);
     doc.setFont("Amiri", "normal");
 
+    // Use vertical headers only when there are many columns (>8 weeks)
+    const useVerticalHeaders = exportWeeks.length > 8;
+    
     const weekGroupHeaders = exportWeeks.map((w) => ({
-      content: "",
-      _weekLabel: `الأسبوع ${w.weekNum}`,
+      content: useVerticalHeaders ? "" : `الأسبوع ${w.weekNum}`,
+      _weekLabel: `أ${w.weekNum}`,
       colSpan: w.dates.length > 0 ? Math.min(w.dates.length, periodsPerWeek) : 1,
-      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, minCellHeight: 18 },
+      styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], textColor: [73, 80, 87] as [number, number, number], fontSize: 7, ...(useVerticalHeaders ? { minCellHeight: 12 } : {}) },
     }));
 
     const summaryHeaders = [
