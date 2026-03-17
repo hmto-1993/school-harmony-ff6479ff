@@ -115,11 +115,17 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.width = `${el.scrollWidth}px`;
         el.style.maxWidth = 'none';
 
-        // Hide buttons and separators
-        const buttons = el.querySelectorAll('button');
+        // Hide only interactive buttons (Undo, Plus, Add) but keep grade icons & stars visible
+        const undoButtons = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"]');
         const seps = el.querySelectorAll('span.w-px');
-        buttons.forEach(btn => (btn as HTMLElement).style.display = 'none');
+        undoButtons.forEach(btn => (btn as HTMLElement).style.display = 'none');
         seps.forEach(s => (s as HTMLElement).style.display = 'none');
+
+        // Shrink font for compact PDF
+        const origFontSize = (el.querySelector('table') as HTMLElement)?.style.fontSize;
+        if (el.querySelector('table')) {
+          (el.querySelector('table') as HTMLElement).style.fontSize = '11px';
+        }
 
         // Measure row boundaries before capture
         const elRect = el.getBoundingClientRect();
@@ -140,8 +146,11 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.overflow = origStyles.overflow;
         el.style.width = origStyles.width;
         el.style.maxWidth = origStyles.maxWidth;
-        buttons.forEach(btn => (btn as HTMLElement).style.display = '');
+        undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
+        if (el.querySelector('table') && origFontSize !== undefined) {
+          (el.querySelector('table') as HTMLElement).style.fontSize = origFontSize || '';
+        }
 
         // Calculations
         const cssToPx = canvas.height / elRect.height;
