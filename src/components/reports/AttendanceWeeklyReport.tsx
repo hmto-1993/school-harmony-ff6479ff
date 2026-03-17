@@ -345,7 +345,7 @@ export default function AttendanceWeeklyReport({
         return Array.from({ length: colCount }, (_, i) => {
           const st = slots[i];
           const cfg = st ? STATUS_CONFIG[st] : null;
-          return { content: "", styles: { halign: "center" as const, fontSize: 7 }, _dotColor: cfg ? hexToRgb(cfg.printColor) : [210, 215, 220] as [number, number, number] };
+          return { content: "", styles: { halign: "center" as const, fontSize: 11 }, _dotColor: cfg ? hexToRgb(cfg.printColor) : [210, 215, 220] as [number, number, number] };
         });
       });
 
