@@ -406,6 +406,18 @@ export default function AttendanceWeeklyReport({
             doc.setFillColor(hColor[0], hColor[1], hColor[2]);
             doc.circle(cx, cy, 1.5, "F");
           }
+          // Draw vertical week labels
+          const weekLabel = weekLabelMap.get(data.column.index);
+          if (weekLabel) {
+            const cx = data.cell.x + data.cell.width / 2;
+            const cy = data.cell.y + data.cell.height - 2;
+            doc.setFontSize(6);
+            doc.setFont("Amiri", "bold");
+            doc.setTextColor(73, 80, 87);
+            doc.text(weekLabel, cx, cy, { angle: 90, align: "left" });
+            doc.setFont("Amiri", "normal");
+            doc.setTextColor(0, 0, 0);
+          }
         }
       },
     });
