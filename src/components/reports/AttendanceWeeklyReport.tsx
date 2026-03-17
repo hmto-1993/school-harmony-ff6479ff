@@ -307,9 +307,9 @@ export default function AttendanceWeeklyReport({
     }));
 
     const summaryHeaders = [
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
-      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 8, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
+      { content: "", styles: { halign: "center" as const, fillColor: [233, 236, 239] as [number, number, number], fontSize: 11, cellWidth: 8 } },
     ];
 
     // Store reversed week headers for vertical text rendering
