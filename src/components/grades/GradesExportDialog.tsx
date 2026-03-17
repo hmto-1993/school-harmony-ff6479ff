@@ -93,7 +93,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const { doc, startY: headerEndY, watermark } = await createArabicPDF({
           reportType: "grades",
           includeHeader: true,
-          orientation: "landscape",
+          orientation: "portrait",
         });
         const pageWidth = doc.internal.pageSize.getWidth();
         const pageHeight = doc.internal.pageSize.getHeight();
@@ -119,10 +119,10 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const hadLightCapture = el.classList.contains('light-capture');
         el.classList.add('light-capture');
 
-        // Hide only interactive buttons (Undo, Plus, Add) but keep grade icons & stars visible
-        const undoButtons = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"]');
+        // Hide interactive buttons, empty grade icons, and non-starred stars
+        const hideEls = el.querySelectorAll('button[title="تراجع"], button[title="إضافة تقييم"], button[data-grade-level="empty"], button[data-starred="false"]');
         const seps = el.querySelectorAll('span.w-px');
-        undoButtons.forEach(btn => (btn as HTMLElement).style.display = 'none');
+        hideEls.forEach(btn => (btn as HTMLElement).style.display = 'none');
         seps.forEach(s => (s as HTMLElement).style.display = 'none');
 
         // Match print styles exactly: font 9px, padding 3px 4px, compact icons
@@ -182,7 +182,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         el.style.width = origStyles.width;
         el.style.maxWidth = origStyles.maxWidth;
         if (!hadLightCapture) el.classList.remove('light-capture');
-        undoButtons.forEach(btn => (btn as HTMLElement).style.display = '');
+        hideEls.forEach(btn => (btn as HTMLElement).style.display = '');
         seps.forEach(s => (s as HTMLElement).style.display = '');
         if (tableEl) {
           tableEl.style.fontSize = origStyles2.fontSize || '';
@@ -249,7 +249,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               ctx.drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
             }
 
-            if (!isFirst) doc.addPage("a4", "landscape");
+            if (!isFirst) doc.addPage("a4", "portrait");
             const sliceImgH = totalH / pxPerMm;
             doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 10, isFirst ? startImgY : 10, imgWidth, sliceImgH);
 

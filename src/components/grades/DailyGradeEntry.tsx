@@ -453,8 +453,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                      slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
                                      slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
                                      slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
+                                     !slotLevel && "grade-empty",
                                    )}
                                    title="اضغط للتبديل"
+                                   data-grade-level={slotLevel || "empty"}
                                  >
                                    <LevelIcon level={slotLevel} />
                                  </button>
@@ -481,9 +483,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                  onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
                                  className={cn(
                                    "p-1 rounded-lg transition-all hover:scale-110",
-                                   isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70"
+                                   isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty"
                                  )}
                                  title="متميز"
+                                 data-starred={isStarred ? "true" : "false"}
                                >
                                  <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
                                </button>
