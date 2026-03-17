@@ -284,8 +284,8 @@
   }
   #print-container .no-print { display: none !important; }
 
-  /* Remove gaps: cards, spacing, margins */
-  #print-container .print-area > * { margin-bottom: 0 !important; }
+  /* Remove gaps: cards, spacing, margins — but preserve print header */
+  #print-container .print-area > *:not(.print-header-area) { margin-bottom: 0 !important; }
   #print-container [class*="space-y-"] > * + * { margin-top: 4px !important; }
   #print-container [class*="gap-"] { gap: 4px !important; }
   #print-container [class*="CardHeader"], #print-container [class*="card-header"] { padding: 4px 0 !important; }
@@ -295,7 +295,7 @@
   #print-container [class*="border-0"], #print-container [class*="backdrop-blur"] { border: none !important; }
   #print-container [class*="p-6"], #print-container [class*="p-4"], #print-container [class*="p-3"] { padding: 2px 0 !important; }
   #print-container [class*="px-"] { padding-left: 0 !important; padding-right: 0 !important; }
-  #print-container [class*="mb-"], #print-container [class*="mt-"] { margin-top: 2px !important; margin-bottom: 2px !important; }
+  #print-container [class*="mb-"]:not(.print-header-area), #print-container [class*="mt-"] { margin-top: 2px !important; margin-bottom: 2px !important; }
 
   /* Remove scroll/height constraints for full content */
   #print-container [class*="max-h-"] { max-height: none !important; }
