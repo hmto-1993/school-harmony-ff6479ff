@@ -52,6 +52,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
@@ -1613,7 +1614,11 @@ export default function SettingsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <span className="text-sm font-medium">اتجاه الطباعة والتصدير:</span>
+              <PrintOrientationToggle />
+            </div>
             <PrintHeaderEditor />
           </CardContent>
         </Card>
