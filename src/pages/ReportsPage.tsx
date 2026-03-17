@@ -413,7 +413,7 @@ export default function ReportsPage() {
       r.student_name,
     ]);
 
-    (doc as any).autoTable({
+    autoTable(doc, {
       startY: startY + 6,
       head: [head],
       body,
