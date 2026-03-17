@@ -376,8 +376,8 @@ export default function AttendanceWeeklyReport({
       ...tableStyles,
       margin: { left: 10, right: 10 },
       tableWidth: "auto",
-      styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
-      headStyles: { ...tableStyles.headStyles, fontSize: 7, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
+      styles: { ...tableStyles.styles, fontSize: 11, cellPadding: 1.5, lineColor: [206, 212, 218], lineWidth: 0.3 },
+      headStyles: { ...tableStyles.headStyles, fontSize: 11, fillColor: [233, 236, 239], textColor: [73, 80, 87] },
       alternateRowStyles: { fillColor: [248, 249, 250] },
       didParseCell: (data: any) => {
         if (data.section === "body" && studentRows[data.row.index]?.isAtRisk && data.column.index <= 1) {
