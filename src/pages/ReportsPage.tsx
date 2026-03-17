@@ -397,6 +397,8 @@ export default function ReportsPage() {
 
   const exportGradesPDF = async () => {
     const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
     const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
