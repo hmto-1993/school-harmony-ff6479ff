@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
+import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
