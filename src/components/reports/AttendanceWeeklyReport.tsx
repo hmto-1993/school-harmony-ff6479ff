@@ -728,7 +728,7 @@ export default function AttendanceWeeklyReport({
           white-space: nowrap;
           background: #f8f9fa;
           font-size: 13px;
-          width: 1%;
+          width: auto;
           line-height: 1.3;
         }
         .logbook-td-dot {
