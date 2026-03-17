@@ -1613,7 +1613,11 @@ export default function SettingsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+              <span className="text-sm font-medium">اتجاه الطباعة والتصدير:</span>
+              <PrintOrientationToggle />
+            </div>
             <PrintHeaderEditor />
           </CardContent>
         </Card>
