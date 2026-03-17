@@ -288,7 +288,7 @@ export default function AttendanceWeeklyReport({
 
     // Calculate optimal name column width based on longest name
     doc.setFont("Amiri", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(11);
     const longestName = studentRows.reduce((max, s) => {
       const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
       return nameText.length > max.length ? nameText : max;
