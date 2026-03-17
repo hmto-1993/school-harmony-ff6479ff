@@ -95,6 +95,82 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   };
 
   const exportPDF = async () => {
+    // If tableRef is provided, use html2canvas to capture the exact table appearance
+    if (tableRef?.current) {
+      try {
+        const { doc, startY: headerEndY, watermark } = await createArabicPDF({
+          reportType: "grades",
+          includeHeader: true,
+        });
+        const pageWidth = doc.internal.pageSize.getWidth();
+
+        doc.setFontSize(16);
+        doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
+        doc.setFontSize(10);
+        doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
+
+        // Hide no-print elements temporarily
+        const noPrintEls = tableRef.current.querySelectorAll('.no-print, button');
+        noPrintEls.forEach(el => (el as HTMLElement).style.visibility = 'hidden');
+
+        const canvas = await html2canvas(tableRef.current, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+        });
+
+        // Restore hidden elements
+        noPrintEls.forEach(el => (el as HTMLElement).style.visibility = '');
+
+        const imgData = canvas.toDataURL("image/png");
+        const imgWidth = pageWidth - 20; // 10mm margins
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const startImgY = headerEndY + 15;
+
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const availableHeight = pageHeight - startImgY - 10;
+
+        if (imgHeight <= availableHeight) {
+          doc.addImage(imgData, "PNG", 10, startImgY, imgWidth, imgHeight);
+        } else {
+          // Multi-page: slice the canvas
+          const pageImgHeight = availableHeight;
+          const sourcePageHeight = (pageImgHeight / imgWidth) * canvas.width;
+          let srcY = 0;
+          let isFirstPage = true;
+
+          while (srcY < canvas.height) {
+            const sliceHeight = Math.min(sourcePageHeight, canvas.height - srcY);
+            const sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = sliceHeight;
+            const ctx = sliceCanvas.getContext('2d')!;
+            ctx.drawImage(canvas, 0, srcY, canvas.width, sliceHeight, 0, 0, canvas.width, sliceHeight);
+
+            const sliceData = sliceCanvas.toDataURL("image/png");
+            const sliceImgH = (sliceHeight * imgWidth) / canvas.width;
+
+            if (!isFirstPage) doc.addPage();
+            doc.addImage(sliceData, "PNG", 10, isFirstPage ? startImgY : 10, imgWidth, sliceImgH);
+
+            srcY += sliceHeight;
+            isFirstPage = false;
+          }
+        }
+
+        finalizePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+        toast.success("تم تصدير ملف PDF بنجاح");
+        setOpen(false);
+        return;
+      } catch (error) {
+        console.error("html2canvas PDF error:", error);
+        toast.error("حدث خطأ أثناء تصدير PDF");
+        return;
+      }
+    }
+
+    // Fallback: use autoTable for PDF generation
     const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       reportType: "grades",
       includeHeader: true,
@@ -115,14 +191,11 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       doc.setFontSize(13);
       doc.text(group.className, pageWidth / 2, startY, { align: "center" });
 
-      // Reverse headers/rows for RTL display
       const reversedHeaders = [...group.headers].reverse();
       const reversedRows = group.rows.map((r) => [...r].reverse());
 
-      // Build head rows: if groupHeaders exist, add them as the first head row
       const headRows: string[][] = [];
       if (group.groupHeaders && group.groupHeaders.length > 0) {
-        // Reverse groupHeaders for RTL and expand to full column count
         const reversedGroupHeaders = [...group.groupHeaders].reverse();
         const expandedRow: string[] = [];
         reversedGroupHeaders.forEach(gh => {
@@ -142,7 +215,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         ...tableStyles,
         styles: { ...tableStyles.styles, fontSize: 8 },
         didParseCell: (data: any) => {
-          // Handle group header merges
           if (group.groupHeaders && group.groupHeaders.length > 0 && data.section === 'head' && data.row.index === 0) {
             const reversedGH = [...group.groupHeaders!].reverse();
             let colOffset = 0;
@@ -162,20 +234,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
                 break;
               }
               checkCol += reversedGH[i].colSpan;
-            }
-          }
-          // Apply cell text colors (reversed columns for RTL)
-          if (group.cellColors && data.section === 'body') {
-            const totalCols = group.headers.length;
-            const originalCol = totalCols - 1 - data.column.index;
-            const key = `${data.row.index}-${originalCol}`;
-            const color = group.cellColors[key];
-            if (color) {
-              const r = parseInt(color.slice(1, 3), 16);
-              const g = parseInt(color.slice(3, 5), 16);
-              const b = parseInt(color.slice(5, 7), 16);
-              data.cell.styles.textColor = [r, g, b];
-              data.cell.styles.fontStyle = 'bold';
             }
           }
         },
