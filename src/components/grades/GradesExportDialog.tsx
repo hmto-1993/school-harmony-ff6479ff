@@ -314,7 +314,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         head: headRows,
         body: reversedRows,
         ...tableStyles,
-        styles: { ...tableStyles.styles, fontSize: 9, cellPadding: 2 },
+        styles: { ...tableStyles.styles, fontSize: 9, cellPadding: 2, lineColor: [180, 180, 180], lineWidth: 0.3 },
         columnStyles: {
           [reversedHeaders.length - 1]: { cellWidth: 14 },
           [reversedHeaders.length - 2]: { cellWidth: 55 },
