@@ -403,7 +403,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             <div className="hidden print:block text-center mb-2">
               <h2 className="text-sm font-bold">{classes.find(c => c.id === selectedClass)?.name} — إدخال الدرجات اليومية — {format(selectedDate, "yyyy/MM/dd")}</h2>
             </div>
-            <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
