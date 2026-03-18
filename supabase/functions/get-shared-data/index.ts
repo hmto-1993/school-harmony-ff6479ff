@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       supabase.from('classes').select('id, name, grade, section').in('id', classIds),
       supabase.from('students').select('id, full_name, class_id').in('class_id', classIds).order('full_name'),
       supabase.from('attendance_records').select('student_id, status, class_id').in('class_id', classIds).eq('date', today),
-      supabase.from('grade_categories').select('id, name, max_score, category_group, sort_order, class_id'),
+      supabase.from('grade_categories').select('id, name, max_score, category_group, sort_order, class_id').in('class_id', classIds),
       supabase.from('behavior_records').select('student_id, type, class_id, date, note').in('class_id', classIds).gte('date', thirtyDaysAgo),
       supabase.from('lesson_plans').select('class_id, week_number, is_completed, lesson_title, day_index, slot_index').in('class_id', classIds).eq('created_by', share.teacher_id),
       supabase.from('site_settings').select('value').eq('id', 'school_name').single(),
