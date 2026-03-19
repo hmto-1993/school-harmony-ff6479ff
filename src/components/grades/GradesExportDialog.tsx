@@ -103,7 +103,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         doc.setFontSize(12);
         doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
         doc.setFontSize(8);
-        doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 5, { align: "center" });
+        doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 4, { align: "center" });
 
         const el = tableRef.current;
         // Save original styles
