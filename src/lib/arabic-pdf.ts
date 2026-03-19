@@ -243,8 +243,8 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
       doc.text(watermark.text, pageWidth / 2, pageHeight / 2, { angle, align: "center" });
     }
 
-    doc.restoreGraphicsState();
-  }
+    doc.setTextColor(0, 0, 0);
+    doc.setFont("Amiri", "normal");
 }
 
 /** Create a pre-configured Arabic PDF document with optional print header */
