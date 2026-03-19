@@ -245,6 +245,7 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
 
     doc.setTextColor(0, 0, 0);
     doc.setFont("Amiri", "normal");
+  }
 }
 
 /** Create a pre-configured Arabic PDF document with optional print header */
