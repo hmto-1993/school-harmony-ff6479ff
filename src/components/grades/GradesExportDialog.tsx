@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { safePrint } from "@/lib/print-utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
@@ -372,19 +372,20 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   if (groups.length === 0) return null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
-              <Upload className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); safePrint(); }}>
-              <Printer className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </DialogTrigger>
+    <>
+      {trigger ? (
+        <span onClick={() => setOpen(true)}>{trigger}</span>
+      ) : (
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={() => setOpen(true)}>
+            <Upload className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
+            <Printer className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>تصدير {title}</DialogTitle>
@@ -426,5 +427,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         </Tabs>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
