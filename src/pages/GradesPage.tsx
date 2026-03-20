@@ -39,6 +39,13 @@ export default function GradesPage() {
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
+  const canEdit = perms.can_manage_grades && !perms.read_only_mode;
+  const canView = perms.can_view_grades || perms.read_only_mode;
+
+  const availableTypes = canEdit
+    ? ENTRY_TYPES
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "classwork");
+
   const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 
   // Set default active type to summary if can't edit
