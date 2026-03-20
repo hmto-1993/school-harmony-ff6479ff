@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
@@ -16,6 +15,7 @@ import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import { useClasses, useStudentCounts } from "@/hooks/useClasses";
 
 const ENTRY_TYPES = [
   { id: "daily", label: "إدخال يومي", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -33,36 +33,11 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [classCounts, setClassCounts] = useState<Record<string, number>>({});
+  const { data: classes = [] } = useClasses();
+  const { data: classCounts = {} } = useStudentCounts();
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
-
-  const canEdit = perms.can_manage_grades && !perms.read_only_mode;
-  // If can't view grades at all, show restricted message
-  const canView = perms.can_view_grades || perms.read_only_mode;
-
-  // Filter entry types based on edit permissions
-  const availableTypes = canEdit
-    ? ENTRY_TYPES
-    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "classwork");
-
-  useEffect(() => {
-    const load = async () => {
-      const [{ data: cls }, { data: students }] = await Promise.all([
-        supabase.from("classes").select("id, name").order("name"),
-        supabase.from("students").select("id, class_id"),
-      ]);
-      setClasses(cls || []);
-      const counts: Record<string, number> = {};
-      (students || []).forEach((s) => {
-        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
-      });
-      setClassCounts(counts);
-    };
-    load();
-  }, []);
 
   const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
 

@@ -3,6 +3,7 @@ import { safePrint } from "@/lib/print-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { useQuery } from "@tanstack/react-query";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardStatCards from "@/components/dashboard/DashboardStatCards";
 import AttendanceOverview from "@/components/dashboard/AttendanceOverview";
@@ -29,74 +30,73 @@ interface ClassStats {
 export default function DashboardPage() {
   const { role } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [totalClasses, setTotalClasses] = useState(0);
-  const [todayPresent, setTodayPresent] = useState(0);
-  const [todayAbsent, setTodayAbsent] = useState(0);
-  const [todayLate, setTodayLate] = useState(0);
-  const [todayNotRecorded, setTodayNotRecorded] = useState(0);
-  const [classStats, setClassStats] = useState<ClassStats[]>([]);
-  const [attendanceRate, setAttendanceRate] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [schoolName, setSchoolName] = useState("نظام إدارة المدرسة");
 
+  const today = format(new Date(), "yyyy-MM-dd");
+
+  const { data: dashboardData, isLoading: loading } = useQuery({
+    queryKey: ["dashboard-stats", today],
+    queryFn: async () => {
+      const [
+        { data: studentsData },
+        { data: classesData },
+        { data: attendanceData },
+      ] = await Promise.all([
+        supabase.from("students").select("id, class_id"),
+        supabase.from("classes").select("id, name"),
+        supabase.from("attendance_records").select("student_id, status, class_id").eq("date", today),
+      ]);
+
+      const students = studentsData || [];
+      const classes = classesData || [];
+      const attendance = attendanceData || [];
+
+      const present = attendance.filter((r) => r.status === "present").length;
+      const absent = attendance.filter((r) => r.status === "absent").length;
+      const late = attendance.filter((r) => r.status === "late").length;
+      const recorded = attendance.length;
+      const notRecorded = Math.max(students.length - recorded, 0);
+
+      const classMap: Record<string, ClassStats> = {};
+      classes.forEach((c) => {
+        classMap[c.id] = { name: c.name, present: 0, absent: 0, late: 0, total: 0 };
+      });
+      students.forEach((s) => {
+        if (s.class_id && classMap[s.class_id]) classMap[s.class_id].total++;
+      });
+      attendance.forEach((a) => {
+        if (a.class_id && classMap[a.class_id]) {
+          if (a.status === "present") classMap[a.class_id].present++;
+          else if (a.status === "absent") classMap[a.class_id].absent++;
+          else if (a.status === "late") classMap[a.class_id].late++;
+        }
+      });
+
+      return {
+        totalStudents: students.length,
+        totalClasses: classes.length,
+        todayPresent: present,
+        todayAbsent: absent,
+        todayLate: late,
+        todayNotRecorded: notRecorded,
+        attendanceRate: students.length > 0 ? Math.round((present / students.length) * 100) : 0,
+        classStats: Object.values(classMap).filter((c) => c.total > 0),
+      };
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes for dashboard
+  });
+
   useEffect(() => {
-    fetchAll();
     supabase.from("site_settings").select("value").eq("id", "school_name").single().then(({ data }) => {
       if (data?.value) setSchoolName(data.value);
     });
   }, []);
 
-  const fetchAll = async () => {
-    setLoading(true);
-    const today = format(new Date(), "yyyy-MM-dd");
-
-    const [
-      { data: studentsData },
-      { data: classesData },
-      { data: attendanceData },
-    ] = await Promise.all([
-      supabase.from("students").select("id, class_id"),
-      supabase.from("classes").select("id, name"),
-      supabase.from("attendance_records").select("student_id, status, class_id").eq("date", today),
-    ]);
-
-    const students = studentsData || [];
-    const classes = classesData || [];
-    const attendance = attendanceData || [];
-
-    setTotalStudents(students.length);
-    setTotalClasses(classes.length);
-
-    const present = attendance.filter((r) => r.status === "present").length;
-    const absent = attendance.filter((r) => r.status === "absent").length;
-    const late = attendance.filter((r) => r.status === "late").length;
-    const recorded = attendance.length;
-    const notRecorded = students.length - recorded;
-
-    setTodayPresent(present);
-    setTodayAbsent(absent);
-    setTodayLate(late);
-    setTodayNotRecorded(notRecorded > 0 ? notRecorded : 0);
-    setAttendanceRate(students.length > 0 ? Math.round((present / students.length) * 100) : 0);
-
-    const classMap: Record<string, ClassStats> = {};
-    classes.forEach((c) => {
-      classMap[c.id] = { name: c.name, present: 0, absent: 0, late: 0, total: 0 };
-    });
-    students.forEach((s) => {
-      if (s.class_id && classMap[s.class_id]) classMap[s.class_id].total++;
-    });
-    attendance.forEach((a) => {
-      if (a.class_id && classMap[a.class_id]) {
-        if (a.status === "present") classMap[a.class_id].present++;
-        else if (a.status === "absent") classMap[a.class_id].absent++;
-        else if (a.status === "late") classMap[a.class_id].late++;
-      }
-    });
-    setClassStats(Object.values(classMap).filter((c) => c.total > 0));
-    setLoading(false);
-  };
+  const {
+    totalStudents = 0, totalClasses = 0, todayPresent = 0,
+    todayAbsent = 0, todayLate = 0, todayNotRecorded = 0,
+    attendanceRate = 0, classStats = [],
+  } = dashboardData || {};
 
   const handlePrint = useCallback(() => {
     safePrint();
