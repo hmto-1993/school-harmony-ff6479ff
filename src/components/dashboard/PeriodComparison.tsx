@@ -133,44 +133,36 @@ function ComparisonGrid({ current, previous }: { current: PeriodStats; previous:
 }
 
 export default function PeriodComparison() {
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [weekCurrent, setWeekCurrent] = useState<PeriodStats | null>(null);
-  const [weekPrevious, setWeekPrevious] = useState<PeriodStats | null>(null);
-  const [monthCurrent, setMonthCurrent] = useState<PeriodStats | null>(null);
-  const [monthPrevious, setMonthPrevious] = useState<PeriodStats | null>(null);
+  const { data } = useQuery({
+    queryKey: ["period-comparison"],
+    queryFn: async () => {
+      const { data: students } = await supabase.from("students").select("id");
+      const count = students?.length || 0;
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+      const now = new Date();
+      const thisWeekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const thisWeekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const lastWeekStart = format(startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const lastWeekEnd = format(endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
 
-  const fetchData = async () => {
-    const { data: students } = await supabase.from("students").select("id");
-    const count = students?.length || 0;
-    setTotalStudents(count);
+      const thisMonthStart = format(startOfMonth(now), "yyyy-MM-dd");
+      const thisMonthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+      const lastMonthStart = format(startOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
+      const lastMonthEnd = format(endOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
 
-    const now = new Date();
-    const thisWeekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const thisWeekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const lastWeekStart = format(startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const lastWeekEnd = format(endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
+      const [wc, wp, mc, mp] = await Promise.all([
+        fetchPeriodData(thisWeekStart, thisWeekEnd, count),
+        fetchPeriodData(lastWeekStart, lastWeekEnd, count),
+        fetchPeriodData(thisMonthStart, thisMonthEnd, count),
+        fetchPeriodData(lastMonthStart, lastMonthEnd, count),
+      ]);
 
-    const thisMonthStart = format(startOfMonth(now), "yyyy-MM-dd");
-    const thisMonthEnd = format(endOfMonth(now), "yyyy-MM-dd");
-    const lastMonthStart = format(startOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
-    const lastMonthEnd = format(endOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
+      return { weekCurrent: wc, weekPrevious: wp, monthCurrent: mc, monthPrevious: mp };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
-    const [wc, wp, mc, mp] = await Promise.all([
-      fetchPeriodData(thisWeekStart, thisWeekEnd, count),
-      fetchPeriodData(lastWeekStart, lastWeekEnd, count),
-      fetchPeriodData(thisMonthStart, thisMonthEnd, count),
-      fetchPeriodData(lastMonthStart, lastMonthEnd, count),
-    ]);
-
-    setWeekCurrent(wc);
-    setWeekPrevious(wp);
-    setMonthCurrent(mc);
-    setMonthPrevious(mp);
-  };
+  const { weekCurrent, weekPrevious, monthCurrent, monthPrevious } = data || {};
 
   if (!weekCurrent || !monthCurrent) return null;
 
