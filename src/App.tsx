@@ -31,7 +31,16 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const InstallPage = lazy(() => import("@/pages/InstallPage"));
 const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+      gcTime: 15 * 60 * 1000,   // 15 minutes - keep in cache
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[60vh]">
