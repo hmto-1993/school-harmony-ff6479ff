@@ -427,5 +427,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         </Tabs>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
