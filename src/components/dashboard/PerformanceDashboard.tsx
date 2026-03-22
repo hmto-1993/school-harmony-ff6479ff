@@ -386,6 +386,7 @@ export default function PerformanceDashboard() {
       </Tabs>
 
       {renderLevelsSection()}
+    </>)}
     </div>
   );
 }
