@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,33 +46,30 @@ const COLORS_BAR = [
 ];
 
 export default function PerformanceDashboard() {
+  const [classes, setClasses] = useState<ClassInfo[]>([]);
+  const [students, setStudents] = useState<StudentInfo[]>([]);
+  const [grades, setGrades] = useState<GradeRecord[]>([]);
+  const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
   const [levelsTypeFilter, setLevelsTypeFilter] = useState<"daily" | "exams">("daily");
 
-  const { data: perfData } = useQuery({
-    queryKey: ["performance-dashboard"],
-    queryFn: async () => {
-      const [{ data: cls }, { data: stu }, { data: grd }, { data: cat }] = await Promise.all([
-        supabase.from("classes").select("id, name").order("name"),
-        supabase.from("students").select("id, full_name, class_id"),
-        supabase.from("grades").select("score, category_id, student_id"),
-        supabase.from("grade_categories").select("id, name, max_score, class_id").order("sort_order"),
-      ]);
-      return {
-        classes: (cls || []) as ClassInfo[],
-        students: (stu || []) as StudentInfo[],
-        grades: (grd || []) as GradeRecord[],
-        categories: (cat || []) as CategoryInfo[],
-      };
-    },
-    staleTime: 5 * 60 * 1000,
-  });
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const classes = perfData?.classes || [];
-  const students = perfData?.students || [];
-  const grades = perfData?.grades || [];
-  const categories = perfData?.categories || [];
+  const fetchData = async () => {
+    const [{ data: cls }, { data: stu }, { data: grd }, { data: cat }] = await Promise.all([
+      supabase.from("classes").select("id, name").order("name"),
+      supabase.from("students").select("id, full_name, class_id"),
+      supabase.from("grades").select("score, category_id, student_id"),
+      supabase.from("grade_categories").select("id, name, max_score, class_id").order("sort_order"),
+    ]);
+    setClasses(cls || []);
+    setStudents(stu || []);
+    setGrades(grd || []);
+    setCategories(cat || []);
+  };
 
   const { dailyCats, examCats } = useMemo(() => {
     const daily = categories.filter(c => !isExamCategory(c.name));

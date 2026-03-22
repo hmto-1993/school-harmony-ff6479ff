@@ -269,7 +269,7 @@
     display: block !important;
     visibility: visible !important;
     width: 100% !important;
-    padding: 6mm 12mm 12mm !important;
+    padding: 4px 0 !important;
     margin: 0 !important;
     background: white !important;
     color: #1e293b !important;
@@ -284,8 +284,8 @@
   }
   #print-container .no-print { display: none !important; }
 
-  /* Remove gaps: cards, spacing, margins — but preserve print header */
-  #print-container .print-area > *:not(.print-header-area) { margin-bottom: 0 !important; }
+  /* Remove gaps: cards, spacing, margins */
+  #print-container .print-area > * { margin-bottom: 0 !important; }
   #print-container [class*="space-y-"] > * + * { margin-top: 4px !important; }
   #print-container [class*="gap-"] { gap: 4px !important; }
   #print-container [class*="CardHeader"], #print-container [class*="card-header"] { padding: 4px 0 !important; }
@@ -295,7 +295,7 @@
   #print-container [class*="border-0"], #print-container [class*="backdrop-blur"] { border: none !important; }
   #print-container [class*="p-6"], #print-container [class*="p-4"], #print-container [class*="p-3"] { padding: 2px 0 !important; }
   #print-container [class*="px-"] { padding-left: 0 !important; padding-right: 0 !important; }
-  #print-container [class*="mb-"]:not(.print-header-area), #print-container [class*="mt-"] { margin-top: 2px !important; margin-bottom: 2px !important; }
+  #print-container [class*="mb-"], #print-container [class*="mt-"] { margin-top: 2px !important; margin-bottom: 2px !important; }
 
   /* Remove scroll/height constraints for full content */
   #print-container [class*="max-h-"] { max-height: none !important; }
@@ -312,10 +312,7 @@
     table-layout: auto !important;
     border-collapse: collapse !important;
     line-height: 1.4 !important;
-    page-break-inside: auto !important;
   }
-  #print-container thead { display: table-header-group !important; }
-  #print-container tr { page-break-inside: avoid !important; break-inside: avoid !important; }
   #print-container th, #print-container td { 
     padding: 6px 8px !important; 
     white-space: nowrap !important;
@@ -327,17 +324,12 @@
   #print-container .relative.w-full.overflow-auto { overflow: visible !important; }
   #print-container .overflow-x-auto { overflow: visible !important; }
 
-  /* Hide empty grade icons, non-starred stars, and save buttons in print */
+  /* Hide empty grade icons and non-starred stars in print */
   #print-container .grade-empty { display: none !important; }
   #print-container .star-empty { display: none !important; }
   #print-container span.w-px { display: none !important; }
   #print-container button[title="تراجع"] { display: none !important; }
   #print-container button[title="إضافة تقييم"] { display: none !important; }
-  #print-container button[title="حفظ"] { display: none !important; }
-  #print-container button:has(> svg.lucide-save) { display: none !important; }
-
-  /* Shrink icons in print to match export */
-  #print-container svg { width: 14px !important; height: 14px !important; }
 
   /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
@@ -345,13 +337,12 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { margin: 0; }
+  @page { margin: 12mm; }
 }
 
 /* Print orientation — applied via body class before printing */
-@page { size: A4 portrait; margin: 0; }
-@page landscape { size: A4 landscape; margin: 0; }
-body.print-landscape #print-container { page: landscape; }
+@page { size: A4 portrait; margin: 8mm; }
+body.print-landscape @page { size: A4 landscape; }
 
 /* Light mode snapshot for html-to-image capture */
 .light-capture, .light-capture * {

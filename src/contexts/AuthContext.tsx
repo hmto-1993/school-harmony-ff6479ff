@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchRole(session.user.id);
+          setTimeout(() => fetchRole(session.user.id), 0);
         } else {
           setRole(null);
         }

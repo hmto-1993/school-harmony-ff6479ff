@@ -41,24 +41,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate file type
-    if (file.type !== 'application/pdf') {
-      return new Response(JSON.stringify({ error: 'Only PDF files are accepted' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Upload file with size check
+    // Upload file
     const fileName = `shared/report_${Date.now()}.pdf`;
     const arrayBuffer = await file.arrayBuffer();
-    const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
-    if (arrayBuffer.byteLength > MAX_BYTES) {
-      return new Response(JSON.stringify({ error: 'File too large (max 20MB)' }), {
-        status: 413,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     const { error: uploadError } = await supabase.storage
       .from('reports')

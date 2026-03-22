@@ -586,13 +586,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         container.appendChild(clone);
                         document.body.appendChild(container);
 
-                        // Force landscape for classwork print
-                        document.body.classList.add("print-landscape");
-
-                        const cleanup = () => {
-                          container.remove();
-                          document.body.classList.remove("print-landscape");
-                        };
+                        const cleanup = () => { container.remove(); };
                         const handleAfterPrint = () => {
                           window.removeEventListener("afterprint", handleAfterPrint);
                           cleanup();

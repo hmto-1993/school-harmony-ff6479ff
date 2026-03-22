@@ -312,30 +312,11 @@ export default function SettingsPage() {
 
   const fetchData = async () => {
     setLoading(true);
-
-    // Build all queries in parallel based on role
-    const coreQueries = Promise.all([
-      supabase.from("classes").select("*").order("name").then(r => r),
-      supabase.from("grade_categories").select("*, classes(name)").order("sort_order").then(r => r),
-      supabase.from("students").select("id, class_id").then(r => r),
-      user ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single().then(r => r) : Promise.resolve({ data: null }),
-      supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single().then(r => r),
+    const [classesRes, catsRes, studentsRes] = await Promise.all([
+      supabase.from("classes").select("*").order("name"),
+      supabase.from("grade_categories").select("*, classes(name)").order("sort_order"),
+      supabase.from("students").select("id, class_id"),
     ]);
-
-    const adminQueries = isAdmin ? Promise.all([
-      supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } }),
-      supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]).then(r => r),
-      supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]).then(r => r),
-      supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]).then(r => r),
-      supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20).then(r => r),
-      supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(r => r),
-      supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week").then(r => r),
-    ]) : Promise.resolve(null);
-
-    const [coreResults, adminResults] = await Promise.all([coreQueries, adminQueries]);
-
-    // Process core data
-    const [classesRes, catsRes, studentsRes, profileRes, lhRes] = coreResults;
 
     const classData = (classesRes.data || []) as ClassRow[];
     const studentCounts: Record<string, number> = {};
@@ -343,6 +324,7 @@ export default function SettingsPage() {
       if (s.class_id) studentCounts[s.class_id] = (studentCounts[s.class_id] || 0) + 1;
     });
     classData.forEach((c) => (c.studentCount = studentCounts[c.id] || 0));
+
     setClasses(classData);
 
     const catData = (catsRes.data || []).map((c: any) => ({
@@ -351,34 +333,66 @@ export default function SettingsPage() {
     }));
     setCategories(catData);
 
+    // Init editing state
     const edits: Record<string, { weight: number; max_score: number }> = {};
     catData.forEach((c: GradeCategory) => {
       edits[c.id] = { weight: c.weight, max_score: c.max_score };
     });
     setEditingCats(edits);
 
-    if (profileRes.data) {
-      setProfileName(profileRes.data.full_name || "");
-      setProfilePhone(profileRes.data.phone || "");
-      setProfileNationalId(profileRes.data.national_id || "");
+    // Fetch profile
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, national_id")
+        .eq("user_id", user.id)
+        .single();
+      if (profile) {
+        setProfileName(profile.full_name || "");
+        setProfilePhone(profile.phone || "");
+        setProfileNationalId(profile.national_id || "");
+      }
     }
 
-    if (lhRes.data?.value) setLetterheadUrl(lhRes.data.value);
+    // Fetch teachers list for admin
+    if (user && isAdmin) {
+      const { data: teachersData } = await supabase.functions.invoke("manage-users", {
+        body: { action: "list_teachers" },
+      });
+      if (teachersData?.teachers) {
+        setTeachers(teachersData.teachers);
+      }
+    }
 
-    // Process admin data
-    if (isAdmin && adminResults) {
-      const [teachersRes, smsRes, loginRes, qcRes, historyRes, overrideRes, schedulesRes] = adminResults;
+    // Fetch letterhead URL
+    const { data: lhSetting } = await supabase
+      .from("site_settings")
+      .select("value")
+      .eq("id", "print_letterhead_url")
+      .single();
+    if (lhSetting?.value) setLetterheadUrl(lhSetting.value);
 
-      if (teachersRes.data?.teachers) setTeachers(teachersRes.data.teachers);
-
-      (smsRes.data || []).forEach((s: any) => {
+    // Fetch SMS provider settings
+    if (isAdmin) {
+      const { data: smsData } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]);
+      (smsData || []).forEach((s: any) => {
         if (s.id === "sms_provider") setSmsProvider(s.value || "msegat");
         if (s.id === "sms_provider_username") setProviderUsername(s.value || "");
         if (s.id === "sms_provider_api_key") setProviderApiKey(s.value || "");
         if (s.id === "sms_provider_sender") setProviderSender(s.value || "");
       });
+    }
 
-      (loginRes.data || []).forEach((s: any) => {
+    // Fetch login page settings
+    if (isAdmin) {
+      const { data: loginData } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]);
+      (loginData || []).forEach((s: any) => {
         if (s.id === "school_name") setLoginSchoolName(s.value || "");
         if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
         if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
@@ -388,8 +402,15 @@ export default function SettingsPage() {
           setNewYear(s.value);
         }
       });
+    }
 
-      (qcRes.data || []).forEach((s: any) => {
+    // Fetch quiz color settings & student visibility & popup
+    if (isAdmin) {
+      const { data: qcData } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
+      (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
         if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
@@ -423,11 +444,26 @@ export default function SettingsPage() {
         if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
       });
 
-      if (historyRes.data) setPopupHistory(historyRes.data as any);
-      setAttendanceOverrideLock(overrideRes.data?.value === "true");
-
+      // Fetch popup history
+      const { data: historyData } = await supabase
+        .from("popup_messages")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (historyData) setPopupHistory(historyData as any);
+      
+      // Fetch attendance override lock setting
+      const { data: overrideSetting } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "attendance_override_lock")
+        .maybeSingle();
+      setAttendanceOverrideLock(overrideSetting?.value === "true");
+      
+      // Fetch class schedules
+      const { data: schedulesData } = await supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week");
       const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
-      (schedulesRes.data || []).forEach((s: any) => {
+      (schedulesData || []).forEach((s: any) => {
         schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
       });
       setClassSchedules(schedulesMap);

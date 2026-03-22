@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { safePrint } from "@/lib/print-utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
@@ -32,12 +32,10 @@ interface GradesExportDialogProps {
   extraSheets?: ExportExtraSheet[];
   trigger?: React.ReactNode;
   tableRef?: React.RefObject<HTMLDivElement>;
-  orientation?: "portrait" | "landscape";
 }
 
-export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef, orientation: propOrientation }: GradesExportDialogProps) {
+export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
-  const pdfOrientation = propOrientation || "portrait";
 
   const exportExcel = () => {
     const wb = XLSX.utils.book_new();
@@ -103,7 +101,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         doc.setFontSize(12);
         doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
         doc.setFontSize(8);
-        doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 4, { align: "center" });
+        doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 5, { align: "center" });
 
         const el = tableRef.current;
         // Save original styles
@@ -206,7 +204,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         const cssToPx = canvas.height / elRect.height;
         const imgWidth = pageWidth - (margin * 2);
         const pxPerMm = canvas.width / imgWidth;
-        const startImgY = headerEndY + 6;
+        const startImgY = headerEndY + 8;
         const availFirst = pageHeight - startImgY - margin;
         const availNext = pageHeight - (margin * 2);
         const totalImgH = canvas.height / pxPerMm;
@@ -276,23 +274,21 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     const { doc, startY: headerEndY, watermark } = await createArabicPDF({
       reportType: "grades",
       includeHeader: true,
-      orientation: pdfOrientation,
     });
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
 
-    const margin = 14;
     groups.forEach((group, gIdx) => {
-      if (gIdx > 0) doc.addPage("a4", pdfOrientation);
-      const startY = gIdx === 0 ? headerEndY + 10 : 15;
+      if (gIdx > 0) doc.addPage("a4", "landscape");
+      const startY = gIdx === 0 ? headerEndY + 15 : 15;
 
-      doc.setFontSize(11);
-      doc.text(group.className, pageWidth - margin, startY, { align: "right" });
-      doc.setFontSize(9);
-      doc.text(format(new Date(), "yyyy/MM/dd"), margin, startY, { align: "left" });
+      doc.setFontSize(13);
+      doc.text(group.className, pageWidth / 2, startY, { align: "center" });
 
       const reversedHeaders = [...group.headers].reverse();
       const reversedRows = group.rows.map((r) => [...r].reverse());
@@ -314,21 +310,9 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         head: headRows,
         body: reversedRows,
         ...tableStyles,
-        styles: { ...tableStyles.styles, fontSize: 9, cellPadding: 2, lineColor: [180, 180, 180], lineWidth: 0.3 },
-        columnStyles: {
-          [reversedHeaders.length - 1]: { cellWidth: 14 },
-          [reversedHeaders.length - 2]: { cellWidth: 55 },
-        },
+        styles: { ...tableStyles.styles, fontSize: 8 },
         didParseCell: (data: any) => {
-          // Alternating row colors
-          if (data.section === 'body' && data.row.index % 2 === 0) {
-            data.cell.styles.fillColor = [248, 250, 252];
-          }
-          // Group header row styling
           if (group.groupHeaders && group.groupHeaders.length > 0 && data.section === 'head' && data.row.index === 0) {
-            data.cell.styles.fillColor = [30, 64, 175];
-            data.cell.styles.textColor = [255, 255, 255];
-            data.cell.styles.fontStyle = 'bold';
             const reversedGH = [...group.groupHeaders!].reverse();
             let colOffset = 0;
             for (let i = 0; i < reversedGH.length; i++) {
@@ -345,14 +329,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
                 break;
               }
               checkCol += reversedGH[i].colSpan;
-            }
-          }
-          // Subtotal/total columns bold
-          if (data.section === 'body') {
-            const cellText = String(data.cell.raw || '');
-            if (cellText.includes('/')) {
-              data.cell.styles.fontStyle = 'bold';
-              data.cell.styles.fillColor = [239, 246, 255];
             }
           }
         },
@@ -372,20 +348,19 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   if (groups.length === 0) return null;
 
   return (
-    <>
-      {trigger ? (
-        <span onClick={() => setOpen(true)}>{trigger}</span>
-      ) : (
-        <div className="flex items-center gap-0.5">
-          <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={() => setOpen(true)}>
-            <Upload className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
-            <Printer className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-      <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <div className="flex items-center gap-0.5">
+            <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
+              <Upload className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); safePrint(); }}>
+              <Printer className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>تصدير {title}</DialogTitle>
@@ -427,6 +402,5 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
         </Tabs>
       </DialogContent>
     </Dialog>
-    </>
   );
 }

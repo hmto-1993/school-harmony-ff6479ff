@@ -215,17 +215,21 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
 
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
+    doc.saveGraphicsState();
     
-    // Parse hex color to RGB and blend with white using opacity to simulate transparency
+    // Parse hex color to RGB
     const hex = watermark.color || "#94a3b8";
-    const opacity = watermark.opacity || 0.1;
-    const r = Math.round(255 * (1 - opacity) + parseInt(hex.slice(1, 3), 16) * opacity);
-    const g = Math.round(255 * (1 - opacity) + parseInt(hex.slice(3, 5), 16) * opacity);
-    const b = Math.round(255 * (1 - opacity) + parseInt(hex.slice(5, 7), 16) * opacity);
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
     
     doc.setTextColor(r, g, b);
     doc.setFontSize(watermark.fontSize || 48);
     doc.setFont("Amiri", "bold");
+    // @ts-ignore - jsPDF supports GState
+    const gState = new (doc as any).GState({ opacity: watermark.opacity || 0.1 });
+    // @ts-ignore
+    doc.setGState(gState);
 
     const angle = watermark.angle || -30;
 
@@ -243,8 +247,7 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
       doc.text(watermark.text, pageWidth / 2, pageHeight / 2, { angle, align: "center" });
     }
 
-    doc.setTextColor(0, 0, 0);
-    doc.setFont("Amiri", "normal");
+    doc.restoreGraphicsState();
   }
 }
 
