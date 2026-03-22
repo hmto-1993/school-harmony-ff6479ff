@@ -146,25 +146,43 @@ export default function StudentsPage() {
       if (s.id === "absence_mode") mode = s.value || "percentage";
     });
 
-    const { data: allAtt } = await supabase
+    // Only fetch absent records to reduce data transfer, then count per student
+    const { data: absentAtt } = await supabase
       .from("attendance_records")
-      .select("student_id, status");
+      .select("student_id")
+      .eq("status", "absent");
 
-    const studentAbsences: Record<string, { absent: number; total: number }> = {};
-    (allAtt || []).forEach((r: any) => {
-      if (!studentAbsences[r.student_id]) studentAbsences[r.student_id] = { absent: 0, total: 0 };
-      studentAbsences[r.student_id].total++;
-      if (r.status === "absent") studentAbsences[r.student_id].absent++;
+    const absentCounts: Record<string, number> = {};
+    (absentAtt || []).forEach((r: any) => {
+      absentCounts[r.student_id] = (absentCounts[r.student_id] || 0) + 1;
     });
 
     const exceeded = new Set<string>();
-    Object.entries(studentAbsences).forEach(([sid, data]) => {
-      if (mode === "sessions" && allowedSessions > 0) {
-        if (data.absent > allowedSessions) exceeded.add(sid);
-      } else if (data.total > 0) {
-        if ((data.absent / data.total) * 100 >= threshold) exceeded.add(sid);
+    if (mode === "sessions" && allowedSessions > 0) {
+      // For sessions mode, only need absent count
+      Object.entries(absentCounts).forEach(([sid, absent]) => {
+        if (absent > allowedSessions) exceeded.add(sid);
+      });
+    } else {
+      // For percentage mode, need total attendance too - only for students with absences
+      const studentIdsWithAbsences = Object.keys(absentCounts);
+      if (studentIdsWithAbsences.length > 0) {
+        const { data: totalAtt } = await supabase
+          .from("attendance_records")
+          .select("student_id")
+          .in("student_id", studentIdsWithAbsences);
+        
+        const totalCounts: Record<string, number> = {};
+        (totalAtt || []).forEach((r: any) => {
+          totalCounts[r.student_id] = (totalCounts[r.student_id] || 0) + 1;
+        });
+
+        Object.entries(absentCounts).forEach(([sid, absent]) => {
+          const total = totalCounts[sid] || 0;
+          if (total > 0 && (absent / total) * 100 >= threshold) exceeded.add(sid);
+        });
       }
-    });
+    }
     setExceededStudents(exceeded);
   };
 
