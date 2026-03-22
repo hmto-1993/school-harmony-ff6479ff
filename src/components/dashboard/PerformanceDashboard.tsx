@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -53,16 +53,31 @@ export default function PerformanceDashboard() {
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
   const [levelsTypeFilter, setLevelsTypeFilter] = useState<"daily" | "exams">("daily");
+  const [isVisible, setIsVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Lazy load: only fetch data when component scrolls into view
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
+    if (!isVisible) return;
     fetchData();
-  }, []);
+  }, [isVisible]);
 
   const fetchData = async () => {
     const [{ data: cls }, { data: stu }, { data: grd }, { data: cat }] = await Promise.all([
       supabase.from("classes").select("id, name").order("name"),
       supabase.from("students").select("id, full_name, class_id"),
-      supabase.from("grades").select("score, category_id, student_id"),
+      supabase.from("grades").select("score, category_id, student_id").not("score", "is", null),
       supabase.from("grade_categories").select("id, name, max_score, class_id").order("sort_order"),
     ]);
     setClasses(cls || []);
