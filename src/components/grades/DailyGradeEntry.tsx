@@ -83,9 +83,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
   const goToToday = () => setSelectedDate(new Date());
 
-  useEffect(() => {
-    supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
-  }, []);
+  // Classes are fetched by parent GradesPage, no need to re-fetch here
 
   useEffect(() => {
     if (!selectedClass) return;

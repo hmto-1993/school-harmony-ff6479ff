@@ -148,7 +148,8 @@ export default function StudentsPage() {
 
     const { data: allAtt } = await supabase
       .from("attendance_records")
-      .select("student_id, status");
+      .select("student_id, status")
+      .eq("status", "absent");
 
     const studentAbsences: Record<string, { absent: number; total: number }> = {};
     (allAtt || []).forEach((r: any) => {

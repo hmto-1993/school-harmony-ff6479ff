@@ -259,23 +259,14 @@ export default function SmartDashboardSummary() {
       })),
     });
 
-    // ── At-Risk Students ──
-    const allAttFull = attData;
+    // ── At-Risk Students (reuse existing data instead of duplicate query) ──
     const students = classesRes.data || [];
-    if (allAttFull.length > 0 && students.length > 0) {
-      const studentDays: Record<string, { absent: number; total: Set<string> }> = {};
-      allAttFull.forEach((r: any) => {
-        if (!studentDays[r.student_id]) {
-          studentDays[r.student_id] = { absent: 0, total: new Set() };
-        }
-        studentDays[r.student_id].total.add(r.date);
-        if (r.status === "absent") studentDays[r.student_id].absent++;
-      });
-
-      // Need full attendance for at-risk calc - fetch with class filter
+    if (students.length > 0) {
+      // Fetch full attendance once (not duplicated from 7-day query)
       let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date");
       if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
       const { data: fullAtt } = await fullAttQuery;
+      
       const fullDays: Record<string, { absent: number; total: Set<string> }> = {};
       (fullAtt || []).forEach((r: any) => {
         if (!fullDays[r.student_id]) {

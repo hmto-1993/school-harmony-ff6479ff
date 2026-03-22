@@ -350,12 +350,19 @@ export default function AttendancePage() {
       const toUpdate = records.filter((r) => r.existing_id);
       const toInsert = records.filter((r) => !r.existing_id);
 
-      for (const record of toUpdate) {
-        const { error } = await supabase
-          .from("attendance_records")
-          .update({ status: record.status, notes: record.notes })
-          .eq("id", record.existing_id!);
-        if (error) throw new Error(error.message || "فشل تحديث سجل الحضور");
+      // Batch updates in parallel instead of sequential loop
+      if (toUpdate.length > 0) {
+        await Promise.all(
+          toUpdate.map((record) =>
+            supabase
+              .from("attendance_records")
+              .update({ status: record.status, notes: record.notes })
+              .eq("id", record.existing_id!)
+              .then(({ error }) => {
+                if (error) throw new Error(error.message || "فشل تحديث سجل الحضور");
+              })
+          )
+        );
       }
 
       if (toInsert.length > 0) {
