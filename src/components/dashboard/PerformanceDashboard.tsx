@@ -343,7 +343,11 @@ export default function PerformanceDashboard() {
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={containerRef} className="space-y-4">
+      {!isVisible ? (
+        <Card className="h-64 bg-muted/30 animate-pulse border-0" />
+      ) : (<>
+
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-lg font-bold flex items-center gap-2">
           <Trophy className="h-5 w-5 text-accent" />
