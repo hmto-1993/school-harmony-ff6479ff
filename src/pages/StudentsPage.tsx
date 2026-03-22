@@ -184,6 +184,7 @@ export default function StudentsPage() {
       }
     }
     setExceededStudents(exceeded);
+  };
 
   const fetchStudents = async () => {
     const { data } = await supabase
