@@ -1333,6 +1333,10 @@ export type Database = {
         Returns: boolean
       }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
+      teacher_owns_all_classes: {
+        Args: { _class_ids: string[]; _teacher_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "teacher"
