@@ -267,13 +267,8 @@ export default function SmartDashboardSummary() {
     // ── At-Risk Students (reuse existing data instead of duplicate query) ──
     const students = classesRes.data || [];
     if (students.length > 0) {
-      // Fetch full attendance once (not duplicated from 7-day query)
-      let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date");
-      if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
-      const { data: fullAtt } = await fullAttQuery;
-      
       const fullDays: Record<string, { absent: number; total: Set<string> }> = {};
-      (fullAtt || []).forEach((r: any) => {
+      (fullAttRes.data || []).forEach((r: any) => {
         if (!fullDays[r.student_id]) {
           fullDays[r.student_id] = { absent: 0, total: new Set() };
         }
