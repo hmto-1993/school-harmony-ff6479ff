@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { safePrint } from "@/lib/print-utils";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
@@ -348,59 +348,59 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
   if (groups.length === 0) return null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={(e) => { e.preventDefault(); setOpen(true); }}>
-              <Upload className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={(e) => { e.preventDefault(); e.stopPropagation(); safePrint(); }}>
-              <Printer className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md" dir="rtl">
-        <DialogHeader>
-          <DialogTitle>تصدير {title}</DialogTitle>
-        </DialogHeader>
+    <>
+      {trigger || (
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={() => setOpen(true)}>
+            <Upload className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
+            <Printer className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md" dir="rtl" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>تصدير {title}</DialogTitle>
+          </DialogHeader>
 
-        <Tabs defaultValue="excel" dir="rtl">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="excel" className="gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              Excel
-            </TabsTrigger>
-            <TabsTrigger value="pdf" className="gap-2">
-              <FileText className="h-4 w-4" />
-              PDF
-            </TabsTrigger>
-            <TabsTrigger value="print" className="gap-2">
-              <Printer className="h-4 w-4" />
-              طباعة
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="excel" className="pt-4">
-            <Button onClick={exportExcel} className="w-full gap-2">
-              <FileSpreadsheet className="h-4 w-4" />
-              تصدير Excel
-            </Button>
-          </TabsContent>
-          <TabsContent value="pdf" className="pt-4">
-            <Button onClick={exportPDF} className="w-full gap-2">
-              <FileText className="h-4 w-4" />
-              تصدير PDF
-            </Button>
-          </TabsContent>
-          <TabsContent value="print" className="pt-4">
-            <Button onClick={handlePrint} className="w-full gap-2">
-              <Printer className="h-4 w-4" />
-              طباعة الصفحة
-            </Button>
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+          <Tabs defaultValue="excel" dir="rtl">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="excel" className="gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                Excel
+              </TabsTrigger>
+              <TabsTrigger value="pdf" className="gap-2">
+                <FileText className="h-4 w-4" />
+                PDF
+              </TabsTrigger>
+              <TabsTrigger value="print" className="gap-2">
+                <Printer className="h-4 w-4" />
+                طباعة
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="excel" className="pt-4">
+              <Button onClick={exportExcel} className="w-full gap-2">
+                <FileSpreadsheet className="h-4 w-4" />
+                تصدير Excel
+              </Button>
+            </TabsContent>
+            <TabsContent value="pdf" className="pt-4">
+              <Button onClick={exportPDF} className="w-full gap-2">
+                <FileText className="h-4 w-4" />
+                تصدير PDF
+              </Button>
+            </TabsContent>
+            <TabsContent value="print" className="pt-4">
+              <Button onClick={handlePrint} className="w-full gap-2">
+                <Printer className="h-4 w-4" />
+                طباعة الصفحة
+              </Button>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
