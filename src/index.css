@@ -406,7 +406,7 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { margin: 2mm 8mm 8mm 8mm; }
+  @page { margin: 0mm 8mm 8mm 8mm; }
 }
 
 /* Print orientation — applied via body class before printing */
