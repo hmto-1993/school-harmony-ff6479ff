@@ -80,7 +80,7 @@ async function fetchDashboardData() {
 }
 
 export default function DashboardPage() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
 
   const { data, isLoading: loading } = useQuery({
@@ -88,6 +88,7 @@ export default function DashboardPage() {
     queryFn: fetchDashboardData,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: !!user,
   });
 
   const totalStudents = data?.totalStudents ?? 0;

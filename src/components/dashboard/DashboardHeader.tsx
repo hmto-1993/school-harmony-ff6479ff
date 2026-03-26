@@ -38,6 +38,7 @@ export default function DashboardHeader({ onPrint }: Props) {
   const [expiringLinks, setExpiringLinks] = useState<{ label: string; daysLeft: number }[]>([]);
 
   useEffect(() => {
+    if (!user) return;
     supabase.from("site_settings").select("value").eq("id", "dashboard_title").maybeSingle().then(({ data }) => {
       if (data?.value) setDashboardTitle(data.value);
     });
