@@ -83,11 +83,14 @@ export default function DashboardPage() {
   const { role } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
 
+  const { user } = useAuth();
+
   const { data, isLoading: loading } = useQuery({
     queryKey: ["dashboard-stats", format(new Date(), "yyyy-MM-dd")],
     queryFn: fetchDashboardData,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    enabled: !!user,
   });
 
   const totalStudents = data?.totalStudents ?? 0;

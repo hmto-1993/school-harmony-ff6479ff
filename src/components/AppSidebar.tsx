@@ -62,8 +62,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
-  const [schoolName, setSchoolName] = useState("ثانوية الفيصلية");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام الإدارة");
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("");
 
   useEffect(() => {
     supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle"]).then(({ data }) => {
