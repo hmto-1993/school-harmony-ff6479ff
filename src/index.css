@@ -407,11 +407,11 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { margin: 0mm 8mm 8mm 8mm; }
+  @page { margin: 0mm 6mm 6mm 6mm; }
 }
 
 /* Print orientation — applied via body class before printing */
-@page { size: A4 portrait; margin: 8mm; }
+@page { size: A4 portrait; margin: 0mm 6mm 6mm 6mm; }
 body.print-landscape @page { size: A4 landscape; }
 
 /* Light mode snapshot for html-to-image capture */
