@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
+import { safePrint } from "@/lib/print-utils";
 import autoTable from "jspdf-autotable";
 
 import { format } from "date-fns";
@@ -110,36 +111,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const tableEl = tableRefs.current.get(classId);
     if (!tableEl) return;
 
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1400,height=900");
-    if (!printWindow) {
-      toast({
-        title: "تعذر فتح نافذة الطباعة",
-        description: "تحقق من السماح بالنوافذ المنبثقة ثم أعد المحاولة",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8" />
-          <title>طباعة المهام والمشاركة</title>
-          <style>
-            body { font-family: 'IBM Plex Sans Arabic', sans-serif; padding: 24px; color: #1a1a1a; background: #fff; }
-            .print-loading { text-align: center; padding: 48px 24px; font-size: 18px; }
-          </style>
-        </head>
-        <body>
-          <div class="print-loading">جارٍ تجهيز الطباعة...</div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-
-    const container = document.createElement("div");
-    container.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;";
+    const sourceContainer = document.createElement("section");
+    sourceContainer.className = "print-area";
+    sourceContainer.id = "classwork-print-source";
+    sourceContainer.setAttribute("dir", "rtl");
+    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;";
 
     try {
       let headerConfig: any = null;
@@ -189,18 +165,19 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         headerDiv.appendChild(rightDiv);
         headerDiv.appendChild(centerDiv);
         headerDiv.appendChild(leftDiv);
-        container.appendChild(headerDiv);
+        sourceContainer.appendChild(headerDiv);
       }
     } catch {}
 
     const title = document.createElement("h2");
     title.style.cssText = "text-align:center;margin-bottom:4px;font-size:14px;font-weight:bold;";
     title.textContent = `المهام والمشاركة — ${className}`;
+
     const periodLabel = document.createElement("p");
     periodLabel.style.cssText = "text-align:center;margin-bottom:8px;font-size:11px;color:#666;";
     periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
-    container.appendChild(title);
-    container.appendChild(periodLabel);
+    sourceContainer.appendChild(title);
+    sourceContainer.appendChild(periodLabel);
 
     const clone = tableEl.cloneNode(true) as HTMLElement;
     clone.style.overflow = "visible";
@@ -229,9 +206,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     });
     clone.querySelectorAll("thead tr").forEach((row) => {
       const ths = row.querySelectorAll("th");
-      if (ths.length >= 2) {
-        ths[1].style.minWidth = "110px";
-      }
+      if (ths.length >= 2) ths[1].style.minWidth = "110px";
     });
     clone.querySelectorAll("tbody tr").forEach((row) => {
       const cells = row.querySelectorAll("td");
@@ -246,62 +221,45 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       if (h.tagName === "svg" || h.closest("svg")) return;
       if (!h.style.color) h.style.color = "#1a1a1a";
     });
-    container.appendChild(clone);
+    sourceContainer.appendChild(clone);
+    document.body.appendChild(sourceContainer);
 
-    const headMarkup = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
-      .map((node) => node.outerHTML)
-      .join("\n");
+    const orientationStyle = document.createElement("style");
+    orientationStyle.id = "classwork-print-orientation";
+    orientationStyle.media = "print";
+    orientationStyle.textContent = `@page { size: A4 landscape; margin: 0mm 6mm 6mm 6mm; }`;
+    document.head.appendChild(orientationStyle);
+    document.body.classList.add("print-landscape");
 
-    printWindow.document.open();
-    printWindow.document.write(`
-      <!doctype html>
-      <html dir="rtl" lang="ar">
-        <head>
-          <meta charset="UTF-8" />
-          <title>طباعة المهام والمشاركة</title>
-          ${headMarkup}
-          <style>
-            @page { size: A4 landscape; margin: 0mm 6mm 6mm 6mm; }
-            html, body { background: #fff !important; color: #1a1a1a !important; }
-            body { font-family: 'IBM Plex Sans Arabic', sans-serif; margin: 0; }
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-            svg { width: 11px !important; height: 11px !important; }
-          </style>
-        </head>
-        <body>
-          ${container.outerHTML}
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-
-    const waitForAssets = () => {
-      const images = Array.from(printWindow.document.images);
-      if (images.length === 0) {
-        setTimeout(() => printWindow.print(), 250);
-        return;
+    const waitForAssets = async () => {
+      if (typeof document !== "undefined" && "fonts" in document) {
+        try {
+          await (document as Document & { fonts: FontFaceSet }).fonts.ready;
+        } catch {}
       }
 
-      let loaded = 0;
-      const done = () => {
-        loaded += 1;
-        if (loaded === images.length) {
-          setTimeout(() => printWindow.print(), 250);
-        }
-      };
+      const images = Array.from(sourceContainer.querySelectorAll("img"));
+      if (images.length === 0) return;
 
-      images.forEach((img) => {
-        if (img.complete) {
-          done();
-        } else {
-          img.addEventListener("load", done, { once: true });
-          img.addEventListener("error", done, { once: true });
-        }
-      });
+      await Promise.all(
+        images.map((img) =>
+          img.complete
+            ? Promise.resolve()
+            : new Promise<void>((resolve) => {
+                img.addEventListener("load", () => resolve(), { once: true });
+                img.addEventListener("error", () => resolve(), { once: true });
+              })
+        )
+      );
     };
 
-    printWindow.addEventListener("afterprint", () => printWindow.close(), { once: true });
-    waitForAssets();
+    await waitForAssets();
+
+    safePrint(() => {
+      sourceContainer.remove();
+      orientationStyle.remove();
+      document.body.classList.remove("print-landscape");
+    });
   };
 
   const exportTableAsPDF = async (classId: string, className: string) => {
