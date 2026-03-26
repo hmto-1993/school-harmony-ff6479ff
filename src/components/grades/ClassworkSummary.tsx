@@ -106,6 +106,204 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  const handlePrintTable = async (classId: string, className: string) => {
+    const tableEl = tableRefs.current.get(classId);
+    if (!tableEl) return;
+
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1400,height=900");
+    if (!printWindow) {
+      toast({
+        title: "تعذر فتح نافذة الطباعة",
+        description: "تحقق من السماح بالنوافذ المنبثقة ثم أعد المحاولة",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8" />
+          <title>طباعة المهام والمشاركة</title>
+          <style>
+            body { font-family: 'IBM Plex Sans Arabic', sans-serif; padding: 24px; color: #1a1a1a; background: #fff; }
+            .print-loading { text-align: center; padding: 48px 24px; font-size: 18px; }
+          </style>
+        </head>
+        <body>
+          <div class="print-loading">جارٍ تجهيز الطباعة...</div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    const container = document.createElement("div");
+    container.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;";
+
+    try {
+      let headerConfig: any = null;
+      const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single();
+      if (data?.value) {
+        try { headerConfig = JSON.parse(data.value); } catch {}
+      }
+      if (!headerConfig) {
+        const { data: def } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
+        if (def?.value) {
+          try { headerConfig = JSON.parse(def.value); } catch {}
+        }
+      }
+      if (headerConfig) {
+        const headerDiv = document.createElement("div");
+        headerDiv.style.cssText = "margin-bottom:10px;padding-bottom:6px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;";
+
+        const rightDiv = document.createElement("div");
+        rightDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || "#1e293b"};`;
+        (headerConfig.rightSection?.lines || []).forEach((line: string) => {
+          const p = document.createElement("p");
+          p.style.cssText = "margin:0;font-weight:600;";
+          p.textContent = line;
+          rightDiv.appendChild(p);
+        });
+
+        const centerDiv = document.createElement("div");
+        centerDiv.style.cssText = "display:flex;align-items:center;gap:10px;flex-shrink:0;";
+        (headerConfig.centerSection?.images || []).forEach((img: string, i: number) => {
+          if (!img) return;
+          const imgEl = document.createElement("img");
+          imgEl.src = img;
+          const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
+          imgEl.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
+          centerDiv.appendChild(imgEl);
+        });
+
+        const leftDiv = document.createElement("div");
+        leftDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || "#1e293b"};`;
+        (headerConfig.leftSection?.lines || []).forEach((line: string) => {
+          const p = document.createElement("p");
+          p.style.cssText = "margin:0;font-weight:600;";
+          p.textContent = line;
+          leftDiv.appendChild(p);
+        });
+
+        headerDiv.appendChild(rightDiv);
+        headerDiv.appendChild(centerDiv);
+        headerDiv.appendChild(leftDiv);
+        container.appendChild(headerDiv);
+      }
+    } catch {}
+
+    const title = document.createElement("h2");
+    title.style.cssText = "text-align:center;margin-bottom:4px;font-size:14px;font-weight:bold;";
+    title.textContent = `المهام والمشاركة — ${className}`;
+    const periodLabel = document.createElement("p");
+    periodLabel.style.cssText = "text-align:center;margin-bottom:8px;font-size:11px;color:#666;";
+    periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
+    container.appendChild(title);
+    container.appendChild(periodLabel);
+
+    const clone = tableEl.cloneNode(true) as HTMLElement;
+    clone.style.overflow = "visible";
+    clone.style.width = "100%";
+    clone.querySelectorAll("table").forEach((t) => {
+      t.style.width = "100%";
+      t.style.tableLayout = "auto";
+      t.style.fontSize = "11px";
+      t.style.borderCollapse = "collapse";
+    });
+    clone.querySelectorAll("th, td").forEach((el) => {
+      const h = el as HTMLElement;
+      h.style.color = "#1a1a1a";
+      h.style.backgroundColor = "";
+      h.style.padding = "3px 5px";
+      h.style.border = "1px solid #d1d5db";
+      h.style.fontSize = "11px";
+      h.style.lineHeight = "1.4";
+      h.style.textAlign = "center";
+      h.style.overflow = "visible";
+      h.style.whiteSpace = "nowrap";
+    });
+    clone.querySelectorAll("th").forEach((el) => {
+      (el as HTMLElement).style.backgroundColor = "#eff6ff";
+      (el as HTMLElement).style.fontWeight = "700";
+    });
+    clone.querySelectorAll("thead tr").forEach((row) => {
+      const ths = row.querySelectorAll("th");
+      if (ths.length >= 2) {
+        ths[1].style.minWidth = "110px";
+      }
+    });
+    clone.querySelectorAll("tbody tr").forEach((row) => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length >= 2) {
+        cells[1].style.whiteSpace = "normal";
+        cells[1].style.textAlign = "right";
+        cells[1].style.minWidth = "110px";
+      }
+    });
+    clone.querySelectorAll("*").forEach((el) => {
+      const h = el as HTMLElement;
+      if (h.tagName === "svg" || h.closest("svg")) return;
+      if (!h.style.color) h.style.color = "#1a1a1a";
+    });
+    container.appendChild(clone);
+
+    const headMarkup = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((node) => node.outerHTML)
+      .join("\n");
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!doctype html>
+      <html dir="rtl" lang="ar">
+        <head>
+          <meta charset="UTF-8" />
+          <title>طباعة المهام والمشاركة</title>
+          ${headMarkup}
+          <style>
+            @page { size: A4 landscape; margin: 0mm 6mm 6mm 6mm; }
+            html, body { background: #fff !important; color: #1a1a1a !important; }
+            body { font-family: 'IBM Plex Sans Arabic', sans-serif; margin: 0; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            svg { width: 11px !important; height: 11px !important; }
+          </style>
+        </head>
+        <body>
+          ${container.outerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+
+    const waitForAssets = () => {
+      const images = Array.from(printWindow.document.images);
+      if (images.length === 0) {
+        setTimeout(() => printWindow.print(), 250);
+        return;
+      }
+
+      let loaded = 0;
+      const done = () => {
+        loaded += 1;
+        if (loaded === images.length) {
+          setTimeout(() => printWindow.print(), 250);
+        }
+      };
+
+      images.forEach((img) => {
+        if (img.complete) {
+          done();
+        } else {
+          img.addEventListener("load", done, { once: true });
+          img.addEventListener("error", done, { once: true });
+        }
+      });
+    };
+
+    printWindow.addEventListener("afterprint", () => printWindow.close(), { once: true });
+    waitForAssets();
+  };
+
   const exportTableAsPDF = async (classId: string, className: string) => {
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
