@@ -588,12 +588,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         container.appendChild(clone);
                         document.body.appendChild(container);
 
-                        // Force landscape for classwork print
+                        // Force landscape for classwork print via injected @page rule
                         document.body.classList.add("print-landscape");
+                        const orientationStyle = document.createElement("style");
+                        orientationStyle.id = "classwork-print-orientation";
+                        orientationStyle.media = "print";
+                        orientationStyle.textContent = `@page { size: A4 landscape; margin: 0mm 6mm 6mm 6mm; }`;
+                        document.head.appendChild(orientationStyle);
 
                         const cleanup = () => {
                           container.remove();
                           document.body.classList.remove("print-landscape");
+                          orientationStyle.remove();
                         };
                         const handleAfterPrint = () => {
                           window.removeEventListener("afterprint", handleAfterPrint);
