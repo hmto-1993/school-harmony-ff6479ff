@@ -581,6 +581,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         });
                         clone.querySelectorAll("*").forEach(el => {
                           const h = el as HTMLElement;
+                          // Preserve SVG icon colors (stars, circles)
+                          if (h.tagName === "svg" || h.closest("svg")) return;
                           if (!h.style.color) h.style.color = "#1a1a1a";
                         });
                         container.appendChild(clone);
