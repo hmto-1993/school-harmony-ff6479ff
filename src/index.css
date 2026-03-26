@@ -293,9 +293,13 @@
   #print-container .rounded-xl, #print-container .rounded-lg, #print-container .rounded-md { border-radius: 0 !important; }
   #print-container .shadow-lg, #print-container .shadow-card, #print-container .shadow-sm { box-shadow: none !important; }
   #print-container [class*="border-0"], #print-container [class*="backdrop-blur"] { border: none !important; }
-  #print-container [class*="p-6"], #print-container [class*="p-4"], #print-container [class*="p-3"] { padding: 2px 0 !important; }
+  #print-container [class*="p-6"], #print-container [class*="p-4"], #print-container [class*="p-3"] { padding: 1px 0 !important; }
   #print-container [class*="px-"] { padding-left: 0 !important; padding-right: 0 !important; }
-  #print-container [class*="mb-"], #print-container [class*="mt-"] { margin-top: 2px !important; margin-bottom: 2px !important; }
+  #print-container [class*="mb-"], #print-container [class*="mt-"] { margin-top: 1px !important; margin-bottom: 1px !important; }
+  /* Hide save icon in print */
+  #print-container button[title="حفظ"],
+  #print-container .lucide-save,
+  #print-container svg.lucide-save { display: none !important; }
 
   /* Remove scroll/height constraints for full content */
   #print-container [class*="max-h-"] { max-height: none !important; }
@@ -402,7 +406,7 @@
   /* Preserve colors */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-  @page { margin: 6mm 12mm 12mm 12mm; }
+  @page { margin: 4mm 8mm 8mm 8mm; }
 }
 
 /* Print orientation — applied via body class before printing */
