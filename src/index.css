@@ -381,6 +381,21 @@
   /* Page break control */
   #print-container .print-area > div > div { page-break-inside: avoid; }
 
+  /* Progress bars in print */
+  #print-container [role="progressbar"] { height: 4px !important; }
+
+  /* Trend icons in semester summary */
+  #print-container svg { width: 14px !important; height: 14px !important; }
+  #print-container svg.h-5.w-5 { width: 18px !important; height: 18px !important; }
+  #print-container svg.h-6.w-6 { width: 20px !important; height: 20px !important; }
+
+  /* DailyGradeEntry icon cells: compact layout */
+  #print-container td .flex.items-center.justify-center.gap-1 { gap: 2px !important; }
+
+  /* Landscape for grades tables with many columns */
+  #print-container table th:nth-child(n+8) ~ th { font-size: 10px !important; }
+  #print-container table td:nth-child(n+8) ~ td { font-size: 10px !important; }
+
   /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
 
