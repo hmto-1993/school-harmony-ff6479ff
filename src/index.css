@@ -311,18 +311,40 @@
     width: 100% !important;
     table-layout: auto !important;
     border-collapse: collapse !important;
+    border-spacing: 0 !important;
     line-height: 1.4 !important;
   }
   #print-container th, #print-container td { 
-    padding: 6px 8px !important; 
+    padding: 4px 6px !important; 
     white-space: nowrap !important;
     font-size: 11px !important;
+    border: 1px solid #d1d5db !important;
+    color: #1a1a1a !important;
   }
+  #print-container th {
+    background-color: #eff6ff !important;
+    font-weight: 700 !important;
+    color: #1e40af !important;
+  }
+  #print-container tbody tr:nth-child(even) { background-color: #f8fafc !important; }
+  #print-container tbody tr:nth-child(odd) { background-color: #ffffff !important; }
   #print-container td[class*="min-w-"], #print-container th[class*="min-w-"] { min-width: 0 !important; }
+  /* Subtotal columns highlight */
+  #print-container td[class*="bg-primary/10"],
+  #print-container td[class*="bg-accent/5"] { background-color: #dbeafe !important; }
+  #print-container th[class*="bg-primary/10"],
+  #print-container th[class*="bg-primary/5"],
+  #print-container th[class*="bg-accent/5"],
+  #print-container th[class*="bg-info/10"],
+  #print-container th[class*="bg-warning/10"] { background-color: #e0f2fe !important; }
   
   /* Table wrapper: remove any width constraints */
   #print-container .relative.w-full.overflow-auto { overflow: visible !important; }
   #print-container .overflow-x-auto { overflow: visible !important; }
+
+  /* Student name column in print */
+  #print-container td:nth-child(2) { text-align: right !important; white-space: normal !important; min-width: 100px !important; }
+  #print-container th:nth-child(2) { text-align: right !important; }
 
   /* Hide empty grade icons and non-starred stars in print */
   #print-container .grade-empty { display: none !important; }
@@ -330,6 +352,49 @@
   #print-container span.w-px { display: none !important; }
   #print-container button[title="تراجع"] { display: none !important; }
   #print-container button[title="إضافة تقييم"] { display: none !important; }
+
+  /* Grade icon buttons: remove button styling, keep icon */
+  #print-container button[data-grade-level] { 
+    background: transparent !important; 
+    border: none !important; 
+    padding: 1px !important; 
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  #print-container button[data-starred] {
+    background: transparent !important;
+    border: none !important;
+    padding: 1px !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+  /* Hide starred=false buttons */
+  #print-container button[data-starred="false"] { display: none !important; }
+
+  /* Remove rounded corners from table cells */
+  #print-container th, #print-container td { border-radius: 0 !important; }
+
+  /* Card borders and backgrounds for print */
+  #print-container [class*="bg-card"] { background-color: white !important; }
+  #print-container [class*="bg-muted"] { background-color: #f8fafc !important; }
+
+  /* Page break control */
+  #print-container .print-area > div > div { page-break-inside: avoid; }
+
+  /* Progress bars in print */
+  #print-container [role="progressbar"] { height: 4px !important; }
+
+  /* Trend icons in semester summary */
+  #print-container svg { width: 14px !important; height: 14px !important; }
+  #print-container svg.h-5.w-5 { width: 18px !important; height: 18px !important; }
+  #print-container svg.h-6.w-6 { width: 20px !important; height: 20px !important; }
+
+  /* DailyGradeEntry icon cells: compact layout */
+  #print-container td .flex.items-center.justify-center.gap-1 { gap: 2px !important; }
+
+  /* Landscape for grades tables with many columns */
+  #print-container table th:nth-child(n+8) ~ th { font-size: 10px !important; }
+  #print-container table td:nth-child(n+8) ~ td { font-size: 10px !important; }
 
   /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
