@@ -80,10 +80,8 @@ async function fetchDashboardData() {
 }
 
 export default function DashboardPage() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-
-  const { user } = useAuth();
 
   const { data, isLoading: loading } = useQuery({
     queryKey: ["dashboard-stats", format(new Date(), "yyyy-MM-dd")],
