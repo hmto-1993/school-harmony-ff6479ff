@@ -150,6 +150,8 @@ export async function printNodeInIframe(
   },
 ): Promise<void> {
   const orientation = options?.orientation ?? getPrintOrientation();
+  const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
+  const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.position = "fixed";
@@ -188,16 +190,26 @@ export async function printNodeInIframe(
         background: #fff;
         color: #1a1a1a;
         direction: rtl;
+        width: ${pageWidth};
+        min-height: ${pageHeight};
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       body {
         font-family: 'IBM Plex Sans Arabic', sans-serif;
+        margin-inline: auto;
+        overflow: visible;
       }
       * {
         box-sizing: border-box;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+      }
+      @media print {
+        html, body {
+          width: ${pageWidth};
+          min-height: ${pageHeight};
+        }
       }
       table {
         width: 100%;
