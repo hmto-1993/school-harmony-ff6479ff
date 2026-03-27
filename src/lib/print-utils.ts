@@ -150,8 +150,8 @@ export async function printNodeInIframe(
   },
 ): Promise<void> {
   const orientation = options?.orientation ?? getPrintOrientation();
-  const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
-  const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
+  const contentWidth = orientation === "landscape" ? "285mm" : "198mm";
+  const contentMinHeight = orientation === "landscape" ? "204mm" : "291mm";
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.position = "fixed";
@@ -190,14 +190,11 @@ export async function printNodeInIframe(
         background: #fff;
         color: #1a1a1a;
         direction: rtl;
-        width: ${pageWidth};
-        min-height: ${pageHeight};
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
       body {
         font-family: 'IBM Plex Sans Arabic', sans-serif;
-        margin-inline: auto;
         overflow: visible;
       }
       * {
@@ -205,10 +202,17 @@ export async function printNodeInIframe(
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
+      .print-root {
+        width: 100%;
+        max-width: ${contentWidth};
+        min-height: ${contentMinHeight};
+        margin: 0 auto;
+        overflow: visible;
+      }
       @media print {
-        html, body {
-          width: ${pageWidth};
-          min-height: ${pageHeight};
+        .print-root {
+          max-width: ${contentWidth};
+          min-height: ${contentMinHeight};
         }
       }
       table {
@@ -228,7 +232,10 @@ export async function printNodeInIframe(
   printDocument.close();
 
   const clone = node.cloneNode(true) as HTMLElement;
-  printDocument.body.appendChild(clone);
+  const root = printDocument.createElement("div");
+  root.className = "print-root";
+  root.appendChild(clone);
+  printDocument.body.appendChild(root);
 
   await waitForDocumentAssets(printDocument);
 
