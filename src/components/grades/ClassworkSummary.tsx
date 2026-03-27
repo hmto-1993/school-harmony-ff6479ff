@@ -114,8 +114,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const previousOrientation = getPrintOrientation();
     setPrintOrientation("landscape");
 
+    document.getElementById("classwork-print-source")?.remove();
+
     const sourceContainer = document.createElement("section");
-    sourceContainer.className = "print-area";
+    sourceContainer.className = "classwork-print-area";
     sourceContainer.id = "classwork-print-source";
     sourceContainer.setAttribute("dir", "rtl");
     sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;";
@@ -230,7 +232,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const orientationStyle = document.createElement("style");
     orientationStyle.id = "classwork-print-orientation";
     orientationStyle.media = "print";
-    orientationStyle.textContent = `@page { size: A4 landscape; margin: 0mm 6mm 6mm 6mm; }`;
+    orientationStyle.textContent = `body.print-landscape #print-container { page: landscape-page; }`;
     document.head.appendChild(orientationStyle);
     document.body.classList.add("print-landscape");
 
@@ -259,7 +261,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     try {
       await waitForAssets();
 
-      safePrint(() => {
+      safePrint("#classwork-print-source", () => {
         sourceContainer.remove();
         orientationStyle.remove();
         document.body.classList.remove("print-landscape");
