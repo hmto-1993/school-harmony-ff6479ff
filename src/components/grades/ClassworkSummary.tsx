@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,6 +73,22 @@ const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?
   return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
 };
 
+function getPrintIconHTML(icon: DailyIcon) {
+  if (icon.isFullScore) {
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;color:#d97706;font-size:8px;line-height:1;">★</span>';
+  }
+
+  if (icon.level === "excellent") {
+    return '<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669;"></span>';
+  }
+
+  if (icon.level === "average") {
+    return '<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706;"></span>';
+  }
+
+  return '<span style="display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:9999px;background:#e11d48;color:#ffffff;font-size:7px;line-height:1;">×</span>';
+}
+
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
 
@@ -107,9 +123,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
+  const groupedByClass = useMemo(() => classes
+    .map((cls) => ({
+      ...cls,
+      students: filteredRows.filter((r) => r.class_id === cls.id),
+      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
+    }))
+    .filter((g) => g.students.length > 0), [classes, filteredRows, allCategories]);
+
   const handlePrintTable = async (classId: string, className: string) => {
-    const tableEl = tableRefs.current.get(classId);
-    if (!tableEl) return;
+    const group = groupedByClass.find((entry) => entry.id === classId);
+    if (!group) return;
 
     const previousOrientation = getPrintOrientation();
     setPrintOrientation("landscape");
@@ -181,49 +205,46 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     sourceContainer.appendChild(title);
     sourceContainer.appendChild(periodLabel);
 
-    const clone = tableEl.cloneNode(true) as HTMLElement;
-    clone.style.overflow = "visible";
-    clone.style.width = "100%";
-    clone.querySelectorAll("table").forEach((t) => {
-      t.style.width = "100%";
-      t.style.tableLayout = "auto";
-      t.style.fontSize = "11px";
-      t.style.borderCollapse = "collapse";
-    });
-    clone.querySelectorAll("th, td").forEach((el) => {
-      const h = el as HTMLElement;
-      h.style.color = "#1a1a1a";
-      h.style.backgroundColor = "";
-      h.style.padding = "3px 5px";
-      h.style.border = "1px solid #d1d5db";
-      h.style.fontSize = "11px";
-      h.style.lineHeight = "1.4";
-      h.style.textAlign = "center";
-      h.style.overflow = "visible";
-      h.style.whiteSpace = "nowrap";
-    });
-    clone.querySelectorAll("th").forEach((el) => {
-      (el as HTMLElement).style.backgroundColor = "#eff6ff";
-      (el as HTMLElement).style.fontWeight = "700";
-    });
-    clone.querySelectorAll("thead tr").forEach((row) => {
-      const ths = row.querySelectorAll("th");
-      if (ths.length >= 2) ths[1].style.minWidth = "110px";
-    });
-    clone.querySelectorAll("tbody tr").forEach((row) => {
-      const cells = row.querySelectorAll("td");
-      if (cells.length >= 2) {
-        cells[1].style.whiteSpace = "normal";
-        cells[1].style.textAlign = "right";
-        cells[1].style.minWidth = "110px";
-      }
-    });
-    clone.querySelectorAll("*").forEach((el) => {
-      const h = el as HTMLElement;
-      if (h.tagName === "svg" || h.closest("svg")) return;
-      if (!h.style.color) h.style.color = "#1a1a1a";
-    });
-    sourceContainer.appendChild(clone);
+    const tableMarkup = document.createElement("div");
+    tableMarkup.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;table-layout:auto;font-size:11px;color:#1a1a1a;">
+        <thead>
+          <tr>
+            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;">#</th>
+            <th style="padding:6px 8px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:120px;text-align:right;">الطالب</th>
+            ${group.categories.map((cat) => `
+              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:58px;">${cat.name}</th>
+              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:52px;">الدرجة<br><span style="font-size:10px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
+            `).join("")}
+            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:88px;">الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${group.students.map((student, index) => {
+            const subtotal = calcManualSubtotal(student.manualScores, group.categories);
+            return `
+              <tr>
+                <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;">${index + 1}</td>
+                <td style="padding:5px 8px;border:1px solid #e2e8f0;text-align:right;white-space:normal;min-width:120px;">${student.full_name}</td>
+                ${group.categories.map((cat) => {
+                  const icons = (student.dailyIcons[cat.id] || []).slice(0, getMaxDisplayIcons(cat.name));
+                  const iconsHTML = icons.length
+                    ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:12px;">${icons.map(getPrintIconHTML).join("")}</div>`
+                    : "";
+
+                  return `
+                    <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;vertical-align:middle;">${iconsHTML}</td>
+                    <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;">${student.manualScores[cat.id] ?? 0}</td>
+                  `;
+                }).join("")}
+                <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;font-weight:700;">${subtotal.score} / ${subtotal.max}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+    sourceContainer.appendChild(tableMarkup);
     const waitForAssets = async () => {
       if (typeof document !== "undefined" && "fonts" in document) {
         try {
@@ -251,6 +272,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
       await printNodeInIframe(sourceContainer, {
         orientation: "landscape",
+        extraStyles: ".classwork-print-area table{width:100%;table-layout:auto}.classwork-print-area th,.classwork-print-area td{page-break-inside:avoid} .classwork-print-area tr{break-inside:avoid-page;page-break-inside:avoid}",
         onCleanup: () => {
           document.body.classList.remove("print-landscape");
           sourceContainer.remove();
@@ -581,14 +603,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const matchesClass = !selectedClass || selectedClass === "all" || r.class_id === selectedClass;
     return matchesName && matchesClass;
   });
-
-  const groupedByClass = classes
-    .map((cls) => ({
-      ...cls,
-      students: filteredRows.filter((r) => r.class_id === cls.id),
-      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
-    }))
-    .filter((g) => g.students.length > 0);
 
   const calcManualSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
     let score = 0, max = 0;
