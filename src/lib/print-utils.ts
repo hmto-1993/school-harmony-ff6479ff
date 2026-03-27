@@ -151,8 +151,11 @@ export async function printNodeInIframe(
   },
 ): Promise<void> {
   const orientation = options?.orientation ?? getPrintOrientation();
+  const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
+  const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
   const contentWidth = orientation === "landscape" ? "285mm" : "198mm";
-  const contentMinHeight = orientation === "landscape" ? "204mm" : "291mm";
+  const contentMinHeight = orientation === "landscape" ? "198mm" : "285mm";
+  const pageName = orientation === "landscape" ? "print-landscape-sheet" : "print-portrait-sheet";
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   iframe.style.position = "fixed";
@@ -185,12 +188,15 @@ export async function printNodeInIframe(
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       @page { size: A4 ${orientation}; margin: 0mm 6mm 6mm 6mm; }
+      @page ${pageName} { size: A4 ${orientation}; margin: 0mm 6mm 6mm 6mm; }
       html, body {
         margin: 0;
         padding: 0;
         background: #fff;
         color: #1a1a1a;
         direction: rtl;
+        width: 100%;
+        min-height: 100%;
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
       }
@@ -204,14 +210,20 @@ export async function printNodeInIframe(
         print-color-adjust: exact;
       }
       .print-root {
-        width: 100%;
+        page: ${pageName};
+        width: ${contentWidth};
         max-width: ${contentWidth};
         min-height: ${contentMinHeight};
         margin: 0 auto;
         overflow: visible;
       }
       @media print {
+        html, body {
+          width: ${pageWidth};
+          min-height: ${pageHeight};
+        }
         .print-root {
+          width: ${contentWidth};
           max-width: ${contentWidth};
           min-height: ${contentMinHeight};
         }

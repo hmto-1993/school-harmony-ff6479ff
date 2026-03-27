@@ -133,7 +133,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const sourceContainer = document.createElement("section");
     sourceContainer.className = "classwork-print-area";
     sourceContainer.setAttribute("dir", "rtl");
-    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;margin:0 auto;padding:0 2mm;box-sizing:border-box;overflow:visible;";
+    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;margin:0 auto;padding:0 2mm;box-sizing:border-box;overflow:visible;width:100%;max-width:285mm;";
 
     try {
       let headerConfig: any = null;
@@ -199,16 +199,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const tableMarkup = document.createElement("div");
     tableMarkup.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;table-layout:auto;font-size:11px;color:#1a1a1a;">
+      <table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;color:#1a1a1a;">
         <thead>
           <tr>
             <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;">#</th>
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:120px;text-align:right;">الطالب</th>
+            <th style="padding:6px 8px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:24%;text-align:right;">الطالب</th>
             ${group.categories.map((cat) => `
-              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:58px;">${cat.name}</th>
-              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:52px;">الدرجة<br><span style="font-size:10px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
+              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:8%;word-break:break-word;">${cat.name}</th>
+              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:7%;">الدرجة<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
             `).join("")}
-            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;min-width:88px;">الإجمالي</th>
+            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:10%;">الإجمالي</th>
           </tr>
         </thead>
         <tbody>
@@ -217,11 +217,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             return `
               <tr>
                 <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;">${index + 1}</td>
-                <td style="padding:5px 8px;border:1px solid #e2e8f0;text-align:right;white-space:normal;min-width:120px;">${student.full_name}</td>
+                <td style="padding:5px 8px;border:1px solid #e2e8f0;text-align:right;white-space:normal;word-break:break-word;">${student.full_name}</td>
                 ${group.categories.map((cat) => {
                   const icons = (student.dailyIcons[cat.id] || []).slice(0, getMaxDisplayIcons(cat.name));
                   const iconsHTML = icons.length
-                    ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:12px;">${icons.map(getPrintIconHTML).join("")}</div>`
+                    ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:12px;max-width:100%;">${icons.map(getPrintIconHTML).join("")}</div>`
                     : "";
 
                   return `
@@ -264,7 +264,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
       await printNodeInIframe(sourceContainer, {
         orientation: "landscape",
-        extraStyles: ".classwork-print-area table{width:100%;table-layout:auto}.classwork-print-area th,.classwork-print-area td{page-break-inside:avoid} .classwork-print-area tr{break-inside:avoid-page;page-break-inside:avoid}",
+        extraStyles: ".classwork-print-area{width:285mm;max-width:285mm}.classwork-print-area table{width:100%!important;table-layout:fixed!important}.classwork-print-area thead{display:table-header-group}.classwork-print-area th,.classwork-print-area td{page-break-inside:avoid;vertical-align:middle}.classwork-print-area tr{break-inside:avoid-page;page-break-inside:avoid}",
         onCleanup: () => {
           document.body.classList.remove("print-landscape");
           sourceContainer.remove();
