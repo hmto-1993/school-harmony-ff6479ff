@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
-import { printNodeInIframe } from "@/lib/print-utils";
+import { getPrintOrientation, printNodeInIframe, setPrintOrientation } from "@/lib/print-utils";
 import autoTable from "jspdf-autotable";
 
 import { format } from "date-fns";
@@ -126,6 +126,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const handlePrintTable = async (classId: string, className: string) => {
     const group = groupedByClass.find((entry) => entry.id === classId);
     if (!group) return;
+
+    const previousOrientation = getPrintOrientation();
+    setPrintOrientation("landscape");
 
     const sourceContainer = document.createElement("section");
     sourceContainer.className = "classwork-print-area";
@@ -265,6 +268,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         onCleanup: () => {
           document.body.classList.remove("print-landscape");
           sourceContainer.remove();
+          setPrintOrientation(previousOrientation);
         },
       });
 
@@ -272,6 +276,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     } catch (error) {
       sourceContainer.remove();
       document.body.classList.remove("print-landscape");
+      setPrintOrientation(previousOrientation);
       throw error;
     }
   };
