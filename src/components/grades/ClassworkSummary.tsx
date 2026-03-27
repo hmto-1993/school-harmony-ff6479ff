@@ -123,14 +123,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const groupedByClass = useMemo(() => classes
-    .map((cls) => ({
-      ...cls,
-      students: filteredRows.filter((r) => r.class_id === cls.id),
-      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
-    }))
-    .filter((g) => g.students.length > 0), [classes, filteredRows, allCategories]);
-
   const handlePrintTable = async (classId: string, className: string) => {
     const group = groupedByClass.find((entry) => entry.id === classId);
     if (!group) return;
@@ -603,6 +595,14 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const matchesClass = !selectedClass || selectedClass === "all" || r.class_id === selectedClass;
     return matchesName && matchesClass;
   });
+
+  const groupedByClass = useMemo(() => classes
+    .map((cls) => ({
+      ...cls,
+      students: filteredRows.filter((r) => r.class_id === cls.id),
+      categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
+    }))
+    .filter((g) => g.students.length > 0), [classes, filteredRows, allCategories]);
 
   const calcManualSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
     let score = 0, max = 0;
