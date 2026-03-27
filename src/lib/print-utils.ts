@@ -7,6 +7,7 @@
 type PrintCleanup = () => void;
 
 let activePrintCleanup: PrintCleanup | null = null;
+const DEFAULT_PRINT_SELECTOR = ".print-area, #absence-print-area";
 
 /** Get stored print orientation preference */
 export function getPrintOrientation(): "portrait" | "landscape" {
@@ -18,7 +19,13 @@ export function setPrintOrientation(orientation: "portrait" | "landscape") {
   localStorage.setItem("print-orientation", orientation);
 }
 
-export function safePrint(onCleanup?: PrintCleanup): void {
+export function safePrint(
+  targetOrCleanup?: string | PrintCleanup,
+  maybeCleanup?: PrintCleanup,
+): void {
+  const selector = typeof targetOrCleanup === "string" ? targetOrCleanup : DEFAULT_PRINT_SELECTOR;
+  const onCleanup = typeof targetOrCleanup === "function" ? targetOrCleanup : maybeCleanup;
+
   activePrintCleanup = onCleanup ?? null;
 
   // Remove any leftover container
@@ -33,7 +40,11 @@ export function safePrint(onCleanup?: PrintCleanup): void {
   }
 
   // Clone all print areas into a body-level container
-  const printAreas = document.querySelectorAll(".print-area, #absence-print-area");
+  const printAreas = document.querySelectorAll(selector);
+  if (printAreas.length === 0) {
+    activePrintCleanup = null;
+    return;
+  }
   const container = document.createElement("div");
   container.id = "print-container";
 
