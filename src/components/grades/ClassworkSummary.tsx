@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
-import { safePrint } from "@/lib/print-utils";
+import { getPrintOrientation, safePrint, setPrintOrientation } from "@/lib/print-utils";
 import autoTable from "jspdf-autotable";
 
 import { format } from "date-fns";
@@ -110,6 +110,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const handlePrintTable = async (classId: string, className: string) => {
     const tableEl = tableRefs.current.get(classId);
     if (!tableEl) return;
+
+    const previousOrientation = getPrintOrientation();
+    setPrintOrientation("landscape");
 
     const sourceContainer = document.createElement("section");
     sourceContainer.className = "print-area";
@@ -253,13 +256,22 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       );
     };
 
-    await waitForAssets();
+    try {
+      await waitForAssets();
 
-    safePrint(() => {
+      safePrint(() => {
+        sourceContainer.remove();
+        orientationStyle.remove();
+        document.body.classList.remove("print-landscape");
+        setPrintOrientation(previousOrientation);
+      });
+    } catch (error) {
       sourceContainer.remove();
       orientationStyle.remove();
       document.body.classList.remove("print-landscape");
-    });
+      setPrintOrientation(previousOrientation);
+      throw error;
+    }
   };
 
   const exportTableAsPDF = async (classId: string, className: string) => {
