@@ -117,7 +117,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const sourceContainer = document.createElement("section");
     sourceContainer.className = "classwork-print-area";
     sourceContainer.setAttribute("dir", "rtl");
-    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;width:285mm;min-width:285mm;max-width:285mm;min-height:198mm;margin:0 auto;padding:0 2mm;box-sizing:border-box;overflow:hidden;";
+    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;margin:0 auto;padding:0 2mm;box-sizing:border-box;overflow:visible;";
 
     try {
       let headerConfig: any = null;
@@ -184,10 +184,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const clone = tableEl.cloneNode(true) as HTMLElement;
     clone.style.overflow = "visible";
     clone.style.width = "100%";
-    clone.style.maxWidth = "100%";
     clone.querySelectorAll("table").forEach((t) => {
       t.style.width = "100%";
-      t.style.maxWidth = "100%";
       t.style.tableLayout = "auto";
       t.style.fontSize = "11px";
       t.style.borderCollapse = "collapse";
