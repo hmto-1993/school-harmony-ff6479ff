@@ -146,6 +146,7 @@ export async function printNodeInIframe(
   node: HTMLElement,
   options?: {
     orientation?: PrintOrientation;
+    extraStyles?: string;
     onCleanup?: PrintCleanup;
   },
 ): Promise<void> {
@@ -225,6 +226,7 @@ export async function printNodeInIframe(
       svg {
         overflow: visible;
       }
+      ${options?.extraStyles ?? ""}
     </style>
   </head>
   <body></body>
