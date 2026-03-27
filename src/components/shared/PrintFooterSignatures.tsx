@@ -43,7 +43,7 @@ export default function PrintFooterSignatures({ reportType }: Props) {
   if (!signatures?.enabled || !signatures.signatures.length) return null;
 
   return (
-    <div className="hidden print:block" style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1" }}>
+    <div className="print-only" style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", direction: "rtl", paddingInline: "32px" }}>
         {signatures.signatures.map((sig, i) => (
           <div key={i} style={{ textAlign: "center", minWidth: "120px" }}>

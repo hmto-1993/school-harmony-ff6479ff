@@ -624,7 +624,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         </div>
       </div>
 
-      <div className="hidden print:block">
+      <div className="print-only">
         <ReportPrintHeader reportType="grades" />
       </div>
 

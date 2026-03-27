@@ -44,7 +44,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
 
   return (
     <div
-      className="hidden print:block mb-1"
+      className="print-only mb-1"
       dir="rtl"
       style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}
     >
