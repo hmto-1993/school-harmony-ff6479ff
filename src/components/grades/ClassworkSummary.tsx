@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
-import { getPrintOrientation, safePrint, setPrintOrientation } from "@/lib/print-utils";
+import { getPrintOrientation, printNodeInIframe, setPrintOrientation } from "@/lib/print-utils";
 import autoTable from "jspdf-autotable";
 
 import { format } from "date-fns";
@@ -114,11 +114,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const previousOrientation = getPrintOrientation();
     setPrintOrientation("landscape");
 
-    document.getElementById("classwork-print-source")?.remove();
-
     const sourceContainer = document.createElement("section");
     sourceContainer.className = "classwork-print-area";
-    sourceContainer.id = "classwork-print-source";
     sourceContainer.setAttribute("dir", "rtl");
     sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;";
 
@@ -227,15 +224,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       if (!h.style.color) h.style.color = "#1a1a1a";
     });
     sourceContainer.appendChild(clone);
-    document.body.appendChild(sourceContainer);
-
-    const orientationStyle = document.createElement("style");
-    orientationStyle.id = "classwork-print-orientation";
-    orientationStyle.media = "print";
-    orientationStyle.textContent = `body.print-landscape #print-container { page: landscape-page; }`;
-    document.head.appendChild(orientationStyle);
-    document.body.classList.add("print-landscape");
-
     const waitForAssets = async () => {
       if (typeof document !== "undefined" && "fonts" in document) {
         try {
@@ -243,7 +231,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         } catch {}
       }
 
-      const images = Array.from(sourceContainer.querySelectorAll("img"));
+        const images = Array.from(sourceContainer.querySelectorAll("img"));
       if (images.length === 0) return;
 
       await Promise.all(
@@ -261,15 +249,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     try {
       await waitForAssets();
 
-      safePrint("#classwork-print-source", () => {
-        sourceContainer.remove();
-        orientationStyle.remove();
-        document.body.classList.remove("print-landscape");
-        setPrintOrientation(previousOrientation);
+      await printNodeInIframe(sourceContainer, {
+        orientation: "landscape",
+        onCleanup: () => {
+          document.body.classList.remove("print-landscape");
+          sourceContainer.remove();
+          setPrintOrientation(previousOrientation);
+        },
       });
+
+      sourceContainer.remove();
     } catch (error) {
       sourceContainer.remove();
-      orientationStyle.remove();
       document.body.classList.remove("print-landscape");
       setPrintOrientation(previousOrientation);
       throw error;

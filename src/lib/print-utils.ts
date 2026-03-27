@@ -5,9 +5,34 @@
  */
 
 type PrintCleanup = () => void;
+type PrintOrientation = "portrait" | "landscape";
 
 let activePrintCleanup: PrintCleanup | null = null;
 const DEFAULT_PRINT_SELECTOR = ".print-area, #absence-print-area";
+
+async function waitForDocumentAssets(doc: Document): Promise<void> {
+  if ("fonts" in doc) {
+    try {
+      await (doc as Document & { fonts: FontFaceSet }).fonts.ready;
+    } catch {
+      // Ignore font readiness failures
+    }
+  }
+
+  const images = Array.from(doc.images);
+  if (images.length === 0) return;
+
+  await Promise.all(
+    images.map((img) =>
+      img.complete
+        ? Promise.resolve()
+        : new Promise<void>((resolve) => {
+            img.addEventListener("load", () => resolve(), { once: true });
+            img.addEventListener("error", () => resolve(), { once: true });
+          })
+    )
+  );
+}
 
 /** Get stored print orientation preference */
 export function getPrintOrientation(): "portrait" | "landscape" {
@@ -114,5 +139,115 @@ export function safePrint(
     setTimeout(() => {
       window.print();
     }, 150);
+  });
+}
+
+export async function printNodeInIframe(
+  node: HTMLElement,
+  options?: {
+    orientation?: PrintOrientation;
+    onCleanup?: PrintCleanup;
+  },
+): Promise<void> {
+  const orientation = options?.orientation ?? getPrintOrientation();
+  const iframe = document.createElement("iframe");
+  iframe.setAttribute("aria-hidden", "true");
+  iframe.style.position = "fixed";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.opacity = "0";
+  iframe.style.pointerEvents = "none";
+  iframe.style.border = "0";
+  iframe.style.bottom = "0";
+  iframe.style.right = "0";
+
+  document.body.appendChild(iframe);
+
+  const printWindow = iframe.contentWindow;
+  const printDocument = iframe.contentDocument;
+  if (!printWindow || !printDocument) {
+    iframe.remove();
+    options?.onCleanup?.();
+    return;
+  }
+
+  printDocument.open();
+  printDocument.write(`<!doctype html>
+<html dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>Print</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      @page { size: A4 ${orientation}; margin: 0mm 6mm 6mm 6mm; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #1a1a1a;
+        direction: rtl;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      body {
+        font-family: 'IBM Plex Sans Arabic', sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      img {
+        max-width: 100%;
+      }
+      svg {
+        overflow: visible;
+      }
+    </style>
+  </head>
+  <body></body>
+</html>`);
+  printDocument.close();
+
+  const clone = node.cloneNode(true) as HTMLElement;
+  printDocument.body.appendChild(clone);
+
+  await waitForDocumentAssets(printDocument);
+
+  await new Promise<void>((resolve) => {
+    let done = false;
+
+    const cleanup = () => {
+      if (done) return;
+      done = true;
+      printWindow.removeEventListener("afterprint", handleAfterPrint);
+      clearTimeout(fallbackTimeout);
+      iframe.remove();
+      options?.onCleanup?.();
+      resolve();
+    };
+
+    const handleAfterPrint = () => {
+      cleanup();
+    };
+
+    printWindow.addEventListener("afterprint", handleAfterPrint);
+
+    const fallbackTimeout = setTimeout(() => {
+      cleanup();
+    }, 60_000);
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 150);
+    });
   });
 }
