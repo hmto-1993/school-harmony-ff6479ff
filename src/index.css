@@ -238,8 +238,17 @@
   color: white !important;
   box-shadow: 0 2px 10px hsl(var(--report-tab-behavior-active) / 0.5);
 }
+/* Print-only elements: hidden on screen, visible only when printing */
+.print-only {
+  display: none !important;
+  visibility: hidden !important;
+}
 
 @media print {
+  .print-only {
+    display: block !important;
+    visibility: visible !important;
+  }
   :root, .dark {
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;
