@@ -315,6 +315,55 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
+  const handlePrintTable = async () => {
+    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+    const dateStr = format(selectedDate, "yyyy/MM/dd");
+
+    const getLevelIcon = (level: GradeLevel) => {
+      if (level === "excellent") return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#059669;"></span>';
+      if (level === "average") return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#d97706;"></span>';
+      if (level === "zero") return '<span style="display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1;">×</span>';
+      return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;border:1px dashed #ccc;"></span>';
+    };
+    const starIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1;">★</span>';
+
+    // Build header
+    const headerCells = [
+      '<th>#</th>',
+      '<th style="text-align:right;">الطالب</th>',
+      ...visibleCategories.map(c => `<th>${c.name}</th>`),
+      ...(!isSingleCategory ? ['<th>المجموع</th>'] : []),
+    ].join('');
+
+    // Build rows
+    const bodyRows = studentGrades.map((sg, i) => {
+      const cells = [
+        `<td>${i + 1}</td>`,
+        `<td style="text-align:right;white-space:nowrap;">${sg.full_name}</td>`,
+        ...visibleCategories.map(cat => {
+          const slotsArr = sg.slots[cat.id] || [null];
+          const isStarred = sg.starred[cat.id] || false;
+          const icons = slotsArr.map(l => getLevelIcon(l)).join(' ');
+          const star = isStarred ? ` ${starIcon}` : '';
+          return `<td><div class="icons-cell">${icons}${star}</div></td>`;
+        }),
+        ...(!isSingleCategory ? [`<td style="font-weight:700;">${calcTotal(sg.grades)}</td>`] : []),
+      ].join('');
+      return `<tr>${cells}</tr>`;
+    }).join('');
+
+    const tableHTML = `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+
+    await printGradesTable({
+      orientation: "portrait",
+      title: `${className} — إدخال الدرجات اليومية`,
+      subtitle: dateStr,
+      reportType: "grades",
+      tableHTML,
+    });
+  };
+
+
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
       <CardHeader className="pb-3 no-print">
