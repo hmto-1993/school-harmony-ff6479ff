@@ -127,8 +127,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
   const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
   const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
-  const contentWidth = orientation === "landscape" ? "283mm" : "196mm";
-  const sideMargin = orientation === "landscape" ? "7mm" : "7mm";
+  const contentWidth = orientation === "landscape" ? "287mm" : "200mm";
+  const sidePad = orientation === "landscape" ? "5mm" : "5mm";
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
@@ -155,7 +155,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @page { size: A4 ${orientation}; margin: 4mm ${sideMargin} 6mm ${sideMargin}; }
+    @page { size: A4 ${orientation}; margin: 0 !important; }
     html, body {
       margin: 0; padding: 0; background: #fff; color: #1a1a1a;
       direction: rtl; width: 100%; min-height: 100%;
@@ -172,7 +172,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
       width: ${contentWidth};
       max-width: ${contentWidth};
       margin: 0 auto;
-      padding: 2mm 0;
+      padding: 3mm ${sidePad};
       overflow: hidden;
     }
     @media print {
