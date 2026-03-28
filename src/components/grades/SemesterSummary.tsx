@@ -3,11 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, TrendingUp, TrendingDown, Minus, Download } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Minus, Download, Printer } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup, ExportExtraSheet } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+import { printGradesTable } from "@/lib/grades-print";
+import { format } from "date-fns";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; max_score: number; class_id: string; category_group: string; }
@@ -143,6 +146,61 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     return "same";
   };
 
+  const handlePrintTable = async (classId: string, className: string) => {
+    const group = grouped.find(g => g.id === classId);
+    if (!group) return;
+
+    const tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:30px;">#</th>
+            <th rowspan="2" style="width:20%;">الطالب</th>
+            <th colspan="2" class="subtotal-header">الفترة الأولى</th>
+            <th colspan="2" class="subtotal-header">الفترة الثانية</th>
+            <th rowspan="2">الإجمالي</th>
+            <th rowspan="2">النسبة</th>
+            <th rowspan="2">التقدير</th>
+          </tr>
+          <tr>
+            <th>المهام والمشاركة</th>
+            <th>الاختبارات</th>
+            <th>المهام والمشاركة</th>
+            <th>الاختبارات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${group.students.map((sg, i) => {
+            const pct = getPercentage(sg.grandTotal, sg.grandMax);
+            const grade = getGradeLabel(pct);
+            const gradeClass = pct >= 90 ? "grade-excellent" : pct >= 80 ? "grade-very-good" : pct >= 70 ? "grade-good" : pct >= 60 ? "grade-acceptable" : "grade-weak";
+            return `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${sg.full_name}</td>
+                <td>${sg.classworkTotal1} / ${sg.classworkMax}</td>
+                <td>${sg.examTotal1} / ${sg.examMax}</td>
+                <td>${sg.classworkTotal2} / ${sg.classworkMax}</td>
+                <td>${sg.examTotal2} / ${sg.examMax}</td>
+                <td class="subtotal-cell">${sg.grandTotal} / ${sg.grandMax}</td>
+                <td>${pct}%</td>
+                <td class="${gradeClass}">${grade.label}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+
+    await printGradesTable({
+      orientation: "landscape",
+      title: `ملخص الفصل الدراسي — ${className}`,
+      subtitle: format(new Date(), "yyyy/MM/dd"),
+      reportType: "grades",
+      tableHTML,
+    });
+  };
+
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل ملخص الفصل...</p>;
 
   return (
@@ -237,10 +295,15 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       ) : grouped.map(group => (
         <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
           <CardHeader className="pb-3 no-print">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">{group.name}</CardTitle>
-              <Badge variant="secondary">{group.students.length} طالب</Badge>
-              <Badge variant="outline" className="text-xs">ملخص الفصل الدراسي</Badge>
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-lg">{group.name}</CardTitle>
+                <Badge variant="secondary">{group.students.length} طالب</Badge>
+                <Badge variant="outline" className="text-xs">ملخص الفصل الدراسي</Badge>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => handlePrintTable(group.id, group.name)}>
+                <Printer className="h-4 w-4" />
+              </Button>
             </div>
           </CardHeader>
           <CardContent>
