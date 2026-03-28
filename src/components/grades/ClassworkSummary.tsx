@@ -12,6 +12,7 @@ import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, Ci
 import { cn } from "@/lib/utils";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import { getPrintOrientation, printNodeInIframe, setPrintOrientation } from "@/lib/print-utils";
+import { printGradesTable, getPrintIconSpan } from "@/lib/grades-print";
 import autoTable from "jspdf-autotable";
 
 import { format } from "date-fns";
@@ -127,88 +128,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const group = groupedByClass.find((entry) => entry.id === classId);
     if (!group) return;
 
-    const previousOrientation = getPrintOrientation();
-    setPrintOrientation("landscape");
-
-    const sourceContainer = document.createElement("section");
-    sourceContainer.className = "classwork-print-area";
-    sourceContainer.setAttribute("dir", "rtl");
-    sourceContainer.style.cssText = "direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;color:#1a1a1a;background:#fff;margin:0 auto;padding:0 2mm;box-sizing:border-box;overflow:visible;width:100%;max-width:285mm;";
-
-    try {
-      let headerConfig: any = null;
-      const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single();
-      if (data?.value) {
-        try { headerConfig = JSON.parse(data.value); } catch {}
-      }
-      if (!headerConfig) {
-        const { data: def } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
-        if (def?.value) {
-          try { headerConfig = JSON.parse(def.value); } catch {}
-        }
-      }
-      if (headerConfig) {
-        const headerDiv = document.createElement("div");
-        headerDiv.style.cssText = "margin-bottom:10px;padding-bottom:6px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;";
-
-        const rightDiv = document.createElement("div");
-        rightDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || "#1e293b"};`;
-        (headerConfig.rightSection?.lines || []).forEach((line: string) => {
-          const p = document.createElement("p");
-          p.style.cssText = "margin:0;font-weight:600;";
-          p.textContent = line;
-          rightDiv.appendChild(p);
-        });
-
-        const centerDiv = document.createElement("div");
-        centerDiv.style.cssText = "display:flex;align-items:center;gap:10px;flex-shrink:0;";
-        (headerConfig.centerSection?.images || []).forEach((img: string, i: number) => {
-          if (!img) return;
-          const imgEl = document.createElement("img");
-          imgEl.src = img;
-          const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-          imgEl.style.cssText = `width:${size}px;height:${size}px;object-fit:contain;`;
-          centerDiv.appendChild(imgEl);
-        });
-
-        const leftDiv = document.createElement("div");
-        leftDiv.style.cssText = `max-width:40%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || "#1e293b"};`;
-        (headerConfig.leftSection?.lines || []).forEach((line: string) => {
-          const p = document.createElement("p");
-          p.style.cssText = "margin:0;font-weight:600;";
-          p.textContent = line;
-          leftDiv.appendChild(p);
-        });
-
-        headerDiv.appendChild(rightDiv);
-        headerDiv.appendChild(centerDiv);
-        headerDiv.appendChild(leftDiv);
-        sourceContainer.appendChild(headerDiv);
-      }
-    } catch {}
-
-    const title = document.createElement("h2");
-    title.style.cssText = "text-align:center;margin-bottom:4px;font-size:14px;font-weight:bold;";
-    title.textContent = `المهام والمشاركة — ${className}`;
-
-    const periodLabel = document.createElement("p");
-    periodLabel.style.cssText = "text-align:center;margin-bottom:8px;font-size:11px;color:#666;";
-    periodLabel.textContent = `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`;
-    sourceContainer.appendChild(title);
-    sourceContainer.appendChild(periodLabel);
-
-    const tableMarkup = document.createElement("div");
-    tableMarkup.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;table-layout:fixed;font-size:10px;color:#1a1a1a;">
+    const tableHTML = `
+      <table>
         <thead>
           <tr>
-            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;">#</th>
-            <th style="padding:6px 8px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:24%;text-align:right;">الطالب</th>
+            <th style="width:30px;">#</th>
+            <th style="width:24%;">الطالب</th>
             ${group.categories.map((cat) => `
-              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:8%;word-break:break-word;">${cat.name}</th>
-              <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:7%;">الدرجة<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
+              <th style="width:auto;border-right:2px solid #93c5fd;">${cat.name}</th>
+              <th style="width:auto;">الدرجة<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
             `).join("")}
-            <th style="padding:6px 4px;border:1px solid #cbd5e1;background:#eff6ff;font-weight:700;width:10%;">الإجمالي</th>
+            <th style="width:auto;">الإجمالي</th>
           </tr>
         </thead>
         <tbody>
@@ -216,69 +146,33 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             const subtotal = calcManualSubtotal(student.manualScores, group.categories);
             return `
               <tr>
-                <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;">${index + 1}</td>
-                <td style="padding:5px 8px;border:1px solid #e2e8f0;text-align:right;white-space:normal;word-break:break-word;">${student.full_name}</td>
+                <td>${index + 1}</td>
+                <td>${student.full_name}</td>
                 ${group.categories.map((cat) => {
                   const icons = (student.dailyIcons[cat.id] || []).slice(0, getMaxDisplayIcons(cat.name));
                   const iconsHTML = icons.length
-                    ? `<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:12px;max-width:100%;">${icons.map(getPrintIconHTML).join("")}</div>`
+                    ? `<div class="icons-cell">${icons.map(getPrintIconSpan).join("")}</div>`
                     : "";
-
                   return `
-                    <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;vertical-align:middle;">${iconsHTML}</td>
-                    <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;">${student.manualScores[cat.id] ?? 0}</td>
+                    <td style="border-right:2px solid #93c5fd;">${iconsHTML}</td>
+                    <td>${student.manualScores[cat.id] ?? 0}</td>
                   `;
                 }).join("")}
-                <td style="padding:5px 4px;border:1px solid #e2e8f0;text-align:center;font-weight:700;">${subtotal.score} / ${subtotal.max}</td>
+                <td class="subtotal-cell">${subtotal.score} / ${subtotal.max}</td>
               </tr>
             `;
           }).join("")}
         </tbody>
       </table>
     `;
-    sourceContainer.appendChild(tableMarkup);
-    const waitForAssets = async () => {
-      if (typeof document !== "undefined" && "fonts" in document) {
-        try {
-          await (document as Document & { fonts: FontFaceSet }).fonts.ready;
-        } catch {}
-      }
 
-        const images = Array.from(sourceContainer.querySelectorAll("img"));
-      if (images.length === 0) return;
-
-      await Promise.all(
-        images.map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise<void>((resolve) => {
-                img.addEventListener("load", () => resolve(), { once: true });
-                img.addEventListener("error", () => resolve(), { once: true });
-              })
-        )
-      );
-    };
-
-    try {
-      await waitForAssets();
-
-      await printNodeInIframe(sourceContainer, {
-        orientation: "landscape",
-        extraStyles: ".classwork-print-area{width:285mm;max-width:285mm}.classwork-print-area table{width:100%!important;table-layout:fixed!important}.classwork-print-area thead{display:table-header-group}.classwork-print-area th,.classwork-print-area td{page-break-inside:avoid;vertical-align:middle}.classwork-print-area tr{break-inside:avoid-page;page-break-inside:avoid}",
-        onCleanup: () => {
-          document.body.classList.remove("print-landscape");
-          sourceContainer.remove();
-          setPrintOrientation(previousOrientation);
-        },
-      });
-
-      sourceContainer.remove();
-    } catch (error) {
-      sourceContainer.remove();
-      document.body.classList.remove("print-landscape");
-      setPrintOrientation(previousOrientation);
-      throw error;
-    }
+    await printGradesTable({
+      orientation: "landscape",
+      title: `المهام والمشاركة — ${className}`,
+      subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
+      reportType: "grades",
+      tableHTML,
+    });
   };
 
   const exportTableAsPDF = async (classId: string, className: string) => {
