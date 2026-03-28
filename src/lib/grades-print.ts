@@ -181,7 +181,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
     }
     table {
       width: 100%; border-collapse: collapse; table-layout: fixed;
-      line-height: 1.4;
+      font-size: 10px; line-height: 1.4;
     }
     th, td {
       padding: 4px 3px; border: 1px solid #cbd5e1;
