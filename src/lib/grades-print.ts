@@ -155,7 +155,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @page { size: A4 ${orientation}; margin: 0 !important; }
+    @page { size: A4 ${orientation}; margin: 5mm 0 0 0 !important; }
+    @page :first { margin-top: 0 !important; }
     html, body {
       margin: 0; padding: 0; background: #fff; color: #1a1a1a;
       direction: rtl; width: 100%; min-height: 100%;
