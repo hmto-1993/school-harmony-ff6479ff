@@ -36,7 +36,7 @@ export default function DashboardLayout() {
       </div>
 
       {/* Main */}
-      <main className="flex-1 overflow-auto min-w-0" dir="rtl">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0" dir="rtl">
         {isMobile && (
           <button
             onClick={() => setMobileOpen(true)}
@@ -47,7 +47,7 @@ export default function DashboardLayout() {
             <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-contain mr-auto" />
           </button>
         )}
-        <div className="p-4 md:p-8 max-w-7xl mx-auto">
+        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden">
           <AnimatePresence mode="wait">
             <PageTransition>
               <Outlet />
