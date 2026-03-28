@@ -1,8 +1,11 @@
 /**
  * Unified WYSIWYG print engine for grade pages.
- * Uses isolated iframe printing to guarantee exact on-screen appearance.
+ * Uses an isolated iframe — completely independent from index.css @media print.
+ * Covers: Daily Entry, Classwork, Final Evaluation, Semester Summary.
  */
 import { supabase } from "@/integrations/supabase/client";
+
+/* ──────────────────────────── Types ──────────────────────────── */
 
 interface PrintOptions {
   orientation?: "portrait" | "landscape";
@@ -12,8 +15,9 @@ interface PrintOptions {
   tableHTML: string;
 }
 
-/** Fetch print header config from settings */
-async function fetchHeaderConfig(reportType: string = "grades"): Promise<any | null> {
+/* ──────────────────────────── Data fetchers ──────────────────── */
+
+async function fetchHeaderConfig(reportType = "grades"): Promise<any | null> {
   try {
     const { data } = await supabase
       .from("site_settings")
@@ -21,7 +25,7 @@ async function fetchHeaderConfig(reportType: string = "grades"): Promise<any | n
       .eq("id", `print_header_config_${reportType}`)
       .single();
     if (data?.value) {
-      try { return JSON.parse(data.value); } catch {}
+      try { return JSON.parse(data.value); } catch { /* skip */ }
     }
     const { data: def } = await supabase
       .from("site_settings")
@@ -29,14 +33,13 @@ async function fetchHeaderConfig(reportType: string = "grades"): Promise<any | n
       .eq("id", "print_header_config")
       .single();
     if (def?.value) {
-      try { return JSON.parse(def.value); } catch {}
+      try { return JSON.parse(def.value); } catch { /* skip */ }
     }
-  } catch {}
+  } catch { /* skip */ }
   return null;
 }
 
-/** Fetch footer signatures config */
-async function fetchFooterConfig(reportType: string = "grades"): Promise<any | null> {
+async function fetchFooterConfig(reportType = "grades"): Promise<any | null> {
   try {
     const { data } = await supabase
       .from("site_settings")
@@ -45,7 +48,7 @@ async function fetchFooterConfig(reportType: string = "grades"): Promise<any | n
       .single();
     let config: any = null;
     if (data?.value) {
-      try { config = JSON.parse(data.value); } catch {}
+      try { config = JSON.parse(data.value); } catch { /* skip */ }
     }
     if (!config?.footerSignatures) {
       const { data: def } = await supabase
@@ -54,15 +57,15 @@ async function fetchFooterConfig(reportType: string = "grades"): Promise<any | n
         .eq("id", "print_header_config")
         .single();
       if (def?.value) {
-        try { config = JSON.parse(def.value); } catch {}
+        try { config = JSON.parse(def.value); } catch { /* skip */ }
       }
     }
-    if (config?.footerSignatures?.enabled) {
-      return config.footerSignatures;
-    }
-  } catch {}
+    if (config?.footerSignatures?.enabled) return config.footerSignatures;
+  } catch { /* skip */ }
   return null;
 }
+
+/* ──────────────────────────── HTML builders ──────────────────── */
 
 function buildHeaderHTML(config: any): string {
   if (!config) return "";
@@ -113,7 +116,95 @@ function buildFooterHTML(signatures: any): string {
   `;
 }
 
-/** Main WYSIWYG print function for grade pages */
+/* ──────────────────────────── CSS for iframe ─────────────────── */
+
+function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: string, pageHeight: string): string {
+  return `
+    /* Page: first page flush, subsequent pages get a top margin */
+    @page { size: A4 ${orientation}; margin: 5mm 0 0 0 !important; }
+    @page :first { margin-top: 0 !important; }
+
+    /* Reset everything */
+    html, body {
+      margin: 0; padding: 0; background: #fff; color: #1a1a1a;
+      direction: rtl; width: 100%; min-height: 100%;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      font-family: 'IBM Plex Sans Arabic', sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Print root container */
+    .print-root {
+      width: ${contentWidth};
+      max-width: ${contentWidth};
+      margin: 0 auto;
+      padding: 3mm 5mm;
+      overflow: hidden;
+    }
+    @media print {
+      html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
+      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
+    }
+
+    /* Table styles */
+    table {
+      width: 100%; border-collapse: collapse; table-layout: fixed;
+      font-size: 10px; line-height: 1.4;
+    }
+    th, td {
+      padding: 4px 3px; border: 1px solid #cbd5e1;
+      text-align: center; vertical-align: middle;
+      overflow: hidden; word-wrap: break-word;
+    }
+    th {
+      background: #eff6ff !important; font-weight: 700; color: #1e40af;
+    }
+    thead { display: table-header-group; }
+    tr { break-inside: avoid-page; page-break-inside: avoid; }
+
+    /* Student name column (2nd col) */
+    td:nth-child(2) { text-align: right; white-space: normal; word-break: break-word; }
+    th:nth-child(2) { text-align: right; }
+
+    /* Alternating row colors */
+    tbody tr:nth-child(even) { background: #f8fafc !important; }
+    tbody tr:nth-child(odd) { background: #fff !important; }
+
+    img { max-width: 100%; }
+
+    /* Title section */
+    .title-section { text-align: center; margin-bottom: 6px; }
+    .title-section h2 { font-size: 14px; font-weight: bold; margin: 0 0 2px; }
+    .title-section p { font-size: 11px; color: #666; margin: 0; }
+
+    /* Subtotal cells */
+    .subtotal-cell { background: #dbeafe !important; font-weight: 700; }
+    .subtotal-header { background: #e0f2fe !important; }
+
+    /* Grade icons */
+    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1; }
+    .icon-excellent { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669; }
+    .icon-average { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706; }
+    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1; }
+    .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:1px;min-height:10px; }
+
+    /* Grade level colors */
+    .grade-excellent { color: #059669; font-weight: 700; }
+    .grade-very-good { color: #2563eb; font-weight: 700; }
+    .grade-good { color: #0284c7; font-weight: 700; }
+    .grade-acceptable { color: #d97706; font-weight: 700; }
+    .grade-weak { color: #e11d48; font-weight: 700; }
+  `;
+}
+
+/* ──────────────────────────── Main print function ────────────── */
+
 export async function printGradesTable(options: PrintOptions): Promise<void> {
   const { orientation = "landscape", title, subtitle, reportType = "grades", tableHTML } = options;
 
@@ -125,11 +216,13 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   const headerHTML = buildHeaderHTML(headerConfig);
   const footerHTML = buildFooterHTML(footerConfig);
 
+  const contentWidth = orientation === "landscape" ? "287mm" : "200mm";
   const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
   const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
-  const contentWidth = orientation === "landscape" ? "287mm" : "200mm";
-  const sidePad = orientation === "landscape" ? "5mm" : "5mm";
 
+  const css = buildIframeCSS(orientation, contentWidth, pageWidth, pageHeight);
+
+  // Create hidden iframe
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
   Object.assign(iframe.style, {
@@ -154,67 +247,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    @page { size: A4 ${orientation}; margin: 5mm 0 0 0 !important; }
-    @page :first { margin-top: 0 !important; }
-    html, body {
-      margin: 0; padding: 0; background: #fff; color: #1a1a1a;
-      direction: rtl; width: 100%; min-height: 100%;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      font-family: 'IBM Plex Sans Arabic', sans-serif;
-    }
-    * {
-      box-sizing: border-box;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-    .print-root {
-      width: ${contentWidth};
-      max-width: ${contentWidth};
-      margin: 0 auto;
-      padding: 3mm ${sidePad};
-      overflow: hidden;
-    }
-    @media print {
-      html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
-      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
-    }
-    table {
-      width: 100%; border-collapse: collapse; table-layout: fixed;
-      font-size: 10px; line-height: 1.4;
-    }
-    th, td {
-      padding: 4px 3px; border: 1px solid #cbd5e1;
-      text-align: center; vertical-align: middle;
-      overflow: hidden; word-wrap: break-word;
-    }
-    th {
-      background: #eff6ff !important; font-weight: 700; color: #1e40af;
-    }
-    thead { display: table-header-group; }
-    tr { break-inside: avoid-page; page-break-inside: avoid; }
-    td:nth-child(2) { text-align: right; white-space: normal; word-break: break-word; }
-    th:nth-child(2) { text-align: right; }
-    tbody tr:nth-child(even) { background: #f8fafc !important; }
-    tbody tr:nth-child(odd) { background: #fff !important; }
-    img { max-width: 100%; }
-    .title-section { text-align: center; margin-bottom: 6px; }
-    .title-section h2 { font-size: 14px; font-weight: bold; margin: 0 0 2px; }
-    .title-section p { font-size: 11px; color: #666; margin: 0; }
-    .subtotal-cell { background: #dbeafe !important; font-weight: 700; }
-    .subtotal-header { background: #e0f2fe !important; }
-    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1; }
-    .icon-excellent { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669; }
-    .icon-average { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706; }
-    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1; }
-    .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:1px;min-height:10px; }
-    .grade-excellent { color: #059669; font-weight: 700; }
-    .grade-very-good { color: #2563eb; font-weight: 700; }
-    .grade-good { color: #0284c7; font-weight: 700; }
-    .grade-acceptable { color: #d97706; font-weight: 700; }
-    .grade-weak { color: #e11d48; font-weight: 700; }
-  </style>
+  <style>${css}</style>
 </head>
 <body>
   <div class="print-root">
@@ -230,13 +263,14 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 </html>`);
   printDocument.close();
 
-  // Wait for fonts and images
+  // Wait for fonts
   try {
     if ("fonts" in printDocument) {
       await (printDocument as any).fonts.ready;
     }
-  } catch {}
+  } catch { /* skip */ }
 
+  // Wait for images
   const images = Array.from(printDocument.images);
   if (images.length > 0) {
     await Promise.all(
@@ -251,7 +285,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
     );
   }
 
-  // Auto-scale: measure table vs container, shrink font if needed
+  // Auto-scale: shrink font if table overflows container
   try {
     const table = printDocument.querySelector("table");
     const root = printDocument.querySelector(".print-root") as HTMLElement;
@@ -262,7 +296,6 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
         const scale = Math.max(0.55, containerW / tableW);
         const baseFontSize = 10 * scale;
         table.style.fontSize = `${baseFontSize}px`;
-        // Re-measure after scaling
         const newTableW = table.scrollWidth;
         if (newTableW > containerW) {
           const scale2 = Math.max(0.5, containerW / newTableW);
@@ -270,9 +303,9 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
         }
       }
     }
-  } catch {}
+  } catch { /* skip */ }
 
-  // Print
+  // Print and cleanup
   await new Promise<void>((resolve) => {
     let done = false;
     const cleanup = () => {
@@ -295,7 +328,9 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   });
 }
 
-/** Helper: build icon HTML for classwork print */
+/* ──────────────────────────── Helpers ────────────────────────── */
+
+/** Build icon HTML for classwork/daily-entry print */
 export function getPrintIconSpan(icon: { level: string; isFullScore: boolean }): string {
   if (icon.isFullScore) return '<span class="icon-star">★</span>';
   if (icon.level === "excellent") return '<span class="icon-excellent"></span>';
