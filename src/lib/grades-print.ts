@@ -127,7 +127,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
   const pageWidth = orientation === "landscape" ? "297mm" : "210mm";
   const pageHeight = orientation === "landscape" ? "210mm" : "297mm";
-  const contentWidth = orientation === "landscape" ? "285mm" : "198mm";
+  const contentWidth = orientation === "landscape" ? "283mm" : "196mm";
+  const sideMargin = orientation === "landscape" ? "7mm" : "7mm";
 
   const iframe = document.createElement("iframe");
   iframe.setAttribute("aria-hidden", "true");
@@ -154,7 +155,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    @page { size: A4 ${orientation}; margin: 4mm 6mm 6mm 6mm; }
+    @page { size: A4 ${orientation}; margin: 4mm ${sideMargin} 6mm ${sideMargin}; }
     html, body {
       margin: 0; padding: 0; background: #fff; color: #1a1a1a;
       direction: rtl; width: 100%; min-height: 100%;
@@ -172,18 +173,20 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
       max-width: ${contentWidth};
       margin: 0 auto;
       padding: 2mm 0;
+      overflow: hidden;
     }
     @media print {
       html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
-      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; }
+      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
     }
     table {
-      width: 100%; border-collapse: collapse; table-layout: auto;
+      width: 100%; border-collapse: collapse; table-layout: fixed;
       font-size: 10px; line-height: 1.4;
     }
     th, td {
-      padding: 5px 4px; border: 1px solid #cbd5e1;
+      padding: 4px 3px; border: 1px solid #cbd5e1;
       text-align: center; vertical-align: middle;
+      overflow: hidden; word-wrap: break-word;
     }
     th {
       background: #eff6ff !important; font-weight: 700; color: #1e40af;
@@ -198,16 +201,13 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
     .title-section { text-align: center; margin-bottom: 6px; }
     .title-section h2 { font-size: 14px; font-weight: bold; margin: 0 0 2px; }
     .title-section p { font-size: 11px; color: #666; margin: 0; }
-    /* Subtotal columns */
     .subtotal-cell { background: #dbeafe !important; font-weight: 700; }
     .subtotal-header { background: #e0f2fe !important; }
-    /* Icon styles */
-    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:10px;height:10px;color:#d97706;font-size:10px;line-height:1; }
-    .icon-excellent { display:inline-block;width:7px;height:7px;border-radius:9999px;background:#059669; }
-    .icon-average { display:inline-block;width:7px;height:7px;border-radius:9999px;background:#d97706; }
-    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:9999px;background:#e11d48;color:#fff;font-size:7px;line-height:1; }
-    .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:12px; }
-    /* Grade label colors */
+    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1; }
+    .icon-excellent { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669; }
+    .icon-average { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706; }
+    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1; }
+    .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:1px;min-height:10px; }
     .grade-excellent { color: #059669; font-weight: 700; }
     .grade-very-good { color: #2563eb; font-weight: 700; }
     .grade-good { color: #0284c7; font-weight: 700; }
@@ -249,6 +249,27 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
       )
     );
   }
+
+  // Auto-scale: measure table vs container, shrink font if needed
+  try {
+    const table = printDocument.querySelector("table");
+    const root = printDocument.querySelector(".print-root") as HTMLElement;
+    if (table && root) {
+      const containerW = root.offsetWidth;
+      const tableW = table.scrollWidth;
+      if (tableW > containerW) {
+        const scale = Math.max(0.55, containerW / tableW);
+        const baseFontSize = 10 * scale;
+        table.style.fontSize = `${baseFontSize}px`;
+        // Re-measure after scaling
+        const newTableW = table.scrollWidth;
+        if (newTableW > containerW) {
+          const scale2 = Math.max(0.5, containerW / newTableW);
+          table.style.fontSize = `${baseFontSize * scale2}px`;
+        }
+      }
+    }
+  } catch {}
 
   // Print
   await new Promise<void>((resolve) => {
