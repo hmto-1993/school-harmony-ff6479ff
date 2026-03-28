@@ -441,8 +441,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               <div className="hidden print:block text-center mb-2">
                 <h2 className="text-sm font-bold">{group.name} — التقييم النهائي — {selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"}</h2>
               </div>
-              <div className="w-full overflow-x-auto rounded-xl border border-border/40 shadow-sm" dir="rtl">
-                <table className="w-full min-w-[700px] text-sm border-separate border-spacing-0" dir="rtl">
+              <div className="w-full overflow-x-auto -mx-1 px-1 rounded-xl border border-border/40 shadow-sm" dir="rtl">
+                <table className="w-full text-sm border-separate border-spacing-0" style={{ tableLayout: "auto" }} dir="rtl">
                   <thead>
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
