@@ -250,6 +250,27 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
     );
   }
 
+  // Auto-scale: measure table vs container, shrink font if needed
+  try {
+    const table = printDocument.querySelector("table");
+    const root = printDocument.querySelector(".print-root") as HTMLElement;
+    if (table && root) {
+      const containerW = root.offsetWidth;
+      const tableW = table.scrollWidth;
+      if (tableW > containerW) {
+        const scale = Math.max(0.55, containerW / tableW);
+        const baseFontSize = 10 * scale;
+        table.style.fontSize = `${baseFontSize}px`;
+        // Re-measure after scaling
+        const newTableW = table.scrollWidth;
+        if (newTableW > containerW) {
+          const scale2 = Math.max(0.5, containerW / newTableW);
+          table.style.fontSize = `${baseFontSize * scale2}px`;
+        }
+      }
+    }
+  } catch {}
+
   // Print
   await new Promise<void>((resolve) => {
     let done = false;
