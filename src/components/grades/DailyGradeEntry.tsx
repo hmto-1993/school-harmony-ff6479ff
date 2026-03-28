@@ -463,7 +463,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
-                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[180px]">الطالب</th>
+                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                     {visibleCategories.map((cat) => (
                       <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[100px]">
                         <div>{cat.name}</div>
@@ -485,7 +485,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       )}
                     >
                       <td className="p-3 text-muted-foreground font-medium border-l border-border/30">{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/30">{sg.full_name}</td>
+                      <td className="p-3 font-semibold border-l border-border/30 max-w-[160px] truncate text-sm">{sg.full_name}</td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
