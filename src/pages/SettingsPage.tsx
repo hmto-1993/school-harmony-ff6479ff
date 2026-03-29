@@ -2795,6 +2795,7 @@ export default function SettingsPage() {
                     {[
                       { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
                       { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
+                      { key: "daily", label: "التقييم اليومي (المشاركة والواجبات)", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
                     ].map(col => (
                       <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                         <h4 className="text-sm font-bold">{col.label}</h4>
