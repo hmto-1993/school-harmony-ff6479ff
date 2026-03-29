@@ -88,7 +88,7 @@ function InlineContactSection({ studentId, studentName, classId }: { studentId: 
         onClick={() => setOpen(!open)}
         className={cn(
           "w-full flex items-center justify-center gap-3 p-4 rounded-2xl font-bold text-base transition-all duration-300",
-          "bg-gradient-to-l from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90",
+          "bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25",
         )}
       >
         <MessageCircle className="h-5 w-5" />
