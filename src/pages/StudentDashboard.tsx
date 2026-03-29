@@ -139,6 +139,10 @@ export default function StudentDashboard() {
   const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
   const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
   const [parentShowContactTeacher, setParentShowContactTeacher] = useState(true);
+  const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
+  const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
+  const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
 
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
@@ -159,7 +163,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
@@ -172,6 +176,13 @@ export default function StudentDashboard() {
       if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
       if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
       if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
+      if (s.id === "parent_grades_default_view") setGradesView(s.value === "table" ? "table" : "cards");
+      if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
+      if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
+      if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
+      if (s.id === "parent_grades_hidden_categories" && s.value) {
+        try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+      }
     });
   };
 
