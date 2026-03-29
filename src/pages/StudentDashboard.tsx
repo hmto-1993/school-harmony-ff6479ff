@@ -641,16 +641,116 @@ export default function StudentDashboard() {
           <TabsContent value="grades">
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
-                  تفاصيل الدرجات
-                  
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
+                    تفاصيل الدرجات
+                  </CardTitle>
+                  <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+                    <button
+                      onClick={() => setGradesView("cards")}
+                      className={cn("p-1.5 rounded-md transition-all", gradesView === "cards" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setGradesView("table")}
+                      className={cn("p-1.5 rounded-md transition-all", gradesView === "table" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
+                    >
+                      <Table2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {student.grades.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">لا توجد درجات مسجلة</p>
+                ) : gradesView === "cards" ? (
+                  /* ─── Cards / Assessment View ─── */
+                  <div className="space-y-3">
+                    {(() => {
+                      // Group grades by category_group
+                      const groups: Record<string, typeof student.grades> = {};
+                      student.grades.forEach((g) => {
+                        const group = g.grade_categories?.category_group || "أخرى";
+                        if (!groups[group]) groups[group] = [];
+                        groups[group].push(g);
+                      });
+                      const groupLabels: Record<string, { label: string; color: string; icon: string }> = {
+                        classwork: { label: "المهام والمشاركة", color: "text-emerald-600 dark:text-emerald-400", icon: "📋" },
+                        exam: { label: "الاختبارات", color: "text-amber-600 dark:text-amber-400", icon: "📝" },
+                        أخرى: { label: "أخرى", color: "text-primary", icon: "📊" },
+                      };
+                      const totalScore = student.grades.reduce((s, g) => s + (g.score ?? 0), 0);
+                      const totalMax = student.grades.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                      return (
+                        <>
+                          {Object.entries(groups).map(([groupKey, items]) => {
+                            const info = groupLabels[groupKey] || groupLabels["أخرى"];
+                            const groupTotal = items.reduce((s, g) => s + (g.score ?? 0), 0);
+                            const groupMax = items.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                            const groupPct = groupMax > 0 ? Math.round((groupTotal / groupMax) * 100) : 0;
+                            return (
+                              <div key={groupKey} className="rounded-xl border border-border/40 overflow-hidden">
+                                <div className="flex items-center justify-between p-3 bg-muted/30 dark:bg-muted/20">
+                                  <span className={cn("text-sm font-bold flex items-center gap-2", info.color)}>
+                                    <span>{info.icon}</span> {info.label}
+                                  </span>
+                                  <Badge variant="secondary" className="text-xs font-bold">
+                                    {groupTotal}/{groupMax} ({groupPct}%)
+                                  </Badge>
+                                </div>
+                                <div className="divide-y divide-border/20">
+                                  {items.map((g, i) => {
+                                    const score = g.score ?? 0;
+                                    const maxScore = g.grade_categories?.max_score || 100;
+                                    const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+                                    return (
+                                      <div key={i} className="flex items-center gap-3 p-3">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-semibold text-foreground truncate">{g.grade_categories?.name || "-"}</p>
+                                          <div className="mt-1.5 h-2 rounded-full bg-muted/50 overflow-hidden">
+                                            <div
+                                              className={cn("h-full rounded-full transition-all duration-500",
+                                                pct >= 90 ? "bg-emerald-500" : pct >= 75 ? "bg-blue-500" : pct >= 60 ? "bg-amber-500" : "bg-rose-500"
+                                              )}
+                                              style={{ width: `${pct}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="text-left shrink-0 w-20">
+                                          <span className={cn("text-lg font-bold",
+                                            pct >= 90 ? "text-emerald-600 dark:text-emerald-400" :
+                                            pct >= 75 ? "text-blue-600 dark:text-blue-400" :
+                                            pct >= 60 ? "text-amber-600 dark:text-amber-400" :
+                                            "text-rose-600 dark:text-rose-400"
+                                          )}>{score}</span>
+                                          <span className="text-xs text-muted-foreground">/{maxScore}</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {/* Total */}
+                          <div className="rounded-xl border-2 border-primary/30 bg-gradient-to-l from-primary/5 to-accent/5 p-4 flex items-center justify-between">
+                            <span className="text-sm font-bold text-foreground">المجموع الكلي</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl font-bold text-primary">{totalScore}</span>
+                              <span className="text-sm text-muted-foreground">/ {totalMax}</span>
+                              <Badge className="bg-primary/10 text-primary border-primary/20 text-xs font-bold">
+                                {totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : 0}%
+                              </Badge>
+                            </div>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
                 ) : (
+                  /* ─── Table View ─── */
                   <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
                     <table className="w-full text-sm border-separate border-spacing-0">
                       <thead>
@@ -669,7 +769,6 @@ export default function StudentDashboard() {
                           const score = g.score ?? 0;
                           const maxScore = g.grade_categories?.max_score || 100;
                           const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-                          // Filled evaluation icons for UI display
                           const evalIcon = pct >= 90 ? "★★★" : pct >= 75 ? "★★" : pct >= 60 ? "★" : "➖";
                           return (
                             <tr key={i} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20")}>
