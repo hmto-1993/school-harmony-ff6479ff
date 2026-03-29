@@ -443,6 +443,8 @@ export default function SettingsPage() {
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
         if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
+        if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
+        if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
