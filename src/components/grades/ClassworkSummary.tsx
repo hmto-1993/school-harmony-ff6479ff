@@ -71,21 +71,7 @@ const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?
   return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
 };
 
-function getPrintIconHTML(icon: DailyIcon) {
-  if (icon.isFullScore) {
-    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;color:#d97706;font-size:8px;line-height:1;">★</span>';
-  }
-
-  if (icon.level === "excellent") {
-    return '<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669;"></span>';
-  }
-
-  if (icon.level === "average") {
-    return '<span style="display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706;"></span>';
-  }
-
-  return '<span style="display:inline-flex;align-items:center;justify-content:center;width:8px;height:8px;border-radius:9999px;background:#e11d48;color:#ffffff;font-size:7px;line-height:1;">×</span>';
-}
+/* getPrintIconHTML removed — using unified getPrintIconSpan from grades-print.ts */
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
