@@ -191,10 +191,10 @@ function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: st
     .subtotal-header { background: #e0f2fe !important; }
 
     /* Grade icons */
-    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;color:#eab308;font-size:12px;line-height:1; }
-    .icon-excellent { display:inline-block;width:8px;height:8px;border-radius:9999px;background:#059669; }
-    .icon-average { display:inline-block;width:8px;height:8px;border-radius:9999px;background:#d97706; }
-    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;border-radius:9999px;background:#e11d48;color:#fff;font-size:7px;line-height:1; }
+    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;color:#b8860b;font-size:13px;line-height:1; }
+    .icon-excellent { display:inline-flex;align-items:center;justify-content:center;width:10px;height:10px;border-radius:9999px;border:1.5px solid #059669;background:transparent;color:#059669;font-size:7px;line-height:1;font-weight:700; }
+    .icon-average { display:inline-flex;align-items:center;justify-content:center;width:10px;height:10px;border-radius:9999px;border:1.5px solid #d97706;background:transparent;color:#d97706;font-size:7px;line-height:1;font-weight:700; }
+    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:10px;height:10px;border-radius:9999px;border:1.5px solid #e11d48;background:transparent;color:#e11d48;font-size:7px;line-height:1;font-weight:700; }
     .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:1px;min-height:10px; }
 
     /* Grade level colors */
@@ -335,8 +335,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
 /** Build icon HTML for classwork/daily-entry print */
 export function getPrintIconSpan(icon: { level: string; isFullScore: boolean }): string {
-  if (icon.isFullScore) return '<span class="icon-star">★</span>';
-  if (icon.level === "excellent") return '<span class="icon-excellent"></span>';
-  if (icon.level === "average") return '<span class="icon-average"></span>';
-  return '<span class="icon-zero">×</span>';
+  if (icon.isFullScore) return '<span class="icon-star">☆</span>';
+  if (icon.level === "excellent") return '<span class="icon-excellent">✔</span>';
+  if (icon.level === "average") return '<span class="icon-average">➖</span>';
+  return '<span class="icon-zero">✖</span>';
 }
