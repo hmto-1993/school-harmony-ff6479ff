@@ -168,8 +168,11 @@ function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: st
     thead { display: table-header-group; }
     tr { break-inside: avoid-page; page-break-inside: avoid; }
 
-    /* Student name column (2nd col) */
-    td:nth-child(2) { text-align: right; white-space: normal; word-break: break-word; }
+    /* Index column (1st col) — bold */
+    td:nth-child(1) { font-weight: 700; }
+
+    /* Student name column (2nd col) — bold */
+    td:nth-child(2) { text-align: right; white-space: normal; word-break: break-word; font-weight: 700; }
     th:nth-child(2) { text-align: right; }
 
     /* Alternating row colors */
