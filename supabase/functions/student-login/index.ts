@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { national_id } = await req.json();
+    const { national_id, login_type } = await req.json();
+    const userType = login_type === "parent" ? "parent" : "student";
 
     if (!national_id) {
       return new Response(
@@ -101,6 +102,7 @@ Deno.serve(async (req) => {
     await supabase.from("student_logins").insert({
       student_id: student.id,
       class_id: student.class_id,
+      login_type: userType,
     });
 
     // Generate HMAC session token for subsequent authenticated calls

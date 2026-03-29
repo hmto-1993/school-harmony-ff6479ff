@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, Eye, TrendingUp, Calendar } from "lucide-react";
+import { Users, Eye, TrendingUp, Calendar, UserCheck, Users2 } from "lucide-react";
 import { format, subDays, isAfter } from "date-fns";
 import { ar } from "date-fns/locale";
 import ExportDialog from "@/components/student-logins/ExportDialog";
@@ -17,6 +17,7 @@ interface LoginRecord {
   student_id: string;
   class_id: string | null;
   logged_in_at: string;
+  login_type: string;
   students: { full_name: string; national_id: string | null; class_id: string | null } | null;
 }
 
@@ -32,6 +33,7 @@ export default function StudentLoginsPage() {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("7");
+  const [loginTypeFilter, setLoginTypeFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function StudentLoginsPage() {
     const [{ data: loginsData }, { data: classesData }] = await Promise.all([
       supabase
         .from("student_logins")
-        .select("id, student_id, class_id, logged_in_at, students(full_name, national_id, class_id)")
+        .select("id, student_id, class_id, logged_in_at, login_type, students(full_name, national_id, class_id)")
         .order("logged_in_at", { ascending: false }),
       supabase.from("classes").select("id, name, grade, section"),
     ]);
@@ -58,12 +60,15 @@ export default function StudentLoginsPage() {
     return logins.filter((l) => {
       const afterDate = isAfter(new Date(l.logged_in_at), cutoffDate);
       const matchesClass = selectedClass === "all" || l.class_id === selectedClass;
-      return afterDate && matchesClass;
+      const matchesType = loginTypeFilter === "all" || (l.login_type || "student") === loginTypeFilter;
+      return afterDate && matchesClass && matchesType;
     });
-  }, [logins, cutoffDate, selectedClass]);
+  }, [logins, cutoffDate, selectedClass, loginTypeFilter]);
 
   const uniqueStudents = useMemo(() => new Set(filteredLogins.map((l) => l.student_id)).size, [filteredLogins]);
   const totalLogins = filteredLogins.length;
+  const parentLogins = useMemo(() => logins.filter(l => isAfter(new Date(l.logged_in_at), cutoffDate) && (l.login_type === "parent")).length, [logins, cutoffDate]);
+  const studentOnlyLogins = useMemo(() => logins.filter(l => isAfter(new Date(l.logged_in_at), cutoffDate) && (l.login_type || "student") === "student").length, [logins, cutoffDate]);
 
   const studentStats = useMemo(() => {
     const map: Record<string, { name: string; classId: string | null; count: number; lastLogin: string }> = {};
@@ -150,9 +155,9 @@ export default function StudentLoginsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
-            سجل دخول الطلاب
+            سجل الزيارات
           </h1>
-          <p className="text-sm text-muted-foreground">تتبع ومراقبة دخول الطلاب على البوابة الإلكترونية</p>
+          <p className="text-sm text-muted-foreground">تتبع ومراقبة زيارات الطلاب وأولياء الأمور على البوابة الإلكترونية</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportDialog
@@ -162,6 +167,16 @@ export default function StudentLoginsPage() {
             getClassName={getClassName}
             getStudentsForClass={getStudentsForClass}
           />
+          <Select value={loginTypeFilter} onValueChange={setLoginTypeFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="student">الطلاب</SelectItem>
+              <SelectItem value="parent">أولياء الأمور</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
@@ -188,7 +203,7 @@ export default function StudentLoginsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
           <CardContent className="flex items-center gap-3 p-5">
             <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-3 shadow-md shadow-primary/25">
@@ -211,6 +226,28 @@ export default function StudentLoginsPage() {
             </div>
           </CardContent>
         </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500/5 via-card to-blue-500/10 dark:from-blue-500/10 dark:via-card dark:to-blue-500/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(210 80% 55%), hsl(210 80% 55% / 0.7))", boxShadow: "0 4px 12px hsl(210 80% 55% / 0.25)" }}>
+              <UserCheck className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{studentOnlyLogins}</p>
+              <p className="text-xs text-muted-foreground">زيارات الطلاب</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-purple-500/5 via-card to-purple-500/10 dark:from-purple-500/10 dark:via-card dark:to-purple-500/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(270 60% 55%), hsl(270 60% 55% / 0.7))", boxShadow: "0 4px 12px hsl(270 60% 55% / 0.25)" }}>
+              <Users2 className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{parentLogins}</p>
+              <p className="text-xs text-muted-foreground">زيارات أولياء الأمور</p>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-success/5 via-card to-success/10 dark:from-success/10 dark:via-card dark:to-success/5">
           <CardContent className="flex items-center gap-3 p-5">
             <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.7))", boxShadow: "0 4px 12px hsl(var(--success) / 0.25)" }}>
@@ -220,7 +257,7 @@ export default function StudentLoginsPage() {
               <p className="text-2xl font-bold text-foreground">
                 {uniqueStudents > 0 ? (totalLogins / uniqueStudents).toFixed(1) : 0}
               </p>
-              <p className="text-xs text-muted-foreground">متوسط الزيارات/طالب</p>
+              <p className="text-xs text-muted-foreground">متوسط/طالب</p>
             </div>
           </CardContent>
         </Card>

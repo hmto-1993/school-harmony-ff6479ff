@@ -1,0 +1,1 @@
+ALTER TABLE public.student_logins ADD COLUMN login_type TEXT NOT NULL DEFAULT 'student';

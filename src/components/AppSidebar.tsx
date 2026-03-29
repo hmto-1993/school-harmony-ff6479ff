@@ -35,7 +35,7 @@ const adminLinks = [
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/activities", label: "الأنشطة", icon: Layers },
-  { to: "/student-logins", label: "دخول الطلاب", icon: UserCheck },
+  { to: "/student-logins", label: "سجل الزيارات", icon: UserCheck },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 

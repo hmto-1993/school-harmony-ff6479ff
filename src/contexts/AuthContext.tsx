@@ -27,7 +27,7 @@ interface AuthContextType {
   student: StudentData | null;
   isStudent: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInStudent: (national_id: string) => Promise<{ error: string | null }>;
+  signInStudent: (national_id: string, login_type?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -57,9 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = sessionStorage.getItem("student_session");
     if (saved) {
       try {
-        const { national_id } = JSON.parse(saved);
+        const { national_id, login_type } = JSON.parse(saved);
         if (national_id) {
-          supabase.functions.invoke("student-login", { body: { national_id } }).then(({ data, error }) => {
+          supabase.functions.invoke("student-login", { body: { national_id, login_type: login_type || "student" } }).then(({ data, error }) => {
             if (!error && data && !data.error) {
               setStudent({
                 id: data.student.id,
@@ -126,10 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signInStudent = async (national_id: string) => {
+  const signInStudent = async (national_id: string, login_type?: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("student-login", {
-        body: { national_id },
+        body: { national_id, login_type: login_type || "student" },
       });
       if (error) return { error: "حدث خطأ في الاتصال" };
       if (data?.error) return { error: data.error as string };
@@ -153,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem("student_session", JSON.stringify({
         id: studentData.id,
         national_id: studentData.national_id,
+        login_type: login_type || "student",
       }));
       return { error: null };
     } catch {
