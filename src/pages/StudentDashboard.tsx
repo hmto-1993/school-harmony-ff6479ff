@@ -250,8 +250,8 @@ export default function StudentDashboard() {
         doc.text(classInfo, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
-      if (student.academic_number) {
-        doc.text(`الرقم الأكاديمي: ${student.academic_number}`, pageWidth / 2, y, { align: "center" });
+      if (student.national_id) {
+        doc.text(`الهوية الوطنية: ${student.national_id}`, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
 
@@ -471,8 +471,8 @@ export default function StudentDashboard() {
                   <Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-muted-foreground">الرقم الأكاديمي</p>
-                  <p className="text-sm font-bold text-foreground">{student.academic_number || "غير محدد"}</p>
+                  <p className="text-[11px] text-muted-foreground">الهوية الوطنية</p>
+                  <p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p>
                 </div>
               </div>
             </div>
