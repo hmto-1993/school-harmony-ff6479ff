@@ -2992,6 +2992,58 @@ export default function SettingsPage() {
                     );
                   }
                 })()}
+
+                {/* Daily Evaluation Preview */}
+                {parentShowDailyGrades && (() => {
+                  const dailyCats = categories.filter((c: any) => 
+                    !parentGradesHiddenCategories.includes(c.id) && 
+                    c.category_group === "classwork"
+                  ).slice(0, 4);
+                  if (dailyCats.length === 0) return null;
+                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
+                  const mockLevels: ("excellent" | "average" | "zero" | null)[][] = dailyCats.map((_, ci) => 
+                    mockDays.map((_, di) => {
+                      const v = (ci + di) % 4;
+                      return v === 0 ? "excellent" : v === 1 ? "average" : v === 2 ? "zero" : null;
+                    })
+                  );
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📋 التقييم اليومي</p>
+                      <div className="overflow-auto rounded-lg border border-border/30">
+                        <table className="w-full text-[10px] border-separate border-spacing-0">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">المعيار</th>
+                              {mockDays.map(d => (
+                                <th key={d} className="p-1.5 text-center font-semibold text-primary border-b border-border/20">{d}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dailyCats.map((cat: any, ci: number) => (
+                              <tr key={cat.id} className={ci % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{cat.name}</td>
+                                {mockDays.map((_, di) => {
+                                  const level = mockLevels[ci][di];
+                                  return (
+                                    <td key={di} className="p-1 text-center border-l border-border/10">
+                                      {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-sm">✔</span> :
+                                       level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-sm">➖</span> :
+                                       level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-sm">✖</span> :
+                                       <span className="text-muted-foreground/30">○</span>}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
             </div>
@@ -3016,6 +3068,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_grades_show_eval", value: String(parentGradesShowEval) }),
                   supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: parentGradesVisiblePeriods }),
                   supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
