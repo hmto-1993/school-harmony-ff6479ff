@@ -565,17 +565,19 @@ export default function StudentDashboard() {
           )}
         </div>
 
-        {/* Notification Cards */}
-        <StudentNotificationCards
-          studentId={student.id}
-          studentName={student.full_name}
-          className={student.class?.name || ""}
-          grades={vis.grades ? student.grades : []}
-          attendance={vis.attendance ? student.attendance : []}
-        />
+        {/* Notification Cards (absence warnings) */}
+        {parentShowAbsenceWarning && (
+          <StudentNotificationCards
+            studentId={student.id}
+            studentName={student.full_name}
+            className={student.class?.name || ""}
+            grades={vis.grades ? student.grades : []}
+            attendance={vis.attendance ? student.attendance : []}
+          />
+        )}
 
         {/* Honor Roll */}
-        <HonorRoll classId={student.class_id} />
+        {parentShowHonorRoll && <HonorRoll classId={student.class_id} />}
 
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
