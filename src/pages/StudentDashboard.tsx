@@ -894,7 +894,79 @@ export default function StudentDashboard() {
                     );
                   })() : null;
 
-                  return <>{mainView}{dailyEval}</>;
+                  // Classwork Icon Strip
+                  const classworkIcons = parentShowClassworkIcons ? (() => {
+                    const cwGrades = filteredGrades.filter((g: any) => 
+                      g.grade_categories?.category_group === "classwork"
+                    );
+                    if (cwGrades.length === 0) return null;
+                    const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+                    const isParticipation = (name: string) => name === "المشاركة";
+                    const MAX_SLOTS = 3;
+                    
+                    const getIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
+                      if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
+                      if (score <= 0) return [{ level: "zero", isStar: false }];
+                      const isPartic = isParticipation(catName);
+                      const slotCount = isPartic ? MAX_SLOTS : 1;
+                      const perSlot = Math.round(maxScore / slotCount);
+                      if (score >= maxScore && isPartic) return [{ level: "excellent", isStar: true }];
+                      const icons: { level: string; isStar: boolean }[] = [];
+                      let remaining = score;
+                      for (let si = 0; si < slotCount; si++) {
+                        if (remaining >= perSlot) { icons.push({ level: "excellent", isStar: false }); remaining -= perSlot; }
+                        else if (remaining >= Math.round(perSlot / 2)) { icons.push({ level: "average", isStar: false }); remaining -= Math.round(perSlot / 2); }
+                        else if (remaining > 0) { icons.push({ level: "average", isStar: false }); remaining = 0; }
+                        else icons.push({ level: "zero", isStar: false });
+                      }
+                      return icons;
+                    };
+
+                    return (
+                      <div className="mt-4 pt-4 border-t border-border/30">
+                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
+                          <span className="inline-block w-1 h-4 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
+                          📊 المهام والمشاركة
+                        </h4>
+                        <div className="space-y-2">
+                          {cwCatNames.map((catName: string) => {
+                            const catGrades = cwGrades
+                              .filter((g: any) => g.grade_categories?.name === catName)
+                              .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
+                            const allIcons = catGrades.flatMap((g: any) => 
+                              getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
+                            );
+                            const maxDisplay = catName === "المشاركة" ? 20 : 8;
+                            const displayIcons = allIcons.slice(-maxDisplay);
+                            return (
+                              <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
+                                <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
+                                <div className="flex items-center gap-0.5 flex-wrap">
+                                  {displayIcons.map((icon, i) => (
+                                    <span key={i} className="text-base">
+                                      {icon.isStar ? <span className="text-amber-500">★</span> :
+                                       icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
+                                       icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
+                                       <span className="text-rose-500 dark:text-rose-400">✖</span>}
+                                    </span>
+                                  ))}
+                                  {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                          <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
+                          <span className="flex items-center gap-1"><span className="text-amber-500">★</span> درجة كاملة</span>
+                          <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
+                          <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
+                        </div>
+                      </div>
+                    );
+                  })() : null;
+
+                  return <>{mainView}{dailyEval}{classworkIcons}</>;
                 })()}
               </CardContent>
             </Card>
