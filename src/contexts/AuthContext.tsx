@@ -8,6 +8,7 @@ interface StudentData {
   id: string;
   full_name: string;
   national_id: string;
+  academic_number: string | null;
   class_id: string | null;
   class: { name: string; grade: string; section: string } | null;
   grades: any[];
