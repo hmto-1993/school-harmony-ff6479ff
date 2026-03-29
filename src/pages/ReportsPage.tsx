@@ -472,18 +472,23 @@ export default function ReportsPage() {
         doc.setFontSize(13);
         doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
 
-        const attTableData = attendanceData.map((r) => [
+        const attTableData = attendanceData.map((r, i) => [
           r.notes || "",
           STATUS_LABELS[r.status] || r.status,
           r.date,
           r.student_name,
+          String(i + 1),
         ]);
 
         autoTable(doc, {
           startY: currentY + 5,
-          head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
+          head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
           body: attTableData,
           ...tableStyles,
+          columnStyles: {
+            3: { halign: "right" as const, fontStyle: "bold" as const },
+            4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+          },
         });
 
         currentY = (doc as any).lastAutoTable.finalY + 10;
@@ -507,11 +512,12 @@ export default function ReportsPage() {
         doc.setFontSize(13);
         doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
 
-        const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب"];
-        const body = gradeData.map((r) => [
+        const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب", "#"];
+        const body = gradeData.map((r, i) => [
           String(r.total),
           ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
           r.student_name,
+          String(i + 1),
         ]);
 
         autoTable(doc, {
@@ -519,6 +525,11 @@ export default function ReportsPage() {
           head: [head],
           body,
           ...tableStyles,
+          columnStyles: {
+            [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
+            [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+            0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
+          },
         });
       }
 
@@ -736,9 +747,13 @@ export default function ReportsPage() {
           doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
           autoTable(doc, {
             startY: currentY + 5,
-            head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
-            body: studentAttendance.map((r) => [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.student_name]),
+            head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
+            body: studentAttendance.map((r, i) => [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.student_name, String(i + 1)]),
             ...tableStyles,
+            columnStyles: {
+              3: { halign: "right" as const, fontStyle: "bold" as const },
+              4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+            },
           });
           currentY = (doc as any).lastAutoTable.finalY + 10;
           doc.setFontSize(10);
@@ -754,12 +769,17 @@ export default function ReportsPage() {
           doc.setFontSize(13);
           doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
           const catNames = Object.keys(studentGrade.categories);
-          const head = ["المجموع", ...catNames.slice().reverse(), "اسم الطالب"];
+          const head = ["المجموع", ...catNames.slice().reverse(), "اسم الطالب", "#"];
           autoTable(doc, {
             startY: currentY + 5,
             head: [head],
-            body: [[String(studentGrade.total), ...catNames.slice().reverse().map((n) => studentGrade.categories[n] !== null ? String(studentGrade.categories[n]) : "—"), studentGrade.student_name]],
+            body: [[String(studentGrade.total), ...catNames.slice().reverse().map((n) => studentGrade.categories[n] !== null ? String(studentGrade.categories[n]) : "—"), studentGrade.student_name, "1"]],
             ...tableStyles,
+            columnStyles: {
+              [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
+              [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+              0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
+            },
           });
         }
 
