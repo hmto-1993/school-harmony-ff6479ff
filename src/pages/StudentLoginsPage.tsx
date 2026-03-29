@@ -167,6 +167,16 @@ export default function StudentLoginsPage() {
             getClassName={getClassName}
             getStudentsForClass={getStudentsForClass}
           />
+          <Select value={loginTypeFilter} onValueChange={setLoginTypeFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="student">الطلاب</SelectItem>
+              <SelectItem value="parent">أولياء الأمور</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={dateRange} onValueChange={setDateRange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
