@@ -179,134 +179,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
     try {
-      const { doc, startY, watermark } = await createArabicPDF({
+      const tableHTML = buildClassworkTableHTML(group);
+      await exportGradesTableAsPDF({
         orientation: "landscape",
+        title: `المهام والمشاركة — ${className}`,
+        subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
         reportType: "grades",
-        includeHeader: true,
+        tableHTML,
+        fileName: `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}`,
       });
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const tableStyles = getArabicTableStyles();
-
-      doc.setFontSize(14);
-      doc.text(`المهام والمشاركة — ${className}`, pageWidth / 2, startY, { align: "center" });
-      doc.setFontSize(9);
-      doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, startY + 6, { align: "center" });
-      doc.text(selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية", pageWidth / 2, startY + 11, { align: "center" });
-
-      const classworkCats = group.categories;
-
-      // Build headers: # | الطالب | [for each cat: icons col | score col] | الإجمالي
-      // Reversed for RTL display
-      const headers: string[] = [];
-      headers.push("الإجمالي");
-      [...classworkCats].reverse().forEach(cat => {
-        headers.push(`الدرجة (${cat.max_score})`);
-        headers.push(cat.name); // icons column header
-      });
-      headers.push("الطالب");
-      headers.push("#");
-
-      // Build rows with placeholder text for icon cells
-      const rows: string[][] = group.students.map((sg, i) => {
-        const sub = calcManualSubtotal(sg.manualScores, classworkCats);
-        const row: string[] = [];
-        row.push(`${sub.score} / ${sub.max}`);
-        [...classworkCats].reverse().forEach(cat => {
-          row.push(String(sg.manualScores[cat.id] ?? 0));
-          row.push(""); // placeholder for icons - will be drawn manually
-        });
-        row.push(sg.full_name);
-        row.push(String(i + 1));
-        return row;
-      });
-
-      const nameColIndex = headers.length - 2;
-
-      // Store icon data for each row/category to draw after table
-      const reversedCats = [...classworkCats].reverse();
-      const iconCellPositions: { rowIdx: number; catIdx: number; icons: DailyIcon[]; }[] = [];
-      group.students.forEach((sg, rowIdx) => {
-        reversedCats.forEach((cat, catIdx) => {
-          const allIcons = sg.dailyIcons[cat.id] || [];
-          const maxDisplay = getMaxDisplayIcons(cat.name);
-          const icons = allIcons.slice(0, maxDisplay);
-          if (icons.length > 0) {
-            iconCellPositions.push({ rowIdx, catIdx, icons });
-          }
-        });
-      });
-
-      // Icon column indices in the headers array (after "الإجمالي", each cat has 2 cols: score at even, icons at odd)
-      // icons col index for catIdx = 1 + catIdx * 2 + 1 = 2 + catIdx * 2
-      const iconColIndices = reversedCats.map((_, ci) => 1 + ci * 2 + 1);
-
-      autoTable(doc, {
-        startY: startY + 15,
-        head: [headers],
-        body: rows,
-        ...tableStyles,
-        styles: { ...tableStyles.styles, fontSize: 7, cellPadding: 1.5 },
-        headStyles: { ...tableStyles.headStyles, fontSize: 7 },
-        columnStyles: {
-          [nameColIndex]: { halign: "right" as const, cellWidth: 35 },
-          ...Object.fromEntries(iconColIndices.map(ci => [ci, { cellWidth: 28, halign: "center" as const }])),
-        },
-        didDrawCell: (data: any) => {
-          if (data.section !== "body") return;
-          const rowIdx = data.row.index;
-          // Check if this column is an icon column
-          const colIdx = data.column.index;
-          const catLocalIdx = iconColIndices.indexOf(colIdx);
-          if (catLocalIdx === -1) return;
-
-          const entry = iconCellPositions.find(e => e.rowIdx === rowIdx && e.catIdx === catLocalIdx);
-          if (!entry || entry.icons.length === 0) return;
-
-          const cellX = data.cell.x;
-          const cellY = data.cell.y;
-          const cellW = data.cell.width;
-          const cellH = data.cell.height;
-          const r = 1.2; // icon radius
-          const gap = 0.6;
-          const iconsPerRow = Math.floor(cellW / (r * 2 + gap));
-          const totalIcons = entry.icons.length;
-          const rowCount = Math.ceil(totalIcons / iconsPerRow);
-          const startYIcon = cellY + (cellH - rowCount * (r * 2 + gap)) / 2 + r;
-
-          entry.icons.forEach((icon, idx) => {
-            const rowI = Math.floor(idx / iconsPerRow);
-            const colI = idx % iconsPerRow;
-            const iconsInThisRow = Math.min(iconsPerRow, totalIcons - rowI * iconsPerRow);
-            const rowWidth = iconsInThisRow * (r * 2 + gap) - gap;
-            const offsetX = cellX + (cellW - rowWidth) / 2 + colI * (r * 2 + gap) + r;
-            const offsetY = startYIcon + rowI * (r * 2 + gap);
-
-            if (icon.isFullScore) {
-              // Draw star shape in amber
-              doc.setFillColor(245, 158, 11);
-              drawPDFStar(doc, offsetX, offsetY, r * 1.1);
-            } else if (icon.level === "excellent") {
-              doc.setFillColor(16, 185, 129); // emerald
-              doc.circle(offsetX, offsetY, r, "F");
-            } else if (icon.level === "average") {
-              doc.setFillColor(245, 158, 11); // amber
-              doc.circle(offsetX, offsetY, r, "F");
-            } else {
-              doc.setFillColor(239, 68, 68); // rose
-              doc.circle(offsetX, offsetY, r, "F");
-              // Draw X mark
-              doc.setDrawColor(255, 255, 255);
-              doc.setLineWidth(0.3);
-              doc.line(offsetX - r * 0.5, offsetY - r * 0.5, offsetX + r * 0.5, offsetY + r * 0.5);
-              doc.line(offsetX + r * 0.5, offsetY - r * 0.5, offsetX - r * 0.5, offsetY + r * 0.5);
-              doc.setDrawColor(0, 0, 0);
-              doc.setLineWidth(0.1);
-            }
-          });
-        },
-      });
-
-      finalizePDF(doc, `المهام_والمشاركة_${className}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
       sonnerToast.success("تم تصدير ملف PDF بنجاح");
     } catch (err) {
       console.error(err);
