@@ -12,7 +12,7 @@ import {
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X,
-  User, Hash, BookMarked, Heart
+  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp
 } from "lucide-react";
 import {
   Dialog,
@@ -79,6 +79,44 @@ const OUTLINED_ICONS = {
   minus: "➖",
   x: "✖",
 };
+
+function FloatingContactButton({ studentId, studentName, classId }: { studentId: string; studentName: string; classId: string | null }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-center gap-3" dir="rtl">
+      {open && (
+        <div className="w-[340px] max-w-[90vw] max-h-[70vh] overflow-auto rounded-2xl shadow-2xl border border-border bg-card animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <div className="flex items-center justify-between p-3 border-b border-border/40 bg-gradient-to-l from-primary/10 to-accent/5">
+            <span className="text-sm font-bold text-foreground flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-primary" />
+              تواصل مع المعلم
+            </span>
+            <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+              <X className="h-4 w-4 text-muted-foreground" />
+            </button>
+          </div>
+          <div className="p-3">
+            <ParentContactForm studentId={studentId} studentName={studentName} classId={classId} />
+          </div>
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300",
+          "bg-gradient-to-br from-primary to-accent hover:scale-110 hover:shadow-2xl",
+          open && "rotate-0"
+        )}
+      >
+        {open ? (
+          <ChevronUp className="h-6 w-6 text-primary-foreground" />
+        ) : (
+          <MessageCircle className="h-6 w-6 text-primary-foreground" />
+        )}
+      </button>
+    </div>
+  );
+}
 
 export default function StudentDashboard() {
   const { student, signOut } = useAuth();
@@ -585,14 +623,7 @@ export default function StudentDashboard() {
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
 
-        {/* Parent Contact Form */}
-        {parentShowContactTeacher && (
-          <ParentContactForm
-            studentId={student.id}
-            studentName={student.full_name}
-            classId={student.class_id}
-          />
-        )}
+        {/* Parent Contact Form moved to floating button at bottom */}
 
         {/* Details Tabs */}
         {(() => {
@@ -943,6 +974,14 @@ export default function StudentDashboard() {
           fileUrl={previewFile.url}
           fileName={previewFile.name}
           onClose={() => setPreviewFile(null)}
+        />
+      )}
+      {/* Floating Contact Teacher Button */}
+      {parentShowContactTeacher && (
+        <FloatingContactButton
+          studentId={student.id}
+          studentName={student.full_name}
+          classId={student.class_id}
         />
       )}
 
