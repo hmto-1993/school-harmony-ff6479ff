@@ -458,10 +458,12 @@ export default function ReportsPage() {
         ? `تقرير حضور الطالب: ${studentName}`
         : `تقرير درجات الطالب: ${studentName}`;
 
-      doc.setFontSize(16);
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
       doc.text(titleText, pageWidth / 2, startY, { align: "center" });
-      doc.setFontSize(10);
-      doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+      doc.setFontSize(9);
+      doc.setFont("Amiri", "normal");
+      doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
       let currentY = startY + 15;
 
@@ -720,10 +722,12 @@ export default function ReportsPage() {
         const tableStyles = getArabicTableStyles();
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        doc.setFontSize(16);
+        doc.setFontSize(14);
+        doc.setFont("Amiri", "bold");
         doc.text(`تقرير الطالب: ${student.full_name}`, pageWidth / 2, startY, { align: "center" });
-        doc.setFontSize(10);
-        doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+        doc.setFontSize(9);
+        doc.setFont("Amiri", "normal");
+        doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
         let currentY = startY + 15;
 
