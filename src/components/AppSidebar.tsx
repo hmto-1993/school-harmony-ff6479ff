@@ -56,7 +56,7 @@ interface AppSidebarProps {
 }
 
 export default function AppSidebar({ onNavigate }: AppSidebarProps) {
-  const { role, signOut } = useAuth();
+  const { role, signOut, user } = useAuth();
   const { perms } = useTeacherPermissions();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -64,6 +64,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolSubtitle, setSchoolSubtitle] = useState("");
+  const [unreadParentMessages, setUnreadParentMessages] = useState(0);
 
   useEffect(() => {
     supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle"]).then(({ data }) => {
@@ -73,6 +74,23 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
       });
     });
   }, []);
+
+  // Fetch unread parent messages count
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = () => {
+      supabase
+        .from("parent_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending")
+        .then(({ count }) => {
+          setUnreadParentMessages(count || 0);
+        });
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const baseLinks = role === "admin" ? adminLinks : teacherLinks;
   // Hide settings for read-only teachers
