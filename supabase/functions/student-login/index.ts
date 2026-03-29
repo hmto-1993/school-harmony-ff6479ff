@@ -190,6 +190,7 @@ Deno.serve(async (req) => {
           id: student.id,
           full_name: student.full_name,
           national_id: student.national_id,
+          academic_number: student.academic_number,
           class_id: student.class_id,
           class: className,
         },

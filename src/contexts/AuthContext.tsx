@@ -8,6 +8,7 @@ interface StudentData {
   id: string;
   full_name: string;
   national_id: string;
+  academic_number: string | null;
   class_id: string | null;
   class: { name: string; grade: string; section: string } | null;
   grades: any[];
@@ -64,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 id: data.student.id,
                 full_name: data.student.full_name,
                 national_id: data.student.national_id,
+                academic_number: data.student.academic_number || null,
                 class_id: data.student.class_id || null,
                 class: data.student.class,
                 grades: data.grades,
@@ -136,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.student.id,
         full_name: data.student.full_name,
         national_id: data.student.national_id,
+        academic_number: data.student.academic_number || null,
         class_id: data.student.class_id || null,
         class: data.student.class,
         grades: data.grades,

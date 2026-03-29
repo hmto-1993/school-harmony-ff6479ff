@@ -49,6 +49,7 @@ import {
   Trophy,
   Crown,
   AlertTriangle,
+  Heart,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -271,6 +272,11 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Parent portal welcome message
+  const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
+  const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
+  const [savingParentWelcome, setSavingParentWelcome] = useState(false);
+
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
@@ -409,7 +415,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -438,6 +444,8 @@ export default function SettingsPage() {
         if (s.id === "student_popup_action") setPopupAction(s.value || "none");
         if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
         if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
+        if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
+        if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -1007,6 +1015,7 @@ export default function SettingsPage() {
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
           { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
           { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
+          { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
@@ -2601,6 +2610,93 @@ export default function SettingsPage() {
             <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
               <strong>ملاحظة:</strong> يظهر شعار النجمة الماسية 💎⭐ بجانب أسماء الطلاب المتميزين في جميع أنحاء التطبيق.
               الخصوصية محفوظة: تُعرض الأسماء والإنجازات فقط، بدون درجات خاصة.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parent Portal Settings */}
+      {activeCard === "parent_portal" && isAdmin && (
+        <Card className="border-2 border-pink-400/30 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Heart className="h-5 w-5 text-pink-500" />
+                بوابة ولي الأمر
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Toggle welcome message */}
+            <div className="flex items-center justify-between p-4 rounded-xl border-2 border-border/50 bg-muted/20">
+              <div>
+                <p className="font-semibold text-foreground">رسالة الترحيب</p>
+                <p className="text-xs text-muted-foreground">تظهر في أعلى لوحة تحكم ولي الأمر</p>
+              </div>
+              <button
+                onClick={() => setParentWelcomeEnabled(!parentWelcomeEnabled)}
+                className={cn(
+                  "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200",
+                  parentWelcomeEnabled ? "bg-primary" : "bg-muted"
+                )}
+              >
+                <span className={cn(
+                  "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200",
+                  parentWelcomeEnabled ? "translate-x-1" : "translate-x-6"
+                )} />
+              </button>
+            </div>
+
+            {/* Welcome message text */}
+            {parentWelcomeEnabled && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">نص رسالة الترحيب</Label>
+                <Textarea
+                  value={parentWelcomeMessage}
+                  onChange={(e) => setParentWelcomeMessage(e.target.value)}
+                  placeholder="مرحباً بك ولي أمر الطالب / {name}..."
+                  className="min-h-[80px] text-sm"
+                  dir="rtl"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  استخدم <code className="bg-muted px-1 rounded text-primary font-mono">{"{name}"}</code> ليتم استبداله تلقائياً باسم الطالب
+                </p>
+
+                {/* Preview */}
+                <div className="p-4 rounded-xl border-2 border-primary/20 bg-gradient-to-l from-primary/5 to-accent/5">
+                  <p className="text-xs text-muted-foreground mb-1">معاينة:</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {parentWelcomeMessage.replace(/\{name\}/g, "أحمد محمد")}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              disabled={savingParentWelcome}
+              className="gap-1.5"
+              onClick={async () => {
+                setSavingParentWelcome(true);
+                const results = await Promise.all([
+                  supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(parentWelcomeEnabled) }),
+                  supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: parentWelcomeMessage }),
+                ]);
+                setSavingParentWelcome(false);
+                if (results.some(r => r.error)) {
+                  toast({ title: "خطأ", description: "فشل حفظ إعدادات بوابة ولي الأمر", variant: "destructive" });
+                } else {
+                  toast({ title: "تم الحفظ", description: "تم تحديث إعدادات بوابة ولي الأمر بنجاح" });
+                }
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {savingParentWelcome ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+            </Button>
+
+            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl space-y-1">
+              <p>🔒 <strong>الأمان:</strong> ولي الأمر يمكنه المشاهدة والتحميل فقط (Read-Only).</p>
+              <p>📄 <strong>التقرير:</strong> يتضمن زر تحميل PDF يحتوي الترويسة الرسمية وبيانات الطالب.</p>
+              <p>☆ <strong>الرموز:</strong> تُستخدم رموز مفرغة (Outlined) لتوفير الحبر عند الطباعة.</p>
             </div>
           </CardContent>
         </Card>
