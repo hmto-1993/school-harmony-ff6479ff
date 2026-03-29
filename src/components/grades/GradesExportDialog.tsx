@@ -358,7 +358,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           </DialogHeader>
 
           <Tabs defaultValue="excel" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="excel" className="gap-2">
                 <FileSpreadsheet className="h-4 w-4" />
                 Excel
@@ -366,10 +366,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               <TabsTrigger value="pdf" className="gap-2">
                 <FileText className="h-4 w-4" />
                 PDF
-              </TabsTrigger>
-              <TabsTrigger value="print" className="gap-2">
-                <Printer className="h-4 w-4" />
-                طباعة
               </TabsTrigger>
             </TabsList>
             <TabsContent value="excel" className="pt-4">
@@ -382,12 +378,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               <Button onClick={exportPDF} className="w-full gap-2">
                 <FileText className="h-4 w-4" />
                 تصدير PDF
-              </Button>
-            </TabsContent>
-            <TabsContent value="print" className="pt-4">
-              <Button onClick={handlePrint} className="w-full gap-2">
-                <Printer className="h-4 w-4" />
-                طباعة الصفحة
               </Button>
             </TabsContent>
           </Tabs>
