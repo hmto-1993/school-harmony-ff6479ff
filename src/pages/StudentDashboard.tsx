@@ -378,7 +378,13 @@ export default function StudentDashboard() {
     navigate("/login");
   };
 
-  const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true };
+  // Apply parent-specific overrides on top of student visibility
+  const vis = {
+    grades: baseVis.grades && parentShowGrades,
+    attendance: baseVis.attendance && parentShowAttendance,
+    behavior: baseVis.behavior && parentShowBehavior,
+  };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
