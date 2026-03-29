@@ -27,7 +27,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { national_id } = await req.json();
+    const { national_id, login_type } = await req.json();
+    const userType = login_type === "parent" ? "parent" : "student";
 
     if (!national_id) {
       return new Response(

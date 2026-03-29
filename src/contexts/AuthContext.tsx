@@ -27,7 +27,7 @@ interface AuthContextType {
   student: StudentData | null;
   isStudent: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInStudent: (national_id: string) => Promise<{ error: string | null }>;
+  signInStudent: (national_id: string, login_type?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
