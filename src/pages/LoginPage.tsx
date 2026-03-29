@@ -80,10 +80,14 @@ export default function LoginPage() {
 
   const handleStudentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentNationalId.trim()) return;
+    const sanitized = studentNationalId.replace(/\D/g, "");
+    if (!sanitized || sanitized.length !== 10) {
+      toast({ title: "خطأ", description: "رقم الهوية يجب أن يتكون من 10 أرقام", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
-    const { error } = await signInStudent(studentNationalId, "student");
+    const { error } = await signInStudent(sanitized, "student");
     setLoading(false);
 
     if (error) {
@@ -99,10 +103,14 @@ export default function LoginPage() {
 
   const handleParentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!parentNationalId.trim()) return;
+    const sanitized = parentNationalId.replace(/\D/g, "");
+    if (!sanitized || sanitized.length !== 10) {
+      toast({ title: "خطأ", description: "رقم الهوية يجب أن يتكون من 10 أرقام", variant: "destructive" });
+      return;
+    }
 
     setLoading(true);
-    const { error } = await signInStudent(parentNationalId, "parent");
+    const { error } = await signInStudent(sanitized, "parent");
     setLoading(false);
 
     if (error) {

@@ -52,14 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole((data?.role as AppRole) || null);
   };
 
-  // Restore student session by re-fetching from server
+  // Restore student session using HMAC token (no PII in storage)
   useEffect(() => {
     const saved = sessionStorage.getItem("student_session");
     if (saved) {
       try {
-        const { national_id, login_type } = JSON.parse(saved);
-        if (national_id) {
-          supabase.functions.invoke("student-login", { body: { national_id, login_type: login_type || "student" } }).then(({ data, error }) => {
+        const parsed = JSON.parse(saved);
+        const { student_id, session_token, session_issued_at, login_type } = parsed;
+        
+        if (student_id && session_token && session_issued_at) {
+          // Secure restore via HMAC token verification
+          supabase.functions.invoke("restore-student-session", {
+            body: { student_id, session_token, session_issued_at, login_type: login_type || "student" },
+          }).then(({ data, error }) => {
             if (!error && data && !data.error) {
               setStudent({
                 id: data.student.id,
@@ -75,12 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 session_token: data.session_token,
                 session_issued_at: data.session_issued_at,
               });
+              // Update stored token with the fresh one
+              sessionStorage.setItem("student_session", JSON.stringify({
+                student_id: data.student.id,
+                session_token: data.session_token,
+                session_issued_at: data.session_issued_at,
+                login_type: login_type || "student",
+              }));
             } else {
               sessionStorage.removeItem("student_session");
             }
             setStudentRestoring(false);
           });
         } else {
+          // Invalid or legacy format — require re-login
           sessionStorage.removeItem("student_session");
           setStudentRestoring(false);
         }
@@ -149,10 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session_issued_at: data.session_issued_at,
       };
       setStudent(studentData);
-      // Only store minimal session identifier, not full data
+      // Store session with HMAC token — no PII (national_id) in browser storage
       sessionStorage.setItem("student_session", JSON.stringify({
-        id: studentData.id,
-        national_id: studentData.national_id,
+        student_id: studentData.id,
+        session_token: studentData.session_token,
+        session_issued_at: studentData.session_issued_at,
         login_type: login_type || "student",
       }));
       return { error: null };
