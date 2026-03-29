@@ -5,11 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, TrendingUp, TrendingDown, Minus, Download, Printer } from "lucide-react";
+import { Search, TrendingUp, TrendingDown, Minus, Download, Printer, FileText } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup, ExportExtraSheet } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { printGradesTable } from "@/lib/grades-print";
+import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
 
 interface ClassInfo { id: string; name: string; }
