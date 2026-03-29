@@ -955,6 +955,15 @@ export default function StudentDashboard() {
         </Tabs>
           );
         })()}
+
+        {/* Contact Teacher - inline at bottom */}
+        {parentShowContactTeacher && (
+          <InlineContactSection
+            studentId={student.id}
+            studentName={student.full_name}
+            classId={student.class_id}
+          />
+        )}
       </main>
 
       {previewFile && (
