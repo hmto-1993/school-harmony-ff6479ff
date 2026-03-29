@@ -2615,6 +2615,93 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Parent Portal Settings */}
+      {activeCard === "parent_portal" && isAdmin && (
+        <Card className="border-2 border-pink-400/30 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Heart className="h-5 w-5 text-pink-500" />
+                بوابة ولي الأمر
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Toggle welcome message */}
+            <div className="flex items-center justify-between p-4 rounded-xl border-2 border-border/50 bg-muted/20">
+              <div>
+                <p className="font-semibold text-foreground">رسالة الترحيب</p>
+                <p className="text-xs text-muted-foreground">تظهر في أعلى لوحة تحكم ولي الأمر</p>
+              </div>
+              <button
+                onClick={() => setParentWelcomeEnabled(!parentWelcomeEnabled)}
+                className={cn(
+                  "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200",
+                  parentWelcomeEnabled ? "bg-primary" : "bg-muted"
+                )}
+              >
+                <span className={cn(
+                  "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200",
+                  parentWelcomeEnabled ? "translate-x-1" : "translate-x-6"
+                )} />
+              </button>
+            </div>
+
+            {/* Welcome message text */}
+            {parentWelcomeEnabled && (
+              <div className="space-y-3">
+                <Label className="text-sm font-semibold">نص رسالة الترحيب</Label>
+                <Textarea
+                  value={parentWelcomeMessage}
+                  onChange={(e) => setParentWelcomeMessage(e.target.value)}
+                  placeholder="مرحباً بك ولي أمر الطالب / {name}..."
+                  className="min-h-[80px] text-sm"
+                  dir="rtl"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  استخدم <code className="bg-muted px-1 rounded text-primary font-mono">{"{name}"}</code> ليتم استبداله تلقائياً باسم الطالب
+                </p>
+
+                {/* Preview */}
+                <div className="p-4 rounded-xl border-2 border-primary/20 bg-gradient-to-l from-primary/5 to-accent/5">
+                  <p className="text-xs text-muted-foreground mb-1">معاينة:</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {parentWelcomeMessage.replace(/\{name\}/g, "أحمد محمد")}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              disabled={savingParentWelcome}
+              className="gap-1.5"
+              onClick={async () => {
+                setSavingParentWelcome(true);
+                const results = await Promise.all([
+                  supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(parentWelcomeEnabled) }),
+                  supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: parentWelcomeMessage }),
+                ]);
+                setSavingParentWelcome(false);
+                if (results.some(r => r.error)) {
+                  toast({ title: "خطأ", description: "فشل حفظ إعدادات بوابة ولي الأمر", variant: "destructive" });
+                } else {
+                  toast({ title: "تم الحفظ", description: "تم تحديث إعدادات بوابة ولي الأمر بنجاح" });
+                }
+              }}
+            >
+              <Save className="h-4 w-4" />
+              {savingParentWelcome ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+            </Button>
+
+            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl space-y-1">
+              <p>🔒 <strong>الأمان:</strong> ولي الأمر يمكنه المشاهدة والتحميل فقط (Read-Only).</p>
+              <p>📄 <strong>التقرير:</strong> يتضمن زر تحميل PDF يحتوي الترويسة الرسمية وبيانات الطالب.</p>
+              <p>☆ <strong>الرموز:</strong> تُستخدم رموز مفرغة (Outlined) لتوفير الحبر عند الطباعة.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {activeCard === "lesson_plans" && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
