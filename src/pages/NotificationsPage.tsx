@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Bell, CheckCircle, MessageSquare, Send, Users, GraduationCap, UserX, Megaphone, FileImage, Check, X as XIcon, Clock } from "lucide-react";
 import AnnouncementsTab from "@/components/announcements/AnnouncementsTab";
+import ParentMessagesInbox from "@/components/parent/ParentMessagesInbox";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
@@ -344,6 +345,10 @@ export default function NotificationsPage() {
             إرسال رسالة SMS
           </TabsTrigger>
           )}
+          <TabsTrigger value="parent-messages" className="gap-1.5">
+            <MessageSquare className="h-4 w-4" />
+            رسائل أولياء الأمور
+          </TabsTrigger>
           <TabsTrigger value="history" className="gap-1.5">
             <Bell className="h-4 w-4" />
             سجل الإشعارات
@@ -614,6 +619,11 @@ export default function NotificationsPage() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* ===== Parent Messages ===== */}
+        <TabsContent value="parent-messages">
+          <ParentMessagesInbox />
         </TabsContent>
 
         {/* ===== History ===== */}
