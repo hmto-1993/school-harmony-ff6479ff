@@ -135,7 +135,10 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
             <Link
               key={link.to}
               to={link.to}
-              onClick={onNavigate}
+              onClick={() => {
+                onNavigate?.();
+                if (link.to === "/notifications") refreshParentMessages();
+              }}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 relative",
                 isCollapsed && "justify-center px-2",
