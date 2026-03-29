@@ -1297,6 +1297,9 @@ export default function SettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الفصول</SelectItem>
+                  {orphanedCategories.length > 0 && (
+                    <SelectItem value="orphaned">فئات غير مرتبطة ({orphanedCategories.length})</SelectItem>
+                  )}
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
