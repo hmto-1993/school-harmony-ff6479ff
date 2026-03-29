@@ -76,19 +76,21 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   }, []);
 
   // Fetch unread parent messages count
+  const refreshParentMessages = () => {
+    if (!user) return;
+    supabase
+      .from("parent_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .then(({ count }) => {
+        setUnreadParentMessages(count || 0);
+      });
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchCount = () => {
-      supabase
-        .from("parent_messages")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending")
-        .then(({ count }) => {
-          setUnreadParentMessages(count || 0);
-        });
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
+    refreshParentMessages();
+    const interval = setInterval(refreshParentMessages, 120000); // every 2 minutes
     return () => clearInterval(interval);
   }, [user]);
 
