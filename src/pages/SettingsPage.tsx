@@ -870,6 +870,45 @@ export default function SettingsPage() {
     fetchData();
   };
 
+  const handleReassignOrphanedCategories = async (targetClassId: string) => {
+    if (!targetClassId || orphanedCategories.length === 0) return;
+    if (targetClassId === "all_classes") {
+      // Reassign to all classes: for each orphaned category, create a copy in each class
+      const inserts = classes.flatMap(cls => 
+        orphanedCategories.map(cat => ({
+          name: cat.name,
+          weight: cat.weight,
+          max_score: cat.max_score,
+          class_id: cls.id,
+          sort_order: cat.sort_order,
+          category_group: cat.category_group,
+        }))
+      );
+      const { error: insertError } = await supabase.from("grade_categories").insert(inserts);
+      if (insertError) {
+        toast({ title: "خطأ", description: insertError.message, variant: "destructive" });
+        return;
+      }
+      // Delete orphaned originals
+      const ids = orphanedCategories.map(c => c.id);
+      await supabase.from("grade_categories").delete().in("id", ids);
+      toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بجميع الفصول` });
+    } else {
+      // Reassign to specific class
+      const updates = orphanedCategories.map(cat =>
+        supabase.from("grade_categories").update({ class_id: targetClassId }).eq("id", cat.id)
+      );
+      const results = await Promise.all(updates);
+      if (results.some(r => r.error)) {
+        toast({ title: "خطأ", description: "فشل ربط بعض الفئات", variant: "destructive" });
+      } else {
+        const className = classes.find(c => c.id === targetClassId)?.name || "";
+        toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بفصل ${className}` });
+      }
+    }
+    fetchData();
+  };
+
   const handleReorderCategory = async (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => {
     const idx = groupCats.findIndex(c => c.id === catId);
     if (idx < 0) return;
