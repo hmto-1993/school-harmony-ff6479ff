@@ -615,6 +615,69 @@ export type Database = {
           },
         ]
       }
+      parent_messages: {
+        Row: {
+          body: string
+          class_id: string | null
+          created_at: string
+          id: string
+          message_type: string
+          parent_name: string
+          parent_phone: string | null
+          replied_at: string | null
+          replied_by: string | null
+          status: string
+          student_id: string
+          subject: string
+          teacher_reply: string | null
+        }
+        Insert: {
+          body?: string
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string
+          parent_name?: string
+          parent_phone?: string | null
+          replied_at?: string | null
+          replied_by?: string | null
+          status?: string
+          student_id: string
+          subject?: string
+          teacher_reply?: string | null
+        }
+        Update: {
+          body?: string
+          class_id?: string | null
+          created_at?: string
+          id?: string
+          message_type?: string
+          parent_name?: string
+          parent_phone?: string | null
+          replied_at?: string | null
+          replied_by?: string | null
+          status?: string
+          student_id?: string
+          subject?: string
+          teacher_reply?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_messages_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "parent_messages_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       popup_messages: {
         Row: {
           created_at: string
