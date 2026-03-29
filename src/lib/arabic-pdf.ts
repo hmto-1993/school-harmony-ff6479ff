@@ -303,14 +303,31 @@ export function finalizePDFAsBlob(doc: jsPDF, watermark?: WatermarkConfig): Blob
   return doc.output("blob") as Blob;
 }
 
-/** Get autoTable styles pre-configured for Arabic font */
+/** Get autoTable styles pre-configured for Arabic font — matches grades-print.ts look */
 export function getArabicTableStyles() {
   return {
-    styles: { font: "Amiri", halign: "center" as const, fontSize: 9 },
+    styles: {
+      font: "Amiri",
+      halign: "center" as const,
+      fontSize: 9,
+      cellPadding: 2.5,
+      lineColor: [203, 213, 225] as [number, number, number],
+      lineWidth: 0.3,
+      textColor: [30, 30, 30] as [number, number, number],
+    },
     headStyles: {
-      fillColor: [59, 130, 246] as [number, number, number],
+      fillColor: [239, 246, 255] as [number, number, number],
+      textColor: [30, 64, 175] as [number, number, number],
       halign: "center" as const,
       fontStyle: "bold" as const,
+      lineColor: [203, 213, 225] as [number, number, number],
+      lineWidth: 0.3,
+    },
+    alternateRowStyles: {
+      fillColor: [248, 250, 252] as [number, number, number],
+    },
+    bodyStyles: {
+      fillColor: [255, 255, 255] as [number, number, number],
     },
   };
 }
