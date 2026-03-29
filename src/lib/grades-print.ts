@@ -17,9 +17,23 @@ interface PrintOptions {
   tableHTML: string;
 }
 
+/* ──────────────────────────── Config cache ───────────────────── */
+
+const headerCache = new Map<string, { data: any; ts: number }>();
+const footerCache = new Map<string, { data: any; ts: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCached(cache: Map<string, { data: any; ts: number }>, key: string): any | undefined {
+  const entry = cache.get(key);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.data;
+  return undefined;
+}
+
 /* ──────────────────────────── Data fetchers ──────────────────── */
 
 async function fetchHeaderConfig(reportType = "grades"): Promise<any | null> {
+  const cached = getCached(headerCache, reportType);
+  if (cached !== undefined) return cached;
   try {
     const { data } = await supabase
       .from("site_settings")
@@ -27,7 +41,7 @@ async function fetchHeaderConfig(reportType = "grades"): Promise<any | null> {
       .eq("id", `print_header_config_${reportType}`)
       .single();
     if (data?.value) {
-      try { return JSON.parse(data.value); } catch { /* skip */ }
+      try { const parsed = JSON.parse(data.value); headerCache.set(reportType, { data: parsed, ts: Date.now() }); return parsed; } catch { /* skip */ }
     }
     const { data: def } = await supabase
       .from("site_settings")
@@ -35,13 +49,16 @@ async function fetchHeaderConfig(reportType = "grades"): Promise<any | null> {
       .eq("id", "print_header_config")
       .single();
     if (def?.value) {
-      try { return JSON.parse(def.value); } catch { /* skip */ }
+      try { const parsed = JSON.parse(def.value); headerCache.set(reportType, { data: parsed, ts: Date.now() }); return parsed; } catch { /* skip */ }
     }
   } catch { /* skip */ }
+  headerCache.set(reportType, { data: null, ts: Date.now() });
   return null;
 }
 
 async function fetchFooterConfig(reportType = "grades"): Promise<any | null> {
+  const cached = getCached(footerCache, reportType);
+  if (cached !== undefined) return cached;
   try {
     const { data } = await supabase
       .from("site_settings")
@@ -62,8 +79,11 @@ async function fetchFooterConfig(reportType = "grades"): Promise<any | null> {
         try { config = JSON.parse(def.value); } catch { /* skip */ }
       }
     }
-    if (config?.footerSignatures?.enabled) return config.footerSignatures;
+    const result = config?.footerSignatures?.enabled ? config.footerSignatures : null;
+    footerCache.set(reportType, { data: result, ts: Date.now() });
+    return result;
   } catch { /* skip */ }
+  footerCache.set(reportType, { data: null, ts: Date.now() });
   return null;
 }
 
