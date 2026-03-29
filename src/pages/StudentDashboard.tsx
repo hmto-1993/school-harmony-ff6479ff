@@ -108,6 +108,8 @@ export default function StudentDashboard() {
   const [parentShowGrades, setParentShowGrades] = useState(true);
   const [parentShowAttendance, setParentShowAttendance] = useState(true);
   const [parentShowBehavior, setParentShowBehavior] = useState(true);
+  const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
+  const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
 
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
@@ -128,7 +130,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
@@ -138,6 +140,8 @@ export default function StudentDashboard() {
       if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
       if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
       if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
+      if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
+      if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
     });
   };
 
