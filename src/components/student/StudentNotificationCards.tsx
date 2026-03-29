@@ -259,7 +259,7 @@ export default function StudentNotificationCards({
       const ext = excuseFile.name.split(".").pop() || "jpg";
       const fileName = `excuse_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
       const filePath = `excuses/${fileName}`;
-      const { error: uploadErr } = await supabase.storage.from("school-assets").upload(filePath, excuseFile);
+      const { error: uploadErr } = await supabase.storage.from("excuses").upload(filePath, excuseFile);
       if (uploadErr) throw uploadErr;
 
       const { data: excuseResult, error: excuseErr } = await supabase.functions.invoke("submit-excuse", {
