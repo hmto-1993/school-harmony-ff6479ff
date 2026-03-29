@@ -1450,6 +1450,30 @@ export default function SettingsPage() {
               </div>
             )}
 
+
+            {/* Orphaned categories notice */}
+            {isAdmin && orphanedCategories.length > 0 && catClassFilter !== "orphaned" && (
+              <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="text-amber-800 dark:text-amber-300">
+                    يوجد {orphanedCategories.length} فئة غير مرتبطة بفصل (محفوظة من فصول محذوفة)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select onValueChange={handleReassignOrphanedCategories}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <SelectValue placeholder="ربط بفصل..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_classes">جميع الفصول</SelectItem>
+                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             {/* Section 1: المهام الأدائية والمشاركة والتفاعل */}
             <div className="space-y-2">
               <h3 className="text-sm font-bold flex items-center gap-2 px-1 text-emerald-600 dark:text-emerald-400">
