@@ -280,6 +280,8 @@ export default function SettingsPage() {
   const [parentShowGrades, setParentShowGrades] = useState(true);
   const [parentShowAttendance, setParentShowAttendance] = useState(true);
   const [parentShowBehavior, setParentShowBehavior] = useState(true);
+  const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
+  const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
 
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
