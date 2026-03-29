@@ -464,6 +464,13 @@ export default function SettingsPage() {
         if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
         if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
         if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
+        if (s.id === "parent_grades_default_view") setParentGradesDefaultView(s.value === "table" ? "table" : "cards");
+        if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
+        if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
+        if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
+        if (s.id === "parent_grades_hidden_categories" && s.value) {
+          try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+        }
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
