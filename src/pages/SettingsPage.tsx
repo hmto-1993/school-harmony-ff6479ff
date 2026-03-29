@@ -734,7 +734,7 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "تم الحذف" });
+      toast({ title: "تم الحذف", description: "تم حذف الفصل. فئات التقييم محفوظة ويمكن إعادة ربطها." });
       fetchData();
     }
   };
@@ -901,13 +901,22 @@ export default function SettingsPage() {
   // Filter categories by selected class
   const [catClassFilter, setCatClassFilter] = useState("all");
 
-  // When "all", show unique categories by name (from first class as template)
+  // Orphaned categories (class was deleted, category preserved)
+  const orphanedCategories = categories.filter((c) => c.class_id === null);
+
+  // When "all", show unique categories by name (from first class as template), plus orphaned
   const filteredCategories = catClassFilter === "all"
     ? (() => {
         const firstClassId = classes[0]?.id;
-        return firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        const classCats = firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        // Include orphaned categories not already represented
+        const classNames = new Set(classCats.map(c => c.name));
+        const uniqueOrphaned = orphanedCategories.filter(c => !classNames.has(c.name));
+        return [...classCats, ...uniqueOrphaned];
       })()
-    : categories.filter((c) => c.class_id === catClassFilter);
+    : catClassFilter === "orphaned"
+      ? orphanedCategories
+      : categories.filter((c) => c.class_id === catClassFilter);
 
   const getEffectiveGroup = (cat: GradeCategory) => editingCats[cat.id]?.category_group ?? cat.category_group;
   const classworkCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "classwork");
