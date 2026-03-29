@@ -1119,18 +1119,21 @@ export type Database = {
           class_id: string | null
           id: string
           logged_in_at: string
+          login_type: string
           student_id: string
         }
         Insert: {
           class_id?: string | null
           id?: string
           logged_in_at?: string
+          login_type?: string
           student_id: string
         }
         Update: {
           class_id?: string | null
           id?: string
           logged_in_at?: string
+          login_type?: string
           student_id?: string
         }
         Relationships: [
