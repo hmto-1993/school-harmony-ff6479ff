@@ -365,52 +365,60 @@ export default function ReportsPage() {
   };
 
   const exportAttendancePDF = async () => {
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
     doc.text("تقرير الحضور", pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("Amiri", "normal");
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
-    const tableData = attendanceData.map((r) => [
+    const tableData = attendanceData.map((r, i) => [
       r.notes || "",
       STATUS_LABELS[r.status] || r.status,
       r.date,
       r.student_name,
+      String(i + 1),
     ]);
 
     autoTable(doc, {
       startY: startY + 12,
-      head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب"]],
+      head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
       body: tableData,
       ...tableStyles,
-      columnStyles: { 3: { halign: "right" } },
+      columnStyles: {
+        3: { halign: "right" as const, fontStyle: "bold" as const },
+        4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+      },
     });
 
-    safeSavePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`);
+    finalizePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`, watermark);
   };
 
   const exportGradesPDF = async () => {
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
     doc.text("تقرير الدرجات", pageWidth / 2, startY, { align: "center" });
 
-    const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب"];
-    const body = gradeData.map((r) => [
+    const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب", "#"];
+    const body = gradeData.map((r, i) => [
       String(r.total),
       ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
       r.student_name,
+      String(i + 1),
     ]);
 
     autoTable(doc, {
@@ -418,10 +426,14 @@ export default function ReportsPage() {
       head: [head],
       body,
       ...tableStyles,
-      columnStyles: { [head.length - 1]: { halign: "right" } },
+      columnStyles: {
+        [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
+        [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+        0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
+      },
     });
 
-    safeSavePDF(doc, `تقرير_الدرجات.pdf`);
+    finalizePDF(doc, `تقرير_الدرجات.pdf`, watermark);
   };
 
   // ============ Print & Send ============
