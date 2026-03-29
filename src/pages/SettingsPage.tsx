@@ -283,8 +283,12 @@ export default function SettingsPage() {
   const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
   const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
   const [parentShowContactTeacher, setParentShowContactTeacher] = useState(true);
+  const [parentGradesDefaultView, setParentGradesDefaultView] = useState<"cards" | "table">("cards");
+  const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
+  const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
+  const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
 
-  // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
   const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
@@ -422,7 +426,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -460,6 +464,13 @@ export default function SettingsPage() {
         if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
         if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
         if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
+        if (s.id === "parent_grades_default_view") setParentGradesDefaultView(s.value === "table" ? "table" : "cards");
+        if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
+        if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
+        if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
+        if (s.id === "parent_grades_hidden_categories" && s.value) {
+          try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+        }
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -2730,6 +2741,109 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Parent Grades Detail Controls */}
+            {parentShowGrades && (
+              <div className="pt-2 border-t border-border/30">
+                <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                  إعدادات تفصيلية لعرض الدرجات
+                </p>
+                <div className="space-y-4 max-w-md">
+                  {/* Default View */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                    <div>
+                      <h4 className="text-sm font-bold">العرض الافتراضي</h4>
+                      <p className="text-xs text-muted-foreground">نوع العرض عند فتح تبويب الدرجات</p>
+                    </div>
+                    <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+                      <button
+                        onClick={() => setParentGradesDefaultView("cards")}
+                        className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesDefaultView === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                      >بطاقات</button>
+                      <button
+                        onClick={() => setParentGradesDefaultView("table")}
+                        className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesDefaultView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                      >جدول</button>
+                    </div>
+                  </div>
+
+                  {/* Visible Periods */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                    <div>
+                      <h4 className="text-sm font-bold">الفترة المعروضة</h4>
+                      <p className="text-xs text-muted-foreground">أي فترة تظهر لولي الأمر</p>
+                    </div>
+                    <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+                      {[
+                        { v: "both" as const, l: "كلاهما" },
+                        { v: "1" as const, l: "الأولى" },
+                        { v: "2" as const, l: "الثانية" },
+                      ].map(opt => (
+                        <button
+                          key={opt.v}
+                          onClick={() => setParentGradesVisiblePeriods(opt.v)}
+                          className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesVisiblePeriods === opt.v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                        >{opt.l}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Show/Hide Columns */}
+                  <div className="space-y-2">
+                    {[
+                      { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
+                      { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
+                    ].map(col => (
+                      <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                        <h4 className="text-sm font-bold">{col.label}</h4>
+                        <button
+                          onClick={() => col.setter(!col.state)}
+                          className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                            col.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                          )}
+                        >
+                          {col.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          {col.state ? "ظاهر" : "مخفي"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Hidden Categories */}
+                  {categories.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
+                      <p className="text-xs text-muted-foreground">الفئات المخفية لن تظهر لولي الأمر</p>
+                      <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
+                        {categories.map((cat: any) => {
+                          const isHidden = parentGradesHiddenCategories.includes(cat.id);
+                          return (
+                            <button
+                              key={cat.id}
+                              onClick={() => {
+                                setParentGradesHiddenCategories(prev =>
+                                  isHidden ? prev.filter(id => id !== cat.id) : [...prev, cat.id]
+                                );
+                              }}
+                              className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                isHidden
+                                  ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
+                                  : "bg-success/10 text-success border-success/30"
+                              )}
+                            >
+                              {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
+                              {cat.name}
+                              {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <Button
               disabled={savingParentWelcome}
               className="gap-1.5"
@@ -2745,6 +2859,11 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_show_honor_roll", value: String(parentShowHonorRoll) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_absence_warning", value: String(parentShowAbsenceWarning) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_contact_teacher", value: String(parentShowContactTeacher) }),
+                  supabase.from("site_settings").upsert({ id: "parent_grades_default_view", value: parentGradesDefaultView }),
+                  supabase.from("site_settings").upsert({ id: "parent_grades_show_percentage", value: String(parentGradesShowPercentage) }),
+                  supabase.from("site_settings").upsert({ id: "parent_grades_show_eval", value: String(parentGradesShowEval) }),
+                  supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: parentGradesVisiblePeriods }),
+                  supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
