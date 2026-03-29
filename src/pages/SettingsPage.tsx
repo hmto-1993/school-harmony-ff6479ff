@@ -734,7 +734,7 @@ export default function SettingsPage() {
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "تم الحذف" });
+      toast({ title: "تم الحذف", description: "تم حذف الفصل. فئات التقييم محفوظة ويمكن إعادة ربطها." });
       fetchData();
     }
   };
@@ -870,6 +870,45 @@ export default function SettingsPage() {
     fetchData();
   };
 
+  const handleReassignOrphanedCategories = async (targetClassId: string) => {
+    if (!targetClassId || orphanedCategories.length === 0) return;
+    if (targetClassId === "all_classes") {
+      // Reassign to all classes: for each orphaned category, create a copy in each class
+      const inserts = classes.flatMap(cls => 
+        orphanedCategories.map(cat => ({
+          name: cat.name,
+          weight: cat.weight,
+          max_score: cat.max_score,
+          class_id: cls.id,
+          sort_order: cat.sort_order,
+          category_group: cat.category_group,
+        }))
+      );
+      const { error: insertError } = await supabase.from("grade_categories").insert(inserts);
+      if (insertError) {
+        toast({ title: "خطأ", description: insertError.message, variant: "destructive" });
+        return;
+      }
+      // Delete orphaned originals
+      const ids = orphanedCategories.map(c => c.id);
+      await supabase.from("grade_categories").delete().in("id", ids);
+      toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بجميع الفصول` });
+    } else {
+      // Reassign to specific class
+      const updates = orphanedCategories.map(cat =>
+        supabase.from("grade_categories").update({ class_id: targetClassId }).eq("id", cat.id)
+      );
+      const results = await Promise.all(updates);
+      if (results.some(r => r.error)) {
+        toast({ title: "خطأ", description: "فشل ربط بعض الفئات", variant: "destructive" });
+      } else {
+        const className = classes.find(c => c.id === targetClassId)?.name || "";
+        toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بفصل ${className}` });
+      }
+    }
+    fetchData();
+  };
+
   const handleReorderCategory = async (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => {
     const idx = groupCats.findIndex(c => c.id === catId);
     if (idx < 0) return;
@@ -901,13 +940,22 @@ export default function SettingsPage() {
   // Filter categories by selected class
   const [catClassFilter, setCatClassFilter] = useState("all");
 
-  // When "all", show unique categories by name (from first class as template)
+  // Orphaned categories (class was deleted, category preserved)
+  const orphanedCategories = categories.filter((c) => c.class_id === null);
+
+  // When "all", show unique categories by name (from first class as template), plus orphaned
   const filteredCategories = catClassFilter === "all"
     ? (() => {
         const firstClassId = classes[0]?.id;
-        return firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        const classCats = firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        // Include orphaned categories not already represented
+        const classNames = new Set(classCats.map(c => c.name));
+        const uniqueOrphaned = orphanedCategories.filter(c => !classNames.has(c.name));
+        return [...classCats, ...uniqueOrphaned];
       })()
-    : categories.filter((c) => c.class_id === catClassFilter);
+    : catClassFilter === "orphaned"
+      ? orphanedCategories
+      : categories.filter((c) => c.class_id === catClassFilter);
 
   const getEffectiveGroup = (cat: GradeCategory) => editingCats[cat.id]?.category_group ?? cat.category_group;
   const classworkCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "classwork");
@@ -1288,6 +1336,9 @@ export default function SettingsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الفصول</SelectItem>
+                  {orphanedCategories.length > 0 && (
+                    <SelectItem value="orphaned">فئات غير مرتبطة ({orphanedCategories.length})</SelectItem>
+                  )}
                   {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -1396,6 +1447,30 @@ export default function SettingsPage() {
                     {savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
                   </Button>
                 )}
+              </div>
+            )}
+
+
+            {/* Orphaned categories notice */}
+            {isAdmin && orphanedCategories.length > 0 && catClassFilter !== "orphaned" && (
+              <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span className="text-amber-800 dark:text-amber-300">
+                    يوجد {orphanedCategories.length} فئة غير مرتبطة بفصل (محفوظة من فصول محذوفة)
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select onValueChange={handleReassignOrphanedCategories}>
+                    <SelectTrigger className="w-[180px] h-8 text-xs">
+                      <SelectValue placeholder="ربط بفصل..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all_classes">جميع الفصول</SelectItem>
+                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
 
