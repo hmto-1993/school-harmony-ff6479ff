@@ -701,8 +701,8 @@ export default function StudentDashboard() {
                         exam: { label: "الاختبارات", color: "text-amber-600 dark:text-amber-400", icon: "📝" },
                         أخرى: { label: "أخرى", color: "text-primary", icon: "📊" },
                       };
-                      const totalScore = student.grades.reduce((s, g) => s + (g.score ?? 0), 0);
-                      const totalMax = student.grades.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                      const totalScore = filteredGrades.reduce((s, g) => s + (g.score ?? 0), 0);
+                      const totalMax = filteredGrades.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
                       return (
                         <>
                           {Object.entries(groups).map(([groupKey, items]) => {
@@ -778,14 +778,14 @@ export default function StudentDashboard() {
                           <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">المعيار</th>
                           <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
                           <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">من</th>
-                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النسبة</th>
-                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">التقييم</th>
+                          {parentGradesShowPercentage && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النسبة</th>}
+                          {parentGradesShowEval && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">التقييم</th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {student.grades.map((g, i) => {
+                        {filteredGrades.map((g, i) => {
                           const isEven = i % 2 === 0;
-                          const isLast = i === student.grades.length - 1;
+                          const isLast = i === filteredGrades.length - 1;
                           const score = g.score ?? 0;
                           const maxScore = g.grade_categories?.max_score || 100;
                           const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
@@ -795,6 +795,7 @@ export default function StudentDashboard() {
                               <td className={cn("p-3 text-right font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{g.grade_categories?.name || "-"}</td>
                               <td className="p-3 text-center border-l border-border/10">{g.score ?? "-"}</td>
                               <td className="p-3 text-center border-l border-border/10">{g.grade_categories?.max_score || "-"}</td>
+                              {parentGradesShowPercentage && (
                               <td className="p-3 text-center border-l border-border/10">
                                 <span className={cn(
                                   "text-xs font-bold",
@@ -804,16 +805,20 @@ export default function StudentDashboard() {
                                   "text-rose-600 dark:text-rose-400"
                                 )}>{pct}%</span>
                               </td>
+                              )}
+                              {parentGradesShowEval && (
                               <td className={cn("p-3 text-center text-lg", isLast && "last:rounded-bl-xl",
                                 pct >= 90 ? "text-amber-500" : pct >= 75 ? "text-blue-500" : pct >= 60 ? "text-amber-600" : "text-muted-foreground"
                               )}>{evalIcon}</td>
+                              )}
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
                   </div>
-                )}
+                );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
