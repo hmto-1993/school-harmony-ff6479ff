@@ -12,7 +12,7 @@ import {
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X,
-  User, Hash, BookMarked, Heart
+  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp
 } from "lucide-react";
 import {
   Dialog,
@@ -585,14 +585,7 @@ export default function StudentDashboard() {
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
 
-        {/* Parent Contact Form */}
-        {parentShowContactTeacher && (
-          <ParentContactForm
-            studentId={student.id}
-            studentName={student.full_name}
-            classId={student.class_id}
-          />
-        )}
+        {/* Parent Contact Form moved to floating button at bottom */}
 
         {/* Details Tabs */}
         {(() => {
