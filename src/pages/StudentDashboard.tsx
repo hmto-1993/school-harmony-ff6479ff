@@ -125,6 +125,7 @@ export default function StudentDashboard() {
   const [popupMessage, setPopupMessage] = useState("");
   const [popupAction, setPopupAction] = useState<string>("none");
   const [activeTab, setActiveTab] = useState<string>("");
+  const [gradesView, setGradesView] = useState<"table" | "cards">("cards");
 
   // Welcome message
   const [welcomeMessage, setWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
