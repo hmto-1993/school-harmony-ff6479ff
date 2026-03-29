@@ -76,19 +76,21 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   }, []);
 
   // Fetch unread parent messages count
+  const refreshParentMessages = () => {
+    if (!user) return;
+    supabase
+      .from("parent_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending")
+      .then(({ count }) => {
+        setUnreadParentMessages(count || 0);
+      });
+  };
+
   useEffect(() => {
     if (!user) return;
-    const fetchCount = () => {
-      supabase
-        .from("parent_messages")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending")
-        .then(({ count }) => {
-          setUnreadParentMessages(count || 0);
-        });
-    };
-    fetchCount();
-    const interval = setInterval(fetchCount, 30000);
+    refreshParentMessages();
+    const interval = setInterval(refreshParentMessages, 120000); // every 2 minutes
     return () => clearInterval(interval);
   }, [user]);
 
@@ -133,7 +135,10 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
             <Link
               key={link.to}
               to={link.to}
-              onClick={onNavigate}
+              onClick={() => {
+                onNavigate?.();
+                if (link.to === "/notifications") refreshParentMessages();
+              }}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 relative",
                 isCollapsed && "justify-center px-2",
