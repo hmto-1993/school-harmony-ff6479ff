@@ -894,6 +894,7 @@ export default function StudentDashboard() {
 
                   return <>{mainView}{dailyEval}</>;
                 })()}
+              </CardContent>
             </Card>
           </TabsContent>
           )}
