@@ -52,20 +52,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole((data?.role as AppRole) || null);
   };
 
-  // Restore student session by re-fetching from server
+  // Restore student session using HMAC token (no PII in storage)
   useEffect(() => {
     const saved = sessionStorage.getItem("student_session");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Support both old format (with national_id) and new format (id only)
-        const studentId = parsed.id;
-        const nationalId = parsed.national_id;
-        const loginType = parsed.login_type || "student";
+        const { student_id, session_token, session_issued_at, login_type } = parsed;
         
-        if (nationalId) {
-          // Legacy restore via national_id
-          supabase.functions.invoke("student-login", { body: { national_id: nationalId, login_type: loginType } }).then(({ data, error }) => {
+        if (student_id && session_token && session_issued_at) {
+          // Secure restore via HMAC token verification
+          supabase.functions.invoke("restore-student-session", {
+            body: { student_id, session_token, session_issued_at, login_type: login_type || "student" },
+          }).then(({ data, error }) => {
             if (!error && data && !data.error) {
               setStudent({
                 id: data.student.id,
@@ -81,20 +80,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 session_token: data.session_token,
                 session_issued_at: data.session_issued_at,
               });
-              // Migrate to new format (no PII in storage)
-              sessionStorage.setItem("student_session", JSON.stringify({ id: data.student.id, login_type: loginType }));
+              // Update stored token with the fresh one
+              sessionStorage.setItem("student_session", JSON.stringify({
+                student_id: data.student.id,
+                session_token: data.session_token,
+                session_issued_at: data.session_issued_at,
+                login_type: login_type || "student",
+              }));
             } else {
               sessionStorage.removeItem("student_session");
             }
             setStudentRestoring(false);
           });
-        } else if (studentId) {
-          // New format: look up national_id from edge function using student record
-          // We need to fetch the student's national_id server-side to re-authenticate
-          // For now, clear session and require re-login (secure approach)
-          sessionStorage.removeItem("student_session");
-          setStudentRestoring(false);
         } else {
+          // Invalid or legacy format — require re-login
           sessionStorage.removeItem("student_session");
           setStudentRestoring(false);
         }
