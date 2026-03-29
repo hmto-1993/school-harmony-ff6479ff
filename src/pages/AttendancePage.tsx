@@ -408,15 +408,16 @@ export default function AttendancePage() {
 
   const exportAttendancePDF = async () => {
     if (!records.length) return;
-    const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const className = classes.find(c => c.id === selectedClass)?.name || "";
     const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
 
     const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
-    const { finalizePDF } = await import("@/lib/arabic-pdf");
+    const tableStyles = getArabicTableStyles();
     doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
     doc.text(`تقرير الحضور — ${className} — ${date}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
 
     const head = [["الملاحظات", "الحالة", "الاسم", "#"]];
@@ -430,9 +431,12 @@ export default function AttendancePage() {
     autoTable(doc, {
       head,
       body,
-      startY: startY + 10,
-      ...getArabicTableStyles(),
-      columnStyles: { 2: { halign: "right" as const } },
+      startY: startY + 8,
+      ...tableStyles,
+      columnStyles: {
+        2: { halign: "right" as const, fontStyle: "bold" as const },
+        3: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+      },
     });
 
     finalizePDF(doc, `حضور_${className}_${date}.pdf`, watermark);
