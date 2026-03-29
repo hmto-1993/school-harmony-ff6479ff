@@ -624,7 +624,7 @@ export default function StudentDashboard() {
                 <CardTitle className="text-lg flex items-center gap-2">
                   <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
                   تفاصيل الدرجات
-                  <span className="text-xs text-muted-foreground font-normal mr-auto">☆ رموز مفرغة لتوفير الحبر</span>
+                  
                 </CardTitle>
               </CardHeader>
               <CardContent>
