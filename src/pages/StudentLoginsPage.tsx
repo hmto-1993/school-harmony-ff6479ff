@@ -17,6 +17,7 @@ interface LoginRecord {
   student_id: string;
   class_id: string | null;
   logged_in_at: string;
+  login_type: string;
   students: { full_name: string; national_id: string | null; class_id: string | null } | null;
 }
 
