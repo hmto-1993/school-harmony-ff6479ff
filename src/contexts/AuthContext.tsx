@@ -57,9 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = sessionStorage.getItem("student_session");
     if (saved) {
       try {
-        const { national_id, login_type } = JSON.parse(saved);
-        if (national_id) {
-          supabase.functions.invoke("student-login", { body: { national_id, login_type: login_type || "student" } }).then(({ data, error }) => {
+        const parsed = JSON.parse(saved);
+        // Support both old format (with national_id) and new format (id only)
+        const studentId = parsed.id;
+        const nationalId = parsed.national_id;
+        const loginType = parsed.login_type || "student";
+        
+        if (nationalId) {
+          // Legacy restore via national_id
+          supabase.functions.invoke("student-login", { body: { national_id: nationalId, login_type: loginType } }).then(({ data, error }) => {
             if (!error && data && !data.error) {
               setStudent({
                 id: data.student.id,
@@ -75,11 +81,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 session_token: data.session_token,
                 session_issued_at: data.session_issued_at,
               });
+              // Migrate to new format (no PII in storage)
+              sessionStorage.setItem("student_session", JSON.stringify({ id: data.student.id, login_type: loginType }));
             } else {
               sessionStorage.removeItem("student_session");
             }
             setStudentRestoring(false);
           });
+        } else if (studentId) {
+          // New format: look up national_id from edge function using student record
+          // We need to fetch the student's national_id server-side to re-authenticate
+          // For now, clear session and require re-login (secure approach)
+          sessionStorage.removeItem("student_session");
+          setStudentRestoring(false);
         } else {
           sessionStorage.removeItem("student_session");
           setStudentRestoring(false);
