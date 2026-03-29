@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
