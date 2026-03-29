@@ -191,10 +191,10 @@ function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: st
     .subtotal-header { background: #e0f2fe !important; }
 
     /* Grade icons */
-    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1; }
-    .icon-excellent { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#059669; }
-    .icon-average { display:inline-block;width:6px;height:6px;border-radius:9999px;background:#d97706; }
-    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1; }
+    .icon-star { display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;color:#eab308;font-size:12px;line-height:1; }
+    .icon-excellent { display:inline-block;width:8px;height:8px;border-radius:9999px;background:#059669; }
+    .icon-average { display:inline-block;width:8px;height:8px;border-radius:9999px;background:#d97706; }
+    .icon-zero { display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;border-radius:9999px;background:#e11d48;color:#fff;font-size:7px;line-height:1; }
     .icons-cell { display:flex;flex-wrap:wrap;justify-content:center;gap:1px;min-height:10px; }
 
     /* Grade level colors */
