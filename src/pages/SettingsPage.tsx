@@ -283,8 +283,12 @@ export default function SettingsPage() {
   const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
   const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
   const [parentShowContactTeacher, setParentShowContactTeacher] = useState(true);
+  const [parentGradesDefaultView, setParentGradesDefaultView] = useState<"cards" | "table">("cards");
+  const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
+  const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
+  const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
 
-  // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
   const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
