@@ -195,24 +195,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     }
   };
 
-  /** Draw a simple 5-point star using filled polygon */
-  const drawPDFStar = (doc: any, cx: number, cy: number, size: number) => {
-    const points: [number, number][] = [];
-    for (let i = 0; i < 10; i++) {
-      const angle = (Math.PI / 2) + (i * Math.PI / 5);
-      const r = i % 2 === 0 ? size : size * 0.45;
-      points.push([cx + r * Math.cos(angle), cy - r * Math.sin(angle)]);
-    }
-    // Draw filled polygon using triangle fan
-    for (let i = 1; i < points.length - 1; i++) {
-      doc.triangle(
-        points[0][0], points[0][1],
-        points[i][0], points[i][1],
-        points[i + 1][0], points[i + 1][1],
-        "F"
-      );
-    }
-  };
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
