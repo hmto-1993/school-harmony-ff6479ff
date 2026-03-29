@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { safePrint } from "@/lib/print-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -340,10 +339,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     setOpen(false);
   };
 
-  const handlePrint = () => {
-    setOpen(false);
-    setTimeout(() => safePrint(), 300);
-  };
 
   if (groups.length === 0) return null;
 
