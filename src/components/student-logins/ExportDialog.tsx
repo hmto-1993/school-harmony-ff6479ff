@@ -113,10 +113,12 @@ export default function ExportDialog({
     const pageWidth = doc.internal.pageSize.getWidth();
     const tableStyles = getArabicTableStyles();
 
-    doc.setFontSize(16);
-    doc.text("سجل دخول الطلاب", pageWidth / 2, headerEndY, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 7, { align: "center" });
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
+    doc.text("سجل الزيارات", pageWidth / 2, headerEndY, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("Amiri", "normal");
+    doc.text(format(new Date(), "yyyy/MM/dd"), pageWidth / 2, headerEndY + 6, { align: "center" });
 
     let startY = headerEndY + 15;
 
