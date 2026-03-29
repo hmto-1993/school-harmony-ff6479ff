@@ -277,10 +277,18 @@
     color-scheme: light;
   }
 
-  /* Preserve colors everywhere */
+  /* Preserve colors & kill heavy effects */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    transition: none !important;
+    animation: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    contain: content;
   }
 
   /* Page setup */
@@ -350,10 +358,11 @@
     font-size: 11px !important;
     direction: rtl !important;
     width: 100% !important;
-    table-layout: auto !important;
+    table-layout: fixed !important;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
     line-height: 1.4 !important;
+    contain: layout style;
   }
   #print-container th, #print-container td {
     padding: 4px 6px !important;
@@ -437,6 +446,17 @@
 
   /* Watermark overlay */
   .print-watermark { display: block !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; }
+
+  /* Force fixed dimensions on header images to prevent reflow */
+  #print-container img {
+    width: auto;
+    height: auto;
+    max-width: 80px;
+    max-height: 80px;
+  }
+
+  /* Kill Recharts / SVG charts in print to avoid heavy rendering */
+  #print-container .recharts-wrapper { display: none !important; }
 }
 
 /* Light mode snapshot for html-to-image capture */

@@ -136,9 +136,7 @@ export function safePrint(
   }, 60_000);
 
   requestAnimationFrame(() => {
-    setTimeout(() => {
-      window.print();
-    }, 150);
+    window.print();
   });
 }
 
@@ -277,10 +275,8 @@ export async function printNodeInIframe(
     }, 60_000);
 
     requestAnimationFrame(() => {
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 150);
+      printWindow.focus();
+      printWindow.print();
     });
   });
 }

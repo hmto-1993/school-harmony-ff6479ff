@@ -35,17 +35,11 @@ export default function PrintPreviewDialog({
   const handlePrint = useCallback(() => {
     onOpenChange(false);
     setIsPrinting(true);
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       safePrint(() => {
         setIsPrinting(false);
-        // Clear cached content ref data
-        if (contentRef.current) {
-          contentRef.current.querySelectorAll("img").forEach(img => {
-            img.removeAttribute("src");
-          });
-        }
       });
-    }, 200);
+    });
   }, [onOpenChange]);
 
   const handleExportPng = async () => {
