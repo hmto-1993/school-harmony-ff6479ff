@@ -289,6 +289,7 @@ export default function SettingsPage() {
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
   const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
+  const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
@@ -427,7 +428,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -473,6 +474,7 @@ export default function SettingsPage() {
           try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
         }
         if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
+        if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -2796,6 +2798,7 @@ export default function SettingsPage() {
                       { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
                       { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
                       { key: "daily", label: "التقييم اليومي (المشاركة والواجبات)", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
+                      { key: "classwork_icons", label: "شريط أيقونات المهام والمشاركة", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
                     ].map(col => (
                       <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                         <h4 className="text-sm font-bold">{col.label}</h4>
@@ -3044,6 +3047,52 @@ export default function SettingsPage() {
                   );
                 })()}
 
+                {/* Classwork Icon Strip Preview */}
+                {parentShowClassworkIcons && (() => {
+                  const cwCats = categories.filter((c: any) => 
+                    !parentGradesHiddenCategories.includes(c.id) && 
+                    c.category_group === "classwork"
+                  ).slice(0, 4);
+                  if (cwCats.length === 0) return null;
+                  const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
+                  cwCats.forEach((cat: any, ci: number) => {
+                    const isPartic = cat.name === "المشاركة";
+                    const count = isPartic ? 8 : 5;
+                    const icons: { level: string; isStar: boolean }[] = [];
+                    for (let i = 0; i < count; i++) {
+                      const v = (ci + i) % 4;
+                      if (isPartic && v === 0) icons.push({ level: "excellent", isStar: true });
+                      else if (v === 0) icons.push({ level: "excellent", isStar: false });
+                      else if (v === 1) icons.push({ level: "average", isStar: false });
+                      else if (v === 2) icons.push({ level: "zero", isStar: false });
+                      else icons.push({ level: "excellent", isStar: false });
+                    }
+                    mockIconSets[cat.name] = icons;
+                  });
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📊 المهام والمشاركة</p>
+                      <div className="space-y-2">
+                        {cwCats.map((cat: any) => (
+                          <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30">
+                            <span className="text-[10px] font-semibold text-foreground whitespace-nowrap min-w-[60px]">{cat.name}</span>
+                            <div className="flex items-center gap-0.5 flex-wrap">
+                              {(mockIconSets[cat.name] || []).map((icon, i) => (
+                                <span key={i} className="text-sm">
+                                  {icon.isStar ? <span className="text-amber-500">★</span> :
+                                   icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
+                                   icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
+                                   <span className="text-rose-500 dark:text-rose-400">✖</span>}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
             </div>
@@ -3069,6 +3118,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: parentGradesVisiblePeriods }),
                   supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_classwork_icons", value: String(parentShowClassworkIcons) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
