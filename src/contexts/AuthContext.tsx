@@ -57,9 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const saved = sessionStorage.getItem("student_session");
     if (saved) {
       try {
-        const { national_id } = JSON.parse(saved);
+        const { national_id, login_type } = JSON.parse(saved);
         if (national_id) {
-          supabase.functions.invoke("student-login", { body: { national_id } }).then(({ data, error }) => {
+          supabase.functions.invoke("student-login", { body: { national_id, login_type: login_type || "student" } }).then(({ data, error }) => {
             if (!error && data && !data.error) {
               setStudent({
                 id: data.student.id,
@@ -153,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.setItem("student_session", JSON.stringify({
         id: studentData.id,
         national_id: studentData.national_id,
+        login_type: login_type || "student",
       }));
       return { error: null };
     } catch {
