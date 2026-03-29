@@ -162,9 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session_issued_at: data.session_issued_at,
       };
       setStudent(studentData);
-      // Only store minimal session identifier — no PII
+      // Store session with HMAC token — no PII (national_id) in browser storage
       sessionStorage.setItem("student_session", JSON.stringify({
-        id: studentData.id,
+        student_id: studentData.id,
+        session_token: studentData.session_token,
+        session_issued_at: studentData.session_issued_at,
         login_type: login_type || "student",
       }));
       return { error: null };
