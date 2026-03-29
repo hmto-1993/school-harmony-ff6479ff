@@ -83,7 +83,7 @@ export default function LoginPage() {
     if (!studentNationalId.trim()) return;
 
     setLoading(true);
-    const { error } = await signInStudent(studentNationalId);
+    const { error } = await signInStudent(studentNationalId, "student");
     setLoading(false);
 
     if (error) {
@@ -102,7 +102,7 @@ export default function LoginPage() {
     if (!parentNationalId.trim()) return;
 
     setLoading(true);
-    const { error } = await signInStudent(parentNationalId);
+    const { error } = await signInStudent(parentNationalId, "parent");
     setLoading(false);
 
     if (error) {

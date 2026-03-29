@@ -102,6 +102,7 @@ Deno.serve(async (req) => {
     await supabase.from("student_logins").insert({
       student_id: student.id,
       class_id: student.class_id,
+      login_type: userType,
     });
 
     // Generate HMAC session token for subsequent authenticated calls

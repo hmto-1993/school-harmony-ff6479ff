@@ -126,10 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signInStudent = async (national_id: string) => {
+  const signInStudent = async (national_id: string, login_type?: string) => {
     try {
       const { data, error } = await supabase.functions.invoke("student-login", {
-        body: { national_id },
+        body: { national_id, login_type: login_type || "student" },
       });
       if (error) return { error: "حدث خطأ في الاتصال" };
       if (data?.error) return { error: data.error as string };
