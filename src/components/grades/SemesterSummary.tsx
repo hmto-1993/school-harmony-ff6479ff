@@ -192,7 +192,13 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       </table>
     `;
 
-    await printGradesTable(opts);
+    await printGradesTable({
+      orientation: "landscape",
+      title: `ملخص الفصل الدراسي — ${className}`,
+      subtitle: format(new Date(), "yyyy/MM/dd"),
+      reportType: "grades",
+      tableHTML,
+    });
   };
 
   const handleExportPDF = async (classId: string, className: string) => {
