@@ -12,7 +12,8 @@ import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { subDays, addDays, isToday, format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
-import { printGradesTable } from "@/lib/grades-print";
+import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
+import { FileText } from "lucide-react";
 
 interface GradeCategory {
   id: string;
@@ -315,10 +316,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
-  const handlePrintTable = async () => {
-    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
-    const dateStr = format(selectedDate, "yyyy/MM/dd");
-
+  const buildDailyTableHTML = () => {
     const getLevelIcon = (level: GradeLevel) => {
       if (level === "excellent") return '<span class="icon-excellent">✔</span>';
       if (level === "average") return '<span class="icon-average">➖</span>';
@@ -327,7 +325,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     };
     const starIcon = '<span class="icon-star">☆</span>';
 
-    // Build header
     const headerCells = [
       '<th style="width:30px;">#</th>',
       '<th style="width:20%;text-align:right;">الطالب</th>',
@@ -335,7 +332,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       ...(!isSingleCategory ? ['<th class="subtotal-header">المجموع</th>'] : []),
     ].join('');
 
-    // Build rows
     const bodyRows = studentGrades.map((sg, i) => {
       const cells = [
         `<td>${i + 1}</td>`,
@@ -352,15 +348,33 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       return `<tr>${cells}</tr>`;
     }).join('');
 
-    const tableHTML = `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+    return `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  };
 
-    await printGradesTable({
-      orientation: "portrait",
+  const getDailyPrintOptions = () => {
+    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+    const dateStr = format(selectedDate, "yyyy/MM/dd");
+    return {
+      orientation: "portrait" as const,
       title: `${className} — إدخال الدرجات اليومية`,
       subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
-      reportType: "grades",
-      tableHTML,
-    });
+      reportType: "grades" as const,
+      tableHTML: buildDailyTableHTML(),
+    };
+  };
+
+  const handlePrintTable = async () => {
+    await printGradesTable(getDailyPrintOptions());
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const opts = getDailyPrintOptions();
+      await exportGradesTableAsPDF({ ...opts, fileName: `الإدخال_اليومي_${format(selectedDate, "yyyy-MM-dd")}` });
+      toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
+    } catch {
+      toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" });
+    }
   };
 
 
