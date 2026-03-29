@@ -359,9 +359,14 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                 <Badge variant="secondary">{group.students.length} طالب</Badge>
                 <Badge variant="outline" className="text-xs">ملخص الفصل الدراسي</Badge>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => handlePrintTable(group.id, group.name)}>
-                <Printer className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-0.5">
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => handleExportPDF(group.id, group.name)}>
+                  <FileText className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => handlePrintTable(group.id, group.name)}>
+                  <Printer className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
