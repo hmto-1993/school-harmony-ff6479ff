@@ -159,6 +159,9 @@ function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: st
       margin: 0; padding: 0;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      transition: none !important;
+      animation: none !important;
+      box-shadow: none !important;
     }
 
     /* Print root container */
@@ -178,6 +181,7 @@ function buildIframeCSS(orientation: string, contentWidth: string, pageWidth: st
     table {
       width: 100%; border-collapse: collapse; table-layout: fixed;
       font-size: 10px; line-height: 1.4;
+      contain: layout style;
     }
     th, td {
       padding: 4px 3px; border: 1px solid #cbd5e1;
