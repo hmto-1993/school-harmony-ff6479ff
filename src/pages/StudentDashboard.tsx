@@ -27,6 +27,7 @@ import StudentAnnouncements from "@/components/announcements/StudentAnnouncement
 import StudentNotificationCards from "@/components/student/StudentNotificationCards";
 import HonorRoll from "@/components/student/HonorRoll";
 import { useTheme } from "@/hooks/use-theme";
+import ParentContactForm from "@/components/parent/ParentContactForm";
 import jsPDF from "jspdf";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
@@ -583,6 +584,15 @@ export default function StudentDashboard() {
 
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
+
+        {/* Parent Contact Form */}
+        {parentShowContactTeacher && (
+          <ParentContactForm
+            studentId={student.id}
+            studentName={student.full_name}
+            classId={student.class_id}
+          />
+        )}
 
         {/* Details Tabs */}
         {(() => {
