@@ -260,7 +260,7 @@ export default function StudentDashboard() {
         doc.text(classInfo, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
-      if (student.national_id) {
+      if (parentShowNationalId && student.national_id) {
         doc.text(`الهوية الوطنية: ${student.national_id}`, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
