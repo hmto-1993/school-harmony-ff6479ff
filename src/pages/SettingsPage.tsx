@@ -2680,6 +2680,47 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* Visibility Controls - same as student view */}
+            <div className="pt-2">
+              <p className="text-sm font-semibold mb-3">التحكم بعرض البيانات لولي الأمر</p>
+              <div className="space-y-3 max-w-md">
+                {[
+                  { key: "national_id", label: "الهوية الوطنية", desc: "إظهار رقم الهوية في بطاقة الطالب", icon: KeyRound, state: parentShowNationalId, setter: setParentShowNationalId },
+                  { key: "grades", label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: parentShowGrades, setter: setParentShowGrades },
+                  { key: "attendance", label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: ClipboardCheck, state: parentShowAttendance, setter: setParentShowAttendance },
+                  { key: "behavior", label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
+                ].map((item) => (
+                  <div key={item.key} className={cn(
+                    "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                    item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
+                        item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold">{item.label}</h4>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => item.setter(!item.state)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      {item.state ? "ظاهر" : "مخفي"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <Button
               disabled={savingParentWelcome}
               className="gap-1.5"
@@ -2688,6 +2729,10 @@ export default function SettingsPage() {
                 const results = await Promise.all([
                   supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(parentWelcomeEnabled) }),
                   supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: parentWelcomeMessage }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_national_id", value: String(parentShowNationalId) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_grades", value: String(parentShowGrades) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_attendance", value: String(parentShowAttendance) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_behavior", value: String(parentShowBehavior) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
@@ -2705,6 +2750,7 @@ export default function SettingsPage() {
               <p>🔒 <strong>الأمان:</strong> ولي الأمر يمكنه المشاهدة والتحميل فقط (Read-Only).</p>
               <p>📄 <strong>التقرير:</strong> يتضمن زر تحميل PDF يحتوي الترويسة الرسمية وبيانات الطالب.</p>
               <p>☆ <strong>الرموز:</strong> تُستخدم رموز مفرغة (Outlined) لتوفير الحبر عند الطباعة.</p>
+              <p>👁️ <strong>التحكم:</strong> يمكنك إخفاء أقسام محددة عن ولي الأمر بشكل مستقل عن إعدادات عرض الطالب.</p>
             </div>
           </CardContent>
         </Card>
