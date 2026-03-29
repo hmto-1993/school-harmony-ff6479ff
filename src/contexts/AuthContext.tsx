@@ -149,10 +149,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session_issued_at: data.session_issued_at,
       };
       setStudent(studentData);
-      // Only store minimal session identifier, not full data
+      // Only store minimal session identifier — no PII
       sessionStorage.setItem("student_session", JSON.stringify({
         id: studentData.id,
-        national_id: studentData.national_id,
         login_type: login_type || "student",
       }));
       return { error: null };

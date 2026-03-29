@@ -30,9 +30,10 @@ Deno.serve(async (req) => {
     const { national_id, login_type } = await req.json();
     const userType = login_type === "parent" ? "parent" : "student";
 
-    if (!national_id) {
+    // Validate national_id: must be non-empty string of digits only, 10 chars
+    if (!national_id || typeof national_id !== "string" || !/^\d{10}$/.test(national_id)) {
       return new Response(
-        JSON.stringify({ error: "رقم الهوية الوطنية مطلوب" }),
+        JSON.stringify({ error: "رقم الهوية الوطنية غير صحيح" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
     // Verify student by national_id only
     const { data: student, error } = await supabase
       .from("students")
-      .select("id, full_name, class_id, national_id, academic_number, parent_phone")
+      .select("id, full_name, class_id, national_id, academic_number")
       .eq("national_id", national_id)
       .single();
 
