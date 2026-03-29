@@ -2697,6 +2697,7 @@ export default function SettingsPage() {
                   { key: "behavior", label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
                   { key: "honor_roll", label: "لوحة الشرف", desc: "عرض لوحة الشرف للطلاب المتميزين", icon: Trophy, state: parentShowHonorRoll, setter: setParentShowHonorRoll },
                   { key: "absence_warning", label: "تنبيه حد الغياب", desc: "عرض تنبيهات وإنذارات الغياب", icon: AlertTriangle, state: parentShowAbsenceWarning, setter: setParentShowAbsenceWarning },
+                  { key: "contact_teacher", label: "التواصل مع المعلم", desc: "تمكين ولي الأمر من إرسال رسالة أو طلب موعد", icon: MessageSquare, state: parentShowContactTeacher, setter: setParentShowContactTeacher },
                 ].map((item) => (
                   <div key={item.key} className={cn(
                     "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
@@ -2743,6 +2744,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_show_behavior", value: String(parentShowBehavior) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_honor_roll", value: String(parentShowHonorRoll) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_absence_warning", value: String(parentShowAbsenceWarning) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_contact_teacher", value: String(parentShowContactTeacher) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
