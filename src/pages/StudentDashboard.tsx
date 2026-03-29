@@ -964,14 +964,6 @@ export default function StudentDashboard() {
           onClose={() => setPreviewFile(null)}
         />
       )}
-      {/* Floating Contact Teacher Button */}
-      {parentShowContactTeacher && (
-        <FloatingContactButton
-          studentId={student.id}
-          studentName={student.full_name}
-          classId={student.class_id}
-        />
-      )}
 
       {/* Popup Message Dialog */}
       <Dialog open={popupOpen} onOpenChange={(open) => {
