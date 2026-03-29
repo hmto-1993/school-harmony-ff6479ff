@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { safePrint } from "@/lib/print-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileSpreadsheet, FileText, Printer } from "lucide-react";
+import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
@@ -340,10 +339,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     setOpen(false);
   };
 
-  const handlePrint = () => {
-    setOpen(false);
-    setTimeout(() => safePrint(), 300);
-  };
 
   if (groups.length === 0) return null;
 
@@ -354,9 +349,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير" onClick={() => setOpen(true)}>
             <Upload className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => safePrint()}>
-            <Printer className="h-4 w-4" />
-          </Button>
         </div>
       )}
       <Dialog open={open} onOpenChange={setOpen}>
@@ -366,7 +358,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
           </DialogHeader>
 
           <Tabs defaultValue="excel" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="excel" className="gap-2">
                 <FileSpreadsheet className="h-4 w-4" />
                 Excel
@@ -374,10 +366,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               <TabsTrigger value="pdf" className="gap-2">
                 <FileText className="h-4 w-4" />
                 PDF
-              </TabsTrigger>
-              <TabsTrigger value="print" className="gap-2">
-                <Printer className="h-4 w-4" />
-                طباعة
               </TabsTrigger>
             </TabsList>
             <TabsContent value="excel" className="pt-4">
@@ -390,12 +378,6 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
               <Button onClick={exportPDF} className="w-full gap-2">
                 <FileText className="h-4 w-4" />
                 تصدير PDF
-              </Button>
-            </TabsContent>
-            <TabsContent value="print" className="pt-4">
-              <Button onClick={handlePrint} className="w-full gap-2">
-                <Printer className="h-4 w-4" />
-                طباعة الصفحة
               </Button>
             </TabsContent>
           </Tabs>
