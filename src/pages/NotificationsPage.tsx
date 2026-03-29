@@ -621,6 +621,11 @@ export default function NotificationsPage() {
           )}
         </TabsContent>
 
+        {/* ===== Parent Messages ===== */}
+        <TabsContent value="parent-messages">
+          <ParentMessagesInbox />
+        </TabsContent>
+
         {/* ===== History ===== */}
         <TabsContent value="history">
           <div className="space-y-3">
