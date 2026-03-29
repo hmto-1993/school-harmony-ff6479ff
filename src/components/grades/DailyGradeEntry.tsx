@@ -7,13 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText } from "lucide-react";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { subDays, addDays, isToday, format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
-import { FileText } from "lucide-react";
 
 interface GradeCategory {
   id: string;
