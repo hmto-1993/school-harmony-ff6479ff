@@ -128,13 +128,14 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
       <nav className="flex-1 p-3 space-y-1">
         {links.map((link) => {
           const isActive = location.pathname === link.to;
+          const showBadge = link.to === "/notifications" && unreadParentMessages > 0;
           return (
             <Link
               key={link.to}
               to={link.to}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+                "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 relative",
                 isCollapsed && "justify-center px-2",
                 isActive
                   ? "bg-sidebar-primary/15 text-sidebar-primary font-semibold shadow-glow"
@@ -143,6 +144,14 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
             >
               <link.icon className={cn("h-[18px] w-[18px] shrink-0", isActive && "drop-shadow-sm")} />
               {!isCollapsed && <span>{link.label}</span>}
+              {showBadge && (
+                <span className={cn(
+                  "flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none px-1",
+                  isCollapsed ? "absolute -top-0.5 -right-0.5" : "mr-auto"
+                )}>
+                  {unreadParentMessages > 99 ? "99+" : unreadParentMessages}
+                </span>
+              )}
             </Link>
           );
         })}
