@@ -674,15 +674,24 @@ export default function StudentDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                {student.grades.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">لا توجد درجات مسجلة</p>
-                ) : gradesView === "cards" ? (
+                {(() => {
+                  // Filter grades based on admin settings
+                  const filteredGrades = student.grades.filter((g) => {
+                    if (parentGradesHiddenCategories.includes(g.category_id)) return false;
+                    if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
+                      if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
+                      if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
+                    }
+                    return true;
+                  });
+                  if (filteredGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد درجات مسجلة</p>;
+                  return gradesView === "cards" ? (
                   /* ─── Cards / Assessment View ─── */
                   <div className="space-y-3">
                     {(() => {
                       // Group grades by category_group
                       const groups: Record<string, typeof student.grades> = {};
-                      student.grades.forEach((g) => {
+                      filteredGrades.forEach((g) => {
                         const group = g.grade_categories?.category_group || "أخرى";
                         if (!groups[group]) groups[group] = [];
                         groups[group].push(g);
