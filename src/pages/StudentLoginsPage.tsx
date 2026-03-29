@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Users, Eye, TrendingUp, Calendar } from "lucide-react";
+import { Users, Eye, TrendingUp, Calendar, UserCheck, Users2 } from "lucide-react";
 import { format, subDays, isAfter } from "date-fns";
 import { ar } from "date-fns/locale";
 import ExportDialog from "@/components/student-logins/ExportDialog";
@@ -67,6 +67,8 @@ export default function StudentLoginsPage() {
 
   const uniqueStudents = useMemo(() => new Set(filteredLogins.map((l) => l.student_id)).size, [filteredLogins]);
   const totalLogins = filteredLogins.length;
+  const parentLogins = useMemo(() => logins.filter(l => isAfter(new Date(l.logged_in_at), cutoffDate) && (l.login_type === "parent")).length, [logins, cutoffDate]);
+  const studentOnlyLogins = useMemo(() => logins.filter(l => isAfter(new Date(l.logged_in_at), cutoffDate) && (l.login_type || "student") === "student").length, [logins, cutoffDate]);
 
   const studentStats = useMemo(() => {
     const map: Record<string, { name: string; classId: string | null; count: number; lastLogin: string }> = {};
