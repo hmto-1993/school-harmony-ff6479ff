@@ -10,10 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
-import { getPrintOrientation, printNodeInIframe, setPrintOrientation } from "@/lib/print-utils";
-import { printGradesTable, getPrintIconSpan } from "@/lib/grades-print";
-import autoTable from "jspdf-autotable";
+import { printGradesTable, getPrintIconSpan, exportGradesTableAsPDF } from "@/lib/grades-print";
 
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
@@ -124,11 +121,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
 
-  const handlePrintTable = async (classId: string, className: string) => {
-    const group = groupedByClass.find((entry) => entry.id === classId);
-    if (!group) return;
-
-    const tableHTML = `
+  const buildClassworkTableHTML = (group: typeof groupedByClass[0]) => {
+    return `
       <table>
         <thead>
           <tr>
@@ -165,14 +159,20 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         </tbody>
       </table>
     `;
+  };
 
-    await printGradesTable({
-      orientation: "landscape",
-      title: `المهام والمشاركة — ${className}`,
-      subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
-      reportType: "grades",
-      tableHTML,
-    });
+  const getClassworkPrintOptions = (group: typeof groupedByClass[0], className: string) => ({
+    orientation: "landscape" as const,
+    title: `المهام والمشاركة — ${className}`,
+    subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
+    reportType: "grades" as const,
+    tableHTML: buildClassworkTableHTML(group),
+  });
+
+  const handlePrintTable = async (classId: string, className: string) => {
+    const group = groupedByClass.find((entry) => entry.id === classId);
+    if (!group) return;
+    await printGradesTable(getClassworkPrintOptions(group, className));
   };
 
   const exportTableAsPDF = async (classId: string, className: string) => {
