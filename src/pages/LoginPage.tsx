@@ -10,12 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
+  const [parentNationalId, setParentNationalId] = useState("");
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolSubtitle, setSchoolSubtitle] = useState("");
@@ -96,13 +97,31 @@ export default function LoginPage() {
     }
   };
 
+  const handleParentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!parentNationalId.trim()) return;
+
+    setLoading(true);
+    const { error } = await signInStudent(parentNationalId);
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "عذراً",
+        description: "رقم الهوية غير مسجل. يرجى التواصل مع معلم المادة.",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/student");
+    }
+  };
+
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${loginBg})`, filter: "blur(6px) brightness(0.55)" }}
       />
-      {/* Overlay gradient — darker in dark mode */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
@@ -118,14 +137,18 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-2 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
-                <TabsTrigger value="staff" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
-                  <Shield className="h-4 w-4" />
-                  معلم / مدير
+              <TabsList className="grid w-full grid-cols-3 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
+                <TabsTrigger value="staff" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
+                  <Shield className="h-4 w-4 shrink-0" />
+                  <span className="truncate">معلم / مدير</span>
                 </TabsTrigger>
-                <TabsTrigger value="student" className="gap-2 rounded-lg data-[state=active]:shadow-sm">
-                  <GraduationCap className="h-4 w-4" />
-                  طالب
+                <TabsTrigger value="student" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
+                  <GraduationCap className="h-4 w-4 shrink-0" />
+                  <span className="truncate">طالب</span>
+                </TabsTrigger>
+                <TabsTrigger value="parent" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="truncate">ولي الأمر</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -189,6 +212,40 @@ export default function LoginPage() {
                     {loading ? "جارٍ الدخول..." : (
                       <span className="flex items-center gap-2">
                         دخول الطالب
+                        <ArrowLeft className="h-4 w-4" />
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="parent">
+                <form onSubmit={handleParentSubmit} className="space-y-4">
+                  <p className="text-sm text-muted-foreground text-center mb-2">
+                    أدخل رقم هوية ابنك لمتابعة أدائه الأكاديمي
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="parent-id">رقم هوية الطالب</Label>
+                    <Input
+                      id="parent-id"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="1234567890"
+                      value={parentNationalId}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/\D/g, "");
+                        setParentNationalId(v);
+                      }}
+                      dir="ltr"
+                      className="text-right h-11 rounded-xl dark:bg-muted/30 dark:border-border/30"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full h-11 rounded-xl gradient-primary hover:opacity-90 transition-opacity text-primary-foreground font-semibold" disabled={loading}>
+                    {loading ? "جارٍ الدخول..." : (
+                      <span className="flex items-center gap-2">
+                        متابعة ابني
                         <ArrowLeft className="h-4 w-4" />
                       </span>
                     )}
