@@ -55,6 +55,16 @@ export default function ParentContactForm({ studentId, studentName, classId }: P
     } else {
       setSent(true);
       toast({ title: "تم الإرسال ✓", description: "تم إرسال رسالتك للمعلم بنجاح" });
+
+      // Notify teacher via push notification (fire and forget)
+      supabase.functions.invoke("notify-parent-message", {
+        body: {
+          class_id: classId,
+          student_name: studentName,
+          subject: subject.trim(),
+          message_type: messageType,
+        },
+      }).catch(() => {});
       setSubject("");
       setBody("");
       setParentName("");
