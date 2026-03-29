@@ -482,6 +482,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
               </div>
+              {parentShowNationalId && (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
                   <Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -491,6 +492,7 @@ export default function StudentDashboard() {
                   <p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p>
                 </div>
               </div>
+              )}
             </div>
           </CardContent>
         </Card>
