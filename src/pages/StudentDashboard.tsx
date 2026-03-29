@@ -1,6 +1,6 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import {
   LogOut, GraduationCap, ClipboardCheck, ShieldCheck, CheckCircle, Clock, BookOpen,
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
-  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X
+  ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X,
+  User, Hash, BookMarked, Heart
 } from "lucide-react";
 import {
   Dialog,
@@ -21,12 +22,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import StudentActivitiesTab from "@/components/activities/StudentActivitiesTab";
-import schoolLogo from "@/assets/school-logo.jpg";
 import { FilePreviewDialog, PreviewButton, isPreviewable, isImage } from "@/components/library/FilePreview";
 import StudentAnnouncements from "@/components/announcements/StudentAnnouncements";
 import StudentNotificationCards from "@/components/student/StudentNotificationCards";
 import HonorRoll from "@/components/student/HonorRoll";
 import { useTheme } from "@/hooks/use-theme";
+import jsPDF from "jspdf";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
@@ -70,6 +71,14 @@ function formatFileSize(bytes: number) {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
+// Outlined icon symbols for ink-saving print
+const OUTLINED_ICONS = {
+  check: "✔",
+  star: "☆",
+  minus: "➖",
+  x: "✖",
+};
+
 export default function StudentDashboard() {
   const { student, signOut } = useAuth();
   const navigate = useNavigate();
@@ -90,13 +99,37 @@ export default function StudentDashboard() {
   const [popupAction, setPopupAction] = useState<string>("none");
   const [activeTab, setActiveTab] = useState<string>("");
 
+  // Welcome message
+  const [welcomeMessage, setWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
+  const [welcomeEnabled, setWelcomeEnabled] = useState(true);
+
+  // School info for PDF
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
+
+  // PDF export
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     if (student) {
       fetchFolders();
       fetchPopup();
+      fetchWelcomeMessage();
     }
   }, [student]);
+
+  const fetchWelcomeMessage = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url"]);
+    (data || []).forEach((s: any) => {
+      if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
+      if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
+      if (s.id === "school_name" && s.value) setSchoolName(s.value);
+      if (s.id === "school_logo_url" && s.value) setSchoolLogoUrl(s.value);
+    });
+  };
 
   const fetchPopup = async () => {
     const { data } = await supabase
@@ -124,15 +157,11 @@ export default function StudentDashboard() {
       if (s.id === "student_popup_repeat") repeat = s.value || "none";
     });
 
-    // Check expiry
     if (expiry && new Date(expiry) < new Date()) enabled = false;
-
-    // Check class targeting
     if (targetType === "specific" && student?.class_id) {
       if (!targetClassIds.includes(student.class_id)) enabled = false;
     }
 
-    // Check repeat logic using localStorage
     if (enabled && message.trim()) {
       const storageKey = `popup_dismissed_${student?.id || "unknown"}`;
       const lastDismissed = localStorage.getItem(storageKey);
@@ -140,19 +169,13 @@ export default function StudentDashboard() {
       if (lastDismissed && repeat !== "none") {
         const dismissedDate = new Date(lastDismissed);
         const now = new Date();
-        
         if (repeat === "daily") {
-          // Show again if dismissed on a different day
-          const sameDay = dismissedDate.toDateString() === now.toDateString();
-          if (sameDay) enabled = false;
+          if (dismissedDate.toDateString() === now.toDateString()) enabled = false;
         } else if (repeat === "weekly") {
-          // Show again if 7+ days have passed
-          const diffMs = now.getTime() - dismissedDate.getTime();
-          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          const diffDays = (now.getTime() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
           if (diffDays < 7) enabled = false;
         }
       } else if (lastDismissed && repeat === "none") {
-        // No repeat = show only once ever
         enabled = false;
       }
     }
@@ -168,7 +191,6 @@ export default function StudentDashboard() {
   const fetchFolders = async () => {
     if (!student) return;
     setFoldersLoading(true);
-    // Get folders visible to students: general (no class_id) + student's class
     const query = supabase
       .from("resource_folders")
       .select("id, title, icon, class_id, category")
@@ -178,7 +200,6 @@ export default function StudentDashboard() {
     const { data } = await query;
     if (data) {
       const filtered = data.filter((f: any) => !f.class_id || f.class_id === student.class_id);
-      // Get file counts
       const { data: fileCounts } = await supabase.from("resource_files").select("folder_id");
       const countMap: Record<string, number> = {};
       fileCounts?.forEach((fc: any) => { countMap[fc.folder_id] = (countMap[fc.folder_id] || 0) + 1; });
@@ -199,6 +220,143 @@ export default function StudentDashboard() {
     setFilesLoading(false);
   };
 
+  // PDF Export function
+  const handleExportPdf = async () => {
+    if (!student) return;
+    setExportingPdf(true);
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      let y = 15;
+
+      // Header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.setTextColor(33, 37, 41);
+      
+      if (schoolName) {
+        doc.text(schoolName, pageWidth / 2, y, { align: "center" });
+        y += 10;
+      }
+      
+      doc.setFontSize(13);
+      doc.text(`تقرير الطالب: ${student.full_name}`, pageWidth / 2, y, { align: "center" });
+      y += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const classInfo = student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "";
+      if (classInfo) {
+        doc.text(classInfo, pageWidth / 2, y, { align: "center" });
+        y += 6;
+      }
+      if (student.academic_number) {
+        doc.text(`الرقم الأكاديمي: ${student.academic_number}`, pageWidth / 2, y, { align: "center" });
+        y += 6;
+      }
+
+      doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}`, pageWidth / 2, y, { align: "center" });
+      y += 10;
+
+      // Separator
+      doc.setDrawColor(200);
+      doc.line(15, y, pageWidth - 15, y);
+      y += 8;
+
+      // Grades section
+      const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+      
+      if (vis.grades && student.grades.length > 0) {
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("☆ الدرجات", pageWidth - 15, y, { align: "right" });
+        y += 8;
+
+        doc.setFontSize(9);
+        // Table header
+        const cols = [pageWidth - 20, pageWidth - 70, pageWidth - 100, pageWidth - 130];
+        doc.setFillColor(240, 240, 245);
+        doc.rect(15, y - 4, pageWidth - 30, 8, "F");
+        doc.text("المعيار", cols[0], y, { align: "right" });
+        doc.text("الدرجة", cols[1], y, { align: "right" });
+        doc.text("من", cols[2], y, { align: "right" });
+        doc.text("الوزن", cols[3], y, { align: "right" });
+        y += 8;
+
+        doc.setFont("helvetica", "normal");
+        student.grades.forEach((g) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.text(g.grade_categories?.name || "-", cols[0], y, { align: "right" });
+          doc.text(String(g.score ?? "-"), cols[1], y, { align: "right" });
+          doc.text(String(g.grade_categories?.max_score || "-"), cols[2], y, { align: "right" });
+          doc.text(`${g.grade_categories?.weight || "-"}%`, cols[3], y, { align: "right" });
+          y += 6;
+        });
+        y += 6;
+      }
+
+      // Attendance section
+      if (vis.attendance && student.attendance.length > 0) {
+        if (y > 240) { doc.addPage(); y = 20; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("✔ الحضور والغياب", pageWidth - 15, y, { align: "right" });
+        y += 8;
+
+        doc.setFontSize(9);
+        const aCols = [pageWidth - 20, pageWidth - 70, pageWidth - 120];
+        doc.setFillColor(240, 240, 245);
+        doc.rect(15, y - 4, pageWidth - 30, 8, "F");
+        doc.text("التاريخ", aCols[0], y, { align: "right" });
+        doc.text("الحالة", aCols[1], y, { align: "right" });
+        doc.text("ملاحظات", aCols[2], y, { align: "right" });
+        y += 8;
+
+        doc.setFont("helvetica", "normal");
+        student.attendance.forEach((a) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          const label = statusLabels[a.status]?.label || a.status;
+          doc.text(a.date, aCols[0], y, { align: "right" });
+          doc.text(label, aCols[1], y, { align: "right" });
+          doc.text(a.notes || "-", aCols[2], y, { align: "right" });
+          y += 6;
+        });
+        y += 6;
+      }
+
+      // Behavior section
+      if (vis.behavior && student.behaviors.length > 0) {
+        if (y > 240) { doc.addPage(); y = 20; }
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(12);
+        doc.text("➖ السلوك", pageWidth - 15, y, { align: "right" });
+        y += 8;
+
+        doc.setFontSize(9);
+        const bCols = [pageWidth - 20, pageWidth - 70, pageWidth - 120];
+        doc.setFillColor(240, 240, 245);
+        doc.rect(15, y - 4, pageWidth - 30, 8, "F");
+        doc.text("التاريخ", bCols[0], y, { align: "right" });
+        doc.text("النوع", bCols[1], y, { align: "right" });
+        doc.text("الملاحظة", bCols[2], y, { align: "right" });
+        y += 8;
+
+        doc.setFont("helvetica", "normal");
+        student.behaviors.forEach((b) => {
+          if (y > 270) { doc.addPage(); y = 20; }
+          doc.text(b.date, bCols[0], y, { align: "right" });
+          doc.text(b.type, bCols[1], y, { align: "right" });
+          doc.text(b.note || "-", bCols[2], y, { align: "right" });
+          y += 6;
+        });
+      }
+
+      doc.save(`تقرير_${student.full_name}.pdf`);
+    } catch (err) {
+      console.error("PDF export error:", err);
+    }
+    setExportingPdf(false);
+  };
 
   if (!student) {
     navigate("/login");
@@ -232,20 +390,25 @@ export default function StudentDashboard() {
   const generalFolders = folders.filter(f => !f.class_id);
   const classFolders = folders.filter(f => !!f.class_id);
 
+  // Resolve welcome message with student name
+  const resolvedWelcome = welcomeMessage.replace(/\{name\}/g, student.full_name);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20" dir="rtl">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl shadow-sm">
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain shadow-md" />
+            {schoolLogoUrl ? (
+              <img src={schoolLogoUrl} alt="الشعار" className="h-10 w-10 rounded-xl object-contain shadow-md" />
+            ) : (
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
+                <GraduationCap className="h-5 w-5 text-primary-foreground" />
+              </div>
+            )}
             <div>
-              <h1 className="text-lg font-bold text-foreground">{student.full_name}</h1>
-              {student.class && (
-                <p className="text-xs text-muted-foreground">
-                  {student.class.name} - {student.class.grade} ({student.class.section})
-                </p>
-              )}
+              <h1 className="text-lg font-bold text-foreground">بوابة ولي الأمر</h1>
+              {schoolName && <p className="text-xs text-muted-foreground">{schoolName}</p>}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -261,6 +424,75 @@ export default function StudentDashboard() {
       </header>
 
       <main className="container mx-auto p-4 space-y-6">
+        {/* Welcome Message */}
+        {welcomeEnabled && (
+          <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/15 dark:via-accent/10 dark:to-primary/10">
+            <CardContent className="p-5">
+              <div className="flex items-start gap-4">
+                <div className="shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/25">
+                  <Heart className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-base font-bold text-foreground leading-relaxed">
+                    {resolvedWelcome}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Student Info Card */}
+        <Card className="border-0 shadow-lg bg-card/90 backdrop-blur-sm">
+          <CardContent className="p-5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">اسم الطالب</p>
+                  <p className="text-sm font-bold text-foreground">{student.full_name}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                  <BookMarked className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">الصف</p>
+                  <p className="text-sm font-bold text-foreground">
+                    {student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "غير محدد"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
+                  <Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-muted-foreground">الرقم الأكاديمي</p>
+                  <p className="text-sm font-bold text-foreground">{student.academic_number || "غير محدد"}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* PDF Export Button */}
+        <Button
+          onClick={handleExportPdf}
+          disabled={exportingPdf}
+          className="w-full h-14 text-lg font-bold rounded-2xl gap-3 bg-gradient-to-l from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20"
+        >
+          {exportingPdf ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+          ) : (
+            <Download className="h-6 w-6" />
+          )}
+          تحميل تقرير الطالب (PDF)
+        </Button>
+
         {/* Summary Cards */}
         <div className={cn("grid gap-4", 
           [vis.grades, vis.attendance, vis.attendance, vis.behavior].filter(Boolean).length <= 2 ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4"
@@ -311,7 +543,7 @@ export default function StudentDashboard() {
           )}
         </div>
 
-        {/* Notification Cards (Warnings + Achievements) */}
+        {/* Notification Cards */}
         <StudentNotificationCards
           studentId={student.id}
           studentName={student.full_name}
@@ -332,7 +564,6 @@ export default function StudentDashboard() {
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-            
             { value: "activities", label: "الأنشطة", icon: Layers },
             { value: "library", label: "المكتبة", icon: BookOpen },
           ];
@@ -357,6 +588,7 @@ export default function StudentDashboard() {
                 <CardTitle className="text-lg flex items-center gap-2">
                   <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-primary to-accent" />
                   تفاصيل الدرجات
+                  <span className="text-xs text-muted-foreground font-normal mr-auto">☆ رموز مفرغة لتوفير الحبر</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -370,19 +602,34 @@ export default function StudentDashboard() {
                           <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">المعيار</th>
                           <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
                           <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">من</th>
-                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">الوزن</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النسبة</th>
+                          <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">التقييم</th>
                         </tr>
                       </thead>
                       <tbody>
                         {student.grades.map((g, i) => {
                           const isEven = i % 2 === 0;
                           const isLast = i === student.grades.length - 1;
+                          const score = g.score ?? 0;
+                          const maxScore = g.grade_categories?.max_score || 100;
+                          const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+                          // Outlined evaluation icons
+                          const evalIcon = pct >= 90 ? "☆☆☆" : pct >= 75 ? "☆☆" : pct >= 60 ? "☆" : "➖";
                           return (
                             <tr key={i} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20")}>
                               <td className={cn("p-3 text-right font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{g.grade_categories?.name || "-"}</td>
                               <td className="p-3 text-center border-l border-border/10">{g.score ?? "-"}</td>
                               <td className="p-3 text-center border-l border-border/10">{g.grade_categories?.max_score || "-"}</td>
-                              <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>{g.grade_categories?.weight || "-"}%</td>
+                              <td className="p-3 text-center border-l border-border/10">
+                                <span className={cn(
+                                  "text-xs font-bold",
+                                  pct >= 90 ? "text-emerald-600 dark:text-emerald-400" :
+                                  pct >= 75 ? "text-blue-600 dark:text-blue-400" :
+                                  pct >= 60 ? "text-amber-600 dark:text-amber-400" :
+                                  "text-rose-600 dark:text-rose-400"
+                                )}>{pct}%</span>
+                              </td>
+                              <td className={cn("p-3 text-center text-lg", isLast && "last:rounded-bl-xl")}>{evalIcon}</td>
                             </tr>
                           );
                         })}
@@ -513,7 +760,6 @@ export default function StudentDashboard() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : selectedFolder ? (
-                  /* Folder files view */
                   <div className="space-y-4">
                     <button
                       onClick={() => { setSelectedFolder(null); setFolderFiles([]); }}
@@ -587,7 +833,6 @@ export default function StudentDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* General folders */}
                     {generalFolders.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-3">
@@ -617,7 +862,6 @@ export default function StudentDashboard() {
                       </div>
                     )}
 
-                    {/* Class folders */}
                     {classFolders.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-3">
@@ -691,7 +935,6 @@ export default function StudentDashboard() {
                   onClick={() => {
                     setActiveTab(popupAction);
                     setPopupOpen(false);
-                    // Scroll to tabs
                     setTimeout(() => {
                       document.querySelector('[role="tablist"]')?.scrollIntoView({ behavior: "smooth", block: "center" });
                     }, 100);
