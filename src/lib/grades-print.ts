@@ -1,9 +1,11 @@
 /**
- * Unified WYSIWYG print engine for grade pages.
+ * Unified WYSIWYG print & PDF export engine for grade pages.
  * Uses an isolated iframe — completely independent from index.css @media print.
  * Covers: Daily Entry, Classwork, Final Evaluation, Semester Summary.
  */
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
+import { toPng } from "html-to-image";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 
