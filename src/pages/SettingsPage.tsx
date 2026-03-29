@@ -288,6 +288,7 @@ export default function SettingsPage() {
   const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
   const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
+  const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
