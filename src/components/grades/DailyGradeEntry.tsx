@@ -329,17 +329,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
     // Build header
     const headerCells = [
-      '<th>#</th>',
-      '<th style="text-align:right;">الطالب</th>',
-      ...visibleCategories.map(c => `<th>${c.name}</th>`),
-      ...(!isSingleCategory ? ['<th>المجموع</th>'] : []),
+      '<th style="width:30px;">#</th>',
+      '<th style="width:20%;text-align:right;">الطالب</th>',
+      ...visibleCategories.map(c => `<th>${c.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(c.max_score)}</span></th>`),
+      ...(!isSingleCategory ? ['<th class="subtotal-header">المجموع</th>'] : []),
     ].join('');
 
     // Build rows
     const bodyRows = studentGrades.map((sg, i) => {
       const cells = [
         `<td>${i + 1}</td>`,
-        `<td style="text-align:right;white-space:nowrap;">${sg.full_name}</td>`,
+        `<td>${sg.full_name}</td>`,
         ...visibleCategories.map(cat => {
           const slotsArr = sg.slots[cat.id] || [null];
           const isStarred = sg.starred[cat.id] || false;
@@ -347,7 +347,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           const star = isStarred ? ` ${starIcon}` : '';
           return `<td><div class="icons-cell">${icons}${star}</div></td>`;
         }),
-        ...(!isSingleCategory ? [`<td style="font-weight:700;">${calcTotal(sg.grades)}</td>`] : []),
+        ...(!isSingleCategory ? [`<td class="subtotal-cell">${calcTotal(sg.grades)}</td>`] : []),
       ].join('');
       return `<tr>${cells}</tr>`;
     }).join('');
@@ -357,7 +357,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     await printGradesTable({
       orientation: "portrait",
       title: `${className} — إدخال الدرجات اليومية`,
-      subtitle: dateStr,
+      subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
       reportType: "grades",
       tableHTML,
     });
