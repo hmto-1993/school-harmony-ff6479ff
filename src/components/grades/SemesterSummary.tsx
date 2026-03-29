@@ -192,13 +192,65 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       </table>
     `;
 
-    await printGradesTable({
-      orientation: "landscape",
-      title: `ملخص الفصل الدراسي — ${className}`,
-      subtitle: format(new Date(), "yyyy/MM/dd"),
-      reportType: "grades",
-      tableHTML,
-    });
+    await printGradesTable(opts);
+  };
+
+  const handleExportPDF = async (classId: string, className: string) => {
+    const group = grouped.find(g => g.id === classId);
+    if (!group) return;
+
+    const tableHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:30px;">#</th>
+            <th rowspan="2" style="width:20%;">الطالب</th>
+            <th colspan="2" class="subtotal-header">الفترة الأولى</th>
+            <th colspan="2" class="subtotal-header">الفترة الثانية</th>
+            <th rowspan="2">الإجمالي</th>
+            <th rowspan="2">النسبة</th>
+            <th rowspan="2">التقدير</th>
+          </tr>
+          <tr>
+            <th>المهام والمشاركة</th>
+            <th>الاختبارات</th>
+            <th>المهام والمشاركة</th>
+            <th>الاختبارات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${group.students.map((sg, i) => {
+            const pct = getPercentage(sg.grandTotal, sg.grandMax);
+            const grade = getGradeLabel(pct);
+            const gradeClass = pct >= 90 ? "grade-excellent" : pct >= 80 ? "grade-very-good" : pct >= 70 ? "grade-good" : pct >= 60 ? "grade-acceptable" : "grade-weak";
+            return `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${sg.full_name}</td>
+                <td>${sg.classworkTotal1} / ${sg.classworkMax}</td>
+                <td>${sg.examTotal1} / ${sg.examMax}</td>
+                <td>${sg.classworkTotal2} / ${sg.classworkMax}</td>
+                <td>${sg.examTotal2} / ${sg.examMax}</td>
+                <td class="subtotal-cell">${sg.grandTotal} / ${sg.grandMax}</td>
+                <td>${pct}%</td>
+                <td class="${gradeClass}">${grade.label}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+
+    try {
+      await exportGradesTableAsPDF({
+        orientation: "landscape",
+        title: `ملخص الفصل الدراسي — ${className}`,
+        subtitle: format(new Date(), "yyyy/MM/dd"),
+        reportType: "grades",
+        tableHTML,
+        fileName: `ملخص_الفصل_${className}_${format(new Date(), "yyyy-MM-dd")}`,
+      });
+    } catch { /* handled */ }
   };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل ملخص الفصل...</p>;
