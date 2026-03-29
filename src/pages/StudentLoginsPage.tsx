@@ -203,7 +203,7 @@ export default function StudentLoginsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
           <CardContent className="flex items-center gap-3 p-5">
             <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/70 p-3 shadow-md shadow-primary/25">
@@ -226,6 +226,28 @@ export default function StudentLoginsPage() {
             </div>
           </CardContent>
         </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500/5 via-card to-blue-500/10 dark:from-blue-500/10 dark:via-card dark:to-blue-500/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(210 80% 55%), hsl(210 80% 55% / 0.7))", boxShadow: "0 4px 12px hsl(210 80% 55% / 0.25)" }}>
+              <UserCheck className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{studentOnlyLogins}</p>
+              <p className="text-xs text-muted-foreground">زيارات الطلاب</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-purple-500/5 via-card to-purple-500/10 dark:from-purple-500/10 dark:via-card dark:to-purple-500/5">
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(270 60% 55%), hsl(270 60% 55% / 0.7))", boxShadow: "0 4px 12px hsl(270 60% 55% / 0.25)" }}>
+              <Users2 className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{parentLogins}</p>
+              <p className="text-xs text-muted-foreground">زيارات أولياء الأمور</p>
+            </div>
+          </CardContent>
+        </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-success/5 via-card to-success/10 dark:from-success/10 dark:via-card dark:to-success/5">
           <CardContent className="flex items-center gap-3 p-5">
             <div className="rounded-2xl p-3 shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.7))", boxShadow: "0 4px 12px hsl(var(--success) / 0.25)" }}>
@@ -235,7 +257,7 @@ export default function StudentLoginsPage() {
               <p className="text-2xl font-bold text-foreground">
                 {uniqueStudents > 0 ? (totalLogins / uniqueStudents).toFixed(1) : 0}
               </p>
-              <p className="text-xs text-muted-foreground">متوسط الزيارات/طالب</p>
+              <p className="text-xs text-muted-foreground">متوسط/طالب</p>
             </div>
           </CardContent>
         </Card>
