@@ -80,40 +80,28 @@ const OUTLINED_ICONS = {
   x: "✖",
 };
 
-function FloatingContactButton({ studentId, studentName, classId }: { studentId: string; studentName: string; classId: string | null }) {
+function InlineContactSection({ studentId, studentName, classId }: { studentId: string; studentName: string; classId: string | null }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col items-center gap-3" dir="rtl">
-      {open && (
-        <div className="w-[340px] max-w-[90vw] max-h-[70vh] overflow-auto rounded-2xl shadow-2xl border border-border bg-card animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className="flex items-center justify-between p-3 border-b border-border/40 bg-gradient-to-l from-primary/10 to-accent/5">
-            <span className="text-sm font-bold text-foreground flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-primary" />
-              تواصل مع المعلم
-            </span>
-            <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-muted transition-colors">
-              <X className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>
-          <div className="p-3">
-            <ParentContactForm studentId={studentId} studentName={studentName} classId={classId} />
-          </div>
-        </div>
-      )}
+    <div className="w-full" dir="rtl">
       <button
         onClick={() => setOpen(!open)}
         className={cn(
-          "w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300",
-          "bg-gradient-to-br from-primary to-accent hover:scale-110 hover:shadow-2xl",
-          open && "rotate-0"
+          "w-full flex items-center justify-center gap-3 p-4 rounded-2xl font-bold text-base transition-all duration-300",
+          "bg-gradient-to-l from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 hover:opacity-90",
         )}
       >
-        {open ? (
-          <ChevronUp className="h-6 w-6 text-primary-foreground" />
-        ) : (
-          <MessageCircle className="h-6 w-6 text-primary-foreground" />
-        )}
+        <MessageCircle className="h-5 w-5" />
+        تواصل مع المعلم
+        <ChevronUp className={cn("h-5 w-5 transition-transform duration-300", !open && "rotate-180")} />
       </button>
+      {open && (
+        <Card className="mt-3 border-0 shadow-lg bg-card/90 backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-300">
+          <CardContent className="p-4">
+            <ParentContactForm studentId={studentId} studentName={studentName} classId={classId} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
