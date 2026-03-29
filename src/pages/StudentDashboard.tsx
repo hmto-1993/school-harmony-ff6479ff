@@ -12,7 +12,7 @@ import {
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X,
-  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp
+  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp, LayoutGrid, Table2
 } from "lucide-react";
 import {
   Dialog,
