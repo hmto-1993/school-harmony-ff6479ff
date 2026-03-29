@@ -155,9 +155,9 @@ export default function StudentLoginsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
-            سجل دخول الطلاب
+            سجل الزيارات
           </h1>
-          <p className="text-sm text-muted-foreground">تتبع ومراقبة دخول الطلاب على البوابة الإلكترونية</p>
+          <p className="text-sm text-muted-foreground">تتبع ومراقبة زيارات الطلاب وأولياء الأمور على البوابة الإلكترونية</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <ExportDialog
