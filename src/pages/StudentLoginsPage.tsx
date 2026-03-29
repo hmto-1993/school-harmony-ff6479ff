@@ -33,6 +33,7 @@ export default function StudentLoginsPage() {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("7");
+  const [loginTypeFilter, setLoginTypeFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function StudentLoginsPage() {
     const [{ data: loginsData }, { data: classesData }] = await Promise.all([
       supabase
         .from("student_logins")
-        .select("id, student_id, class_id, logged_in_at, students(full_name, national_id, class_id)")
+        .select("id, student_id, class_id, logged_in_at, login_type, students(full_name, national_id, class_id)")
         .order("logged_in_at", { ascending: false }),
       supabase.from("classes").select("id, name, grade, section"),
     ]);
@@ -59,9 +60,10 @@ export default function StudentLoginsPage() {
     return logins.filter((l) => {
       const afterDate = isAfter(new Date(l.logged_in_at), cutoffDate);
       const matchesClass = selectedClass === "all" || l.class_id === selectedClass;
-      return afterDate && matchesClass;
+      const matchesType = loginTypeFilter === "all" || (l.login_type || "student") === loginTypeFilter;
+      return afterDate && matchesClass && matchesType;
     });
-  }, [logins, cutoffDate, selectedClass]);
+  }, [logins, cutoffDate, selectedClass, loginTypeFilter]);
 
   const uniqueStudents = useMemo(() => new Set(filteredLogins.map((l) => l.student_id)).size, [filteredLogins]);
   const totalLogins = filteredLogins.length;
