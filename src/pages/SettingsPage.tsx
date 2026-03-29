@@ -271,6 +271,11 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Parent portal welcome message
+  const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
+  const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
+  const [savingParentWelcome, setSavingParentWelcome] = useState(false);
+
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
