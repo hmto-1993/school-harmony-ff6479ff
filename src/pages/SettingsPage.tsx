@@ -1207,6 +1207,15 @@ export default function SettingsPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                title="تعديل الفصل"
+                                onClick={() => startEditingClass(cls)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-7 w-7 text-primary hover:text-primary"
                                 title="جدول الحصص"
                                 onClick={() => setScheduleDialogClass({ id: cls.id, name: cls.name })}
