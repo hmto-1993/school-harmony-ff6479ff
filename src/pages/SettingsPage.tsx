@@ -276,6 +276,10 @@ export default function SettingsPage() {
   const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
   const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
   const [savingParentWelcome, setSavingParentWelcome] = useState(false);
+  const [parentShowNationalId, setParentShowNationalId] = useState(true);
+  const [parentShowGrades, setParentShowGrades] = useState(true);
+  const [parentShowAttendance, setParentShowAttendance] = useState(true);
+  const [parentShowBehavior, setParentShowBehavior] = useState(true);
 
   // Absence threshold settings
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
@@ -415,7 +419,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -446,6 +450,10 @@ export default function SettingsPage() {
         if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
         if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
         if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
+        if (s.id === "parent_show_national_id") setParentShowNationalId(s.value !== "false");
+        if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
+        if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
+        if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -2672,6 +2680,47 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* Visibility Controls - same as student view */}
+            <div className="pt-2">
+              <p className="text-sm font-semibold mb-3">التحكم بعرض البيانات لولي الأمر</p>
+              <div className="space-y-3 max-w-md">
+                {[
+                  { key: "national_id", label: "الهوية الوطنية", desc: "إظهار رقم الهوية في بطاقة الطالب", icon: KeyRound, state: parentShowNationalId, setter: setParentShowNationalId },
+                  { key: "grades", label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: parentShowGrades, setter: setParentShowGrades },
+                  { key: "attendance", label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: ClipboardCheck, state: parentShowAttendance, setter: setParentShowAttendance },
+                  { key: "behavior", label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
+                ].map((item) => (
+                  <div key={item.key} className={cn(
+                    "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                    item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                  )}>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
+                        item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold">{item.label}</h4>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => item.setter(!item.state)}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      {item.state ? "ظاهر" : "مخفي"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <Button
               disabled={savingParentWelcome}
               className="gap-1.5"
@@ -2680,6 +2729,10 @@ export default function SettingsPage() {
                 const results = await Promise.all([
                   supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(parentWelcomeEnabled) }),
                   supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: parentWelcomeMessage }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_national_id", value: String(parentShowNationalId) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_grades", value: String(parentShowGrades) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_attendance", value: String(parentShowAttendance) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_behavior", value: String(parentShowBehavior) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
@@ -2697,6 +2750,7 @@ export default function SettingsPage() {
               <p>🔒 <strong>الأمان:</strong> ولي الأمر يمكنه المشاهدة والتحميل فقط (Read-Only).</p>
               <p>📄 <strong>التقرير:</strong> يتضمن زر تحميل PDF يحتوي الترويسة الرسمية وبيانات الطالب.</p>
               <p>☆ <strong>الرموز:</strong> تُستخدم رموز مفرغة (Outlined) لتوفير الحبر عند الطباعة.</p>
+              <p>👁️ <strong>التحكم:</strong> يمكنك إخفاء أقسام محددة عن ولي الأمر بشكل مستقل عن إعدادات عرض الطالب.</p>
             </div>
           </CardContent>
         </Card>

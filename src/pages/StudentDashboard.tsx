@@ -103,6 +103,12 @@ export default function StudentDashboard() {
   const [welcomeMessage, setWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
   const [welcomeEnabled, setWelcomeEnabled] = useState(true);
 
+  // Parent visibility overrides
+  const [parentShowNationalId, setParentShowNationalId] = useState(true);
+  const [parentShowGrades, setParentShowGrades] = useState(true);
+  const [parentShowAttendance, setParentShowAttendance] = useState(true);
+  const [parentShowBehavior, setParentShowBehavior] = useState(true);
+
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
@@ -122,12 +128,16 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
       if (s.id === "school_name" && s.value) setSchoolName(s.value);
       if (s.id === "school_logo_url" && s.value) setSchoolLogoUrl(s.value);
+      if (s.id === "parent_show_national_id") setParentShowNationalId(s.value !== "false");
+      if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
+      if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
+      if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
     });
   };
 
@@ -250,7 +260,7 @@ export default function StudentDashboard() {
         doc.text(classInfo, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
-      if (student.national_id) {
+      if (parentShowNationalId && student.national_id) {
         doc.text(`الهوية الوطنية: ${student.national_id}`, pageWidth / 2, y, { align: "center" });
         y += 6;
       }
@@ -368,7 +378,13 @@ export default function StudentDashboard() {
     navigate("/login");
   };
 
-  const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true };
+  // Apply parent-specific overrides on top of student visibility
+  const vis = {
+    grades: baseVis.grades && parentShowGrades,
+    attendance: baseVis.attendance && parentShowAttendance,
+    behavior: baseVis.behavior && parentShowBehavior,
+  };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
@@ -466,6 +482,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
               </div>
+              {parentShowNationalId && (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
                   <Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -475,6 +492,7 @@ export default function StudentDashboard() {
                   <p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p>
                 </div>
               </div>
+              )}
             </div>
           </CardContent>
         </Card>
