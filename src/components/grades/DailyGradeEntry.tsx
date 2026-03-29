@@ -320,12 +320,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     const dateStr = format(selectedDate, "yyyy/MM/dd");
 
     const getLevelIcon = (level: GradeLevel) => {
-      if (level === "excellent") return '<span class="icon-excellent"></span>';
-      if (level === "average") return '<span class="icon-average"></span>';
-      if (level === "zero") return '<span class="icon-zero">×</span>';
-      return '<span style="display:inline-block;width:8px;height:8px;border-radius:9999px;border:1px dashed #ccc;"></span>';
+      if (level === "excellent") return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#059669;"></span>';
+      if (level === "average") return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:#d97706;"></span>';
+      if (level === "zero") return '<span style="display:inline-flex;align-items:center;justify-content:center;width:7px;height:7px;border-radius:9999px;background:#e11d48;color:#fff;font-size:6px;line-height:1;">×</span>';
+      return '<span style="display:inline-block;width:7px;height:7px;border-radius:9999px;border:1px dashed #ccc;"></span>';
     };
-    const starIcon = '<span class="icon-star">★</span>';
+    const starIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:9px;height:9px;color:#d97706;font-size:9px;line-height:1;">★</span>';
 
     // Build header
     const headerCells = [
