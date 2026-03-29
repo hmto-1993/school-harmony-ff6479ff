@@ -649,8 +649,8 @@ export default function StudentDashboard() {
                           const score = g.score ?? 0;
                           const maxScore = g.grade_categories?.max_score || 100;
                           const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-                          // Outlined evaluation icons
-                          const evalIcon = pct >= 90 ? "☆☆☆" : pct >= 75 ? "☆☆" : pct >= 60 ? "☆" : "➖";
+                          // Filled evaluation icons for UI display
+                          const evalIcon = pct >= 90 ? "★★★" : pct >= 75 ? "★★" : pct >= 60 ? "★" : "➖";
                           return (
                             <tr key={i} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20")}>
                               <td className={cn("p-3 text-right font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{g.grade_categories?.name || "-"}</td>
@@ -665,7 +665,9 @@ export default function StudentDashboard() {
                                   "text-rose-600 dark:text-rose-400"
                                 )}>{pct}%</span>
                               </td>
-                              <td className={cn("p-3 text-center text-lg", isLast && "last:rounded-bl-xl")}>{evalIcon}</td>
+                              <td className={cn("p-3 text-center text-lg", isLast && "last:rounded-bl-xl",
+                                pct >= 90 ? "text-amber-500" : pct >= 75 ? "text-blue-500" : pct >= 60 ? "text-amber-600" : "text-muted-foreground"
+                              )}>{evalIcon}</td>
                             </tr>
                           );
                         })}
