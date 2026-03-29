@@ -1,9 +1,11 @@
 /**
- * Unified WYSIWYG print engine for grade pages.
+ * Unified WYSIWYG print & PDF export engine for grade pages.
  * Uses an isolated iframe — completely independent from index.css @media print.
  * Covers: Daily Entry, Classwork, Final Evaluation, Semester Summary.
  */
 import { supabase } from "@/integrations/supabase/client";
+import jsPDF from "jspdf";
+import { toPng } from "html-to-image";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 
@@ -331,7 +333,186 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
   });
 }
 
-/* ──────────────────────────── Helpers ────────────────────────── */
+/* ──────────────────────────── PDF Export ─────────────────────── */
+
+export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?: string }): Promise<void> {
+  const { orientation = "landscape", title, subtitle, reportType = "grades", tableHTML, fileName } = options;
+
+  const [headerConfig, footerConfig] = await Promise.all([
+    fetchHeaderConfig(reportType),
+    fetchFooterConfig(reportType),
+  ]);
+
+  const headerHTML = buildHeaderHTML(headerConfig);
+  const footerHTML = buildFooterHTML(footerConfig);
+
+  // Use mm-based widths for A4
+  const isLandscape = orientation === "landscape";
+  const pageWmm = isLandscape ? 297 : 210;
+  const pageHmm = isLandscape ? 210 : 297;
+  const contentWmm = pageWmm - 10; // 5mm margins each side
+
+  // Render width in pixels (96dpi → ~3.78 px/mm)
+  const pxPerMm = 3.78;
+  const renderW = Math.round(contentWmm * pxPerMm);
+
+  const css = buildIframeCSS(orientation, `${renderW}px`, `${renderW + 40}px`, `auto`);
+
+  // Create offscreen container
+  const container = document.createElement("div");
+  Object.assign(container.style, {
+    position: "fixed", left: "-9999px", top: "0",
+    width: `${renderW + 40}px`, background: "#fff", zIndex: "-1",
+  });
+  document.body.appendChild(container);
+
+  const iframe = document.createElement("iframe");
+  Object.assign(iframe.style, {
+    width: `${renderW + 40}px`, height: "auto",
+    border: "0", overflow: "hidden",
+  });
+  container.appendChild(iframe);
+
+  const iDoc = iframe.contentDocument;
+  const iWin = iframe.contentWindow;
+  if (!iDoc || !iWin) { container.remove(); return; }
+
+  iDoc.open();
+  iDoc.write(`<!doctype html>
+<html dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <title>${title}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    ${css}
+    /* Override page-based rules for capture */
+    html, body { width: ${renderW}px !important; min-height: auto !important; }
+    .print-root { width: ${renderW}px !important; max-width: ${renderW}px !important; padding: 8px 12px !important; }
+  </style>
+</head>
+<body>
+  <div class="print-root">
+    ${headerHTML}
+    <div class="title-section">
+      <h2>${title}</h2>
+      ${subtitle ? `<p>${subtitle}</p>` : ""}
+    </div>
+    ${tableHTML}
+    ${footerHTML}
+  </div>
+</body>
+</html>`);
+  iDoc.close();
+
+  // Wait for fonts
+  try { if ("fonts" in iDoc) await (iDoc as any).fonts.ready; } catch {}
+
+  // Wait for images
+  const images = Array.from(iDoc.images);
+  if (images.length > 0) {
+    await Promise.all(images.map(img =>
+      img.complete ? Promise.resolve() : new Promise<void>(r => {
+        img.addEventListener("load", () => r(), { once: true });
+        img.addEventListener("error", () => r(), { once: true });
+      })
+    ));
+  }
+
+  // Auto-scale table font if needed
+  try {
+    const table = iDoc.querySelector("table");
+    const root = iDoc.querySelector(".print-root") as HTMLElement;
+    if (table && root) {
+      const cW = root.offsetWidth;
+      const tW = table.scrollWidth;
+      if (tW > cW) {
+        const s = Math.max(0.55, cW / tW);
+        table.style.fontSize = `${10 * s}px`;
+        const tW2 = table.scrollWidth;
+        if (tW2 > cW) table.style.fontSize = `${10 * s * Math.max(0.5, cW / tW2)}px`;
+      }
+    }
+  } catch {}
+
+  // Resize iframe to content height
+  const body = iDoc.body;
+  const contentH = body.scrollHeight;
+  iframe.style.height = `${contentH + 20}px`;
+
+  // Small delay to ensure rendering
+  await new Promise(r => setTimeout(r, 300));
+
+  // Capture as PNG
+  const root = iDoc.querySelector(".print-root") as HTMLElement;
+  let dataUrl: string;
+  try {
+    dataUrl = await toPng(root, {
+      backgroundColor: "#ffffff",
+      pixelRatio: 2,
+      width: root.scrollWidth,
+      height: root.scrollHeight,
+    });
+  } catch {
+    container.remove();
+    throw new Error("فشل في التقاط صورة الجدول");
+  }
+
+  container.remove();
+
+  // Create PDF
+  const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+
+  // Load image dimensions
+  const img = new Image();
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("فشل تحميل الصورة"));
+    img.src = dataUrl;
+  });
+
+  const imgAspect = img.width / img.height;
+  const margin = 5;
+  const usableW = pageWmm - margin * 2;
+  const totalImgH = usableW / imgAspect;
+  const usableH = pageHmm - margin * 2;
+
+  if (totalImgH <= usableH) {
+    // Fits on one page
+    doc.addImage(dataUrl, "PNG", margin, margin, usableW, totalImgH);
+  } else {
+    // Multi-page: slice the image
+    const pxPerMmImg = img.width / usableW;
+    let srcY = 0;
+    let pageIdx = 0;
+
+    while (srcY < img.height - 1) {
+      const sliceHpx = Math.min(usableH * pxPerMmImg, img.height - srcY);
+      if (sliceHpx <= 1) break;
+
+      const sliceCanvas = document.createElement("canvas");
+      sliceCanvas.width = img.width;
+      sliceCanvas.height = Math.ceil(sliceHpx);
+      const ctx = sliceCanvas.getContext("2d")!;
+      ctx.drawImage(img, 0, srcY, img.width, sliceHpx, 0, 0, img.width, sliceHpx);
+
+      if (pageIdx > 0) doc.addPage("a4", orientation);
+      const sliceHmm = sliceHpx / pxPerMmImg;
+      doc.addImage(sliceCanvas.toDataURL("image/png"), "PNG", margin, margin, usableW, sliceHmm);
+
+      srcY += sliceHpx;
+      pageIdx++;
+    }
+  }
+
+  // Download
+  const safeName = fileName || `${title.replace(/[^\u0600-\u06FFa-zA-Z0-9_\- ]/g, "_")}`;
+  doc.save(`${safeName}.pdf`);
+}
+
+
 
 /** Build icon HTML for classwork/daily-entry print */
 export function getPrintIconSpan(icon: { level: string; isFullScore: boolean }): string {
