@@ -288,6 +288,7 @@ export default function SettingsPage() {
   const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
   const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
+  const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
@@ -426,7 +427,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -471,6 +472,7 @@ export default function SettingsPage() {
         if (s.id === "parent_grades_hidden_categories" && s.value) {
           try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
         }
+        if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -2793,6 +2795,7 @@ export default function SettingsPage() {
                     {[
                       { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
                       { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
+                      { key: "daily", label: "التقييم اليومي (المشاركة والواجبات)", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
                     ].map(col => (
                       <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                         <h4 className="text-sm font-bold">{col.label}</h4>
@@ -2989,6 +2992,58 @@ export default function SettingsPage() {
                     );
                   }
                 })()}
+
+                {/* Daily Evaluation Preview */}
+                {parentShowDailyGrades && (() => {
+                  const dailyCats = categories.filter((c: any) => 
+                    !parentGradesHiddenCategories.includes(c.id) && 
+                    c.category_group === "classwork"
+                  ).slice(0, 4);
+                  if (dailyCats.length === 0) return null;
+                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
+                  const mockLevels: ("excellent" | "average" | "zero" | null)[][] = dailyCats.map((_, ci) => 
+                    mockDays.map((_, di) => {
+                      const v = (ci + di) % 4;
+                      return v === 0 ? "excellent" : v === 1 ? "average" : v === 2 ? "zero" : null;
+                    })
+                  );
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📋 التقييم اليومي</p>
+                      <div className="overflow-auto rounded-lg border border-border/30">
+                        <table className="w-full text-[10px] border-separate border-spacing-0">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">المعيار</th>
+                              {mockDays.map(d => (
+                                <th key={d} className="p-1.5 text-center font-semibold text-primary border-b border-border/20">{d}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {dailyCats.map((cat: any, ci: number) => (
+                              <tr key={cat.id} className={ci % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{cat.name}</td>
+                                {mockDays.map((_, di) => {
+                                  const level = mockLevels[ci][di];
+                                  return (
+                                    <td key={di} className="p-1 text-center border-l border-border/10">
+                                      {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-sm">✔</span> :
+                                       level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-sm">➖</span> :
+                                       level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-sm">✖</span> :
+                                       <span className="text-muted-foreground/30">○</span>}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
             </div>
@@ -3013,6 +3068,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_grades_show_eval", value: String(parentGradesShowEval) }),
                   supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: parentGradesVisiblePeriods }),
                   supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
+                  supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
