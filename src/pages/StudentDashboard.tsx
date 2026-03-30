@@ -440,12 +440,12 @@ export default function StudentDashboard() {
   };
 
   const baseVis = student.visibility || { grades: true, attendance: true, behavior: true };
-  // Apply parent-specific overrides on top of student visibility
-  const vis = {
+  // Apply parent-specific overrides only for parent login
+  const vis = isParent ? {
     grades: baseVis.grades && parentShowGrades,
     attendance: baseVis.attendance && parentShowAttendance,
     behavior: baseVis.behavior && parentShowBehavior,
-  };
+  } : baseVis;
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum, g) => {
     const cat = g.grade_categories;
