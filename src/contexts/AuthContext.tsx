@@ -15,6 +15,7 @@ interface StudentData {
   behaviors: any[];
   attendance: any[];
   visibility?: { grades: boolean; attendance: boolean; behavior: boolean };
+  evalSettings?: { showDaily: boolean; showClasswork: boolean; iconsCount: number };
   session_token?: string;
   session_issued_at?: number;
   login_type?: string;
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 behaviors: data.behaviors,
                 attendance: data.attendance,
                 visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+                evalSettings: data.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 },
                 session_token: data.session_token,
                 session_issued_at: data.session_issued_at,
                 login_type: login_type || "student",
@@ -160,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         behaviors: data.behaviors,
         attendance: data.attendance,
         visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+        evalSettings: data.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 },
         session_token: data.session_token,
         session_issued_at: data.session_issued_at,
         login_type: login_type || "student",
