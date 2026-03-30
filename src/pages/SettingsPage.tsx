@@ -2815,6 +2815,24 @@ export default function SettingsPage() {
                         </button>
                       </div>
                     ))}
+
+                    {/* Classwork icons count selector */}
+                    {parentShowClassworkIcons && (
+                      <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                        <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
+                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                          {[5, 10, 15, 20].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => setParentClassworkIconsCount(n)}
+                              className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all",
+                                parentClassworkIconsCount === n ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                              )}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hidden Categories */}
@@ -3121,6 +3139,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_classwork_icons", value: String(parentShowClassworkIcons) }),
+                  supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(parentClassworkIconsCount) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
