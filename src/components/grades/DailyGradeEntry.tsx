@@ -544,7 +544,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {extraSlotsEnabled && slotsArr.length < MAX_SLOTS && (
+                              {extraSlotsEnabled && !extraSlotsDisabledCats.includes(cat.id) && slotsArr.length < MAX_SLOTS && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
