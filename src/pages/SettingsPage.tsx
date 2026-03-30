@@ -279,6 +279,8 @@ export default function SettingsPage() {
   // Daily extra slots
   const [dailyExtraSlotsEnabled, setDailyExtraSlotsEnabled] = useState(true);
   const [dailyExtraSlotsDisabledCats, setDailyExtraSlotsDisabledCats] = useState<string[]>([]);
+  const [dailyMaxSlots, setDailyMaxSlots] = useState(3);
+  const [dailyMaxSlotsPerCat, setDailyMaxSlotsPerCat] = useState<Record<string, number>>({});
 
   // Parent portal welcome message
   const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
