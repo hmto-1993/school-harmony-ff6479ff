@@ -508,6 +508,9 @@ export default function SettingsPage() {
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
         if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
         if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
+        if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
+          try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
+        }
       });
 
       // Fetch popup history
