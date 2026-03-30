@@ -422,7 +422,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2">
-              <Upload className="h-4 w-4" />
+              <Download className="h-4 w-4" />
               من ملف Excel / CSV
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => pdfInputRef.current?.click()} className="gap-2">
