@@ -908,153 +908,79 @@ export default function StudentDashboard() {
                   </div>
                 );
 
-                  // Daily Evaluation
-                  const dailyEval = parentShowDailyGrades ? (() => {
-                    const dailyGrades = filteredGrades.filter((g: any) => 
-                      g.date && g.grade_categories?.category_group === "classwork"
-                    );
-                    if (dailyGrades.length === 0) return null;
-                    const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
-                    const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
-                    const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
-                    const getLevel = (score: number | null, maxScore: number) => {
-                      if (score === null || score === undefined) return null;
-                      const pct = maxScore > 0 ? score / maxScore : 0;
-                      if (pct >= 0.8) return "excellent";
-                      if (pct >= 0.4) return "average";
-                      return "zero";
-                    };
-                    return (
-                      <div className="mt-4 pt-4 border-t border-border/30">
-                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                          <span className="inline-block w-1 h-4 rounded-full bg-gradient-to-b from-emerald-500 to-blue-500" />
-                          📋 التقييم اليومي
-                        </h4>
-                        <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
-                          <table className="w-full text-xs border-separate border-spacing-0">
-                            <thead>
-                              <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
-                                <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">المعيار</th>
-                                {uniqueDates.map((date: string) => {
-                                  const d = new Date(date);
-                                  const dayName = dayLabels[d.getDay()] || "";
-                                  return (
-                                    <th key={date} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap">
-                                      <div className="text-[10px]">{dayName}</div>
-                                      <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
-                                    </th>
-                                  );
-                                })}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {dailyCatNames.map((catName: string, ci: number) => (
-                                <tr key={catName} className={ci % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
-                                  <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">{catName}</td>
-                                  {uniqueDates.map((date: string) => {
-                                    const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                                    const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
-                                    return (
-                                      <td key={date} className="p-1.5 text-center border-l border-border/10">
-                                        {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
-                                         level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
-                                         level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
-                                         <span className="text-muted-foreground/30 text-sm">○</span>}
-                                      </td>
-                                    );
-                                  })}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
-                          <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
-                          <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
-                          <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
-                          <span className="flex items-center gap-1"><span className="text-muted-foreground/30">○</span> لم يُقيّم</span>
-                        </div>
-                      </div>
-                    );
-                  })() : null;
-
-                  // Classwork Icon Strip
-                  const classworkIcons = parentShowClassworkIcons ? (() => {
-                    const cwGrades = filteredGrades.filter((g: any) => 
-                      g.grade_categories?.category_group === "classwork"
-                    );
-                    if (cwGrades.length === 0) return null;
-                    const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
-                    const isParticipation = (name: string) => name === "المشاركة";
-                    const MAX_SLOTS = 3;
-                    
-                    const getIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
-                      if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
-                      if (score <= 0) return [{ level: "zero", isStar: false }];
-                      const isPartic = isParticipation(catName);
-                      const slotCount = isPartic ? MAX_SLOTS : 1;
-                      const perSlot = Math.round(maxScore / slotCount);
-                      if (score >= maxScore && isPartic) return [{ level: "excellent", isStar: true }];
-                      const icons: { level: string; isStar: boolean }[] = [];
-                      let remaining = score;
-                      for (let si = 0; si < slotCount; si++) {
-                        if (remaining >= perSlot) { icons.push({ level: "excellent", isStar: false }); remaining -= perSlot; }
-                        else if (remaining >= Math.round(perSlot / 2)) { icons.push({ level: "average", isStar: false }); remaining -= Math.round(perSlot / 2); }
-                        else if (remaining > 0) { icons.push({ level: "average", isStar: false }); remaining = 0; }
-                        else icons.push({ level: "zero", isStar: false });
-                      }
-                      return icons;
-                    };
-
-                    return (
-                      <div className="mt-4 pt-4 border-t border-border/30">
-                        <h4 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
-                          <span className="inline-block w-1 h-4 rounded-full bg-gradient-to-b from-blue-500 to-purple-500" />
-                          📊 المهام والمشاركة
-                        </h4>
-                        <div className="space-y-2">
-                          {cwCatNames.map((catName: string) => {
-                            const catGrades = cwGrades
-                              .filter((g: any) => g.grade_categories?.name === catName)
-                              .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
-                            const allIcons = catGrades.flatMap((g: any) => 
-                              getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
-                            );
-                            const displayIcons = allIcons.slice(-parentClassworkIconsCount);
-                            return (
-                              <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
-                                <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
-                                <div className="flex items-center gap-0.5 flex-wrap">
-                                  {displayIcons.map((icon, i) => (
-                                    <span key={i} className="text-base">
-                                      {icon.isStar ? <span className="text-amber-500">★</span> :
-                                       icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
-                                       icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
-                                       <span className="text-rose-500 dark:text-rose-400">✖</span>}
-                                    </span>
-                                  ))}
-                                  {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
-                          <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
-                          <span className="flex items-center gap-1"><span className="text-amber-500">★</span> درجة كاملة</span>
-                          <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
-                          <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
-                        </div>
-                      </div>
-                    );
-                  })() : null;
-
-                  return <>{mainView}{dailyEval}{classworkIcons}</>;
+                  return <>{mainView}</>;
                 })()}
               </CardContent>
             </Card>
           </TabsContent>
           )}
+
+          {/* التقييم المستمر Tab - Parent only */}
+          {(() => {
+            const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
+            if (!showEvalTab || !vis.grades) return null;
+            
+            const studentClassId = student.class_id;
+            const isCatHiddenForStudent = (catId: string) => {
+              if (studentClassId && parentGradesHiddenCategories.classes[studentClassId]?.length) {
+                return parentGradesHiddenCategories.classes[studentClassId].includes(catId);
+              }
+              return parentGradesHiddenCategories.global.includes(catId);
+            };
+            const filteredGrades = student.grades.filter((g) => {
+              if (isCatHiddenForStudent(g.category_id)) return false;
+              if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
+                if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
+                if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
+              }
+              return true;
+            });
+
+            return (
+          <TabsContent value="evaluation">
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <span className="inline-block w-1 h-5 rounded-full bg-gradient-to-b from-emerald-500 to-blue-500" />
+                  التقييم المستمر
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Sub-view toggle */}
+                <div className="flex items-center gap-2 mb-4 bg-muted/40 rounded-xl p-1">
+                  {parentShowDailyGrades && (
+                    <button
+                      onClick={() => setActiveTab("evaluation")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all",
+                        (!parentShowClassworkIcons || (activeTab === "evaluation" && !document.querySelector('[data-eval-sub="classwork"]')))
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      )}
+                      data-eval-sub="daily"
+                      id="eval-daily-btn"
+                    >
+                      📅 تفاعل اليوم
+                    </button>
+                  )}
+                  {parentShowClassworkIcons && (
+                    <button
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all",
+                        "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                      )}
+                      data-eval-sub="classwork"
+                      id="eval-classwork-btn"
+                    >
+                      📊 التفاعل الكلي
+                    </button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+            );
+          })()}
 
           {vis.attendance && (
           <TabsContent value="attendance">
