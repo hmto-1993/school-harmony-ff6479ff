@@ -110,6 +110,7 @@ export default function StudentDashboard() {
   const { student, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const isParent = student?.login_type === "parent";
 
   // Resource library state
   const [folders, setFolders] = useState<ResourceFolder[]>([]);
