@@ -268,7 +268,6 @@ export default function GradesPage() {
           )}
           <PrintFooterSignatures reportType={activeType === "behavior" ? "behavior" : "grades"} />
         </div>
-        </div>
       ) : (
         <EmptyState
           icon={ClipboardList}
