@@ -2960,6 +2960,14 @@ export default function SettingsPage() {
             )}
 
             {/* ─── Live Preview ─── */}
+            {(() => {
+              const isCatHidden = (catId: string, classId?: string) => {
+                if (classId && parentGradesHiddenCategories.classes[classId]?.length) {
+                  return parentGradesHiddenCategories.classes[classId].includes(catId);
+                }
+                return parentGradesHiddenCategories.global.includes(catId);
+              };
+              return (
             <div className="pt-3 border-t border-border/30">
               <p className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <Eye className="h-4 w-4 text-primary" />
@@ -2967,13 +2975,6 @@ export default function SettingsPage() {
               </p>
               <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-muted/10 p-4 max-w-md">
                 {(() => {
-                  // Build mock data from real categories
-                   const isCatHidden = (catId: string, classId?: string) => {
-                     if (classId && parentGradesHiddenCategories.classes[classId]?.length) {
-                       return parentGradesHiddenCategories.classes[classId].includes(catId);
-                     }
-                     return parentGradesHiddenCategories.global.includes(catId);
-                   };
                    const visibleCats = categories.filter((c: any) => !isCatHidden(c.id, c.class_id));
                   const mockGrades = visibleCats.map((c: any, i: number) => {
                     const mockScore = Math.round(c.max_score * (0.6 + Math.sin(i + 1) * 0.3));
