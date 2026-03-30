@@ -2945,6 +2945,76 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* ─── Continuous Evaluation Tab Settings ─── */}
+            <div className="pt-2 border-t border-border/30">
+              <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-emerald-600" />
+                إعدادات التقييم المستمر
+              </p>
+              <div className="space-y-3 max-w-md">
+                {/* Show Daily Interaction */}
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  parentShowDailyGrades ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div>
+                    <h4 className="text-sm font-bold">📅 تفاعل اليوم</h4>
+                    <p className="text-xs text-muted-foreground">الإدخال اليومي للتقييم المستمر</p>
+                  </div>
+                  <button
+                    onClick={() => setParentShowDailyGrades(!parentShowDailyGrades)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      parentShowDailyGrades ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {parentShowDailyGrades ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {parentShowDailyGrades ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+
+                {/* Show Cumulative Interaction */}
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  parentShowClassworkIcons ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div>
+                    <h4 className="text-sm font-bold">📊 التفاعل الكلي</h4>
+                    <p className="text-xs text-muted-foreground">ملخص المهام والمشاركة التراكمي</p>
+                  </div>
+                  <button
+                    onClick={() => setParentShowClassworkIcons(!parentShowClassworkIcons)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      parentShowClassworkIcons ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {parentShowClassworkIcons ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {parentShowClassworkIcons ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+
+                {/* Icons Count Control */}
+                {parentShowClassworkIcons && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                    <div>
+                      <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
+                      <p className="text-xs text-muted-foreground">الحد الأقصى لعدد أيقونات التقييم في التفاعل الكلي</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
+                      >−</button>
+                      <span className="w-8 text-center font-bold text-sm">{parentClassworkIconsCount}</span>
+                      <button
+                        onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
+                      >+</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* ─── Live Preview ─── */}
             {(() => {
               const isCatHidden = (catId: string, classId?: string) => {
