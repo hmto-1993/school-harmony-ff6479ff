@@ -77,6 +77,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [extraSlotsEnabled, setExtraSlotsEnabled] = useState(true);
+  const [extraSlotsDisabledCats, setExtraSlotsDisabledCats] = useState<string[]>([]);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
@@ -87,8 +88,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
-    supabase.from("site_settings").select("value").eq("id", "daily_extra_slots_enabled").maybeSingle().then(({ data }) => {
-      if (data) setExtraSlotsEnabled(data.value !== "false");
+    supabase.from("site_settings").select("id, value").in("id", ["daily_extra_slots_enabled", "daily_extra_slots_disabled_cats"]).then(({ data }) => {
+      (data || []).forEach((s: any) => {
+        if (s.id === "daily_extra_slots_enabled") setExtraSlotsEnabled(s.value !== "false");
+        if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
+          try { setExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setExtraSlotsDisabledCats([]); }
+        }
+      });
     });
   }, []);
 
@@ -538,7 +544,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {extraSlotsEnabled && slotsArr.length < MAX_SLOTS && (
+                              {extraSlotsEnabled && !extraSlotsDisabledCats.includes(cat.id) && slotsArr.length < MAX_SLOTS && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
