@@ -29,27 +29,41 @@ interface ClassStats {
 
 async function fetchDashboardData() {
   const today = format(new Date(), "yyyy-MM-dd");
+  const todayDayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon, ...
 
   const [
     { data: studentsData },
     { data: classesData },
     { data: attendanceData },
     { data: settingsData },
+    { data: schedulesData },
   ] = await Promise.all([
     supabase.from("students").select("id, class_id"),
     supabase.from("classes").select("id, name"),
     supabase.from("attendance_records").select("student_id, status, class_id").eq("date", today),
     supabase.from("site_settings").select("value").eq("id", "school_name").single(),
+    supabase.from("class_schedules").select("class_id, days_of_week"),
   ]);
 
   const students = studentsData || [];
   const classes = classesData || [];
   const attendance = attendanceData || [];
+  const schedules = schedulesData || [];
+
+  // Classes that have lessons scheduled today
+  const activeClassIds = new Set(
+    schedules
+      .filter((s) => Array.isArray(s.days_of_week) && s.days_of_week.includes(todayDayOfWeek))
+      .map((s) => s.class_id)
+  );
+
+  // Students in active classes only (for attendance rate)
+  const activeStudents = students.filter((s) => s.class_id && activeClassIds.has(s.class_id));
 
   const present = attendance.filter((r) => r.status === "present").length;
   const absent = attendance.filter((r) => r.status === "absent").length;
   const late = attendance.filter((r) => r.status === "late").length;
-  const notRecorded = Math.max(0, students.length - attendance.length);
+  const notRecorded = Math.max(0, activeStudents.length - attendance.length);
 
   const classMap: Record<string, ClassStats> = {};
   classes.forEach((c) => {
@@ -73,7 +87,7 @@ async function fetchDashboardData() {
     todayAbsent: absent,
     todayLate: late,
     todayNotRecorded: notRecorded,
-    attendanceRate: students.length > 0 ? Math.round((present / students.length) * 100) : 0,
+    attendanceRate: activeStudents.length > 0 ? Math.round((present / activeStudents.length) * 100) : 0,
     classStats: Object.values(classMap).filter((c) => c.total > 0),
     schoolName: settingsData?.value || "نظام إدارة المدرسة",
   };
