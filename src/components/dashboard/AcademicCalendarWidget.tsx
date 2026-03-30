@@ -107,20 +107,25 @@ export default function AcademicCalendarWidget() {
   const statusText = useMemo(() => {
     if (!activeWeek) return null;
     const parts: string[] = [];
+    const firstDay = schoolDays[0] ?? 0;
+    const lastDay = schoolDays[schoolDays.length - 1] ?? 4;
+    const weekStartDay = activeWeek.startDate.getDay();
+    const schoolStart = addDaysUtil(activeWeek.startDate, ((firstDay - weekStartDay) + 7) % 7);
+    const schoolEnd = addDaysUtil(activeWeek.startDate, ((lastDay - weekStartDay) + 7) % 7);
     // Hijri range
-    const hijriStart = formatHijriDate(activeWeek.startDate);
-    const hijriEnd = formatHijriDate(activeWeek.endDate);
+    const hijriStart = formatHijriDate(schoolStart);
+    const hijriEnd = formatHijriDate(schoolEnd);
     if (hijriStart && hijriEnd) {
       parts.push(`${hijriStart} - ${hijriEnd} هـ`);
     }
     // Gregorian range
-    parts.push(`${formatDateShort(activeWeek.startDate)} - ${formatDateShort(activeWeek.endDate)} م`);
+    parts.push(`${formatDateShort(schoolStart)} - ${formatDateShort(schoolEnd)} م`);
     parts.push(`الأسبوع ${activeWeek.weekNumber}`);
     if (activeWeek.type !== "normal") {
       parts.push(activeWeek.label);
     }
     return parts.join(" • ");
-  }, [activeWeek]);
+  }, [activeWeek, schoolDays]);
 
   return (
     <>
