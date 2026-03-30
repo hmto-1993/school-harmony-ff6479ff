@@ -256,11 +256,22 @@ export default function StudentNotificationCards({
     }
     setExcuseUploading(true);
     try {
-      const ext = excuseFile.name.split(".").pop() || "jpg";
-      const fileName = `excuse_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const filePath = `excuses/${fileName}`;
-      const { error: uploadErr } = await supabase.storage.from("excuses").upload(filePath, excuseFile);
-      if (uploadErr) throw uploadErr;
+      // Upload file via secure edge function (not direct storage)
+      const uploadForm = new FormData();
+      uploadForm.append("file", excuseFile);
+      uploadForm.append("student_id", studentId);
+      uploadForm.append("session_token", authStudent?.session_token || "");
+      uploadForm.append("session_issued_at", String(authStudent?.session_issued_at || ""));
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const uploadRes = await fetch(`${supabaseUrl}/functions/v1/upload-excuse-file`, {
+        method: "POST",
+        body: uploadForm,
+      });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.success) throw new Error(uploadData.error || "فشل رفع الملف");
+
+      const filePath = uploadData.file_path;
 
       const { data: excuseResult, error: excuseErr } = await supabase.functions.invoke("submit-excuse", {
         body: {
