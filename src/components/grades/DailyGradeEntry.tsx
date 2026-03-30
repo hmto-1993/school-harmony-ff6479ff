@@ -54,11 +54,11 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   );
 };
 
-const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
-const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(name);
-const isParticipation = (name: string) => name === "المشاركة";
+const ALLOWED_DAILY_CATEGORIES = ["المهام الادائية", "المهام الأدائية", "المشاركة", "المشاركة والتفاعل"];
+const isAllowedInDaily = (name: string) => ALLOWED_DAILY_CATEGORIES.some(a => name.includes(a) || a.includes(name));
+const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 const isBookCategory = (name: string) => name === "الكتاب";
-const MAX_PARTICIPATION_SLOTS = 3;
+const MAX_SLOTS = 3;
 
 
 interface DailyGradeEntryProps {
@@ -133,7 +133,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           } else {
             const max = Number(c.max_score);
             const isPartCat = isParticipation(c.name);
-            const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+            const slotCount = isParticipation(c.name) ? MAX_SLOTS : MAX_SLOTS;
             const perSlot = Math.round(max / slotCount);
 
             if (score >= max && isPartCat) {
@@ -177,7 +177,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const cycleSlot = (studentId: string, categoryId: string, slotIndex: number, maxScore: number, catName: string) => {
-    const maxSlots = isParticipation(catName) ? MAX_PARTICIPATION_SLOTS : 1;
+    const maxSlots = MAX_SLOTS;
     setStudentGrades((prev) =>
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
@@ -194,7 +194,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
         const currentSlots = [...(sg.slots[categoryId] || [])];
-        if (currentSlots.length >= MAX_PARTICIPATION_SLOTS) return sg;
+        if (currentSlots.length >= MAX_SLOTS) return sg;
         currentSlots.push(null);
         return { ...sg, slots: { ...sg.slots, [categoryId]: currentSlots } };
       })
@@ -208,7 +208,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         const wasStarred = sg.starred[categoryId];
         const newStarred = !wasStarred;
         const catName = categories.find(c => c.id === categoryId)?.name || "";
-        const slotCount = isParticipation(catName) ? MAX_PARTICIPATION_SLOTS : 1;
+        const slotCount = MAX_SLOTS;
         const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
         return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
       })
@@ -310,7 +310,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     }
   };
 
-  const dailyCategories = categories.filter(c => !isHiddenFromDaily(c.name));
+  const dailyCategories = categories.filter(c => isAllowedInDaily(c.name));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
@@ -533,7 +533,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {isPartCat && slotsArr.length < MAX_PARTICIPATION_SLOTS && (
+                              {slotsArr.length < MAX_SLOTS && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
