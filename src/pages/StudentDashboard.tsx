@@ -938,8 +938,7 @@ export default function StudentDashboard() {
                             const allIcons = catGrades.flatMap((g: any) => 
                               getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                             );
-                            const maxDisplay = catName === "المشاركة" ? 20 : 8;
-                            const displayIcons = allIcons.slice(-maxDisplay);
+                            const displayIcons = allIcons.slice(-parentClassworkIconsCount);
                             return (
                               <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
                                 <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
