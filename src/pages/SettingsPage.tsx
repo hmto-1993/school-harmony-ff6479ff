@@ -3229,14 +3229,6 @@ export default function SettingsPage() {
                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (cwCats.length === 0) return null;
-                  const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500"];
-                  const catColorsBg = [
-                    "bg-emerald-500/10", "bg-blue-500/10", "bg-amber-500/10", "bg-violet-500/10"
-                  ];
-                  const catColorsText = [
-                    "text-emerald-700 dark:text-emerald-400", "text-blue-700 dark:text-blue-400",
-                    "text-amber-700 dark:text-amber-400", "text-violet-700 dark:text-violet-400"
-                  ];
                   const mockIcons = ["✔", "★", "➖", "✔", "✔", "★"];
                   return (
                     <div className="mt-3 pt-3 border-t border-border/20">
@@ -3251,9 +3243,8 @@ export default function SettingsPage() {
                           </thead>
                           <tbody>
                             {cwCats.map((cat: any, ci: number) => (
-                              <tr key={cat.id} className={catColorsBg[ci % 4]}>
-                                <td className={cn("p-1.5 text-right font-bold border-l border-border/10 whitespace-nowrap", catColorsText[ci % 4])}>
-                                  <span className={cn("inline-block w-2 h-2 rounded-full mr-1", catColorsDot[ci % 4])} />
+                              <tr key={cat.id} className={ci % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">
                                   {cat.name}
                                 </td>
                                 <td className="p-1.5 text-center border-l border-border/10">

@@ -1040,23 +1040,8 @@ export default function StudentDashboard() {
                 return icons;
               };
 
-              const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500", "bg-rose-500", "bg-cyan-500"];
-              const catColorsBg = [
-                "bg-emerald-500/10 dark:bg-emerald-500/15",
-                "bg-blue-500/10 dark:bg-blue-500/15",
-                "bg-amber-500/10 dark:bg-amber-500/15",
-                "bg-violet-500/10 dark:bg-violet-500/15",
-                "bg-rose-500/10 dark:bg-rose-500/15",
-                "bg-cyan-500/10 dark:bg-cyan-500/15",
-              ];
-              const catColorsText = [
-                "text-emerald-700 dark:text-emerald-400",
-                "text-blue-700 dark:text-blue-400",
-                "text-amber-700 dark:text-amber-400",
-                "text-violet-700 dark:text-violet-400",
-                "text-rose-700 dark:text-rose-400",
-                "text-cyan-700 dark:text-cyan-400",
-              ];
+              // Use same alternating style as daily view
+
 
               return (
                 <>
@@ -1077,11 +1062,9 @@ export default function StudentDashboard() {
                             getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                           );
                           const displayIcons = allIcons.slice(-parentClassworkIconsCount);
-                          const ci = catIdx % 6;
                           return (
-                            <tr key={catName} className={catColorsBg[ci]}>
-                              <td className={cn("p-3 text-right font-bold border-l border-border/10 whitespace-nowrap text-xs", catColorsText[ci])}>
-                                <span className={cn("inline-block w-2 h-2 rounded-full mr-1.5", catColorsDot[ci])} />
+                            <tr key={catName} className={catIdx % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                              <td className="p-3 text-right font-semibold border-l border-border/10 whitespace-nowrap text-xs">
                                 {catName}
                               </td>
                               <td className="p-3 text-center border-l border-border/10">
