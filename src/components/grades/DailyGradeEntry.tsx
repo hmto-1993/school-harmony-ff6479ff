@@ -110,6 +110,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     loadData();
   }, [selectedClass, selectedDate, selectedPeriod]);
 
+  const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
+
   const loadData = async () => {
     const { data: cats } = await supabase
       .from("grade_categories").select("*").eq("class_id", selectedClass).order("sort_order");
