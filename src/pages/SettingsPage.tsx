@@ -251,6 +251,9 @@ export default function SettingsPage() {
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
   const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
+  const [studentShowDailyGrades, setStudentShowDailyGrades] = useState(true);
+  const [studentShowClassworkIcons, setStudentShowClassworkIcons] = useState(true);
+  const [studentClassworkIconsCount, setStudentClassworkIconsCount] = useState(10);
 
   // Student popup message
   const [popupEnabled, setPopupEnabled] = useState(false);
