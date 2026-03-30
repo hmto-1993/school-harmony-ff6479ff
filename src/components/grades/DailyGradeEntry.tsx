@@ -195,7 +195,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const cycleSlot = (studentId: string, categoryId: string, slotIndex: number, maxScore: number, catName: string) => {
-    const maxSlots = MAX_SLOTS;
+    const maxSlots = getMaxSlots(categoryId);
     setStudentGrades((prev) =>
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
