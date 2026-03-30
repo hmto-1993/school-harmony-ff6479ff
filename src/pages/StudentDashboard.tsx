@@ -1062,11 +1062,9 @@ export default function StudentDashboard() {
                             getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                           );
                           const displayIcons = allIcons.slice(-parentClassworkIconsCount);
-                          const ci = catIdx % 6;
                           return (
-                            <tr key={catName} className={catColorsBg[ci]}>
-                              <td className={cn("p-3 text-right font-bold border-l border-border/10 whitespace-nowrap text-xs", catColorsText[ci])}>
-                                <span className={cn("inline-block w-2 h-2 rounded-full mr-1.5", catColorsDot[ci])} />
+                            <tr key={catName} className={catIdx % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                              <td className="p-3 text-right font-semibold border-l border-border/10 whitespace-nowrap text-xs">
                                 {catName}
                               </td>
                               <td className="p-3 text-center border-l border-border/10">
