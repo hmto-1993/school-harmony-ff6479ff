@@ -2751,350 +2751,307 @@ export default function SettingsPage() {
               </CardTitle>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Toggle welcome message */}
-            <div className="flex items-center justify-between p-4 rounded-xl border-2 border-border/50 bg-muted/20">
-              <div>
-                <p className="font-semibold text-foreground">رسالة الترحيب</p>
-                <p className="text-xs text-muted-foreground">تظهر في أعلى لوحة تحكم ولي الأمر</p>
-              </div>
-              <button
-                onClick={() => setParentWelcomeEnabled(!parentWelcomeEnabled)}
-                className={cn(
-                  "relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200",
-                  parentWelcomeEnabled ? "bg-primary" : "bg-muted"
-                )}
-              >
-                <span className={cn(
-                  "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200",
-                  parentWelcomeEnabled ? "translate-x-6" : "translate-x-1"
-                )} />
-              </button>
-            </div>
+          <CardContent className="space-y-5">
 
-            {/* Welcome message text */}
-            {parentWelcomeEnabled && (
-              <div className="space-y-3">
-                <Label className="text-sm font-semibold">نص رسالة الترحيب</Label>
-                <Textarea
-                  value={parentWelcomeMessage}
-                  onChange={(e) => setParentWelcomeMessage(e.target.value)}
-                  placeholder="مرحباً بك ولي أمر الطالب / {name}..."
-                  className="min-h-[80px] text-sm"
-                  dir="rtl"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  استخدم <code className="bg-muted px-1 rounded text-primary font-mono">{"{name}"}</code> ليتم استبداله تلقائياً باسم الطالب
-                </p>
-
-                {/* Preview */}
-                <div className="p-4 rounded-xl border-2 border-primary/20 bg-gradient-to-l from-primary/5 to-accent/5">
-                  <p className="text-xs text-muted-foreground mb-1">معاينة:</p>
-                  <p className="text-sm font-bold text-foreground">
-                    {parentWelcomeMessage.replace(/\{name\}/g, "أحمد محمد")}
-                  </p>
+            {/* ─── Section 1: Welcome + Visibility (side by side) ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Welcome Message */}
+              <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-bold flex items-center gap-1.5">💬 رسالة الترحيب</h4>
+                  <button
+                    onClick={() => setParentWelcomeEnabled(!parentWelcomeEnabled)}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
+                      parentWelcomeEnabled ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
+                      parentWelcomeEnabled ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </button>
                 </div>
+                {parentWelcomeEnabled && (
+                  <>
+                    <Textarea
+                      value={parentWelcomeMessage}
+                      onChange={(e) => setParentWelcomeMessage(e.target.value)}
+                      placeholder="مرحباً بك ولي أمر الطالب / {name}..."
+                      className="min-h-[60px] text-xs"
+                      dir="rtl"
+                    />
+                    <p className="text-[10px] text-muted-foreground">
+                      استخدم <code className="bg-muted px-1 rounded text-primary font-mono">{"{name}"}</code> ليتم استبداله باسم الطالب
+                    </p>
+                  </>
+                )}
               </div>
-            )}
 
-            {/* Visibility Controls - same as student view */}
-            <div className="pt-2">
-              <p className="text-sm font-semibold mb-3">التحكم بعرض البيانات لولي الأمر</p>
-              <div className="space-y-3 max-w-md">
-                {[
-                  { key: "national_id", label: "الهوية الوطنية", desc: "إظهار رقم الهوية في بطاقة الطالب", icon: KeyRound, state: parentShowNationalId, setter: setParentShowNationalId },
-                  { key: "grades", label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: parentShowGrades, setter: setParentShowGrades },
-                  { key: "attendance", label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: ClipboardCheck, state: parentShowAttendance, setter: setParentShowAttendance },
-                  { key: "behavior", label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
-                  { key: "honor_roll", label: "لوحة الشرف", desc: "عرض لوحة الشرف للطلاب المتميزين", icon: Trophy, state: parentShowHonorRoll, setter: setParentShowHonorRoll },
-                  { key: "absence_warning", label: "تنبيه حد الغياب", desc: "عرض تنبيهات وإنذارات الغياب", icon: AlertTriangle, state: parentShowAbsenceWarning, setter: setParentShowAbsenceWarning },
-                  { key: "contact_teacher", label: "التواصل مع المعلم", desc: "تمكين ولي الأمر من إرسال رسالة أو طلب موعد", icon: MessageSquare, state: parentShowContactTeacher, setter: setParentShowContactTeacher },
-                  { key: "library", label: "المكتبة", desc: "عرض تبويب المكتبة والملفات المشتركة", icon: Eye, state: parentShowLibrary, setter: setParentShowLibrary },
-                  { key: "activities", label: "الأنشطة", desc: "عرض تبويب الأنشطة والاختبارات", icon: Eye, state: parentShowActivities, setter: setParentShowActivities },
-                ].map((item) => (
-                  <div key={item.key} className={cn(
-                    "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
-                    item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
-                  )}>
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
-                        item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                      )}>
-                        <item.icon className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold">{item.label}</h4>
-                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                      </div>
-                    </div>
+              {/* Visibility Toggles - Compact */}
+              <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
+                <h4 className="text-sm font-bold mb-2">👁️ التحكم بالعرض</h4>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { key: "national_id", label: "الهوية الوطنية", icon: KeyRound, state: parentShowNationalId, setter: setParentShowNationalId },
+                    { key: "grades", label: "الدرجات", icon: GraduationCap, state: parentShowGrades, setter: setParentShowGrades },
+                    { key: "attendance", label: "الحضور والغياب", icon: ClipboardCheck, state: parentShowAttendance, setter: setParentShowAttendance },
+                    { key: "behavior", label: "السلوك", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
+                    { key: "honor_roll", label: "لوحة الشرف", icon: Trophy, state: parentShowHonorRoll, setter: setParentShowHonorRoll },
+                    { key: "absence_warning", label: "تنبيه الغياب", icon: AlertTriangle, state: parentShowAbsenceWarning, setter: setParentShowAbsenceWarning },
+                    { key: "contact_teacher", label: "التواصل", icon: MessageSquare, state: parentShowContactTeacher, setter: setParentShowContactTeacher },
+                    { key: "library", label: "المكتبة", icon: Eye, state: parentShowLibrary, setter: setParentShowLibrary },
+                    { key: "activities", label: "الأنشطة", icon: Eye, state: parentShowActivities, setter: setParentShowActivities },
+                  ].map((item) => (
                     <button
+                      key={item.key}
                       onClick={() => item.setter(!item.state)}
                       className={cn(
-                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                        item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                        "flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all text-right",
+                        item.state
+                          ? "border-success/40 bg-success/10 text-success"
+                          : "border-border/40 bg-muted/30 text-muted-foreground"
                       )}
                     >
-                      {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                      {item.state ? "ظاهر" : "مخفي"}
+                      <item.icon className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                      {item.state ? <Eye className="h-3 w-3 mr-auto shrink-0" /> : <EyeOff className="h-3 w-3 mr-auto shrink-0" />}
                     </button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Parent Grades Detail Controls */}
-            {parentShowGrades && (
-              <div className="pt-2 border-t border-border/30">
-                <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-primary" />
-                  إعدادات تفصيلية لعرض الدرجات
-                </p>
-                <div className="space-y-4 max-w-md">
-                  {/* Default View */}
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                    <div>
-                      <h4 className="text-sm font-bold">العرض الافتراضي</h4>
-                      <p className="text-xs text-muted-foreground">نوع العرض عند فتح تبويب الدرجات</p>
+            {/* ─── Section 2: Grade + Evaluation Settings (side by side collapsibles) ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Grade Detail Settings */}
+              {parentShowGrades && (
+                <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                    <h4 className="text-sm font-bold flex items-center gap-1.5">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      إعدادات الدرجات
+                    </h4>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-3 pb-3 space-y-3">
+                    {/* Default View */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
+                      <span className="text-xs font-bold">العرض الافتراضي</span>
+                      <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5">
+                        <button
+                          onClick={() => setParentGradesDefaultView("cards")}
+                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", parentGradesDefaultView === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                        >بطاقات</button>
+                        <button
+                          onClick={() => setParentGradesDefaultView("table")}
+                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", parentGradesDefaultView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                        >جدول</button>
+                      </div>
                     </div>
-                    <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
-                      <button
-                        onClick={() => setParentGradesDefaultView("cards")}
-                        className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesDefaultView === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                      >بطاقات</button>
-                      <button
-                        onClick={() => setParentGradesDefaultView("table")}
-                        className={cn("px-3 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesDefaultView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                      >جدول</button>
-                    </div>
-                  </div>
 
-                  {/* Visible Periods */}
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                    <div>
-                      <h4 className="text-sm font-bold">الفترة المعروضة</h4>
-                      <p className="text-xs text-muted-foreground">أي فترة تظهر لولي الأمر</p>
+                    {/* Visible Periods */}
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
+                      <span className="text-xs font-bold">الفترة المعروضة</span>
+                      <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5">
+                        {[
+                          { v: "both" as const, l: "كلاهما" },
+                          { v: "1" as const, l: "الأولى" },
+                          { v: "2" as const, l: "الثانية" },
+                        ].map(opt => (
+                          <button
+                            key={opt.v}
+                            onClick={() => setParentGradesVisiblePeriods(opt.v)}
+                            className={cn("px-2 py-1 rounded text-[11px] font-bold transition-all", parentGradesVisiblePeriods === opt.v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
+                          >{opt.l}</button>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+
+                    {/* Show/Hide Columns */}
+                    <div className="flex gap-2">
                       {[
-                        { v: "both" as const, l: "كلاهما" },
-                        { v: "1" as const, l: "الأولى" },
-                        { v: "2" as const, l: "الثانية" },
-                      ].map(opt => (
+                        { key: "percentage", label: "النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
+                        { key: "eval", label: "التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
+                      ].map(col => (
                         <button
-                          key={opt.v}
-                          onClick={() => setParentGradesVisiblePeriods(opt.v)}
-                          className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all", parentGradesVisiblePeriods === opt.v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                        >{opt.l}</button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Show/Hide Columns */}
-                  <div className="space-y-2">
-                  {[
-                      { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
-                      { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
-                    ].map(col => (
-                      <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                        <h4 className="text-sm font-bold">{col.label}</h4>
-                        <button
+                          key={col.key}
                           onClick={() => col.setter(!col.state)}
-                          className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                            col.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                          className={cn("flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] font-bold border transition-all",
+                            col.state ? "border-success/40 bg-success/10 text-success" : "border-border/40 bg-card text-muted-foreground"
                           )}
                         >
-                          {col.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                          {col.state ? "ظاهر" : "مخفي"}
+                          {col.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                          {col.label}
                         </button>
+                      ))}
+                    </div>
+
+                    {/* Hidden Categories */}
+                    {categories.length > 0 && (
+                      <div className="space-y-2 pt-1 border-t border-border/30">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-bold text-muted-foreground">إخفاء فئات محددة</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            onClick={() => setHiddenCatScope("global")}
+                            className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
+                              hiddenCatScope === "global"
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "bg-muted/30 text-muted-foreground border-border/50"
+                            )}
+                          >
+                            الكل
+                            {parentGradesHiddenCategories.global.length > 0 && (
+                              <span className="mr-0.5 text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{parentGradesHiddenCategories.global.length}</span>
+                            )}
+                          </button>
+                          {classes.map((cls) => {
+                            const classHidden = parentGradesHiddenCategories.classes[cls.id] || [];
+                            return (
+                              <button
+                                key={cls.id}
+                                onClick={() => setHiddenCatScope(cls.id)}
+                                className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                  hiddenCatScope === cls.id
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-muted/30 text-muted-foreground border-border/50"
+                                )}
+                              >
+                                {cls.name}
+                                {classHidden.length > 0 && (
+                                  <span className="mr-0.5 text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{classHidden.length}</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {hiddenCatScope !== "global" && (
+                          <div className="flex gap-1.5">
+                            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
+                              const currentList = parentGradesHiddenCategories.classes[hiddenCatScope] || [];
+                              setParentGradesHiddenCategories(prev => ({ ...prev, global: [...currentList], classes: {} }));
+                              setHiddenCatScope("global");
+                              toast({ title: "تم التعميم", description: "تم تطبيق إعدادات هذا الفصل على جميع الفصول" });
+                            }}>
+                              <Check className="h-3 w-3" />
+                              تعميم
+                            </Button>
+                            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
+                              const source = hiddenCatScope === "global" ? parentGradesHiddenCategories.global : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                              const newClasses: Record<string, string[]> = {};
+                              classes.forEach(cls => { newClasses[cls.id] = [...source]; });
+                              setParentGradesHiddenCategories(prev => ({ ...prev, classes: newClasses }));
+                              toast({ title: "تم النسخ", description: "تم نسخ الإعدادات إلى جميع الفصول" });
+                            }}>
+                              نسخ للكل
+                            </Button>
+                          </div>
+                        )}
+
+                        {(() => {
+                          const scopeCats = hiddenCatScope === "global"
+                            ? categories
+                            : categories.filter((c: any) => c.class_id === hiddenCatScope || !c.class_id);
+                          const currentHiddenList = hiddenCatScope === "global"
+                            ? parentGradesHiddenCategories.global
+                            : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                          if (scopeCats.length === 0) return <p className="text-[10px] text-muted-foreground py-1">لا توجد فئات</p>;
+                          return (
+                            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-auto">
+                              {scopeCats.map((cat: any) => {
+                                const isHidden = currentHiddenList.includes(cat.id);
+                                return (
+                                  <button
+                                    key={cat.id}
+                                    onClick={() => {
+                                      setParentGradesHiddenCategories(prev => {
+                                        if (hiddenCatScope === "global") {
+                                          return { ...prev, global: isHidden ? prev.global.filter(id => id !== cat.id) : [...prev.global, cat.id] };
+                                        } else {
+                                          const classList = prev.classes[hiddenCatScope] || [];
+                                          return { ...prev, classes: { ...prev.classes, [hiddenCatScope]: isHidden ? classList.filter(id => id !== cat.id) : [...classList, cat.id] } };
+                                        }
+                                      });
+                                    }}
+                                    className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                      isHidden
+                                        ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
+                                        : "bg-success/10 text-success border-success/30"
+                                    )}
+                                  >
+                                    {isHidden ? <EyeOff className="inline h-2.5 w-2.5 ml-0.5" /> : <Eye className="inline h-2.5 w-2.5 ml-0.5" />}
+                                    {cat.name}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
-                    ))}
-                  </div>
-
-                   {/* Hidden Categories - Per Class */}
-                   {categories.length > 0 && (
-                     <div className="space-y-3">
-                       <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
-                       <p className="text-xs text-muted-foreground">حدد الفصل ثم اختر الفئات المراد إخفاؤها، أو طبّق على جميع الفصول</p>
-
-                       {/* Scope selector */}
-                       <div className="flex flex-wrap gap-1.5">
-                         <button
-                           onClick={() => setHiddenCatScope("global")}
-                           className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                             hiddenCatScope === "global"
-                               ? "bg-primary text-primary-foreground border-primary"
-                               : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
-                           )}
-                         >
-                           جميع الفصول
-                           {parentGradesHiddenCategories.global.length > 0 && (
-                             <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{parentGradesHiddenCategories.global.length}</span>
-                           )}
-                         </button>
-                         {classes.map((cls) => {
-                           const classHidden = parentGradesHiddenCategories.classes[cls.id] || [];
-                           return (
-                             <button
-                               key={cls.id}
-                               onClick={() => setHiddenCatScope(cls.id)}
-                               className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                                 hiddenCatScope === cls.id
-                                   ? "bg-primary text-primary-foreground border-primary"
-                                   : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
-                               )}
-                             >
-                               {cls.name}
-                               {classHidden.length > 0 && (
-                                 <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{classHidden.length}</span>
-                               )}
-                             </button>
-                           );
-                         })}
-                       </div>
-
-                       {/* Apply to all / copy buttons */}
-                       {hiddenCatScope !== "global" && (
-                         <div className="flex gap-2">
-                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
-                             const currentList = parentGradesHiddenCategories.classes[hiddenCatScope] || [];
-                             setParentGradesHiddenCategories(prev => ({ ...prev, global: [...currentList], classes: {} }));
-                             setHiddenCatScope("global");
-                             toast({ title: "تم التعميم", description: "تم تطبيق إعدادات هذا الفصل على جميع الفصول" });
-                           }}>
-                             <Check className="h-3.5 w-3.5" />
-                             تعميم على الكل
-                           </Button>
-                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
-                             const source = hiddenCatScope === "global" ? parentGradesHiddenCategories.global : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
-                             const newClasses: Record<string, string[]> = {};
-                             classes.forEach(cls => { newClasses[cls.id] = [...source]; });
-                             setParentGradesHiddenCategories(prev => ({ ...prev, classes: newClasses }));
-                             toast({ title: "تم النسخ", description: "تم نسخ الإعدادات إلى جميع الفصول" });
-                           }}>
-                             نسخ إلى كل فصل
-                           </Button>
-                         </div>
-                       )}
-
-                       {/* Category toggles */}
-                       {(() => {
-                         const scopeCats = hiddenCatScope === "global"
-                           ? categories
-                           : categories.filter((c: any) => c.class_id === hiddenCatScope || !c.class_id);
-                         const currentHiddenList = hiddenCatScope === "global"
-                           ? parentGradesHiddenCategories.global
-                           : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
-                         if (scopeCats.length === 0) return <p className="text-xs text-muted-foreground py-2">لا توجد فئات لهذا الفصل</p>;
-                         return (
-                           <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
-                             {scopeCats.map((cat: any) => {
-                               const isHidden = currentHiddenList.includes(cat.id);
-                               return (
-                                 <button
-                                   key={cat.id}
-                                   onClick={() => {
-                                     setParentGradesHiddenCategories(prev => {
-                                       if (hiddenCatScope === "global") {
-                                         return { ...prev, global: isHidden ? prev.global.filter(id => id !== cat.id) : [...prev.global, cat.id] };
-                                       } else {
-                                         const classList = prev.classes[hiddenCatScope] || [];
-                                         return { ...prev, classes: { ...prev.classes, [hiddenCatScope]: isHidden ? classList.filter(id => id !== cat.id) : [...classList, cat.id] } };
-                                       }
-                                     });
-                                   }}
-                                   className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                                     isHidden
-                                       ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
-                                       : "bg-success/10 text-success border-success/30"
-                                   )}
-                                 >
-                                   {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
-                                   {cat.name}
-                                   {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
-                                 </button>
-                               );
-                             })}
-                           </div>
-                         );
-                       })()}
-                     </div>
-                   )}
-                </div>
-              </div>
-            )}
-
-            {/* ─── Continuous Evaluation Tab Settings ─── */}
-            <div className="pt-2 border-t border-border/30">
-              <p className="text-sm font-semibold mb-3 flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-emerald-600" />
-                إعدادات التقييم المستمر
-              </p>
-              <div className="space-y-3 max-w-md">
-                {/* Show Daily Interaction */}
-                <div className={cn(
-                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
-                  parentShowDailyGrades ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
-                )}>
-                  <div>
-                    <h4 className="text-sm font-bold">📅 تفاعل اليوم</h4>
-                    <p className="text-xs text-muted-foreground">الإدخال اليومي للتقييم المستمر</p>
-                  </div>
-                  <button
-                    onClick={() => setParentShowDailyGrades(!parentShowDailyGrades)}
-                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      parentShowDailyGrades ? "bg-success text-white" : "bg-muted text-muted-foreground"
                     )}
-                  >
-                    {parentShowDailyGrades ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    {parentShowDailyGrades ? "ظاهر" : "مخفي"}
-                  </button>
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              )}
 
-                {/* Show Cumulative Interaction */}
-                <div className={cn(
-                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
-                  parentShowClassworkIcons ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
-                )}>
-                  <div>
-                    <h4 className="text-sm font-bold">📊 التفاعل الكلي</h4>
-                    <p className="text-xs text-muted-foreground">ملخص المهام والمشاركة التراكمي</p>
-                  </div>
-                  <button
-                    onClick={() => setParentShowClassworkIcons(!parentShowClassworkIcons)}
-                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      parentShowClassworkIcons ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {parentShowClassworkIcons ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    {parentShowClassworkIcons ? "ظاهر" : "مخفي"}
-                  </button>
-                </div>
+              {/* Continuous Evaluation Settings */}
+              <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                  <h4 className="text-sm font-bold flex items-center gap-1.5">
+                    <ClipboardList className="h-4 w-4 text-emerald-600" />
+                    التقييم المستمر
+                  </h4>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-3 pb-3 space-y-2">
+                  {[
+                    { label: "📅 تفاعل اليوم", desc: "الإدخال اليومي", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
+                    { label: "📊 التفاعل الكلي", desc: "ملخص تراكمي", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
+                  ].map((item, i) => (
+                    <div key={i} className={cn(
+                      "flex items-center justify-between p-2.5 rounded-lg border transition-all",
+                      item.state ? "border-success/40 bg-success/5" : "border-border/40 bg-card"
+                    )}>
+                      <div>
+                        <h4 className="text-xs font-bold">{item.label}</h4>
+                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => item.setter(!item.state)}
+                        className={cn("flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all",
+                          item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {item.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {item.state ? "ظاهر" : "مخفي"}
+                      </button>
+                    </div>
+                  ))}
 
-                {/* Icons Count Control */}
-                {parentShowClassworkIcons && (
-                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                    <div>
-                      <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
-                      <p className="text-xs text-muted-foreground">الحد الأقصى لعدد أيقونات التقييم في التفاعل الكلي</p>
+                  {parentShowClassworkIcons && (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
+                      <span className="text-xs font-bold">عدد الأيقونات</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
+                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
+                        >−</button>
+                        <span className="w-6 text-center font-bold text-xs">{parentClassworkIconsCount}</span>
+                        <button
+                          onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
+                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
+                        >+</button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
-                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
-                      >−</button>
-                      <span className="w-8 text-center font-bold text-sm">{parentClassworkIconsCount}</span>
-                      <button
-                        onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
-                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
-                      >+</button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             </div>
 
-
+            {/* Save Button + Info */}
+            <div className="flex items-center gap-3 pt-2">
             <Button
               disabled={savingParentWelcome}
               className="gap-1.5"
@@ -3132,12 +3089,7 @@ export default function SettingsPage() {
               <Save className="h-4 w-4" />
               {savingParentWelcome ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
             </Button>
-
-            <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded-xl space-y-1">
-              <p>🔒 <strong>الأمان:</strong> ولي الأمر يمكنه المشاهدة والتحميل فقط (Read-Only).</p>
-              <p>📄 <strong>التقرير:</strong> يتضمن زر تحميل PDF يحتوي الترويسة الرسمية وبيانات الطالب.</p>
-              <p>☆ <strong>الرموز:</strong> تُستخدم رموز مفرغة (Outlined) لتوفير الحبر عند الطباعة.</p>
-              <p>👁️ <strong>التحكم:</strong> يمكنك إخفاء أقسام محددة عن ولي الأمر بشكل مستقل عن إعدادات عرض الطالب.</p>
+            <p className="text-[10px] text-muted-foreground">🔒 ولي الأمر يشاهد فقط (Read-Only)</p>
             </div>
           </CardContent>
         </Card>
