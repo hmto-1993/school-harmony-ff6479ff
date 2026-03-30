@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
 import { useAcademicWeek, WeekInfo } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const MONTHS_AR = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
@@ -72,9 +73,29 @@ function isSameWeek(a: Date, weekStart: Date, weekEnd: Date): boolean {
   return t >= weekStart.getTime() && t <= weekEnd.getTime();
 }
 
+function addDaysUtil(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 export default function AcademicCalendarWidget() {
   const { calendarData, currentWeek, getWeeksInfo } = useAcademicWeek();
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
+  const [schoolDays, setSchoolDays] = useState<number[]>([0, 1, 2, 3, 4]); // default Sun-Thu
+
+  useEffect(() => {
+    supabase
+      .from("class_schedules")
+      .select("days_of_week")
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.days_of_week && data.days_of_week.length > 0) {
+          setSchoolDays(data.days_of_week.sort((a: number, b: number) => a - b));
+        }
+      });
+  }, []);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
 
@@ -86,20 +107,25 @@ export default function AcademicCalendarWidget() {
   const statusText = useMemo(() => {
     if (!activeWeek) return null;
     const parts: string[] = [];
+    const firstDay = schoolDays[0] ?? 0;
+    const lastDay = schoolDays[schoolDays.length - 1] ?? 4;
+    const weekStartDay = activeWeek.startDate.getDay();
+    const schoolStart = addDaysUtil(activeWeek.startDate, ((firstDay - weekStartDay) + 7) % 7);
+    const schoolEnd = addDaysUtil(activeWeek.startDate, ((lastDay - weekStartDay) + 7) % 7);
     // Hijri range
-    const hijriStart = formatHijriDate(activeWeek.startDate);
-    const hijriEnd = formatHijriDate(activeWeek.endDate);
+    const hijriStart = formatHijriDate(schoolStart);
+    const hijriEnd = formatHijriDate(schoolEnd);
     if (hijriStart && hijriEnd) {
       parts.push(`${hijriStart} - ${hijriEnd} هـ`);
     }
     // Gregorian range
-    parts.push(`${formatDateShort(activeWeek.startDate)} - ${formatDateShort(activeWeek.endDate)} م`);
+    parts.push(`${formatDateShort(schoolStart)} - ${formatDateShort(schoolEnd)} م`);
     parts.push(`الأسبوع ${activeWeek.weekNumber}`);
     if (activeWeek.type !== "normal") {
       parts.push(activeWeek.label);
     }
     return parts.join(" • ");
-  }, [activeWeek]);
+  }, [activeWeek, schoolDays]);
 
   return (
     <>
@@ -175,14 +201,25 @@ export default function AcademicCalendarWidget() {
                         ) : week.weekNumber}
                       </div>
 
-                      {/* Date range - Hijri + Gregorian */}
+                      {/* Date range - School days only */}
                       <div className="p-2 border-l flex flex-col justify-center gap-0.5">
-                        <span className="text-xs text-foreground/80">
-                          {formatDateShort(week.startDate)} – {formatDateShort(week.endDate)} م
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatHijriDate(week.startDate)} – {formatHijriDate(week.endDate)} هـ
-                        </span>
+                        {(() => {
+                          const firstDay = schoolDays[0] ?? 0;
+                          const lastDay = schoolDays[schoolDays.length - 1] ?? 4;
+                          const weekStartDay = week.startDate.getDay();
+                          const schoolStart = addDaysUtil(week.startDate, ((firstDay - weekStartDay) + 7) % 7);
+                          const schoolEnd = addDaysUtil(week.startDate, ((lastDay - weekStartDay) + 7) % 7);
+                          return (
+                            <>
+                              <span className="text-xs text-foreground/80">
+                                {formatDateShort(schoolStart)} – {formatDateShort(schoolEnd)} م
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatHijriDate(schoolStart)} – {formatHijriDate(schoolEnd)} هـ
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Status badge */}
