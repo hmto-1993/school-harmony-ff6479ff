@@ -2846,37 +2846,115 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {/* Hidden Categories */}
-                  {categories.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
-                      <p className="text-xs text-muted-foreground">الفئات المخفية لن تظهر لولي الأمر</p>
-                      <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
-                        {categories.map((cat: any) => {
-                          const isHidden = parentGradesHiddenCategories.includes(cat.id);
-                          return (
-                            <button
-                              key={cat.id}
-                              onClick={() => {
-                                setParentGradesHiddenCategories(prev =>
-                                  isHidden ? prev.filter(id => id !== cat.id) : [...prev, cat.id]
-                                );
-                              }}
-                              className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                                isHidden
-                                  ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
-                                  : "bg-success/10 text-success border-success/30"
-                              )}
-                            >
-                              {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
-                              {cat.name}
-                              {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                   {/* Hidden Categories - Per Class */}
+                   {categories.length > 0 && (
+                     <div className="space-y-3">
+                       <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
+                       <p className="text-xs text-muted-foreground">حدد الفصل ثم اختر الفئات المراد إخفاؤها، أو طبّق على جميع الفصول</p>
+
+                       {/* Scope selector */}
+                       <div className="flex flex-wrap gap-1.5">
+                         <button
+                           onClick={() => setHiddenCatScope("global")}
+                           className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                             hiddenCatScope === "global"
+                               ? "bg-primary text-primary-foreground border-primary"
+                               : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
+                           )}
+                         >
+                           جميع الفصول
+                           {parentGradesHiddenCategories.global.length > 0 && (
+                             <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{parentGradesHiddenCategories.global.length}</span>
+                           )}
+                         </button>
+                         {classes.map((cls) => {
+                           const classHidden = parentGradesHiddenCategories.classes[cls.id] || [];
+                           return (
+                             <button
+                               key={cls.id}
+                               onClick={() => setHiddenCatScope(cls.id)}
+                               className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                 hiddenCatScope === cls.id
+                                   ? "bg-primary text-primary-foreground border-primary"
+                                   : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
+                               )}
+                             >
+                               {cls.name}
+                               {classHidden.length > 0 && (
+                                 <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{classHidden.length}</span>
+                               )}
+                             </button>
+                           );
+                         })}
+                       </div>
+
+                       {/* Apply to all / copy buttons */}
+                       {hiddenCatScope !== "global" && (
+                         <div className="flex gap-2">
+                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+                             const currentList = parentGradesHiddenCategories.classes[hiddenCatScope] || [];
+                             setParentGradesHiddenCategories(prev => ({ ...prev, global: [...currentList], classes: {} }));
+                             setHiddenCatScope("global");
+                             toast({ title: "تم التعميم", description: "تم تطبيق إعدادات هذا الفصل على جميع الفصول" });
+                           }}>
+                             <Check className="h-3.5 w-3.5" />
+                             تعميم على الكل
+                           </Button>
+                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+                             const source = hiddenCatScope === "global" ? parentGradesHiddenCategories.global : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                             const newClasses: Record<string, string[]> = {};
+                             classes.forEach(cls => { newClasses[cls.id] = [...source]; });
+                             setParentGradesHiddenCategories(prev => ({ ...prev, classes: newClasses }));
+                             toast({ title: "تم النسخ", description: "تم نسخ الإعدادات إلى جميع الفصول" });
+                           }}>
+                             نسخ إلى كل فصل
+                           </Button>
+                         </div>
+                       )}
+
+                       {/* Category toggles */}
+                       {(() => {
+                         const scopeCats = hiddenCatScope === "global"
+                           ? categories
+                           : categories.filter((c: any) => c.class_id === hiddenCatScope || !c.class_id);
+                         const currentHiddenList = hiddenCatScope === "global"
+                           ? parentGradesHiddenCategories.global
+                           : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                         if (scopeCats.length === 0) return <p className="text-xs text-muted-foreground py-2">لا توجد فئات لهذا الفصل</p>;
+                         return (
+                           <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
+                             {scopeCats.map((cat: any) => {
+                               const isHidden = currentHiddenList.includes(cat.id);
+                               return (
+                                 <button
+                                   key={cat.id}
+                                   onClick={() => {
+                                     setParentGradesHiddenCategories(prev => {
+                                       if (hiddenCatScope === "global") {
+                                         return { ...prev, global: isHidden ? prev.global.filter(id => id !== cat.id) : [...prev.global, cat.id] };
+                                       } else {
+                                         const classList = prev.classes[hiddenCatScope] || [];
+                                         return { ...prev, classes: { ...prev.classes, [hiddenCatScope]: isHidden ? classList.filter(id => id !== cat.id) : [...classList, cat.id] } };
+                                       }
+                                     });
+                                   }}
+                                   className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                     isHidden
+                                       ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
+                                       : "bg-success/10 text-success border-success/30"
+                                   )}
+                                 >
+                                   {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
+                                   {cat.name}
+                                   {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         );
+                       })()}
+                     </div>
+                   )}
                 </div>
               </div>
             )}
