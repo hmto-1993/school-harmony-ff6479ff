@@ -287,7 +287,8 @@ export default function SettingsPage() {
   const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
   const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
-  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<{ global: string[]; classes: Record<string, string[]> }>({ global: [], classes: {} });
+  const [hiddenCatScope, setHiddenCatScope] = useState<"global" | string>("global");
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
@@ -472,7 +473,17 @@ export default function SettingsPage() {
         if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
         if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
         if (s.id === "parent_grades_hidden_categories" && s.value) {
-          try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+          try {
+            const parsed = JSON.parse(s.value);
+            if (Array.isArray(parsed)) {
+              // Migration from old flat array format
+              setParentGradesHiddenCategories({ global: parsed, classes: {} });
+            } else if (parsed.global !== undefined) {
+              setParentGradesHiddenCategories(parsed);
+            } else {
+              setParentGradesHiddenCategories({ global: [], classes: {} });
+            }
+          } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
         }
         if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
         if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
@@ -2835,42 +2846,128 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {/* Hidden Categories */}
-                  {categories.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
-                      <p className="text-xs text-muted-foreground">الفئات المخفية لن تظهر لولي الأمر</p>
-                      <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
-                        {categories.map((cat: any) => {
-                          const isHidden = parentGradesHiddenCategories.includes(cat.id);
-                          return (
-                            <button
-                              key={cat.id}
-                              onClick={() => {
-                                setParentGradesHiddenCategories(prev =>
-                                  isHidden ? prev.filter(id => id !== cat.id) : [...prev, cat.id]
-                                );
-                              }}
-                              className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
-                                isHidden
-                                  ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
-                                  : "bg-success/10 text-success border-success/30"
-                              )}
-                            >
-                              {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
-                              {cat.name}
-                              {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                   {/* Hidden Categories - Per Class */}
+                   {categories.length > 0 && (
+                     <div className="space-y-3">
+                       <h4 className="text-sm font-bold">إخفاء فئات تقييم محددة</h4>
+                       <p className="text-xs text-muted-foreground">حدد الفصل ثم اختر الفئات المراد إخفاؤها، أو طبّق على جميع الفصول</p>
+
+                       {/* Scope selector */}
+                       <div className="flex flex-wrap gap-1.5">
+                         <button
+                           onClick={() => setHiddenCatScope("global")}
+                           className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                             hiddenCatScope === "global"
+                               ? "bg-primary text-primary-foreground border-primary"
+                               : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
+                           )}
+                         >
+                           جميع الفصول
+                           {parentGradesHiddenCategories.global.length > 0 && (
+                             <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{parentGradesHiddenCategories.global.length}</span>
+                           )}
+                         </button>
+                         {classes.map((cls) => {
+                           const classHidden = parentGradesHiddenCategories.classes[cls.id] || [];
+                           return (
+                             <button
+                               key={cls.id}
+                               onClick={() => setHiddenCatScope(cls.id)}
+                               className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                 hiddenCatScope === cls.id
+                                   ? "bg-primary text-primary-foreground border-primary"
+                                   : "bg-muted/30 text-muted-foreground border-border/50 hover:border-primary/30"
+                               )}
+                             >
+                               {cls.name}
+                               {classHidden.length > 0 && (
+                                 <span className="mr-1 text-[10px] bg-destructive/20 text-destructive px-1 py-0.5 rounded-full">{classHidden.length}</span>
+                               )}
+                             </button>
+                           );
+                         })}
+                       </div>
+
+                       {/* Apply to all / copy buttons */}
+                       {hiddenCatScope !== "global" && (
+                         <div className="flex gap-2">
+                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+                             const currentList = parentGradesHiddenCategories.classes[hiddenCatScope] || [];
+                             setParentGradesHiddenCategories(prev => ({ ...prev, global: [...currentList], classes: {} }));
+                             setHiddenCatScope("global");
+                             toast({ title: "تم التعميم", description: "تم تطبيق إعدادات هذا الفصل على جميع الفصول" });
+                           }}>
+                             <Check className="h-3.5 w-3.5" />
+                             تعميم على الكل
+                           </Button>
+                           <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => {
+                             const source = hiddenCatScope === "global" ? parentGradesHiddenCategories.global : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                             const newClasses: Record<string, string[]> = {};
+                             classes.forEach(cls => { newClasses[cls.id] = [...source]; });
+                             setParentGradesHiddenCategories(prev => ({ ...prev, classes: newClasses }));
+                             toast({ title: "تم النسخ", description: "تم نسخ الإعدادات إلى جميع الفصول" });
+                           }}>
+                             نسخ إلى كل فصل
+                           </Button>
+                         </div>
+                       )}
+
+                       {/* Category toggles */}
+                       {(() => {
+                         const scopeCats = hiddenCatScope === "global"
+                           ? categories
+                           : categories.filter((c: any) => c.class_id === hiddenCatScope || !c.class_id);
+                         const currentHiddenList = hiddenCatScope === "global"
+                           ? parentGradesHiddenCategories.global
+                           : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
+                         if (scopeCats.length === 0) return <p className="text-xs text-muted-foreground py-2">لا توجد فئات لهذا الفصل</p>;
+                         return (
+                           <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
+                             {scopeCats.map((cat: any) => {
+                               const isHidden = currentHiddenList.includes(cat.id);
+                               return (
+                                 <button
+                                   key={cat.id}
+                                   onClick={() => {
+                                     setParentGradesHiddenCategories(prev => {
+                                       if (hiddenCatScope === "global") {
+                                         return { ...prev, global: isHidden ? prev.global.filter(id => id !== cat.id) : [...prev.global, cat.id] };
+                                       } else {
+                                         const classList = prev.classes[hiddenCatScope] || [];
+                                         return { ...prev, classes: { ...prev.classes, [hiddenCatScope]: isHidden ? classList.filter(id => id !== cat.id) : [...classList, cat.id] } };
+                                       }
+                                     });
+                                   }}
+                                   className={cn("px-3 py-1.5 rounded-lg text-xs font-bold border transition-all",
+                                     isHidden
+                                       ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
+                                       : "bg-success/10 text-success border-success/30"
+                                   )}
+                                 >
+                                   {isHidden ? <EyeOff className="inline h-3 w-3 ml-1" /> : <Eye className="inline h-3 w-3 ml-1" />}
+                                   {cat.name}
+                                   {cat.class_name !== "—" && <span className="text-muted-foreground mr-1">({cat.class_name})</span>}
+                                 </button>
+                               );
+                             })}
+                           </div>
+                         );
+                       })()}
+                     </div>
+                   )}
                 </div>
               </div>
             )}
 
             {/* ─── Live Preview ─── */}
+            {(() => {
+              const isCatHidden = (catId: string, classId?: string) => {
+                if (classId && parentGradesHiddenCategories.classes[classId]?.length) {
+                  return parentGradesHiddenCategories.classes[classId].includes(catId);
+                }
+                return parentGradesHiddenCategories.global.includes(catId);
+              };
+              return (
             <div className="pt-3 border-t border-border/30">
               <p className="text-sm font-semibold mb-3 flex items-center gap-2">
                 <Eye className="h-4 w-4 text-primary" />
@@ -2878,8 +2975,7 @@ export default function SettingsPage() {
               </p>
               <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-muted/10 p-4 max-w-md">
                 {(() => {
-                  // Build mock data from real categories
-                  const visibleCats = categories.filter((c: any) => !parentGradesHiddenCategories.includes(c.id));
+                   const visibleCats = categories.filter((c: any) => !isCatHidden(c.id, c.class_id));
                   const mockGrades = visibleCats.map((c: any, i: number) => {
                     const mockScore = Math.round(c.max_score * (0.6 + Math.sin(i + 1) * 0.3));
                     return {
@@ -3018,9 +3114,9 @@ export default function SettingsPage() {
 
                 {/* Daily Evaluation Preview */}
                 {parentShowDailyGrades && (() => {
-                  const dailyCats = categories.filter((c: any) => 
-                    !parentGradesHiddenCategories.includes(c.id) && 
-                    c.category_group === "classwork"
+                   const dailyCats = categories.filter((c: any) => 
+                     !isCatHidden(c.id, c.class_id) && 
+                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (dailyCats.length === 0) return null;
                   const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
@@ -3069,9 +3165,9 @@ export default function SettingsPage() {
 
                 {/* Classwork Icon Strip Preview */}
                 {parentShowClassworkIcons && (() => {
-                  const cwCats = categories.filter((c: any) => 
-                    !parentGradesHiddenCategories.includes(c.id) && 
-                    c.category_group === "classwork"
+                   const cwCats = categories.filter((c: any) => 
+                     !isCatHidden(c.id, c.class_id) && 
+                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (cwCats.length === 0) return null;
                   const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
@@ -3116,6 +3212,8 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
             </div>
+              );
+            })()}
 
             <Button
               disabled={savingParentWelcome}

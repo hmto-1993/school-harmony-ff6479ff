@@ -142,7 +142,7 @@ export default function StudentDashboard() {
   const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
   const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
-  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<{ global: string[]; classes: Record<string, string[]> }>({ global: [], classes: {} });
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
@@ -184,7 +184,16 @@ export default function StudentDashboard() {
       if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
       if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
       if (s.id === "parent_grades_hidden_categories" && s.value) {
-        try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+        try {
+          const parsed = JSON.parse(s.value);
+          if (Array.isArray(parsed)) {
+            setParentGradesHiddenCategories({ global: parsed, classes: {} });
+          } else if (parsed.global !== undefined) {
+            setParentGradesHiddenCategories(parsed);
+          } else {
+            setParentGradesHiddenCategories({ global: [], classes: {} });
+          }
+        } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
       }
       if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
       if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
@@ -681,9 +690,15 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  // Filter grades based on admin settings
+                  const studentClassId = student.class_id;
+                  const isCatHiddenForStudent = (catId: string) => {
+                    if (studentClassId && parentGradesHiddenCategories.classes[studentClassId]?.length) {
+                      return parentGradesHiddenCategories.classes[studentClassId].includes(catId);
+                    }
+                    return parentGradesHiddenCategories.global.includes(catId);
+                  };
                   const filteredGrades = student.grades.filter((g) => {
-                    if (parentGradesHiddenCategories.includes(g.category_id)) return false;
+                    if (isCatHiddenForStudent(g.category_id)) return false;
                     if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
                       if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
                       if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
