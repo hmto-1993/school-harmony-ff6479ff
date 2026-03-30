@@ -919,9 +919,9 @@ export default function StudentDashboard() {
           </TabsContent>
           )}
 
-          {/* التقييم المستمر Tab - Parent only */}
+          {/* التقييم المستمر Tab */}
           {(() => {
-            const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
+            const showEvalTab = (isParent && (parentShowDailyGrades || parentShowClassworkIcons)) || !isParent;
             if (!showEvalTab || !vis.grades) return null;
             
             const studentClassId = student.class_id;
