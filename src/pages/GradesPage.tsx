@@ -219,14 +219,43 @@ export default function GradesPage() {
         <div className="animate-fade-in print-area">
           <ReportPrintHeader reportType="grades" />
           <PrintWatermark reportType="grades" />
-          {activeType === "daily" && (
+
+          {/* Sub-view toggle for evaluation tab */}
+          {activeType === "evaluation" && (
+            <div className="flex items-center gap-2 mb-4 no-print">
+              <button
+                onClick={() => setEvalSubView("daily")}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 border-2",
+                  evalSubView === "daily"
+                    ? "bg-primary/15 border-primary text-primary shadow-sm"
+                    : "bg-card border-border/60 text-muted-foreground hover:border-primary/40"
+                )}
+              >
+                📅 تفاعل اليوم
+              </button>
+              <button
+                onClick={() => setEvalSubView("period")}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 border-2",
+                  evalSubView === "period"
+                    ? "bg-primary/15 border-primary text-primary shadow-sm"
+                    : "bg-card border-border/60 text-muted-foreground hover:border-primary/40"
+                )}
+              >
+                📊 التفاعل الكلي
+              </button>
+            </div>
+          )}
+
+          {activeType === "evaluation" && evalSubView === "daily" && (
             <DailyGradeEntry selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
+          )}
+          {activeType === "evaluation" && evalSubView === "period" && (
+            <ClassworkSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
           {activeType === "behavior" && (
             <BehaviorEntry selectedClass={selectedClass} onClassChange={setSelectedClass} />
-          )}
-          {activeType === "classwork" && (
-            <ClassworkSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
           {activeType === "summary" && (
             <GradesSummary selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
@@ -238,6 +267,7 @@ export default function GradesPage() {
             <GradesImport selectedClass={selectedClass} onClassChange={setSelectedClass} selectedPeriod={selectedPeriod} />
           )}
           <PrintFooterSignatures reportType={activeType === "behavior" ? "behavior" : "grades"} />
+        </div>
         </div>
       ) : (
         <EmptyState
