@@ -12,7 +12,8 @@ import {
   Globe, School, FolderOpen, FileText, Download, Loader2,
   Atom, FlaskConical, Microscope, Calculator, Brain, TestTube2, Ruler, Lightbulb,
   ClipboardList, Zap, Magnet, Waves, FileSpreadsheet, ArrowRight, Layers, Sun, Moon, Megaphone, X,
-  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp, LayoutGrid, Table2
+  User, Hash, BookMarked, Heart, MessageCircle, ChevronUp, LayoutGrid, Table2,
+  Star, CheckCircle2, MinusCircle, XCircle
 } from "lucide-react";
 import {
   Dialog,
@@ -988,9 +989,9 @@ export default function StudentDashboard() {
                                 const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
                                 return (
                                   <td key={catName} className="p-1.5 text-center border-l border-border/10">
-                                    {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
-                                     level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
-                                     level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
+                                    {level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" /> :
+                                     level === "average" ? <MinusCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" /> :
+                                     level === "zero" ? <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" /> :
                                      <span className="text-muted-foreground/30 text-sm">○</span>}
                                   </td>
                                 );
@@ -1002,9 +1003,9 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
-                    <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
-                    <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
-                    <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> ممتاز</span>
+                    <span className="flex items-center gap-1"><MinusCircle className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
+                    <span className="flex items-center gap-1"><XCircle className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
                     <span className="flex items-center gap-1"><span className="text-muted-foreground/30">○</span> لم يُقيّم</span>
                   </div>
                 </>
@@ -1070,11 +1071,11 @@ export default function StudentDashboard() {
                               <td className="p-3 text-center border-l border-border/10">
                                 <div className="flex items-center gap-0.5 flex-wrap justify-center">
                                   {displayIcons.map((icon, i) => (
-                                    <span key={i} className="text-base">
-                                      {icon.isStar ? <span className="text-amber-500">★</span> :
-                                       icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
-                                       icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
-                                       <span className="text-rose-500 dark:text-rose-400">✖</span>}
+                                    <span key={i}>
+                                      {icon.isStar ? <Star className="h-5 w-5 text-amber-500 fill-amber-500 inline-block" /> :
+                                       icon.level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 inline-block" /> :
+                                       icon.level === "average" ? <MinusCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 inline-block" /> :
+                                       <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400 inline-block" />}
                                     </span>
                                   ))}
                                   {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
@@ -1087,10 +1088,10 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
-                    <span className="flex items-center gap-1"><span className="text-amber-500">★</span> متميز</span>
-                    <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
-                    <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
-                    <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> متميز</span>
+                    <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> ممتاز</span>
+                    <span className="flex items-center gap-1"><MinusCircle className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
+                    <span className="flex items-center gap-1"><XCircle className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
                   </div>
                 </>
               );
