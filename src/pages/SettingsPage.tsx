@@ -290,6 +290,7 @@ export default function SettingsPage() {
   const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
+  const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
@@ -428,7 +429,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -475,6 +476,7 @@ export default function SettingsPage() {
         }
         if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
         if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
+        if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -2813,6 +2815,24 @@ export default function SettingsPage() {
                         </button>
                       </div>
                     ))}
+
+                    {/* Classwork icons count selector */}
+                    {parentShowClassworkIcons && (
+                      <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                        <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
+                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                          {[5, 10, 15, 20].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => setParentClassworkIconsCount(n)}
+                              className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all",
+                                parentClassworkIconsCount === n ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                              )}
+                            >{n}</button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hidden Categories */}
@@ -3057,7 +3077,7 @@ export default function SettingsPage() {
                   const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
                   cwCats.forEach((cat: any, ci: number) => {
                     const isPartic = cat.name === "المشاركة";
-                    const count = isPartic ? 8 : 5;
+                    const count = Math.min(parentClassworkIconsCount, isPartic ? 20 : 10);
                     const icons: { level: string; isStar: boolean }[] = [];
                     for (let i = 0; i < count; i++) {
                       const v = (ci + i) % 4;
@@ -3119,6 +3139,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_classwork_icons", value: String(parentShowClassworkIcons) }),
+                  supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(parentClassworkIconsCount) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {

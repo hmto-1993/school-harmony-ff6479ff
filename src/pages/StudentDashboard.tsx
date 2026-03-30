@@ -145,6 +145,7 @@ export default function StudentDashboard() {
   const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
+  const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
 
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
@@ -165,7 +166,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
@@ -187,6 +188,7 @@ export default function StudentDashboard() {
       }
       if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
       if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
+      if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
     });
   };
 
@@ -936,8 +938,7 @@ export default function StudentDashboard() {
                             const allIcons = catGrades.flatMap((g: any) => 
                               getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                             );
-                            const maxDisplay = catName === "المشاركة" ? 20 : 8;
-                            const displayIcons = allIcons.slice(-maxDisplay);
+                            const displayIcons = allIcons.slice(-parentClassworkIconsCount);
                             return (
                               <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
                                 <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
