@@ -2038,6 +2038,9 @@ export default function SettingsPage() {
                     supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
                     supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
                     supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: String(studentShowDailyGrades) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: String(studentShowClassworkIcons) }),
+                    supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: String(studentClassworkIconsCount) }),
                   ]);
                   setSavingVisibility(false);
                   if (results.some(r => r.error)) {
