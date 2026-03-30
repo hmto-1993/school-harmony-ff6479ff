@@ -2080,12 +2080,18 @@ export default function SettingsPage() {
                         setShowAttendance(true);
                         setShowBehavior(true);
                         setHiddenCategories({ p1: [], p2: [] });
+                        setStudentShowDailyGrades(true);
+                        setStudentShowClassworkIcons(true);
+                        setStudentClassworkIconsCount(10);
                         setSavingVisibility(true);
                         const results = await Promise.all([
                           supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
+                          supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: "10" }),
                         ]);
                         setSavingVisibility(false);
                         if (results.some(r => r.error)) {
