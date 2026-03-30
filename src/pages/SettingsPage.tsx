@@ -3149,51 +3149,7 @@ export default function SettingsPage() {
                   );
                 })()}
 
-                {/* Classwork Icon Strip Preview */}
-                {parentShowClassworkIcons && (() => {
-                   const cwCats = categories.filter((c: any) => 
-                     !isCatHidden(c.id, c.class_id) && 
-                     c.category_group === "classwork"
-                  ).slice(0, 4);
-                  if (cwCats.length === 0) return null;
-                  const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
-                  cwCats.forEach((cat: any, ci: number) => {
-                    const isPartic = cat.name === "المشاركة";
-                    const count = Math.min(parentClassworkIconsCount, isPartic ? 20 : 10);
-                    const icons: { level: string; isStar: boolean }[] = [];
-                    for (let i = 0; i < count; i++) {
-                      const v = (ci + i) % 4;
-                      if (isPartic && v === 0) icons.push({ level: "excellent", isStar: true });
-                      else if (v === 0) icons.push({ level: "excellent", isStar: false });
-                      else if (v === 1) icons.push({ level: "average", isStar: false });
-                      else if (v === 2) icons.push({ level: "zero", isStar: false });
-                      else icons.push({ level: "excellent", isStar: false });
-                    }
-                    mockIconSets[cat.name] = icons;
-                  });
-                  return (
-                    <div className="mt-3 pt-3 border-t border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📊 المهام والمشاركة</p>
-                      <div className="space-y-2">
-                        {cwCats.map((cat: any) => (
-                          <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30">
-                            <span className="text-[10px] font-semibold text-foreground whitespace-nowrap min-w-[60px]">{cat.name}</span>
-                            <div className="flex items-center gap-0.5 flex-wrap">
-                              {(mockIconSets[cat.name] || []).map((icon, i) => (
-                                <span key={i} className="text-sm">
-                                  {icon.isStar ? <span className="text-amber-500">★</span> :
-                                   icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
-                                   icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
-                                   <span className="text-rose-500 dark:text-rose-400">✖</span>}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+
 
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
