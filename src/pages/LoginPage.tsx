@@ -145,18 +145,18 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-3 mb-5 h-12 rounded-xl bg-muted/80 dark:bg-muted/40 gap-1 p-1">
-                <TabsTrigger value="staff" className="flex flex-col items-center gap-0.5 rounded-lg data-[state=active]:shadow-sm text-[10px] sm:text-xs px-1 py-1.5 min-w-0">
+              <TabsList className="grid w-full grid-cols-3 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
+                <TabsTrigger value="staff" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
                   <Shield className="h-4 w-4 shrink-0" />
-                  <span className="truncate leading-tight">معلم</span>
+                  <span className="truncate">معلم / مدير</span>
                 </TabsTrigger>
-                <TabsTrigger value="student" className="flex flex-col items-center gap-0.5 rounded-lg data-[state=active]:shadow-sm text-[10px] sm:text-xs px-1 py-1.5 min-w-0">
+                <TabsTrigger value="student" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
                   <GraduationCap className="h-4 w-4 shrink-0" />
-                  <span className="truncate leading-tight">طالب</span>
+                  <span className="truncate">طالب</span>
                 </TabsTrigger>
-                <TabsTrigger value="parent" className="flex flex-col items-center gap-0.5 rounded-lg data-[state=active]:shadow-sm text-[10px] sm:text-xs px-1 py-1.5 min-w-0">
+                <TabsTrigger value="parent" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
                   <Users className="h-4 w-4 shrink-0" />
-                  <span className="truncate leading-tight">ولي أمر</span>
+                  <span className="truncate">ولي الأمر</span>
                 </TabsTrigger>
               </TabsList>
 
