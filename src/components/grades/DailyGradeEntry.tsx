@@ -495,12 +495,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     <tr
                       key={sg.student_id}
                       className={cn(
+                        "group transition-all duration-200 cursor-default hover:bg-primary/10 dark:hover:bg-primary/15",
                         isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                         !isLast && "border-b border-border/20"
                       )}
                     >
-                      <td className="p-3 text-muted-foreground font-medium border-l border-border/30">{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/30 max-w-[160px] truncate text-sm">{sg.full_name}</td>
+                      <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                      <td className="p-3 font-semibold border-l border-border/30 max-w-[160px] truncate text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">{sg.full_name}</td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
