@@ -226,7 +226,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         const wasStarred = sg.starred[categoryId];
         const newStarred = !wasStarred;
         const catName = categories.find(c => c.id === categoryId)?.name || "";
-        const slotCount = MAX_SLOTS;
+        const slotCount = getMaxSlots(categoryId);
         const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
         return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
       })
