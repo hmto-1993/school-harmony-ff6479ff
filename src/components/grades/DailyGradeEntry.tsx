@@ -87,6 +87,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    supabase.from("site_settings").select("value").eq("id", "daily_extra_slots_enabled").maybeSingle().then(({ data }) => {
+      if (data) setExtraSlotsEnabled(data.value !== "false");
+    });
   }, []);
 
   useEffect(() => {
