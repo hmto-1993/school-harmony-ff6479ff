@@ -714,7 +714,7 @@ export default function StudentDashboard() {
                   /* ─── Cards / Assessment View ─── */
                   <div className="space-y-3">
                     {(() => {
-                      // Group grades by category_group
+                      // Group grades by category_group, then aggregate by category name
                       const groups: Record<string, typeof student.grades> = {};
                       filteredGrades.forEach((g) => {
                         const group = g.grade_categories?.category_group || "أخرى";
@@ -728,12 +728,36 @@ export default function StudentDashboard() {
                       };
                       const totalScore = filteredGrades.reduce((s, g) => s + (g.score ?? 0), 0);
                       const totalMax = filteredGrades.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                      
+                      // Helper to aggregate items by category name (dedup)
+                      const aggregateByCategory = (items: typeof student.grades) => {
+                        const catMap: Record<string, { name: string; totalScore: number; maxScore: number; count: number; categoryGroup: string; catName: string }> = {};
+                        items.forEach((g) => {
+                          const catName = g.grade_categories?.name || "-";
+                          const catId = g.category_id || catName;
+                          if (!catMap[catId]) {
+                            catMap[catId] = {
+                              name: catName,
+                              totalScore: 0,
+                              maxScore: g.grade_categories?.max_score || 100,
+                              count: 0,
+                              categoryGroup: g.grade_categories?.category_group || "",
+                              catName,
+                            };
+                          }
+                          catMap[catId].totalScore += (g.score ?? 0);
+                          catMap[catId].count += 1;
+                        });
+                        return Object.values(catMap);
+                      };
+
                       return (
                         <>
                           {Object.entries(groups).map(([groupKey, items]) => {
                             const info = groupLabels[groupKey] || groupLabels["أخرى"];
-                            const groupTotal = items.reduce((s, g) => s + (g.score ?? 0), 0);
-                            const groupMax = items.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                            const aggregated = aggregateByCategory(items);
+                            const groupTotal = aggregated.reduce((s, a) => s + a.totalScore, 0);
+                            const groupMax = aggregated.reduce((s, a) => s + (a.maxScore * a.count), 0);
                             const groupPct = groupMax > 0 ? Math.round((groupTotal / groupMax) * 100) : 0;
                             return (
                               <div key={groupKey} className="rounded-xl border border-border/40 overflow-hidden">
@@ -746,45 +770,31 @@ export default function StudentDashboard() {
                                   </Badge>
                                 </div>
                                 <div className="divide-y divide-border/20">
-                                  {items.map((g, i) => {
-                                    const score = g.score ?? 0;
-                                    const maxScore = g.grade_categories?.max_score || 100;
-                                    const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-                                    const isClasswork = g.grade_categories?.category_group === "classwork";
-                                    const isPartic = g.grade_categories?.name === "المشاركة" || g.grade_categories?.name === "المشاركة والتفاعل";
+                                  {aggregated.map((agg, i) => {
+                                    const score = agg.totalScore;
+                                    const maxScore = agg.maxScore;
+                                    const totalMaxForCat = maxScore * agg.count;
+                                    const pct = totalMaxForCat > 0 ? Math.round((score / totalMaxForCat) * 100) : 0;
+                                    const isClasswork = agg.categoryGroup === "classwork";
+                                    const isPartic = agg.catName === "المشاركة" || agg.catName === "المشاركة والتفاعل";
                                     
                                     // For classwork: show icons instead of scores
                                     if (isClasswork) {
-                                      const slotCount = isPartic ? 3 : 1;
-                                      const perSlot = Math.round(maxScore / slotCount);
-                                      let iconElements: React.ReactNode[] = [];
-                                      
-                                      if (score >= maxScore && isPartic) {
-                                        iconElements = [<span key="star" className="text-amber-500 text-lg">★</span>];
-                                      } else if (score <= 0) {
-                                        iconElements = [<span key="x" className="text-rose-500 dark:text-rose-400 text-lg">✖</span>];
+                                      const iconElements: React.ReactNode[] = [];
+                                      if (pct >= 90) {
+                                        iconElements.push(<span key="star" className="text-amber-500 text-lg">★</span>);
+                                      } else if (pct >= 70) {
+                                        iconElements.push(<span key="check" className="text-emerald-600 dark:text-emerald-400 text-lg">✔</span>);
+                                      } else if (pct >= 50) {
+                                        iconElements.push(<span key="minus" className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
                                       } else {
-                                        let remaining = score;
-                                        for (let si = 0; si < slotCount; si++) {
-                                          if (remaining >= perSlot) {
-                                            iconElements.push(<span key={si} className="text-emerald-600 dark:text-emerald-400 text-lg">✔</span>);
-                                            remaining -= perSlot;
-                                          } else if (remaining >= Math.round(perSlot / 2)) {
-                                            iconElements.push(<span key={si} className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
-                                            remaining = 0;
-                                          } else if (remaining > 0) {
-                                            iconElements.push(<span key={si} className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
-                                            remaining = 0;
-                                          } else {
-                                            iconElements.push(<span key={si} className="text-rose-500 dark:text-rose-400 text-lg">✖</span>);
-                                          }
-                                        }
+                                        iconElements.push(<span key="x" className="text-rose-500 dark:text-rose-400 text-lg">✖</span>);
                                       }
                                       
                                       return (
                                         <div key={i} className="flex items-center gap-3 p-3">
                                           <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-foreground truncate">{g.grade_categories?.name || "-"}</p>
+                                            <p className="text-sm font-semibold text-foreground truncate">{agg.name}</p>
                                           </div>
                                           <div className="flex items-center gap-1 shrink-0">
                                             {iconElements}
@@ -797,7 +807,7 @@ export default function StudentDashboard() {
                                     return (
                                       <div key={i} className="flex items-center gap-3 p-3">
                                         <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-semibold text-foreground truncate">{g.grade_categories?.name || "-"}</p>
+                                          <p className="text-sm font-semibold text-foreground truncate">{agg.name}</p>
                                           <div className="mt-1.5 h-2 rounded-full bg-muted/50 overflow-hidden">
                                             <div
                                               className={cn("h-full rounded-full transition-all duration-500",
@@ -814,7 +824,7 @@ export default function StudentDashboard() {
                                             pct >= 60 ? "text-amber-600 dark:text-amber-400" :
                                             "text-rose-600 dark:text-rose-400"
                                           )}>{score}</span>
-                                          <span className="text-xs text-muted-foreground">/{maxScore}</span>
+                                          <span className="text-xs text-muted-foreground">/{totalMaxForCat}</span>
                                         </div>
                                       </div>
                                     );
