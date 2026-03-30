@@ -3077,7 +3077,7 @@ export default function SettingsPage() {
                   const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
                   cwCats.forEach((cat: any, ci: number) => {
                     const isPartic = cat.name === "المشاركة";
-                    const count = isPartic ? 8 : 5;
+                    const count = Math.min(parentClassworkIconsCount, isPartic ? 20 : 10);
                     const icons: { level: string; isStar: boolean }[] = [];
                     for (let i = 0; i < count; i++) {
                       const v = (ci + i) % 4;
