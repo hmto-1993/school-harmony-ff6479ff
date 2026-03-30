@@ -3113,9 +3113,9 @@ export default function SettingsPage() {
 
                 {/* Daily Evaluation Preview */}
                 {parentShowDailyGrades && (() => {
-                  const dailyCats = categories.filter((c: any) => 
-                    !parentGradesHiddenCategories.includes(c.id) && 
-                    c.category_group === "classwork"
+                   const dailyCats = categories.filter((c: any) => 
+                     !isCatHidden(c.id, c.class_id) && 
+                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (dailyCats.length === 0) return null;
                   const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
@@ -3164,9 +3164,9 @@ export default function SettingsPage() {
 
                 {/* Classwork Icon Strip Preview */}
                 {parentShowClassworkIcons && (() => {
-                  const cwCats = categories.filter((c: any) => 
-                    !parentGradesHiddenCategories.includes(c.id) && 
-                    c.category_group === "classwork"
+                   const cwCats = categories.filter((c: any) => 
+                     !isCatHidden(c.id, c.class_id) && 
+                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (cwCats.length === 0) return null;
                   const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
