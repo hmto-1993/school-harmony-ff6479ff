@@ -786,24 +786,28 @@ export default function StudentDashboard() {
                                     
                                     // For classwork: show icons instead of scores
                                     if (isClasswork) {
-                                      const iconElements: React.ReactNode[] = [];
-                                      if (pct >= 90) {
-                                        iconElements.push(<span key="star" className="text-amber-500 text-lg">★</span>);
-                                      } else if (pct >= 70) {
-                                        iconElements.push(<span key="check" className="text-emerald-600 dark:text-emerald-400 text-lg">✔</span>);
-                                      } else if (pct >= 50) {
-                                        iconElements.push(<span key="minus" className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
-                                      } else {
-                                        iconElements.push(<span key="x" className="text-rose-500 dark:text-rose-400 text-lg">✖</span>);
-                                      }
-                                      
+                                      // In parent portal: show numbers only (no icons)
                                       return (
                                         <div key={i} className="flex items-center gap-3 p-3">
                                           <div className="flex-1 min-w-0">
                                             <p className="text-sm font-semibold text-foreground truncate">{agg.name}</p>
+                                            <div className="mt-1.5 h-2 rounded-full bg-muted/50 overflow-hidden">
+                                              <div
+                                                className={cn("h-full rounded-full transition-all duration-500",
+                                                  pct >= 90 ? "bg-emerald-500" : pct >= 75 ? "bg-blue-500" : pct >= 60 ? "bg-amber-500" : "bg-rose-500"
+                                                )}
+                                                style={{ width: `${pct}%` }}
+                                              />
+                                            </div>
                                           </div>
-                                          <div className="flex items-center gap-1 shrink-0">
-                                            {iconElements}
+                                          <div className="text-left shrink-0 w-20">
+                                            <span className={cn("text-lg font-bold",
+                                              pct >= 90 ? "text-emerald-600 dark:text-emerald-400" :
+                                              pct >= 75 ? "text-blue-600 dark:text-blue-400" :
+                                              pct >= 60 ? "text-amber-600 dark:text-amber-400" :
+                                              "text-rose-600 dark:text-rose-400"
+                                            )}>{score}</span>
+                                            <span className="text-xs text-muted-foreground">/{totalMaxForCat}</span>
                                           </div>
                                         </div>
                                       );
