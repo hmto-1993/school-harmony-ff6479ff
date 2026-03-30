@@ -151,13 +151,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           } else {
             const max = Number(c.max_score);
             const isPartCat = isParticipation(c.name);
-            const slotCount = isParticipation(c.name) ? MAX_SLOTS : MAX_SLOTS;
+            const slotCount = getMaxSlots(c.id);
             const perSlot = Math.round(max / slotCount);
 
             if (score >= max && isPartCat) {
               // Full score on participation → starred
               starred[c.id] = true;
-              slots[c.id] = [null, null, null];
+              slots[c.id] = Array(slotCount).fill(null);
             } else if (score >= max && !isPartCat) {
               // Full score on single-slot (واجبات/كتاب) → excellent, NOT starred
               starred[c.id] = false;
