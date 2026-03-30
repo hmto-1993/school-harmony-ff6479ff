@@ -513,6 +513,10 @@ export default function SettingsPage() {
         if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
           try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
         }
+        if (s.id === "daily_max_slots" && s.value) setDailyMaxSlots(Number(s.value) || 3);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setDailyMaxSlotsPerCat(JSON.parse(s.value)); } catch { setDailyMaxSlotsPerCat({}); }
+        }
       });
 
       // Fetch popup history
