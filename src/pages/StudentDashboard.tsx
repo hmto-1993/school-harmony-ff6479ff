@@ -484,7 +484,7 @@ export default function StudentDashboard() {
               </div>
             )}
             <div>
-              <h1 className="text-lg font-bold text-foreground">بوابة ولي الأمر</h1>
+              <h1 className="text-lg font-bold text-foreground">{isParent ? "بوابة ولي الأمر" : "لوحة الطالب"}</h1>
               {schoolName && <p className="text-xs text-muted-foreground">{schoolName}</p>}
             </div>
           </div>
@@ -502,7 +502,7 @@ export default function StudentDashboard() {
 
       <main className="container mx-auto p-4 space-y-6">
         {/* Welcome Message */}
-        {welcomeEnabled && (
+        {isParent && welcomeEnabled && (
           <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/15 dark:via-accent/10 dark:to-primary/10">
             <CardContent className="p-5">
               <div className="flex items-start gap-4">
@@ -543,7 +543,7 @@ export default function StudentDashboard() {
                   </p>
                 </div>
               </div>
-              {parentShowNationalId && (
+              {(!isParent || parentShowNationalId) && (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center">
                   <Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -625,7 +625,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Notification Cards (absence warnings) */}
-        {parentShowAbsenceWarning && (
+        {(!isParent || parentShowAbsenceWarning) && (
           <StudentNotificationCards
             studentId={student.id}
             studentName={student.full_name}
@@ -636,7 +636,7 @@ export default function StudentDashboard() {
         )}
 
         {/* Honor Roll */}
-        {parentShowHonorRoll && <HonorRoll classId={student.class_id} />}
+        {(!isParent || parentShowHonorRoll) && <HonorRoll classId={student.class_id} />}
 
         {/* Announcements */}
         <StudentAnnouncements classId={student.class_id} />
@@ -1250,7 +1250,7 @@ export default function StudentDashboard() {
         })()}
 
         {/* Contact Teacher - inline at bottom */}
-        {parentShowContactTeacher && (
+        {isParent && parentShowContactTeacher && (
           <InlineContactSection
             studentId={student.id}
             studentName={student.full_name}
