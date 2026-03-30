@@ -147,6 +147,8 @@ export default function StudentDashboard() {
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
+  const [parentShowLibrary, setParentShowLibrary] = useState(true);
+  const [parentShowActivities, setParentShowActivities] = useState(true);
 
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
@@ -167,7 +169,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
@@ -199,6 +201,8 @@ export default function StudentDashboard() {
       if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
       if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
       if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
+      if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
+      if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
     });
   };
 
@@ -649,8 +653,8 @@ export default function StudentDashboard() {
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-            { value: "activities", label: "الأنشطة", icon: Layers },
-            { value: "library", label: "المكتبة", icon: BookOpen },
+            ...(!isParent || parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
+            ...(!isParent || parentShowLibrary ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
           ];
           const defaultTab = visibleTabs[0]?.value || "activities";
           return (
