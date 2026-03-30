@@ -50,6 +50,7 @@ import {
   Crown,
   AlertTriangle,
   Heart,
+  ClipboardList,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -2945,6 +2946,76 @@ export default function SettingsPage() {
               </div>
             )}
 
+            {/* ─── Continuous Evaluation Tab Settings ─── */}
+            <div className="pt-2 border-t border-border/30">
+              <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-emerald-600" />
+                إعدادات التقييم المستمر
+              </p>
+              <div className="space-y-3 max-w-md">
+                {/* Show Daily Interaction */}
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  parentShowDailyGrades ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div>
+                    <h4 className="text-sm font-bold">📅 تفاعل اليوم</h4>
+                    <p className="text-xs text-muted-foreground">الإدخال اليومي للتقييم المستمر</p>
+                  </div>
+                  <button
+                    onClick={() => setParentShowDailyGrades(!parentShowDailyGrades)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      parentShowDailyGrades ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {parentShowDailyGrades ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {parentShowDailyGrades ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+
+                {/* Show Cumulative Interaction */}
+                <div className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  parentShowClassworkIcons ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div>
+                    <h4 className="text-sm font-bold">📊 التفاعل الكلي</h4>
+                    <p className="text-xs text-muted-foreground">ملخص المهام والمشاركة التراكمي</p>
+                  </div>
+                  <button
+                    onClick={() => setParentShowClassworkIcons(!parentShowClassworkIcons)}
+                    className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      parentShowClassworkIcons ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {parentShowClassworkIcons ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {parentShowClassworkIcons ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+
+                {/* Icons Count Control */}
+                {parentShowClassworkIcons && (
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
+                    <div>
+                      <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
+                      <p className="text-xs text-muted-foreground">الحد الأقصى لعدد أيقونات التقييم في التفاعل الكلي</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
+                      >−</button>
+                      <span className="w-8 text-center font-bold text-sm">{parentClassworkIconsCount}</span>
+                      <button
+                        onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
+                        className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-sm"
+                      >+</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* ─── Live Preview ─── */}
             {(() => {
               const isCatHidden = (catId: string, classId?: string) => {
@@ -3100,14 +3171,14 @@ export default function SettingsPage() {
                   }
                 })()}
 
-                {/* Daily Evaluation Preview */}
+                {/* Daily Evaluation Preview - Days as rows, criteria as columns */}
                 {parentShowDailyGrades && (() => {
                    const dailyCats = categories.filter((c: any) => 
                      !isCatHidden(c.id, c.class_id) && 
                      c.category_group === "classwork"
                   ).slice(0, 4);
                   if (dailyCats.length === 0) return null;
-                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
+                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
                   const mockLevels: ("excellent" | "average" | "zero" | null)[][] = dailyCats.map((_, ci) => 
                     mockDays.map((_, di) => {
                       const v = (ci + di) % 4;
@@ -3116,25 +3187,25 @@ export default function SettingsPage() {
                   );
                   return (
                     <div className="mt-3 pt-3 border-t border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📋 التقييم اليومي</p>
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📅 تفاعل اليوم</p>
                       <div className="overflow-auto rounded-lg border border-border/30">
                         <table className="w-full text-[10px] border-separate border-spacing-0">
                           <thead>
                             <tr className="bg-muted/30">
-                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">المعيار</th>
-                              {mockDays.map(d => (
-                                <th key={d} className="p-1.5 text-center font-semibold text-primary border-b border-border/20">{d}</th>
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">اليوم</th>
+                              {dailyCats.map((cat: any) => (
+                                <th key={cat.id} className="p-1.5 text-center font-semibold text-primary border-b border-border/20 whitespace-nowrap">{cat.name}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
-                            {dailyCats.map((cat: any, ci: number) => (
-                              <tr key={cat.id} className={ci % 2 === 0 ? "bg-card" : "bg-muted/20"}>
-                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{cat.name}</td>
-                                {mockDays.map((_, di) => {
+                            {mockDays.map((day, di) => (
+                              <tr key={day} className={di % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{day}</td>
+                                {dailyCats.map((_, ci) => {
                                   const level = mockLevels[ci][di];
                                   return (
-                                    <td key={di} className="p-1 text-center border-l border-border/10">
+                                    <td key={ci} className="p-1 text-center border-l border-border/10">
                                       {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-sm">✔</span> :
                                        level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-sm">➖</span> :
                                        level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-sm">✖</span> :
@@ -3142,6 +3213,58 @@ export default function SettingsPage() {
                                     </td>
                                   );
                                 })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Cumulative Evaluation Preview */}
+                {parentShowClassworkIcons && (() => {
+                  const cwCats = categories.filter((c: any) => 
+                    !isCatHidden(c.id, c.class_id) && 
+                    c.category_group === "classwork"
+                  ).slice(0, 4);
+                  if (cwCats.length === 0) return null;
+                  const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500"];
+                  const catColorsBg = [
+                    "bg-emerald-500/10", "bg-blue-500/10", "bg-amber-500/10", "bg-violet-500/10"
+                  ];
+                  const catColorsText = [
+                    "text-emerald-700 dark:text-emerald-400", "text-blue-700 dark:text-blue-400",
+                    "text-amber-700 dark:text-amber-400", "text-violet-700 dark:text-violet-400"
+                  ];
+                  const mockIcons = ["✔", "★", "➖", "✔", "✔", "★"];
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📊 التفاعل الكلي</p>
+                      <div className="overflow-auto rounded-lg border border-border/30">
+                        <table className="w-full text-[10px] border-separate border-spacing-0">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">فئة التقييم</th>
+                              <th className="p-1.5 text-center font-semibold text-primary border-b border-border/20">التقييم</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cwCats.map((cat: any, ci: number) => (
+                              <tr key={cat.id} className={catColorsBg[ci % 4]}>
+                                <td className={cn("p-1.5 text-right font-bold border-l border-border/10 whitespace-nowrap", catColorsText[ci % 4])}>
+                                  <span className={cn("inline-block w-2 h-2 rounded-full mr-1", catColorsDot[ci % 4])} />
+                                  {cat.name}
+                                </td>
+                                <td className="p-1.5 text-center border-l border-border/10">
+                                  <div className="flex items-center gap-0.5 justify-center">
+                                    {mockIcons.slice(0, parentClassworkIconsCount > 6 ? 6 : parentClassworkIconsCount).map((icon, i) => (
+                                      <span key={i} className={cn("text-sm",
+                                        icon === "★" ? "text-amber-500" : icon === "✔" ? "text-emerald-600" : "text-amber-500"
+                                      )}>{icon}</span>
+                                    ))}
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>

@@ -943,7 +943,7 @@ export default function StudentDashboard() {
                                    evalSubView === "daily" && parentShowDailyGrades ? "daily" :
                                    parentShowDailyGrades ? "daily" : "classwork";
 
-            // Daily Evaluation content
+            // Daily Evaluation content - Days as rows, criteria as columns
             const dailyContent = (() => {
               const dailyGrades = evalFilteredGrades.filter((g: any) => 
                 g.date && g.grade_categories?.category_group === "classwork"
@@ -965,37 +965,39 @@ export default function StudentDashboard() {
                     <table className="w-full text-xs border-separate border-spacing-0">
                       <thead>
                         <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
-                          <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">المعيار</th>
-                          {uniqueDates.map((date: string) => {
-                            const d = new Date(date);
-                            const dayName = dayLabels[d.getDay()] || "";
-                            return (
-                              <th key={date} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap">
-                                <div className="text-[10px]">{dayName}</div>
-                                <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
-                              </th>
-                            );
-                          })}
+                          <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">اليوم</th>
+                          {dailyCatNames.map((catName: string) => (
+                            <th key={catName} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap text-[10px]">
+                              {catName}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {dailyCatNames.map((catName: string, ci: number) => (
-                          <tr key={catName} className={ci % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
-                            <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">{catName}</td>
-                            {uniqueDates.map((date: string) => {
-                              const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                              const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
-                              return (
-                                <td key={date} className="p-1.5 text-center border-l border-border/10">
-                                  {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
-                                   level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
-                                   level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
-                                   <span className="text-muted-foreground/30 text-sm">○</span>}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
+                        {uniqueDates.map((date: string, di: number) => {
+                          const d = new Date(date);
+                          const dayName = dayLabels[d.getDay()] || "";
+                          return (
+                            <tr key={date} className={di % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                              <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">
+                                <div className="text-xs">{dayName}</div>
+                                <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
+                              </td>
+                              {dailyCatNames.map((catName: string) => {
+                                const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
+                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
+                                return (
+                                  <td key={catName} className="p-1.5 text-center border-l border-border/10">
+                                    {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
+                                     level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
+                                     level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
+                                     <span className="text-muted-foreground/30 text-sm">○</span>}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1009,7 +1011,7 @@ export default function StudentDashboard() {
               );
             })();
 
-            // Classwork Icons content
+            // Classwork Icons content - Table with colored categories, no numbers
             const classworkContent = (() => {
               const cwGrades = evalFilteredGrades.filter((g: any) => 
                 g.grade_categories?.category_group === "classwork"
@@ -1038,49 +1040,72 @@ export default function StudentDashboard() {
                 return icons;
               };
 
+              const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500", "bg-rose-500", "bg-cyan-500"];
+              const catColorsBg = [
+                "bg-emerald-500/10 dark:bg-emerald-500/15",
+                "bg-blue-500/10 dark:bg-blue-500/15",
+                "bg-amber-500/10 dark:bg-amber-500/15",
+                "bg-violet-500/10 dark:bg-violet-500/15",
+                "bg-rose-500/10 dark:bg-rose-500/15",
+                "bg-cyan-500/10 dark:bg-cyan-500/15",
+              ];
+              const catColorsText = [
+                "text-emerald-700 dark:text-emerald-400",
+                "text-blue-700 dark:text-blue-400",
+                "text-amber-700 dark:text-amber-400",
+                "text-violet-700 dark:text-violet-400",
+                "text-rose-700 dark:text-rose-400",
+                "text-cyan-700 dark:text-cyan-400",
+              ];
+
               return (
                 <>
-                  <div className="space-y-0 rounded-xl border border-border/40 overflow-hidden">
-                    {cwCatNames.map((catName: string, catIdx: number) => {
-                      const catGrades = cwGrades
-                        .filter((g: any) => g.grade_categories?.name === catName)
-                        .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
-                      const allIcons = catGrades.flatMap((g: any) => 
-                        getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
-                      );
-                      const displayIcons = allIcons.slice(-parentClassworkIconsCount);
-                      const totalScore = catGrades.reduce((s: number, g: any) => s + (g.score ?? 0), 0);
-                      const totalMax = catGrades.reduce((s: number, g: any) => s + (g.grade_categories?.max_score || 0), 0);
-                      return (
-                        <div key={catName} className={cn(
-                          "p-3",
-                          catIdx % 2 === 0 ? "bg-card" : "bg-muted/20 dark:bg-muted/10",
-                          catIdx < cwCatNames.length - 1 && "border-b border-border/30"
-                        )}>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-foreground">{catName}</span>
-                            <Badge variant="secondary" className="text-[10px] font-bold">
-                              {totalScore}/{totalMax}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-0.5 flex-wrap">
-                            {displayIcons.map((icon, i) => (
-                              <span key={i} className="text-base">
-                                {icon.isStar ? <span className="text-amber-500">★</span> :
-                                 icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
-                                 icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
-                                 <span className="text-rose-500 dark:text-rose-400">✖</span>}
-                              </span>
-                            ))}
-                            {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
+                    <table className="w-full text-sm border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
+                          <th className="text-right p-3 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl text-xs">فئة التقييم</th>
+                          <th className="text-center p-3 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 last:rounded-tl-xl text-xs">التقييم</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cwCatNames.map((catName: string, catIdx: number) => {
+                          const catGrades = cwGrades
+                            .filter((g: any) => g.grade_categories?.name === catName)
+                            .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
+                          const allIcons = catGrades.flatMap((g: any) => 
+                            getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
+                          );
+                          const displayIcons = allIcons.slice(-parentClassworkIconsCount);
+                          const ci = catIdx % 6;
+                          return (
+                            <tr key={catName} className={catColorsBg[ci]}>
+                              <td className={cn("p-3 text-right font-bold border-l border-border/10 whitespace-nowrap text-xs", catColorsText[ci])}>
+                                <span className={cn("inline-block w-2 h-2 rounded-full mr-1.5", catColorsDot[ci])} />
+                                {catName}
+                              </td>
+                              <td className="p-3 text-center border-l border-border/10">
+                                <div className="flex items-center gap-0.5 flex-wrap justify-center">
+                                  {displayIcons.map((icon, i) => (
+                                    <span key={i} className="text-base">
+                                      {icon.isStar ? <span className="text-amber-500">★</span> :
+                                       icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
+                                       icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
+                                       <span className="text-rose-500 dark:text-rose-400">✖</span>}
+                                    </span>
+                                  ))}
+                                  {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><span className="text-amber-500">★</span> متميز</span>
                     <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
-                    <span className="flex items-center gap-1"><span className="text-amber-500">★</span> درجة كاملة</span>
                     <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
                     <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
                   </div>
