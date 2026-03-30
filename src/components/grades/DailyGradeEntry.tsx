@@ -58,7 +58,7 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
 const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork";
 const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 const isBookCategory = (name: string) => name === "الكتاب";
-const MAX_SLOTS = 3;
+const DEFAULT_MAX_SLOTS = 3;
 
 
 interface DailyGradeEntryProps {
