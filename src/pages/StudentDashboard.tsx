@@ -652,8 +652,8 @@ export default function StudentDashboard() {
         {(() => {
           const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
           const visibleTabs = [
-            ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(showEvalTab ? [{ value: "evaluation", label: "التقييم المستمر", icon: ClipboardList }] : []),
+            ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
             ...(!isParent || parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
@@ -709,6 +709,8 @@ export default function StudentDashboard() {
                   };
                   const filteredGrades = student.grades.filter((g) => {
                     if (isCatHiddenForStudent(g.category_id)) return false;
+                    // Hide classwork group from grades tab entirely
+                    if (g.grade_categories?.category_group === "classwork") return false;
                     if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
                       if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
                       if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
@@ -1038,8 +1040,8 @@ export default function StudentDashboard() {
 
               return (
                 <>
-                  <div className="space-y-2">
-                    {cwCatNames.map((catName: string) => {
+                  <div className="space-y-0 rounded-xl border border-border/40 overflow-hidden">
+                    {cwCatNames.map((catName: string, catIdx: number) => {
                       const catGrades = cwGrades
                         .filter((g: any) => g.grade_categories?.name === catName)
                         .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
@@ -1047,9 +1049,20 @@ export default function StudentDashboard() {
                         getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                       );
                       const displayIcons = allIcons.slice(-parentClassworkIconsCount);
+                      const totalScore = catGrades.reduce((s: number, g: any) => s + (g.score ?? 0), 0);
+                      const totalMax = catGrades.reduce((s: number, g: any) => s + (g.grade_categories?.max_score || 0), 0);
                       return (
-                        <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
-                          <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
+                        <div key={catName} className={cn(
+                          "p-3",
+                          catIdx % 2 === 0 ? "bg-card" : "bg-muted/20 dark:bg-muted/10",
+                          catIdx < cwCatNames.length - 1 && "border-b border-border/30"
+                        )}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-foreground">{catName}</span>
+                            <Badge variant="secondary" className="text-[10px] font-bold">
+                              {totalScore}/{totalMax}
+                            </Badge>
+                          </div>
                           <div className="flex items-center gap-0.5 flex-wrap">
                             {displayIcons.map((icon, i) => (
                               <span key={i} className="text-base">

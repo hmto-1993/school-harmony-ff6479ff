@@ -2813,11 +2813,9 @@ export default function SettingsPage() {
 
                   {/* Show/Hide Columns */}
                   <div className="space-y-2">
-                    {[
+                  {[
                       { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
                       { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
-                      { key: "daily", label: "التقييم اليومي (المشاركة والواجبات)", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
-                      { key: "classwork_icons", label: "شريط أيقونات المهام والمشاركة", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
                     ].map(col => (
                       <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                         <h4 className="text-sm font-bold">{col.label}</h4>
@@ -2832,24 +2830,6 @@ export default function SettingsPage() {
                         </button>
                       </div>
                     ))}
-
-                    {/* Classwork icons count selector */}
-                    {parentShowClassworkIcons && (
-                      <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                        <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
-                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                          {[5, 10, 15, 20].map(n => (
-                            <button
-                              key={n}
-                              onClick={() => setParentClassworkIconsCount(n)}
-                              className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all",
-                                parentClassworkIconsCount === n ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                              )}
-                            >{n}</button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                    {/* Hidden Categories - Per Class */}
@@ -2993,6 +2973,8 @@ export default function SettingsPage() {
                   }).filter((g: any) => {
                     if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
                     if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
+                    // Hide classwork from grades preview (shown in evaluation tab)
+                    if (g.grade_categories?.category_group === "classwork") return false;
                     return true;
                   });
 
@@ -3169,51 +3151,7 @@ export default function SettingsPage() {
                   );
                 })()}
 
-                {/* Classwork Icon Strip Preview */}
-                {parentShowClassworkIcons && (() => {
-                   const cwCats = categories.filter((c: any) => 
-                     !isCatHidden(c.id, c.class_id) && 
-                     c.category_group === "classwork"
-                  ).slice(0, 4);
-                  if (cwCats.length === 0) return null;
-                  const mockIconSets: Record<string, { level: string; isStar: boolean }[]> = {};
-                  cwCats.forEach((cat: any, ci: number) => {
-                    const isPartic = cat.name === "المشاركة";
-                    const count = Math.min(parentClassworkIconsCount, isPartic ? 20 : 10);
-                    const icons: { level: string; isStar: boolean }[] = [];
-                    for (let i = 0; i < count; i++) {
-                      const v = (ci + i) % 4;
-                      if (isPartic && v === 0) icons.push({ level: "excellent", isStar: true });
-                      else if (v === 0) icons.push({ level: "excellent", isStar: false });
-                      else if (v === 1) icons.push({ level: "average", isStar: false });
-                      else if (v === 2) icons.push({ level: "zero", isStar: false });
-                      else icons.push({ level: "excellent", isStar: false });
-                    }
-                    mockIconSets[cat.name] = icons;
-                  });
-                  return (
-                    <div className="mt-3 pt-3 border-t border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📊 المهام والمشاركة</p>
-                      <div className="space-y-2">
-                        {cwCats.map((cat: any) => (
-                          <div key={cat.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/20 border border-border/30">
-                            <span className="text-[10px] font-semibold text-foreground whitespace-nowrap min-w-[60px]">{cat.name}</span>
-                            <div className="flex items-center gap-0.5 flex-wrap">
-                              {(mockIconSets[cat.name] || []).map((icon, i) => (
-                                <span key={i} className="text-sm">
-                                  {icon.isStar ? <span className="text-amber-500">★</span> :
-                                   icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
-                                   icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
-                                   <span className="text-rose-500 dark:text-rose-400">✖</span>}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
+
 
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
