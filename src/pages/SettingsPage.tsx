@@ -287,7 +287,8 @@ export default function SettingsPage() {
   const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
   const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
   const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
-  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<string[]>([]);
+  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<{ global: string[]; classes: Record<string, string[]> }>({ global: [], classes: {} });
+  const [hiddenCatScope, setHiddenCatScope] = useState<"global" | string>("global");
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
