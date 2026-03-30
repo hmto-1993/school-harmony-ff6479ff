@@ -651,7 +651,8 @@ export default function StudentDashboard() {
 
         {/* Details Tabs */}
         {(() => {
-          const showEvalTab = (isParent && (parentShowDailyGrades || parentShowClassworkIcons)) || !isParent;
+          const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+          const showEvalTab = isParent ? (parentShowDailyGrades || parentShowClassworkIcons) : (studentEval.showDaily || studentEval.showClasswork);
           const visibleTabs = [
             ...(showEvalTab ? [{ value: "evaluation", label: "التقييم المستمر", icon: ClipboardList }] : []),
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
@@ -921,7 +922,8 @@ export default function StudentDashboard() {
 
           {/* التقييم المستمر Tab */}
           {(() => {
-            const showEvalTab = (isParent && (parentShowDailyGrades || parentShowClassworkIcons)) || !isParent;
+            const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+            const showEvalTab = isParent ? (parentShowDailyGrades || parentShowClassworkIcons) : (studentEval.showDaily || studentEval.showClasswork);
             if (!showEvalTab || !vis.grades) return null;
             
             const studentClassId = student.class_id;
@@ -940,8 +942,9 @@ export default function StudentDashboard() {
               return true;
             });
 
-            const showDaily = isParent ? parentShowDailyGrades : true;
-            const showClasswork = isParent ? parentShowClassworkIcons : true;
+            const showDaily = isParent ? parentShowDailyGrades : studentEval.showDaily;
+            const showClasswork = isParent ? parentShowClassworkIcons : studentEval.showClasswork;
+            const effectiveIconsCount = isParent ? parentClassworkIconsCount : studentEval.iconsCount;
             const currentSubView = evalSubView === "classwork" && showClasswork ? "classwork" : 
                                    evalSubView === "daily" && showDaily ? "daily" :
                                    showDaily ? "daily" : "classwork";
@@ -1064,7 +1067,7 @@ export default function StudentDashboard() {
                           const allIcons = catGrades.flatMap((g: any) => 
                             getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
                           );
-                          const displayIcons = allIcons.slice(-parentClassworkIconsCount);
+                          const displayIcons = allIcons.slice(-effectiveIconsCount);
                           return (
                             <tr key={catName} className={catIdx % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
                               <td className="p-3 text-right font-semibold border-l border-border/10 whitespace-nowrap text-xs">
