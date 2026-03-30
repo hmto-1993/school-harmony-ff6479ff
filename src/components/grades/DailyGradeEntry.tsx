@@ -19,6 +19,7 @@ interface GradeCategory {
   name: string;
   weight: number;
   max_score: number;
+  category_group: string;
 }
 
 type GradeLevel = "excellent" | "average" | "zero" | null;
@@ -54,8 +55,7 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   );
 };
 
-const ALLOWED_DAILY_CATEGORIES = ["المهام الادائية", "المهام الأدائية", "المشاركة", "المشاركة والتفاعل"];
-const isAllowedInDaily = (name: string) => ALLOWED_DAILY_CATEGORIES.some(a => name.includes(a) || a.includes(name));
+const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork";
 const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 const isBookCategory = (name: string) => name === "الكتاب";
 const MAX_SLOTS = 3;
@@ -310,7 +310,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     }
   };
 
-  const dailyCategories = categories.filter(c => isAllowedInDaily(c.name));
+  const dailyCategories = categories.filter(c => isAllowedInDaily(c));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
