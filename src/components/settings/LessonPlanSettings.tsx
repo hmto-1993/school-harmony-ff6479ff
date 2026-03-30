@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download } from "lucide-react";
+import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
@@ -26,6 +26,9 @@ interface LessonSlot {
 }
 
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+const DAY_NAME_TO_INDEX: Record<string, number> = {
+  "الأحد": 0, "الاثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الخميس": 4,
+};
 
 export default function LessonPlanSettings({ classes }: { classes: ClassOption[] }) {
   const { user } = useAuth();
@@ -37,15 +40,21 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [importingPdf, setImportingPdf] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // "all" means all classes
+  const isAllClasses = selectedClassId === "__all__";
+  const effectiveClassId = isAllClasses ? (classes[0]?.id || "") : selectedClassId;
 
   useEffect(() => {
-    if (!selectedClassId) return;
+    if (!effectiveClassId || isAllClasses) return;
     (async () => {
       const { data } = await supabase
         .from("class_schedules")
         .select("periods_per_week, days_of_week")
-        .eq("class_id", selectedClassId)
+        .eq("class_id", effectiveClassId)
         .maybeSingle();
       if (data) {
         setPeriodsPerWeek(data.periods_per_week);
@@ -55,15 +64,35 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         setDaysOfWeek([0, 1, 2, 3, 4]);
       }
     })();
-  }, [selectedClassId]);
+  }, [effectiveClassId, isAllClasses]);
+
+  // For "all classes" mode, load schedule from first class
+  useEffect(() => {
+    if (!isAllClasses || classes.length === 0) return;
+    const firstId = classes[0].id;
+    (async () => {
+      const { data } = await supabase
+        .from("class_schedules")
+        .select("periods_per_week, days_of_week")
+        .eq("class_id", firstId)
+        .maybeSingle();
+      if (data) {
+        setPeriodsPerWeek(data.periods_per_week);
+        setDaysOfWeek(data.days_of_week);
+      } else {
+        setPeriodsPerWeek(5);
+        setDaysOfWeek([0, 1, 2, 3, 4]);
+      }
+    })();
+  }, [isAllClasses, classes]);
 
   const fetchLessons = useCallback(async () => {
-    if (!selectedClassId) return;
+    if (!effectiveClassId) return;
     setLoading(true);
     const { data } = await supabase
       .from("lesson_plans")
       .select("*")
-      .eq("class_id", selectedClassId)
+      .eq("class_id", effectiveClassId)
       .eq("week_number", weekNumber);
 
     const map: Record<string, LessonSlot> = {};
@@ -79,11 +108,11 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     });
     setSlots(map);
     setLoading(false);
-  }, [selectedClassId, weekNumber]);
+  }, [effectiveClassId, weekNumber]);
 
   useEffect(() => {
-    fetchLessons();
-  }, [fetchLessons]);
+    if (effectiveClassId) fetchLessons();
+  }, [fetchLessons, effectiveClassId]);
 
   const slotsPerDay = Math.max(1, Math.ceil(periodsPerWeek / Math.max(daysOfWeek.length, 1)));
 
@@ -98,51 +127,64 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     }));
   };
 
+  // Save to one or all classes
+  const saveToClasses = async (targetClasses: ClassOption[], slotsData: Record<string, LessonSlot>, wk: number) => {
+    if (!user) return 0;
+    let totalInserted = 0;
+
+    for (const cls of targetClasses) {
+      await supabase
+        .from("lesson_plans")
+        .delete()
+        .eq("class_id", cls.id)
+        .eq("week_number", wk)
+        .eq("created_by", user.id);
+
+      const rows = Object.entries(slotsData)
+        .filter(([, s]) => s.lesson_title.trim())
+        .map(([key, s]) => {
+          const [dayIdx, slotIdx] = key.split("-").map(Number);
+          return {
+            class_id: cls.id,
+            week_number: wk,
+            day_index: dayIdx,
+            slot_index: slotIdx,
+            lesson_title: s.lesson_title,
+            objectives: s.objectives,
+            teacher_reflection: s.teacher_reflection,
+            is_completed: s.is_completed,
+            created_by: user.id,
+          };
+        });
+
+      if (rows.length > 0) {
+        const { error } = await supabase.from("lesson_plans").insert(rows);
+        if (!error) totalInserted += rows.length;
+      }
+    }
+    return totalInserted;
+  };
+
   const handleSave = async () => {
     if (!user || !selectedClassId) return;
     setSaving(true);
 
-    await supabase
-      .from("lesson_plans")
-      .delete()
-      .eq("class_id", selectedClassId)
-      .eq("week_number", weekNumber)
-      .eq("created_by", user.id);
+    const targets = isAllClasses ? classes : classes.filter(c => c.id === selectedClassId);
+    const totalInserted = await saveToClasses(targets, slots, weekNumber);
 
-    const rows = Object.entries(slots)
-      .filter(([, s]) => s.lesson_title.trim())
-      .map(([key, s]) => {
-        const [dayIdx, slotIdx] = key.split("-").map(Number);
-        return {
-          class_id: selectedClassId,
-          week_number: weekNumber,
-          day_index: dayIdx,
-          slot_index: slotIdx,
-          lesson_title: s.lesson_title,
-          objectives: s.objectives,
-          teacher_reflection: s.teacher_reflection,
-          is_completed: s.is_completed,
-          created_by: user.id,
-        };
-      });
-
-    if (rows.length > 0) {
-      const { error } = await supabase.from("lesson_plans").insert(rows);
-      if (error) {
-        toast({ title: "خطأ", description: "فشل حفظ الخطة", variant: "destructive" });
-        setSaving(false);
-        return;
-      }
-    }
-
-    toast({ title: "✅ تم الحفظ", description: `تم حفظ خطة الأسبوع ${weekNumber}` });
+    toast({
+      title: "✅ تم الحفظ",
+      description: isAllClasses
+        ? `تم حفظ الخطة في ${targets.length} فصل`
+        : `تم حفظ خطة الأسبوع ${weekNumber}`,
+    });
     setSaving(false);
     fetchLessons();
   };
 
   // Broadcast current week's plan to all other classes
   const handleBroadcast = async () => {
-    if (!user || !selectedClassId) return;
+    if (!user || !selectedClassId || isAllClasses) return;
     const otherClasses = classes.filter((c) => c.id !== selectedClassId);
     if (otherClasses.length === 0) {
       toast({ title: "تنبيه", description: "لا توجد فصول أخرى للتعميم عليها" });
@@ -155,35 +197,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     }
 
     setSaving(true);
-    let totalInserted = 0;
-
-    for (const cls of otherClasses) {
-      // Delete existing for this week in target class
-      await supabase
-        .from("lesson_plans")
-        .delete()
-        .eq("class_id", cls.id)
-        .eq("week_number", weekNumber)
-        .eq("created_by", user.id);
-
-      const rows = filledSlots.map(([key, s]) => {
-        const [dayIdx, slotIdx] = key.split("-").map(Number);
-        return {
-          class_id: cls.id,
-          week_number: weekNumber,
-          day_index: dayIdx,
-          slot_index: slotIdx,
-          lesson_title: s.lesson_title,
-          objectives: s.objectives,
-          teacher_reflection: s.teacher_reflection,
-          is_completed: false,
-          created_by: user.id,
-        };
-      });
-
-      const { error } = await supabase.from("lesson_plans").insert(rows);
-      if (!error) totalInserted += rows.length;
-    }
+    const totalInserted = await saveToClasses(otherClasses, slots, weekNumber);
 
     toast({
       title: "✅ تم التعميم",
@@ -192,6 +206,55 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     setSaving(false);
   };
 
+  // Bulk fill all weeks at once
+  const handleBulkFill = async (lessonsData: Array<{ weekNumber: number; lessonTitle: string; objectives: string; dayName?: string }>) => {
+    if (!user || !selectedClassId) return;
+    setSaving(true);
+
+    const targets = isAllClasses ? classes : classes.filter(c => c.id === selectedClassId);
+
+    // Group by week
+    const byWeek: Record<number, typeof lessonsData> = {};
+    lessonsData.forEach((m) => {
+      if (!byWeek[m.weekNumber]) byWeek[m.weekNumber] = [];
+      byWeek[m.weekNumber].push(m);
+    });
+
+    let totalInserted = 0;
+
+    for (const [wk, lessons] of Object.entries(byWeek)) {
+      const wkNum = Number(wk);
+
+      // Build slots for this week
+      const weekSlots: Record<string, LessonSlot> = {};
+      lessons.forEach((lesson, idx) => {
+        let dayIdx: number;
+        if (lesson.dayName && DAY_NAME_TO_INDEX[lesson.dayName] !== undefined) {
+          dayIdx = DAY_NAME_TO_INDEX[lesson.dayName];
+        } else {
+          dayIdx = daysOfWeek[idx % daysOfWeek.length];
+        }
+        const slotIdx = Math.floor(idx / daysOfWeek.length);
+        const key = `${dayIdx}-${slotIdx}`;
+        weekSlots[key] = {
+          lesson_title: lesson.lessonTitle,
+          objectives: lesson.objectives,
+          teacher_reflection: "",
+          is_completed: false,
+        };
+      });
+
+      totalInserted += await saveToClasses(targets, weekSlots, wkNum);
+    }
+
+    toast({
+      title: "✅ تم الاستيراد",
+      description: `تم استيراد ${totalInserted} درس في ${Object.keys(byWeek).length} أسبوع${isAllClasses ? ` لـ ${targets.length} فصل` : ""}`,
+    });
+
+    setSaving(false);
+    fetchLessons();
+  };
 
   const handleDownloadTemplate = () => {
     const templateData = [
@@ -206,7 +269,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     safeWriteXLSX(wb, "lesson_plan_template.xlsx");
   };
 
-  // Import from Excel/CSV
+  // Import from Excel/CSV — now supports bulk fill
   const handleFileImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user || !selectedClassId) return;
@@ -224,11 +287,11 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         return;
       }
 
-      // Map columns (support Arabic & English headers)
       const mapped = rows.map((r) => ({
         weekNumber: Number(r["رقم الأسبوع"] || r["Week Number"] || r["week_number"] || weekNumber),
         lessonTitle: String(r["عنوان الدرس"] || r["Lesson Title"] || r["lesson_title"] || "").trim(),
         objectives: String(r["اسم الوحدة"] || r["Unit Name"] || r["unit_name"] || r["الأهداف"] || r["Objectives"] || "").trim(),
+        dayName: String(r["اليوم"] || r["Day"] || "").trim() || undefined,
       })).filter((r) => r.lessonTitle);
 
       if (mapped.length === 0) {
@@ -237,54 +300,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         return;
       }
 
-      // Group by week number
-      const byWeek: Record<number, typeof mapped> = {};
-      mapped.forEach((m) => {
-        if (!byWeek[m.weekNumber]) byWeek[m.weekNumber] = [];
-        byWeek[m.weekNumber].push(m);
-      });
-
-      let totalInserted = 0;
-
-      for (const [wk, lessons] of Object.entries(byWeek)) {
-        const wkNum = Number(wk);
-
-        // Delete existing for this week
-        await supabase
-          .from("lesson_plans")
-          .delete()
-          .eq("class_id", selectedClassId)
-          .eq("week_number", wkNum)
-          .eq("created_by", user.id);
-
-        // Distribute lessons across days/slots
-        const insertRows = lessons.map((lesson, idx) => {
-          const dayIdx = daysOfWeek[idx % daysOfWeek.length];
-          const slotIdx = Math.floor(idx / daysOfWeek.length);
-          return {
-            class_id: selectedClassId,
-            week_number: wkNum,
-            day_index: dayIdx,
-            slot_index: slotIdx,
-            lesson_title: lesson.lessonTitle,
-            objectives: lesson.objectives,
-            teacher_reflection: "",
-            is_completed: false,
-            created_by: user.id,
-          };
-        });
-
-        const { error } = await supabase.from("lesson_plans").insert(insertRows);
-        if (!error) totalInserted += insertRows.length;
-      }
-
-      toast({
-        title: "✅ تم الاستيراد",
-        description: `تم استيراد ${totalInserted} درس بنجاح`,
-      });
-
-      // Refresh grid
-      fetchLessons();
+      await handleBulkFill(mapped);
     } catch {
       toast({ title: "خطأ", description: "فشل قراءة الملف", variant: "destructive" });
     }
@@ -292,6 +308,59 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
     setImporting(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  // Import from PDF via AI
+  const handlePdfImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !selectedClassId) return;
+    setImportingPdf(true);
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const pdfBase64 = btoa(binary);
+
+      toast({ title: "⏳ جارٍ التحليل", description: "يتم تحليل ملف PDF بالذكاء الاصطناعي..." });
+
+      const { data, error } = await supabase.functions.invoke("parse-pdf-lessons", {
+        body: { pdfBase64 },
+      });
+
+      if (error || data?.error) {
+        toast({ title: "خطأ", description: data?.error || "فشل تحليل الملف", variant: "destructive" });
+        setImportingPdf(false);
+        return;
+      }
+
+      const lessons: any[] = data?.lessons || [];
+      if (lessons.length === 0) {
+        toast({ title: "تنبيه", description: "لم يتم العثور على دروس في الملف", variant: "destructive" });
+        setImportingPdf(false);
+        return;
+      }
+
+      const mapped = lessons.map((l: any) => ({
+        weekNumber: Number(l.week_number) || 1,
+        lessonTitle: String(l.lesson_title || "").trim(),
+        objectives: String(l.objectives || "").trim(),
+        dayName: l.day_name || undefined,
+      })).filter((r) => r.lessonTitle);
+
+      await handleBulkFill(mapped);
+
+    } catch {
+      toast({ title: "خطأ", description: "فشل قراءة ملف PDF", variant: "destructive" });
+    }
+
+    setImportingPdf(false);
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+  };
+
+  const hasContent = selectedClassId && !loading;
 
   return (
     <div className="space-y-4">
@@ -302,6 +371,9 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
           <Select value={selectedClassId} onValueChange={setSelectedClassId}>
             <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="__all__">
+                <span className="font-bold text-primary">🏫 الجميع</span>
+              </SelectItem>
               {classes.map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
               ))}
@@ -322,25 +394,34 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         </div>
         <Button onClick={handleSave} disabled={saving || !selectedClassId} className="gap-1.5">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          حفظ الخطة
+          {isAllClasses ? "حفظ للجميع" : "حفظ الخطة"}
         </Button>
-        <Button
-          variant="secondary"
-          disabled={saving || !selectedClassId || Object.keys(slots).length === 0}
-          className="gap-1.5"
-          onClick={handleBroadcast}
-        >
-          <BookOpen className="h-4 w-4" />
-          تعميم على جميع الفصول
-        </Button>
+        {!isAllClasses && (
+          <Button
+            variant="secondary"
+            disabled={saving || !selectedClassId || Object.keys(slots).length === 0}
+            className="gap-1.5"
+            onClick={handleBroadcast}
+          >
+            <BookOpen className="h-4 w-4" />
+            تعميم على جميع الفصول
+          </Button>
+        )}
 
         {/* Import / Template buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <input
             ref={fileInputRef}
             type="file"
             accept=".xlsx,.xls,.csv"
             onChange={handleFileImport}
+            className="hidden"
+          />
+          <input
+            ref={pdfInputRef}
+            type="file"
+            accept=".pdf"
+            onChange={handlePdfImport}
             className="hidden"
           />
           <Button
@@ -351,7 +432,17 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
             onClick={() => fileInputRef.current?.click()}
           >
             {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            استيراد
+            استيراد Excel
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/30"
+            disabled={!selectedClassId || importingPdf}
+            onClick={() => pdfInputRef.current?.click()}
+          >
+            {importingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+            استيراد PDF
           </Button>
           <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleDownloadTemplate}>
             <Download className="h-4 w-4" />
@@ -360,8 +451,15 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         </div>
       </div>
 
+      {isAllClasses && (
+        <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm text-primary">
+          <CopyPlus className="h-4 w-4 inline-block ml-1.5" />
+          وضع الجميع: سيتم تطبيق الخطة والاستيراد على <strong>جميع الفصول ({classes.length})</strong> دفعة واحدة.
+        </div>
+      )}
+
       {/* Grid */}
-      {selectedClassId && !loading && (
+      {hasContent && (
         <div className="overflow-auto rounded-xl border border-border/40">
           <table className="w-full border-collapse" dir="rtl" style={{ fontSize: 13 }}>
             <thead>
