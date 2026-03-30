@@ -3229,7 +3229,6 @@ export default function SettingsPage() {
                     c.category_group === "classwork"
                   ).slice(0, 4);
                   if (cwCats.length === 0) return null;
-                  const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500"];
                   const mockIcons = ["✔", "★", "➖", "✔", "✔", "★"];
                   return (
                     <div className="mt-3 pt-3 border-t border-border/20">
