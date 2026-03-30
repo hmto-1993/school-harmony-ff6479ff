@@ -17,6 +17,7 @@ interface StudentData {
   visibility?: { grades: boolean; attendance: boolean; behavior: boolean };
   session_token?: string;
   session_issued_at?: number;
+  login_type?: string;
 }
 
 interface AuthContextType {
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 visibility: data.visibility || { grades: true, attendance: true, behavior: true },
                 session_token: data.session_token,
                 session_issued_at: data.session_issued_at,
+                login_type: login_type || "student",
               });
               // Update stored token with the fresh one
               sessionStorage.setItem("student_session", JSON.stringify({
@@ -160,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         visibility: data.visibility || { grades: true, attendance: true, behavior: true },
         session_token: data.session_token,
         session_issued_at: data.session_issued_at,
+        login_type: login_type || "student",
       };
       setStudent(studentData);
       // Store session with HMAC token — no PII (national_id) in browser storage
