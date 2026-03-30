@@ -928,7 +928,7 @@ export default function StudentDashboard() {
               }
               return parentGradesHiddenCategories.global.includes(catId);
             };
-            const filteredGrades = student.grades.filter((g) => {
+            const evalFilteredGrades = student.grades.filter((g) => {
               if (isCatHiddenForStudent(g.category_id)) return false;
               if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
                 if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
@@ -936,6 +936,144 @@ export default function StudentDashboard() {
               }
               return true;
             });
+
+            const currentSubView = evalSubView === "classwork" && parentShowClassworkIcons ? "classwork" : 
+                                   evalSubView === "daily" && parentShowDailyGrades ? "daily" :
+                                   parentShowDailyGrades ? "daily" : "classwork";
+
+            // Daily Evaluation content
+            const dailyContent = (() => {
+              const dailyGrades = evalFilteredGrades.filter((g: any) => 
+                g.date && g.grade_categories?.category_group === "classwork"
+              );
+              if (dailyGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات تقييم يومي</p>;
+              const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
+              const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+              const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
+              const getLevel = (score: number | null, maxScore: number) => {
+                if (score === null || score === undefined) return null;
+                const pct = maxScore > 0 ? score / maxScore : 0;
+                if (pct >= 0.8) return "excellent";
+                if (pct >= 0.4) return "average";
+                return "zero";
+              };
+              return (
+                <>
+                  <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
+                    <table className="w-full text-xs border-separate border-spacing-0">
+                      <thead>
+                        <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
+                          <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">المعيار</th>
+                          {uniqueDates.map((date: string) => {
+                            const d = new Date(date);
+                            const dayName = dayLabels[d.getDay()] || "";
+                            return (
+                              <th key={date} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap">
+                                <div className="text-[10px]">{dayName}</div>
+                                <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
+                              </th>
+                            );
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {dailyCatNames.map((catName: string, ci: number) => (
+                          <tr key={catName} className={ci % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                            <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">{catName}</td>
+                            {uniqueDates.map((date: string) => {
+                              const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
+                              const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
+                              return (
+                                <td key={date} className="p-1.5 text-center border-l border-border/10">
+                                  {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
+                                   level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
+                                   level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
+                                   <span className="text-muted-foreground/30 text-sm">○</span>}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
+                    <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
+                    <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
+                    <span className="flex items-center gap-1"><span className="text-muted-foreground/30">○</span> لم يُقيّم</span>
+                  </div>
+                </>
+              );
+            })();
+
+            // Classwork Icons content
+            const classworkContent = (() => {
+              const cwGrades = evalFilteredGrades.filter((g: any) => 
+                g.grade_categories?.category_group === "classwork"
+              );
+              if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
+              const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+              const isParticipationFn = (name: string) => name === "المشاركة";
+              const MAX_SLOTS = 3;
+              
+              const getIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
+                if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
+                if (score <= 0) return [{ level: "zero", isStar: false }];
+                const isPartic = isParticipationFn(catName);
+                const slotCount = isPartic ? MAX_SLOTS : 1;
+                const perSlot = Math.round(maxScore / slotCount);
+                const icons: { level: string; isStar: boolean }[] = [];
+                for (let s = 0; s < slotCount; s++) {
+                  const slotScore = Math.min(Math.max(score - s * perSlot, 0), perSlot);
+                  const pct = perSlot > 0 ? slotScore / perSlot : 0;
+                  if (slotScore <= 0 && s > 0) break;
+                  if (pct >= 1) icons.push({ level: "excellent", isStar: true });
+                  else if (pct >= 0.8) icons.push({ level: "excellent", isStar: false });
+                  else if (pct >= 0.4) icons.push({ level: "average", isStar: false });
+                  else icons.push({ level: "zero", isStar: false });
+                }
+                return icons;
+              };
+
+              return (
+                <>
+                  <div className="space-y-2">
+                    {cwCatNames.map((catName: string) => {
+                      const catGrades = cwGrades
+                        .filter((g: any) => g.grade_categories?.name === catName)
+                        .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
+                      const allIcons = catGrades.flatMap((g: any) => 
+                        getIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
+                      );
+                      const displayIcons = allIcons.slice(-parentClassworkIconsCount);
+                      return (
+                        <div key={catName} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/30">
+                          <span className="text-xs font-semibold text-foreground whitespace-nowrap min-w-[70px]">{catName}</span>
+                          <div className="flex items-center gap-0.5 flex-wrap">
+                            {displayIcons.map((icon, i) => (
+                              <span key={i} className="text-base">
+                                {icon.isStar ? <span className="text-amber-500">★</span> :
+                                 icon.level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400">✔</span> :
+                                 icon.level === "average" ? <span className="text-amber-500 dark:text-amber-400">➖</span> :
+                                 <span className="text-rose-500 dark:text-rose-400">✖</span>}
+                              </span>
+                            ))}
+                            {allIcons.length === 0 && <span className="text-muted-foreground/40 text-xs">لا توجد بيانات</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><span className="text-emerald-600">✔</span> ممتاز</span>
+                    <span className="flex items-center gap-1"><span className="text-amber-500">★</span> درجة كاملة</span>
+                    <span className="flex items-center gap-1"><span className="text-amber-500">➖</span> متوسط</span>
+                    <span className="flex items-center gap-1"><span className="text-rose-500">✖</span> ضعيف</span>
+                  </div>
+                </>
+              );
+            })();
 
             return (
           <TabsContent value="evaluation">
@@ -948,35 +1086,34 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent>
                 {/* Sub-view toggle */}
-                <div className="flex items-center gap-2 mb-4 bg-muted/40 rounded-xl p-1">
-                  {parentShowDailyGrades && (
+                {parentShowDailyGrades && parentShowClassworkIcons && (
+                  <div className="flex items-center gap-1 mb-4 bg-muted/40 rounded-xl p-1">
                     <button
-                      onClick={() => setActiveTab("evaluation")}
+                      onClick={() => setEvalSubView("daily")}
                       className={cn(
                         "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all",
-                        (!parentShowClassworkIcons || (activeTab === "evaluation" && !document.querySelector('[data-eval-sub="classwork"]')))
+                        currentSubView === "daily"
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                       )}
-                      data-eval-sub="daily"
-                      id="eval-daily-btn"
                     >
                       📅 تفاعل اليوم
                     </button>
-                  )}
-                  {parentShowClassworkIcons && (
                     <button
+                      onClick={() => setEvalSubView("classwork")}
                       className={cn(
                         "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition-all",
-                        "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                        currentSubView === "classwork"
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                       )}
-                      data-eval-sub="classwork"
-                      id="eval-classwork-btn"
                     >
                       📊 التفاعل الكلي
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
+                
+                {currentSubView === "daily" ? dailyContent : classworkContent}
               </CardContent>
             </Card>
           </TabsContent>
