@@ -714,7 +714,7 @@ export default function StudentDashboard() {
                   /* ─── Cards / Assessment View ─── */
                   <div className="space-y-3">
                     {(() => {
-                      // Group grades by category_group
+                      // Group grades by category_group, then aggregate by category name
                       const groups: Record<string, typeof student.grades> = {};
                       filteredGrades.forEach((g) => {
                         const group = g.grade_categories?.category_group || "أخرى";
@@ -728,12 +728,36 @@ export default function StudentDashboard() {
                       };
                       const totalScore = filteredGrades.reduce((s, g) => s + (g.score ?? 0), 0);
                       const totalMax = filteredGrades.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                      
+                      // Helper to aggregate items by category name (dedup)
+                      const aggregateByCategory = (items: typeof student.grades) => {
+                        const catMap: Record<string, { name: string; totalScore: number; maxScore: number; count: number; categoryGroup: string; catName: string }> = {};
+                        items.forEach((g) => {
+                          const catName = g.grade_categories?.name || "-";
+                          const catId = g.category_id || catName;
+                          if (!catMap[catId]) {
+                            catMap[catId] = {
+                              name: catName,
+                              totalScore: 0,
+                              maxScore: g.grade_categories?.max_score || 100,
+                              count: 0,
+                              categoryGroup: g.grade_categories?.category_group || "",
+                              catName,
+                            };
+                          }
+                          catMap[catId].totalScore += (g.score ?? 0);
+                          catMap[catId].count += 1;
+                        });
+                        return Object.values(catMap);
+                      };
+
                       return (
                         <>
                           {Object.entries(groups).map(([groupKey, items]) => {
                             const info = groupLabels[groupKey] || groupLabels["أخرى"];
-                            const groupTotal = items.reduce((s, g) => s + (g.score ?? 0), 0);
-                            const groupMax = items.reduce((s, g) => s + (g.grade_categories?.max_score || 0), 0);
+                            const aggregated = aggregateByCategory(items);
+                            const groupTotal = aggregated.reduce((s, a) => s + a.totalScore, 0);
+                            const groupMax = aggregated.reduce((s, a) => s + (a.maxScore * a.count), 0);
                             const groupPct = groupMax > 0 ? Math.round((groupTotal / groupMax) * 100) : 0;
                             return (
                               <div key={groupKey} className="rounded-xl border border-border/40 overflow-hidden">
@@ -746,7 +770,7 @@ export default function StudentDashboard() {
                                   </Badge>
                                 </div>
                                 <div className="divide-y divide-border/20">
-                                  {items.map((g, i) => {
+                                  {aggregated.map((agg, i) => {
                                     const score = g.score ?? 0;
                                     const maxScore = g.grade_categories?.max_score || 100;
                                     const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
