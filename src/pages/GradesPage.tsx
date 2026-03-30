@@ -35,7 +35,8 @@ export default function GradesPage() {
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
-  const [activeType, setActiveType] = useState<string>("daily");
+  const [activeType, setActiveType] = useState<string>("evaluation");
+  const [evalSubView, setEvalSubView] = useState<"daily" | "period">("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
@@ -45,7 +46,7 @@ export default function GradesPage() {
   // Filter entry types based on edit permissions
   const availableTypes = canEdit
     ? ENTRY_TYPES
-    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "classwork");
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "evaluation");
 
   useEffect(() => {
     const load = async () => {
@@ -63,11 +64,11 @@ export default function GradesPage() {
     load();
   }, []);
 
-  const showPeriodSelector = activeType === "daily" || activeType === "summary" || activeType === "classwork" || activeType === "import";
+  const showPeriodSelector = activeType === "evaluation" || activeType === "summary" || activeType === "import";
 
   // Set default active type to summary if can't edit
   useEffect(() => {
-    if (permsLoaded && !canEdit && (activeType === "daily" || activeType === "behavior" || activeType === "import")) {
+    if (permsLoaded && !canEdit && (activeType === "behavior" || activeType === "import")) {
       setActiveType("summary");
     }
   }, [permsLoaded, canEdit]);
