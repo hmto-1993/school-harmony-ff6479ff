@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus } from "lucide-react";
+import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus, FileUp } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
