@@ -3212,6 +3212,8 @@ export default function SettingsPage() {
                 <p className="text-[10px] text-muted-foreground text-center mt-2 opacity-70">* الدرجات تجريبية للمعاينة فقط</p>
               </div>
             </div>
+              );
+            })()}
 
             <Button
               disabled={savingParentWelcome}
