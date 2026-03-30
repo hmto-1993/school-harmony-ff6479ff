@@ -212,7 +212,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
         const currentSlots = [...(sg.slots[categoryId] || [])];
-        if (currentSlots.length >= MAX_SLOTS) return sg;
+        if (currentSlots.length >= getMaxSlots(categoryId)) return sg;
         currentSlots.push(null);
         return { ...sg, slots: { ...sg.slots, [categoryId]: currentSlots } };
       })
