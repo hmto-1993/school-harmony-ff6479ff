@@ -3094,15 +3094,6 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* ─── Live Preview ─── */}
-            {(() => {
-              const isCatHidden = (catId: string, classId?: string) => {
-                if (classId && parentGradesHiddenCategories.classes[classId]?.length) {
-                  return parentGradesHiddenCategories.classes[classId].includes(catId);
-                }
-                return parentGradesHiddenCategories.global.includes(catId);
-              };
-
 
             <Button
               disabled={savingParentWelcome}
