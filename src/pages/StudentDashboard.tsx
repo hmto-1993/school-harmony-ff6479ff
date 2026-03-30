@@ -1110,7 +1110,7 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent>
                 {/* Sub-view toggle */}
-                {parentShowDailyGrades && parentShowClassworkIcons && (
+                {showDaily && showClasswork && (
                   <div className="flex items-center gap-1 mb-4 bg-muted/40 rounded-xl p-1">
                     <button
                       onClick={() => setEvalSubView("daily")}
