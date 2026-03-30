@@ -196,14 +196,25 @@ export default function AcademicCalendarWidget() {
                         ) : week.weekNumber}
                       </div>
 
-                      {/* Date range - Hijri + Gregorian */}
+                      {/* Date range - School days only */}
                       <div className="p-2 border-l flex flex-col justify-center gap-0.5">
-                        <span className="text-xs text-foreground/80">
-                          {formatDateShort(week.startDate)} – {formatDateShort(week.endDate)} م
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatHijriDate(week.startDate)} – {formatHijriDate(week.endDate)} هـ
-                        </span>
+                        {(() => {
+                          const firstDay = schoolDays[0] ?? 0;
+                          const lastDay = schoolDays[schoolDays.length - 1] ?? 4;
+                          const weekStartDay = week.startDate.getDay();
+                          const schoolStart = addDaysUtil(week.startDate, ((firstDay - weekStartDay) + 7) % 7);
+                          const schoolEnd = addDaysUtil(week.startDate, ((lastDay - weekStartDay) + 7) % 7);
+                          return (
+                            <>
+                              <span className="text-xs text-foreground/80">
+                                {formatDateShort(schoolStart)} – {formatDateShort(schoolEnd)} م
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {formatHijriDate(schoolStart)} – {formatHijriDate(schoolEnd)} هـ
+                              </span>
+                            </>
+                          );
+                        })()}
                       </div>
 
                       {/* Status badge */}
