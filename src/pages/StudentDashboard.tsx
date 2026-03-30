@@ -649,8 +649,10 @@ export default function StudentDashboard() {
 
         {/* Details Tabs */}
         {(() => {
+          const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
           const visibleTabs = [
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
+            ...(showEvalTab ? [{ value: "evaluation", label: "التقييم المستمر", icon: ClipboardList }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
             ...(!isParent || parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
