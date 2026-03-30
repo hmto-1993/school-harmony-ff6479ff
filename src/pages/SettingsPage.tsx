@@ -276,6 +276,9 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Daily extra slots
+  const [dailyExtraSlotsEnabled, setDailyExtraSlotsEnabled] = useState(true);
+
   // Parent portal welcome message
   const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
   const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
@@ -436,7 +439,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -503,6 +506,7 @@ export default function SettingsPage() {
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
         if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
+        if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
       });
 
       // Fetch popup history
@@ -1742,6 +1746,30 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground text-center">
                 💡 أي تعديل سيُطبق على جميع الفصول تلقائياً
               </p>
+            )}
+
+            {/* Extra Slots Toggle */}
+            {isAdmin && (
+              <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
+                <div>
+                  <h4 className="text-sm font-bold">🔓 زيادة رموز التقييم</h4>
+                  <p className="text-[11px] text-muted-foreground">السماح بإضافة حتى 3 رموز تقييم لكل فئة في الإدخال اليومي</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newVal = !dailyExtraSlotsEnabled;
+                    setDailyExtraSlotsEnabled(newVal);
+                    await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
+                    toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {dailyExtraSlotsEnabled ? "مفتوح" : "مقفل"}
+                </button>
+              </div>
             )}
           </CardContent>
         </Card>

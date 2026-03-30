@@ -76,6 +76,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [extraSlotsEnabled, setExtraSlotsEnabled] = useState(true);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
@@ -86,6 +87,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    supabase.from("site_settings").select("value").eq("id", "daily_extra_slots_enabled").maybeSingle().then(({ data }) => {
+      if (data) setExtraSlotsEnabled(data.value !== "false");
+    });
   }, []);
 
   useEffect(() => {
@@ -534,7 +538,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {slotsArr.length < MAX_SLOTS && (
+                              {extraSlotsEnabled && slotsArr.length < MAX_SLOTS && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
