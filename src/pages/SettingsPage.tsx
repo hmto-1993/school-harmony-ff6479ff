@@ -454,6 +454,9 @@ export default function SettingsPage() {
             }
           } catch { setHiddenCategories({ p1: [], p2: [] }); }
         }
+        if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
+        if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
+        if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
         if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
         if (s.id === "student_popup_title") setPopupTitle(s.value || "");
         if (s.id === "student_popup_message") setPopupMessage(s.value || "");
