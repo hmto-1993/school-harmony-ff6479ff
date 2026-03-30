@@ -750,6 +750,50 @@ export default function StudentDashboard() {
                                     const score = g.score ?? 0;
                                     const maxScore = g.grade_categories?.max_score || 100;
                                     const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+                                    const isClasswork = g.grade_categories?.category_group === "classwork";
+                                    const isPartic = g.grade_categories?.name === "المشاركة" || g.grade_categories?.name === "المشاركة والتفاعل";
+                                    
+                                    // For classwork: show icons instead of scores
+                                    if (isClasswork) {
+                                      const slotCount = isPartic ? 3 : 1;
+                                      const perSlot = Math.round(maxScore / slotCount);
+                                      let iconElements: React.ReactNode[] = [];
+                                      
+                                      if (score >= maxScore && isPartic) {
+                                        iconElements = [<span key="star" className="text-amber-500 text-lg">★</span>];
+                                      } else if (score <= 0) {
+                                        iconElements = [<span key="x" className="text-rose-500 dark:text-rose-400 text-lg">✖</span>];
+                                      } else {
+                                        let remaining = score;
+                                        for (let si = 0; si < slotCount; si++) {
+                                          if (remaining >= perSlot) {
+                                            iconElements.push(<span key={si} className="text-emerald-600 dark:text-emerald-400 text-lg">✔</span>);
+                                            remaining -= perSlot;
+                                          } else if (remaining >= Math.round(perSlot / 2)) {
+                                            iconElements.push(<span key={si} className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
+                                            remaining = 0;
+                                          } else if (remaining > 0) {
+                                            iconElements.push(<span key={si} className="text-amber-500 dark:text-amber-400 text-lg">➖</span>);
+                                            remaining = 0;
+                                          } else {
+                                            iconElements.push(<span key={si} className="text-rose-500 dark:text-rose-400 text-lg">✖</span>);
+                                          }
+                                        }
+                                      }
+                                      
+                                      return (
+                                        <div key={i} className="flex items-center gap-3 p-3">
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-foreground truncate">{g.grade_categories?.name || "-"}</p>
+                                          </div>
+                                          <div className="flex items-center gap-1 shrink-0">
+                                            {iconElements}
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                    
+                                    // For non-classwork (exams etc): keep score display
                                     return (
                                       <div key={i} className="flex items-center gap-3 p-3">
                                         <div className="flex-1 min-w-0">
