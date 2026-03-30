@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus } from "lucide-react";
+import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus, FileUp } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
@@ -408,47 +409,33 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
           </Button>
         )}
 
-        {/* Import / Template buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls,.csv"
-            onChange={handleFileImport}
-            className="hidden"
-          />
-          <input
-            ref={pdfInputRef}
-            type="file"
-            accept=".pdf"
-            onChange={handlePdfImport}
-            className="hidden"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            disabled={!selectedClassId || importing}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-            استيراد Excel
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-rose-600 border-rose-200 hover:bg-rose-50 dark:text-rose-400 dark:border-rose-800 dark:hover:bg-rose-950/30"
-            disabled={!selectedClassId || importingPdf}
-            onClick={() => pdfInputRef.current?.click()}
-          >
-            {importingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-            استيراد PDF
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleDownloadTemplate}>
-            <Download className="h-4 w-4" />
-            تحميل النموذج
-          </Button>
-        </div>
+        {/* Import / Template */}
+        <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileImport} className="hidden" />
+        <input ref={pdfInputRef} type="file" accept=".pdf" onChange={handlePdfImport} className="hidden" />
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-1.5" disabled={!selectedClassId || importing || importingPdf}>
+              {(importing || importingPdf) ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+              استيراد خطة
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => fileInputRef.current?.click()} className="gap-2">
+              <Upload className="h-4 w-4" />
+              من ملف Excel / CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => pdfInputRef.current?.click()} className="gap-2">
+              <FileText className="h-4 w-4" />
+              من ملف PDF (ذكاء اصطناعي)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Button variant="ghost" size="sm" className="gap-1.5" onClick={handleDownloadTemplate}>
+          <Upload className="h-4 w-4" />
+          تحميل النموذج
+        </Button>
       </div>
 
       {isAllClasses && (
