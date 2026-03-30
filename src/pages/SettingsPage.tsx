@@ -2813,11 +2813,9 @@ export default function SettingsPage() {
 
                   {/* Show/Hide Columns */}
                   <div className="space-y-2">
-                    {[
+                  {[
                       { key: "percentage", label: "عمود النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
                       { key: "eval", label: "عمود التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
-                      { key: "daily", label: "التقييم اليومي (المشاركة والواجبات)", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
-                      { key: "classwork_icons", label: "شريط أيقونات المهام والمشاركة", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
                     ].map(col => (
                       <div key={col.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
                         <h4 className="text-sm font-bold">{col.label}</h4>
@@ -2832,24 +2830,6 @@ export default function SettingsPage() {
                         </button>
                       </div>
                     ))}
-
-                    {/* Classwork icons count selector */}
-                    {parentShowClassworkIcons && (
-                      <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/20">
-                        <h4 className="text-sm font-bold">عدد الأيقونات المعروضة</h4>
-                        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                          {[5, 10, 15, 20].map(n => (
-                            <button
-                              key={n}
-                              onClick={() => setParentClassworkIconsCount(n)}
-                              className={cn("px-2.5 py-1.5 rounded-md text-xs font-bold transition-all",
-                                parentClassworkIconsCount === n ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                              )}
-                            >{n}</button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                    {/* Hidden Categories - Per Class */}
