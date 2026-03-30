@@ -17,6 +17,7 @@ interface StudentData {
   visibility?: { grades: boolean; attendance: boolean; behavior: boolean };
   session_token?: string;
   session_issued_at?: number;
+  login_type?: string;
 }
 
 interface AuthContextType {
