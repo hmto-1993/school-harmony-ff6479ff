@@ -310,7 +310,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     }
   };
 
-  const dailyCategories = categories.filter(c => isAllowedInDaily(c.name));
+  const dailyCategories = categories.filter(c => isAllowedInDaily(c));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
