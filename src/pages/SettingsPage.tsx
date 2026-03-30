@@ -276,6 +276,9 @@ export default function SettingsPage() {
   const [honorRollEnabled, setHonorRollEnabled] = useState(false);
   const [savingHonorRoll, setSavingHonorRoll] = useState(false);
 
+  // Daily extra slots
+  const [dailyExtraSlotsEnabled, setDailyExtraSlotsEnabled] = useState(true);
+
   // Parent portal welcome message
   const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
   const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
