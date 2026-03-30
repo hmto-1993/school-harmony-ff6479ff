@@ -54,11 +54,11 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
   );
 };
 
-const HIDDEN_DAILY_CATEGORIES = ["اختبار عملي", "اختبار الفترة"];
-const isHiddenFromDaily = (name: string) => HIDDEN_DAILY_CATEGORIES.includes(name);
-const isParticipation = (name: string) => name === "المشاركة";
+const ALLOWED_DAILY_CATEGORIES = ["المهام الادائية", "المهام الأدائية", "المشاركة", "المشاركة والتفاعل"];
+const isAllowedInDaily = (name: string) => ALLOWED_DAILY_CATEGORIES.some(a => name.includes(a) || a.includes(name));
+const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 const isBookCategory = (name: string) => name === "الكتاب";
-const MAX_PARTICIPATION_SLOTS = 3;
+const MAX_SLOTS = 3;
 
 
 interface DailyGradeEntryProps {
