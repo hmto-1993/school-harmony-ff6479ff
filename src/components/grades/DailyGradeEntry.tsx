@@ -90,11 +90,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
-    supabase.from("site_settings").select("id, value").in("id", ["daily_extra_slots_enabled", "daily_extra_slots_disabled_cats"]).then(({ data }) => {
+    supabase.from("site_settings").select("id, value").in("id", ["daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat"]).then(({ data }) => {
       (data || []).forEach((s: any) => {
         if (s.id === "daily_extra_slots_enabled") setExtraSlotsEnabled(s.value !== "false");
         if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
           try { setExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setExtraSlotsDisabledCats([]); }
+        }
+        if (s.id === "daily_max_slots" && s.value) setGlobalMaxSlots(Number(s.value) || DEFAULT_MAX_SLOTS);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setMaxSlotsPerCat(JSON.parse(s.value)); } catch { setMaxSlotsPerCat({}); }
         }
       });
     });
