@@ -943,7 +943,7 @@ export default function StudentDashboard() {
                                    evalSubView === "daily" && parentShowDailyGrades ? "daily" :
                                    parentShowDailyGrades ? "daily" : "classwork";
 
-            // Daily Evaluation content
+            // Daily Evaluation content - Days as rows, criteria as columns
             const dailyContent = (() => {
               const dailyGrades = evalFilteredGrades.filter((g: any) => 
                 g.date && g.grade_categories?.category_group === "classwork"
@@ -965,37 +965,39 @@ export default function StudentDashboard() {
                     <table className="w-full text-xs border-separate border-spacing-0">
                       <thead>
                         <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
-                          <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">المعيار</th>
-                          {uniqueDates.map((date: string) => {
-                            const d = new Date(date);
-                            const dayName = dayLabels[d.getDay()] || "";
-                            return (
-                              <th key={date} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap">
-                                <div className="text-[10px]">{dayName}</div>
-                                <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
-                              </th>
-                            );
-                          })}
+                          <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">اليوم</th>
+                          {dailyCatNames.map((catName: string) => (
+                            <th key={catName} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap text-[10px]">
+                              {catName}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
-                        {dailyCatNames.map((catName: string, ci: number) => (
-                          <tr key={catName} className={ci % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
-                            <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">{catName}</td>
-                            {uniqueDates.map((date: string) => {
-                              const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                              const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
-                              return (
-                                <td key={date} className="p-1.5 text-center border-l border-border/10">
-                                  {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
-                                   level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
-                                   level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
-                                   <span className="text-muted-foreground/30 text-sm">○</span>}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
+                        {uniqueDates.map((date: string, di: number) => {
+                          const d = new Date(date);
+                          const dayName = dayLabels[d.getDay()] || "";
+                          return (
+                            <tr key={date} className={di % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                              <td className="p-2 text-right font-semibold border-l border-border/10 whitespace-nowrap">
+                                <div className="text-xs">{dayName}</div>
+                                <div className="text-[9px] text-muted-foreground">{d.getDate()}/{d.getMonth() + 1}</div>
+                              </td>
+                              {dailyCatNames.map((catName: string) => {
+                                const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
+                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
+                                return (
+                                  <td key={catName} className="p-1.5 text-center border-l border-border/10">
+                                    {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-base">✔</span> :
+                                     level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-base">➖</span> :
+                                     level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-base">✖</span> :
+                                     <span className="text-muted-foreground/30 text-sm">○</span>}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
