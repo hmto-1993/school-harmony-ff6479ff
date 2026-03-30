@@ -1887,209 +1887,180 @@ export default function SettingsPage() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">اختر البيانات التي تريد إظهارها للطلاب عند تسجيل دخولهم</p>
-            <div className="space-y-3 max-w-md">
-              {[
-                { key: "grades" as const, label: "الدرجات", desc: "عرض درجات الطالب وتفاصيل التقييم", icon: GraduationCap, state: showGrades, setter: setShowGrades, hasSubmenu: true },
-                { key: "attendance" as const, label: "الحضور والغياب", desc: "عرض سجل الحضور والغياب", icon: Users, state: showAttendance, setter: setShowAttendance },
-                { key: "behavior" as const, label: "السلوك", desc: "عرض التقييمات السلوكية", icon: Eye, state: showBehavior, setter: setShowBehavior },
-              ].map((item) => (
-                <div key={item.key} className={cn(
-                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
-                  item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
-                )}>
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
-                      item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                    )}>
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold">{item.label}</h4>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => item.setter(!item.state)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    {item.state ? "ظاهر" : "مخفي"}
-                  </button>
+          <CardContent className="space-y-5">
+
+            {/* ─── Row 1: Visibility Toggles + Evaluation (side by side) ─── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Main Visibility Toggles */}
+              <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
+                <h4 className="text-sm font-bold mb-2">👁️ الأقسام المعروضة</h4>
+                <div className="space-y-1.5">
+                  {[
+                    { key: "grades" as const, label: "الدرجات", icon: GraduationCap, state: showGrades, setter: setShowGrades },
+                    { key: "attendance" as const, label: "الحضور والغياب", icon: Users, state: showAttendance, setter: setShowAttendance },
+                    { key: "behavior" as const, label: "السلوك", icon: Eye, state: showBehavior, setter: setShowBehavior },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      onClick={() => item.setter(!item.state)}
+                      className={cn(
+                        "flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-xs font-semibold border transition-all text-right",
+                        item.state
+                          ? "border-success/40 bg-success/10 text-success"
+                          : "border-border/40 bg-muted/30 text-muted-foreground"
+                      )}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.state ? <Eye className="h-3 w-3 shrink-0" /> : <EyeOff className="h-3 w-3 shrink-0" />}
+                      <span className="text-[10px]">{item.state ? "ظاهر" : "مخفي"}</span>
+                    </button>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* Continuous Evaluation Settings */}
+              <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                  <h4 className="text-sm font-bold flex items-center gap-1.5">
+                    <ClipboardList className="h-4 w-4 text-emerald-600" />
+                    التقييم المستمر
+                  </h4>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="px-3 pb-3 space-y-2">
+                  {[
+                    { label: "📅 تفاعل اليوم", desc: "التقييم اليومي بالأيقونات", state: studentShowDailyGrades, setter: setStudentShowDailyGrades },
+                    { label: "📊 التفاعل الكلي", desc: "التقييم التراكمي بالأيقونات", state: studentShowClassworkIcons, setter: setStudentShowClassworkIcons },
+                  ].map((item, i) => (
+                    <div key={i} className={cn(
+                      "flex items-center justify-between p-2.5 rounded-lg border transition-all",
+                      item.state ? "border-success/40 bg-success/5" : "border-border/40 bg-card"
+                    )}>
+                      <div>
+                        <h4 className="text-xs font-bold">{item.label}</h4>
+                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                      </div>
+                      <button
+                        onClick={() => item.setter(!item.state)}
+                        className={cn("flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all",
+                          item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                        )}
+                      >
+                        {item.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                        {item.state ? "ظاهر" : "مخفي"}
+                      </button>
+                    </div>
+                  ))}
+
+                  {studentShowClassworkIcons && (
+                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
+                      <span className="text-xs font-bold">عدد الأيقونات</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setStudentClassworkIconsCount(Math.max(5, studentClassworkIconsCount - 5))}
+                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
+                        >−</button>
+                        <span className="w-6 text-center font-bold text-xs">{studentClassworkIconsCount}</span>
+                        <button
+                          onClick={() => setStudentClassworkIconsCount(Math.min(30, studentClassworkIconsCount + 5))}
+                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
+                        >+</button>
+                      </div>
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
             </div>
 
-            {/* Grade Categories Visibility per Period */}
+            {/* ─── Row 2: Grade Categories per Period ─── */}
             {showGrades && (() => {
               const uniqueNames = Array.from(new Set(categories.map(c => c.name)));
               if (uniqueNames.length === 0) return null;
               const currentHidden = hiddenCategories[visibilityPeriod];
               return (
-                <div className="space-y-3 max-w-md">
-                  <div className="flex items-center gap-2 pt-2">
-                    <div className="h-px flex-1 bg-border" />
-                    <span className="text-xs font-bold text-muted-foreground">فئات التقييم المعروضة للطالب</span>
-                    <div className="h-px flex-1 bg-border" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">حدد الفئات التي تريد إظهارها في صفحة الطالب لكل فترة بشكل مستقل.</p>
-
-                  {/* Period Selector */}
-                  <div className="grid grid-cols-2 gap-2">
-                    {([
-                      { key: "p1" as const, label: "الفترة الأولى" },
-                      { key: "p2" as const, label: "الفترة الثانية" },
-                    ]).map(p => (
-                      <button
-                        key={p.key}
-                        onClick={() => setVisibilityPeriod(p.key)}
-                        className={cn(
-                          "flex items-center justify-center gap-2 p-3 rounded-xl border-2 text-sm font-bold transition-all duration-200",
-                          visibilityPeriod === p.key
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
-                        )}
+                <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                    <h4 className="text-sm font-bold flex items-center gap-1.5">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                      فئات التقييم المعروضة
+                    </h4>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-3 pb-3 space-y-3">
+                    {/* Period Selector + Apply Button */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5 flex-1">
+                        {([
+                          { key: "p1" as const, label: "الفترة الأولى" },
+                          { key: "p2" as const, label: "الفترة الثانية" },
+                        ]).map(p => (
+                          <button
+                            key={p.key}
+                            onClick={() => setVisibilityPeriod(p.key)}
+                            className={cn(
+                              "flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[11px] font-bold transition-all",
+                              visibilityPeriod === p.key
+                                ? "bg-primary text-primary-foreground"
+                                : "text-muted-foreground"
+                            )}
+                          >
+                            {p.label}
+                            {hiddenCategories[p.key].length > 0 && (
+                              <span className="text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{hiddenCategories[p.key].length}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1 text-[10px] h-7 shrink-0"
+                        onClick={() => {
+                          const source = hiddenCategories[visibilityPeriod];
+                          const targetPeriod = visibilityPeriod === "p1" ? "p2" : "p1";
+                          setHiddenCategories(prev => ({ ...prev, [targetPeriod]: [...source] }));
+                          toast({ title: "تم النسخ", description: `تم تطبيق على الفترتين` });
+                        }}
                       >
-                        <div className={cn(
-                          "h-2.5 w-2.5 rounded-full transition-all",
-                          visibilityPeriod === p.key ? "bg-primary scale-125" : "bg-muted-foreground/30"
-                        )} />
-                        {p.label}
-                        {hiddenCategories[p.key].length > 0 && (
-                          <span className="text-[10px] bg-destructive/15 text-destructive px-1.5 py-0.5 rounded-full font-bold">
-                            {hiddenCategories[p.key].length} مخفي
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
+                        <Check className="h-3 w-3" />
+                        للفترتين
+                      </Button>
+                    </div>
 
-                  {/* Apply to both periods button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs"
-                    onClick={() => {
-                      const source = hiddenCategories[visibilityPeriod];
-                      const targetPeriod = visibilityPeriod === "p1" ? "p2" : "p1";
-                      setHiddenCategories(prev => ({
-                        ...prev,
-                        [targetPeriod]: [...source]
-                      }));
-                      toast({ title: "تم النسخ", description: `تم تطبيق إعدادات ${visibilityPeriod === "p1" ? "الفترة الأولى" : "الفترة الثانية"} على الفترتين` });
-                    }}
-                  >
-                    <Check className="h-3.5 w-3.5" />
-                    تطبيق على الفترتين
-                  </Button>
-
-                  <div className="grid grid-cols-1 gap-2">
-                    {uniqueNames.map(name => {
-                      const isHidden = currentHidden.includes(name);
-                      return (
-                        <button
-                          key={name}
-                          onClick={() => {
-                            setHiddenCategories(prev => ({
-                              ...prev,
-                              [visibilityPeriod]: isHidden
-                                ? prev[visibilityPeriod].filter(n => n !== name)
-                                : [...prev[visibilityPeriod], name]
-                            }));
-                          }}
-                          className={cn(
-                            "flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all duration-200 text-right",
-                            !isHidden
-                              ? "border-success/40 bg-success/5"
-                              : "border-border/50 bg-muted/30 opacity-70"
-                          )}
-                        >
-                          <span className={cn("text-sm font-semibold", !isHidden ? "text-foreground" : "text-muted-foreground line-through")}>
+                    {/* Category toggles */}
+                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-auto">
+                      {uniqueNames.map(name => {
+                        const isHidden = currentHidden.includes(name);
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => {
+                              setHiddenCategories(prev => ({
+                                ...prev,
+                                [visibilityPeriod]: isHidden
+                                  ? prev[visibilityPeriod].filter(n => n !== name)
+                                  : [...prev[visibilityPeriod], name]
+                              }));
+                            }}
+                            className={cn("px-2.5 py-1.5 rounded-md text-[11px] font-bold border transition-all",
+                              isHidden
+                                ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
+                                : "bg-success/10 text-success border-success/30"
+                            )}
+                          >
+                            {isHidden ? <EyeOff className="inline h-2.5 w-2.5 ml-0.5" /> : <Eye className="inline h-2.5 w-2.5 ml-0.5" />}
                             {name}
-                          </span>
-                          <span className={cn(
-                            "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold",
-                            !isHidden ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                          )}>
-                            {!isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                            {!isHidden ? "ظاهر" : "مخفي"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })()}
 
-            {/* Student Evaluation Settings */}
-            <div className="space-y-3 max-w-md">
-              <div className="flex items-center gap-2 pt-2">
-                <div className="h-px flex-1 bg-border" />
-                <span className="text-xs font-bold text-muted-foreground">التقييم المستمر في لوحة الطالب</span>
-                <div className="h-px flex-1 bg-border" />
-              </div>
-              <p className="text-xs text-muted-foreground">تحكم في ظهور تبويب التقييم المستمر (تفاعل اليوم والتفاعل الكلي) في لوحة الطالب بشكل مستقل عن بوابة ولي الأمر.</p>
-              
-              {[
-                { label: "تفاعل اليوم", desc: "عرض التقييم اليومي بالأيقونات", state: studentShowDailyGrades, setter: setStudentShowDailyGrades },
-                { label: "التفاعل الكلي", desc: "عرض التقييم التراكمي بالأيقونات", state: studentShowClassworkIcons, setter: setStudentShowClassworkIcons },
-              ].map((item) => (
-                <div key={item.label} className={cn(
-                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
-                  item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
-                )}>
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
-                      item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
-                    )}>
-                      <ClipboardList className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold">{item.label}</h4>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => item.setter(!item.state)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                    )}
-                  >
-                    {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    {item.state ? "ظاهر" : "مخفي"}
-                  </button>
-                </div>
-              ))}
-
-              {studentShowClassworkIcons && (
-                <div className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-muted/20">
-                  <div>
-                    <h4 className="text-sm font-bold">عدد الأيقونات</h4>
-                    <p className="text-xs text-muted-foreground">الحد الأقصى للأيقونات في التفاعل الكلي</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setStudentClassworkIconsCount(Math.max(5, studentClassworkIconsCount - 5))}
-                      className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm font-bold hover:bg-muted/80"
-                    >−</button>
-                    <span className="text-sm font-bold w-8 text-center">{studentClassworkIconsCount}</span>
-                    <button
-                      onClick={() => setStudentClassworkIconsCount(Math.min(30, studentClassworkIconsCount + 5))}
-                      className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm font-bold hover:bg-muted/80"
-                    >+</button>
-                  </div>
-                </div>
-              )}
-            </div>
-
+            {/* Save + Reset */}
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 disabled={savingVisibility}
@@ -2124,7 +2095,7 @@ export default function SettingsPage() {
                     className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
                   >
                     <X className="h-3.5 w-3.5" />
-                    إعادة ضبط الكل
+                    إعادة ضبط
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent dir="rtl">
