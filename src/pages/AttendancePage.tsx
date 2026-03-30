@@ -770,12 +770,13 @@ export default function AttendancePage() {
                       <tr
                         key={record.student_id}
                         className={cn(
+                          "group transition-all duration-200 cursor-default hover:bg-primary/10 dark:hover:bg-primary/15",
                           isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                           !isLast && "border-b border-border/20"
                         )}
                       >
-                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/10">
+                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10 transition-colors duration-200 group-hover:text-primary", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
+                        <td className="p-3 font-semibold border-l border-border/10 transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
                           <div className="flex items-center gap-2">
                             <span>{record.full_name}</span>
                             {absenceAlerts[record.student_id]?.exceeded && (
