@@ -251,6 +251,9 @@ export default function SettingsPage() {
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
   const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
+  const [studentShowDailyGrades, setStudentShowDailyGrades] = useState(true);
+  const [studentShowClassworkIcons, setStudentShowClassworkIcons] = useState(true);
+  const [studentClassworkIconsCount, setStudentClassworkIconsCount] = useState(10);
 
   // Student popup message
   const [popupEnabled, setPopupEnabled] = useState(false);
@@ -433,7 +436,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -451,6 +454,9 @@ export default function SettingsPage() {
             }
           } catch { setHiddenCategories({ p1: [], p2: [] }); }
         }
+        if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
+        if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
+        if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
         if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
         if (s.id === "student_popup_title") setPopupTitle(s.value || "");
         if (s.id === "student_popup_message") setPopupMessage(s.value || "");
@@ -2021,6 +2027,69 @@ export default function SettingsPage() {
               );
             })()}
 
+            {/* Student Evaluation Settings */}
+            <div className="space-y-3 max-w-md">
+              <div className="flex items-center gap-2 pt-2">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs font-bold text-muted-foreground">التقييم المستمر في لوحة الطالب</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <p className="text-xs text-muted-foreground">تحكم في ظهور تبويب التقييم المستمر (تفاعل اليوم والتفاعل الكلي) في لوحة الطالب بشكل مستقل عن بوابة ولي الأمر.</p>
+              
+              {[
+                { label: "تفاعل اليوم", desc: "عرض التقييم اليومي بالأيقونات", state: studentShowDailyGrades, setter: setStudentShowDailyGrades },
+                { label: "التفاعل الكلي", desc: "عرض التقييم التراكمي بالأيقونات", state: studentShowClassworkIcons, setter: setStudentShowClassworkIcons },
+              ].map((item) => (
+                <div key={item.label} className={cn(
+                  "flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300",
+                  item.state ? "border-success/40 bg-success/5" : "border-border/50 bg-muted/30"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "flex items-center justify-center h-10 w-10 rounded-xl transition-all",
+                      item.state ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"
+                    )}>
+                      <ClipboardList className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold">{item.label}</h4>
+                      <p className="text-xs text-muted-foreground">{item.desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => item.setter(!item.state)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {item.state ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    {item.state ? "ظاهر" : "مخفي"}
+                  </button>
+                </div>
+              ))}
+
+              {studentShowClassworkIcons && (
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-muted/20">
+                  <div>
+                    <h4 className="text-sm font-bold">عدد الأيقونات</h4>
+                    <p className="text-xs text-muted-foreground">الحد الأقصى للأيقونات في التفاعل الكلي</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setStudentClassworkIconsCount(Math.max(5, studentClassworkIconsCount - 5))}
+                      className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm font-bold hover:bg-muted/80"
+                    >−</button>
+                    <span className="text-sm font-bold w-8 text-center">{studentClassworkIconsCount}</span>
+                    <button
+                      onClick={() => setStudentClassworkIconsCount(Math.min(30, studentClassworkIconsCount + 5))}
+                      className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center text-sm font-bold hover:bg-muted/80"
+                    >+</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center gap-2 flex-wrap">
               <Button
                 disabled={savingVisibility}
@@ -2032,6 +2101,9 @@ export default function SettingsPage() {
                     supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
                     supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
                     supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: String(studentShowDailyGrades) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: String(studentShowClassworkIcons) }),
+                    supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: String(studentClassworkIconsCount) }),
                   ]);
                   setSavingVisibility(false);
                   if (results.some(r => r.error)) {
@@ -2071,12 +2143,18 @@ export default function SettingsPage() {
                         setShowAttendance(true);
                         setShowBehavior(true);
                         setHiddenCategories({ p1: [], p2: [] });
+                        setStudentShowDailyGrades(true);
+                        setStudentShowClassworkIcons(true);
+                        setStudentClassworkIconsCount(10);
                         setSavingVisibility(true);
                         const results = await Promise.all([
                           supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
                           supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
+                          supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: "true" }),
+                          supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: "10" }),
                         ]);
                         setSavingVisibility(false);
                         if (results.some(r => r.error)) {

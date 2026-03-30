@@ -79,14 +79,18 @@ Deno.serve(async (req) => {
     const { data: visSettings } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories"]);
+      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count"]);
 
     const visibility: Record<string, boolean> = { grades: true, attendance: true, behavior: true };
     let hiddenCategories: { p1: string[]; p2: string[] } = { p1: [], p2: [] };
+    const evalSettings = { showDaily: true, showClasswork: true, iconsCount: 10 };
     (visSettings || []).forEach((s: any) => {
       if (s.id === "student_show_grades") visibility.grades = s.value !== "false";
       if (s.id === "student_show_attendance") visibility.attendance = s.value !== "false";
       if (s.id === "student_show_behavior") visibility.behavior = s.value !== "false";
+      if (s.id === "student_show_daily_grades") evalSettings.showDaily = s.value !== "false";
+      if (s.id === "student_show_classwork_icons") evalSettings.showClasswork = s.value !== "false";
+      if (s.id === "student_classwork_icons_count" && s.value) evalSettings.iconsCount = Number(s.value) || 10;
       if (s.id === "student_hidden_categories" && s.value) {
         try {
           const parsed = JSON.parse(s.value);
@@ -148,6 +152,7 @@ Deno.serve(async (req) => {
         behaviors,
         attendance,
         visibility,
+        evalSettings,
         session_token: newToken,
         session_issued_at: newIssuedAt,
       }),
