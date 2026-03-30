@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users } from "lucide-react";
+import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
@@ -42,6 +42,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   const { user } = useAuth();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
 
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [students, setStudents] = useState<StudentInfo[]>([]);
@@ -49,7 +50,8 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
-  const [existingGrades, setExistingGrades] = useState<Record<string, string>>({}); // student_id -> grade_id
+  const [parsingPdf, setParsingPdf] = useState(false);
+  const [existingGrades, setExistingGrades] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!selectedClass) return;
@@ -70,7 +72,6 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
   useEffect(() => {
     if (!selectedCategory || students.length === 0) return;
-    // Load existing grades for this category and period
     const loadExisting = async () => {
       const { data } = await supabase
         .from("grades")
@@ -86,21 +87,35 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   }, [selectedCategory, selectedPeriod, students]);
 
   const matchStudent = useCallback((name: string, nationalId: string | null): StudentInfo | null => {
-    // Try matching by national_id first
     if (nationalId) {
       const byId = students.find(s => s.national_id === nationalId);
       if (byId) return byId;
     }
-    // Try exact name match
     const normalized = name.trim();
     const byName = students.find(s => s.full_name.trim() === normalized);
     if (byName) return byName;
-    // Try partial match
     const partial = students.find(s =>
       s.full_name.trim().includes(normalized) || normalized.includes(s.full_name.trim())
     );
     return partial || null;
   }, [students]);
+
+  const processRows = useCallback((rawRows: { name: string; id: string | null; score: number | null }[]) => {
+    const cat = categories.find(c => c.id === selectedCategory);
+    const maxScore = cat ? Number(cat.max_score) : 100;
+
+    const rows: ImportRow[] = rawRows
+      .filter(r => r.name)
+      .map((row) => {
+        const matched = matchStudent(row.name, row.id);
+        let status: ImportRow["status"] = "matched";
+        if (!matched) status = "not_found";
+        else if (row.score === null || row.score < 0 || row.score > maxScore) status = "invalid_score";
+        return { studentName: row.name, studentId: row.id, score: row.score, matchedStudent: matched, status };
+      });
+
+    setImportRows(rows);
+  }, [categories, selectedCategory, matchStudent]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -120,41 +135,97 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
           return;
         }
 
-        const cat = categories.find(c => c.id === selectedCategory);
-        const maxScore = cat ? Number(cat.max_score) : 100;
-
-        // Detect columns
         const headers = Object.keys(json[0]);
         const nameCol = headers.find(h => /اسم|الطالب|name|student/i.test(h)) || headers[0];
         const idCol = headers.find(h => /هوية|رقم|national|id/i.test(h));
         const scoreCol = headers.find(h => /درجة|score|grade|mark|نتيجة/i.test(h)) || headers[headers.length - 1];
 
-        const rows: ImportRow[] = json.map((row) => {
-          const studentName = String(row[nameCol] || "").trim();
-          const studentId = idCol ? String(row[idCol] || "").trim() : null;
+        const rawRows = json.map((row) => {
+          const name = String(row[nameCol] || "").trim();
+          const id = idCol ? String(row[idCol] || "").trim() || null : null;
           const rawScore = row[scoreCol];
           let score: number | null = null;
           if (rawScore !== undefined && rawScore !== null && rawScore !== "") {
             score = Number(rawScore);
             if (isNaN(score)) score = null;
           }
+          return { name, id, score };
+        });
 
-          const matched = studentName ? matchStudent(studentName, studentId) : null;
-          let status: ImportRow["status"] = "matched";
-          if (!matched) status = "not_found";
-          else if (score === null || score < 0 || score > maxScore) status = "invalid_score";
-
-          return { studentName, studentId, score, matchedStudent: matched, status };
-        }).filter(r => r.studentName);
-
-        setImportRows(rows);
+        processRows(rawRows);
       } catch (err) {
         toast({ title: "خطأ في قراءة الملف", description: "تأكد من صيغة الملف", variant: "destructive" });
       }
     };
     reader.readAsArrayBuffer(file);
-    // Reset input
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handlePdfSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "الملف كبير جداً", description: "الحد الأقصى 10 ميجابايت", variant: "destructive" });
+      return;
+    }
+
+    setFileName(file.name);
+    setParsingPdf(true);
+    setImportRows([]);
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const pdfBase64 = btoa(binary);
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const resp = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/parse-pdf-grades`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ pdfBase64 }),
+        }
+      );
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: "Unknown error" }));
+        throw new Error(err.error || "فشل في تحليل الملف");
+      }
+
+      const { grades } = await resp.json();
+
+      if (!grades || grades.length === 0) {
+        toast({ title: "لم يتم العثور على بيانات", description: "لم يتمكن النظام من استخراج درجات من هذا الملف", variant: "destructive" });
+        setParsingPdf(false);
+        return;
+      }
+
+      const rawRows = grades.map((g: any) => ({
+        name: String(g.student_name || "").trim(),
+        id: g.national_id ? String(g.national_id).trim() : null,
+        score: g.score !== null && g.score !== undefined ? Number(g.score) : null,
+      }));
+
+      processRows(rawRows);
+      toast({ title: "تم تحليل الملف", description: `تم استخراج ${rawRows.length} سجل من ملف PDF` });
+    } catch (err: any) {
+      toast({ title: "خطأ في تحليل PDF", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
+    } finally {
+      setParsingPdf(false);
+      if (pdfRef.current) pdfRef.current.value = "";
+    }
   };
 
   const removeRow = (index: number) => {
@@ -261,15 +332,30 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <Button variant="default" className="gap-2 pointer-events-none">
-                    <Download className="h-4 w-4" />
-                    رفع ملف Excel / CSV
+                    <FileSpreadsheet className="h-4 w-4" />
+                    رفع Excel / CSV
+                  </Button>
+                </div>
+                <div className="relative">
+                  <input
+                    ref={pdfRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={handlePdfSelect}
+                    disabled={parsingPdf}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                  />
+                  <Button variant="secondary" className="gap-2 pointer-events-none" disabled={parsingPdf}>
+                    {parsingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                    {parsingPdf ? "جارٍ التحليل..." : "رفع ملف PDF"}
                   </Button>
                 </div>
               </div>
               {fileName && (
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <FileSpreadsheet className="h-4 w-4" />
+                  {fileName.endsWith(".pdf") ? <FileText className="h-4 w-4" /> : <FileSpreadsheet className="h-4 w-4" />}
                   {fileName}
+                  {parsingPdf && <span className="text-xs text-primary">(جارٍ تحليل الملف بالذكاء الاصطناعي...)</span>}
                 </p>
               )}
             </div>
@@ -360,9 +446,9 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
               <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground gap-3 rounded-xl border-2 border-dashed border-border/50">
                 <Download className="h-10 w-10 opacity-40" />
                 <div>
-                  <p className="font-medium">ارفع ملف Excel أو CSV يحتوي على درجات الطلاب</p>
-                  <p className="text-xs mt-1">يجب أن يحتوي الملف على عمود لاسم الطالب وعمود للدرجة</p>
-                  <p className="text-xs">أو حمّل القالب الجاهز وعبّئه ثم ارفعه</p>
+                  <p className="font-medium">ارفع ملف Excel أو CSV أو PDF يحتوي على درجات الطلاب</p>
+                  <p className="text-xs mt-1">يجب أن يحتوي الملف على اسم الطالب (أو رقم الهوية) والدرجة</p>
+                  <p className="text-xs">ملفات PDF يتم تحليلها تلقائياً بالذكاء الاصطناعي</p>
                 </div>
               </div>
             )}
