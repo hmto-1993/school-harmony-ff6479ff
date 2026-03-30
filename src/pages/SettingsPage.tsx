@@ -279,6 +279,8 @@ export default function SettingsPage() {
   // Daily extra slots
   const [dailyExtraSlotsEnabled, setDailyExtraSlotsEnabled] = useState(true);
   const [dailyExtraSlotsDisabledCats, setDailyExtraSlotsDisabledCats] = useState<string[]>([]);
+  const [dailyMaxSlots, setDailyMaxSlots] = useState(3);
+  const [dailyMaxSlotsPerCat, setDailyMaxSlotsPerCat] = useState<Record<string, number>>({});
 
   // Parent portal welcome message
   const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
@@ -440,7 +442,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -510,6 +512,10 @@ export default function SettingsPage() {
         if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
         if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
           try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
+        }
+        if (s.id === "daily_max_slots" && s.value) setDailyMaxSlots(Number(s.value) || 3);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setDailyMaxSlotsPerCat(JSON.parse(s.value)); } catch { setDailyMaxSlotsPerCat({}); }
         }
       });
 
@@ -1758,49 +1764,90 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
                   <div>
                     <h4 className="text-sm font-bold">{dailyExtraSlotsEnabled ? "🔓" : "🔒"} زيادة رموز التقييم</h4>
-                    <p className="text-[11px] text-muted-foreground">السماح بإضافة حتى 3 رموز تقييم في الإدخال اليومي</p>
+                    <p className="text-[11px] text-muted-foreground">السماح بإضافة رموز تقييم إضافية في الإدخال اليومي</p>
                   </div>
-                  <button
-                    onClick={async () => {
-                      const newVal = !dailyExtraSlotsEnabled;
-                      setDailyExtraSlotsEnabled(newVal);
-                      await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
-                      toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
-                    }}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                      dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                  <div className="flex items-center gap-2">
+                    {dailyExtraSlotsEnabled && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-muted-foreground">الحد الأقصى:</span>
+                        <Select value={String(dailyMaxSlots)} onValueChange={async (val) => {
+                          const num = Number(val);
+                          setDailyMaxSlots(num);
+                          await supabase.from("site_settings").upsert({ id: "daily_max_slots", value: val });
+                          toast({ title: `تم تحديد الحد الأقصى إلى ${num} رموز` });
+                        }}>
+                          <SelectTrigger className="h-7 w-16 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                              <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     )}
-                  >
-                    {dailyExtraSlotsEnabled ? "مفتوح للكل" : "مقفل للكل"}
-                  </button>
+                    <button
+                      onClick={async () => {
+                        const newVal = !dailyExtraSlotsEnabled;
+                        setDailyExtraSlotsEnabled(newVal);
+                        await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
+                        toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
+                      }}
+                      className={cn(
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                        dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                      )}
+                    >
+                      {dailyExtraSlotsEnabled ? "مفتوح للكل" : "مقفل للكل"}
+                    </button>
+                  </div>
                 </div>
 
                 {dailyExtraSlotsEnabled && classworkCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/30 bg-muted/5">
-                    <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص لكل فئة:</p>
+                    <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص لكل فئة (اضغط للقفل/الفتح، اسحب العدد لتغيير الحد):</p>
                     {classworkCategories.map((cat) => {
                       const isDisabled = dailyExtraSlotsDisabledCats.includes(cat.id);
+                      const catMax = dailyMaxSlotsPerCat[cat.id] ?? dailyMaxSlots;
                       return (
-                        <button
-                          key={cat.id}
-                          onClick={async () => {
-                            const newList = isDisabled
-                              ? dailyExtraSlotsDisabledCats.filter(id => id !== cat.id)
-                              : [...dailyExtraSlotsDisabledCats, cat.id];
-                            setDailyExtraSlotsDisabledCats(newList);
-                            await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
-                            toast({ title: isDisabled ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
-                          }}
-                          className={cn(
-                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
-                            isDisabled
-                              ? "bg-muted/50 text-muted-foreground border-border/50"
-                              : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                        <div key={cat.id} className="flex items-center gap-1">
+                          <button
+                            onClick={async () => {
+                              const newList = isDisabled
+                                ? dailyExtraSlotsDisabledCats.filter(id => id !== cat.id)
+                                : [...dailyExtraSlotsDisabledCats, cat.id];
+                              setDailyExtraSlotsDisabledCats(newList);
+                              await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
+                              toast({ title: isDisabled ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
+                            }}
+                            className={cn(
+                              "flex items-center gap-1 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-all border border-l-0",
+                              isDisabled
+                                ? "bg-muted/50 text-muted-foreground border-border/50"
+                                : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                            )}
+                          >
+                            {isDisabled ? "🔒" : "🔓"} {cat.name}
+                          </button>
+                          {!isDisabled && (
+                            <Select value={String(catMax)} onValueChange={async (val) => {
+                              const newMap = { ...dailyMaxSlotsPerCat, [cat.id]: Number(val) };
+                              setDailyMaxSlotsPerCat(newMap);
+                              await supabase.from("site_settings").upsert({ id: "daily_max_slots_per_cat", value: JSON.stringify(newMap) });
+                              toast({ title: `حد "${cat.name}" = ${val} رموز` });
+                            }}>
+                              <SelectTrigger className="h-7 w-14 text-xs rounded-l-lg rounded-r-none border-r-0">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           )}
-                        >
-                          {isDisabled ? "🔒" : "🔓"} {cat.name}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>

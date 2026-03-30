@@ -58,7 +58,7 @@ const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: stri
 const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork";
 const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 const isBookCategory = (name: string) => name === "الكتاب";
-const MAX_SLOTS = 3;
+const DEFAULT_MAX_SLOTS = 3;
 
 
 interface DailyGradeEntryProps {
@@ -78,6 +78,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [extraSlotsEnabled, setExtraSlotsEnabled] = useState(true);
   const [extraSlotsDisabledCats, setExtraSlotsDisabledCats] = useState<string[]>([]);
+  const [globalMaxSlots, setGlobalMaxSlots] = useState(DEFAULT_MAX_SLOTS);
+  const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
@@ -88,11 +90,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
-    supabase.from("site_settings").select("id, value").in("id", ["daily_extra_slots_enabled", "daily_extra_slots_disabled_cats"]).then(({ data }) => {
+    supabase.from("site_settings").select("id, value").in("id", ["daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat"]).then(({ data }) => {
       (data || []).forEach((s: any) => {
         if (s.id === "daily_extra_slots_enabled") setExtraSlotsEnabled(s.value !== "false");
         if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
           try { setExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setExtraSlotsDisabledCats([]); }
+        }
+        if (s.id === "daily_max_slots" && s.value) setGlobalMaxSlots(Number(s.value) || DEFAULT_MAX_SLOTS);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setMaxSlotsPerCat(JSON.parse(s.value)); } catch { setMaxSlotsPerCat({}); }
         }
       });
     });
@@ -103,6 +109,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     setSelectedCategory("");
     loadData();
   }, [selectedClass, selectedDate, selectedPeriod]);
+
+  const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
 
   const loadData = async () => {
     const { data: cats } = await supabase
@@ -143,13 +151,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           } else {
             const max = Number(c.max_score);
             const isPartCat = isParticipation(c.name);
-            const slotCount = isParticipation(c.name) ? MAX_SLOTS : MAX_SLOTS;
+            const slotCount = getMaxSlots(c.id);
             const perSlot = Math.round(max / slotCount);
 
             if (score >= max && isPartCat) {
               // Full score on participation → starred
               starred[c.id] = true;
-              slots[c.id] = [null, null, null];
+              slots[c.id] = Array(slotCount).fill(null);
             } else if (score >= max && !isPartCat) {
               // Full score on single-slot (واجبات/كتاب) → excellent, NOT starred
               starred[c.id] = false;
@@ -187,7 +195,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const cycleSlot = (studentId: string, categoryId: string, slotIndex: number, maxScore: number, catName: string) => {
-    const maxSlots = MAX_SLOTS;
+    const maxSlots = getMaxSlots(categoryId);
     setStudentGrades((prev) =>
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
@@ -204,7 +212,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       prev.map((sg) => {
         if (sg.student_id !== studentId) return sg;
         const currentSlots = [...(sg.slots[categoryId] || [])];
-        if (currentSlots.length >= MAX_SLOTS) return sg;
+        if (currentSlots.length >= getMaxSlots(categoryId)) return sg;
         currentSlots.push(null);
         return { ...sg, slots: { ...sg.slots, [categoryId]: currentSlots } };
       })
@@ -218,7 +226,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         const wasStarred = sg.starred[categoryId];
         const newStarred = !wasStarred;
         const catName = categories.find(c => c.id === categoryId)?.name || "";
-        const slotCount = MAX_SLOTS;
+        const slotCount = getMaxSlots(categoryId);
         const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
         return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
       })
@@ -544,7 +552,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {extraSlotsEnabled && !extraSlotsDisabledCats.includes(cat.id) && slotsArr.length < MAX_SLOTS && (
+                              {extraSlotsEnabled && !extraSlotsDisabledCats.includes(cat.id) && slotsArr.length < getMaxSlots(cat.id) && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
