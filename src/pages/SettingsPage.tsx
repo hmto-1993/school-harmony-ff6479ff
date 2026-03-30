@@ -1747,6 +1747,30 @@ export default function SettingsPage() {
                 💡 أي تعديل سيُطبق على جميع الفصول تلقائياً
               </p>
             )}
+
+            {/* Extra Slots Toggle */}
+            {isAdmin && (
+              <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
+                <div>
+                  <h4 className="text-sm font-bold">🔓 زيادة رموز التقييم</h4>
+                  <p className="text-[11px] text-muted-foreground">السماح بإضافة حتى 3 رموز تقييم لكل فئة في الإدخال اليومي</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    const newVal = !dailyExtraSlotsEnabled;
+                    setDailyExtraSlotsEnabled(newVal);
+                    await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
+                    toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
+                  }}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                    dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {dailyExtraSlotsEnabled ? "مفتوح" : "مقفل"}
+                </button>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
