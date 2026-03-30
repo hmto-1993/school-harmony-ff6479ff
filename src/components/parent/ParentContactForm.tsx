@@ -39,32 +39,31 @@ export default function ParentContactForm({ studentId, studentName, classId }: P
     }
 
     setSending(true);
-    const { error } = await supabase.from("parent_messages").insert({
-      student_id: studentId,
-      class_id: classId,
-      message_type: messageType,
-      subject: subject.trim(),
-      body: body.trim(),
-      parent_name: parentName.trim(),
-      parent_phone: parentPhone.trim(),
+
+    // Get session info from sessionStorage
+    const raw = sessionStorage.getItem("student_session");
+    const session = raw ? JSON.parse(raw) : {};
+
+    const { data, error } = await supabase.functions.invoke("submit-parent-message", {
+      body: {
+        student_id: studentId,
+        class_id: classId,
+        message_type: messageType,
+        subject: subject.trim(),
+        body: body.trim(),
+        parent_name: parentName.trim(),
+        parent_phone: parentPhone.trim(),
+        session_token: session.session_token,
+        session_issued_at: session.session_issued_at,
+      },
     });
 
     setSending(false);
-    if (error) {
-      toast({ title: "خطأ", description: "فشل إرسال الرسالة، يرجى المحاولة مرة أخرى", variant: "destructive" });
+    if (error || data?.error) {
+      toast({ title: "خطأ", description: data?.error || "فشل إرسال الرسالة، يرجى المحاولة مرة أخرى", variant: "destructive" });
     } else {
       setSent(true);
       toast({ title: "تم الإرسال ✓", description: "تم إرسال رسالتك للمعلم بنجاح" });
-
-      // Notify teacher via push notification (fire and forget)
-      supabase.functions.invoke("notify-parent-message", {
-        body: {
-          class_id: classId,
-          student_name: studentName,
-          subject: subject.trim(),
-          message_type: messageType,
-        },
-      }).catch(() => {});
       setSubject("");
       setBody("");
       setParentName("");

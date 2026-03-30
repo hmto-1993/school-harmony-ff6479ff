@@ -1391,6 +1391,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_teacher_write_permission: {
+        Args: { _permission: string; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
