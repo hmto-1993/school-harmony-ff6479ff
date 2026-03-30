@@ -651,7 +651,7 @@ export default function StudentDashboard() {
 
         {/* Details Tabs */}
         {(() => {
-          const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
+          const showEvalTab = (isParent && (parentShowDailyGrades || parentShowClassworkIcons)) || !isParent;
           const visibleTabs = [
             ...(showEvalTab ? [{ value: "evaluation", label: "التقييم المستمر", icon: ClipboardList }] : []),
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
@@ -919,9 +919,9 @@ export default function StudentDashboard() {
           </TabsContent>
           )}
 
-          {/* التقييم المستمر Tab - Parent only */}
+          {/* التقييم المستمر Tab */}
           {(() => {
-            const showEvalTab = isParent && (parentShowDailyGrades || parentShowClassworkIcons);
+            const showEvalTab = (isParent && (parentShowDailyGrades || parentShowClassworkIcons)) || !isParent;
             if (!showEvalTab || !vis.grades) return null;
             
             const studentClassId = student.class_id;
@@ -940,9 +940,11 @@ export default function StudentDashboard() {
               return true;
             });
 
-            const currentSubView = evalSubView === "classwork" && parentShowClassworkIcons ? "classwork" : 
-                                   evalSubView === "daily" && parentShowDailyGrades ? "daily" :
-                                   parentShowDailyGrades ? "daily" : "classwork";
+            const showDaily = isParent ? parentShowDailyGrades : true;
+            const showClasswork = isParent ? parentShowClassworkIcons : true;
+            const currentSubView = evalSubView === "classwork" && showClasswork ? "classwork" : 
+                                   evalSubView === "daily" && showDaily ? "daily" :
+                                   showDaily ? "daily" : "classwork";
 
             // Daily Evaluation content - Days as rows, criteria as columns
             const dailyContent = (() => {
@@ -1108,7 +1110,7 @@ export default function StudentDashboard() {
               </CardHeader>
               <CardContent>
                 {/* Sub-view toggle */}
-                {parentShowDailyGrades && parentShowClassworkIcons && (
+                {showDaily && showClasswork && (
                   <div className="flex items-center gap-1 mb-4 bg-muted/40 rounded-xl p-1">
                     <button
                       onClick={() => setEvalSubView("daily")}
