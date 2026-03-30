@@ -19,6 +19,7 @@ interface GradeCategory {
   name: string;
   weight: number;
   max_score: number;
+  category_group: string;
 }
 
 type GradeLevel = "excellent" | "average" | "zero" | null;
