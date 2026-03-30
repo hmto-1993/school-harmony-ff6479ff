@@ -940,9 +940,11 @@ export default function StudentDashboard() {
               return true;
             });
 
-            const currentSubView = evalSubView === "classwork" && parentShowClassworkIcons ? "classwork" : 
-                                   evalSubView === "daily" && parentShowDailyGrades ? "daily" :
-                                   parentShowDailyGrades ? "daily" : "classwork";
+            const showDaily = isParent ? parentShowDailyGrades : true;
+            const showClasswork = isParent ? parentShowClassworkIcons : true;
+            const currentSubView = evalSubView === "classwork" && showClasswork ? "classwork" : 
+                                   evalSubView === "daily" && showDaily ? "daily" :
+                                   showDaily ? "daily" : "classwork";
 
             // Daily Evaluation content - Days as rows, criteria as columns
             const dailyContent = (() => {
