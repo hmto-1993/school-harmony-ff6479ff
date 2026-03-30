@@ -3171,14 +3171,14 @@ export default function SettingsPage() {
                   }
                 })()}
 
-                {/* Daily Evaluation Preview */}
+                {/* Daily Evaluation Preview - Days as rows, criteria as columns */}
                 {parentShowDailyGrades && (() => {
                    const dailyCats = categories.filter((c: any) => 
                      !isCatHidden(c.id, c.class_id) && 
                      c.category_group === "classwork"
                   ).slice(0, 4);
                   if (dailyCats.length === 0) return null;
-                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"].slice(0, 5);
+                  const mockDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
                   const mockLevels: ("excellent" | "average" | "zero" | null)[][] = dailyCats.map((_, ci) => 
                     mockDays.map((_, di) => {
                       const v = (ci + di) % 4;
@@ -3187,25 +3187,25 @@ export default function SettingsPage() {
                   );
                   return (
                     <div className="mt-3 pt-3 border-t border-border/20">
-                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📋 التقييم اليومي</p>
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📅 تفاعل اليوم</p>
                       <div className="overflow-auto rounded-lg border border-border/30">
                         <table className="w-full text-[10px] border-separate border-spacing-0">
                           <thead>
                             <tr className="bg-muted/30">
-                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">المعيار</th>
-                              {mockDays.map(d => (
-                                <th key={d} className="p-1.5 text-center font-semibold text-primary border-b border-border/20">{d}</th>
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">اليوم</th>
+                              {dailyCats.map((cat: any) => (
+                                <th key={cat.id} className="p-1.5 text-center font-semibold text-primary border-b border-border/20 whitespace-nowrap">{cat.name}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
-                            {dailyCats.map((cat: any, ci: number) => (
-                              <tr key={cat.id} className={ci % 2 === 0 ? "bg-card" : "bg-muted/20"}>
-                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{cat.name}</td>
-                                {mockDays.map((_, di) => {
+                            {mockDays.map((day, di) => (
+                              <tr key={day} className={di % 2 === 0 ? "bg-card" : "bg-muted/20"}>
+                                <td className="p-1.5 text-right font-semibold border-l border-border/10 whitespace-nowrap">{day}</td>
+                                {dailyCats.map((_, ci) => {
                                   const level = mockLevels[ci][di];
                                   return (
-                                    <td key={di} className="p-1 text-center border-l border-border/10">
+                                    <td key={ci} className="p-1 text-center border-l border-border/10">
                                       {level === "excellent" ? <span className="text-emerald-600 dark:text-emerald-400 text-sm">✔</span> :
                                        level === "average" ? <span className="text-amber-500 dark:text-amber-400 text-sm">➖</span> :
                                        level === "zero" ? <span className="text-rose-500 dark:text-rose-400 text-sm">✖</span> :
@@ -3213,6 +3213,58 @@ export default function SettingsPage() {
                                     </td>
                                   );
                                 })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Cumulative Evaluation Preview */}
+                {parentShowClassworkIcons && (() => {
+                  const cwCats = categories.filter((c: any) => 
+                    !isCatHidden(c.id, c.class_id) && 
+                    c.category_group === "classwork"
+                  ).slice(0, 4);
+                  if (cwCats.length === 0) return null;
+                  const catColorsDot = ["bg-emerald-500", "bg-blue-500", "bg-amber-500", "bg-violet-500"];
+                  const catColorsBg = [
+                    "bg-emerald-500/10", "bg-blue-500/10", "bg-amber-500/10", "bg-violet-500/10"
+                  ];
+                  const catColorsText = [
+                    "text-emerald-700 dark:text-emerald-400", "text-blue-700 dark:text-blue-400",
+                    "text-amber-700 dark:text-amber-400", "text-violet-700 dark:text-violet-400"
+                  ];
+                  const mockIcons = ["✔", "★", "➖", "✔", "✔", "★"];
+                  return (
+                    <div className="mt-3 pt-3 border-t border-border/20">
+                      <p className="text-[10px] font-bold text-muted-foreground mb-2">📊 التفاعل الكلي</p>
+                      <div className="overflow-auto rounded-lg border border-border/30">
+                        <table className="w-full text-[10px] border-separate border-spacing-0">
+                          <thead>
+                            <tr className="bg-muted/30">
+                              <th className="p-1.5 text-right font-semibold text-primary border-b border-border/20">فئة التقييم</th>
+                              <th className="p-1.5 text-center font-semibold text-primary border-b border-border/20">التقييم</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cwCats.map((cat: any, ci: number) => (
+                              <tr key={cat.id} className={catColorsBg[ci % 4]}>
+                                <td className={cn("p-1.5 text-right font-bold border-l border-border/10 whitespace-nowrap", catColorsText[ci % 4])}>
+                                  <span className={cn("inline-block w-2 h-2 rounded-full mr-1", catColorsDot[ci % 4])} />
+                                  {cat.name}
+                                </td>
+                                <td className="p-1.5 text-center border-l border-border/10">
+                                  <div className="flex items-center gap-0.5 justify-center">
+                                    {mockIcons.slice(0, parentClassworkIconsCount > 6 ? 6 : parentClassworkIconsCount).map((icon, i) => (
+                                      <span key={i} className={cn("text-sm",
+                                        icon === "★" ? "text-amber-500" : icon === "✔" ? "text-emerald-600" : "text-amber-500"
+                                      )}>{icon}</span>
+                                    ))}
+                                  </div>
+                                </td>
                               </tr>
                             ))}
                           </tbody>
