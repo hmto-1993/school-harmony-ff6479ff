@@ -2973,6 +2973,8 @@ export default function SettingsPage() {
                   }).filter((g: any) => {
                     if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
                     if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
+                    // Hide classwork from grades preview (shown in evaluation tab)
+                    if (g.grade_categories?.category_group === "classwork") return false;
                     return true;
                   });
 
