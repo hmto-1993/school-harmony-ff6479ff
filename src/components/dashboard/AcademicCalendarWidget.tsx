@@ -73,9 +73,29 @@ function isSameWeek(a: Date, weekStart: Date, weekEnd: Date): boolean {
   return t >= weekStart.getTime() && t <= weekEnd.getTime();
 }
 
+function addDaysUtil(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
 export default function AcademicCalendarWidget() {
   const { calendarData, currentWeek, getWeeksInfo } = useAcademicWeek();
   const [selectedWeek, setSelectedWeek] = useState<WeekInfo | null>(null);
+  const [schoolDays, setSchoolDays] = useState<number[]>([0, 1, 2, 3, 4]); // default Sun-Thu
+
+  useEffect(() => {
+    supabase
+      .from("class_schedules")
+      .select("days_of_week")
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.days_of_week && data.days_of_week.length > 0) {
+          setSchoolDays(data.days_of_week.sort((a: number, b: number) => a - b));
+        }
+      });
+  }, []);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
 
