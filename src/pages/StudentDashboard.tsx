@@ -561,14 +561,16 @@ export default function StudentDashboard() {
         <Button
           onClick={handleExportPdf}
           disabled={exportingPdf}
-          className="w-full h-14 text-lg font-bold rounded-2xl gap-3 bg-gradient-to-l from-primary to-accent hover:opacity-90 shadow-lg shadow-primary/20"
+          variant="ghost"
+          size="sm"
+          className="w-auto mx-auto flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           {exportingPdf ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <Download className="h-6 w-6" />
+            <FileText className="h-4 w-4" />
           )}
-          تحميل تقرير الطالب (PDF)
+          تصدير PDF
         </Button>
 
         {/* Summary Cards */}
