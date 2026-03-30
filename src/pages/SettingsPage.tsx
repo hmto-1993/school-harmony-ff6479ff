@@ -2688,7 +2688,7 @@ export default function SettingsPage() {
               >
                 <span className={cn(
                   "inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200",
-                  parentWelcomeEnabled ? "translate-x-1" : "translate-x-6"
+                  parentWelcomeEnabled ? "translate-x-6" : "translate-x-1"
                 )} />
               </button>
             </div>
