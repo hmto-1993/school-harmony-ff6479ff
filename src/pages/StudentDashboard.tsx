@@ -159,7 +159,7 @@ export default function StudentDashboard() {
     if (student) {
       fetchFolders();
       fetchPopup();
-      fetchWelcomeMessage();
+      if (isParent) fetchWelcomeMessage();
     }
   }, [student]);
 
