@@ -653,8 +653,8 @@ export default function StudentDashboard() {
             ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
             ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
             ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-            { value: "activities", label: "الأنشطة", icon: Layers },
-            { value: "library", label: "المكتبة", icon: BookOpen },
+            ...(!isParent || parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
+            ...(!isParent || parentShowLibrary ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
           ];
           const defaultTab = visibleTabs[0]?.value || "activities";
           return (
