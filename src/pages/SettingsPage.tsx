@@ -1754,25 +1754,57 @@ export default function SettingsPage() {
 
             {/* Extra Slots Toggle */}
             {isAdmin && (
-              <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
-                <div>
-                  <h4 className="text-sm font-bold">🔓 زيادة رموز التقييم</h4>
-                  <p className="text-[11px] text-muted-foreground">السماح بإضافة حتى 3 رموز تقييم لكل فئة في الإدخال اليومي</p>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
+                  <div>
+                    <h4 className="text-sm font-bold">{dailyExtraSlotsEnabled ? "🔓" : "🔒"} زيادة رموز التقييم</h4>
+                    <p className="text-[11px] text-muted-foreground">السماح بإضافة حتى 3 رموز تقييم في الإدخال اليومي</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const newVal = !dailyExtraSlotsEnabled;
+                      setDailyExtraSlotsEnabled(newVal);
+                      await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
+                      toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
+                    }}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                      dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {dailyExtraSlotsEnabled ? "مفتوح للكل" : "مقفل للكل"}
+                  </button>
                 </div>
-                <button
-                  onClick={async () => {
-                    const newVal = !dailyExtraSlotsEnabled;
-                    setDailyExtraSlotsEnabled(newVal);
-                    await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
-                    toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
-                  }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                    dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {dailyExtraSlotsEnabled ? "مفتوح" : "مقفل"}
-                </button>
+
+                {dailyExtraSlotsEnabled && classworkCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/30 bg-muted/5">
+                    <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص لكل فئة:</p>
+                    {classworkCategories.map((cat) => {
+                      const isDisabled = dailyExtraSlotsDisabledCats.includes(cat.id);
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={async () => {
+                            const newList = isDisabled
+                              ? dailyExtraSlotsDisabledCats.filter(id => id !== cat.id)
+                              : [...dailyExtraSlotsDisabledCats, cat.id];
+                            setDailyExtraSlotsDisabledCats(newList);
+                            await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
+                            toast({ title: isDisabled ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
+                          }}
+                          className={cn(
+                            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
+                            isDisabled
+                              ? "bg-muted/50 text-muted-foreground border-border/50"
+                              : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50"
+                          )}
+                        >
+                          {isDisabled ? "🔒" : "🔓"} {cat.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
