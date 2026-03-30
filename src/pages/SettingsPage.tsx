@@ -473,7 +473,17 @@ export default function SettingsPage() {
         if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
         if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
         if (s.id === "parent_grades_hidden_categories" && s.value) {
-          try { setParentGradesHiddenCategories(JSON.parse(s.value)); } catch { setParentGradesHiddenCategories([]); }
+          try {
+            const parsed = JSON.parse(s.value);
+            if (Array.isArray(parsed)) {
+              // Migration from old flat array format
+              setParentGradesHiddenCategories({ global: parsed, classes: {} });
+            } else if (parsed.global !== undefined) {
+              setParentGradesHiddenCategories(parsed);
+            } else {
+              setParentGradesHiddenCategories({ global: [], classes: {} });
+            }
+          } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
         }
         if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
         if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
