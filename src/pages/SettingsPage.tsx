@@ -2968,7 +2968,13 @@ export default function SettingsPage() {
               <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-muted/10 p-4 max-w-md">
                 {(() => {
                   // Build mock data from real categories
-                  const visibleCats = categories.filter((c: any) => !parentGradesHiddenCategories.includes(c.id));
+                   const isCatHidden = (catId: string, classId?: string) => {
+                     if (classId && parentGradesHiddenCategories.classes[classId]?.length) {
+                       return parentGradesHiddenCategories.classes[classId].includes(catId);
+                     }
+                     return parentGradesHiddenCategories.global.includes(catId);
+                   };
+                   const visibleCats = categories.filter((c: any) => !isCatHidden(c.id, c.class_id));
                   const mockGrades = visibleCats.map((c: any, i: number) => {
                     const mockScore = Math.round(c.max_score * (0.6 + Math.sin(i + 1) * 0.3));
                     return {
