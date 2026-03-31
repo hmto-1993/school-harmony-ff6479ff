@@ -3199,6 +3199,25 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {activeCard === "timetable" && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Table2 className="h-5 w-5 text-primary" />
+                جدول الحصص الأسبوعي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TimetableEditor open={activeCard === "timetable"} onOpenChange={(open) => !open && setActiveCard(null)} />
+          </CardContent>
+        </Card>
+      )}
+
 
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
