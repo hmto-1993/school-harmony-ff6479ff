@@ -96,6 +96,7 @@ Return a JSON array of objects with these fields:
 - lesson_title (required): The lesson title
 - objectives: Learning objectives or unit name (string, can be empty)
 - day_name: Day name in Arabic if available (الأحد، الاثنين، الثلاثاء، الأربعاء، الخميس)
+- is_weekly: Boolean. Set to true if this lesson spans the ENTIRE week (all days), not just one day.
 
 IMPORTANT:
 - Extract ALL lessons found in the document across all weeks
@@ -103,17 +104,20 @@ IMPORTANT:
 - Look for columns/sections like: الأسبوع، عنوان الدرس، الموضوع، الوحدة، الأهداف، اليوم
 - Handle Arabic text properly
 - If week_number is not explicit, infer from order (first group = week 1, etc.)
+- WEEKLY LESSONS DETECTION: If a lesson appears once per week WITHOUT a specific day assignment, or if the document shows one lesson title per week (not per day), set is_weekly to true. This is common in curriculum distribution documents (توزيع المنهج) where each week has one topic that spans the entire week.
+- If the document shows different lessons for different days within the same week, those are daily lessons (is_weekly: false).
+- If there is only ONE lesson per week with no day column or day information, it is almost certainly a weekly lesson (is_weekly: true).
 - Return ONLY the JSON array, no other text
 
 Example output:
-[{"week_number":1,"lesson_title":"درس الجمع","objectives":"الوحدة الأولى","day_name":"الأحد"},{"week_number":1,"lesson_title":"درس الطرح","objectives":"الوحدة الأولى","day_name":"الاثنين"},{"week_number":2,"lesson_title":"درس الضرب","objectives":"الوحدة الثانية"}]`,
+[{"week_number":1,"lesson_title":"درس الجمع","objectives":"الوحدة الأولى","day_name":"الأحد","is_weekly":false},{"week_number":2,"lesson_title":"درس الكسور","objectives":"الوحدة الثانية","is_weekly":true}]`,
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Extract all lesson plans from this PDF. Return only a JSON array.",
+                text: "Extract all lesson plans from this PDF. Return only a JSON array. Pay attention to whether lessons are daily (specific day) or weekly (span entire week).",
               },
               {
                 type: "image_url",
