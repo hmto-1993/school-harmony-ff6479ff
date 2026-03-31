@@ -12,6 +12,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle2, Circle } from "lucide-react";
 
 interface ClassOption {
   id: string;
