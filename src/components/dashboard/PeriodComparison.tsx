@@ -44,9 +44,9 @@ function RateBadge({ current, previous, label }: { current: number; previous: nu
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-xl font-bold tabular-nums",
+    <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className={cn("text-lg font-bold tabular-nums",
         current >= 80 ? "text-success" : current >= 50 ? "text-warning" : "text-destructive"
       )}>
         {current}%
