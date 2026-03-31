@@ -3213,7 +3213,7 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <TimetableEditor open={activeCard === "timetable"} onOpenChange={(open) => !open && setActiveCard(null)} />
+            <TimetableEditor classes={classes.map(c => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
       )}
