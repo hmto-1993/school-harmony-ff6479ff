@@ -3216,6 +3216,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(parentClassworkIconsCount) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_library", value: String(parentShowLibrary) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_activities", value: String(parentShowActivities) }),
+                  supabase.from("site_settings").upsert({ id: "parent_pdf_header", value: JSON.stringify(parentPdfHeader) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
