@@ -156,6 +156,7 @@ export default function StudentDashboard() {
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
+  const [parentPdfHeader, setParentPdfHeader] = useState<{ line1: string; line2: string; line3: string; showLogo: boolean }>({ line1: "", line2: "", line3: "", showLogo: true });
 
   // PDF export
   const [exportingPdf, setExportingPdf] = useState(false);
