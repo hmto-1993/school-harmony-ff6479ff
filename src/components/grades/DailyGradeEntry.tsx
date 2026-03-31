@@ -47,14 +47,17 @@ const levelScore = (level: GradeLevel, perSlot: number): number => {
   return 0;
 };
 
-const LevelIcon = ({ level, size = "h-6 w-6" }: { level: GradeLevel; size?: string }) => {
-  if (level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
-  if (level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
-  if (level === "zero") return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
-  return (
-    <div className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />
-  );
-};
+const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
+  ({ level, size = "h-6 w-6", ...props }, ref) => {
+    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
+    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} /></div>;
+    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} /></div>;
+    return (
+      <div ref={ref} {...props} className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />
+    );
+  }
+);
+LevelIcon.displayName = "LevelIcon";
 
 const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork";
 const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
