@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye } from "lucide-react";
+import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
