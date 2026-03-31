@@ -27,7 +27,7 @@ interface ClassOption {
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
 
 export default function WeekLessonsWidget() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { currentWeek } = useAcademicWeek();
   const navigate = useNavigate();
   const [lessons, setLessons] = useState<LessonItem[]>([]);
@@ -35,23 +35,39 @@ export default function WeekLessonsWidget() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedClassId, setSelectedClassId] = useState("");
 
-  // Fetch teacher's classes
+  // Fetch classes - for admins fetch all, for teachers fetch their classes
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("teacher_classes")
-      .select("class_id, classes(id, name)")
-      .eq("teacher_id", user.id)
-      .then(({ data }) => {
-        const cls = (data || [])
-          .map((tc: any) => tc.classes)
-          .filter(Boolean) as ClassOption[];
-        setClasses(cls);
-        if (cls.length > 0 && !selectedClassId) {
-          setSelectedClassId(cls[0].id);
-        }
-      });
-  }, [user]);
+    const isAdmin = role === "admin";
+
+    if (isAdmin) {
+      supabase
+        .from("classes")
+        .select("id, name")
+        .order("name")
+        .then(({ data }) => {
+          const cls = (data || []) as ClassOption[];
+          setClasses(cls);
+          if (cls.length > 0 && !selectedClassId) {
+            setSelectedClassId(cls[0].id);
+          }
+        });
+    } else {
+      supabase
+        .from("teacher_classes")
+        .select("class_id, classes(id, name)")
+        .eq("teacher_id", user.id)
+        .then(({ data }) => {
+          const cls = (data || [])
+            .map((tc: any) => tc.classes)
+            .filter(Boolean) as ClassOption[];
+          setClasses(cls);
+          if (cls.length > 0 && !selectedClassId) {
+            setSelectedClassId(cls[0].id);
+          }
+        });
+    }
+  }, [user, role]);
 
   const fetchLessons = useCallback(() => {
     if (!currentWeek || !selectedClassId) {
@@ -78,7 +94,6 @@ export default function WeekLessonsWidget() {
 
   const toggleCompletion = async (lesson: LessonItem) => {
     const newVal = !lesson.is_completed;
-    // Optimistic update
     setLessons((prev) =>
       prev.map((l) => (l.id === lesson.id ? { ...l, is_completed: newVal } : l))
     );
@@ -87,7 +102,6 @@ export default function WeekLessonsWidget() {
       .update({ is_completed: newVal })
       .eq("id", lesson.id);
     if (error) {
-      // Revert
       setLessons((prev) =>
         prev.map((l) => (l.id === lesson.id ? { ...l, is_completed: !newVal } : l))
       );
@@ -96,7 +110,7 @@ export default function WeekLessonsWidget() {
   };
 
   const completedCount = lessons.filter((l) => l.is_completed).length;
-  const todayDayIndex = new Date().getDay(); // 0=Sun
+  const todayDayIndex = new Date().getDay();
 
   if (loading && !selectedClassId) {
     return <Card className="border-0 ring-1 ring-border/30 animate-pulse h-48 bg-muted/30" />;
@@ -155,7 +169,7 @@ export default function WeekLessonsWidget() {
         {/* Progress bar */}
         {lessons.length > 0 && (
           <div className="mt-2 flex items-center gap-2">
-            <Progress value={lessons.length > 0 ? (completedCount / lessons.length) * 100 : 0} className="h-2 flex-1 bg-muted/50 [&>div]:bg-gradient-to-l [&>div]:from-success [&>div]:to-success/70" />
+            <Progress value={(completedCount / lessons.length) * 100} className="h-2 flex-1 bg-muted/50 [&>div]:bg-gradient-to-l [&>div]:from-success [&>div]:to-success/70" />
             <span className="text-[10px] font-semibold text-muted-foreground min-w-[32px] text-left">
               {Math.round((completedCount / lessons.length) * 100)}%
             </span>
