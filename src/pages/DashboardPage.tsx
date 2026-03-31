@@ -14,6 +14,8 @@ import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary"
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
 import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
+import FullTimetableWidget from "@/components/dashboard/FullTimetableWidget";
+import TodayScheduleWidget from "@/components/dashboard/TodayScheduleWidget";
 import DraggableWidget from "@/components/dashboard/DraggableWidget";
 import { useDashboardOrder } from "@/hooks/useDashboardOrder";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
