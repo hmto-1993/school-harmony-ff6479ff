@@ -306,6 +306,12 @@ export default function SettingsPage() {
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
+  const [parentPdfHeader, setParentPdfHeader] = useState({
+    line1: "",
+    line2: "",
+    line3: "",
+    showLogo: true,
+  });
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
