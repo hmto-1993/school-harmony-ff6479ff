@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, Plus, Minus } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TimetableEditorProps {
   classes: { id: string; name: string }[];
@@ -26,36 +26,41 @@ const DAYS = [
   { value: 4, label: "الخميس" },
 ];
 
-const MAX_PERIODS = 8;
+const DEFAULT_PERIODS = 6;
+const MAX_PERIODS = 7;
 
 export default function TimetableEditor({ classes }: TimetableEditorProps) {
   const [selectedClassId, setSelectedClassId] = useState("");
   const [slots, setSlots] = useState<TimetableSlot[]>([]);
-  const [periodsCount, setPeriodsCount] = useState(7);
-  const [activeDays, setActiveDays] = useState<number[]>([0, 1, 2, 3, 4]);
+  const [periodsCount, setPeriodsCount] = useState(DEFAULT_PERIODS);
+  const [configuredPeriods, setConfiguredPeriods] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Load configured periods for all classes
   useEffect(() => {
+    if (classes.length === 0) return;
+    supabase
+      .from("class_schedules")
+      .select("class_id, periods_per_week")
+      .in("class_id", classes.map(c => c.id))
+      .then(({ data }) => {
+        const map: Record<string, number> = {};
+        (data || []).forEach((s: any) => { map[s.class_id] = s.periods_per_week; });
+        setConfiguredPeriods(map);
+      });
     if (classes.length > 0 && !selectedClassId) setSelectedClassId(classes[0].id);
   }, [classes]);
 
   const fetchSlots = useCallback(async () => {
     if (!selectedClassId) return;
     setLoading(true);
-
     const [{ data: schedule }, { data }] = await Promise.all([
-      supabase.from("class_schedules").select("periods_per_week, days_of_week").eq("class_id", selectedClassId).maybeSingle(),
+      supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClassId).maybeSingle(),
       supabase.from("timetable_slots").select("*").eq("class_id", selectedClassId).order("day_of_week").order("period_number"),
     ]);
-
-    if (schedule) {
-      setPeriodsCount(Math.min(MAX_PERIODS, Math.max(1, schedule.periods_per_week)));
-      setActiveDays(schedule.days_of_week as number[]);
-    } else {
-      setPeriodsCount(7);
-      setActiveDays([0, 1, 2, 3, 4]);
-    }
+    const p = schedule?.periods_per_week ?? DEFAULT_PERIODS;
+    setPeriodsCount(Math.min(MAX_PERIODS, Math.max(1, p)));
     setSlots((data || []) as TimetableSlot[]);
     setLoading(false);
   }, [selectedClassId]);
@@ -64,9 +69,8 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
     if (selectedClassId) fetchSlots();
   }, [selectedClassId, fetchSlots]);
 
-  const getSlotValue = (day: number, period: number) => {
-    return slots.find(s => s.day_of_week === day && s.period_number === period)?.subject_name || "";
-  };
+  const getSlotValue = (day: number, period: number) =>
+    slots.find(s => s.day_of_week === day && s.period_number === period)?.subject_name || "";
 
   const updateSlot = (day: number, period: number, value: string) => {
     setSlots(prev => {
@@ -80,13 +84,23 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
     });
   };
 
+  const togglePeriod7 = () => {
+    if (periodsCount >= MAX_PERIODS) {
+      // Remove period 7 slots
+      setSlots(prev => prev.filter(s => s.period_number < MAX_PERIODS));
+      setPeriodsCount(DEFAULT_PERIODS);
+    } else {
+      setPeriodsCount(MAX_PERIODS);
+    }
+  };
+
   const handleSave = async () => {
     if (!selectedClassId) return;
     setSaving(true);
     await supabase.from("timetable_slots").delete().eq("class_id", selectedClassId);
 
     const toInsert = slots
-      .filter(s => s.subject_name.trim())
+      .filter(s => s.subject_name.trim() && s.period_number <= periodsCount)
       .map(s => ({ class_id: selectedClassId, day_of_week: s.day_of_week, period_number: s.period_number, subject_name: s.subject_name.trim() }));
 
     if (toInsert.length > 0) {
@@ -101,50 +115,40 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
     setSaving(false);
   };
 
-  const copyFromClass = async (sourceClassId: string) => {
-    if (!sourceClassId || sourceClassId === selectedClassId) return;
-    const { data } = await supabase
-      .from("timetable_slots")
-      .select("day_of_week, period_number, subject_name")
-      .eq("class_id", sourceClassId);
-
-    if (data && data.length > 0) {
-      setSlots(data.map(s => ({ ...s, class_id: selectedClassId })));
-      toast({ title: "تم النسخ", description: "تم نسخ الجدول. اضغط حفظ لتثبيت التغييرات." });
-    } else {
-      toast({ title: "تنبيه", description: "لا يوجد جدول في الفصل المحدد", variant: "destructive" });
-    }
-  };
+  if (classes.length === 0) {
+    return <p className="text-sm text-muted-foreground text-center py-6">لا توجد فصول مضافة بعد</p>;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-xs font-semibold text-muted-foreground mb-1 block">اختر الفصل</label>
-          <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="اختر الفصل" />
-            </SelectTrigger>
-            <SelectContent>
-              {classes.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="min-w-[180px]">
-          <label className="text-xs font-semibold text-muted-foreground mb-1 block">نسخ من فصل آخر</label>
-          <Select onValueChange={copyFromClass} value="">
-            <SelectTrigger className="h-9">
-              <SelectValue placeholder="نسخ من..." />
-            </SelectTrigger>
-            <SelectContent>
-              {classes.filter(c => c.id !== selectedClassId).map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Class Tabs */}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+        {classes.map(c => {
+          const isActive = c.id === selectedClassId;
+          const cp = configuredPeriods[c.id];
+          return (
+            <button
+              key={c.id}
+              onClick={() => setSelectedClassId(c.id)}
+              className={cn(
+                "flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border-2",
+                isActive
+                  ? "border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                  : "border-border/40 bg-muted/30 text-muted-foreground hover:border-primary/40 hover:bg-muted/60"
+              )}
+            >
+              <span>{c.name}</span>
+              {cp != null && (
+                <span className={cn(
+                  "inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-md text-[10px] font-bold",
+                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"
+                )}>
+                  {cp}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
@@ -152,48 +156,61 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
           <div className="h-6 w-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-border/50">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-muted/50">
-                <th className="py-2.5 px-3 text-right font-bold text-xs text-muted-foreground border-b border-border/30 w-20">الحصة</th>
-                {activeDays.map(day => (
-                  <th key={day} className="py-2.5 px-2 text-center font-bold text-xs text-muted-foreground border-b border-border/30">
-                    {DAYS.find(d => d.value === day)?.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
-                <tr key={period} className="border-b border-border/20 last:border-0">
-                  <td className="py-1.5 px-3 text-center font-bold text-xs text-primary bg-primary/5">{period}</td>
-                  {activeDays.map(day => (
-                    <td key={day} className="py-1 px-1">
-                      <Input
-                        value={getSlotValue(day, period)}
-                        onChange={e => updateSlot(day, period, e.target.value)}
-                        placeholder="المادة"
-                        className="h-8 text-xs text-center border-border/30 bg-background/50 focus:bg-background"
-                      />
-                    </td>
+        <>
+          {/* Timetable Grid */}
+          <div className="overflow-x-auto rounded-xl border border-border/50">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-muted/50">
+                  <th className="py-2.5 px-3 text-center font-bold text-xs text-muted-foreground border-b border-border/30 w-16">الحصة</th>
+                  {DAYS.map(day => (
+                    <th key={day.value} className="py-2.5 px-2 text-center font-bold text-xs text-muted-foreground border-b border-border/30">
+                      {day.label}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
+                  <tr key={period} className="border-b border-border/20 last:border-0">
+                    <td className="py-1.5 px-3 text-center font-bold text-xs text-primary bg-primary/5">{period}</td>
+                    {DAYS.map(day => (
+                      <td key={day.value} className="py-1 px-1">
+                        <Input
+                          value={getSlotValue(day.value, period)}
+                          onChange={e => updateSlot(day.value, period, e.target.value)}
+                          placeholder="المادة"
+                          className="h-8 text-xs text-center border-border/30 bg-background/50 focus:bg-background"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] text-muted-foreground">
-          💡 عدد الحصص وأيام الدراسة من إعدادات جدول الفصل (أيقونة التقويم بجانب كل فصل)
-        </p>
-        <Button size="sm" onClick={handleSave} disabled={saving || loading}>
-          <Save className="h-4 w-4 ml-1.5" />
-          {saving ? "جارٍ الحفظ..." : "حفظ الجدول"}
-        </Button>
-      </div>
+          {/* Actions */}
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={togglePeriod7}
+              className="text-xs"
+            >
+              {periodsCount >= MAX_PERIODS ? (
+                <><Minus className="h-3.5 w-3.5 ml-1" />حذف الحصة 7</>
+              ) : (
+                <><Plus className="h-3.5 w-3.5 ml-1" />إضافة حصة 7</>
+              )}
+            </Button>
+            <Button size="sm" onClick={handleSave} disabled={saving || loading}>
+              <Save className="h-4 w-4 ml-1.5" />
+              {saving ? "جارٍ الحفظ..." : "حفظ الجدول"}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
