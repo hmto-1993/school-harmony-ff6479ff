@@ -136,7 +136,7 @@ export default function DashboardPage() {
   const widgetMap: Record<string, ReactNode> = {
     smartSummary: <SmartDashboardSummary />,
     attendanceAndComparison: (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <AttendanceOverview
           todayPresent={todayPresent}
           todayAbsent={todayAbsent}
@@ -145,13 +145,13 @@ export default function DashboardPage() {
           classStats={classStats}
         />
         <PeriodComparison />
+        <SafeZoneCounter />
       </div>
     ),
     widgetGrid: (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
         <WeekLessonsWidget />
         <AcademicCalendarWidget />
-        <SafeZoneCounter />
       </div>
     ),
     honorRoll: <HonorRoll />,
