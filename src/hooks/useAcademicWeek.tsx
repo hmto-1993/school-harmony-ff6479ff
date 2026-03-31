@@ -82,7 +82,7 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
       
       for (const item of rawExamDates) {
         if (item.type === "holiday") {
-          holidays.push({ date: item.date, label: item.label });
+          holidays.push({ date: item.date, end_date: item.end_date, label: item.label });
         } else {
           examDates.push({ date: item.date, label: item.label, type: item.type });
         }
