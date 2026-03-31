@@ -8,7 +8,8 @@ export interface ExamDate {
 }
 
 export interface HolidayDate {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD (start date)
+  end_date?: string; // YYYY-MM-DD (optional end date for ranges)
   label: string;
 }
 
