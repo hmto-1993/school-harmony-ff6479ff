@@ -353,19 +353,80 @@ export default function SettingsPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [classesRes, catsRes, studentsRes] = await Promise.all([
+
+    // Build all independent queries upfront
+    const coreQueries = Promise.all([
       supabase.from("classes").select("*").order("name"),
       supabase.from("grade_categories").select("*, classes(name)").order("sort_order"),
       supabase.from("students").select("id, class_id"),
     ]);
 
+    const profileQuery = user
+      ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single()
+      : Promise.resolve({ data: null });
+
+    const teachersQuery = user && isAdmin
+      ? supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } })
+      : Promise.resolve({ data: null });
+
+    const letterheadQuery = supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single();
+
+    const smsQuery = isAdmin
+      ? supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"])
+      : Promise.resolve({ data: null });
+
+    const loginQuery = isAdmin
+      ? supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"])
+      : Promise.resolve({ data: null });
+
+    const settingsQuery = isAdmin
+      ? supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"])
+      : Promise.resolve({ data: null });
+
+    const popupHistoryQuery = isAdmin
+      ? supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20)
+      : Promise.resolve({ data: null });
+
+    const overrideQuery = isAdmin
+      ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle()
+      : Promise.resolve({ data: null });
+
+    const schedulesQuery = isAdmin
+      ? supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week")
+      : Promise.resolve({ data: null });
+
+    // Execute ALL queries in parallel
+    const [
+      [classesRes, catsRes, studentsRes],
+      profileRes,
+      teachersRes,
+      lhRes,
+      smsRes,
+      loginRes,
+      settingsRes,
+      popupHistoryRes,
+      overrideRes,
+      schedulesRes,
+    ] = await Promise.all([
+      coreQueries,
+      profileQuery,
+      teachersQuery,
+      letterheadQuery,
+      smsQuery,
+      loginQuery,
+      settingsQuery,
+      popupHistoryQuery,
+      overrideQuery,
+      schedulesQuery,
+    ]);
+
+    // Process core data
     const classData = (classesRes.data || []) as ClassRow[];
     const studentCounts: Record<string, number> = {};
     (studentsRes.data || []).forEach((s: any) => {
       if (s.class_id) studentCounts[s.class_id] = (studentCounts[s.class_id] || 0) + 1;
     });
     classData.forEach((c) => (c.studentCount = studentCounts[c.id] || 0));
-
     setClasses(classData);
 
     const catData = (catsRes.data || []).map((c: any) => ({
@@ -374,186 +435,139 @@ export default function SettingsPage() {
     }));
     setCategories(catData);
 
-    // Init editing state
     const edits: Record<string, { weight: number; max_score: number }> = {};
     catData.forEach((c: GradeCategory) => {
       edits[c.id] = { weight: c.weight, max_score: c.max_score };
     });
     setEditingCats(edits);
 
-    // Fetch profile
-    if (user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, phone, national_id")
-        .eq("user_id", user.id)
-        .single();
-      if (profile) {
-        setProfileName(profile.full_name || "");
-        setProfilePhone(profile.phone || "");
-        setProfileNationalId(profile.national_id || "");
+    // Profile
+    if (profileRes.data) {
+      const profile = profileRes.data as any;
+      setProfileName(profile.full_name || "");
+      setProfilePhone(profile.phone || "");
+      setProfileNationalId(profile.national_id || "");
+    }
+
+    // Teachers
+    if (teachersRes.data?.teachers) {
+      setTeachers(teachersRes.data.teachers);
+    }
+
+    // Letterhead
+    if ((lhRes as any).data?.value) setLetterheadUrl((lhRes as any).data.value);
+
+    // SMS
+    ((smsRes as any).data || []).forEach((s: any) => {
+      if (s.id === "sms_provider") setSmsProvider(s.value || "msegat");
+      if (s.id === "sms_provider_username") setProviderUsername(s.value || "");
+      if (s.id === "sms_provider_api_key") setProviderApiKey(s.value || "");
+      if (s.id === "sms_provider_sender") setProviderSender(s.value || "");
+    });
+
+    // Login settings
+    ((loginRes as any).data || []).forEach((s: any) => {
+      if (s.id === "school_name") setLoginSchoolName(s.value || "");
+      if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
+      if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
+      if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
+      if (s.id === "default_academic_year" && s.value) {
+        setDefaultAcademicYear(s.value);
+        setNewYear(s.value);
       }
-    }
+    });
 
-    // Fetch teachers list for admin
-    if (user && isAdmin) {
-      const { data: teachersData } = await supabase.functions.invoke("manage-users", {
-        body: { action: "list_teachers" },
-      });
-      if (teachersData?.teachers) {
-        setTeachers(teachersData.teachers);
+    // All settings (quiz, student, parent, etc.)
+    ((settingsRes as any).data || []).forEach((s: any) => {
+      if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
+      if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
+      if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
+      if (s.id === "student_show_grades") setShowGrades(s.value !== "false");
+      if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
+      if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
+      if (s.id === "student_hidden_categories" && s.value) {
+        try {
+          const parsed = JSON.parse(s.value);
+          if (Array.isArray(parsed)) {
+            setHiddenCategories({ p1: parsed, p2: parsed });
+          } else {
+            setHiddenCategories({ p1: parsed.p1 || [], p2: parsed.p2 || [] });
+          }
+        } catch { setHiddenCategories({ p1: [], p2: [] }); }
       }
-    }
+      if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
+      if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
+      if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
+      if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
+      if (s.id === "student_popup_title") setPopupTitle(s.value || "");
+      if (s.id === "student_popup_message") setPopupMessage(s.value || "");
+      if (s.id === "student_popup_expiry") setPopupExpiry(s.value || "");
+      if (s.id === "student_popup_target_type") setPopupTargetType((s.value as "all" | "specific") || "all");
+      if (s.id === "student_popup_target_classes" && s.value) {
+        try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
+      }
+      if (s.id === "student_popup_action") setPopupAction(s.value || "none");
+      if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
+      if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
+      if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
+      if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
+      if (s.id === "parent_show_national_id") setParentShowNationalId(s.value !== "false");
+      if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
+      if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
+      if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
+      if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
+      if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
+      if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
+      if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
+      if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
+      if (s.id === "parent_grades_default_view") setParentGradesDefaultView(s.value === "table" ? "table" : "cards");
+      if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
+      if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
+      if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
+      if (s.id === "parent_grades_hidden_categories" && s.value) {
+        try {
+          const parsed = JSON.parse(s.value);
+          if (Array.isArray(parsed)) {
+            setParentGradesHiddenCategories({ global: parsed, classes: {} });
+          } else if (parsed.global !== undefined) {
+            setParentGradesHiddenCategories(parsed);
+          } else {
+            setParentGradesHiddenCategories({ global: [], classes: {} });
+          }
+        } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
+      }
+      if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
+      if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
+      if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
+      if (s.id === "parent_pdf_header" && s.value) {
+        try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
+      }
+      if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
+      if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
+      if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
+      if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
+      if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
+      if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
+        try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
+      }
+      if (s.id === "daily_max_slots" && s.value) setDailyMaxSlots(Number(s.value) || 3);
+      if (s.id === "daily_max_slots_per_cat" && s.value) {
+        try { setDailyMaxSlotsPerCat(JSON.parse(s.value)); } catch { setDailyMaxSlotsPerCat({}); }
+      }
+    });
 
-    // Fetch letterhead URL
-    const { data: lhSetting } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", "print_letterhead_url")
-      .single();
-    if (lhSetting?.value) setLetterheadUrl(lhSetting.value);
+    // Popup history
+    if ((popupHistoryRes as any).data) setPopupHistory((popupHistoryRes as any).data as any);
 
-    // Fetch SMS provider settings
-    if (isAdmin) {
-      const { data: smsData } = await supabase
-        .from("site_settings")
-        .select("id, value")
-        .in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]);
-      (smsData || []).forEach((s: any) => {
-        if (s.id === "sms_provider") setSmsProvider(s.value || "msegat");
-        if (s.id === "sms_provider_username") setProviderUsername(s.value || "");
-        if (s.id === "sms_provider_api_key") setProviderApiKey(s.value || "");
-        if (s.id === "sms_provider_sender") setProviderSender(s.value || "");
-      });
-    }
+    // Attendance override
+    setAttendanceOverrideLock((overrideRes as any).data?.value === "true");
 
-    // Fetch login page settings
-    if (isAdmin) {
-      const { data: loginData } = await supabase
-        .from("site_settings")
-        .select("id, value")
-        .in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]);
-      (loginData || []).forEach((s: any) => {
-        if (s.id === "school_name") setLoginSchoolName(s.value || "");
-        if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
-        if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
-        if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
-        if (s.id === "default_academic_year" && s.value) {
-          setDefaultAcademicYear(s.value);
-          setNewYear(s.value);
-        }
-      });
-    }
-
-    // Fetch quiz color settings & student visibility & popup
-    if (isAdmin) {
-      const { data: qcData } = await supabase
-        .from("site_settings")
-        .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"]);
-      (qcData || []).forEach((s: any) => {
-        if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
-        if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
-        if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
-        if (s.id === "student_show_grades") setShowGrades(s.value !== "false");
-        if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
-        if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
-        if (s.id === "student_hidden_categories" && s.value) {
-          try {
-            const parsed = JSON.parse(s.value);
-            if (Array.isArray(parsed)) {
-              setHiddenCategories({ p1: parsed, p2: parsed });
-            } else {
-              setHiddenCategories({ p1: parsed.p1 || [], p2: parsed.p2 || [] });
-            }
-          } catch { setHiddenCategories({ p1: [], p2: [] }); }
-        }
-        if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
-        if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
-        if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
-        if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
-        if (s.id === "student_popup_title") setPopupTitle(s.value || "");
-        if (s.id === "student_popup_message") setPopupMessage(s.value || "");
-        if (s.id === "student_popup_expiry") setPopupExpiry(s.value || "");
-        if (s.id === "student_popup_target_type") setPopupTargetType((s.value as "all" | "specific") || "all");
-        if (s.id === "student_popup_target_classes" && s.value) {
-          try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
-        }
-        if (s.id === "student_popup_action") setPopupAction(s.value || "none");
-        if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
-        if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
-        if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
-        if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
-        if (s.id === "parent_show_national_id") setParentShowNationalId(s.value !== "false");
-        if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
-        if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
-        if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
-        if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
-        if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
-        if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
-        if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
-        if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
-        if (s.id === "parent_grades_default_view") setParentGradesDefaultView(s.value === "table" ? "table" : "cards");
-        if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
-        if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
-        if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
-        if (s.id === "parent_grades_hidden_categories" && s.value) {
-          try {
-            const parsed = JSON.parse(s.value);
-            if (Array.isArray(parsed)) {
-              // Migration from old flat array format
-              setParentGradesHiddenCategories({ global: parsed, classes: {} });
-            } else if (parsed.global !== undefined) {
-              setParentGradesHiddenCategories(parsed);
-            } else {
-              setParentGradesHiddenCategories({ global: [], classes: {} });
-            }
-          } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
-        }
-        if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
-        if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
-        if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
-        if (s.id === "parent_pdf_header" && s.value) {
-          try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
-        }
-        if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
-        if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
-        if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
-        if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
-        if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
-        if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
-          try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
-        }
-        if (s.id === "daily_max_slots" && s.value) setDailyMaxSlots(Number(s.value) || 3);
-        if (s.id === "daily_max_slots_per_cat" && s.value) {
-          try { setDailyMaxSlotsPerCat(JSON.parse(s.value)); } catch { setDailyMaxSlotsPerCat({}); }
-        }
-      });
-
-      // Fetch popup history
-      const { data: historyData } = await supabase
-        .from("popup_messages")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (historyData) setPopupHistory(historyData as any);
-      
-      // Fetch attendance override lock setting
-      const { data: overrideSetting } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "attendance_override_lock")
-        .maybeSingle();
-      setAttendanceOverrideLock(overrideSetting?.value === "true");
-      
-      // Fetch class schedules
-      const { data: schedulesData } = await supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week");
-      const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
-      (schedulesData || []).forEach((s: any) => {
-        schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
-      });
-      setClassSchedules(schedulesMap);
-    }
+    // Class schedules
+    const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
+    ((schedulesRes as any).data || []).forEach((s: any) => {
+      schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
+    });
+    setClassSchedules(schedulesMap);
 
     setLoading(false);
   };
