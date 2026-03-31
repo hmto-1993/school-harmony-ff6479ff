@@ -686,6 +686,7 @@ export default function AttendancePage() {
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">
+                <ScrollToSaveButton targetId="attendance-save" />
                 <Button
                   size="sm"
                   onClick={markAllPresent}
