@@ -207,6 +207,9 @@ export default function StudentDashboard() {
       if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
       if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
       if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
+      if (s.id === "parent_pdf_header" && s.value) {
+        try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
+      }
     });
   };
 
