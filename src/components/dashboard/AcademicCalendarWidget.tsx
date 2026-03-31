@@ -173,7 +173,7 @@ export default function AcademicCalendarWidget() {
           {calendarData && weeks.length > 0 && (
             <>
               {/* Week-based grid */}
-              <div className="border rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
+              <div ref={scrollContainerRef} className="border rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
                 {/* Header */}
                 <div className="grid grid-cols-[50px_1fr_auto] bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0 z-10">
                   <div className="p-2 text-center border-l border-border">الأسبوع</div>
