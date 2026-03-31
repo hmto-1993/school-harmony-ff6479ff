@@ -51,6 +51,7 @@ import {
   AlertTriangle,
   Heart,
   ClipboardList,
+  Table2,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
