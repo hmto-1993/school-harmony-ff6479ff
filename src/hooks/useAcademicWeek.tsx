@@ -8,7 +8,8 @@ export interface ExamDate {
 }
 
 export interface HolidayDate {
-  date: string; // YYYY-MM-DD
+  date: string; // YYYY-MM-DD (start date)
+  end_date?: string; // YYYY-MM-DD (optional end date for ranges)
   label: string;
 }
 
@@ -81,7 +82,7 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
       
       for (const item of rawExamDates) {
         if (item.type === "holiday") {
-          holidays.push({ date: item.date, label: item.label });
+          holidays.push({ date: item.date, end_date: item.end_date, label: item.label });
         } else {
           examDates.push({ date: item.date, label: item.label, type: item.type });
         }
@@ -150,10 +151,12 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
         return d >= weekStart && d <= weekEnd;
       });
 
-      // Find holidays in this week
+      // Find holidays in this week (support date ranges)
       const weekHolidays = calendarData.holidays.filter(h => {
-        const d = new Date(h.date);
-        return d >= weekStart && d <= weekEnd;
+        const hStart = new Date(h.date);
+        const hEnd = h.end_date ? new Date(h.end_date) : hStart;
+        // Holiday overlaps with this week if holiday start <= weekEnd AND holiday end >= weekStart
+        return hStart <= weekEnd && hEnd >= weekStart;
       });
 
       let type: WeekType = "normal";

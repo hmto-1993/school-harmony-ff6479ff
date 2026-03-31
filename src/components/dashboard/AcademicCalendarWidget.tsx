@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, BookOpen, GraduationCap, TreePalm, AlertTriangle } from "lucide-react";
@@ -98,8 +98,18 @@ export default function AcademicCalendarWidget() {
   }, []);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentWeekRef = useRef<HTMLDivElement>(null);
 
-  const today = new Date();
+  // Auto-scroll to current week on mount
+  useEffect(() => {
+    if (currentWeekRef.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const element = currentWeekRef.current;
+      const offsetTop = element.offsetTop - container.offsetTop;
+      container.scrollTop = Math.max(0, offsetTop - container.clientHeight / 3);
+    }
+  }, [weeks, currentWeek]);
 
   // Build status text for selected or current week
   const activeWeek = selectedWeek || weeks.find(w => w.weekNumber === currentWeek) || null;
@@ -163,7 +173,7 @@ export default function AcademicCalendarWidget() {
           {calendarData && weeks.length > 0 && (
             <>
               {/* Week-based grid */}
-              <div className="border rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
+              <div ref={scrollContainerRef} className="border rounded-lg overflow-hidden max-h-[360px] overflow-y-auto">
                 {/* Header */}
                 <div className="grid grid-cols-[50px_1fr_auto] bg-muted/50 text-xs font-medium text-muted-foreground sticky top-0 z-10">
                   <div className="p-2 text-center border-l border-border">الأسبوع</div>
@@ -179,6 +189,7 @@ export default function AcademicCalendarWidget() {
                   return (
                     <div
                       key={week.weekNumber}
+                      ref={isCurrent ? currentWeekRef : undefined}
                       onClick={() => setSelectedWeek(isSelected ? null : week)}
                       className={cn(
                         "grid grid-cols-[50px_1fr_auto] border-t cursor-pointer transition-all",

@@ -84,7 +84,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setHolidays(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateHoliday = (index: number, field: keyof HolidayDate, value: string) => {
+  const updateHoliday = (index: number, field: string, value: string) => {
     setHolidays(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
   };
 
@@ -110,7 +110,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setSaving(true);
     const combinedDates = [
       ...examDates.filter(e => e.date && e.label).map(e => ({ date: e.date, label: e.label, type: e.type })),
-      ...holidays.filter(h => h.date && h.label).map(h => ({ date: h.date, label: h.label, type: "holiday" as const })),
+      ...holidays.filter(h => h.date && h.label).map(h => ({ date: h.date, end_date: h.end_date || undefined, label: h.label, type: "holiday" as const })),
     ];
     const payload = {
       start_date: startDate,
@@ -245,7 +245,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                             setSemester(preset.semester);
                             setAcademicYear(preset.academic_year);
                             setExamDates(preset.exam_dates);
-                            setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
+                            setHolidays(preset.holidays.map(h => ({ date: h.date, end_date: h.end_date, label: h.label })));
                             toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
                           }}
                         >
@@ -275,7 +275,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                               setSemester(preset.semester);
                               setAcademicYear(preset.academic_year);
                               setExamDates(preset.exam_dates);
-                              setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
+                              setHolidays(preset.holidays.map(h => ({ date: h.date, end_date: h.end_date, label: h.label })));
                               toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
                             }}
                           >
@@ -464,12 +464,16 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
           )}
 
           {holidays.map((holiday, i) => (
-            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
-              <div className="flex-1">
-                <Label className="text-[10px]">التاريخ</Label>
+            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 flex-wrap">
+              <div className="flex-1 min-w-[120px]">
+                <Label className="text-[10px]">من تاريخ</Label>
                 <Input type="date" value={holiday.date} onChange={e => updateHoliday(i, "date", e.target.value)} className="h-8 text-xs" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-[120px]">
+                <Label className="text-[10px]">إلى تاريخ <span className="text-muted-foreground">(اختياري)</span></Label>
+                <Input type="date" value={holiday.end_date || ""} onChange={e => updateHoliday(i, "end_date", e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="flex-1 min-w-[120px]">
                 <Label className="text-[10px]">الوصف</Label>
                 <Input value={holiday.label} onChange={e => updateHoliday(i, "label", e.target.value)} className="h-8 text-xs" placeholder="إجازة اليوم الوطني" />
               </div>

@@ -8,7 +8,7 @@ export interface MOEPreset {
   semester: string;
   academic_year: string;
   exam_dates: ExamDate[];
-  holidays: { date: string; label: string }[];
+  holidays: { date: string; end_date?: string; label: string }[];
 }
 
 // التقويم الدراسي المعتمد من وزارة التعليم السعودية
