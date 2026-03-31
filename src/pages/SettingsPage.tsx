@@ -1084,6 +1084,7 @@ export default function SettingsPage() {
           { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
+          { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
