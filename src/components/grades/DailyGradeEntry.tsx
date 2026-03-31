@@ -450,7 +450,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             </div>
           </div>
           {/* Date Navigation */}
-          <div className="flex items-center gap-2 flex-wrap">
+           <div className="flex items-center gap-2 flex-wrap">
+             <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}>
               <ChevronRight className="h-4 w-4" />
             </Button>
