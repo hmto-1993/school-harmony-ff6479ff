@@ -60,10 +60,10 @@ export default function FullTimetableWidget() {
       setSlots((slotsRes.data || []) as Slot[]);
       if (schedRes.data) {
         setActiveDays(schedRes.data.days_of_week as number[]);
-        setMaxPeriod(schedRes.data.periods_per_week);
+        setMaxPeriod(Math.min(schedRes.data.periods_per_week, 7));
       } else {
         setActiveDays([0, 1, 2, 3, 4]);
-        setMaxPeriod(7);
+        setMaxPeriod(6);
       }
       setLoading(false);
     });
