@@ -30,7 +30,7 @@ function toHijri(date: Date): string {
   }
 }
 
-export default function DashboardHeader({ onPrint }: Props) {
+export default function DashboardHeader({ onPrint, locked, onToggleLock, onResetOrder }: Props) {
   const { user } = useAuth();
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
