@@ -162,20 +162,20 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50">
-                  <th className="py-2.5 px-3 text-center font-bold text-xs text-muted-foreground border-b border-border/30 w-16">الحصة</th>
-                  {DAYS.map(day => (
-                    <th key={day.value} className="py-2.5 px-2 text-center font-bold text-xs text-muted-foreground border-b border-border/30">
-                      {day.label}
+                  <th className="py-2.5 px-3 text-center font-bold text-xs text-muted-foreground border-b border-border/30 w-20">اليوم</th>
+                  {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
+                    <th key={period} className="py-2.5 px-2 text-center font-bold text-xs text-muted-foreground border-b border-border/30">
+                      {period}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
-                  <tr key={period} className="border-b border-border/20 last:border-0">
-                    <td className="py-1.5 px-3 text-center font-bold text-xs text-primary bg-primary/5">{period}</td>
-                    {DAYS.map(day => (
-                      <td key={day.value} className="py-1 px-1">
+                {DAYS.map(day => (
+                  <tr key={day.value} className="border-b border-border/20 last:border-0">
+                    <td className="py-1.5 px-3 text-center font-bold text-xs text-primary bg-primary/5 whitespace-nowrap">{day.label}</td>
+                    {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
+                      <td key={period} className="py-1 px-1">
                         <Input
                           value={getSlotValue(day.value, period)}
                           onChange={e => updateSlot(day.value, period, e.target.value)}
