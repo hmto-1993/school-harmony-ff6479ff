@@ -30,6 +30,7 @@ import HonorRoll from "@/components/student/HonorRoll";
 import { useTheme } from "@/hooks/use-theme";
 import ParentContactForm from "@/components/parent/ParentContactForm";
 import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
