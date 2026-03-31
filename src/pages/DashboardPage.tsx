@@ -124,7 +124,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       <DashboardHeader onPrint={handlePrint} />
 
       <DashboardStatCards
@@ -137,29 +137,34 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <SmartDashboardSummary />
-
-      <AttendanceOverview
-        todayPresent={todayPresent}
-        todayAbsent={todayAbsent}
-        todayLate={todayLate}
-        todayNotRecorded={todayNotRecorded}
-        classStats={classStats}
-      />
-
-      <HonorRoll />
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <PeriodComparison />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 space-y-5">
+          <SmartDashboardSummary />
+          <AttendanceOverview
+            todayPresent={todayPresent}
+            todayAbsent={todayAbsent}
+            todayLate={todayLate}
+            todayNotRecorded={todayNotRecorded}
+            classStats={classStats}
+          />
         </div>
-        <div className="space-y-6">
-          <AcademicCalendarWidget />
+        <div className="space-y-5">
           <WeekLessonsWidget />
+          <AcademicCalendarWidget />
           <SafeZoneCounter />
         </div>
       </div>
-      <PerformanceDashboard />
+
+      <HonorRoll />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2">
+          <PeriodComparison />
+        </div>
+        <div>
+          <PerformanceDashboard />
+        </div>
+      </div>
 
       <DashboardPrintView
         totalStudents={totalStudents}
