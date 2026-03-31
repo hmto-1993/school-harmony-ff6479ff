@@ -7,6 +7,7 @@ export const DEFAULT_ORDER = [
   "smartSummary",
   "attendanceAndComparison",
   "widgetGrid",
+  "timetableWidgets",
   "honorRoll",
   "performanceDashboard",
 ];
