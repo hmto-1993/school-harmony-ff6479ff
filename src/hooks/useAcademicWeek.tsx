@@ -151,10 +151,12 @@ export function AcademicWeekProvider({ children }: { children: ReactNode }) {
         return d >= weekStart && d <= weekEnd;
       });
 
-      // Find holidays in this week
+      // Find holidays in this week (support date ranges)
       const weekHolidays = calendarData.holidays.filter(h => {
-        const d = new Date(h.date);
-        return d >= weekStart && d <= weekEnd;
+        const hStart = new Date(h.date);
+        const hEnd = h.end_date ? new Date(h.end_date) : hStart;
+        // Holiday overlaps with this week if holiday start <= weekEnd AND holiday end >= weekStart
+        return hStart <= weekEnd && hEnd >= weekStart;
       });
 
       let type: WeekType = "normal";
