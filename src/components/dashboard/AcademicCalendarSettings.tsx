@@ -110,7 +110,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setSaving(true);
     const combinedDates = [
       ...examDates.filter(e => e.date && e.label).map(e => ({ date: e.date, label: e.label, type: e.type })),
-      ...holidays.filter(h => h.date && h.label).map(h => ({ date: h.date, label: h.label, type: "holiday" as const })),
+      ...holidays.filter(h => h.date && h.label).map(h => ({ date: h.date, end_date: h.end_date || undefined, label: h.label, type: "holiday" as const })),
     ];
     const payload = {
       start_date: startDate,
