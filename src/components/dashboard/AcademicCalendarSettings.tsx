@@ -275,7 +275,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                               setSemester(preset.semester);
                               setAcademicYear(preset.academic_year);
                               setExamDates(preset.exam_dates);
-                              setHolidays(preset.holidays.map(h => ({ date: h.date, label: h.label })));
+                              setHolidays(preset.holidays.map(h => ({ date: h.date, end_date: h.end_date, label: h.label })));
                               toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
                             }}
                           >
