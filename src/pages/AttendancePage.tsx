@@ -820,7 +820,7 @@ export default function AttendancePage() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-end mt-4">
+              <div id="attendance-save" className="flex justify-end mt-4">
                 <Button onClick={handleSave} disabled={saving || isClassLocked || isViewOnly} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
                   {isViewOnly ? "عرض فقط" : isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
