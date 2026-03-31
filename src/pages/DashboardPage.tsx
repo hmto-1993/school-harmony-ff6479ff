@@ -156,6 +156,12 @@ export default function DashboardPage() {
         <AcademicCalendarWidget />
       </div>
     ),
+    timetableWidgets: (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+        <FullTimetableWidget />
+        <TodayScheduleWidget />
+      </div>
+    ),
     honorRoll: <HonorRoll />,
     performanceDashboard: <PerformanceDashboard />,
   };
