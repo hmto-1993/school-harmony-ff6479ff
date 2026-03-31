@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, ReactNode } from "react";
 import { safePrint } from "@/lib/print-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,8 @@ import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary"
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
 import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
+import DraggableWidget from "@/components/dashboard/DraggableWidget";
+import { useDashboardOrder } from "@/hooks/useDashboardOrder";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import EmptyState from "@/components/EmptyState";
 import { Lock } from "lucide-react";
@@ -29,7 +31,7 @@ interface ClassStats {
 
 async function fetchDashboardData() {
   const today = format(new Date(), "yyyy-MM-dd");
-  const todayDayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon, ...
+  const todayDayOfWeek = new Date().getDay();
 
   const [
     { data: studentsData },
@@ -50,14 +52,12 @@ async function fetchDashboardData() {
   const attendance = attendanceData || [];
   const schedules = schedulesData || [];
 
-  // Classes that have lessons scheduled today
   const activeClassIds = new Set(
     schedules
       .filter((s) => Array.isArray(s.days_of_week) && s.days_of_week.includes(todayDayOfWeek))
       .map((s) => s.class_id)
   );
 
-  // Students in active classes only (for attendance rate)
   const activeStudents = students.filter((s) => s.class_id && activeClassIds.has(s.class_id));
 
   const present = attendance.filter((r) => r.status === "present").length;
@@ -96,6 +96,16 @@ async function fetchDashboardData() {
 export default function DashboardPage() {
   const { role, user } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
+  const {
+    order,
+    locked,
+    draggedId,
+    toggleLock,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    resetOrder,
+  } = useDashboardOrder();
 
   const { data, isLoading: loading } = useQuery({
     queryKey: ["dashboard-stats", format(new Date(), "yyyy-MM-dd")],
@@ -123,9 +133,51 @@ export default function DashboardPage() {
     return <EmptyState icon={Lock} title="لا تملك صلاحية عرض لوحة التحكم" description="تواصل مع المسؤول لتفعيل صلاحية عرض لوحة التحكم" />;
   }
 
+  const widgetMap: Record<string, ReactNode> = {
+    smartSummary: <SmartDashboardSummary />,
+    attendanceOverview: (
+      <AttendanceOverview
+        todayPresent={todayPresent}
+        todayAbsent={todayAbsent}
+        todayLate={todayLate}
+        todayNotRecorded={todayNotRecorded}
+        classStats={classStats}
+      />
+    ),
+    widgetGrid: (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+        <WeekLessonsWidget />
+        <AcademicCalendarWidget />
+        <SafeZoneCounter />
+      </div>
+    ),
+    honorRoll: <HonorRoll />,
+    periodComparison: <PeriodComparison />,
+    performanceDashboard: <PerformanceDashboard />,
+  };
+
+  const renderWidget = (id: string) => (
+    <DraggableWidget
+      key={id}
+      id={id}
+      locked={locked}
+      isDragging={draggedId === id}
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      {widgetMap[id]}
+    </DraggableWidget>
+  );
+
   return (
     <div className="space-y-5">
-      <DashboardHeader onPrint={handlePrint} />
+      <DashboardHeader
+        onPrint={handlePrint}
+        locked={locked}
+        onToggleLock={toggleLock}
+        onResetOrder={resetOrder}
+      />
 
       <DashboardStatCards
         totalStudents={totalStudents}
@@ -137,27 +189,7 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <SmartDashboardSummary />
-
-      <AttendanceOverview
-        todayPresent={todayPresent}
-        todayAbsent={todayAbsent}
-        todayLate={todayLate}
-        todayNotRecorded={todayNotRecorded}
-        classStats={classStats}
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
-        <WeekLessonsWidget />
-        <AcademicCalendarWidget />
-        <SafeZoneCounter />
-      </div>
-
-      <HonorRoll />
-
-      <PeriodComparison />
-
-      <PerformanceDashboard />
+      {order.map((id) => renderWidget(id))}
 
       <DashboardPrintView
         totalStudents={totalStudents}

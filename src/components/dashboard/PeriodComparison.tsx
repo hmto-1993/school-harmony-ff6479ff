@@ -23,9 +23,9 @@ function TrendBadge({ current, previous, label }: { current: number; previous: n
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold tabular-nums">{current}</p>
+    <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-lg font-bold tabular-nums">{current}</p>
       {previous > 0 && (
         <div className={cn("flex items-center gap-1 text-xs font-medium",
           isUp ? "text-success" : isDown ? "text-destructive" : "text-muted-foreground"
@@ -44,9 +44,9 @@ function RateBadge({ current, previous, label }: { current: number; previous: nu
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-xl font-bold tabular-nums",
+    <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className={cn("text-lg font-bold tabular-nums",
         current >= 80 ? "text-success" : current >= 50 ? "text-warning" : "text-destructive"
       )}>
         {current}%
@@ -97,8 +97,8 @@ function ComparisonGrid({ current, previous }: { current: PeriodStats; previous:
   ];
 
   return (
-    <div className="space-y-5">
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         <RateBadge current={current.rate} previous={previous.rate} label="نسبة الحضور" />
         <TrendBadge current={current.present} previous={previous.present} label="حاضر" />
         <TrendBadge current={current.absent} previous={previous.absent} label="غائب" />
@@ -106,11 +106,11 @@ function ComparisonGrid({ current, previous }: { current: PeriodStats; previous:
         <TrendBadge current={current.behaviorNegative} previous={previous.behaviorNegative} label="سلوك سلبي" />
       </div>
       {(current.present > 0 || previous.present > 0) && (
-        <div className="h-48 mt-2">
+        <div className="h-32 mt-1">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} barGap={4} barSize={20}>
+            <BarChart data={chartData} barGap={4} barSize={16}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-              <XAxis dataKey="name" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip
                 contentStyle={{
@@ -118,7 +118,7 @@ function ComparisonGrid({ current, previous }: { current: PeriodStats; previous:
                   border: "1px solid hsl(var(--border))",
                   background: "hsl(var(--card))",
                   boxShadow: "0 8px 30px rgba(0,0,0,0.12)",
-                  fontSize: "12px",
+                  fontSize: "11px",
                 }}
               />
               <Bar dataKey="الحالي" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} animationDuration={800} />

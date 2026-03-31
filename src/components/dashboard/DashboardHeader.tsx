@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap, AlertTriangle, Lock, Unlock, RotateCcw } from "lucide-react";
 import ShareDialog from "@/components/shared/ShareDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   onPrint?: () => void;
+  locked?: boolean;
+  onToggleLock?: () => void;
+  onResetOrder?: () => void;
 }
 
 function toHijri(date: Date): string {
@@ -27,7 +30,7 @@ function toHijri(date: Date): string {
   }
 }
 
-export default function DashboardHeader({ onPrint }: Props) {
+export default function DashboardHeader({ onPrint, locked, onToggleLock, onResetOrder }: Props) {
   const { user } = useAuth();
   const today = format(new Date(), "yyyy/MM/dd");
   const dayName = new Date().toLocaleDateString("ar-SA", { weekday: "long" });
@@ -107,6 +110,16 @@ export default function DashboardHeader({ onPrint }: Props) {
             )}
           </div>
           <div className="flex items-center gap-1 print:hidden">
+            {onToggleLock && (
+              <Button size="sm" variant="ghost" onClick={onToggleLock} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0" title={locked ? "فتح ترتيب الويدجات" : "قفل ترتيب الويدجات"}>
+                {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </Button>
+            )}
+            {!locked && onResetOrder && (
+              <Button size="sm" variant="ghost" onClick={onResetOrder} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0" title="إعادة الترتيب الافتراضي">
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
             <ShareDialog />
             {onPrint && (
               <Button size="sm" variant="ghost" onClick={onPrint} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0">
@@ -119,6 +132,30 @@ export default function DashboardHeader({ onPrint }: Props) {
         {/* Desktop: full info column */}
         <div className="hidden sm:flex flex-col items-end gap-2 text-left">
           <div className="flex items-center gap-2">
+            {onToggleLock && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onToggleLock}
+                className="text-white/80 hover:text-white hover:bg-white/15 gap-1.5 print:hidden"
+                title={locked ? "فتح ترتيب الويدجات" : "قفل ترتيب الويدجات"}
+              >
+                {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+                <span className="text-xs font-medium">{locked ? "قفل" : "فتح"}</span>
+              </Button>
+            )}
+            {!locked && onResetOrder && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onResetOrder}
+                className="text-white/80 hover:text-white hover:bg-white/15 gap-1.5 print:hidden"
+                title="إعادة الترتيب الافتراضي"
+              >
+                <RotateCcw className="h-4 w-4" />
+                <span className="text-xs font-medium">افتراضي</span>
+              </Button>
+            )}
             <ShareDialog />
             {onPrint && (
               <Button
