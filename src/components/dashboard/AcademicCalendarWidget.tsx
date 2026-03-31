@@ -98,8 +98,18 @@ export default function AcademicCalendarWidget() {
   }, []);
 
   const weeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const currentWeekRef = useRef<HTMLDivElement>(null);
 
-  const today = new Date();
+  // Auto-scroll to current week on mount
+  useEffect(() => {
+    if (currentWeekRef.current && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const element = currentWeekRef.current;
+      const offsetTop = element.offsetTop - container.offsetTop;
+      container.scrollTop = Math.max(0, offsetTop - container.clientHeight / 3);
+    }
+  }, [weeks, currentWeek]);
 
   // Build status text for selected or current week
   const activeWeek = selectedWeek || weeks.find(w => w.weekNumber === currentWeek) || null;
