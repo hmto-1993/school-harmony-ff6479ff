@@ -604,7 +604,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end mt-4">
+            <div id="grades-save" className="flex justify-end mt-4">
               <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                  <Save className="h-4 w-4 ml-2" />
                  {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
