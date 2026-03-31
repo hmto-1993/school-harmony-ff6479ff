@@ -686,7 +686,6 @@ export default function AttendancePage() {
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">
-                <ScrollToSaveButton targetId="attendance-save" />
                 <Button
                   size="sm"
                   onClick={markAllPresent}
@@ -733,6 +732,7 @@ export default function AttendancePage() {
                     className="h-9 text-xs pr-8 backdrop-blur-sm"
                   />
                 </div>
+                <ScrollToSaveButton targetId="attendance-save" />
                 <div className="flex items-center gap-1.5 mr-auto">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AttendanceStatus | "all")}>
