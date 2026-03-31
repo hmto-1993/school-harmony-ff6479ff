@@ -464,12 +464,16 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
           )}
 
           {holidays.map((holiday, i) => (
-            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2">
-              <div className="flex-1">
-                <Label className="text-[10px]">التاريخ</Label>
+            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 flex-wrap">
+              <div className="flex-1 min-w-[120px]">
+                <Label className="text-[10px]">من تاريخ</Label>
                 <Input type="date" value={holiday.date} onChange={e => updateHoliday(i, "date", e.target.value)} className="h-8 text-xs" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-[120px]">
+                <Label className="text-[10px]">إلى تاريخ <span className="text-muted-foreground">(اختياري)</span></Label>
+                <Input type="date" value={holiday.end_date || ""} onChange={e => updateHoliday(i, "end_date", e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="flex-1 min-w-[120px]">
                 <Label className="text-[10px]">الوصف</Label>
                 <Input value={holiday.label} onChange={e => updateHoliday(i, "label", e.target.value)} className="h-8 text-xs" placeholder="إجازة اليوم الوطني" />
               </div>
