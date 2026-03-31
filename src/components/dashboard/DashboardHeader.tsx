@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap, AlertTriangle } from "lucide-react";
+import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap, AlertTriangle, Lock, Unlock, RotateCcw } from "lucide-react";
 import ShareDialog from "@/components/shared/ShareDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
