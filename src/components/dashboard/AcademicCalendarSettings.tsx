@@ -84,7 +84,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
     setHolidays(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateHoliday = (index: number, field: keyof HolidayDate, value: string) => {
+  const updateHoliday = (index: number, field: string, value: string) => {
     setHolidays(prev => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
   };
 
