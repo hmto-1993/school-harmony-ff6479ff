@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Save, Plus, Minus } from "lucide-react";
@@ -8,14 +8,6 @@ import { cn } from "@/lib/utils";
 
 interface TimetableEditorProps {
   classes: { id: string; name: string }[];
-}
-
-interface TimetableSlot {
-  id?: string;
-  class_id: string;
-  day_of_week: number;
-  period_number: number;
-  subject_name: string;
 }
 
 const DAYS = [
@@ -28,66 +20,63 @@ const DAYS = [
 
 const DEFAULT_PERIODS = 6;
 const MAX_PERIODS = 7;
+const EMPTY = "__empty__";
 
 export default function TimetableEditor({ classes }: TimetableEditorProps) {
-  const [selectedClassId, setSelectedClassId] = useState("");
-  const [slots, setSlots] = useState<TimetableSlot[]>([]);
+  // grid[`${day}-${period}`] = classId
+  const [grid, setGrid] = useState<Record<string, string>>({});
   const [periodsCount, setPeriodsCount] = useState(DEFAULT_PERIODS);
-  const [configuredPeriods, setConfiguredPeriods] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load configured periods for all classes
-  useEffect(() => {
-    if (classes.length === 0) return;
-    supabase
-      .from("class_schedules")
-      .select("class_id, periods_per_week")
-      .in("class_id", classes.map(c => c.id))
-      .then(({ data }) => {
-        const map: Record<string, number> = {};
-        (data || []).forEach((s: any) => { map[s.class_id] = s.periods_per_week; });
-        setConfiguredPeriods(map);
-      });
-    if (classes.length > 0 && !selectedClassId) setSelectedClassId(classes[0].id);
-  }, [classes]);
+  const key = (day: number, period: number) => `${day}-${period}`;
 
   const fetchSlots = useCallback(async () => {
-    if (!selectedClassId) return;
+    if (classes.length === 0) return;
     setLoading(true);
-    const [{ data: schedule }, { data }] = await Promise.all([
-      supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClassId).maybeSingle(),
-      supabase.from("timetable_slots").select("*").eq("class_id", selectedClassId).order("day_of_week").order("period_number"),
-    ]);
-    const p = schedule?.periods_per_week ?? DEFAULT_PERIODS;
-    setPeriodsCount(Math.min(MAX_PERIODS, Math.max(1, p)));
-    setSlots((data || []) as TimetableSlot[]);
+    const classIds = classes.map(c => c.id);
+    const { data } = await supabase
+      .from("timetable_slots")
+      .select("class_id, day_of_week, period_number")
+      .in("class_id", classIds);
+
+    const newGrid: Record<string, string> = {};
+    let maxP = DEFAULT_PERIODS;
+    (data || []).forEach((s: any) => {
+      newGrid[key(s.day_of_week, s.period_number)] = s.class_id;
+      if (s.period_number > maxP) maxP = s.period_number;
+    });
+    setGrid(newGrid);
+    setPeriodsCount(Math.min(MAX_PERIODS, Math.max(DEFAULT_PERIODS, maxP)));
     setLoading(false);
-  }, [selectedClassId]);
+  }, [classes]);
 
   useEffect(() => {
-    if (selectedClassId) fetchSlots();
-  }, [selectedClassId, fetchSlots]);
+    fetchSlots();
+  }, [fetchSlots]);
 
-  const getSlotValue = (day: number, period: number) =>
-    slots.find(s => s.day_of_week === day && s.period_number === period)?.subject_name || "";
+  const getCell = (day: number, period: number) => grid[key(day, period)] || "";
 
-  const updateSlot = (day: number, period: number, value: string) => {
-    setSlots(prev => {
-      const existing = prev.find(s => s.day_of_week === day && s.period_number === period);
-      if (existing) {
-        return prev.map(s =>
-          s.day_of_week === day && s.period_number === period ? { ...s, subject_name: value } : s
-        );
+  const setCell = (day: number, period: number, classId: string) => {
+    setGrid(prev => {
+      const next = { ...prev };
+      if (classId) {
+        next[key(day, period)] = classId;
+      } else {
+        delete next[key(day, period)];
       }
-      return [...prev, { class_id: selectedClassId, day_of_week: day, period_number: period, subject_name: value }];
+      return next;
     });
   };
 
   const togglePeriod7 = () => {
     if (periodsCount >= MAX_PERIODS) {
-      // Remove period 7 slots
-      setSlots(prev => prev.filter(s => s.period_number < MAX_PERIODS));
+      // Remove period 7 from grid
+      setGrid(prev => {
+        const next = { ...prev };
+        DAYS.forEach(d => { delete next[key(d.value, MAX_PERIODS)]; });
+        return next;
+      });
       setPeriodsCount(DEFAULT_PERIODS);
     } else {
       setPeriodsCount(MAX_PERIODS);
@@ -95,13 +84,27 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
   };
 
   const handleSave = async () => {
-    if (!selectedClassId) return;
+    if (classes.length === 0) return;
     setSaving(true);
-    await supabase.from("timetable_slots").delete().eq("class_id", selectedClassId);
 
-    const toInsert = slots
-      .filter(s => s.subject_name.trim() && s.period_number <= periodsCount)
-      .map(s => ({ class_id: selectedClassId, day_of_week: s.day_of_week, period_number: s.period_number, subject_name: s.subject_name.trim() }));
+    const classIds = classes.map(c => c.id);
+    // Delete all existing slots for these classes
+    await supabase.from("timetable_slots").delete().in("class_id", classIds);
+
+    // Build insert rows
+    const classNameMap = Object.fromEntries(classes.map(c => [c.id, c.name]));
+    const toInsert = Object.entries(grid)
+      .filter(([, cid]) => cid && classIds.includes(cid))
+      .map(([k, cid]) => {
+        const [d, p] = k.split("-").map(Number);
+        return {
+          class_id: cid,
+          day_of_week: d,
+          period_number: p,
+          subject_name: classNameMap[cid] || "",
+        };
+      })
+      .filter(s => s.period_number <= periodsCount);
 
     if (toInsert.length > 0) {
       const { error } = await supabase.from("timetable_slots").insert(toInsert);
@@ -121,36 +124,6 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
 
   return (
     <div className="space-y-4">
-      {/* Class Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
-        {classes.map(c => {
-          const isActive = c.id === selectedClassId;
-          const cp = configuredPeriods[c.id];
-          return (
-            <button
-              key={c.id}
-              onClick={() => setSelectedClassId(c.id)}
-              className={cn(
-                "flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 border-2",
-                isActive
-                  ? "border-primary bg-primary text-primary-foreground shadow-md scale-[1.02]"
-                  : "border-border/40 bg-muted/30 text-muted-foreground hover:border-primary/40 hover:bg-muted/60"
-              )}
-            >
-              <span>{c.name}</span>
-              {cp != null && (
-                <span className={cn(
-                  "inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-md text-[10px] font-bold",
-                  isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary/10 text-primary"
-                )}>
-                  {cp}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
       {loading ? (
         <div className="flex justify-center py-10">
           <div className="h-6 w-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -165,7 +138,7 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
                   <th className="py-2.5 px-3 text-center font-bold text-xs text-muted-foreground border-b border-border/30 w-20">اليوم</th>
                   {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
                     <th key={period} className="py-2.5 px-2 text-center font-bold text-xs text-muted-foreground border-b border-border/30">
-                      {period}
+                      الحصة {period}
                     </th>
                   ))}
                 </tr>
@@ -174,16 +147,30 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
                 {DAYS.map(day => (
                   <tr key={day.value} className="border-b border-border/20 last:border-0">
                     <td className="py-1.5 px-3 text-center font-bold text-xs text-primary bg-primary/5 whitespace-nowrap">{day.label}</td>
-                    {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => (
-                      <td key={period} className="py-1 px-1">
-                        <Input
-                          value={getSlotValue(day.value, period)}
-                          onChange={e => updateSlot(day.value, period, e.target.value)}
-                          placeholder="المادة"
-                          className="h-8 text-xs text-center border-border/30 bg-background/50 focus:bg-background"
-                        />
-                      </td>
-                    ))}
+                    {Array.from({ length: periodsCount }, (_, i) => i + 1).map(period => {
+                      const val = getCell(day.value, period);
+                      return (
+                        <td key={period} className="py-1 px-1">
+                          <Select
+                            value={val || EMPTY}
+                            onValueChange={v => setCell(day.value, period, v === EMPTY ? "" : v)}
+                          >
+                            <SelectTrigger className={cn(
+                              "h-8 text-[11px] border-border/30",
+                              val ? "bg-primary/10 text-primary font-semibold" : "bg-background/50 text-muted-foreground"
+                            )}>
+                              <SelectValue placeholder="—" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={EMPTY} className="text-xs text-muted-foreground">— فارغة —</SelectItem>
+                              {classes.map(c => (
+                                <SelectItem key={c.id} value={c.id} className="text-xs">{c.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
