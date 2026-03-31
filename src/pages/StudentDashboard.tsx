@@ -320,10 +320,32 @@ export default function StudentDashboard() {
       
       let html = "";
 
-      // Header
-      if (schoolName) {
-        html += `<h1 style="text-align:center;font-size:20px;margin:0 0 4px;color:#1e3a5f;">${schoolName}</h1>`;
+      // Custom PDF Header from settings
+      const hasCustomHeader = parentPdfHeader.line1 || parentPdfHeader.line2 || parentPdfHeader.line3;
+      if (hasCustomHeader) {
+        html += `<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;">`;
+        // Logo on the right (RTL)
+        if (parentPdfHeader.showLogo && schoolLogoUrl) {
+          html += `<img src="${schoolLogoUrl}" style="width:60px;height:60px;border-radius:8px;object-fit:contain;" crossorigin="anonymous" />`;
+        }
+        html += `<div style="text-align:center;flex:1;">`;
+        if (parentPdfHeader.line1) html += `<p style="font-size:14px;font-weight:bold;margin:0 0 2px;color:#1e3a5f;">${parentPdfHeader.line1}</p>`;
+        if (parentPdfHeader.line2) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line2}</p>`;
+        if (parentPdfHeader.line3) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line3}</p>`;
+        html += `</div>`;
+        if (parentPdfHeader.showLogo && schoolLogoUrl) {
+          html += `<div style="width:60px;"></div>`;
+        }
+        html += `</div>`;
+        html += `<hr style="border:none;border-top:2px solid #1e3a5f;margin:0 0 12px;">`;
+      } else {
+        // Fallback: school name only
+        if (schoolName) {
+          html += `<h1 style="text-align:center;font-size:20px;margin:0 0 4px;color:#1e3a5f;">${schoolName}</h1>`;
+        }
       }
+
+      // Student info
       html += `<h2 style="text-align:center;font-size:16px;margin:0 0 4px;color:#333;">تقرير الطالب: ${student.full_name}</h2>`;
       
       const classInfo = student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "";
