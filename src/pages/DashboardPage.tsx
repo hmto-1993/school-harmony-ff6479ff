@@ -137,6 +137,7 @@ export default function DashboardPage() {
 
   const widgetMap: Record<string, ReactNode> = {
     smartSummary: <SmartDashboardSummary />,
+    fullTimetable: <FullTimetableWidget />,
     attendanceAndComparison: (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <AttendanceOverview
@@ -151,15 +152,10 @@ export default function DashboardPage() {
       </div>
     ),
     widgetGrid: (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+        <TodayScheduleWidget />
         <WeekLessonsWidget />
         <AcademicCalendarWidget />
-      </div>
-    ),
-    timetableWidgets: (
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
-        <FullTimetableWidget />
-        <TodayScheduleWidget />
       </div>
     ),
     honorRoll: <HonorRoll />,
