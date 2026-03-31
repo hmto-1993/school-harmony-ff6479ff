@@ -110,6 +110,16 @@ export default function DashboardHeader({ onPrint, locked, onToggleLock, onReset
             )}
           </div>
           <div className="flex items-center gap-1 print:hidden">
+            {onToggleLock && (
+              <Button size="sm" variant="ghost" onClick={onToggleLock} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0" title={locked ? "فتح ترتيب الويدجات" : "قفل ترتيب الويدجات"}>
+                {locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </Button>
+            )}
+            {!locked && onResetOrder && (
+              <Button size="sm" variant="ghost" onClick={onResetOrder} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0" title="إعادة الترتيب الافتراضي">
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            )}
             <ShareDialog />
             {onPrint && (
               <Button size="sm" variant="ghost" onClick={onPrint} className="text-white/80 hover:text-white hover:bg-white/15 h-8 w-8 p-0">
