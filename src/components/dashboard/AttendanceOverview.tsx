@@ -59,40 +59,40 @@ export default function AttendanceOverview({ todayPresent, todayAbsent, todayLat
   ].filter((d) => d.value > 0);
 
   return (
-    <Card className="shadow-card border-border/50 animate-fade-in" style={{ animationDelay: "500ms", animationFillMode: "both" }}>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-primary/10">
-            <ClipboardCheck className="h-4 w-4 text-primary" />
+    <Card className="shadow-card border-border/50 animate-fade-in h-full" style={{ animationDelay: "500ms", animationFillMode: "both" }}>
+      <CardHeader className="pb-1 px-4 pt-4">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <div className="p-1 rounded-lg bg-primary/10">
+            <ClipboardCheck className="h-3.5 w-3.5 text-primary" />
           </div>
           الحضور وملخص الفصول
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         <Tabs defaultValue="chart" dir="rtl">
-          <TabsList className="grid grid-cols-2 w-full mb-4">
-            <TabsTrigger value="chart" className="text-xs gap-1.5">
-              <ClipboardCheck className="h-3.5 w-3.5" />
+          <TabsList className="grid grid-cols-2 w-full mb-2 h-8">
+            <TabsTrigger value="chart" className="text-[11px] gap-1 h-7">
+              <ClipboardCheck className="h-3 w-3" />
               توزيع الحضور
             </TabsTrigger>
-            <TabsTrigger value="classes" className="text-xs gap-1.5">
-              <BarChart3 className="h-3.5 w-3.5" />
+            <TabsTrigger value="classes" className="text-[11px] gap-1 h-7">
+              <BarChart3 className="h-3 w-3" />
               ملخص الفصول
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="chart">
             {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
+              <ResponsiveContainer width="100%" height={200}>
                 <PieChart>
                   <Pie
                     activeIndex={activeIndex}
                     activeShape={renderActiveShape}
                     data={pieData}
                     cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={95}
+                    cy="45%"
+                    innerRadius={45}
+                    outerRadius={72}
                     paddingAngle={4}
                     dataKey="value"
                     onMouseEnter={onPieEnter}
@@ -105,28 +105,28 @@ export default function AttendanceOverview({ todayPresent, todayAbsent, todayLat
                       <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} className="transition-opacity duration-200" />
                     ))}
                   </Pie>
-                  <Legend formatter={(value: string) => <span className="text-xs text-foreground">{value}</span>} />
+                  <Legend formatter={(value: string) => <span className="text-[10px] text-foreground">{value}</span>} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[280px]">
-                <p className="text-sm text-muted-foreground">لا توجد بيانات حضور اليوم</p>
+              <div className="flex items-center justify-center h-[200px]">
+                <p className="text-xs text-muted-foreground">لا توجد بيانات حضور اليوم</p>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="classes">
             {classStats.length > 0 ? (
-              <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
-                <table className="w-full text-sm border-separate border-spacing-0">
-                  <thead>
+              <div className="overflow-auto rounded-xl border border-border/40 shadow-sm max-h-[200px]">
+                <table className="w-full text-xs border-separate border-spacing-0">
+                  <thead className="sticky top-0 z-10">
                     <tr className="bg-gradient-to-l from-primary/8 to-primary/4 dark:from-primary/15 dark:to-primary/8">
-                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">الفصل</th>
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطلاب</th>
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 bg-success/5 dark:bg-success/10">حاضر</th>
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 bg-destructive/5 dark:bg-destructive/10">غائب</th>
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 bg-warning/5 dark:bg-warning/10">متأخر</th>
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">الحضور</th>
+                      <th className="text-right p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20 first:rounded-tr-xl">الفصل</th>
+                      <th className="text-center p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20">الطلاب</th>
+                      <th className="text-center p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20 bg-success/5">حاضر</th>
+                      <th className="text-center p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20 bg-destructive/5">غائب</th>
+                      <th className="text-center p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20 bg-warning/5">متأخر</th>
+                      <th className="text-center p-2 font-semibold text-primary text-[11px] border-b-2 border-primary/20 last:rounded-tl-xl">%</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -142,29 +142,18 @@ export default function AttendanceOverview({ todayPresent, todayAbsent, todayLat
                             !isLast && "border-b border-border/20"
                           )}
                         >
-                          <td className={cn("p-3 font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{cls.name}</td>
-                          <td className="p-3 text-center text-muted-foreground font-medium border-l border-border/10">{cls.total}</td>
-                          <td className="p-3 text-center font-bold text-success bg-success/[0.03] dark:bg-success/[0.06] border-l border-border/10">{cls.present}</td>
-                          <td className="p-3 text-center font-bold text-destructive bg-destructive/[0.03] dark:bg-destructive/[0.06] border-l border-border/10">{cls.absent}</td>
-                          <td className="p-3 text-center font-bold text-warning bg-warning/[0.03] dark:bg-warning/[0.06] border-l border-border/10">{cls.late}</td>
-                          <td className={cn("p-3 text-center", isLast && "last:rounded-bl-xl")}>
-                            <div className="flex items-center justify-center gap-2">
-                              <div className="w-16 h-2 rounded-full bg-muted/80 overflow-hidden">
-                                <div
-                                  className={cn(
-                                    "h-full rounded-full transition-all duration-700",
-                                    rate >= 80 ? "bg-success" : rate >= 50 ? "bg-warning" : "bg-destructive"
-                                  )}
-                                  style={{ width: `${rate}%` }}
-                                />
-                              </div>
-                              <span className={cn(
-                                "text-xs font-bold tabular-nums min-w-[32px]",
-                                rate >= 80 ? "text-success" : rate >= 50 ? "text-warning" : "text-destructive"
-                              )}>
-                                {rate}%
-                              </span>
-                            </div>
+                          <td className={cn("p-2 font-semibold border-l border-border/10 text-[11px]", isLast && "first:rounded-br-xl")}>{cls.name}</td>
+                          <td className="p-2 text-center text-muted-foreground font-medium border-l border-border/10">{cls.total}</td>
+                          <td className="p-2 text-center font-bold text-success bg-success/[0.03] border-l border-border/10">{cls.present}</td>
+                          <td className="p-2 text-center font-bold text-destructive bg-destructive/[0.03] border-l border-border/10">{cls.absent}</td>
+                          <td className="p-2 text-center font-bold text-warning bg-warning/[0.03] border-l border-border/10">{cls.late}</td>
+                          <td className={cn("p-2 text-center", isLast && "last:rounded-bl-xl")}>
+                            <span className={cn(
+                              "text-[11px] font-bold tabular-nums",
+                              rate >= 80 ? "text-success" : rate >= 50 ? "text-warning" : "text-destructive"
+                            )}>
+                              {rate}%
+                            </span>
                           </td>
                         </tr>
                       );
@@ -173,8 +162,8 @@ export default function AttendanceOverview({ todayPresent, todayAbsent, todayLat
                 </table>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-[280px]">
-                <p className="text-sm text-muted-foreground">لا توجد بيانات فصول</p>
+              <div className="flex items-center justify-center h-[200px]">
+                <p className="text-xs text-muted-foreground">لا توجد بيانات فصول</p>
               </div>
             )}
           </TabsContent>
