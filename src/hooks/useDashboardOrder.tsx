@@ -5,10 +5,9 @@ const LOCK_KEY = "dashboard-widgets-locked";
 
 export const DEFAULT_ORDER = [
   "smartSummary",
-  "attendanceOverview",
+  "attendanceAndComparison",
   "widgetGrid",
   "honorRoll",
-  "periodComparison",
   "performanceDashboard",
 ];
 
