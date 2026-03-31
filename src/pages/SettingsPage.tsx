@@ -3182,7 +3182,7 @@ export default function SettingsPage() {
                   >
                     <span className={cn(
                       "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
-                      parentPdfHeader.showLogo ? "translate-x-6" : "translate-x-1"
+                      parentPdfHeader.showLogo ? "-translate-x-6" : "-translate-x-1"
                     )} />
                   </button>
                 </div>
