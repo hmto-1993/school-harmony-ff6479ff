@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText } from "lucide-react";
+import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { subDays, addDays, isToday, format } from "date-fns";
@@ -449,7 +450,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             </div>
           </div>
           {/* Date Navigation */}
-          <div className="flex items-center gap-2 flex-wrap">
+           <div className="flex items-center gap-2 flex-wrap">
+             <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}>
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -602,7 +604,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </tbody>
               </table>
             </div>
-            <div className="flex justify-end mt-4">
+            <div id="grades-save" className="flex justify-end mt-4">
               <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                  <Save className="h-4 w-4 ml-2" />
                  {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
 import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye } from "lucide-react";
+import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
@@ -685,6 +686,7 @@ export default function AttendancePage() {
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-4 items-center">
+                <ScrollToSaveButton targetId="attendance-save" />
                 <Button
                   size="sm"
                   onClick={markAllPresent}
@@ -818,7 +820,7 @@ export default function AttendancePage() {
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-end mt-4">
+              <div id="attendance-save" className="flex justify-end mt-4">
                 <Button onClick={handleSave} disabled={saving || isClassLocked || isViewOnly} className="shadow-md shadow-primary/20">
                   <Save className="h-4 w-4 ml-2" />
                   {isViewOnly ? "عرض فقط" : isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
