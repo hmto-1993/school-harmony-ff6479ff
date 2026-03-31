@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, CheckCircle2, Circle, Settings } from "lucide-react";
+import { BookOpen, CheckCircle2, Circle, Settings, CalendarRange } from "lucide-react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,7 @@ interface ClassOption {
 }
 
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+const WEEKLY_DAY_INDEX = -1;
 
 export default function WeekLessonsWidget() {
   const { user, role } = useAuth();
@@ -116,9 +117,13 @@ export default function WeekLessonsWidget() {
     return <Card className="border-0 ring-1 ring-border/30 animate-pulse h-48 bg-muted/30" />;
   }
 
-  // Group by day
+  // Separate weekly and daily lessons
+  const weeklyLessons = lessons.filter(l => l.day_index === WEEKLY_DAY_INDEX);
+  const dailyLessons = lessons.filter(l => l.day_index !== WEEKLY_DAY_INDEX);
+
+  // Group daily by day
   const byDay = new Map<number, LessonItem[]>();
-  lessons.forEach((l) => {
+  dailyLessons.forEach((l) => {
     if (!byDay.has(l.day_index)) byDay.set(l.day_index, []);
     byDay.get(l.day_index)!.push(l);
   });
@@ -187,6 +192,39 @@ export default function WeekLessonsWidget() {
           </p>
         ) : (
           <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin">
+            {/* Weekly lessons */}
+            {weeklyLessons.length > 0 && (
+              <div>
+                <p className="text-[11px] font-bold mb-1 text-accent flex items-center gap-1">
+                  <CalendarRange className="h-3 w-3" />
+                  أسبوعي
+                </p>
+                <div className="space-y-1">
+                  {weeklyLessons.map((l) => (
+                    <button
+                      key={l.id}
+                      onClick={() => toggleCompletion(l)}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs transition-colors w-full text-right",
+                        l.is_completed
+                          ? "bg-success/10 text-success hover:bg-success/15"
+                          : "bg-accent/10 text-foreground hover:bg-accent/15"
+                      )}
+                    >
+                      {l.is_completed ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                      ) : (
+                        <Circle className="h-3.5 w-3.5 shrink-0 text-accent" />
+                      )}
+                      <span className={cn("truncate flex-1", l.is_completed && "line-through opacity-70")}>
+                        {l.lesson_title}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Daily lessons */}
             {Array.from(byDay.entries()).map(([dayIdx, dayLessons]) => (
               <div key={dayIdx}>
                 <p className={cn(

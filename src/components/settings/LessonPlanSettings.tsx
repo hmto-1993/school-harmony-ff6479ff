@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus, FileUp } from "lucide-react";
+import { Save, BookOpen, ChevronRight, ChevronLeft, Check, Loader2, Upload, Download, FileText, CopyPlus, FileUp, CalendarDays, CalendarRange } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
@@ -15,6 +15,7 @@ import { safeWriteXLSX } from "@/lib/download-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ClassOption {
   id: string;
@@ -33,6 +34,7 @@ const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأر
 const DAY_NAME_TO_INDEX: Record<string, number> = {
   "الأحد": 0, "الاثنين": 1, "الثلاثاء": 2, "الأربعاء": 3, "الخميس": 4,
 };
+const WEEKLY_DAY_INDEX = -1; // Sentinel for weekly lessons
 
 export default function LessonPlanSettings({ classes }: { classes: ClassOption[] }) {
   const { user } = useAuth();
@@ -41,6 +43,8 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
   const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([0, 1, 2, 3, 4]);
   const [slots, setSlots] = useState<Record<string, LessonSlot>>({});
+  // Track which slot indices are weekly (span all days)
+  const [weeklySlots, setWeeklySlots] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -100,6 +104,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
       .eq("week_number", weekNumber);
 
     const map: Record<string, LessonSlot> = {};
+    const newWeeklySlots = new Set<number>();
     (data || []).forEach((lp: any) => {
       const key = `${lp.day_index}-${lp.slot_index}`;
       map[key] = {
@@ -109,8 +114,12 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         teacher_reflection: lp.teacher_reflection || "",
         is_completed: lp.is_completed || false,
       };
+      if (lp.day_index === WEEKLY_DAY_INDEX) {
+        newWeeklySlots.add(lp.slot_index);
+      }
     });
     setSlots(map);
+    setWeeklySlots(newWeeklySlots);
     setLoading(false);
   }, [effectiveClassId, weekNumber]);
 
@@ -129,6 +138,60 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         [field]: value,
       },
     }));
+  };
+
+  // Toggle a slot between daily and weekly
+  const toggleWeeklySlot = (slotIdx: number) => {
+    setWeeklySlots(prev => {
+      const next = new Set(prev);
+      if (next.has(slotIdx)) {
+        // Switch from weekly to daily: move data from day_index=-1 to first day
+        next.delete(slotIdx);
+        const weeklyKey = `${WEEKLY_DAY_INDEX}-${slotIdx}`;
+        const weeklyData = slots[weeklyKey];
+        if (weeklyData?.lesson_title?.trim()) {
+          // Copy to first day
+          const firstDay = daysOfWeek[0] ?? 0;
+          const dailyKey = `${firstDay}-${slotIdx}`;
+          setSlots(prev => {
+            const updated = { ...prev };
+            updated[dailyKey] = { ...weeklyData };
+            delete updated[weeklyKey];
+            return updated;
+          });
+        } else {
+          setSlots(prev => {
+            const updated = { ...prev };
+            delete updated[weeklyKey];
+            return updated;
+          });
+        }
+      } else {
+        // Switch from daily to weekly: take first non-empty day's data
+        next.add(slotIdx);
+        let foundData: LessonSlot | null = null;
+        const keysToRemove: string[] = [];
+        for (const dayIdx of daysOfWeek) {
+          const dailyKey = `${dayIdx}-${slotIdx}`;
+          if (slots[dailyKey]?.lesson_title?.trim() && !foundData) {
+            foundData = { ...slots[dailyKey] };
+          }
+          keysToRemove.push(dailyKey);
+        }
+        const weeklyKey = `${WEEKLY_DAY_INDEX}-${slotIdx}`;
+        setSlots(prev => {
+          const updated = { ...prev };
+          keysToRemove.forEach(k => delete updated[k]);
+          if (foundData) {
+            updated[weeklyKey] = foundData;
+          } else {
+            updated[weeklyKey] = { lesson_title: "", objectives: "", teacher_reflection: "", is_completed: false };
+          }
+          return updated;
+        });
+      }
+      return next;
+    });
   };
 
   // Save to one or all classes
@@ -211,7 +274,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
   };
 
   // Bulk fill all weeks at once
-  const handleBulkFill = async (lessonsData: Array<{ weekNumber: number; lessonTitle: string; objectives: string; dayName?: string }>) => {
+  const handleBulkFill = async (lessonsData: Array<{ weekNumber: number; lessonTitle: string; objectives: string; dayName?: string; isWeekly?: boolean }>) => {
     if (!user || !selectedClassId) return;
     setSaving(true);
 
@@ -231,21 +294,38 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
 
       // Build slots for this week
       const weekSlots: Record<string, LessonSlot> = {};
-      lessons.forEach((lesson, idx) => {
-        let dayIdx: number;
-        if (lesson.dayName && DAY_NAME_TO_INDEX[lesson.dayName] !== undefined) {
-          dayIdx = DAY_NAME_TO_INDEX[lesson.dayName];
+      let dailyIdx = 0; // Counter for daily lessons without explicit day
+      lessons.forEach((lesson) => {
+        if (lesson.isWeekly) {
+          // Weekly lesson: use day_index = -1
+          // Find next available slot_index for weekly
+          let slotIdx = 0;
+          while (weekSlots[`${WEEKLY_DAY_INDEX}-${slotIdx}`]) slotIdx++;
+          const key = `${WEEKLY_DAY_INDEX}-${slotIdx}`;
+          weekSlots[key] = {
+            lesson_title: lesson.lessonTitle,
+            objectives: lesson.objectives,
+            teacher_reflection: "",
+            is_completed: false,
+          };
         } else {
-          dayIdx = daysOfWeek[idx % daysOfWeek.length];
+          // Daily lesson
+          let dayIdx: number;
+          if (lesson.dayName && DAY_NAME_TO_INDEX[lesson.dayName] !== undefined) {
+            dayIdx = DAY_NAME_TO_INDEX[lesson.dayName];
+          } else {
+            dayIdx = daysOfWeek[dailyIdx % daysOfWeek.length];
+          }
+          const slotIdx = Math.floor(dailyIdx / daysOfWeek.length);
+          const key = `${dayIdx}-${slotIdx}`;
+          weekSlots[key] = {
+            lesson_title: lesson.lessonTitle,
+            objectives: lesson.objectives,
+            teacher_reflection: "",
+            is_completed: false,
+          };
+          dailyIdx++;
         }
-        const slotIdx = Math.floor(idx / daysOfWeek.length);
-        const key = `${dayIdx}-${slotIdx}`;
-        weekSlots[key] = {
-          lesson_title: lesson.lessonTitle,
-          objectives: lesson.objectives,
-          teacher_reflection: "",
-          is_completed: false,
-        };
       });
 
       totalInserted += await saveToClasses(targets, weekSlots, wkNum);
@@ -262,12 +342,12 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
 
   const handleDownloadTemplate = () => {
     const templateData = [
-      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الجمع", "اسم الوحدة": "الوحدة الأولى" },
-      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الطرح", "اسم الوحدة": "الوحدة الأولى" },
-      { "رقم الأسبوع": 2, "عنوان الدرس": "مثال: درس الضرب", "اسم الوحدة": "الوحدة الثانية" },
+      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الجمع", "اسم الوحدة": "الوحدة الأولى", "اليوم": "الأحد", "أسبوعي": "" },
+      { "رقم الأسبوع": 1, "عنوان الدرس": "مثال: درس الطرح", "اسم الوحدة": "الوحدة الأولى", "اليوم": "الاثنين", "أسبوعي": "" },
+      { "رقم الأسبوع": 2, "عنوان الدرس": "مثال: درس يمتد أسبوع كامل", "اسم الوحدة": "الوحدة الثانية", "اليوم": "", "أسبوعي": "نعم" },
     ];
     const ws = XLSX.utils.json_to_sheet(templateData);
-    ws["!cols"] = [{ wch: 14 }, { wch: 30 }, { wch: 25 }];
+    ws["!cols"] = [{ wch: 14 }, { wch: 30 }, { wch: 25 }, { wch: 12 }, { wch: 10 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "خطة الدروس");
     safeWriteXLSX(wb, "lesson_plan_template.xlsx");
@@ -291,12 +371,17 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         return;
       }
 
-      const mapped = rows.map((r) => ({
-        weekNumber: Number(r["رقم الأسبوع"] || r["Week Number"] || r["week_number"] || weekNumber),
-        lessonTitle: String(r["عنوان الدرس"] || r["Lesson Title"] || r["lesson_title"] || "").trim(),
-        objectives: String(r["اسم الوحدة"] || r["Unit Name"] || r["unit_name"] || r["الأهداف"] || r["Objectives"] || "").trim(),
-        dayName: String(r["اليوم"] || r["Day"] || "").trim() || undefined,
-      })).filter((r) => r.lessonTitle);
+      const mapped = rows.map((r) => {
+        const weeklyVal = String(r["أسبوعي"] || r["Weekly"] || r["is_weekly"] || "").trim().toLowerCase();
+        const isWeekly = weeklyVal === "نعم" || weeklyVal === "yes" || weeklyVal === "true" || weeklyVal === "1";
+        return {
+          weekNumber: Number(r["رقم الأسبوع"] || r["Week Number"] || r["week_number"] || weekNumber),
+          lessonTitle: String(r["عنوان الدرس"] || r["Lesson Title"] || r["lesson_title"] || "").trim(),
+          objectives: String(r["اسم الوحدة"] || r["Unit Name"] || r["unit_name"] || r["الأهداف"] || r["Objectives"] || "").trim(),
+          dayName: String(r["اليوم"] || r["Day"] || "").trim() || undefined,
+          isWeekly,
+        };
+      }).filter((r) => r.lessonTitle);
 
       if (mapped.length === 0) {
         toast({ title: "خطأ", description: "لم يتم العثور على دروس صالحة في الملف", variant: "destructive" });
@@ -352,6 +437,7 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
         lessonTitle: String(l.lesson_title || "").trim(),
         objectives: String(l.objectives || "").trim(),
         dayName: l.day_name || undefined,
+        isWeekly: l.is_weekly === true,
       })).filter((r) => r.lessonTitle);
 
       await handleBulkFill(mapped);
@@ -463,22 +549,115 @@ export default function LessonPlanSettings({ classes }: { classes: ClassOption[]
               </tr>
             </thead>
             <tbody>
+              {/* Weekly lessons first */}
+              {Array.from({ length: slotsPerDay }, (_, slotIdx) => {
+                if (!weeklySlots.has(slotIdx)) return null;
+                const key = `${WEEKLY_DAY_INDEX}-${slotIdx}`;
+                const slot = slots[key] || { lesson_title: "", objectives: "", teacher_reflection: "", is_completed: false };
+                return (
+                  <tr key={`weekly-${slotIdx}`} className="bg-accent/5">
+                    <td className="border border-border/20 px-3 py-2 text-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => toggleWeeklySlot(slotIdx)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-accent"
+                          >
+                            <CalendarRange className="h-3.5 w-3.5" />
+                            أسبوعي
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="left">
+                          <p className="text-xs">اضغط للتحويل إلى يومي</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </td>
+                    <td className="border border-border/20 px-2 py-2 text-center font-semibold text-muted-foreground">
+                      {slotIdx + 1}
+                    </td>
+                    <td className="border border-border/20 p-1">
+                      <Input
+                        value={slot.lesson_title}
+                        onChange={(e) => updateSlot(WEEKLY_DAY_INDEX, slotIdx, "lesson_title", e.target.value)}
+                        placeholder="عنوان الدرس (يمتد للأسبوع كاملاً)"
+                        className="h-8 text-xs border-0 bg-transparent focus-visible:ring-1"
+                      />
+                    </td>
+                    <td className="border border-border/20 p-1">
+                      <Input
+                        value={slot.objectives}
+                        onChange={(e) => updateSlot(WEEKLY_DAY_INDEX, slotIdx, "objectives", e.target.value)}
+                        placeholder="الأهداف"
+                        className="h-8 text-xs border-0 bg-transparent focus-visible:ring-1"
+                      />
+                    </td>
+                    <td className="border border-border/20 p-1">
+                      <Input
+                        value={slot.teacher_reflection}
+                        onChange={(e) => updateSlot(WEEKLY_DAY_INDEX, slotIdx, "teacher_reflection", e.target.value)}
+                        placeholder="ملاحظات"
+                        className="h-8 text-xs border-0 bg-transparent focus-visible:ring-1"
+                      />
+                    </td>
+                    <td className="border border-border/20 px-2 py-2 text-center">
+                      <button
+                        onClick={() => updateSlot(WEEKLY_DAY_INDEX, slotIdx, "is_completed", !slot.is_completed)}
+                        className={cn(
+                          "h-6 w-6 rounded-md border-2 inline-flex items-center justify-center transition-colors",
+                          slot.is_completed
+                            ? "bg-primary border-primary text-primary-foreground"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        {slot.is_completed && <Check className="h-3.5 w-3.5" />}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {/* Daily lessons */}
               {daysOfWeek.map((dayIdx) =>
                 Array.from({ length: slotsPerDay }, (_, slotIdx) => {
+                  if (weeklySlots.has(slotIdx)) return null; // Skip daily rows for weekly slots
                   const key = `${dayIdx}-${slotIdx}`;
                   const slot = slots[key] || { lesson_title: "", objectives: "", teacher_reflection: "", is_completed: false };
+                  const isFirstSlotForDay = !weeklySlots.has(slotIdx) && (() => {
+                    // Check if this is the first non-weekly slot for this day
+                    for (let s = 0; s < slotIdx; s++) {
+                      if (!weeklySlots.has(s)) return false;
+                    }
+                    return true;
+                  })();
+                  const dailySlotsCount = Array.from({ length: slotsPerDay }, (_, i) => i).filter(i => !weeklySlots.has(i)).length;
                   return (
                     <tr key={key} className={cn(slotIdx % 2 === 0 ? "bg-card" : "bg-muted/30")}>
-                      {slotIdx === 0 && (
+                      {isFirstSlotForDay && (
                         <td
-                          rowSpan={slotsPerDay}
+                          rowSpan={dailySlotsCount}
                           className="border border-border/20 px-3 py-2 text-center font-bold text-foreground bg-muted/50"
                         >
                           {DAY_NAMES[dayIdx] || `يوم ${dayIdx + 1}`}
                         </td>
                       )}
-                      <td className="border border-border/20 px-2 py-2 text-center font-semibold text-muted-foreground">
-                        {slotIdx + 1}
+                      <td className="border border-border/20 px-2 py-2 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-semibold text-muted-foreground">{slotIdx + 1}</span>
+                          {dayIdx === daysOfWeek[0] && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => toggleWeeklySlot(slotIdx)}
+                                  className="text-muted-foreground/50 hover:text-accent transition-colors"
+                                >
+                                  <CalendarRange className="h-3 w-3" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="left">
+                                <p className="text-xs">تحويل إلى درس أسبوعي</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
                       </td>
                       <td className="border border-border/20 p-1">
                         <Input
@@ -560,16 +739,22 @@ function LessonPlanPreview({
   const DAY_LABELS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"];
   const todayDayIndex = new Date().getDay();
 
-  // Group filled lessons by day
+  // Group filled lessons by day, weekly lessons get their own group
   const byDay = new Map<number, { title: string; completed: boolean }[]>();
+  const weeklyLessons: { title: string; completed: boolean }[] = [];
+
   Object.entries(slots).forEach(([key, slot]) => {
     if (!slot.lesson_title.trim()) return;
     const [dayIdx] = key.split("-").map(Number);
-    if (!byDay.has(dayIdx)) byDay.set(dayIdx, []);
-    byDay.get(dayIdx)!.push({ title: slot.lesson_title, completed: slot.is_completed });
+    if (dayIdx === WEEKLY_DAY_INDEX) {
+      weeklyLessons.push({ title: slot.lesson_title, completed: slot.is_completed });
+    } else {
+      if (!byDay.has(dayIdx)) byDay.set(dayIdx, []);
+      byDay.get(dayIdx)!.push({ title: slot.lesson_title, completed: slot.is_completed });
+    }
   });
 
-  const allLessons = Array.from(byDay.values()).flat();
+  const allLessons = [...weeklyLessons, ...Array.from(byDay.values()).flat()];
   const completedCount = allLessons.filter(l => l.completed).length;
   const total = allLessons.length;
 
@@ -606,6 +791,38 @@ function LessonPlanPreview({
           </CardHeader>
           <CardContent className="px-4 pb-4 pt-1">
             <div className="space-y-2 max-h-56 overflow-y-auto scrollbar-thin">
+              {/* Weekly lessons */}
+              {weeklyLessons.length > 0 && (
+                <div>
+                  <p className="text-[11px] font-bold mb-1 text-accent flex items-center gap-1">
+                    <CalendarRange className="h-3 w-3" />
+                    أسبوعي
+                  </p>
+                  <div className="space-y-1">
+                    {weeklyLessons.map((l, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs",
+                          l.completed
+                            ? "bg-success/10 text-success"
+                            : "bg-accent/10 text-foreground"
+                        )}
+                      >
+                        {l.completed ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />
+                        ) : (
+                          <Circle className="h-3.5 w-3.5 shrink-0 text-accent" />
+                        )}
+                        <span className={cn("truncate flex-1", l.completed && "line-through opacity-70")}>
+                          {l.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Daily lessons */}
               {Array.from(byDay.entries())
                 .sort(([a], [b]) => a - b)
                 .map(([dayIdx, dayLessons]) => (
