@@ -114,7 +114,37 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
         return;
       }
     }
-    toast({ title: "تم الحفظ", description: "تم حفظ جدول الحصص بنجاح" });
+
+    // Sync class_schedules with timetable data
+    const classStats: Record<string, { periods: number; days: Set<number> }> = {};
+    toInsert.forEach(s => {
+      if (!classStats[s.class_id]) classStats[s.class_id] = { periods: 0, days: new Set() };
+      classStats[s.class_id].periods++;
+      classStats[s.class_id].days.add(s.day_of_week);
+    });
+
+    for (const cid of classIds) {
+      const stats = classStats[cid];
+      const periodsPerWeek = stats?.periods || 0;
+      const daysOfWeek = stats ? Array.from(stats.days).sort() : [0, 1, 2, 3, 4];
+
+      const { data: existing } = await supabase
+        .from("class_schedules")
+        .select("id")
+        .eq("class_id", cid)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from("class_schedules")
+          .update({ periods_per_week: periodsPerWeek, days_of_week: daysOfWeek })
+          .eq("id", existing.id);
+      } else if (periodsPerWeek > 0) {
+        await supabase.from("class_schedules")
+          .insert({ class_id: cid, periods_per_week: periodsPerWeek, days_of_week: daysOfWeek });
+      }
+    }
+
+    toast({ title: "تم الحفظ", description: "تم حفظ جدول الحصص وتحديث إعدادات التحضير" });
     setSaving(false);
   };
 
