@@ -51,6 +51,7 @@ import {
   AlertTriangle,
   Heart,
   ClipboardList,
+  Table2,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
@@ -59,6 +60,7 @@ import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSet
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
+import TimetableEditor from "@/components/settings/TimetableEditor";
 import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import { useCalendarType } from "@/hooks/useCalendarType";
@@ -1084,6 +1086,7 @@ export default function SettingsPage() {
           { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
+          { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -3192,6 +3195,25 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <LessonPlanSettings classes={classes.map((c) => ({ id: c.id, name: c.name }))} />
+          </CardContent>
+        </Card>
+      )}
+
+      {activeCard === "timetable" && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Table2 className="h-5 w-5 text-primary" />
+                جدول الحصص الأسبوعي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TimetableEditor classes={classes.map(c => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
       )}

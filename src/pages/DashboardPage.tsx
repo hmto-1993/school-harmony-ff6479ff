@@ -14,6 +14,8 @@ import SmartDashboardSummary from "@/components/dashboard/SmartDashboardSummary"
 import HonorRoll from "@/components/student/HonorRoll";
 import SafeZoneCounter from "@/components/dashboard/SafeZoneCounter";
 import WeekLessonsWidget from "@/components/dashboard/WeekLessonsWidget";
+import FullTimetableWidget from "@/components/dashboard/FullTimetableWidget";
+import TodayScheduleWidget from "@/components/dashboard/TodayScheduleWidget";
 import DraggableWidget from "@/components/dashboard/DraggableWidget";
 import { useDashboardOrder } from "@/hooks/useDashboardOrder";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
@@ -152,6 +154,12 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
         <WeekLessonsWidget />
         <AcademicCalendarWidget />
+      </div>
+    ),
+    timetableWidgets: (
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 auto-rows-[350px] [&>*]:flex [&>*]:flex-col [&>*]:overflow-hidden">
+        <FullTimetableWidget />
+        <TodayScheduleWidget />
       </div>
     ),
     honorRoll: <HonorRoll />,
