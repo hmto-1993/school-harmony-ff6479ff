@@ -3144,6 +3144,51 @@ export default function SettingsPage() {
               </Collapsible>
             </div>
 
+            {/* ─── Section 3: PDF Header ─── */}
+            <Collapsible className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                <h4 className="text-sm font-bold flex items-center gap-1.5">
+                  <Printer className="h-4 w-4 text-blue-600" />
+                  ترويسة التصدير (PDF)
+                </h4>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3 space-y-2">
+                <p className="text-[10px] text-muted-foreground mb-1">تظهر هذه الترويسة في أعلى تقرير ولي الأمر عند التصدير</p>
+                {[
+                  { key: "line1", label: "السطر الأول (مثال: وزارة التعليم)", placeholder: "وزارة التعليم" },
+                  { key: "line2", label: "السطر الثاني (مثال: إدارة التعليم)", placeholder: "إدارة التعليم بمنطقة ..." },
+                  { key: "line3", label: "السطر الثالث (مثال: اسم المدرسة)", placeholder: "مدرسة ..." },
+                ].map(field => (
+                  <div key={field.key}>
+                    <Label className="text-[11px] font-bold text-muted-foreground">{field.label}</Label>
+                    <Input
+                      value={(parentPdfHeader as any)[field.key] || ""}
+                      onChange={(e) => setParentPdfHeader(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.placeholder}
+                      className="text-xs h-8 mt-0.5"
+                      dir="rtl"
+                    />
+                  </div>
+                ))}
+                <div className="flex items-center justify-between p-2 rounded-lg border border-border/40 bg-card">
+                  <span className="text-xs font-bold">إظهار الشعار</span>
+                  <button
+                    onClick={() => setParentPdfHeader(prev => ({ ...prev, showLogo: !prev.showLogo }))}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
+                      parentPdfHeader.showLogo ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
+                      parentPdfHeader.showLogo ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             {/* Save Button + Info */}
             <div className="flex items-center gap-3 pt-2">
             <Button
