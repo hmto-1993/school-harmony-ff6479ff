@@ -189,6 +189,7 @@ export default function AcademicCalendarWidget() {
                   return (
                     <div
                       key={week.weekNumber}
+                      ref={isCurrent ? currentWeekRef : undefined}
                       onClick={() => setSelectedWeek(isSelected ? null : week)}
                       className={cn(
                         "grid grid-cols-[50px_1fr_auto] border-t cursor-pointer transition-all",
