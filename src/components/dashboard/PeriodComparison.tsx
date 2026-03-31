@@ -23,9 +23,9 @@ function TrendBadge({ current, previous, label }: { current: number; previous: n
   const isDown = diff < 0;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold tabular-nums">{current}</p>
+    <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors">
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+      <p className="text-lg font-bold tabular-nums">{current}</p>
       {previous > 0 && (
         <div className={cn("flex items-center gap-1 text-xs font-medium",
           isUp ? "text-success" : isDown ? "text-destructive" : "text-muted-foreground"
