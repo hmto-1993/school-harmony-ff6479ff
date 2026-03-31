@@ -10,6 +10,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   onPrint?: () => void;
+  locked?: boolean;
+  onToggleLock?: () => void;
+  onResetOrder?: () => void;
 }
 
 function toHijri(date: Date): string {
