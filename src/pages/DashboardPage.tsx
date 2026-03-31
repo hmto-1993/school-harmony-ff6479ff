@@ -137,34 +137,27 @@ export default function DashboardPage() {
         loading={loading}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
-          <SmartDashboardSummary />
-          <AttendanceOverview
-            todayPresent={todayPresent}
-            todayAbsent={todayAbsent}
-            todayLate={todayLate}
-            todayNotRecorded={todayNotRecorded}
-            classStats={classStats}
-          />
-        </div>
-        <div className="space-y-5">
-          <WeekLessonsWidget />
-          <AcademicCalendarWidget />
-          <SafeZoneCounter />
-        </div>
+      <SmartDashboardSummary />
+
+      <AttendanceOverview
+        todayPresent={todayPresent}
+        todayAbsent={todayAbsent}
+        todayLate={todayLate}
+        todayNotRecorded={todayNotRecorded}
+        classStats={classStats}
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <WeekLessonsWidget />
+        <AcademicCalendarWidget />
+        <SafeZoneCounter />
       </div>
 
       <HonorRoll />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2">
-          <PeriodComparison />
-        </div>
-        <div>
-          <PerformanceDashboard />
-        </div>
-      </div>
+      <PeriodComparison />
+
+      <PerformanceDashboard />
 
       <DashboardPrintView
         totalStudents={totalStudents}
