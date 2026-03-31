@@ -156,6 +156,7 @@ export default function StudentDashboard() {
   // School info for PDF
   const [schoolName, setSchoolName] = useState("");
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
+  const [parentPdfHeader, setParentPdfHeader] = useState<{ line1: string; line2: string; line3: string; showLogo: boolean }>({ line1: "", line2: "", line3: "", showLogo: true });
 
   // PDF export
   const [exportingPdf, setExportingPdf] = useState(false);
@@ -172,7 +173,7 @@ export default function StudentDashboard() {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities"]);
+      .in("id", ["parent_welcome_message", "parent_welcome_enabled", "school_name", "school_logo_url", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "parent_pdf_header"]);
     (data || []).forEach((s: any) => {
       if (s.id === "parent_welcome_message" && s.value) setWelcomeMessage(s.value);
       if (s.id === "parent_welcome_enabled") setWelcomeEnabled(s.value !== "false");
@@ -206,6 +207,9 @@ export default function StudentDashboard() {
       if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
       if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
       if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
+      if (s.id === "parent_pdf_header" && s.value) {
+        try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
+      }
     });
   };
 
@@ -316,10 +320,32 @@ export default function StudentDashboard() {
       
       let html = "";
 
-      // Header
-      if (schoolName) {
-        html += `<h1 style="text-align:center;font-size:20px;margin:0 0 4px;color:#1e3a5f;">${schoolName}</h1>`;
+      // Custom PDF Header from settings
+      const hasCustomHeader = parentPdfHeader.line1 || parentPdfHeader.line2 || parentPdfHeader.line3;
+      if (hasCustomHeader) {
+        html += `<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;">`;
+        // Logo on the right (RTL)
+        if (parentPdfHeader.showLogo && schoolLogoUrl) {
+          html += `<img src="${schoolLogoUrl}" style="width:60px;height:60px;border-radius:8px;object-fit:contain;" crossorigin="anonymous" />`;
+        }
+        html += `<div style="text-align:center;flex:1;">`;
+        if (parentPdfHeader.line1) html += `<p style="font-size:14px;font-weight:bold;margin:0 0 2px;color:#1e3a5f;">${parentPdfHeader.line1}</p>`;
+        if (parentPdfHeader.line2) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line2}</p>`;
+        if (parentPdfHeader.line3) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line3}</p>`;
+        html += `</div>`;
+        if (parentPdfHeader.showLogo && schoolLogoUrl) {
+          html += `<div style="width:60px;"></div>`;
+        }
+        html += `</div>`;
+        html += `<hr style="border:none;border-top:2px solid #1e3a5f;margin:0 0 12px;">`;
+      } else {
+        // Fallback: school name only
+        if (schoolName) {
+          html += `<h1 style="text-align:center;font-size:20px;margin:0 0 4px;color:#1e3a5f;">${schoolName}</h1>`;
+        }
       }
+
+      // Student info
       html += `<h2 style="text-align:center;font-size:16px;margin:0 0 4px;color:#333;">تقرير الطالب: ${student.full_name}</h2>`;
       
       const classInfo = student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "";

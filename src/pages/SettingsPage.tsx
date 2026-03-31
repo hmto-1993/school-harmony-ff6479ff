@@ -306,6 +306,12 @@ export default function SettingsPage() {
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
+  const [parentPdfHeader, setParentPdfHeader] = useState({
+    line1: "",
+    line2: "",
+    line3: "",
+    showLogo: true,
+  });
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
   const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
@@ -444,7 +450,7 @@ export default function SettingsPage() {
       const { data: qcData } = await supabase
         .from("site_settings")
         .select("id, value")
-        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat"]);
+        .in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"]);
       (qcData || []).forEach((s: any) => {
         if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
         if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
@@ -507,6 +513,9 @@ export default function SettingsPage() {
         if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
         if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
         if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
+        if (s.id === "parent_pdf_header" && s.value) {
+          try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
+        }
         if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
         if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
         if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
@@ -3135,6 +3144,51 @@ export default function SettingsPage() {
               </Collapsible>
             </div>
 
+            {/* ─── Section 3: PDF Header ─── */}
+            <Collapsible className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
+                <h4 className="text-sm font-bold flex items-center gap-1.5">
+                  <Printer className="h-4 w-4 text-blue-600" />
+                  ترويسة التصدير (PDF)
+                </h4>
+                <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-3 pb-3 space-y-2">
+                <p className="text-[10px] text-muted-foreground mb-1">تظهر هذه الترويسة في أعلى تقرير ولي الأمر عند التصدير</p>
+                {[
+                  { key: "line1", label: "السطر الأول (مثال: وزارة التعليم)", placeholder: "وزارة التعليم" },
+                  { key: "line2", label: "السطر الثاني (مثال: إدارة التعليم)", placeholder: "إدارة التعليم بمنطقة ..." },
+                  { key: "line3", label: "السطر الثالث (مثال: اسم المدرسة)", placeholder: "مدرسة ..." },
+                ].map(field => (
+                  <div key={field.key}>
+                    <Label className="text-[11px] font-bold text-muted-foreground">{field.label}</Label>
+                    <Input
+                      value={(parentPdfHeader as any)[field.key] || ""}
+                      onChange={(e) => setParentPdfHeader(prev => ({ ...prev, [field.key]: e.target.value }))}
+                      placeholder={field.placeholder}
+                      className="text-xs h-8 mt-0.5"
+                      dir="rtl"
+                    />
+                  </div>
+                ))}
+                <div className="flex items-center justify-between p-2 rounded-lg border border-border/40 bg-card">
+                  <span className="text-xs font-bold">إظهار الشعار</span>
+                  <button
+                    onClick={() => setParentPdfHeader(prev => ({ ...prev, showLogo: !prev.showLogo }))}
+                    className={cn(
+                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
+                      parentPdfHeader.showLogo ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
+                      parentPdfHeader.showLogo ? "translate-x-6" : "translate-x-1"
+                    )} />
+                  </button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             {/* Save Button + Info */}
             <div className="flex items-center gap-3 pt-2">
             <Button
@@ -3162,6 +3216,7 @@ export default function SettingsPage() {
                   supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(parentClassworkIconsCount) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_library", value: String(parentShowLibrary) }),
                   supabase.from("site_settings").upsert({ id: "parent_show_activities", value: String(parentShowActivities) }),
+                  supabase.from("site_settings").upsert({ id: "parent_pdf_header", value: JSON.stringify(parentPdfHeader) }),
                 ]);
                 setSavingParentWelcome(false);
                 if (results.some(r => r.error)) {
