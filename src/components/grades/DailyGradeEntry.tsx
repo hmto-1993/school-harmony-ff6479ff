@@ -386,16 +386,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
-  // Filter students: show only present/late, hide absent
+  // Filter students: show only present/late, hide absent (unless showAbsent toggled)
   const hasAttendanceRecords = attendanceLoaded && Object.keys(attendanceMap).length > 0;
   const filteredStudentGrades = useMemo(() => {
     if (!attendanceLoaded || !hasAttendanceRecords) return studentGrades;
+    if (showAbsent) return studentGrades; // show all when toggle is on
     return studentGrades.filter((sg) => {
       const status = attendanceMap[sg.student_id];
-      // Show students who are present, late, early_leave, sick_leave — hide only "absent"
       return status && status !== "absent";
     });
-  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords]);
+  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords, showAbsent]);
+
+  const absentCount = useMemo(() => {
+    if (!hasAttendanceRecords) return 0;
+    return studentGrades.filter(sg => attendanceMap[sg.student_id] === "absent").length;
+  }, [studentGrades, attendanceMap, hasAttendanceRecords]);
 
   const buildDailyTableHTML = () => {
     const getLevelIcon = (level: GradeLevel) => {
