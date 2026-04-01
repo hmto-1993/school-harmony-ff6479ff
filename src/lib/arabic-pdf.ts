@@ -152,12 +152,16 @@ async function renderPrintHeaderFromConfig(
     }
   });
 
-  // --- Center images ---
+  // --- Center images (capped size for balanced header) ---
   const images = config.centerSection.images.filter(Boolean);
+  const textHeight = Math.max(currentY, leftY) - 12; // height used by text sections
+  const maxImgSize = Math.max(textHeight * 0.85, 12); // cap to ~85% of text height, min 12mm
+
   if (images.length > 0) {
     const centerX = pageWidth / 2;
     const totalImgWidth = images.reduce((sum, _, i) => {
-      const size = (config.centerSection.imagesSizes[i] || 60) * 0.3;
+      const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.26;
+      const size = Math.min(rawSize, maxImgSize);
       return sum + size + 2;
     }, -2);
 
@@ -168,12 +172,15 @@ async function renderPrintHeaderFromConfig(
       const sizePx = config.centerSection.imagesSizes[
         config.centerSection.images.indexOf(imgUrl)
       ] || 60;
-      const sizeMm = sizePx * 0.3;
+      const rawSizeMm = sizePx * 0.26;
+      const sizeMm = Math.min(rawSizeMm, maxImgSize);
+      // Center vertically relative to text
+      const imgY = 12 + (textHeight - sizeMm) / 2;
 
       const base64 = await imageUrlToBase64(imgUrl);
       if (base64) {
         try {
-          doc.addImage(base64, "PNG", imgX, 6, sizeMm, sizeMm);
+          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), sizeMm, sizeMm);
         } catch {
           // Skip if image fails
         }
