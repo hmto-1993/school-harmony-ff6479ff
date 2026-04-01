@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText, AlertTriangle } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { subDays, addDays, isToday, format } from "date-fns";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GradeCategory {
   id: string;
@@ -84,6 +85,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [extraSlotsDisabledCats, setExtraSlotsDisabledCats] = useState<string[]>([]);
   const [globalMaxSlots, setGlobalMaxSlots] = useState(DEFAULT_MAX_SLOTS);
   const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
@@ -113,6 +116,51 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     setSelectedCategory("");
     loadData();
   }, [selectedClass, selectedDate, selectedPeriod]);
+
+  // Load attendance for the selected date & class
+  const loadAttendance = async () => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const { data } = await supabase
+      .from("attendance_records")
+      .select("student_id, status")
+      .eq("class_id", selectedClass)
+      .eq("date", dateStr);
+    const map: Record<string, string> = {};
+    (data || []).forEach((r) => { map[r.student_id] = r.status; });
+    setAttendanceMap(map);
+    setAttendanceLoaded(true);
+  };
+
+  useEffect(() => {
+    if (!selectedClass) return;
+    setAttendanceLoaded(false);
+    loadAttendance();
+  }, [selectedClass, selectedDate]);
+
+  // Realtime subscription for attendance changes
+  useEffect(() => {
+    if (!selectedClass) return;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const channel = supabase
+      .channel(`attendance-daily-${selectedClass}-${dateStr}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "attendance_records",
+          filter: `class_id=eq.${selectedClass}`,
+        },
+        (payload: any) => {
+          const record = payload.new || payload.old;
+          if (record?.date === dateStr) {
+            loadAttendance();
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedClass, selectedDate]);
 
   const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
 
@@ -337,6 +385,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
+  // Filter students: show only present/late, hide absent
+  const hasAttendanceRecords = attendanceLoaded && Object.keys(attendanceMap).length > 0;
+  const filteredStudentGrades = useMemo(() => {
+    if (!attendanceLoaded || !hasAttendanceRecords) return studentGrades;
+    return studentGrades.filter((sg) => {
+      const status = attendanceMap[sg.student_id];
+      // Show students who are present, late, early_leave, sick_leave — hide only "absent"
+      return status && status !== "absent";
+    });
+  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords]);
+
   const buildDailyTableHTML = () => {
     const getLevelIcon = (level: GradeLevel) => {
       if (level === "excellent") return '<span class="icon-excellent">✔</span>';
@@ -353,7 +412,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       ...(!isSingleCategory ? ['<th class="subtotal-header">المجموع</th>'] : []),
     ].join('');
 
-    const bodyRows = studentGrades.map((sg, i) => {
+    const bodyRows = filteredStudentGrades.map((sg, i) => {
       const cells = [
         `<td>${i + 1}</td>`,
         `<td>${sg.full_name}</td>`,
@@ -399,6 +458,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
 
+
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
       <CardHeader className="pb-3 no-print">
@@ -423,7 +483,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                    groups={(() => {
                      const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
                      const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                     const rows = studentGrades.map((sg, i) => [
+                     const rows = filteredStudentGrades.map((sg, i) => [
                        String(i + 1),
                        sg.full_name,
                        ...visibleCategories.map(c => {
@@ -496,6 +556,30 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                </div>
              </div>
 
+            {/* Attendance alerts */}
+            {attendanceLoaded && !hasAttendanceRecords && (
+              <Alert className="mb-4 border-warning/50 bg-warning/5">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <AlertDescription className="text-warning text-sm font-medium">
+                  يرجى رصد الحضور أولاً ليظهر الطلاب في قائمة التفاعل
+                </AlertDescription>
+              </Alert>
+            )}
+            {hasAttendanceRecords && filteredStudentGrades.length === 0 && (
+              <Alert className="mb-4 border-muted-foreground/30">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <AlertDescription className="text-muted-foreground text-sm">
+                  جميع الطلاب مسجّلون كغائبين في هذا اليوم
+                </AlertDescription>
+              </Alert>
+            )}
+            {hasAttendanceRecords && filteredStudentGrades.length > 0 && filteredStudentGrades.length < studentGrades.length && (
+              <div className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 no-print">
+                <span className="inline-block w-2 h-2 rounded-full bg-success" />
+                يُعرض {filteredStudentGrades.length} طالب حاضر من أصل {studentGrades.length}
+              </div>
+            )}
+
             <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
@@ -511,9 +595,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   </tr>
                 </thead>
                 <tbody>
-                  {studentGrades.map((sg, i) => {
+                  {filteredStudentGrades.map((sg, i) => {
                     const isEven = i % 2 === 0;
-                    const isLast = i === studentGrades.length - 1;
+                    const isLast = i === filteredStudentGrades.length - 1;
                     return (
                     <tr
                       key={sg.student_id}
