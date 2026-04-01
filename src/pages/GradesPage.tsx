@@ -198,7 +198,7 @@ export default function GradesPage() {
               return (
                 <button
                   key={period.id}
-                  onClick={() => setSelectedPeriod(period.id)}
+                  onClick={() => handlePeriodChange(period.id)}
                   className={cn(
                     "relative flex items-center justify-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive
