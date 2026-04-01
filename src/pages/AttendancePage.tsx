@@ -720,14 +720,26 @@ export default function AttendancePage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={exportAttendanceExcel} className="gap-2 cursor-pointer">
+                    <DropdownMenuItem onClick={() => exportAttendanceExcel("all")} className="gap-2 cursor-pointer">
                       <FileSpreadsheet className="h-4 w-4" />
-                      تصدير Excel
+                      تصدير الكل Excel
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={exportAttendancePDF} className="gap-2 cursor-pointer">
+                    <DropdownMenuItem onClick={() => exportAttendancePDF("all")} className="gap-2 cursor-pointer">
                       <FileText className="h-4 w-4" />
-                      تصدير PDF
+                      تصدير الكل PDF
                     </DropdownMenuItem>
+                    {statusFilter !== "all" && (
+                      <>
+                        <DropdownMenuItem onClick={() => exportAttendanceExcel("filtered")} className="gap-2 cursor-pointer">
+                          <FileSpreadsheet className="h-4 w-4 text-warning" />
+                          تصدير المفلتر Excel ({statusOptions.find(o => o.value === statusFilter)?.label})
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => exportAttendancePDF("filtered")} className="gap-2 cursor-pointer">
+                          <FileText className="h-4 w-4 text-warning" />
+                          تصدير المفلتر PDF ({statusOptions.find(o => o.value === statusFilter)?.label})
+                        </DropdownMenuItem>
+                      </>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <div className="relative flex-1 min-w-[160px] max-w-[280px]">
