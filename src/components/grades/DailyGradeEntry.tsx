@@ -617,14 +617,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   {filteredStudentGrades.map((sg, i) => {
                     const isEven = i % 2 === 0;
                     const isLast = i === filteredStudentGrades.length - 1;
-                    const isAbsent = hasAttendanceRecords && attendanceMap[sg.student_id] === "absent";
-                    const isLate = hasAttendanceRecords && attendanceMap[sg.student_id] === "late";
+                    const studentStatus = hasAttendanceRecords ? attendanceMap[sg.student_id] : undefined;
+                    const isHidden = studentStatus && hiddenStatuses.includes(studentStatus);
+                    const isLate = studentStatus === "late";
+                    const statusLabel: Record<string, string> = {
+                      absent: "غائب",
+                      early_leave: "منصرف مبكراً",
+                      sick_leave: "إجازة مرضية",
+                    };
                     return (
                     <tr
                       key={sg.student_id}
                       className={cn(
                         "group transition-all duration-200 cursor-default",
-                        isAbsent
+                        isHidden
                           ? "opacity-50 bg-destructive/5 dark:bg-destructive/10"
                           : cn(
                               "hover:bg-primary/10 dark:hover:bg-primary/15",
@@ -643,9 +649,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               متأخر
                             </span>
                           )}
-                          {isAbsent && (
+                          {isHidden && studentStatus && (
                             <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
-                              غائب
+                              {statusLabel[studentStatus] || studentStatus}
                             </span>
                           )}
                         </span>
