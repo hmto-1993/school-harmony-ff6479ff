@@ -412,7 +412,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       ...(!isSingleCategory ? ['<th class="subtotal-header">المجموع</th>'] : []),
     ].join('');
 
-    const bodyRows = studentGrades.map((sg, i) => {
+    const bodyRows = filteredStudentGrades.map((sg, i) => {
       const cells = [
         `<td>${i + 1}</td>`,
         `<td>${sg.full_name}</td>`,
