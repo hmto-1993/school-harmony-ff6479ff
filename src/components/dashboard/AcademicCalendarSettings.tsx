@@ -239,15 +239,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                           key={key}
                           variant="outline"
                           className="w-full justify-between h-auto py-3 px-4 border-primary/30 bg-primary/5"
-                          onClick={() => {
-                            setStartDate(preset.start_date);
-                            setTotalWeeks(preset.total_weeks);
-                            setSemester(preset.semester);
-                            setAcademicYear(preset.academic_year);
-                            setExamDates(preset.exam_dates);
-                            setHolidays(preset.holidays.map(h => ({ date: h.date, end_date: h.end_date, label: h.label })));
-                            toast({ title: "تم الاستيراد", description: `تم تحميل تقويم ${preset.label}` });
-                          }}
+                          onClick={() => applyPreset(preset)}
                         >
                           <div className="flex flex-col items-start gap-0.5">
                             <span className="text-sm font-medium">{preset.label}</span>
