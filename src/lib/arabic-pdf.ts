@@ -166,7 +166,7 @@ async function renderPrintHeaderFromConfig(
   if (images.length > 0) {
     const centerX = pageWidth / 2;
     // Cap logo to text height or 18mm max
-    const maxImgSize = Math.min(Math.max(textHeight * 0.9, 12), 18);
+    const maxImgSize = Math.min(Math.max(textHeight * 0.75, 10), 14);
 
     const totalImgWidth = images.reduce((sum, _, i) => {
       const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.22;
