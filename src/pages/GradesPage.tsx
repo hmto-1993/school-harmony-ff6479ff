@@ -37,7 +37,15 @@ export default function GradesPage() {
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
-  const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
+  const [selectedPeriod, setSelectedPeriod] = useState<number>(() => {
+    const saved = localStorage.getItem("grades_selected_period");
+    return saved ? Number(saved) : 1;
+  });
+
+  const handlePeriodChange = (period: number) => {
+    setSelectedPeriod(period);
+    localStorage.setItem("grades_selected_period", String(period));
+  };
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
   // If can't view grades at all, show restricted message
@@ -190,7 +198,7 @@ export default function GradesPage() {
               return (
                 <button
                   key={period.id}
-                  onClick={() => setSelectedPeriod(period.id)}
+                  onClick={() => handlePeriodChange(period.id)}
                   className={cn(
                     "relative flex items-center justify-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
                     isActive

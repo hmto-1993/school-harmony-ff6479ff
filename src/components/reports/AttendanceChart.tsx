@@ -6,21 +6,13 @@ interface AttendanceChartProps {
   data: { status: string }[];
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  present: "حاضر",
-  absent: "غائب",
-  late: "متأخر",
-  early_leave: "خروج مبكر",
-  sick_leave: "إجازة مرضية",
+const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+  present:    { label: "حاضر",        color: "hsl(152, 69%, 45%)" },
+  absent:     { label: "غائب",        color: "hsl(0, 72%, 58%)" },
+  late:       { label: "متأخر",       color: "hsl(43, 96%, 52%)" },
+  early_leave:{ label: "خروج مبكر",   color: "hsl(210, 78%, 55%)" },
+  sick_leave: { label: "إجازة مرضية", color: "hsl(280, 60%, 58%)" },
 };
-
-const COLORS = [
-  "hsl(152, 69%, 45%)",  // present - emerald
-  "hsl(0, 72%, 58%)",    // absent - coral red
-  "hsl(43, 96%, 52%)",   // late - amber gold
-  "hsl(210, 78%, 55%)",  // early_leave - sky blue
-  "hsl(280, 60%, 58%)",  // sick_leave - violet
-];
 
 const renderActiveShape = (props: any) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, percent, value } = props;
@@ -66,8 +58,9 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
       counts[r.status] = (counts[r.status] || 0) + 1;
     });
     return Object.entries(counts).map(([status, value]) => ({
-      name: STATUS_LABELS[status] || status,
+      name: STATUS_CONFIG[status]?.label || status,
       value,
+      color: STATUS_CONFIG[status]?.color || "hsl(220, 14%, 55%)",
     }));
   }, [data]);
 
@@ -97,8 +90,8 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
               animationDuration={700}
               animationEasing="ease-out"
             >
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
             <Legend
