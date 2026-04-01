@@ -593,9 +593,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   </tr>
                 </thead>
                 <tbody>
-                  {studentGrades.map((sg, i) => {
+                  {filteredStudentGrades.map((sg, i) => {
                     const isEven = i % 2 === 0;
-                    const isLast = i === studentGrades.length - 1;
+                    const isLast = i === filteredStudentGrades.length - 1;
                     return (
                     <tr
                       key={sg.student_id}
