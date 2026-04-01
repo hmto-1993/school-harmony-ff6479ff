@@ -90,8 +90,8 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
               animationDuration={700}
               animationEasing="ease-out"
             >
-              {chartData.map((_, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
             <Legend
