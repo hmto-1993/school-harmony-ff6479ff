@@ -483,7 +483,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                    groups={(() => {
                      const className = `${classes.find(c => c.id === selectedClass)?.name || "الفصل"} — ${format(selectedDate, "yyyy/MM/dd")}`;
                      const headers = ["#", "الطالب", ...visibleCategories.map(c => c.name), ...(!isSingleCategory ? ["المجموع"] : [])];
-                     const rows = studentGrades.map((sg, i) => [
+                     const rows = filteredStudentGrades.map((sg, i) => [
                        String(i + 1),
                        sg.full_name,
                        ...visibleCategories.map(c => {
