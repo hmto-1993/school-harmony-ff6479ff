@@ -257,13 +257,12 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
             <TabsTrigger value="pdf" className="text-xs gap-1"><FileText className="h-3 w-3" /> ملف PDF</TabsTrigger>
           </TabsList>
 
-          {/* MOE Preset Tab */}
+          {/* MOE Preset Tab - Self-contained, auto-saves */}
           <TabsContent value="moe" className="space-y-3 mt-4">
             <p className="text-xs text-muted-foreground">
-              اختر الفصل الدراسي لاستيراد التقويم الأكاديمي الرسمي لوزارة التعليم السعودية تلقائياً
+              اختر الفصل الدراسي لاستيراد وحفظ التقويم الأكاديمي الرسمي لوزارة التعليم السعودية تلقائياً
             </p>
 
-            {/* Current year presets */}
             {(() => {
               const currentYear = defaultAcademicYear || "1447-1448";
               const currentPresets = Object.entries(MOE_PRESETS).filter(([, p]) => p.academic_year === currentYear);
@@ -279,6 +278,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                           key={key}
                           variant="outline"
                           className="w-full justify-between h-auto py-3 px-4 border-primary/30 bg-primary/5"
+                          disabled={saving}
                           onClick={() => applyPreset(preset)}
                         >
                           <div className="flex flex-col items-start gap-0.5">
@@ -301,6 +301,7 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                           <Button
                             variant="outline"
                             className="flex-1 justify-between h-auto py-2 px-3 opacity-70 hover:opacity-100"
+                            disabled={saving}
                             onClick={() => applyPreset(preset)}
                           >
                             <div className="flex flex-col items-start gap-0.5">
@@ -362,12 +363,18 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
               );
             })()}
 
+            {saving && (
+              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> جاري الحفظ...
+              </div>
+            )}
+
             <p className="text-[10px] text-muted-foreground text-center">
               * التواريخ مبنية على التقويم الدراسي المعتمد من وزارة التعليم للعام ١٤٤٦-١٤٤٧هـ و ١٤٤٧-١٤٤٨هـ
             </p>
           </TabsContent>
 
-          {/* Manual Tab */}
+          {/* Manual Tab - Self-contained with its own editors and save */}
           <TabsContent value="manual" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -397,9 +404,121 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
                 <Input value={academicYear} onChange={e => setAcademicYear(e.target.value)} className="mt-1" placeholder="1446-1447" />
               </div>
             </div>
+
+            {/* Exam dates editor - inside manual tab */}
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">مواعيد الاختبارات</Label>
+                <Button variant="ghost" size="sm" onClick={addExamDate} className="gap-1 text-xs h-7">
+                  <Plus className="h-3 w-3" /> إضافة
+                </Button>
+              </div>
+
+              {examDates.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">لا توجد مواعيد اختبارات</p>
+              )}
+
+              {examDates.map((exam, i) => (
+                <div key={i} className="flex items-end gap-2 bg-muted/30 rounded-lg p-2">
+                  <div className="flex-1">
+                    <Label className="text-[10px]">التاريخ</Label>
+                    <Input type="date" value={exam.date} onChange={e => updateExamDate(i, "date", e.target.value)} className="h-8 text-xs" />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-[10px]">الوصف</Label>
+                    <Input value={exam.label} onChange={e => updateExamDate(i, "label", e.target.value)} className="h-8 text-xs" placeholder="اختبارات نصفية" />
+                  </div>
+                  <div className="w-24">
+                    <Label className="text-[10px]">النوع</Label>
+                    <Select value={exam.type} onValueChange={v => updateExamDate(i, "type", v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="midterm">نصفي</SelectItem>
+                        <SelectItem value="final">نهائي</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeExamDate(i)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Holidays editor - inside manual tab */}
+            <div className="space-y-3 border-t pt-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold flex items-center gap-1.5">
+                  <TreePalm className="h-4 w-4 text-emerald-500" />
+                  مواعيد الإجازات
+                </Label>
+                <Button variant="ghost" size="sm" onClick={addHoliday} className="gap-1 text-xs h-7">
+                  <Plus className="h-3 w-3" /> إضافة
+                </Button>
+              </div>
+
+              {holidays.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">لا توجد إجازات</p>
+              )}
+
+              {holidays.map((holiday, i) => (
+                <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 flex-wrap">
+                  <div className="flex-1 min-w-[120px]">
+                    <Label className="text-[10px]">من تاريخ</Label>
+                    <Input type="date" value={holiday.date} onChange={e => updateHoliday(i, "date", e.target.value)} className="h-8 text-xs" />
+                  </div>
+                  <div className="flex-1 min-w-[120px]">
+                    <Label className="text-[10px]">إلى تاريخ <span className="text-muted-foreground">(اختياري)</span></Label>
+                    <Input type="date" value={holiday.end_date || ""} onChange={e => updateHoliday(i, "end_date", e.target.value)} className="h-8 text-xs" />
+                  </div>
+                  <div className="flex-1 min-w-[120px]">
+                    <Label className="text-[10px]">الوصف</Label>
+                    <Input value={holiday.label} onChange={e => updateHoliday(i, "label", e.target.value)} className="h-8 text-xs" placeholder="إجازة اليوم الوطني" />
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeHoliday(i)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Save & Delete - inside manual tab */}
+            <div className="flex gap-2 mt-4 border-t pt-4">
+              <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}
+                حفظ التقويم
+              </Button>
+              <Button variant="outline" onClick={onClose}>إلغاء</Button>
+              {calendarData?.id && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deleting}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent dir="rtl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>حذف التقويم الأكاديمي؟</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        سيتم حذف التقويم الأكاديمي وجميع مواعيد الاختبارات والإجازات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={handleDelete}
+                      >
+                        حذف التقويم
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </TabsContent>
 
-          {/* CSV Tab */}
+          {/* CSV Tab - imports into manual fields then switches to manual */}
           <TabsContent value="csv" className="space-y-3 mt-4">
             <p className="text-xs text-muted-foreground">
               ارفع ملف Excel أو CSV يحتوي على أعمدة: <Badge variant="outline" className="mx-1 text-[10px]">date</Badge>
@@ -430,118 +549,6 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
             </Button>
           </TabsContent>
         </Tabs>
-
-        {/* Exam dates editor */}
-        <div className="space-y-3 mt-4 border-t pt-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">مواعيد الاختبارات</Label>
-            <Button variant="ghost" size="sm" onClick={addExamDate} className="gap-1 text-xs h-7">
-              <Plus className="h-3 w-3" /> إضافة
-            </Button>
-          </div>
-
-          {examDates.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-3">لا توجد مواعيد اختبارات</p>
-          )}
-
-          {examDates.map((exam, i) => (
-            <div key={i} className="flex items-end gap-2 bg-muted/30 rounded-lg p-2">
-              <div className="flex-1">
-                <Label className="text-[10px]">التاريخ</Label>
-                <Input type="date" value={exam.date} onChange={e => updateExamDate(i, "date", e.target.value)} className="h-8 text-xs" />
-              </div>
-              <div className="flex-1">
-                <Label className="text-[10px]">الوصف</Label>
-                <Input value={exam.label} onChange={e => updateExamDate(i, "label", e.target.value)} className="h-8 text-xs" placeholder="اختبارات نصفية" />
-              </div>
-              <div className="w-24">
-                <Label className="text-[10px]">النوع</Label>
-                <Select value={exam.type} onValueChange={v => updateExamDate(i, "type", v)}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="midterm">نصفي</SelectItem>
-                    <SelectItem value="final">نهائي</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeExamDate(i)}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {/* Holidays editor */}
-        <div className="space-y-3 mt-4 border-t pt-4">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold flex items-center gap-1.5">
-              <TreePalm className="h-4 w-4 text-emerald-500" />
-              مواعيد الإجازات
-            </Label>
-            <Button variant="ghost" size="sm" onClick={addHoliday} className="gap-1 text-xs h-7">
-              <Plus className="h-3 w-3" /> إضافة
-            </Button>
-          </div>
-
-          {holidays.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-3">لا توجد إجازات</p>
-          )}
-
-          {holidays.map((holiday, i) => (
-            <div key={i} className="flex items-end gap-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2 flex-wrap">
-              <div className="flex-1 min-w-[120px]">
-                <Label className="text-[10px]">من تاريخ</Label>
-                <Input type="date" value={holiday.date} onChange={e => updateHoliday(i, "date", e.target.value)} className="h-8 text-xs" />
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <Label className="text-[10px]">إلى تاريخ <span className="text-muted-foreground">(اختياري)</span></Label>
-                <Input type="date" value={holiday.end_date || ""} onChange={e => updateHoliday(i, "end_date", e.target.value)} className="h-8 text-xs" />
-              </div>
-              <div className="flex-1 min-w-[120px]">
-                <Label className="text-[10px]">الوصف</Label>
-                <Input value={holiday.label} onChange={e => updateHoliday(i, "label", e.target.value)} className="h-8 text-xs" placeholder="إجازة اليوم الوطني" />
-              </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeHoliday(i)}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {/* Save & Delete */}
-        <div className="flex gap-2 mt-4">
-          <Button onClick={handleSave} disabled={saving} className="flex-1 gap-2">
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}
-            حفظ التقويم
-          </Button>
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          {calendarData?.id && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" disabled={deleting}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent dir="rtl">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>حذف التقويم الأكاديمي؟</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    سيتم حذف التقويم الأكاديمي وجميع مواعيد الاختبارات والإجازات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    onClick={handleDelete}
-                  >
-                    حذف التقويم
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
       </DialogContent>
     </Dialog>
   );
