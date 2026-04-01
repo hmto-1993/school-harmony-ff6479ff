@@ -64,6 +64,46 @@ export default function AcademicCalendarSettings({ onClose }: Props) {
       });
   }, []);
 
+  const applyPreset = async (preset: typeof MOE_PRESETS[string]) => {
+    const newHolidays = preset.holidays.map(h => ({ date: h.date, end_date: h.end_date, label: h.label }));
+    setStartDate(preset.start_date);
+    setTotalWeeks(preset.total_weeks);
+    setSemester(preset.semester);
+    setAcademicYear(preset.academic_year);
+    setExamDates(preset.exam_dates);
+    setHolidays(newHolidays);
+
+    // Auto-save
+    setSaving(true);
+    const combinedDates = [
+      ...preset.exam_dates.map(e => ({ date: e.date, label: e.label, type: e.type })),
+      ...newHolidays.filter(h => h.date && h.label).map(h => ({ date: h.date, end_date: h.end_date || undefined, label: h.label, type: "holiday" as const })),
+    ];
+    const payload = {
+      start_date: preset.start_date,
+      total_weeks: preset.total_weeks,
+      semester: preset.semester,
+      academic_year: preset.academic_year,
+      exam_dates: JSON.parse(JSON.stringify(combinedDates)),
+      created_by: user!.id,
+    };
+
+    let error;
+    if (calendarData?.id) {
+      ({ error } = await supabase.from("academic_calendar").update(payload).eq("id", calendarData.id));
+    } else {
+      ({ error } = await supabase.from("academic_calendar").insert([payload]));
+    }
+    setSaving(false);
+
+    if (error) {
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الحفظ", description: `تم حفظ تقويم ${preset.label} بنجاح` });
+      await refetch();
+    }
+  };
+
   const addExamDate = () => {
     setExamDates(prev => [...prev, { date: "", label: "", type: "midterm" }]);
   };
