@@ -386,20 +386,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
-  // Filter students: show only present/late, hide absent (unless showAbsent toggled)
+  // Filter students: show only present/late, hide absent/early_leave/sick_leave (unless showAbsent toggled)
   const hasAttendanceRecords = attendanceLoaded && Object.keys(attendanceMap).length > 0;
+  const hiddenStatuses = ["absent", "early_leave", "sick_leave"];
   const filteredStudentGrades = useMemo(() => {
     if (!attendanceLoaded || !hasAttendanceRecords) return studentGrades;
     if (showAbsent) return studentGrades; // show all when toggle is on
     return studentGrades.filter((sg) => {
       const status = attendanceMap[sg.student_id];
-      return status && status !== "absent";
+      return status && !hiddenStatuses.includes(status);
     });
   }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords, showAbsent]);
 
   const absentCount = useMemo(() => {
     if (!hasAttendanceRecords) return 0;
-    return studentGrades.filter(sg => attendanceMap[sg.student_id] === "absent").length;
+    return studentGrades.filter(sg => hiddenStatuses.includes(attendanceMap[sg.student_id] || "")).length;
   }, [studentGrades, attendanceMap, hasAttendanceRecords]);
 
   const buildDailyTableHTML = () => {
