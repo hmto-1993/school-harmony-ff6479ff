@@ -385,6 +385,17 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
+  // Filter students: show only present/late, hide absent
+  const hasAttendanceRecords = attendanceLoaded && Object.keys(attendanceMap).length > 0;
+  const filteredStudentGrades = useMemo(() => {
+    if (!attendanceLoaded || !hasAttendanceRecords) return studentGrades;
+    return studentGrades.filter((sg) => {
+      const status = attendanceMap[sg.student_id];
+      // Show students who are present, late, early_leave, sick_leave — hide only "absent"
+      return status && status !== "absent";
+    });
+  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords]);
+
   const buildDailyTableHTML = () => {
     const getLevelIcon = (level: GradeLevel) => {
       if (level === "excellent") return '<span class="icon-excellent">✔</span>';
