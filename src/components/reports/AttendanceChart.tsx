@@ -58,8 +58,9 @@ export default function AttendanceChart({ data }: AttendanceChartProps) {
       counts[r.status] = (counts[r.status] || 0) + 1;
     });
     return Object.entries(counts).map(([status, value]) => ({
-      name: STATUS_LABELS[status] || status,
+      name: STATUS_CONFIG[status]?.label || status,
       value,
+      color: STATUS_CONFIG[status]?.color || "hsl(220, 14%, 55%)",
     }));
   }, [data]);
 
