@@ -117,6 +117,51 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     loadData();
   }, [selectedClass, selectedDate, selectedPeriod]);
 
+  // Load attendance for the selected date & class
+  const loadAttendance = async () => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const { data } = await supabase
+      .from("attendance_records")
+      .select("student_id, status")
+      .eq("class_id", selectedClass)
+      .eq("date", dateStr);
+    const map: Record<string, string> = {};
+    (data || []).forEach((r) => { map[r.student_id] = r.status; });
+    setAttendanceMap(map);
+    setAttendanceLoaded(true);
+  };
+
+  useEffect(() => {
+    if (!selectedClass) return;
+    setAttendanceLoaded(false);
+    loadAttendance();
+  }, [selectedClass, selectedDate]);
+
+  // Realtime subscription for attendance changes
+  useEffect(() => {
+    if (!selectedClass) return;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const channel = supabase
+      .channel(`attendance-daily-${selectedClass}-${dateStr}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "attendance_records",
+          filter: `class_id=eq.${selectedClass}`,
+        },
+        (payload: any) => {
+          const record = payload.new || payload.old;
+          if (record?.date === dateStr) {
+            loadAttendance();
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedClass, selectedDate]);
+
   const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
 
   const loadData = async () => {
