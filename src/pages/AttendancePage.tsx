@@ -390,12 +390,13 @@ export default function AttendancePage() {
     }
   };
 
-  const exportAttendanceExcel = async () => {
-    if (!records.length) return;
+  const exportAttendanceExcel = async (scope: "all" | "filtered" = "all") => {
+    const data = scope === "filtered" ? filteredRecords : records;
+    if (!data.length) return;
     const XLSX = await import("xlsx");
     const className = classes.find(c => c.id === selectedClass)?.name || "";
     const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
-    const rows = records.map((r, i) => ({
+    const rows = data.map((r, i) => ({
       "#": i + 1,
       "الاسم": r.full_name,
       "الحالة": statusLabel[r.status] || r.status,
@@ -403,26 +404,31 @@ export default function AttendancePage() {
     }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "الحضور");
-    safeWriteXLSX(wb, `حضور_${className}_${date}.xlsx`);
-    toast({ title: "تم", description: "تم تصدير ملف Excel بنجاح" });
+    const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
+    safeWriteXLSX(wb, `حضور_${className}_${date}${suffix}.xlsx`);
+    toast({ title: "تم", description: `تم تصدير ${data.length} سجل إلى Excel` });
   };
 
-  const exportAttendancePDF = async () => {
-    if (!records.length) return;
+  const exportAttendancePDF = async (scope: "all" | "filtered" = "all") => {
+    const data = scope === "filtered" ? filteredRecords : records;
+    if (!data.length) return;
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const className = classes.find(c => c.id === selectedClass)?.name || "";
     const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
+    const filterLabel = scope === "filtered" && statusFilter !== "all" 
+      ? ` (${statusOptions.find(o => o.value === statusFilter)?.label || statusFilter})` 
+      : "";
 
     const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     doc.setFontSize(14);
     doc.setFont("Amiri", "bold");
-    doc.text(`تقرير الحضور — ${className} — ${date}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
+    doc.text(`تقرير الحضور — ${className} — ${date}${filterLabel}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
 
     const head = [["الملاحظات", "الحالة", "الاسم", "#"]];
-    const body = records.map((r, i) => [
+    const body = data.map((r, i) => [
       r.notes || "",
       statusLabel[r.status] || r.status,
       r.full_name,
@@ -440,8 +446,9 @@ export default function AttendancePage() {
       },
     });
 
-    finalizePDF(doc, `حضور_${className}_${date}.pdf`, watermark);
-    toast({ title: "تم", description: "تم تصدير ملف PDF بنجاح" });
+    const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
+    finalizePDF(doc, `حضور_${className}_${date}${suffix}.pdf`, watermark);
+    toast({ title: "تم", description: `تم تصدير ${data.length} سجل إلى PDF` });
   };
 
   const filteredRecords = useMemo(() => {
