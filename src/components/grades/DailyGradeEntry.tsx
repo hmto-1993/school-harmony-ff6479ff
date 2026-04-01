@@ -85,6 +85,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [extraSlotsDisabledCats, setExtraSlotsDisabledCats] = useState<string[]>([]);
   const [globalMaxSlots, setGlobalMaxSlots] = useState(DEFAULT_MAX_SLOTS);
   const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
+  const [attendanceLoaded, setAttendanceLoaded] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
