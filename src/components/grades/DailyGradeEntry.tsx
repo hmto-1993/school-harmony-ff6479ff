@@ -616,17 +616,39 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   {filteredStudentGrades.map((sg, i) => {
                     const isEven = i % 2 === 0;
                     const isLast = i === filteredStudentGrades.length - 1;
+                    const isAbsent = hasAttendanceRecords && attendanceMap[sg.student_id] === "absent";
+                    const isLate = hasAttendanceRecords && attendanceMap[sg.student_id] === "late";
                     return (
                     <tr
                       key={sg.student_id}
                       className={cn(
-                        "group transition-all duration-200 cursor-default hover:bg-primary/10 dark:hover:bg-primary/15",
-                        isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                        "group transition-all duration-200 cursor-default",
+                        isAbsent
+                          ? "opacity-50 bg-destructive/5 dark:bg-destructive/10"
+                          : cn(
+                              "hover:bg-primary/10 dark:hover:bg-primary/15",
+                              isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"
+                            ),
                         !isLast && "border-b border-border/20"
                       )}
                     >
                       <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">{sg.full_name}</td>
+                      <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                        <span className="flex items-center gap-1.5">
+                          {sg.full_name}
+                          {isLate && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
+                              <Clock className="h-3 w-3" />
+                              متأخر
+                            </span>
+                          )}
+                          {isAbsent && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
+                              غائب
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
