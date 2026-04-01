@@ -87,6 +87,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
   const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
   const [attendanceLoaded, setAttendanceLoaded] = useState(false);
+  const [showAbsent, setShowAbsent] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
