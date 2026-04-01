@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText, AlertTriangle } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Download, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
@@ -87,6 +87,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
   const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>({});
   const [attendanceLoaded, setAttendanceLoaded] = useState(false);
+  const [showAbsent, setShowAbsent] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
 
   const goToPrevDay = () => setSelectedDate(prev => subDays(prev, 1));
@@ -385,16 +386,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     ? dailyCategories.filter((c) => c.id === selectedCategory) : dailyCategories;
   const isSingleCategory = selectedCategory && selectedCategory !== "all";
 
-  // Filter students: show only present/late, hide absent
+  // Filter students: show only present/late, hide absent (unless showAbsent toggled)
   const hasAttendanceRecords = attendanceLoaded && Object.keys(attendanceMap).length > 0;
   const filteredStudentGrades = useMemo(() => {
     if (!attendanceLoaded || !hasAttendanceRecords) return studentGrades;
+    if (showAbsent) return studentGrades; // show all when toggle is on
     return studentGrades.filter((sg) => {
       const status = attendanceMap[sg.student_id];
-      // Show students who are present, late, early_leave, sick_leave — hide only "absent"
       return status && status !== "absent";
     });
-  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords]);
+  }, [studentGrades, attendanceMap, attendanceLoaded, hasAttendanceRecords, showAbsent]);
+
+  const absentCount = useMemo(() => {
+    if (!hasAttendanceRecords) return 0;
+    return studentGrades.filter(sg => attendanceMap[sg.student_id] === "absent").length;
+  }, [studentGrades, attendanceMap, hasAttendanceRecords]);
 
   const buildDailyTableHTML = () => {
     const getLevelIcon = (level: GradeLevel) => {
@@ -573,10 +579,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </AlertDescription>
               </Alert>
             )}
-            {hasAttendanceRecords && filteredStudentGrades.length > 0 && filteredStudentGrades.length < studentGrades.length && (
-              <div className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 no-print">
-                <span className="inline-block w-2 h-2 rounded-full bg-success" />
-                يُعرض {filteredStudentGrades.length} طالب حاضر من أصل {studentGrades.length}
+            {hasAttendanceRecords && absentCount > 0 && (
+              <div className="mb-3 flex items-center justify-between flex-wrap gap-2 no-print">
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-success" />
+                  يُعرض {filteredStudentGrades.length - (showAbsent ? absentCount : 0)} طالب حاضر من أصل {studentGrades.length}
+                  {showAbsent && <span className="text-destructive/70 mr-1">({absentCount} غائب)</span>}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5"
+                  onClick={() => setShowAbsent(prev => !prev)}
+                >
+                  {showAbsent ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showAbsent ? "إخفاء الغائبين" : `إظهار الغائبين (${absentCount})`}
+                </Button>
               </div>
             )}
 
@@ -598,17 +616,39 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   {filteredStudentGrades.map((sg, i) => {
                     const isEven = i % 2 === 0;
                     const isLast = i === filteredStudentGrades.length - 1;
+                    const isAbsent = hasAttendanceRecords && attendanceMap[sg.student_id] === "absent";
+                    const isLate = hasAttendanceRecords && attendanceMap[sg.student_id] === "late";
                     return (
                     <tr
                       key={sg.student_id}
                       className={cn(
-                        "group transition-all duration-200 cursor-default hover:bg-primary/10 dark:hover:bg-primary/15",
-                        isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
+                        "group transition-all duration-200 cursor-default",
+                        isAbsent
+                          ? "opacity-50 bg-destructive/5 dark:bg-destructive/10"
+                          : cn(
+                              "hover:bg-primary/10 dark:hover:bg-primary/15",
+                              isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"
+                            ),
                         !isLast && "border-b border-border/20"
                       )}
                     >
                       <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                      <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">{sg.full_name}</td>
+                      <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                        <span className="flex items-center gap-1.5">
+                          {sg.full_name}
+                          {isLate && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
+                              <Clock className="h-3 w-3" />
+                              متأخر
+                            </span>
+                          )}
+                          {isAbsent && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
+                              غائب
+                            </span>
+                          )}
+                        </span>
+                      </td>
                       {visibleCategories.map((cat) => {
                         const maxScore = Number(cat.max_score);
                         const currentScore = sg.grades[cat.id];
