@@ -556,6 +556,30 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                </div>
              </div>
 
+            {/* Attendance alerts */}
+            {attendanceLoaded && !hasAttendanceRecords && (
+              <Alert className="mb-4 border-warning/50 bg-warning/5">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <AlertDescription className="text-warning text-sm font-medium">
+                  يرجى رصد الحضور أولاً ليظهر الطلاب في قائمة التفاعل
+                </AlertDescription>
+              </Alert>
+            )}
+            {hasAttendanceRecords && filteredStudentGrades.length === 0 && (
+              <Alert className="mb-4 border-muted-foreground/30">
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                <AlertDescription className="text-muted-foreground text-sm">
+                  جميع الطلاب مسجّلون كغائبين في هذا اليوم
+                </AlertDescription>
+              </Alert>
+            )}
+            {hasAttendanceRecords && filteredStudentGrades.length > 0 && filteredStudentGrades.length < studentGrades.length && (
+              <div className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 no-print">
+                <span className="inline-block w-2 h-2 rounded-full bg-success" />
+                يُعرض {filteredStudentGrades.length} طالب حاضر من أصل {studentGrades.length}
+              </div>
+            )}
+
             <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
                 <thead>
