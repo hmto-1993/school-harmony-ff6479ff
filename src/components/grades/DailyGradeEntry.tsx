@@ -579,10 +579,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </AlertDescription>
               </Alert>
             )}
-            {hasAttendanceRecords && filteredStudentGrades.length > 0 && filteredStudentGrades.length < studentGrades.length && (
-              <div className="mb-3 text-xs text-muted-foreground flex items-center gap-1.5 no-print">
-                <span className="inline-block w-2 h-2 rounded-full bg-success" />
-                يُعرض {filteredStudentGrades.length} طالب حاضر من أصل {studentGrades.length}
+            {hasAttendanceRecords && absentCount > 0 && (
+              <div className="mb-3 flex items-center justify-between flex-wrap gap-2 no-print">
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <span className="inline-block w-2 h-2 rounded-full bg-success" />
+                  يُعرض {filteredStudentGrades.length - (showAbsent ? absentCount : 0)} طالب حاضر من أصل {studentGrades.length}
+                  {showAbsent && <span className="text-destructive/70 mr-1">({absentCount} غائب)</span>}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs gap-1.5"
+                  onClick={() => setShowAbsent(prev => !prev)}
+                >
+                  {showAbsent ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  {showAbsent ? "إخفاء الغائبين" : `إظهار الغائبين (${absentCount})`}
+                </Button>
               </div>
             )}
 
