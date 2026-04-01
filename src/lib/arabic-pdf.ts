@@ -124,43 +124,52 @@ async function renderPrintHeaderFromConfig(
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
+  const sectionWidth = (pageWidth - margin * 2) * 0.38; // ~38% each side like grades
+  const centerWidth = (pageWidth - margin * 2) * 0.24;
 
-  let currentY = 12;
+  const startY = 12;
+  let rightY = startY;
+  let leftY = startY;
 
-  // --- Right section text ---
+  // --- Right section text (centered within its area) ---
   doc.setFont("Amiri", "bold");
-  const rightFontSize = Math.min(config.rightSection.fontSize || 12, 14);
+  const rightFontSize = Math.min(config.rightSection.fontSize || 11, 13);
   doc.setFontSize(rightFontSize);
+  const lineSpacing = rightFontSize * 0.5;
+  const rightCenterX = pageWidth - margin - sectionWidth / 2;
 
-  const rightX = pageWidth - margin;
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
-      doc.text(line, rightX, currentY, { align: "right" });
-      currentY += rightFontSize * 0.45;
+      doc.text(line, rightCenterX, rightY, { align: "center" });
+      rightY += lineSpacing;
     }
   });
 
-  // --- Left section text ---
-  let leftY = 12;
-  const leftFontSize = Math.min(config.leftSection.fontSize || 12, 14);
+  // --- Left section text (centered within its area) ---
+  const leftFontSize = Math.min(config.leftSection.fontSize || 11, 13);
   doc.setFontSize(leftFontSize);
+  const leftLineSpacing = leftFontSize * 0.5;
+  const leftCenterX = margin + sectionWidth / 2;
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
-      doc.text(line, margin, leftY, { align: "left" });
-      leftY += leftFontSize * 0.45;
+      doc.text(line, leftCenterX, leftY, { align: "center" });
+      leftY += leftLineSpacing;
     }
   });
 
-  // --- Center images (capped size for balanced header) ---
-  const images = config.centerSection.images.filter(Boolean);
-  const textHeight = Math.max(currentY, leftY) - 12; // height used by text sections
-  const maxImgSize = Math.max(textHeight * 0.85, 12); // cap to ~85% of text height, min 12mm
+  const textMaxY = Math.max(rightY, leftY);
+  const textHeight = textMaxY - startY;
 
+  // --- Center images (sized proportionally, vertically centered) ---
+  const images = config.centerSection.images.filter(Boolean);
   if (images.length > 0) {
     const centerX = pageWidth / 2;
+    // Cap logo to text height or 18mm max
+    const maxImgSize = Math.min(Math.max(textHeight * 0.9, 12), 18);
+
     const totalImgWidth = images.reduce((sum, _, i) => {
-      const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.26;
+      const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.22;
       const size = Math.min(rawSize, maxImgSize);
       return sum + size + 2;
     }, -2);
@@ -172,10 +181,9 @@ async function renderPrintHeaderFromConfig(
       const sizePx = config.centerSection.imagesSizes[
         config.centerSection.images.indexOf(imgUrl)
       ] || 60;
-      const rawSizeMm = sizePx * 0.26;
+      const rawSizeMm = sizePx * 0.22;
       const sizeMm = Math.min(rawSizeMm, maxImgSize);
-      // Center vertically relative to text
-      const imgY = 12 + (textHeight - sizeMm) / 2;
+      const imgY = startY + (textHeight - sizeMm) / 2 - 2;
 
       const base64 = await imageUrlToBase64(imgUrl);
       if (base64) {
@@ -189,15 +197,13 @@ async function renderPrintHeaderFromConfig(
     }
   }
 
-  const maxY = Math.max(currentY, leftY);
-
+  // --- Blue bottom border (matching grades style) ---
   doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.5);
-  doc.line(margin, maxY + 2, pageWidth - margin, maxY + 2);
+  doc.setLineWidth(0.7);
+  doc.line(margin, textMaxY + 2, pageWidth - margin, textMaxY + 2);
 
   doc.setFont("Amiri", "normal");
-
-  return maxY + 8;
+  return textMaxY + 8;
 }
 
 /**
