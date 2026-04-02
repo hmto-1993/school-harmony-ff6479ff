@@ -340,7 +340,8 @@ export default function AttendanceWeeklyReport({
         });
       });
 
-      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+      const thresholdLbl = absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`;
+      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${thresholdLbl}` : s.name;
 
       const row = [
         { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
