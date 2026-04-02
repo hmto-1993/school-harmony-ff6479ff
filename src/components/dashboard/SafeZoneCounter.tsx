@@ -41,7 +41,7 @@ export default function SafeZoneCounter() {
       .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
 
     let absenceThreshold = 20;
-    let absModeVal: "percentage" | "sessions" = "percentage";
+    let absModeVal = "percentage";
     let allowedSessionsVal = 0;
     (settingsData || []).forEach((s: any) => {
       if (s.id === "absence_threshold") absenceThreshold = Number(s.value) || 20;

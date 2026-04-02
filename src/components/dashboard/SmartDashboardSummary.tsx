@@ -547,7 +547,7 @@ export default function SmartDashboardSummary() {
               <AlertTriangle className="h-4 w-4 text-warning-foreground" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">حد الغياب 20%</p>
+              <p className="text-sm font-bold text-foreground">حد الغياب {mode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${threshold}%`}</p>
               <p className="text-xs text-muted-foreground">طلاب بلغوا الحد</p>
             </div>
             <Badge className={cn(
