@@ -186,6 +186,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   };
 
 
+  useEffect(() => {
+    supabase.from("site_settings").select("id, value").in("id", ["daily_max_slots", "daily_max_slots_per_cat"]).then(({ data }) => {
+      (data || []).forEach((s: any) => {
+        if (s.id === "daily_max_slots" && s.value) setGlobalMaxSlots(Number(s.value) || DEFAULT_MAX_SLOTS);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setMaxSlotsPerCat(JSON.parse(s.value)); } catch { setMaxSlotsPerCat({}); }
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
   const loadAllData = async () => {
