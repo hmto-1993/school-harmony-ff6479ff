@@ -300,7 +300,8 @@ export default function AttendanceWeeklyReport({
     doc.setFont("Amiri", "bold");
     doc.setFontSize(9);
     const longestName = studentRows.reduce((max, s) => {
-      const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+      const thresholdLabel = absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`;
+      const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${thresholdLabel}` : s.name;
       return nameText.length > max.length ? nameText : max;
     }, "");
     const nameColWidth = Math.min(doc.getTextWidth(longestName) + 6, 70);
