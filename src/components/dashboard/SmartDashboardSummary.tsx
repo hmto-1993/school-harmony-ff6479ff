@@ -75,6 +75,7 @@ export default function SmartDashboardSummary() {
   const [dailyAttendance, setDailyAttendance] = useState<DailyAttendance[]>([]);
   const [gradeDistribution, setGradeDistribution] = useState<GradeDistribution[]>([]);
   const [behaviorSummary, setBehaviorSummary] = useState<BehaviorSummary>({ positive: 0, negative: 0, recentTrend: [] });
+  const [absSettingsDisplay, setAbsSettingsDisplay] = useState({ mode: "percentage", threshold: 20, allowedSessions: 0 });
 
   // Warning slip state
   const [warningOpen, setWarningOpen] = useState(false);
