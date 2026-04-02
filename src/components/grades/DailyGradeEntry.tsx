@@ -48,6 +48,58 @@ const levelScore = (level: GradeLevel, perSlot: number): number => {
   return 0;
 };
 
+const restoreSlotsFromScore = ({
+  score,
+  maxScore,
+  slotCount,
+  isParticipationCategory,
+}: {
+  score: number | null;
+  maxScore: number;
+  slotCount: number;
+  isParticipationCategory: boolean;
+}): { slots: GradeLevel[]; starred: boolean } => {
+  if (score === null) {
+    return { slots: [null], starred: false };
+  }
+
+  if (score >= maxScore && isParticipationCategory) {
+    return { slots: [], starred: true };
+  }
+
+  if (score >= maxScore) {
+    return { slots: ["excellent"], starred: false };
+  }
+
+  if (score === 0) {
+    return { slots: ["zero"], starred: false };
+  }
+
+  const perSlot = Math.round(maxScore / slotCount);
+  const averageScore = Math.round(perSlot / 2);
+  const restoredSlots: GradeLevel[] = [];
+  let remaining = score;
+
+  while (remaining > 0 && restoredSlots.length < slotCount) {
+    if (remaining >= perSlot) {
+      restoredSlots.push("excellent");
+      remaining -= perSlot;
+      continue;
+    }
+
+    if (remaining >= averageScore) {
+      restoredSlots.push("average");
+      remaining -= averageScore;
+      continue;
+    }
+
+    restoredSlots.push("average");
+    remaining = 0;
+  }
+
+  return { slots: restoredSlots.length > 0 ? restoredSlots : [null], starred: false };
+};
+
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
   ({ level, size = "h-6 w-6", ...props }, ref) => {
     if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
@@ -197,45 +249,18 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           gradeValues[c.id] = score;
           if (g?.id) gradeIds[c.id] = g.id;
 
-          // Restore slot/star state from saved score
-          if (score === null) {
-            slots[c.id] = [null];
-            starred[c.id] = false;
-          } else {
-            const max = Number(c.max_score);
-            const isPartCat = isParticipation(c.name);
-            const slotCount = getMaxSlots(c.id);
-            const perSlot = Math.round(max / slotCount);
+          const max = Number(c.max_score);
+          const isPartCat = isParticipation(c.name);
+          const slotCount = getMaxSlots(c.id);
+          const restored = restoreSlotsFromScore({
+            score,
+            maxScore: max,
+            slotCount,
+            isParticipationCategory: isPartCat,
+          });
 
-            if (score >= max && isPartCat) {
-              // Full score on participation → starred
-              starred[c.id] = true;
-              slots[c.id] = Array(slotCount).fill(null);
-            } else if (score >= max && !isPartCat) {
-              // Full score on single-slot (واجبات/كتاب) → excellent, NOT starred
-              starred[c.id] = false;
-              slots[c.id] = ["excellent"];
-            } else {
-              starred[c.id] = false;
-              const restoredSlots: GradeLevel[] = [];
-              let remaining = score;
-              for (let si = 0; si < slotCount; si++) {
-                if (remaining >= perSlot) {
-                  restoredSlots.push("excellent");
-                  remaining -= perSlot;
-                } else if (remaining >= Math.round(perSlot / 2)) {
-                  restoredSlots.push("average");
-                  remaining -= Math.round(perSlot / 2);
-                } else if (remaining > 0) {
-                  restoredSlots.push("average");
-                  remaining = 0;
-                } else {
-                  restoredSlots.push("zero");
-                }
-              }
-              slots[c.id] = restoredSlots;
-            }
-          }
+          slots[c.id] = restored.slots;
+          starred[c.id] = restored.starred;
         });
         return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred };
       })
