@@ -368,7 +368,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         }));
       }
 
-      toast({ title: "تم الحفظ", description: "تم حفظ الدرجات بنجاح" });
+      // Build per-student save summary
+      const savedCounts: { name: string; count: number }[] = [];
+      for (const sg of studentGrades) {
+        let count = 0;
+        for (const cat of catsToSave) {
+          const score = sg.grades[cat.id];
+          if (score !== null && score !== undefined) count++;
+        }
+        if (count > 0) savedCounts.push({ name: sg.full_name.split(" ").slice(0, 2).join(" "), count });
+      }
+      const totalGrades = savedCounts.reduce((s, r) => s + r.count, 0);
+      const summaryLines = savedCounts.map(r => `${r.name}: ${r.count} درجة`).join("\n");
+      toast({
+        title: `✅ تم حفظ ${totalGrades} درجة لـ ${savedCounts.length} طالب`,
+        description: summaryLines,
+      });
     } catch (err: any) {
       console.error("Grade save error:", err);
       toast({
