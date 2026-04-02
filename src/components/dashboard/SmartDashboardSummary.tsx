@@ -181,6 +181,7 @@ export default function SmartDashboardSummary() {
       if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
       if (s.id === "absence_mode") mode = s.value || "percentage";
     });
+    setAbsSettingsDisplay({ mode, threshold, allowedSessions });
 
     // Absent today
     const absentList: AbsentStudent[] = (absRes.data || []).map((r: any) => ({
