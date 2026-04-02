@@ -242,7 +242,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
     });
 
-    // Build daily icons map: student_id -> category_id -> DailyIcon[]
+    // Build daily icons map using same restoreSlotsFromScore logic as DailyGradeEntry
     const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
@@ -254,13 +254,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const studentMap = dailyIconsMap.get(g.student_id)!;
       if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
       
-      const isFullScore = score >= Number(cat.max_score) && isParticipation(cat.name);
-      if (isFullScore) {
+      const maxScore = Number(cat.max_score);
+      const isPartCat = isParticipation(cat.name);
+      const slotCount = getMaxSlots(cat.id);
+      const restored = restoreSlotsFromScore({ score, maxScore, slotCount, isParticipationCategory: isPartCat });
+
+      if (restored.starred) {
         studentMap.get(g.category_id)!.push({ level: "excellent", isFullScore: true });
       } else {
-        const levels = decomposeScoreToIcons(score, Number(cat.max_score), cat.name);
-        levels.forEach(level => {
-          studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+        restored.slots.forEach(level => {
+          if (level !== null) {
+            studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+          }
         });
       }
     });
