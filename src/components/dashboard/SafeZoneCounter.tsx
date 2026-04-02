@@ -46,10 +46,10 @@ export default function SafeZoneCounter() {
     (settingsData || []).forEach((s: any) => {
       if (s.id === "absence_threshold") absenceThreshold = Number(s.value) || 20;
       if (s.id === "absence_allowed_sessions") allowedSessionsVal = Number(s.value) || 0;
-      if (s.id === "absence_mode") absModeVal = s.value as any || "percentage";
+      if (s.id === "absence_mode") absModeVal = s.value || "percentage";
     });
     setThreshold(absenceThreshold);
-    setAbsenceMode(absModeVal);
+    setAbsenceMode(absModeVal as "percentage" | "sessions");
     setAllowedSessions(allowedSessionsVal);
 
     // Get all students with classes
