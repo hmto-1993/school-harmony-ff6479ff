@@ -614,7 +614,7 @@ export default function AttendanceWeeklyReport({
                       {s.isAtRisk && (
                         <span className="block text-[10px] mt-0.5" style={{ color: "#ef4444" }}>
                           <AlertTriangle className="inline h-3 w-3 ml-0.5" style={{ color: "#ef4444" }} />
-                          تجاوز {Math.round(alertThreshold * 100)}%
+                          تجاوز {absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`}
                         </span>
                       )}
                     </td>
