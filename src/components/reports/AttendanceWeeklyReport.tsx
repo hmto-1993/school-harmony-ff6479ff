@@ -143,7 +143,12 @@ export default function AttendanceWeeklyReport({
         weeksData[w.weekNum] = slots;
       });
 
-      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
+      let isAtRisk = false;
+      if (absenceMode === "sessions" && allowedSessions > 0) {
+        isAtRisk = totalAbsent > allowedSessions;
+      } else {
+        isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
+      }
 
       return {
         id: s.id, name: s.full_name, weeks: weeksData,
