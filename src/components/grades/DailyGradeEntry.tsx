@@ -180,7 +180,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
     grades?.forEach((g) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score ? Number(g.score) : null, id: g.id });
+      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id });
     });
 
     setCategories((cats as GradeCategory[]) || []);
