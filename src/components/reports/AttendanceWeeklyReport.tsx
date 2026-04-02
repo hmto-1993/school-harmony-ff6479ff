@@ -158,7 +158,7 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, getWeekForDate]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, absenceMode, allowedSessions, getWeekForDate]);
 
   // All academic weeks for the selector
   const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);

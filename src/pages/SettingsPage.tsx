@@ -3565,7 +3565,7 @@ export default function SettingsPage() {
                       </div>
                       <div className="text-right">
                         <h3 className="text-base font-bold text-foreground">حد إنذار الغياب</h3>
-                        <p className="text-xs text-muted-foreground">تحديد نسبة الغياب التي يتم عندها إنذار الطالب وولي الأمر — الحالي: {absenceThreshold}%</p>
+                        <p className="text-xs text-muted-foreground">تحديد حد الغياب الذي يتم عنده إنذار الطالب وولي الأمر — الحالي: {absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}</p>
                       </div>
                     </div>
                     <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />

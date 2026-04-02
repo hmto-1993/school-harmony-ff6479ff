@@ -133,16 +133,27 @@ export default function AbsenceWarningSlip({
     // Build default warning text
     const subj = subjectData?.value || "المادة الدراسية";
     const absentCount = attendance?.length || 0;
-    // Fetch absence threshold
-    const { data: thresholdData } = await supabase
+    // Fetch absence settings
+    const { data: absSettings } = await supabase
       .from("site_settings")
-      .select("value")
-      .eq("id", "absence_threshold")
-      .maybeSingle();
-    const threshold = thresholdData?.value ? Number(thresholdData.value) : 20;
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
+    
+    let threshold = 20;
+    let allowedSess = 0;
+    let absMode = "percentage";
+    (absSettings || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") threshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSess = Number(s.value) || 0;
+      if (s.id === "absence_mode") absMode = s.value || "percentage";
+    });
+
+    const thresholdText = absMode === "sessions" && allowedSess > 0
+      ? `${allowedSess} حصة غياب`
+      : `${threshold}%`;
 
     setWarningText(
-      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي تتجاوز نسبة غيابه ${threshold}% يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
+      `تحية طيبة وبعد،\n\nنود إشعاركم بأن الطالب ${studentName} في الفصل ${className} (مادة ${subj}) قد بلغت نسبة غيابه ${absenceRate}% من إجمالي الحصص الدراسية (${absentCount} غياب من أصل ${totalDays} حصة).\n\nوحيث أن نظام وزارة التعليم ينص على أن الطالب الذي يتجاوز حد الغياب المسموح به (${thresholdText}) يُحرم من دخول الاختبارات النهائية، نأمل منكم متابعة ابنكم والتواصل مع إدارة المدرسة لمعالجة هذا الأمر.\n\nتنبيه: هذا الطالب قد بلغ حد الغياب المسموح به. يُرجى إشعار ولي الأمر.`
     );
 
     setLoading(false);
