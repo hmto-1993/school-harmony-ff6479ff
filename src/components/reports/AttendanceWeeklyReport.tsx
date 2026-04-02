@@ -80,16 +80,21 @@ export default function AttendanceWeeklyReport({
   const tableRef = useRef<HTMLDivElement>(null);
   const didInitializeWeekSelectionRef = useRef(false);
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
+  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
+  const [allowedSessions, setAllowedSessions] = useState(0);
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set());
 
   useEffect(() => {
     supabase
       .from("site_settings")
-      .select("value")
-      .eq("id", "absence_threshold")
-      .maybeSingle()
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"])
       .then(({ data }) => {
-        if (data?.value) setAlertThreshold(Number(data.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+        (data || []).forEach((s: any) => {
+          if (s.id === "absence_threshold" && s.value) setAlertThreshold(Number(s.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+          if (s.id === "absence_allowed_sessions" && s.value) setAllowedSessions(Number(s.value) || 0);
+          if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as any || "percentage");
+        });
       });
   }, []);
 
