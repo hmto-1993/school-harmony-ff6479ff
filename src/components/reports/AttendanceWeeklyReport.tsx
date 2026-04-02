@@ -80,16 +80,21 @@ export default function AttendanceWeeklyReport({
   const tableRef = useRef<HTMLDivElement>(null);
   const didInitializeWeekSelectionRef = useRef(false);
   const [alertThreshold, setAlertThreshold] = useState(DEFAULT_ALERT_THRESHOLD);
+  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
+  const [allowedSessions, setAllowedSessions] = useState(0);
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number | "all">>(new Set());
 
   useEffect(() => {
     supabase
       .from("site_settings")
-      .select("value")
-      .eq("id", "absence_threshold")
-      .maybeSingle()
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"])
       .then(({ data }) => {
-        if (data?.value) setAlertThreshold(Number(data.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+        (data || []).forEach((s: any) => {
+          if (s.id === "absence_threshold" && s.value) setAlertThreshold(Number(s.value) / 100 || DEFAULT_ALERT_THRESHOLD);
+          if (s.id === "absence_allowed_sessions" && s.value) setAllowedSessions(Number(s.value) || 0);
+          if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as any || "percentage");
+        });
       });
   }, []);
 
@@ -138,7 +143,12 @@ export default function AttendanceWeeklyReport({
         weeksData[w.weekNum] = slots;
       });
 
-      const isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
+      let isAtRisk = false;
+      if (absenceMode === "sessions" && allowedSessions > 0) {
+        isAtRisk = totalAbsent > allowedSessions;
+      } else {
+        isAtRisk = totalPeriodsHeld > 0 && totalAbsent / totalPeriodsHeld > alertThreshold;
+      }
 
       return {
         id: s.id, name: s.full_name, weeks: weeksData,
@@ -148,7 +158,7 @@ export default function AttendanceWeeklyReport({
     });
 
     return { weeks, studentRows, totalPeriodsHeld };
-  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, getWeekForDate]);
+  }, [attendanceData, students, periodsPerWeek, dateFrom, dateTo, alertThreshold, absenceMode, allowedSessions, getWeekForDate]);
 
   // All academic weeks for the selector
   const academicWeeks = useMemo(() => getWeeksInfo(), [getWeeksInfo]);
@@ -239,7 +249,7 @@ export default function AttendanceWeeklyReport({
       row["غائب"] = s.totalAbsent;
       row["متأخر"] = s.totalLate;
       row["معذور"] = s.totalExcused;
-      row["تنبيه"] = s.isAtRisk ? `⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : "";
+      row["تنبيه"] = s.isAtRisk ? `⚠ تجاوز ${absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`}` : "";
       return row;
     });
     const ws = XLSX.utils.json_to_sheet(rows, { header: headers });
@@ -290,7 +300,8 @@ export default function AttendanceWeeklyReport({
     doc.setFont("Amiri", "bold");
     doc.setFontSize(9);
     const longestName = studentRows.reduce((max, s) => {
-      const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+      const thresholdLabel = absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`;
+      const nameText = s.isAtRisk ? `${s.name} ⚠ تجاوز ${thresholdLabel}` : s.name;
       return nameText.length > max.length ? nameText : max;
     }, "");
     const nameColWidth = Math.min(doc.getTextWidth(longestName) + 6, 70);
@@ -329,7 +340,8 @@ export default function AttendanceWeeklyReport({
         });
       });
 
-      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${Math.round(alertThreshold * 100)}%` : s.name;
+      const thresholdLbl = absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`;
+      const nameContent = s.isAtRisk ? `${s.name}\n⚠ تجاوز ${thresholdLbl}` : s.name;
 
       const row = [
         { content: String(s.totalLate), styles: { halign: "center" as const, fontSize: 8, textColor: hexToRgb("#d97706") as [number, number, number] } },
@@ -602,7 +614,7 @@ export default function AttendanceWeeklyReport({
                       {s.isAtRisk && (
                         <span className="block text-[10px] mt-0.5" style={{ color: "#ef4444" }}>
                           <AlertTriangle className="inline h-3 w-3 ml-0.5" style={{ color: "#ef4444" }} />
-                          تجاوز {Math.round(alertThreshold * 100)}%
+                          تجاوز {absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`}
                         </span>
                       )}
                     </td>
@@ -663,7 +675,7 @@ export default function AttendanceWeeklyReport({
             <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm print:hidden">
               <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
               <span className="text-destructive font-medium">
-                {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
+                {atRiskCount} طالب تجاوز حد الغياب المسموح ({absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`})
               </span>
             </div>
           )}

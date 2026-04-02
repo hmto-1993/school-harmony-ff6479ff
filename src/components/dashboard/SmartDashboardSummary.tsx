@@ -75,6 +75,7 @@ export default function SmartDashboardSummary() {
   const [dailyAttendance, setDailyAttendance] = useState<DailyAttendance[]>([]);
   const [gradeDistribution, setGradeDistribution] = useState<GradeDistribution[]>([]);
   const [behaviorSummary, setBehaviorSummary] = useState<BehaviorSummary>({ positive: 0, negative: 0, recentTrend: [] });
+  const [absSettingsDisplay, setAbsSettingsDisplay] = useState({ mode: "percentage", threshold: 20, allowedSessions: 0 });
 
   // Warning slip state
   const [warningOpen, setWarningOpen] = useState(false);
@@ -180,6 +181,7 @@ export default function SmartDashboardSummary() {
       if (s.id === "absence_allowed_sessions") allowedSessions = Number(s.value) || 0;
       if (s.id === "absence_mode") mode = s.value || "percentage";
     });
+    setAbsSettingsDisplay({ mode, threshold, allowedSessions });
 
     // Absent today
     const absentList: AbsentStudent[] = (absRes.data || []).map((r: any) => ({
@@ -547,7 +549,7 @@ export default function SmartDashboardSummary() {
               <AlertTriangle className="h-4 w-4 text-warning-foreground" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">حد الغياب 20%</p>
+              <p className="text-sm font-bold text-foreground">حد الغياب {absSettingsDisplay.mode === "sessions" && absSettingsDisplay.allowedSessions > 0 ? `${absSettingsDisplay.allowedSessions} حصة` : `${absSettingsDisplay.threshold}%`}</p>
               <p className="text-xs text-muted-foreground">طلاب بلغوا الحد</p>
             </div>
             <Badge className={cn(

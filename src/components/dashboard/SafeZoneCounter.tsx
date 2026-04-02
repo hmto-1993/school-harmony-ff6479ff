@@ -20,6 +20,8 @@ interface StudentAbsenceData {
 export default function SafeZoneCounter() {
   const [loading, setLoading] = useState(true);
   const [threshold, setThreshold] = useState(20);
+  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
+  const [allowedSessions, setAllowedSessions] = useState(0);
   const [studentsAtRisk, setStudentsAtRisk] = useState<StudentAbsenceData[]>([]);
   const [safeCount, setSafeCount] = useState(0);
   const [warningCount, setWarningCount] = useState(0);
@@ -32,15 +34,23 @@ export default function SafeZoneCounter() {
   const fetchData = async () => {
     setLoading(true);
 
-    // Get threshold setting
-    const { data: thresholdSetting } = await supabase
+    // Get all absence settings
+    const { data: settingsData } = await supabase
       .from("site_settings")
-      .select("value")
-      .eq("id", "absence_threshold")
-      .maybeSingle();
+      .select("id, value")
+      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
 
-    const absenceThreshold = thresholdSetting?.value ? parseInt(thresholdSetting.value, 10) : 20;
+    let absenceThreshold = 20;
+    let absModeVal = "percentage";
+    let allowedSessionsVal = 0;
+    (settingsData || []).forEach((s: any) => {
+      if (s.id === "absence_threshold") absenceThreshold = Number(s.value) || 20;
+      if (s.id === "absence_allowed_sessions") allowedSessionsVal = Number(s.value) || 0;
+      if (s.id === "absence_mode") absModeVal = s.value || "percentage";
+    });
     setThreshold(absenceThreshold);
+    setAbsenceMode(absModeVal as "percentage" | "sessions");
+    setAllowedSessions(allowedSessionsVal);
 
     // Get all students with classes
     const { data: students } = await supabase
@@ -76,10 +86,21 @@ export default function SafeZoneCounter() {
       const absenceRate = stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0;
       
       let status: "safe" | "warning" | "danger" = "safe";
-      if (absenceRate >= absenceThreshold) {
+      
+      let exceeded = false;
+      let isWarningZone = false;
+      if (absModeVal === "sessions" && allowedSessionsVal > 0) {
+        exceeded = stats.absent > allowedSessionsVal;
+        isWarningZone = !exceeded && stats.absent >= Math.round(allowedSessionsVal * 0.7);
+      } else {
+        exceeded = absenceRate >= absenceThreshold;
+        isWarningZone = !exceeded && absenceRate >= absenceThreshold * 0.7;
+      }
+      
+      if (exceeded) {
         status = "danger";
         danger++;
-      } else if (absenceRate >= absenceThreshold * 0.7) {
+      } else if (isWarningZone) {
         status = "warning";
         warning++;
       } else {
