@@ -675,7 +675,7 @@ export default function AttendanceWeeklyReport({
             <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 flex items-center gap-2 text-sm print:hidden">
               <AlertTriangle className="h-4 w-4 text-destructive flex-shrink-0" />
               <span className="text-destructive font-medium">
-                {atRiskCount} طالب تجاوز نسبة الغياب {Math.round(alertThreshold * 100)}% من إجمالي الحصص المنعقدة
+                {atRiskCount} طالب تجاوز حد الغياب المسموح ({absenceMode === "sessions" && allowedSessions > 0 ? `${allowedSessions} حصة` : `${Math.round(alertThreshold * 100)}%`})
               </span>
             </div>
           )}
