@@ -16,10 +16,10 @@ import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
-type GradeLevel = "excellent" | "average" | "zero";
+type GradeLevel = "excellent" | "average" | "zero" | null;
 
-const isParticipation = (name: string) => name === "المشاركة";
-const MAX_PARTICIPATION_SLOTS = 3;
+const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+const DEFAULT_MAX_SLOTS = 3;
 
 /** Maximum display icons per category in ClassworkSummary */
 function getMaxDisplayIcons(catName: string): number {
@@ -27,36 +27,36 @@ function getMaxDisplayIcons(catName: string): number {
   if (catName === "الواجبات") return 8;
   if (catName === "الكتاب") return 8;
   if (catName === "الأعمال والمشاريع") return 8;
-  return 8; // default fallback
+  return 8;
 }
 
-/** Decompose a daily score into colored icon levels */
-function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
-  if (score <= 0) return ["zero"];
-  const isPartCat = isParticipation(catName);
-  const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+/** Restore minimal slots from a saved score – matches DailyGradeEntry logic exactly */
+function restoreSlotsFromScore({
+  score,
+  maxScore,
+  slotCount,
+  isParticipationCategory,
+}: {
+  score: number | null;
+  maxScore: number;
+  slotCount: number;
+  isParticipationCategory: boolean;
+}): { slots: GradeLevel[]; starred: boolean } {
+  if (score === null) return { slots: [], starred: false };
+  if (score >= maxScore && isParticipationCategory) return { slots: [], starred: true };
+  if (score >= maxScore) return { slots: ["excellent"], starred: false };
+  if (score === 0) return { slots: ["zero"], starred: false };
+
   const perSlot = Math.round(maxScore / slotCount);
-
-  // Full score on participation → single star (handled separately)
-  if (score >= maxScore && isPartCat) return ["excellent"]; // will render as star
-
-  const icons: GradeLevel[] = [];
+  const averageScore = Math.round(perSlot / 2);
+  const restoredSlots: GradeLevel[] = [];
   let remaining = score;
-  for (let si = 0; si < slotCount; si++) {
-    if (remaining >= perSlot) {
-      icons.push("excellent");
-      remaining -= perSlot;
-    } else if (remaining >= Math.round(perSlot / 2)) {
-      icons.push("average");
-      remaining -= Math.round(perSlot / 2);
-    } else if (remaining > 0) {
-      icons.push("average");
-      remaining = 0;
-    } else {
-      icons.push("zero");
-    }
+  while (remaining > 0 && restoredSlots.length < slotCount) {
+    if (remaining >= perSlot) { restoredSlots.push("excellent"); remaining -= perSlot; continue; }
+    if (remaining >= averageScore) { restoredSlots.push("average"); remaining -= averageScore; continue; }
+    restoredSlots.push("average"); remaining = 0;
   }
-  return icons;
+  return { slots: restoredSlots.length > 0 ? restoredSlots : [], starred: false };
 }
 
 interface DailyIcon {
@@ -105,7 +105,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [saving, setSaving] = useState(false);
   const [fillAllValue, setFillAllValue] = useState("");
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
+  const [globalMaxSlots, setGlobalMaxSlots] = useState(DEFAULT_MAX_SLOTS);
+  const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
 
   const buildClassworkTableHTML = (group: typeof groupedByClass[0]) => {
     return `
@@ -182,6 +186,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   };
 
 
+  useEffect(() => {
+    supabase.from("site_settings").select("id, value").in("id", ["daily_max_slots", "daily_max_slots_per_cat"]).then(({ data }) => {
+      (data || []).forEach((s: any) => {
+        if (s.id === "daily_max_slots" && s.value) setGlobalMaxSlots(Number(s.value) || DEFAULT_MAX_SLOTS);
+        if (s.id === "daily_max_slots_per_cat" && s.value) {
+          try { setMaxSlotsPerCat(JSON.parse(s.value)); } catch { setMaxSlotsPerCat({}); }
+        }
+      });
+    });
+  }, []);
+
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
 
   const loadAllData = async () => {
@@ -227,7 +242,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
     });
 
-    // Build daily icons map: student_id -> category_id -> DailyIcon[]
+    // Build daily icons map using same restoreSlotsFromScore logic as DailyGradeEntry
     const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
@@ -239,13 +254,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const studentMap = dailyIconsMap.get(g.student_id)!;
       if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
       
-      const isFullScore = score >= Number(cat.max_score) && isParticipation(cat.name);
-      if (isFullScore) {
+      const maxScore = Number(cat.max_score);
+      const isPartCat = isParticipation(cat.name);
+      const slotCount = getMaxSlots(cat.id);
+      const restored = restoreSlotsFromScore({ score, maxScore, slotCount, isParticipationCategory: isPartCat });
+
+      if (restored.starred) {
         studentMap.get(g.category_id)!.push({ level: "excellent", isFullScore: true });
       } else {
-        const levels = decomposeScoreToIcons(score, Number(cat.max_score), cat.name);
-        levels.forEach(level => {
-          studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+        restored.slots.forEach(level => {
+          if (level !== null) {
+            studentMap.get(g.category_id)!.push({ level, isFullScore: false });
+          }
         });
       }
     });
