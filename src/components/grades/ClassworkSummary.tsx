@@ -105,7 +105,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
   const [saving, setSaving] = useState(false);
   const [fillAllValue, setFillAllValue] = useState("");
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
+  const [globalMaxSlots, setGlobalMaxSlots] = useState(DEFAULT_MAX_SLOTS);
+  const [maxSlotsPerCat, setMaxSlotsPerCat] = useState<Record<string, number>>({});
   const tableRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
 
   const buildClassworkTableHTML = (group: typeof groupedByClass[0]) => {
     return `
