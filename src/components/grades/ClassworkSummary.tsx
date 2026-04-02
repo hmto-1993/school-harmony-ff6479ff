@@ -16,10 +16,10 @@ import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
-type GradeLevel = "excellent" | "average" | "zero";
+type GradeLevel = "excellent" | "average" | "zero" | null;
 
-const isParticipation = (name: string) => name === "المشاركة";
-const MAX_PARTICIPATION_SLOTS = 3;
+const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+const DEFAULT_MAX_SLOTS = 3;
 
 /** Maximum display icons per category in ClassworkSummary */
 function getMaxDisplayIcons(catName: string): number {
@@ -27,36 +27,36 @@ function getMaxDisplayIcons(catName: string): number {
   if (catName === "الواجبات") return 8;
   if (catName === "الكتاب") return 8;
   if (catName === "الأعمال والمشاريع") return 8;
-  return 8; // default fallback
+  return 8;
 }
 
-/** Decompose a daily score into colored icon levels */
-function decomposeScoreToIcons(score: number, maxScore: number, catName: string): GradeLevel[] {
-  if (score <= 0) return ["zero"];
-  const isPartCat = isParticipation(catName);
-  const slotCount = isPartCat ? MAX_PARTICIPATION_SLOTS : 1;
+/** Restore minimal slots from a saved score – matches DailyGradeEntry logic exactly */
+function restoreSlotsFromScore({
+  score,
+  maxScore,
+  slotCount,
+  isParticipationCategory,
+}: {
+  score: number | null;
+  maxScore: number;
+  slotCount: number;
+  isParticipationCategory: boolean;
+}): { slots: GradeLevel[]; starred: boolean } {
+  if (score === null) return { slots: [], starred: false };
+  if (score >= maxScore && isParticipationCategory) return { slots: [], starred: true };
+  if (score >= maxScore) return { slots: ["excellent"], starred: false };
+  if (score === 0) return { slots: ["zero"], starred: false };
+
   const perSlot = Math.round(maxScore / slotCount);
-
-  // Full score on participation → single star (handled separately)
-  if (score >= maxScore && isPartCat) return ["excellent"]; // will render as star
-
-  const icons: GradeLevel[] = [];
+  const averageScore = Math.round(perSlot / 2);
+  const restoredSlots: GradeLevel[] = [];
   let remaining = score;
-  for (let si = 0; si < slotCount; si++) {
-    if (remaining >= perSlot) {
-      icons.push("excellent");
-      remaining -= perSlot;
-    } else if (remaining >= Math.round(perSlot / 2)) {
-      icons.push("average");
-      remaining -= Math.round(perSlot / 2);
-    } else if (remaining > 0) {
-      icons.push("average");
-      remaining = 0;
-    } else {
-      icons.push("zero");
-    }
+  while (remaining > 0 && restoredSlots.length < slotCount) {
+    if (remaining >= perSlot) { restoredSlots.push("excellent"); remaining -= perSlot; continue; }
+    if (remaining >= averageScore) { restoredSlots.push("average"); remaining -= averageScore; continue; }
+    restoredSlots.push("average"); remaining = 0;
   }
-  return icons;
+  return { slots: restoredSlots.length > 0 ? restoredSlots : [], starred: false };
 }
 
 interface DailyIcon {
