@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/card";
 import { Users, UserCheck, UserX, Clock, LogOut, Stethoscope } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type StatusFilter = "all" | "present" | "absent" | "late" | "early_leave" | "sick_leave";
+
 interface AttendanceStatsProps {
   total: number;
   present: number;
@@ -9,6 +11,8 @@ interface AttendanceStatsProps {
   late: number;
   earlyLeave: number;
   sickLeave: number;
+  activeFilter?: StatusFilter;
+  onFilterChange?: (filter: StatusFilter) => void;
 }
 
 const stats = [
