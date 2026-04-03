@@ -59,6 +59,7 @@ export default function GradesPage() {
 
   useEffect(() => {
     const load = async () => {
+      setClassesLoading(true);
       const [{ data: cls }, { data: students }] = await Promise.all([
         supabase.from("classes").select("id, name").order("name"),
         supabase.from("students").select("id, class_id"),
@@ -69,6 +70,7 @@ export default function GradesPage() {
         if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
       });
       setClassCounts(counts);
+      setClassesLoading(false);
     };
     load();
   }, []);
