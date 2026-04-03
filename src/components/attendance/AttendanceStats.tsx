@@ -42,6 +42,8 @@ export default function AttendanceStats({ total, present, absent, late, earlyLea
 
   const handleClick = (key: string) => {
     if (!onFilterChange || !hasRecords) return;
+    // Don't switch to a status that has 0 students (except "all")
+    if (key !== "total" && values[key] === 0) return;
     const filterVal = filterKeyMap[key];
     onFilterChange(activeFilter === filterVal && filterVal !== "all" ? "all" : filterVal);
   };
