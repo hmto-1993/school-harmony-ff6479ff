@@ -57,10 +57,10 @@ export default function AttendanceStats({ total, present, absent, late, earlyLea
             onClick={() => handleClick(s.key)}
             className={cn(
               "relative overflow-hidden border-0 ring-1 shadow-lg p-3 text-center transition-all duration-500 group animate-fade-in",
-              onFilterChange ? "cursor-pointer hover:scale-105" : "cursor-default",
+              onFilterChange && hasRecords ? "cursor-pointer hover:scale-105" : "cursor-default opacity-80",
               `bg-gradient-to-br ${s.gradient}`,
               s.ring,
-              isActive && onFilterChange && "ring-2 shadow-xl scale-[1.03]"
+              isActive && onFilterChange && hasRecords && "ring-2 shadow-xl scale-[1.03]"
             )}
             style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
           >
