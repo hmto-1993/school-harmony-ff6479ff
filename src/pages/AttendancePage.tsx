@@ -110,12 +110,14 @@ export default function AttendancePage() {
   }, [selectedDate, calendarData, getWeekForDate]);
 
   useEffect(() => {
-    supabase.from("classes").select("id, name").order("name").then(({ data }) => {
-      setClasses(data || []);
-    });
-    // Fetch override lock setting
-    supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(({ data }) => {
-      setOverrideLock(data?.value === "true");
+    setClassesLoading(true);
+    Promise.all([
+      supabase.from("classes").select("id, name").order("name"),
+      supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
+    ]).then(([{ data: cls }, { data: lockData }]) => {
+      setClasses(cls || []);
+      setOverrideLock(lockData?.value === "true");
+      setClassesLoading(false);
     });
   }, []);
 
