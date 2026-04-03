@@ -163,7 +163,6 @@ export default function GradesPage() {
                 ) : (
                 <span className="mt-1 block h-3 w-12 mx-auto rounded bg-muted/50 animate-pulse" />
                 )}
-                </span>
                 
               </button>
             );
