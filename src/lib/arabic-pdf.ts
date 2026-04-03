@@ -124,8 +124,8 @@ async function renderPrintHeaderFromConfig(
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
-  const sectionWidth = (pageWidth - margin * 2) * 0.38; // ~38% each side like grades
-  const centerWidth = (pageWidth - margin * 2) * 0.24;
+  const sectionWidth = (pageWidth - margin * 2) * 0.40; // 40% each side — matches grades HTML
+  const centerWidth = (pageWidth - margin * 2) * 0.20;
 
   const startY = 12;
   let rightY = startY;
@@ -135,7 +135,7 @@ async function renderPrintHeaderFromConfig(
   doc.setFont("Amiri", "bold");
   const rightFontSize = Math.min(config.rightSection.fontSize || 11, 13);
   doc.setFontSize(rightFontSize);
-  const lineSpacing = rightFontSize * 0.5;
+  const lineSpacing = rightFontSize * 0.55; // ~line-height:1.8 equivalent
   const rightCenterX = pageWidth - margin - sectionWidth / 2;
 
   config.rightSection.lines.forEach((line) => {
@@ -148,7 +148,7 @@ async function renderPrintHeaderFromConfig(
   // --- Left section text (centered within its area) ---
   const leftFontSize = Math.min(config.leftSection.fontSize || 11, 13);
   doc.setFontSize(leftFontSize);
-  const leftLineSpacing = leftFontSize * 0.5;
+  const leftLineSpacing = leftFontSize * 0.55;
   const leftCenterX = margin + sectionWidth / 2;
 
   config.leftSection.lines.forEach((line) => {
@@ -165,11 +165,11 @@ async function renderPrintHeaderFromConfig(
   const images = config.centerSection.images.filter(Boolean);
   if (images.length > 0) {
     const centerX = pageWidth / 2;
-    // Cap logo to text height or 18mm max
-    const maxImgSize = Math.min(Math.max(textHeight * 0.75, 10), 14);
+    // Match grades HTML: use configured size, cap to text block height or 18mm
+    const maxImgSize = Math.min(Math.max(textHeight * 0.85, 12), 18);
 
     const totalImgWidth = images.reduce((sum, _, i) => {
-      const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.22;
+      const rawSize = (config.centerSection.imagesSizes[i] || 60) * 0.24;
       const size = Math.min(rawSize, maxImgSize);
       return sum + size + 2;
     }, -2);
@@ -181,9 +181,9 @@ async function renderPrintHeaderFromConfig(
       const sizePx = config.centerSection.imagesSizes[
         config.centerSection.images.indexOf(imgUrl)
       ] || 60;
-      const rawSizeMm = sizePx * 0.22;
+      const rawSizeMm = sizePx * 0.24;
       const sizeMm = Math.min(rawSizeMm, maxImgSize);
-      const imgY = startY + (textHeight - sizeMm) / 2 - 2;
+      const imgY = startY + (textHeight - sizeMm) / 2 - 1;
 
       const base64 = await imageUrlToBase64(imgUrl);
       if (base64) {
@@ -197,13 +197,13 @@ async function renderPrintHeaderFromConfig(
     }
   }
 
-  // --- Blue bottom border (matching grades style) ---
+  // --- Blue bottom border (matching grades style: 3px ≈ 0.8mm) ---
   doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.7);
-  doc.line(margin, textMaxY + 2, pageWidth - margin, textMaxY + 2);
+  doc.setLineWidth(0.8);
+  doc.line(margin, textMaxY + 3, pageWidth - margin, textMaxY + 3);
 
   doc.setFont("Amiri", "normal");
-  return textMaxY + 8;
+  return textMaxY + 9;
 }
 
 /**
