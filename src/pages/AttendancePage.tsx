@@ -137,6 +137,7 @@ export default function AttendancePage() {
   }, [selectedClass, date]);
 
   const loadWeeklyProgress = async () => {
+    setWeeklyProgressLoaded(false);
     // 1. Fetch class_schedules for periods_per_week limits
     const { data: schedules } = await supabase
       .from("class_schedules")
@@ -167,6 +168,7 @@ export default function AttendancePage() {
       };
     });
     setWeeklyProgress(progress);
+    setWeeklyProgressLoaded(true);
   };
 
   const loadDayNote = async () => {
