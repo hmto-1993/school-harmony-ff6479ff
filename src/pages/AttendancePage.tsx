@@ -74,6 +74,7 @@ export default function AttendancePage() {
   const [moveTargetDate, setMoveTargetDate] = useState<Date>(new Date());
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
+  const [weeklyProgressLoaded, setWeeklyProgressLoaded] = useState(false);
   const [overrideLock, setOverrideLock] = useState(false);
   const [absenceAlerts, setAbsenceAlerts] = useState<Record<string, AbsenceAlert>>({});
   const date = format(selectedDate, "yyyy-MM-dd");
