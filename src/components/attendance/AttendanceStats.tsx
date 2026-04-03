@@ -42,6 +42,8 @@ export default function AttendanceStats({ total, present, absent, late, earlyLea
 
   const handleClick = (key: string) => {
     if (!onFilterChange || !hasRecords) return;
+    // Don't switch to a status that has 0 students (except "all")
+    if (key !== "total" && values[key] === 0) return;
     const filterVal = filterKeyMap[key];
     onFilterChange(activeFilter === filterVal && filterVal !== "all" ? "all" : filterVal);
   };
@@ -57,7 +59,7 @@ export default function AttendanceStats({ total, present, absent, late, earlyLea
             onClick={() => handleClick(s.key)}
             className={cn(
               "relative overflow-hidden border-0 ring-1 shadow-lg p-3 text-center transition-all duration-500 group animate-fade-in",
-              onFilterChange && hasRecords ? "cursor-pointer hover:scale-105" : "cursor-default opacity-80",
+              onFilterChange && hasRecords && (s.key === "total" || values[s.key] > 0) ? "cursor-pointer hover:scale-105" : "cursor-default opacity-60",
               `bg-gradient-to-br ${s.gradient}`,
               s.ring,
               isActive && onFilterChange && hasRecords && "ring-2 shadow-xl scale-[1.03]"
