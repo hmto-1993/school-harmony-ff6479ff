@@ -644,7 +644,7 @@ export default function AttendancePage() {
                 )}
               </button>
             );
-          })}
+          }))}
         </div>
       </div>
 
