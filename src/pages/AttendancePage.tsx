@@ -704,7 +704,18 @@ export default function AttendancePage() {
 
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardContent className="pt-6">
-          {records.length === 0 ? (
+          {studentsLoading ? (
+            <div className="space-y-3 py-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-8 h-4 rounded bg-muted/50" />
+                  <div className="h-4 w-32 rounded bg-muted/50" />
+                  <div className="flex-1" />
+                  <div className="h-8 w-24 rounded-lg bg-muted/40" />
+                </div>
+              ))}
+            </div>
+          ) : records.length === 0 ? (
             <EmptyState
               icon={CalendarIcon}
               title={selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
