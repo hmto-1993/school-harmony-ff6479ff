@@ -57,6 +57,7 @@ export default function AttendancePage() {
   const { toast } = useToast();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { calendarData, getWeekForDate } = useAcademicWeek();
+  const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const [records, setRecords] = useState<StudentAttendance[]>([]);
