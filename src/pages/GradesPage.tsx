@@ -33,6 +33,7 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
+  const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
@@ -58,6 +59,7 @@ export default function GradesPage() {
 
   useEffect(() => {
     const load = async () => {
+      setClassesLoading(true);
       const [{ data: cls }, { data: students }] = await Promise.all([
         supabase.from("classes").select("id, name").order("name"),
         supabase.from("students").select("id, class_id"),
@@ -68,6 +70,7 @@ export default function GradesPage() {
         if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
       });
       setClassCounts(counts);
+      setClassesLoading(false);
     };
     load();
   }, []);
@@ -118,7 +121,18 @@ export default function GradesPage() {
           اختر الفصل
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {classes.map((cls, i) => {
+          {classesLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border-2 border-border/30 p-4 text-center animate-pulse">
+                <div className="mx-auto w-11 h-11 rounded-xl bg-muted/50 mb-2.5" />
+                <div className="h-4 w-16 mx-auto rounded bg-muted/50 mb-1.5" />
+                <div className="h-3 w-12 mx-auto rounded bg-muted/40" />
+              </div>
+            ))
+          ) : classes.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
+          ) : (
+          classes.map((cls, i) => {
             const isActive = selectedClass === cls.id;
             const count = classCounts[cls.id] || 0;
             return (
@@ -148,7 +162,7 @@ export default function GradesPage() {
                 
               </button>
             );
-          })}
+          }))}
         </div>
       </div>
 

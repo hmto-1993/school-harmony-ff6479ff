@@ -57,8 +57,10 @@ export default function AttendancePage() {
   const { toast } = useToast();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { calendarData, getWeekForDate } = useAcademicWeek();
+  const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -109,12 +111,14 @@ export default function AttendancePage() {
   }, [selectedDate, calendarData, getWeekForDate]);
 
   useEffect(() => {
-    supabase.from("classes").select("id, name").order("name").then(({ data }) => {
-      setClasses(data || []);
-    });
-    // Fetch override lock setting
-    supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle().then(({ data }) => {
-      setOverrideLock(data?.value === "true");
+    setClassesLoading(true);
+    Promise.all([
+      supabase.from("classes").select("id, name").order("name"),
+      supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
+    ]).then(([{ data: cls }, { data: lockData }]) => {
+      setClasses(cls || []);
+      setOverrideLock(lockData?.value === "true");
+      setClassesLoading(false);
     });
   }, []);
 
@@ -280,17 +284,19 @@ export default function AttendancePage() {
 
 
   const loadStudents = async () => {
-    const { data: students } = await supabase
-      .from("students")
-      .select("id, full_name")
-      .eq("class_id", selectedClass)
-      .order("full_name");
-
-    const { data: attendance } = await supabase
-      .from("attendance_records")
-      .select("id, student_id, status, notes")
-      .eq("class_id", selectedClass)
-      .eq("date", date);
+    setStudentsLoading(true);
+    const [{ data: students }, { data: attendance }] = await Promise.all([
+      supabase
+        .from("students")
+        .select("id, full_name")
+        .eq("class_id", selectedClass)
+        .order("full_name"),
+      supabase
+        .from("attendance_records")
+        .select("id, student_id, status, notes")
+        .eq("class_id", selectedClass)
+        .eq("date", date),
+    ]);
 
     const attendanceMap = new Map(attendance?.map((a) => [a.student_id, a]));
 
@@ -306,6 +312,7 @@ export default function AttendancePage() {
         };
       })
     );
+    setStudentsLoading(false);
   };
 
   const updateStatus = (studentId: string, status: AttendanceStatus) => {
@@ -571,7 +578,18 @@ export default function AttendancePage() {
           اختر الفصل
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {classes.map((c, index) => {
+          {classesLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border-2 border-border/30 p-3 text-center animate-pulse">
+                <div className="mx-auto w-10 h-10 rounded-lg bg-muted/50 mb-2" />
+                <div className="h-4 w-20 mx-auto rounded bg-muted/50 mb-1.5" />
+                <div className="h-4 w-10 mx-auto rounded-full bg-muted/40" />
+              </div>
+            ))
+          ) : classes.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
+          ) : (
+          classes.map((c, index) => {
             const isSelected = selectedClass === c.id;
             const colorPalette = [
               { gradient: "from-primary/15 to-primary/5", border: "border-primary/40", text: "text-primary", iconBg: "bg-primary/20" },
@@ -630,7 +648,7 @@ export default function AttendancePage() {
                 )}
               </button>
             );
-          })}
+          }))}
         </div>
       </div>
 
@@ -686,7 +704,18 @@ export default function AttendancePage() {
 
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
         <CardContent className="pt-6">
-          {records.length === 0 ? (
+          {studentsLoading ? (
+            <div className="space-y-3 py-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-8 h-4 rounded bg-muted/50" />
+                  <div className="h-4 w-32 rounded bg-muted/50" />
+                  <div className="flex-1" />
+                  <div className="h-8 w-24 rounded-lg bg-muted/40" />
+                </div>
+              ))}
+            </div>
+          ) : records.length === 0 ? (
             <EmptyState
               icon={CalendarIcon}
               title={selectedClass ? "لا يوجد طلاب في هذا الفصل" : "اختر فصلاً لبدء تسجيل الحضور"}
