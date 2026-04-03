@@ -33,6 +33,7 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
+  const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [classCounts, setClassCounts] = useState<Record<string, number>>({});
   const [selectedClass, setSelectedClass] = useState("");
