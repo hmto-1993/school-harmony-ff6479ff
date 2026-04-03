@@ -38,8 +38,10 @@ export default function AttendanceStats({ total, present, absent, late, earlyLea
 
   if (total === 0) return null;
 
+  const hasRecords = present > 0 || absent > 0 || late > 0 || earlyLeave > 0 || sickLeave > 0;
+
   const handleClick = (key: string) => {
-    if (!onFilterChange) return;
+    if (!onFilterChange || !hasRecords) return;
     const filterVal = filterKeyMap[key];
     onFilterChange(activeFilter === filterVal && filterVal !== "all" ? "all" : filterVal);
   };
