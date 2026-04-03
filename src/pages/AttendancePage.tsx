@@ -680,6 +680,8 @@ export default function AttendancePage() {
         late={records.filter((r) => r.status === "late").length}
         earlyLeave={records.filter((r) => r.status === "early_leave").length}
         sickLeave={records.filter((r) => r.status === "sick_leave").length}
+        activeFilter={statusFilter === "all" ? "all" : statusFilter}
+        onFilterChange={(f) => setStatusFilter(f as AttendanceStatus | "all")}
       />
 
       <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
