@@ -24,33 +24,55 @@ const stats = [
   { key: "sickLeave", label: "مرضي", icon: Stethoscope, gradient: "from-info/5 via-card to-info/10", iconBg: "bg-gradient-to-br from-info to-info/70", iconColor: "text-primary-foreground", ring: "ring-info/10" },
 ] as const;
 
-export default function AttendanceStats({ total, present, absent, late, earlyLeave, sickLeave }: AttendanceStatsProps) {
+const filterKeyMap: Record<string, StatusFilter> = {
+  total: "all",
+  present: "present",
+  absent: "absent",
+  late: "late",
+  earlyLeave: "early_leave",
+  sickLeave: "sick_leave",
+};
+
+export default function AttendanceStats({ total, present, absent, late, earlyLeave, sickLeave, activeFilter = "all", onFilterChange }: AttendanceStatsProps) {
   const values: Record<string, number> = { total, present, absent, late, earlyLeave, sickLeave };
 
   if (total === 0) return null;
 
+  const handleClick = (key: string) => {
+    if (!onFilterChange) return;
+    const filterVal = filterKeyMap[key];
+    onFilterChange(activeFilter === filterVal && filterVal !== "all" ? "all" : filterVal);
+  };
+
   return (
     <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-      {stats.map((s, index) => (
-        <Card
-          key={s.key}
-          className={cn(
-            "relative overflow-hidden border-0 ring-1 shadow-lg p-3 text-center transition-all duration-500 group cursor-default animate-fade-in",
-            `bg-gradient-to-br ${s.gradient}`,
-            s.ring
-          )}
-          style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
-        >
-          <div className={cn(
-            "mx-auto w-9 h-9 rounded-xl flex items-center justify-center mb-2 shadow-md transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg",
-            s.iconBg
-          )}>
-            <s.icon className={cn("h-4 w-4", s.iconColor)} />
-          </div>
-          <p className="text-2xl font-black text-foreground tabular-nums">{values[s.key]}</p>
-          <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{s.label}</p>
-        </Card>
-      ))}
+      {stats.map((s, index) => {
+        const filterVal = filterKeyMap[s.key];
+        const isActive = activeFilter === filterVal || (activeFilter === "all" && s.key === "total");
+        return (
+          <Card
+            key={s.key}
+            onClick={() => handleClick(s.key)}
+            className={cn(
+              "relative overflow-hidden border-0 ring-1 shadow-lg p-3 text-center transition-all duration-500 group animate-fade-in",
+              onFilterChange ? "cursor-pointer hover:scale-105" : "cursor-default",
+              `bg-gradient-to-br ${s.gradient}`,
+              s.ring,
+              isActive && onFilterChange && "ring-2 shadow-xl scale-[1.03]"
+            )}
+            style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
+          >
+            <div className={cn(
+              "mx-auto w-9 h-9 rounded-xl flex items-center justify-center mb-2 shadow-md transition-all duration-500 group-hover:scale-110 group-hover:shadow-lg",
+              s.iconBg
+            )}>
+              <s.icon className={cn("h-4 w-4", s.iconColor)} />
+            </div>
+            <p className="text-2xl font-black text-foreground tabular-nums">{values[s.key]}</p>
+            <p className="text-[11px] text-muted-foreground font-medium mt-0.5">{s.label}</p>
+          </Card>
+        );
+      })}
     </div>
   );
 }
