@@ -631,6 +631,7 @@ export default function AttendancePage() {
                   isSelected ? color.text : "text-foreground"
                 )}>{c.name}</p>
                 {/* Weekly progress badge */}
+                {weeklyProgressLoaded ? (
                 <div className={cn(
                   "mt-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
                   isComplete && !overrideLock
@@ -646,6 +647,9 @@ export default function AttendancePage() {
                   ) : null}
                   {sessions}/{limit}
                 </div>
+                ) : (
+                <div className="mt-1.5 inline-block h-4 w-10 rounded-full bg-muted/50 animate-pulse" />
+                )}
                 {isSelected && (
                   <div className={cn("absolute top-2 left-2 w-2.5 h-2.5 rounded-full animate-pulse", "bg-primary")} />
                 )}
