@@ -574,7 +574,18 @@ export default function AttendancePage() {
           اختر الفصل
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {classes.map((c, index) => {
+          {classesLoading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border-2 border-border/30 p-3 text-center animate-pulse">
+                <div className="mx-auto w-10 h-10 rounded-lg bg-muted/50 mb-2" />
+                <div className="h-4 w-20 mx-auto rounded bg-muted/50 mb-1.5" />
+                <div className="h-4 w-10 mx-auto rounded-full bg-muted/40" />
+              </div>
+            ))
+          ) : classes.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
+          ) : (
+          classes.map((c, index) => {
             const isSelected = selectedClass === c.id;
             const colorPalette = [
               { gradient: "from-primary/15 to-primary/5", border: "border-primary/40", text: "text-primary", iconBg: "bg-primary/20" },
