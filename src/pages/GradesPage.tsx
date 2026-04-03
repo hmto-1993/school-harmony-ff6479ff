@@ -156,8 +156,13 @@ export default function GradesPage() {
                 <span className={cn("text-sm font-bold block", isActive ? "text-primary" : "text-foreground")}>
                   {cls.name}
                 </span>
+                {classCounts[cls.id] !== undefined ? (
                 <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
                   {count} طالب
+                </span>
+                ) : (
+                <span className="mt-1 block h-3 w-12 mx-auto rounded bg-muted/50 animate-pulse" />
+                )}
                 </span>
                 
               </button>
