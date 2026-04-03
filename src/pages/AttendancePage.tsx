@@ -284,17 +284,19 @@ export default function AttendancePage() {
 
 
   const loadStudents = async () => {
-    const { data: students } = await supabase
-      .from("students")
-      .select("id, full_name")
-      .eq("class_id", selectedClass)
-      .order("full_name");
-
-    const { data: attendance } = await supabase
-      .from("attendance_records")
-      .select("id, student_id, status, notes")
-      .eq("class_id", selectedClass)
-      .eq("date", date);
+    setStudentsLoading(true);
+    const [{ data: students }, { data: attendance }] = await Promise.all([
+      supabase
+        .from("students")
+        .select("id, full_name")
+        .eq("class_id", selectedClass)
+        .order("full_name"),
+      supabase
+        .from("attendance_records")
+        .select("id, student_id, status, notes")
+        .eq("class_id", selectedClass)
+        .eq("date", date),
+    ]);
 
     const attendanceMap = new Map(attendance?.map((a) => [a.student_id, a]));
 
@@ -310,6 +312,7 @@ export default function AttendancePage() {
         };
       })
     );
+    setStudentsLoading(false);
   };
 
   const updateStatus = (studentId: string, status: AttendanceStatus) => {
