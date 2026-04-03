@@ -60,6 +60,7 @@ export default function AttendancePage() {
   const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
+  const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
