@@ -754,25 +754,6 @@ export default function AttendancePage() {
                   />
                 </div>
                 <ScrollToSaveButton targetId="attendance-save" />
-                <div className="flex items-center gap-1.5 mr-auto">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as AttendanceStatus | "all")}>
-                    <SelectTrigger className="w-40 h-9 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">الكل ({records.length})</SelectItem>
-                      {statusOptions.map((opt) => {
-                        const count = records.filter((r) => r.status === opt.value).length;
-                        return (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label} ({count})
-                          </SelectItem>
-                        );
-                      })}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="overflow-hidden rounded-xl border border-border/40 shadow-sm">
                 <table className="w-full text-sm border-separate border-spacing-0">
