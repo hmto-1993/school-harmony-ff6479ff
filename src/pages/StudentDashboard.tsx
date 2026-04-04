@@ -29,8 +29,9 @@ import StudentNotificationCards from "@/components/student/StudentNotificationCa
 import HonorRoll from "@/components/student/HonorRoll";
 import { useTheme } from "@/hooks/use-theme";
 import ParentContactForm from "@/components/parent/ParentContactForm";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
+import autoTable from "jspdf-autotable";
+import { toast } from "sonner";
 
 const statusLabels: Record<string, { label: string; color: string }> = {
   present: { label: "حاضر", color: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" },
