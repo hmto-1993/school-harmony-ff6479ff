@@ -977,11 +977,19 @@ export default function StudentDashboard() {
               const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
               const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
               const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
-              const getLevel = (score: number | null, maxScore: number) => {
+              const isParticFn = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+              const DAILY_MAX_SLOTS = 3;
+              const getLevel = (score: number | null, maxScore: number, catName: string) => {
                 if (score === null || score === undefined) return null;
-                const pct = maxScore > 0 ? score / maxScore : 0;
-                if (pct >= 0.8) return "excellent";
-                if (pct >= 0.4) return "average";
+                const isPartic = isParticFn(catName);
+                if (score >= maxScore && isPartic) return "star";
+                if (score >= maxScore) return "excellent";
+                if (score === 0) return "zero";
+                const slotCount = isPartic ? DAILY_MAX_SLOTS : 1;
+                const perSlot = Math.round(maxScore / slotCount);
+                const averageScore = Math.round(perSlot / 2);
+                if (score >= perSlot) return "excellent";
+                if (score >= averageScore) return "average";
                 return "zero";
               };
               return (
@@ -1010,10 +1018,11 @@ export default function StudentDashboard() {
                               </td>
                               {dailyCatNames.map((catName: string) => {
                                 const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
+                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100, catName) : null;
                                 return (
                                   <td key={catName} className="p-1.5 text-center border-l border-border/10">
-                                    {level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" /> :
+                                    {level === "star" ? <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" /> :
+                                     level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" /> :
                                      level === "average" ? <MinusCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" /> :
                                      level === "zero" ? <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" /> :
                                      <span className="text-muted-foreground/30 text-sm">○</span>}
@@ -1027,6 +1036,7 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> متميز</span>
                     <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> ممتاز</span>
                     <span className="flex items-center gap-1"><MinusCircle className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
                     <span className="flex items-center gap-1"><XCircle className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
@@ -1043,26 +1053,38 @@ export default function StudentDashboard() {
               );
               if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
               const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
-              const isParticipationFn = (name: string) => name === "المشاركة";
-              const MAX_SLOTS = 3;
+              const isParticFn2 = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+              const CW_MAX_SLOTS = 3;
               
               const getIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
                 if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
                 if (score <= 0) return [{ level: "zero", isStar: false }];
-                const isPartic = isParticipationFn(catName);
-                const slotCount = isPartic ? MAX_SLOTS : 1;
-                const perSlot = Math.round(maxScore / slotCount);
-                const icons: { level: string; isStar: boolean }[] = [];
-                for (let s = 0; s < slotCount; s++) {
-                  const slotScore = Math.min(Math.max(score - s * perSlot, 0), perSlot);
-                  const pct = perSlot > 0 ? slotScore / perSlot : 0;
-                  if (slotScore <= 0 && s > 0) break;
-                  if (pct >= 1) icons.push({ level: "excellent", isStar: true });
-                  else if (pct >= 0.8) icons.push({ level: "excellent", isStar: false });
-                  else if (pct >= 0.4) icons.push({ level: "average", isStar: false });
-                  else icons.push({ level: "zero", isStar: false });
+                const isPartic = isParticFn2(catName);
+                // Star: only when total score >= maxScore AND participation (matches teacher logic)
+                if (score >= maxScore && isPartic) {
+                  return [{ level: "excellent", isStar: true }];
                 }
-                return icons;
+                if (score >= maxScore) {
+                  return [{ level: "excellent", isStar: false }];
+                }
+                const slotCount = isPartic ? CW_MAX_SLOTS : 1;
+                const perSlot = Math.round(maxScore / slotCount);
+                const averageScore = Math.round(perSlot / 2);
+                const icons: { level: string; isStar: boolean }[] = [];
+                let remaining = score;
+                while (remaining > 0 && icons.length < slotCount) {
+                  if (remaining >= perSlot) {
+                    icons.push({ level: "excellent", isStar: false });
+                    remaining -= perSlot;
+                  } else if (remaining >= averageScore) {
+                    icons.push({ level: "average", isStar: false });
+                    remaining -= averageScore;
+                  } else {
+                    icons.push({ level: "average", isStar: false });
+                    remaining = 0;
+                  }
+                }
+                return icons.length > 0 ? icons : [{ level: "zero", isStar: false }];
               };
 
               // Use same alternating style as daily view
