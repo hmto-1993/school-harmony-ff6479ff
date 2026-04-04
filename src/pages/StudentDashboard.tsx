@@ -1053,26 +1053,38 @@ export default function StudentDashboard() {
               );
               if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
               const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
-              const isParticipationFn = (name: string) => name === "المشاركة";
-              const MAX_SLOTS = 3;
+              const isParticFn2 = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+              const CW_MAX_SLOTS = 3;
               
               const getIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
                 if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
                 if (score <= 0) return [{ level: "zero", isStar: false }];
-                const isPartic = isParticipationFn(catName);
-                const slotCount = isPartic ? MAX_SLOTS : 1;
-                const perSlot = Math.round(maxScore / slotCount);
-                const icons: { level: string; isStar: boolean }[] = [];
-                for (let s = 0; s < slotCount; s++) {
-                  const slotScore = Math.min(Math.max(score - s * perSlot, 0), perSlot);
-                  const pct = perSlot > 0 ? slotScore / perSlot : 0;
-                  if (slotScore <= 0 && s > 0) break;
-                  if (pct >= 1) icons.push({ level: "excellent", isStar: true });
-                  else if (pct >= 0.8) icons.push({ level: "excellent", isStar: false });
-                  else if (pct >= 0.4) icons.push({ level: "average", isStar: false });
-                  else icons.push({ level: "zero", isStar: false });
+                const isPartic = isParticFn2(catName);
+                // Star: only when total score >= maxScore AND participation (matches teacher logic)
+                if (score >= maxScore && isPartic) {
+                  return [{ level: "excellent", isStar: true }];
                 }
-                return icons;
+                if (score >= maxScore) {
+                  return [{ level: "excellent", isStar: false }];
+                }
+                const slotCount = isPartic ? CW_MAX_SLOTS : 1;
+                const perSlot = Math.round(maxScore / slotCount);
+                const averageScore = Math.round(perSlot / 2);
+                const icons: { level: string; isStar: boolean }[] = [];
+                let remaining = score;
+                while (remaining > 0 && icons.length < slotCount) {
+                  if (remaining >= perSlot) {
+                    icons.push({ level: "excellent", isStar: false });
+                    remaining -= perSlot;
+                  } else if (remaining >= averageScore) {
+                    icons.push({ level: "average", isStar: false });
+                    remaining -= averageScore;
+                  } else {
+                    icons.push({ level: "average", isStar: false });
+                    remaining = 0;
+                  }
+                }
+                return icons.length > 0 ? icons : [{ level: "zero", isStar: false }];
               };
 
               // Use same alternating style as daily view
