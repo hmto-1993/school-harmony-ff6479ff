@@ -977,11 +977,19 @@ export default function StudentDashboard() {
               const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
               const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
               const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
-              const getLevel = (score: number | null, maxScore: number) => {
+              const isParticFn = (name: string) => name === "المشاركة" || name.includes("المشاركة");
+              const DAILY_MAX_SLOTS = 3;
+              const getLevel = (score: number | null, maxScore: number, catName: string) => {
                 if (score === null || score === undefined) return null;
-                const pct = maxScore > 0 ? score / maxScore : 0;
-                if (pct >= 0.8) return "excellent";
-                if (pct >= 0.4) return "average";
+                const isPartic = isParticFn(catName);
+                if (score >= maxScore && isPartic) return "star";
+                if (score >= maxScore) return "excellent";
+                if (score === 0) return "zero";
+                const slotCount = isPartic ? DAILY_MAX_SLOTS : 1;
+                const perSlot = Math.round(maxScore / slotCount);
+                const averageScore = Math.round(perSlot / 2);
+                if (score >= perSlot) return "excellent";
+                if (score >= averageScore) return "average";
                 return "zero";
               };
               return (
@@ -1010,10 +1018,11 @@ export default function StudentDashboard() {
                               </td>
                               {dailyCatNames.map((catName: string) => {
                                 const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100) : null;
+                                const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100, catName) : null;
                                 return (
                                   <td key={catName} className="p-1.5 text-center border-l border-border/10">
-                                    {level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" /> :
+                                    {level === "star" ? <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" /> :
+                                     level === "excellent" ? <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" /> :
                                      level === "average" ? <MinusCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" /> :
                                      level === "zero" ? <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" /> :
                                      <span className="text-muted-foreground/30 text-sm">○</span>}
@@ -1027,6 +1036,7 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                   <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
+                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> متميز</span>
                     <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> ممتاز</span>
                     <span className="flex items-center gap-1"><MinusCircle className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
                     <span className="flex items-center gap-1"><XCircle className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
