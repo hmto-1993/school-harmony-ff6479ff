@@ -454,22 +454,18 @@ export default function StudentDashboard() {
           const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
           const isParticFn2 = (name: string) => name.includes("المشاركة");
           const CW_MAX_SLOTS = 3;
-          const getIconSymbol = (score: number | null, maxScore: number, catName: string): string[] => {
-            if (score === null || score === undefined || score <= 0) return ["✘"];
+          // Use same getLevel logic as daily evaluation for consistent symbols
+          const getCwLevel = (score: number | null, maxScore: number, catName: string) => {
+            if (score === null || score === undefined) return "○";
             const isP = isParticFn2(catName);
-            if (score >= maxScore && isP) return ["★"];
-            if (score >= maxScore) return ["✔"];
+            if (score >= maxScore && isP) return "★";
+            if (score >= maxScore) return "✔";
+            if (score === 0) return "✘";
             const slotCount = isP ? CW_MAX_SLOTS : 1;
             const perSlot = Math.round(maxScore / slotCount);
-            const avg = Math.round(perSlot / 2);
-            const icons: string[] = [];
-            let remaining = score;
-            while (remaining > 0 && icons.length < slotCount) {
-              if (remaining >= perSlot) { icons.push("✔"); remaining -= perSlot; }
-              else if (remaining >= avg) { icons.push("◐"); remaining = 0; }
-              else { icons.push("◐"); remaining = 0; }
-            }
-            return icons.length > 0 ? icons : ["✘"];
+            if (score >= perSlot) return "✔";
+            if (score >= Math.round(perSlot / 2)) return "◐";
+            return "✘";
           };
 
           if (currentY > 240) { doc.addPage(); currentY = 15; }
@@ -481,8 +477,8 @@ export default function StudentDashboard() {
             const catGrades = cwGrades
               .filter((g: any) => g.grade_categories?.name === catName)
               .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
-            const allIcons = catGrades.flatMap((g: any) =>
-              getIconSymbol(g.score, g.grade_categories?.max_score || 100, catName)
+            const allIcons = catGrades.map((g: any) =>
+              getCwLevel(g.score, g.grade_categories?.max_score || 100, catName)
             );
             const displayIcons = allIcons.slice(-effectiveIconsCount);
             return [displayIcons.join(" "), catName];
@@ -496,7 +492,11 @@ export default function StudentDashboard() {
             styles: { ...tableStyles.styles, fontSize: 10 },
             columnStyles: { 0: { halign: "center" as const }, 1: { halign: "right" as const } },
           });
-          currentY = (doc as any).lastAutoTable.finalY + 10;
+          currentY = (doc as any).lastAutoTable.finalY + 6;
+          doc.setFontSize(7);
+          doc.setFont("Amiri", "normal");
+          doc.text("★ متميز   ✔ ممتاز   ◐ متوسط   ✘ ضعيف   ○ لم يُقيّم", pageWidth / 2, currentY, { align: "center" });
+          currentY += 10;
         }
       }
 
