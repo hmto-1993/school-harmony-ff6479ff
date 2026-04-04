@@ -303,154 +303,249 @@ export default function StudentDashboard() {
     setFilesLoading(false);
   };
 
-  // PDF Export function using html2canvas for proper Arabic text rendering
+  // PDF Export using unified Arabic PDF system (Amiri font + print header)
   const handleExportPdf = async () => {
     if (!student) return;
     setExportingPdf(true);
     try {
-      const vis = student.visibility || { grades: true, attendance: true, behavior: true };
+      const vis2 = student.visibility || { grades: true, attendance: true, behavior: true };
       const effectiveVis = isParent ? {
-        grades: vis.grades && parentShowGrades,
-        attendance: vis.attendance && parentShowAttendance,
-        behavior: vis.behavior && parentShowBehavior,
-      } : vis;
+        grades: vis2.grades && parentShowGrades,
+        attendance: vis2.attendance && parentShowAttendance,
+        behavior: vis2.behavior && parentShowBehavior,
+      } : vis2;
 
-      // Build an offscreen HTML element with proper Arabic styling
-      const container = document.createElement("div");
-      container.style.cssText = "position:absolute;left:-9999px;top:0;width:794px;background:#fff;padding:30px 40px;font-family:'Segoe UI',Tahoma,Arial,sans-serif;direction:rtl;color:#1a1a2e;";
-      
-      let html = "";
+      const { doc, startY: headerEndY, watermark } = await createArabicPDF({
+        reportType: isParent ? "parent_report" : "student_report",
+        includeHeader: true,
+      });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const tableStyles = getArabicTableStyles();
 
-      // Custom PDF Header from settings
-      const hasCustomHeader = parentPdfHeader.line1 || parentPdfHeader.line2 || parentPdfHeader.line3;
-      if (hasCustomHeader) {
-        html += `<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px;">`;
-        // Logo on the right (RTL)
-        if (parentPdfHeader.showLogo && schoolLogoUrl) {
-          html += `<img src="${schoolLogoUrl}" style="width:60px;height:60px;border-radius:8px;object-fit:contain;" crossorigin="anonymous" />`;
-        }
-        html += `<div style="text-align:center;flex:1;">`;
-        if (parentPdfHeader.line1) html += `<p style="font-size:14px;font-weight:bold;margin:0 0 2px;color:#1e3a5f;">${parentPdfHeader.line1}</p>`;
-        if (parentPdfHeader.line2) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line2}</p>`;
-        if (parentPdfHeader.line3) html += `<p style="font-size:12px;margin:0 0 2px;color:#333;">${parentPdfHeader.line3}</p>`;
-        html += `</div>`;
-        if (parentPdfHeader.showLogo && schoolLogoUrl) {
-          html += `<div style="width:60px;"></div>`;
-        }
-        html += `</div>`;
-        html += `<hr style="border:none;border-top:2px solid #1e3a5f;margin:0 0 12px;">`;
-      } else {
-        // Fallback: school name only
-        if (schoolName) {
-          html += `<h1 style="text-align:center;font-size:20px;margin:0 0 4px;color:#1e3a5f;">${schoolName}</h1>`;
-        }
-      }
+      // Title
+      doc.setFontSize(14);
+      doc.setFont("Amiri", "bold");
+      doc.text(`تقرير الطالب: ${student.full_name}`, pageWidth / 2, headerEndY, { align: "center" });
 
-      // Student info
-      html += `<h2 style="text-align:center;font-size:16px;margin:0 0 4px;color:#333;">تقرير الطالب: ${student.full_name}</h2>`;
-      
+      let currentY = headerEndY + 6;
+      doc.setFontSize(9);
+      doc.setFont("Amiri", "normal");
       const classInfo = student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "";
       if (classInfo) {
-        html += `<p style="text-align:center;font-size:12px;margin:0 0 2px;color:#666;">${classInfo}</p>`;
+        doc.text(classInfo, pageWidth / 2, currentY, { align: "center" });
+        currentY += 5;
       }
-      if (parentShowNationalId && student.national_id) {
-        html += `<p style="text-align:center;font-size:12px;margin:0 0 2px;color:#666;">الهوية الوطنية: ${student.national_id}</p>`;
+      if ((!isParent || parentShowNationalId) && student.national_id) {
+        doc.text(`الهوية الوطنية: ${student.national_id}`, pageWidth / 2, currentY, { align: "center" });
+        currentY += 5;
       }
-      html += `<p style="text-align:center;font-size:11px;margin:0 0 12px;color:#999;">تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}</p>`;
-      html += `<hr style="border:none;border-top:1px solid #ddd;margin:0 0 16px;">`;
+      doc.text(`تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}`, pageWidth / 2, currentY, { align: "center" });
+      currentY += 10;
 
-      // Table style
-      const tableStyle = `width:100%;border-collapse:collapse;margin:0 0 20px;font-size:11px;`;
-      const thStyle = `background:#f0f4f8;padding:6px 10px;text-align:right;border:1px solid #ddd;font-weight:bold;color:#1e3a5f;`;
-      const tdStyle = `padding:5px 10px;text-align:right;border:1px solid #eee;`;
-
-      // Grades
+      // --- Grades Section ---
       if (effectiveVis.grades && student.grades.length > 0) {
-        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">☆ الدرجات</h3>`;
-        html += `<table style="${tableStyle}"><thead><tr>`;
-        html += `<th style="${thStyle}">المعيار</th><th style="${thStyle}">الدرجة</th><th style="${thStyle}">من</th><th style="${thStyle}">الوزن</th>`;
-        html += `</tr></thead><tbody>`;
-        student.grades.forEach((g, i) => {
-          const bg = i % 2 === 0 ? "#fff" : "#fafbfc";
-          html += `<tr style="background:${bg}">`;
-          html += `<td style="${tdStyle}font-weight:bold;">${g.grade_categories?.name || "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.score ?? "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.grade_categories?.max_score || "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.grade_categories?.weight || "-"}%</td>`;
-          html += `</tr>`;
+        const studentClassId = student.class_id;
+        const isCatHidden = (catId: string) => {
+          if (studentClassId && parentGradesHiddenCategories.classes[studentClassId]?.length) {
+            return parentGradesHiddenCategories.classes[studentClassId].includes(catId);
+          }
+          return parentGradesHiddenCategories.global.includes(catId);
+        };
+        const filteredG = student.grades.filter((g: any) => {
+          if (isCatHidden(g.category_id)) return false;
+          if (parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
+            if (parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
+            if (parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
+          }
+          return true;
         });
-        html += `</tbody></table>`;
+
+        if (filteredG.length > 0) {
+          doc.setFontSize(12);
+          doc.setFont("Amiri", "bold");
+          doc.text("الدرجات", pageWidth - 14, currentY, { align: "right" });
+          
+          const gradeHead = ["النسبة", "من", "الدرجة", "المعيار"];
+          const gradeBody = filteredG.map((g: any) => {
+            const score = g.score ?? 0;
+            const maxScore = g.grade_categories?.max_score || 100;
+            const pct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+            return [`${pct}%`, maxScore.toString(), (g.score ?? "-").toString(), g.grade_categories?.name || "-"];
+          });
+
+          autoTable(doc, {
+            startY: currentY + 4,
+            head: [gradeHead],
+            body: gradeBody,
+            ...tableStyles,
+            columnStyles: { 3: { halign: "right" as const } },
+          });
+          currentY = (doc as any).lastAutoTable.finalY + 10;
+        }
       }
 
-      // Attendance
+      // --- Daily Evaluation Section (تفاعل اليوم) ---
+      const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+      const showDaily = isParent ? parentShowDailyGrades : studentEval.showDaily;
+      const showClasswork = isParent ? parentShowClassworkIcons : studentEval.showClasswork;
+      const effectiveIconsCount = isParent ? parentClassworkIconsCount : studentEval.iconsCount;
+
+      if (effectiveVis.grades && showDaily) {
+        const dailyGrades = student.grades.filter((g: any) =>
+          g.date && g.grade_categories?.category_group === "classwork"
+        );
+        if (dailyGrades.length > 0) {
+          const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
+          const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          const dayLabelsMap: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
+          const isParticFn = (name: string) => name.includes("المشاركة");
+          const DAILY_MAX_SLOTS = 3;
+          const getLevel = (score: number | null, maxScore: number, catName: string) => {
+            if (score === null || score === undefined) return null;
+            const isP = isParticFn(catName);
+            if (score >= maxScore && isP) return "★";
+            if (score >= maxScore) return "✔";
+            if (score === 0) return "✘";
+            const slotCount = isP ? DAILY_MAX_SLOTS : 1;
+            const perSlot = Math.round(maxScore / slotCount);
+            if (score >= perSlot) return "✔";
+            if (score >= Math.round(perSlot / 2)) return "◐";
+            return "✘";
+          };
+
+          if (currentY > 240) { doc.addPage(); currentY = 15; }
+          doc.setFontSize(12);
+          doc.setFont("Amiri", "bold");
+          doc.text("تفاعل اليوم", pageWidth - 14, currentY, { align: "right" });
+
+          const dailyHead = [...dailyCatNames.reverse(), "اليوم"];
+          const dailyBody = uniqueDates.map((date: string) => {
+            const d = new Date(date);
+            const dayName = dayLabelsMap[d.getDay()] || "";
+            const row = dailyCatNames.map((catName: string) => {
+              const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
+              return grade ? (getLevel(grade.score, grade.grade_categories?.max_score || 100, catName) || "○") : "○";
+            });
+            return [...row, `${dayName} ${d.getDate()}/${d.getMonth() + 1}`];
+          });
+
+          autoTable(doc, {
+            startY: currentY + 4,
+            head: [dailyHead],
+            body: dailyBody,
+            ...tableStyles,
+            styles: { ...tableStyles.styles, fontSize: 10 },
+            columnStyles: { [dailyCatNames.length]: { halign: "right" as const } },
+          });
+          currentY = (doc as any).lastAutoTable.finalY + 6;
+          doc.setFontSize(7);
+          doc.setFont("Amiri", "normal");
+          doc.text("★ متميز   ✔ ممتاز   ◐ متوسط   ✘ ضعيف   ○ لم يُقيّم", pageWidth / 2, currentY, { align: "center" });
+          currentY += 10;
+        }
+      }
+
+      // --- Classwork Icons Section (التفاعل الكلي) ---
+      if (effectiveVis.grades && showClasswork) {
+        const cwGrades = student.grades.filter((g: any) =>
+          g.grade_categories?.category_group === "classwork"
+        );
+        if (cwGrades.length > 0) {
+          const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          const isParticFn2 = (name: string) => name.includes("المشاركة");
+          const CW_MAX_SLOTS = 3;
+          const getIconSymbol = (score: number | null, maxScore: number, catName: string): string[] => {
+            if (score === null || score === undefined || score <= 0) return ["✘"];
+            const isP = isParticFn2(catName);
+            if (score >= maxScore && isP) return ["★"];
+            if (score >= maxScore) return ["✔"];
+            const slotCount = isP ? CW_MAX_SLOTS : 1;
+            const perSlot = Math.round(maxScore / slotCount);
+            const avg = Math.round(perSlot / 2);
+            const icons: string[] = [];
+            let remaining = score;
+            while (remaining > 0 && icons.length < slotCount) {
+              if (remaining >= perSlot) { icons.push("✔"); remaining -= perSlot; }
+              else if (remaining >= avg) { icons.push("◐"); remaining = 0; }
+              else { icons.push("◐"); remaining = 0; }
+            }
+            return icons.length > 0 ? icons : ["✘"];
+          };
+
+          if (currentY > 240) { doc.addPage(); currentY = 15; }
+          doc.setFontSize(12);
+          doc.setFont("Amiri", "bold");
+          doc.text("التفاعل الكلي", pageWidth - 14, currentY, { align: "right" });
+
+          const cwBody = cwCatNames.map((catName: string) => {
+            const catGrades = cwGrades
+              .filter((g: any) => g.grade_categories?.name === catName)
+              .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
+            const allIcons = catGrades.flatMap((g: any) =>
+              getIconSymbol(g.score, g.grade_categories?.max_score || 100, catName)
+            );
+            const displayIcons = allIcons.slice(-effectiveIconsCount);
+            return [displayIcons.join(" "), catName];
+          });
+
+          autoTable(doc, {
+            startY: currentY + 4,
+            head: [["التقييم", "فئة التقييم"]],
+            body: cwBody,
+            ...tableStyles,
+            styles: { ...tableStyles.styles, fontSize: 10 },
+            columnStyles: { 0: { halign: "center" as const }, 1: { halign: "right" as const } },
+          });
+          currentY = (doc as any).lastAutoTable.finalY + 10;
+        }
+      }
+
+      // --- Attendance Section ---
       if (effectiveVis.attendance && student.attendance.length > 0) {
-        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">✔ الحضور والغياب</h3>`;
-        html += `<table style="${tableStyle}"><thead><tr>`;
-        html += `<th style="${thStyle}">التاريخ</th><th style="${thStyle}">الحالة</th><th style="${thStyle}">ملاحظات</th>`;
-        html += `</tr></thead><tbody>`;
-        student.attendance.forEach((a, i) => {
-          const bg = i % 2 === 0 ? "#fff" : "#fafbfc";
-          const label = statusLabels[a.status]?.label || a.status;
-          html += `<tr style="background:${bg}">`;
-          html += `<td style="${tdStyle}">${a.date}</td>`;
-          html += `<td style="${tdStyle}">${label}</td>`;
-          html += `<td style="${tdStyle}">${a.notes || "-"}</td>`;
-          html += `</tr>`;
+        if (currentY > 240) { doc.addPage(); currentY = 15; }
+        doc.setFontSize(12);
+        doc.setFont("Amiri", "bold");
+        doc.text("الحضور والغياب", pageWidth - 14, currentY, { align: "right" });
+
+        autoTable(doc, {
+          startY: currentY + 4,
+          head: [["ملاحظات", "الحالة", "التاريخ"]],
+          body: student.attendance.map((a: any) => [
+            a.notes || "-",
+            statusLabels[a.status]?.label || a.status,
+            a.date,
+          ]),
+          ...tableStyles,
+          columnStyles: { 2: { halign: "right" as const } },
         });
-        html += `</tbody></table>`;
+        currentY = (doc as any).lastAutoTable.finalY + 10;
       }
 
-      // Behavior
+      // --- Behavior Section ---
       if (effectiveVis.behavior && student.behaviors.length > 0) {
-        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">➖ السلوك</h3>`;
-        html += `<table style="${tableStyle}"><thead><tr>`;
-        html += `<th style="${thStyle}">التاريخ</th><th style="${thStyle}">النوع</th><th style="${thStyle}">الملاحظة</th>`;
-        html += `</tr></thead><tbody>`;
-        student.behaviors.forEach((b, i) => {
-          const bg = i % 2 === 0 ? "#fff" : "#fafbfc";
-          html += `<tr style="background:${bg}">`;
-          html += `<td style="${tdStyle}">${b.date}</td>`;
-          html += `<td style="${tdStyle}">${b.type}</td>`;
-          html += `<td style="${tdStyle}">${b.note || "-"}</td>`;
-          html += `</tr>`;
+        if (currentY > 240) { doc.addPage(); currentY = 15; }
+        doc.setFontSize(12);
+        doc.setFont("Amiri", "bold");
+        doc.text("السلوك", pageWidth - 14, currentY, { align: "right" });
+
+        autoTable(doc, {
+          startY: currentY + 4,
+          head: [["الملاحظة", "النوع", "التاريخ"]],
+          body: student.behaviors.map((b: any) => [
+            b.note || "-",
+            b.type,
+            b.date,
+          ]),
+          ...tableStyles,
+          columnStyles: { 2: { halign: "right" as const } },
         });
-        html += `</tbody></table>`;
       }
 
-      container.innerHTML = html;
-      document.body.appendChild(container);
-
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-      });
-
-      document.body.removeChild(container);
-
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-
-      const doc = new jsPDF("p", "mm", "a4");
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      doc.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        doc.addPage();
-        doc.addImage(imgData, "JPEG", 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
-      }
-
-      doc.save(`تقرير_${student.full_name}.pdf`);
+      finalizePDF(doc, `تقرير_${student.full_name}.pdf`, watermark);
+      toast.success("تم تصدير التقرير بنجاح");
     } catch (err) {
       console.error("PDF export error:", err);
+      toast.error("حدث خطأ أثناء التصدير");
     }
     setExportingPdf(false);
   };
