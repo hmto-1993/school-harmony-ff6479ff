@@ -179,7 +179,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     const margin = 10;
 
     // --- Render header as HTML image (same approach as grades export) ---
-    let startY = 10;
+    let startY = 5;
     let watermark: any = undefined;
 
     // Fetch behavior-specific header first, then default — independent from grades
