@@ -115,7 +115,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setSaving(true);
     const today = new Date().toISOString().split("T")[0];
 
-    const updates: PromiseLike<any>[] = [];
+    const updates: Promise<any>[] = [];
     const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
 
     for (const s of students) {
@@ -123,7 +123,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       if (s.existingId) {
         updates.push(supabase.from("behavior_records").update({
           type: s.type, note: s.note || null,
-        }).eq("id", s.existingId).then());
+        }).eq("id", s.existingId));
       } else {
         inserts.push({
           student_id: s.student_id,
@@ -136,13 +136,20 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       }
     }
 
-    const ops: PromiseLike<any>[] = [...updates];
+    let hasError = false;
+    await Promise.all(updates);
     if (inserts.length > 0) {
-      ops.push(supabase.from("behavior_records").insert(inserts).then());
+      const { error } = await supabase.from("behavior_records").insert(inserts);
+      if (error) {
+        console.error("behavior insert error:", error);
+        hasError = true;
+        toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
+      }
     }
-    await Promise.all(ops);
 
-    toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
+    if (!hasError) {
+      toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
+    }
     setSaving(false);
     loadData();
   };
