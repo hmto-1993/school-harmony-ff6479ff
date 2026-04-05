@@ -211,7 +211,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         .map((img: string, i: number) => {
           if (!img) return "";
           const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-          return `<img src="${img}" alt="" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
+          return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
         }).join("");
 
       const headerHTML = `
