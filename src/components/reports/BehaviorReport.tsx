@@ -168,7 +168,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "behavior", includeHeader: true });
+    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "behavior", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -199,12 +199,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       startY: startY + 12,
       head: [summaryData.map((s) => `${s.label}`)],
       body: [
-        summaryData.map((s) => `${s.count}  (${s.pct}%)`),
+        summaryData.map((s) => `${s.count}`),
       ],
       ...tableStyles,
       headStyles: {
         ...tableStyles.headStyles,
-        fillColor: [60, 60, 60],
+        fillColor: [240, 240, 240],
+        textColor: [30, 30, 30],
         fontSize: 11,
       },
       bodyStyles: {
