@@ -357,6 +357,40 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       currentY = (doc as any).lastAutoTable.finalY + 10;
     }
 
+    // --- Footer Signatures ---
+    const footerConfig = headerConfig?.footerSignatures;
+    if (footerConfig?.enabled && footerConfig.signatures?.length) {
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const sigCount = footerConfig.signatures.length;
+      const sigWidth = (pageWidth - margin * 2) / sigCount;
+
+      // Check if we need a new page for signatures
+      if (currentY + 40 > pageHeight - 15) {
+        doc.addPage();
+        currentY = 20;
+      }
+
+      // Dashed line separator
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineDashPattern([2, 2], 0);
+      doc.line(margin, currentY, pageWidth - margin, currentY);
+      doc.setLineDashPattern([], 0);
+      currentY += 10;
+
+      footerConfig.signatures.forEach((sig: any, idx: number) => {
+        const x = margin + sigWidth * idx + sigWidth / 2;
+        doc.setFontSize(10);
+        doc.setTextColor(30, 41, 59);
+        doc.text(sig.label || "", x, currentY, { align: "center" });
+        doc.setFontSize(9);
+        doc.setTextColor(71, 85, 105);
+        doc.text(sig.name || "........................", x, currentY + 6, { align: "center" });
+        // Signature line
+        doc.setDrawColor(148, 163, 184);
+        doc.line(x - 25, currentY + 18, x + 25, currentY + 18);
+      });
+    }
+
     finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark);
   };
 
