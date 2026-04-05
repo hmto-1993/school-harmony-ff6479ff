@@ -16,6 +16,12 @@ import {
 import { BarChart3, Heart } from "lucide-react";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
+// Strip [severity:xxx] prefix from note for display
+const cleanNote = (note: string | null): string => {
+  if (!note) return "—";
+  return note.replace(/\[severity:\w+\]\s*/g, "").trim() || "—";
+};
+
 interface BehaviorRow {
   student_name: string;
   date: string;
