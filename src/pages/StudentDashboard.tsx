@@ -363,22 +363,123 @@ export default function StudentDashboard() {
       const thStyle = `background:#f0f4f8;padding:6px 10px;text-align:right;border:1px solid #ddd;font-weight:bold;color:#1e3a5f;`;
       const tdStyle = `padding:5px 10px;text-align:right;border:1px solid #eee;`;
 
-      // Grades
+      // SVG icon helpers for PDF
+      const svgStar = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+      const svgCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>`;
+      const svgMinus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>`;
+      const svgX = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>`;
+      const emptyCircle = `<span style="display:inline-block;width:20px;height:20px;border-radius:50%;border:1.5px solid #ccc;"></span>`;
+
+      const pdfGetLevel = (score: number | null, maxScore: number, catName: string) => {
+        if (score === null || score === undefined) return null;
+        const isPartic = catName === "المشاركة" || catName.includes("المشاركة");
+        if (score >= maxScore && isPartic) return "star";
+        if (score >= maxScore) return "excellent";
+        if (score === 0) return "zero";
+        const slotCount = isPartic ? 3 : 1;
+        const perSlot = Math.round(maxScore / slotCount);
+        const averageScore = Math.round(perSlot / 2);
+        if (score >= perSlot) return "excellent";
+        if (score >= averageScore) return "average";
+        return "zero";
+      };
+      const pdfGetIconHtml = (level: string | null) => {
+        if (level === "star") return svgStar;
+        if (level === "excellent") return svgCheck;
+        if (level === "average") return svgMinus;
+        if (level === "zero") return svgX;
+        return emptyCircle;
+      };
+      const pdfGetIconLevel = (score: number | null, maxScore: number, catName: string): { level: string; isStar: boolean }[] => {
+        if (score === null || score === undefined) return [{ level: "zero", isStar: false }];
+        if (score <= 0) return [{ level: "zero", isStar: false }];
+        const isPartic = catName === "المشاركة" || catName.includes("المشاركة");
+        if (score >= maxScore && isPartic) return [{ level: "excellent", isStar: true }];
+        if (score >= maxScore) return [{ level: "excellent", isStar: false }];
+        const slotCount = isPartic ? 3 : 1;
+        const perSlot = Math.round(maxScore / slotCount);
+        const averageScore = Math.round(perSlot / 2);
+        const icons: { level: string; isStar: boolean }[] = [];
+        let remaining = score;
+        while (remaining > 0 && icons.length < slotCount) {
+          if (remaining >= perSlot) { icons.push({ level: "excellent", isStar: false }); remaining -= perSlot; }
+          else if (remaining >= averageScore) { icons.push({ level: "average", isStar: false }); remaining -= averageScore; }
+          else { icons.push({ level: "average", isStar: false }); remaining = 0; }
+        }
+        return icons.length > 0 ? icons : [{ level: "zero", isStar: false }];
+      };
+      const pdfIconFromObj = (icon: { level: string; isStar: boolean }) => {
+        if (icon.isStar) return svgStar;
+        if (icon.level === "excellent") return svgCheck;
+        if (icon.level === "average") return svgMinus;
+        return svgX;
+      };
+
+      // Grades — icon-based evaluation view
       if (effectiveVis.grades && student.grades.length > 0) {
-        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">☆ الدرجات</h3>`;
-        html += `<table style="${tableStyle}"><thead><tr>`;
-        html += `<th style="${thStyle}">المعيار</th><th style="${thStyle}">الدرجة</th><th style="${thStyle}">من</th><th style="${thStyle}">الوزن</th>`;
-        html += `</tr></thead><tbody>`;
-        student.grades.forEach((g, i) => {
-          const bg = i % 2 === 0 ? "#fff" : "#fafbfc";
-          html += `<tr style="background:${bg}">`;
-          html += `<td style="${tdStyle}font-weight:bold;">${g.grade_categories?.name || "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.score ?? "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.grade_categories?.max_score || "-"}</td>`;
-          html += `<td style="${tdStyle}">${g.grade_categories?.weight || "-"}%</td>`;
-          html += `</tr>`;
-        });
-        html += `</tbody></table>`;
+        const cwGrades = student.grades.filter((g: any) => g.grade_categories?.category_group === "classwork");
+        
+        // Daily evaluation (last 7 days)
+        const dailyGrades = cwGrades.filter((g: any) => g.date);
+        if (dailyGrades.length > 0) {
+          const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
+          const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
+          html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">📅 تفاعل اليوم</h3>`;
+          html += `<table style="${tableStyle}"><thead><tr>`;
+          html += `<th style="${thStyle}">اليوم</th>`;
+          dailyCatNames.forEach(name => { html += `<th style="${thStyle}text-align:center;">${name}</th>`; });
+          html += `</tr></thead><tbody>`;
+          uniqueDates.forEach((date, di) => {
+            const d = new Date(date);
+            const bg = di % 2 === 0 ? "#fff" : "#fafbfc";
+            html += `<tr style="background:${bg}">`;
+            html += `<td style="${tdStyle}font-weight:bold;">${dayLabels[d.getDay()] || ""} ${d.getDate()}/${d.getMonth() + 1}</td>`;
+            dailyCatNames.forEach(catName => {
+              const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
+              const level = grade ? pdfGetLevel(grade.score, grade.grade_categories?.max_score || 100, catName) : null;
+              html += `<td style="${tdStyle}text-align:center;">${pdfGetIconHtml(level)}</td>`;
+            });
+            html += `</tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+        
+        // Classwork (cumulative) icons
+        if (cwGrades.length > 0) {
+          const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">📊 التفاعل الكلي</h3>`;
+          html += `<table style="${tableStyle}"><thead><tr>`;
+          html += `<th style="${thStyle}">فئة التقييم</th><th style="${thStyle}text-align:center;">التقييم</th>`;
+          html += `</tr></thead><tbody>`;
+          cwCatNames.forEach((catName, ci) => {
+            const catGrades = cwGrades
+              .filter((g: any) => g.grade_categories?.name === catName)
+              .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
+            const allIcons = catGrades.flatMap((g: any) => 
+              pdfGetIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
+            );
+            const pdfIconsCount = isParent ? parentClassworkIconsCount : (student.evalSettings?.iconsCount || 15);
+            const displayIcons = allIcons.slice(-pdfIconsCount);
+            const bg = ci % 2 === 0 ? "#fff" : "#fafbfc";
+            html += `<tr style="background:${bg}">`;
+            html += `<td style="${tdStyle}font-weight:bold;">${catName}</td>`;
+            html += `<td style="${tdStyle}text-align:center;"><div style="display:flex;gap:2px;justify-content:center;flex-wrap:wrap;">`;
+            displayIcons.forEach(icon => { html += pdfIconFromObj(icon); });
+            if (displayIcons.length === 0) html += `<span style="color:#999;font-size:11px;">لا توجد بيانات</span>`;
+            html += `</div></td>`;
+            html += `</tr>`;
+          });
+          html += `</tbody></table>`;
+        }
+
+        // Legend
+        html += `<div style="display:flex;gap:16px;justify-content:center;margin:0 0 16px;font-size:10px;color:#666;">`;
+        html += `<span style="display:flex;align-items:center;gap:4px;">${svgStar} متميز</span>`;
+        html += `<span style="display:flex;align-items:center;gap:4px;">${svgCheck} ممتاز</span>`;
+        html += `<span style="display:flex;align-items:center;gap:4px;">${svgMinus} متوسط</span>`;
+        html += `<span style="display:flex;align-items:center;gap:4px;">${svgX} ضعيف</span>`;
+        html += `</div>`;
       }
 
       // Attendance
