@@ -147,7 +147,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     (doc as any).autoTable({
       startY: startY + 12,
       head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
-      body: data.map((r, i) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
+      body: data.map((r, i) => [cleanNote(r.note), TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
       ...tableStyles,
       columnStyles: { 3: { halign: "right" } },
     });
