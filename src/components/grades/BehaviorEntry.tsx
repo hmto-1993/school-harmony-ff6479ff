@@ -123,12 +123,17 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setStudents(
       (studs || []).map((s) => {
         const rec = recordsMap.get(s.id);
+        const rawNote = rec?.note || "";
+        const severityMatch = rawNote.match(/\[severity:(\w+)\]/);
+        const severity = severityMatch ? severityMatch[1] : "low";
+        const note = rawNote.replace(/\[severity:\w+\]\s*/, "");
         return {
           student_id: s.id,
           full_name: s.full_name,
           parent_phone: s.parent_phone,
           type: (rec?.type as BehaviorType) || null,
-          note: rec?.note || "",
+          note,
+          severity,
           existingId: rec?.id || null,
           notified: rec?.notified || false,
         };
