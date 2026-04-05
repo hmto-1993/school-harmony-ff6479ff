@@ -125,7 +125,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         "اسم الطالب": r.student_name,
         التاريخ: r.date,
         النوع: TYPE_LABELS[r.type] || r.type,
-        ملاحظات: r.note || "",
+        ملاحظات: cleanNote(r.note),
       }))
     );
     const wb = XLSX.utils.book_new();
