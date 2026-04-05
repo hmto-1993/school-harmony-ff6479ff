@@ -340,6 +340,7 @@ export default function PrintHeaderEditor() {
       centerSection: {
         images: [...prev.centerSection.images, ""],
         imagesSizes: [...prev.centerSection.imagesSizes, 60],
+        imagesWidths: [...(prev.centerSection.imagesWidths || prev.centerSection.imagesSizes), 60],
       },
     }));
   };
@@ -350,6 +351,7 @@ export default function PrintHeaderEditor() {
       centerSection: {
         images: prev.centerSection.images.filter((_, i) => i !== index),
         imagesSizes: prev.centerSection.imagesSizes.filter((_, i) => i !== index),
+        imagesWidths: (prev.centerSection.imagesWidths || prev.centerSection.imagesSizes).filter((_, i) => i !== index),
       },
     }));
   };
