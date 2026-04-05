@@ -115,7 +115,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setSaving(true);
     const today = new Date().toISOString().split("T")[0];
 
-    const updates: Promise<any>[] = [];
+    const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
 
     for (const s of students) {
