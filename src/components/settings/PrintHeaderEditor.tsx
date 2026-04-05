@@ -45,6 +45,7 @@ interface SectionConfig {
 interface CenterSectionConfig {
   images: string[];
   imagesSizes: number[];
+  imagesWidths?: number[];
 }
 
 export interface WatermarkConfig {
