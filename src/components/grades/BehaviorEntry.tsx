@@ -387,6 +387,43 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                 </div>
               </div>
 
+              {/* Severity Level for Negative */}
+              {currentNoteStudent.type === "negative" && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">مستوى الخطورة</p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {([
+                      { key: "none", label: "غير خطر" },
+                      { key: "low", label: "منخفض" },
+                      { key: "medium", label: "متوسط" },
+                      { key: "high", label: "عالي" },
+                      { key: "critical", label: "حرج" },
+                    ]).map((sev) => {
+                      const currentSeverity = currentNoteStudent.severity || "low";
+                      return (
+                        <button
+                          key={sev.key}
+                          type="button"
+                          onClick={() => {
+                            setStudents((prev) =>
+                              prev.map((s) => s.student_id === noteDialog.studentId ? { ...s, severity: sev.key } : s)
+                            );
+                          }}
+                          className={cn(
+                            "px-2 py-2.5 rounded-xl border-2 text-xs font-bold transition-all text-center",
+                            currentSeverity === sev.key
+                              ? "bg-emerald-600 text-white border-transparent shadow-lg"
+                              : "border-border bg-card text-foreground hover:bg-muted/30"
+                          )}
+                        >
+                          {sev.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Quick Suggestions */}
               {currentNoteType && currentSuggestions.length > 0 && (
                 <div>
