@@ -16,6 +16,12 @@ import {
 import { BarChart3, Heart } from "lucide-react";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
+// Strip [severity:xxx] prefix from note for display
+const cleanNote = (note: string | null): string => {
+  if (!note) return "—";
+  return note.replace(/\[severity:\w+\]\s*/g, "").trim() || "—";
+};
+
 interface BehaviorRow {
   student_name: string;
   date: string;
@@ -119,7 +125,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         "اسم الطالب": r.student_name,
         التاريخ: r.date,
         النوع: TYPE_LABELS[r.type] || r.type,
-        ملاحظات: r.note || "",
+        ملاحظات: cleanNote(r.note),
       }))
     );
     const wb = XLSX.utils.book_new();
@@ -141,7 +147,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     (doc as any).autoTable({
       startY: startY + 12,
       head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
-      body: data.map((r, i) => [r.note || "", TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
+      body: data.map((r, i) => [cleanNote(r.note), TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
       ...tableStyles,
       columnStyles: { 3: { halign: "right" } },
     });
@@ -213,6 +219,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       paddingAngle={3}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={true}
                     >
                       {pieData.map((entry, index) => (
                         <Cell
@@ -241,7 +248,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fontStyle: "normal" }} angle={-20} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <Tooltip />
                     <Legend />
@@ -282,7 +289,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                             {TYPE_LABELS[row.type] || row.type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{row.note || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{cleanNote(row.note)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
