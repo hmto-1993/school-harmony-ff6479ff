@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { safeWriteXLSX } from "@/lib/download-utils";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
+  Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
 import { Heart } from "lucide-react";
@@ -136,13 +136,12 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       studentMap[r.student_name][r.type as "positive" | "negative" | "neutral"]++;
     }
   });
-  const barData = Object.entries(studentMap).map(([name, counts]) => ({
-    name: name.split(" ").slice(0, 2).join(" "),
-    إيجابي: counts.positive,
-    سلبي: counts.negative,
-    محايد: counts.neutral,
-  }));
-  const barChartHeight = Math.max(280, barData.length * 52);
+  const studentCards = Object.entries(studentMap)
+    .map(([name, counts]) => {
+      const total = counts.positive + counts.negative + counts.neutral;
+      return { name, ...counts, total };
+    })
+    .sort((a, b) => b.total - a.total);
 
   const exportExcel = async () => {
     const XLSX = await import("xlsx");
@@ -291,31 +290,66 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
             </Card>
 
             {/* Bar Chart per student */}
-            <Card className="shadow-card">
+            <Card className="shadow-card md:col-span-1">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">السلوك حسب الطالب</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="max-h-[360px] overflow-auto">
-                  <ResponsiveContainer width="100%" height={barChartHeight}>
-                    <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                      <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        width={130}
-                        interval={0}
-                        tick={{ fontSize: 11 }}
-                      />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="إيجابي" fill={TYPE_COLORS.positive} radius={[0, 2, 2, 0]} />
-                      <Bar dataKey="سلبي" fill={TYPE_COLORS.negative} radius={[0, 2, 2, 0]} />
-                      <Bar dataKey="محايد" fill={TYPE_COLORS.neutral} radius={[0, 2, 2, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+              <CardContent className="p-3">
+                <div className="max-h-[320px] overflow-auto space-y-2.5 pe-1">
+                  {studentCards.map((s) => (
+                    <div key={s.name} className="rounded-lg border border-border/60 bg-muted/30 p-2.5 space-y-1.5 hover:bg-muted/60 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{s.name}</span>
+                        <span className="text-xs text-muted-foreground">{s.total} سجل</span>
+                      </div>
+                      {/* Stacked bar */}
+                      <div className="flex h-3 w-full rounded-full overflow-hidden bg-muted">
+                        {s.positive > 0 && (
+                          <div
+                            className="h-full transition-all"
+                            style={{ width: `${(s.positive / s.total) * 100}%`, backgroundColor: TYPE_COLORS.positive }}
+                            title={`إيجابي: ${s.positive}`}
+                          />
+                        )}
+                        {s.neutral > 0 && (
+                          <div
+                            className="h-full transition-all"
+                            style={{ width: `${(s.neutral / s.total) * 100}%`, backgroundColor: TYPE_COLORS.neutral }}
+                            title={`محايد: ${s.neutral}`}
+                          />
+                        )}
+                        {s.negative > 0 && (
+                          <div
+                            className="h-full transition-all"
+                            style={{ width: `${(s.negative / s.total) * 100}%`, backgroundColor: TYPE_COLORS.negative }}
+                            title={`سلبي: ${s.negative}`}
+                          />
+                        )}
+                      </div>
+                      {/* Counts */}
+                      <div className="flex items-center gap-3 text-[10px]">
+                        {s.positive > 0 && (
+                          <span className="flex items-center gap-1">
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.positive }} />
+                            <span className="text-muted-foreground">إيجابي {s.positive}</span>
+                          </span>
+                        )}
+                        {s.neutral > 0 && (
+                          <span className="flex items-center gap-1">
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.neutral }} />
+                            <span className="text-muted-foreground">محايد {s.neutral}</span>
+                          </span>
+                        )}
+                        {s.negative > 0 && (
+                          <span className="flex items-center gap-1">
+                            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.negative }} />
+                            <span className="text-muted-foreground">سلبي {s.negative}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>              
               </CardContent>
             </Card>
           </div>
