@@ -61,6 +61,7 @@ import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
 import TimetableEditor from "@/components/settings/TimetableEditor";
+import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
 import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import { useCalendarType } from "@/hooks/useCalendarType";
