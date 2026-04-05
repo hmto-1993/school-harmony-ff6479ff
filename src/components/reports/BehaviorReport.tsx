@@ -166,7 +166,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
   const exportPDF = async () => {
     const { registerArabicFont, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
-    const { toPng } = await import("html-to-image");
+    const html2canvas = (await import("html2canvas")).default;
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const jsPDFModule = await import("jspdf");
@@ -211,7 +211,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         .map((img: string, i: number) => {
           if (!img) return "";
           const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-          return `<img src="${img}" alt="" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
+          return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
         }).join("");
 
       const headerHTML = `
@@ -243,13 +243,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ));
 
       try {
-        const dataUrl = await toPng(container, { backgroundColor: "#ffffff", pixelRatio: 3 });
-        const imgEl = new Image();
-        await new Promise<void>((resolve) => { imgEl.onload = () => resolve(); imgEl.src = dataUrl; });
-
-        const imgAspect = imgEl.naturalWidth / imgEl.naturalHeight;
+        const canvas = await html2canvas(container, { backgroundColor: "#ffffff", scale: 3, useCORS: true, allowTaint: true });
+        const dataUrl = canvas.toDataURL("image/png");
+        const aspect = canvas.width / canvas.height;
         const usableW = pageWidth - margin * 2;
-        const imgH = usableW / imgAspect;
+        const imgH = usableW / aspect;
 
         doc.addImage(dataUrl, "PNG", margin, startY, usableW, imgH);
         startY = startY + imgH + 4;
