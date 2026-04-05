@@ -168,11 +168,23 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
 
+    const buildNote = (s: StudentBehavior) => {
+      const base = s.note || "";
+      if (s.type === "negative" && s.severity && s.severity !== "low") {
+        return `[severity:${s.severity}] ${base}`.trim();
+      }
+      if (s.type === "negative" && s.severity === "low") {
+        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
+      }
+      return base || null;
+    };
+
     for (const s of students) {
       if (s.type === null) continue;
+      const note = buildNote(s);
       if (s.existingId) {
         updates.push(supabase.from("behavior_records").update({
-          type: s.type, note: s.note || null,
+          type: s.type, note,
         }).eq("id", s.existingId).then());
       } else {
         inserts.push({
@@ -180,7 +192,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
           class_id: selectedClass,
           date: today,
           type: s.type,
-          note: s.note || null,
+          note,
           recorded_by: user.id,
         });
       }
