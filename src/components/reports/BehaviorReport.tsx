@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +15,7 @@ import {
   Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Heart } from "lucide-react";
+import { Heart, User, CalendarDays } from "lucide-react";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
 type SeverityLevel = "low" | "medium" | "high" | "critical";
@@ -76,6 +79,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   const [data, setData] = useState<BehaviorRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState<"all" | "positive" | "negative" | "neutral">("all");
+  const [selectedStudentName, setSelectedStudentName] = useState<string | null>(null);
 
   const fetchBehavior = async () => {
     if (!selectedClass) return;
@@ -123,6 +127,10 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   const neutral = data.filter((r) => r.type === "neutral").length;
 
   const filteredData = typeFilter === "all" ? data : data.filter((r) => r.type === typeFilter);
+
+  const studentDetailRows = selectedStudentName
+    ? data.filter((r) => r.student_name === selectedStudentName).sort((a, b) => b.date.localeCompare(a.date))
+    : [];
 
   const pieData = [
     { name: "إيجابي", value: positive },
@@ -343,7 +351,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       )}
                       <div className="space-y-2">
                         {group.students.map((s) => (
-                          <div key={s.name} className="rounded-lg border border-border/60 bg-muted/30 p-2.5 space-y-1.5 hover:bg-muted/60 transition-colors">
+                          <div
+                            key={s.name}
+                            className="rounded-lg border border-border/60 bg-muted/30 p-2.5 space-y-1.5 hover:bg-muted/60 transition-colors cursor-pointer"
+                            onClick={() => setSelectedStudentName(s.name)}
+                            role="button"
+                            tabIndex={0}
+                          >
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{s.name}</span>
                               <span className="text-xs text-muted-foreground">{s.total} سجل</span>
@@ -438,6 +452,52 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           </Card>
         </div>
       )}
+
+      <Dialog open={!!selectedStudentName} onOpenChange={(open) => !open && setSelectedStudentName(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <User className="h-4 w-4" />
+              تفاصيل سلوك: {selectedStudentName}
+            </DialogTitle>
+          </DialogHeader>
+          {studentDetailRows.length > 0 && (
+            <div className="space-y-3 overflow-auto flex-1 pe-1">
+              <div className="flex items-center gap-3 flex-wrap">
+                {(["positive", "negative", "neutral"] as const).map((t) => {
+                  const count = studentDetailRows.filter((r) => r.type === t).length;
+                  if (count === 0) return null;
+                  return (
+                    <Badge key={t} variant={t === "positive" ? "default" : t === "negative" ? "destructive" : "secondary"} className="gap-1">
+                      {TYPE_LABELS[t]} <span className="font-bold">{count}</span>
+                    </Badge>
+                  );
+                })}
+                <span className="text-xs text-muted-foreground mr-auto">إجمالي: {studentDetailRows.length}</span>
+              </div>
+              <div className="space-y-2">
+                {studentDetailRows.map((row, i) => (
+                  <div key={i} className="rounded-lg border border-border/50 p-3 space-y-1.5 bg-muted/20">
+                    <div className="flex items-center justify-between">
+                      <Badge variant={row.type === "positive" ? "default" : row.type === "negative" ? "destructive" : "secondary"} className="text-[11px]">
+                        {TYPE_LABELS[row.type] || row.type}
+                      </Badge>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3 w-3" />
+                        {row.date}
+                      </span>
+                    </div>
+                    {row.note !== "—" && <p className="text-sm text-foreground">{row.note}</p>}
+                    {row.severity && (
+                      <Badge variant="outline" className="text-[10px]">خطورة: {formatSeverity(row.severity)}</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {!loading && data.length === 0 && (
         <Card className="print:hidden">
