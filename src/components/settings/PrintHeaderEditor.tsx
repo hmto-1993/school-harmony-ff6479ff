@@ -31,6 +31,7 @@ import {
   Copy,
   Droplets,
   RotateCcw,
+  Ruler,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -880,6 +881,52 @@ export default function PrintHeaderEditor() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Margins settings */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <Ruler className="h-4 w-4" />
+                <Label className="font-semibold text-sm">هوامش الترويسة (PDF)</Label>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">الهامش العلوي (mm)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={0}
+                      max={30}
+                      step={1}
+                      value={[config.margins?.top ?? 5]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), top: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.top ?? 5}mm</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">الهامش الجانبي (mm)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={2}
+                      max={40}
+                      step={1}
+                      value={[config.margins?.side ?? 8]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), side: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.side ?? 8}mm</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
