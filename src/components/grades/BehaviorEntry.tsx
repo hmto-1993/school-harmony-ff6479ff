@@ -18,6 +18,7 @@ interface StudentBehavior {
   parent_phone: string | null;
   type: BehaviorType;
   note: string;
+  severity: string;
   existingId: string | null;
   notified: boolean;
 }
