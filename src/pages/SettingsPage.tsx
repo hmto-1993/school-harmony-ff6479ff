@@ -1622,18 +1622,33 @@ export default function SettingsPage() {
                     ) : classworkCategories.map((cat) => (
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">
-                          {isAdmin ? (
-                            <Input
-                              value={editingCats[cat.id]?.name ?? cat.name}
-                              onChange={(e) =>
-                                setEditingCats((prev) => ({
-                                  ...prev,
-                                  [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
-                                }))
+                          <div className="flex items-center gap-2">
+                            {isAdmin ? (
+                              <Input
+                                value={editingCats[cat.id]?.name ?? cat.name}
+                                onChange={(e) =>
+                                  setEditingCats((prev) => ({
+                                    ...prev,
+                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
+                                  }))
+                                }
+                                className="h-8 w-40"
+                              />
+                            ) : <span>{cat.name}</span>}
+                            {catClassFilter === "all" && (() => {
+                              const classesWithCat = categories.filter(c => c.name === cat.name && c.class_id !== null);
+                              const missingCount = classes.length - classesWithCat.length;
+                              if (missingCount > 0) {
+                                const missingNames = classes.filter(cls => !classesWithCat.some(c => c.class_id === cls.id)).map(c => c.name);
+                                return (
+                                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600 dark:text-amber-400 whitespace-nowrap" title={`ناقصة في: ${missingNames.join("، ")}`}>
+                                    ⚠ ناقصة في {missingCount} فصل
+                                  </Badge>
+                                );
                               }
-                              className="h-8 w-40"
-                            />
-                          ) : <span>{cat.name}</span>}
+                              return null;
+                            })()}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {isAdmin ? (
