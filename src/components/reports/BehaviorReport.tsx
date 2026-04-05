@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     setLoading(false);
   };
 
+  // Auto-fetch when filters change
+  useEffect(() => {
+    if (selectedClass && dateFrom && dateTo) {
+      fetchBehavior();
+    }
+  }, [selectedClass, dateFrom, dateTo, selectedStudent]);
+
   // Summary counts
   const positive = data.filter((r) => r.type === "positive").length;
   const negative = data.filter((r) => r.type === "negative").length;
@@ -144,16 +151,15 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 print:hidden">
-        <Button onClick={fetchBehavior} disabled={loading || !selectedClass}>
-          <BarChart3 className="h-4 w-4 ml-1.5" />
-          {loading ? "جارٍ التحميل..." : "عرض التقرير"}
-        </Button>
-      {data.length > 0 && (
-            <ReportExportDialog
-              title="تصدير تقرير السلوك"
-              onExportExcel={exportExcel}
-              onExportPDF={exportPDF}
-            />
+        {loading && (
+          <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>
+        )}
+        {data.length > 0 && (
+          <ReportExportDialog
+            title="تصدير تقرير السلوك"
+            onExportExcel={exportExcel}
+            onExportPDF={exportPDF}
+          />
         )}
       </div>
 
