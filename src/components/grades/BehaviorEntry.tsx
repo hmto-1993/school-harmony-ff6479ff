@@ -413,11 +413,11 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                   <p className="text-sm font-semibold mb-2">مستوى الخطورة</p>
                   <div className="grid grid-cols-5 gap-1.5">
                     {([
-                      { key: "none", label: "غير خطر" },
-                      { key: "low", label: "منخفض" },
-                      { key: "medium", label: "متوسط" },
-                      { key: "high", label: "عالي" },
-                      { key: "critical", label: "حرج" },
+                      { key: "none", label: "غير خطر", en: "Not Dangerous" },
+                      { key: "low", label: "منخفض", en: "Low" },
+                      { key: "medium", label: "متوسط", en: "Medium" },
+                      { key: "high", label: "عالي", en: "High" },
+                      { key: "critical", label: "حرج", en: "Critical" },
                     ]).map((sev) => {
                       const currentSeverity = currentNoteStudent.severity || "low";
                       return (
@@ -436,7 +436,8 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                               : "border-border bg-card text-foreground hover:bg-muted/30"
                           )}
                         >
-                          {sev.label}
+                          <span className="block">{sev.label}</span>
+                          <span className="block text-[9px] font-medium opacity-70">{sev.en}</span>
                         </button>
                       );
                     })}
