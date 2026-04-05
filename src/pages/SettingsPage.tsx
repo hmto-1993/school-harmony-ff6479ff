@@ -1884,23 +1884,32 @@ export default function SettingsPage() {
                 {classworkCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/30 bg-muted/5">
                     <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص عدد الرموز لكل فئة (اضغط للقفل/الفتح، واختر العدد):</p>
-                    {classworkCategories.map((cat) => {
-                      const isDisabled = !dailyExtraSlotsEnabled || dailyExtraSlotsDisabledCats.includes(cat.id);
-                      const catMax = dailyMaxSlotsPerCat[cat.id] ?? dailyMaxSlots;
+                    {/* Deduplicate by name for all-classes view */}
+                    {(() => {
+                      const seen = new Set<string>();
+                      return classworkCategories.filter(cat => {
+                        if (seen.has(cat.name)) return false;
+                        seen.add(cat.name);
+                        return true;
+                      });
+                    })().map((cat) => {
+                      const catKey = cat.name;
+                      const isDisabled = !dailyExtraSlotsEnabled || dailyExtraSlotsDisabledCats.includes(catKey);
+                      const catMax = dailyMaxSlotsPerCat[catKey] ?? dailyMaxSlots;
                       return (
-                        <div key={cat.id} className="flex items-center gap-1">
+                        <div key={catKey} className="flex items-center gap-1">
                           <button
                             onClick={async () => {
                               if (!dailyExtraSlotsEnabled) {
                                 toast({ title: "يجب فتح زيادة الرموز أولاً", variant: "destructive" });
                                 return;
                               }
-                              const newList = dailyExtraSlotsDisabledCats.includes(cat.id)
-                                ? dailyExtraSlotsDisabledCats.filter(id => id !== cat.id)
-                                : [...dailyExtraSlotsDisabledCats, cat.id];
+                              const newList = dailyExtraSlotsDisabledCats.includes(catKey)
+                                ? dailyExtraSlotsDisabledCats.filter(k => k !== catKey)
+                                : [...dailyExtraSlotsDisabledCats, catKey];
                               setDailyExtraSlotsDisabledCats(newList);
                               await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
-                              toast({ title: dailyExtraSlotsDisabledCats.includes(cat.id) ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
+                              toast({ title: dailyExtraSlotsDisabledCats.includes(catKey) ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
                             }}
                             className={cn(
                               "flex items-center gap-1 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-all border border-l-0",
@@ -1915,7 +1924,7 @@ export default function SettingsPage() {
                             value={String(isDisabled ? 1 : catMax)}
                             disabled={isDisabled}
                             onValueChange={async (val) => {
-                              const newMap = { ...dailyMaxSlotsPerCat, [cat.id]: Number(val) };
+                              const newMap = { ...dailyMaxSlotsPerCat, [catKey]: Number(val) };
                               setDailyMaxSlotsPerCat(newMap);
                               await supabase.from("site_settings").upsert({ id: "daily_max_slots_per_cat", value: JSON.stringify(newMap) });
                               toast({ title: `حد "${cat.name}" = ${val} رموز` });

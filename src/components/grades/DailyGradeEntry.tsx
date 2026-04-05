@@ -215,7 +215,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     return () => { supabase.removeChannel(channel); };
   }, [selectedClass, selectedDate]);
 
-  const getMaxSlots = (catId: string) => maxSlotsPerCat[catId] ?? globalMaxSlots;
+  const getCatName = (catId: string) => categories.find(c => c.id === catId)?.name || "";
+  const getMaxSlots = (catId: string) => {
+    const name = getCatName(catId);
+    return maxSlotsPerCat[name] ?? maxSlotsPerCat[catId] ?? globalMaxSlots;
+  };
+  const isCatDisabled = (catId: string) => {
+    const name = getCatName(catId);
+    return extraSlotsDisabledCats.includes(name) || extraSlotsDisabledCats.includes(catId);
+  };
 
   const loadData = async () => {
     const { data: cats } = await supabase
@@ -728,7 +736,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               ))}
 
                               {/* Add slot button for participation */}
-                              {extraSlotsEnabled && !extraSlotsDisabledCats.includes(cat.id) && slotsArr.length < getMaxSlots(cat.id) && (
+                              {extraSlotsEnabled && !isCatDisabled(cat.id) && slotsArr.length < getMaxSlots(cat.id) && (
                                 <button
                                   type="button"
                                   onClick={() => addSlot(sg.student_id, cat.id, maxScore)}
