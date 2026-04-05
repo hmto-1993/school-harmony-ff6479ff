@@ -100,8 +100,9 @@ function buildHeaderHTML(config: any): string {
   const images = (config.centerSection?.images || [])
     .map((img: string, i: number) => {
       if (!img) return "";
-      const size = config.centerSection?.imagesSizes?.[i] || 60;
-      return `<img src="${img}" alt="" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
+      const height = config.centerSection?.imagesSizes?.[i] || 60;
+      const width = config.centerSection?.imagesWidths?.[i] ?? height;
+      return `<img src="${img}" alt="" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
     })
     .join("");
 
