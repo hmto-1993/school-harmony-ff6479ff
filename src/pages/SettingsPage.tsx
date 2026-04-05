@@ -1881,22 +1881,26 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                {dailyExtraSlotsEnabled && classworkCategories.length > 0 && (
+                {classworkCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/30 bg-muted/5">
-                    <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص لكل فئة (اضغط للقفل/الفتح، اسحب العدد لتغيير الحد):</p>
+                    <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص عدد الرموز لكل فئة (اضغط للقفل/الفتح، واختر العدد):</p>
                     {classworkCategories.map((cat) => {
-                      const isDisabled = dailyExtraSlotsDisabledCats.includes(cat.id);
+                      const isDisabled = !dailyExtraSlotsEnabled || dailyExtraSlotsDisabledCats.includes(cat.id);
                       const catMax = dailyMaxSlotsPerCat[cat.id] ?? dailyMaxSlots;
                       return (
                         <div key={cat.id} className="flex items-center gap-1">
                           <button
                             onClick={async () => {
-                              const newList = isDisabled
+                              if (!dailyExtraSlotsEnabled) {
+                                toast({ title: "يجب فتح زيادة الرموز أولاً", variant: "destructive" });
+                                return;
+                              }
+                              const newList = dailyExtraSlotsDisabledCats.includes(cat.id)
                                 ? dailyExtraSlotsDisabledCats.filter(id => id !== cat.id)
                                 : [...dailyExtraSlotsDisabledCats, cat.id];
                               setDailyExtraSlotsDisabledCats(newList);
                               await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
-                              toast({ title: isDisabled ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
+                              toast({ title: dailyExtraSlotsDisabledCats.includes(cat.id) ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
                             }}
                             className={cn(
                               "flex items-center gap-1 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-all border border-l-0",
@@ -1907,23 +1911,24 @@ export default function SettingsPage() {
                           >
                             {isDisabled ? "🔒" : "🔓"} {cat.name}
                           </button>
-                          {!isDisabled && (
-                            <Select value={String(catMax)} onValueChange={async (val) => {
+                          <Select
+                            value={String(isDisabled ? 1 : catMax)}
+                            disabled={isDisabled}
+                            onValueChange={async (val) => {
                               const newMap = { ...dailyMaxSlotsPerCat, [cat.id]: Number(val) };
                               setDailyMaxSlotsPerCat(newMap);
                               await supabase.from("site_settings").upsert({ id: "daily_max_slots_per_cat", value: JSON.stringify(newMap) });
                               toast({ title: `حد "${cat.name}" = ${val} رموز` });
                             }}>
-                              <SelectTrigger className="h-7 w-14 text-xs rounded-l-lg rounded-r-none border-r-0">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          )}
+                            <SelectTrigger className={cn("h-7 w-14 text-xs rounded-l-lg rounded-r-none border-r-0", isDisabled && "opacity-50")}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                                <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       );
                     })}
