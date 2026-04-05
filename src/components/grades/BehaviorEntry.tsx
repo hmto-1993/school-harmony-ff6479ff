@@ -299,7 +299,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                         )}
                       >
                         <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/10" style={{ fontStyle: "normal" }}>{s.full_name}</td>
+                        <td className="p-3 font-semibold border-l border-border/10 hover:bg-primary/10 hover:text-primary transition-colors cursor-default rounded-sm" style={{ fontStyle: "normal" }}>{s.full_name}</td>
                         <td className="p-3 text-center border-l border-border/10">
                            <button
                              type="button"
