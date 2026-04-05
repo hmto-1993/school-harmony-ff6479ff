@@ -245,8 +245,9 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       try {
         const canvas = await html2canvas(container, { backgroundColor: "#ffffff", scale: 3, useCORS: true, allowTaint: true });
         const dataUrl = canvas.toDataURL("image/png");
+        const aspect = canvas.width / canvas.height;
         const usableW = pageWidth - margin * 2;
-        const imgH = usableW / imgAspect;
+        const imgH = usableW / aspect;
 
         doc.addImage(dataUrl, "PNG", margin, startY, usableW, imgH);
         startY = startY + imgH + 4;
