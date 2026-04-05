@@ -66,12 +66,18 @@ export interface FooterSignaturesConfig {
   signatures: FooterSignature[];
 }
 
+export interface MarginsConfig {
+  top: number;
+  side: number;
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
   watermark?: WatermarkConfig;
   footerSignatures?: FooterSignaturesConfig;
+  margins?: MarginsConfig;
 }
 
 const defaultWatermark: WatermarkConfig = {
@@ -90,6 +96,11 @@ const defaultFooterSignatures: FooterSignaturesConfig = {
     { label: "معلم المادة", name: "" },
     { label: "مدير المدرسة", name: "" },
   ],
+};
+
+const defaultMargins: MarginsConfig = {
+  top: 5,
+  side: 8,
 };
 
 const defaultConfig: PrintHeaderConfig = {
@@ -111,6 +122,7 @@ const defaultConfig: PrintHeaderConfig = {
   },
   watermark: defaultWatermark,
   footerSignatures: defaultFooterSignatures,
+  margins: defaultMargins,
 };
 
 interface ReportTypeOption {
