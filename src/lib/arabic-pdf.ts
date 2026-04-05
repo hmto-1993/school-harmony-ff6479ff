@@ -140,7 +140,7 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightCenterX = pageWidth - margin - sectionWidth / 2;
+  const rightCenterX = pageWidth - headerMargin - sectionWidth / 2;
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
@@ -158,7 +158,7 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftCenterX = margin + sectionWidth / 2;
+  const leftCenterX = headerMargin + sectionWidth / 2;
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
