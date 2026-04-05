@@ -83,7 +83,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
                 src={img}
                 alt=""
                 style={{
-                  width: `${config.centerSection.imagesSizes[i] || 60}px`,
+                  width: `${config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i] ?? 60}px`,
                   height: `${config.centerSection.imagesSizes[i] || 60}px`,
                   objectFit: "contain",
                 }}

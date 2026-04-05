@@ -31,6 +31,7 @@ import {
   Copy,
   Droplets,
   RotateCcw,
+  Ruler,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
@@ -44,6 +45,7 @@ interface SectionConfig {
 interface CenterSectionConfig {
   images: string[];
   imagesSizes: number[];
+  imagesWidths?: number[];
 }
 
 export interface WatermarkConfig {
@@ -66,12 +68,18 @@ export interface FooterSignaturesConfig {
   signatures: FooterSignature[];
 }
 
+export interface MarginsConfig {
+  top: number;
+  side: number;
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
   watermark?: WatermarkConfig;
   footerSignatures?: FooterSignaturesConfig;
+  margins?: MarginsConfig;
 }
 
 const defaultWatermark: WatermarkConfig = {
@@ -90,6 +98,11 @@ const defaultFooterSignatures: FooterSignaturesConfig = {
     { label: "معلم المادة", name: "" },
     { label: "مدير المدرسة", name: "" },
   ],
+};
+
+const defaultMargins: MarginsConfig = {
+  top: 5,
+  side: 8,
 };
 
 const defaultConfig: PrintHeaderConfig = {
@@ -111,6 +124,7 @@ const defaultConfig: PrintHeaderConfig = {
   },
   watermark: defaultWatermark,
   footerSignatures: defaultFooterSignatures,
+  margins: defaultMargins,
 };
 
 interface ReportTypeOption {
@@ -162,12 +176,12 @@ export default function PrintHeaderEditor() {
         if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
         if (!parsed.watermark) parsed.watermark = defaultWatermark;
         if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
+        if (!parsed.margins) parsed.margins = defaultMargins;
         setConfig(parsed);
       } catch {
         setConfig(defaultConfig);
       }
     } else if (reportType !== "__default__") {
-      // If no class-specific config, load default as base
       const { data: defData } = await supabase
         .from("site_settings")
         .select("value")
@@ -180,6 +194,7 @@ export default function PrintHeaderEditor() {
           if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
           if (!parsed.watermark) parsed.watermark = defaultWatermark;
           if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
+          if (!parsed.margins) parsed.margins = defaultMargins;
           setConfig(parsed);
         } catch {
           setConfig(defaultConfig);
@@ -311,12 +326,21 @@ export default function PrintHeaderEditor() {
     });
   };
 
+  const updateImageWidth = (index: number, width: number) => {
+    setConfig((prev) => {
+      const imagesWidths = [...(prev.centerSection.imagesWidths || prev.centerSection.imagesSizes)];
+      imagesWidths[index] = width;
+      return { ...prev, centerSection: { ...prev.centerSection, imagesWidths } };
+    });
+  };
+
   const addImageSlot = () => {
     setConfig((prev) => ({
       ...prev,
       centerSection: {
         images: [...prev.centerSection.images, ""],
         imagesSizes: [...prev.centerSection.imagesSizes, 60],
+        imagesWidths: [...(prev.centerSection.imagesWidths || prev.centerSection.imagesSizes), 60],
       },
     }));
   };
@@ -327,6 +351,7 @@ export default function PrintHeaderEditor() {
       centerSection: {
         images: prev.centerSection.images.filter((_, i) => i !== index),
         imagesSizes: prev.centerSection.imagesSizes.filter((_, i) => i !== index),
+        imagesWidths: (prev.centerSection.imagesWidths || prev.centerSection.imagesSizes).filter((_, i) => i !== index),
       },
     }));
   };
@@ -539,9 +564,9 @@ export default function PrintHeaderEditor() {
                     {config.centerSection.images.map((img, i) => (
                       <div key={i}>
                         {img ? (
-                          <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
+                          <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
                         ) : (
-                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
+                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30" style={{ width: `${(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
                             <ImageIcon className="h-4 w-4 text-muted-foreground/40" />
                           </div>
                         )}
@@ -609,10 +634,17 @@ export default function PrintHeaderEditor() {
                         {uploading === i && <p className="text-xs text-muted-foreground mt-1">جارٍ الرفع...</p>}
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <Label className="text-xs text-muted-foreground whitespace-nowrap">الحجم:</Label>
-                      <Slider min={30} max={120} step={5} value={[config.centerSection.imagesSizes[i] || 60]} onValueChange={([v]) => updateImageSize(i, v)} className="flex-1" />
-                      <span className="text-xs font-mono w-8 text-center">{config.centerSection.imagesSizes[i] || 60}px</span>
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">العرض:</Label>
+                        <Slider min={30} max={150} step={5} value={[(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60]} onValueChange={([v]) => updateImageWidth(i, v)} className="flex-1" />
+                        <span className="text-xs font-mono w-8 text-center">{(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60}px</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground whitespace-nowrap">الارتفاع:</Label>
+                        <Slider min={30} max={150} step={5} value={[config.centerSection.imagesSizes[i] || 60]} onValueChange={([v]) => updateImageSize(i, v)} className="flex-1" />
+                        <span className="text-xs font-mono w-8 text-center">{config.centerSection.imagesSizes[i] || 60}px</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -867,6 +899,52 @@ export default function PrintHeaderEditor() {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Margins settings */}
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <Ruler className="h-4 w-4" />
+                <Label className="font-semibold text-sm">هوامش الترويسة (PDF)</Label>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">الهامش العلوي (mm)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={0}
+                      max={30}
+                      step={1}
+                      value={[config.margins?.top ?? 5]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), top: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.top ?? 5}mm</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">الهامش الجانبي (mm)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={2}
+                      max={40}
+                      step={1}
+                      value={[config.margins?.side ?? 8]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), side: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.side ?? 8}mm</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
