@@ -646,7 +646,6 @@ export default function PrintHeaderEditor() {
                         <span className="text-xs font-mono w-8 text-center">{config.centerSection.imagesSizes[i] || 60}px</span>
                       </div>
                     </div>
-                    </div>
                   </div>
                 ))}
               </CardContent>
