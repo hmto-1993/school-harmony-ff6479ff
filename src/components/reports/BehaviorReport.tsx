@@ -75,6 +75,7 @@ const TYPE_COLORS: Record<string, string> = {
 export default function BehaviorReport({ selectedClass, dateFrom, dateTo, selectedStudent }: BehaviorReportProps) {
   const [data, setData] = useState<BehaviorRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<"all" | "positive" | "negative" | "neutral">("all");
 
   const fetchBehavior = async () => {
     if (!selectedClass) return;
@@ -121,7 +122,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   const negative = data.filter((r) => r.type === "negative").length;
   const neutral = data.filter((r) => r.type === "neutral").length;
 
-  // Pie chart data
+  const filteredData = typeFilter === "all" ? data : data.filter((r) => r.type === typeFilter);
+
   const pieData = [
     { name: "إيجابي", value: positive },
     { name: "سلبي", value: negative },
@@ -130,7 +132,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
   // Per-student bar chart
   const studentMap: Record<string, { positive: number; negative: number; neutral: number }> = {};
-  data.forEach((r) => {
+  filteredData.forEach((r) => {
     if (!studentMap[r.student_name]) studentMap[r.student_name] = { positive: 0, negative: 0, neutral: 0 };
     if (r.type in studentMap[r.student_name]) {
       studentMap[r.student_name][r.type as "positive" | "negative" | "neutral"]++;
@@ -200,31 +202,53 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           <ReportPrintHeader reportType="behavior" />
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
+            <Card
+              className={`cursor-pointer transition-all ${typeFilter === "all" ? "ring-2 ring-primary shadow-md" : "hover:bg-muted/50"}`}
+              onClick={() => setTypeFilter("all")}
+            >
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold">{data.length}</p>
                 <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card
+              className={`cursor-pointer transition-all ${typeFilter === "positive" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
+              style={typeFilter === "positive" ? { borderColor: TYPE_COLORS.positive, boxShadow: `0 0 0 2px ${TYPE_COLORS.positive}40` } : {}}
+              onClick={() => setTypeFilter(typeFilter === "positive" ? "all" : "positive")}
+            >
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.positive }}>{positive}</p>
                 <p className="text-xs text-muted-foreground">إيجابي</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card
+              className={`cursor-pointer transition-all ${typeFilter === "negative" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
+              style={typeFilter === "negative" ? { borderColor: TYPE_COLORS.negative, boxShadow: `0 0 0 2px ${TYPE_COLORS.negative}40` } : {}}
+              onClick={() => setTypeFilter(typeFilter === "negative" ? "all" : "negative")}
+            >
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.negative }}>{negative}</p>
                 <p className="text-xs text-muted-foreground">سلبي</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card
+              className={`cursor-pointer transition-all ${typeFilter === "neutral" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
+              style={typeFilter === "neutral" ? { borderColor: TYPE_COLORS.neutral, boxShadow: `0 0 0 2px ${TYPE_COLORS.neutral}40` } : {}}
+              onClick={() => setTypeFilter(typeFilter === "neutral" ? "all" : "neutral")}
+            >
               <CardContent className="p-4 text-center">
                 <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.neutral }}>{neutral}</p>
                 <p className="text-xs text-muted-foreground">محايد</p>
               </CardContent>
             </Card>
           </div>
+
+          {typeFilter !== "all" && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>تصفية: <strong className="text-foreground">{TYPE_LABELS[typeFilter]}</strong> ({filteredData.length} سجل)</span>
+              <button onClick={() => setTypeFilter("all")} className="text-primary hover:underline text-xs">إلغاء الفلتر</button>
+            </div>
+          )}
 
           {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -370,6 +394,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                   </TableHeader>
                   <TableBody>
                     {data.map((row, i) => (
+                    {filteredData.map((row, i) => (
                       <TableRow key={i}>
                         <TableCell className="font-medium">{row.student_name}</TableCell>
                         <TableCell>{row.date}</TableCell>
