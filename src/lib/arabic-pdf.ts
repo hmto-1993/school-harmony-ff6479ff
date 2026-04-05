@@ -131,12 +131,12 @@ async function renderPrintHeaderFromConfig(
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 10;
-  const headerMargin = 8;
-  const usableWidth = pageWidth - margin * 2;
+  const headerMargin = config.margins?.side ?? 8;
+  const usableWidth = pageWidth - headerMargin * 2;
   const sectionWidth = usableWidth * 0.42;
-  const centerWidth = usableWidth * 0.24; // 24% center for images
+  const centerWidth = usableWidth * 0.24;
 
-  const startY = 10;
+  const startY = config.margins?.top ?? 10;
   let rightY = startY;
   let leftY = startY;
 
