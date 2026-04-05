@@ -165,13 +165,96 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     : [{ key: typeFilter, label: "", color: "", students: studentCards }];
 
   const exportPDF = async () => {
-    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const { registerArabicFont, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const { toPng } = await import("html-to-image");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "behavior", includeHeader: true });
+    const jsPDFModule = await import("jspdf");
+    const jsPDF = jsPDFModule.default;
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    await registerArabicFont(doc);
     const tableStyles = getArabicTableStyles();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 10; // A4 portrait consistent margin
+    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
+    const margin = 10;
+
+    // --- Render header as HTML image (same approach as grades export) ---
+    let startY = 10;
+    let watermark: any = undefined;
+
+    // Fetch header config
+    const { data: hdrData } = await supabase
+      .from("site_settings").select("value")
+      .eq("id", "print_header_config_behavior").single();
+    let headerConfig: any = null;
+    if (hdrData?.value) try { headerConfig = JSON.parse(hdrData.value); } catch {}
+    if (!headerConfig) {
+      const { data: defData } = await supabase
+        .from("site_settings").select("value")
+        .eq("id", "print_header_config").single();
+      if (defData?.value) try { headerConfig = JSON.parse(defData.value); } catch {}
+    }
+
+    if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
+
+    if (headerConfig) {
+      // Build header HTML exactly like grades-print.ts
+      const rightLines = (headerConfig.rightSection?.lines || [])
+        .map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
+      const leftLines = (headerConfig.leftSection?.lines || [])
+        .map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
+      const images = (headerConfig.centerSection?.images || [])
+        .map((img: string, i: number) => {
+          if (!img) return "";
+          const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
+          return `<img src="${img}" alt="" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
+        }).join("");
+
+      const headerHTML = `
+        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:12px 20px 0;background:#fff;">
+          <div style="padding-bottom:8px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+            <div style="max-width:40%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
+              ${rightLines}
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+              ${images}
+            </div>
+            <div style="max-width:40%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || '#1e293b'};">
+              ${leftLines}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Create offscreen container, capture as image
+      const container = document.createElement("div");
+      container.style.cssText = "position:fixed;left:-9999px;top:0;width:760px;background:#fff;";
+      container.innerHTML = headerHTML;
+      document.body.appendChild(container);
+
+      // Wait for images to load
+      const imgs = container.querySelectorAll("img");
+      await Promise.all(Array.from(imgs).map(img =>
+        img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
+      ));
+
+      try {
+        const dataUrl = await toPng(container, { backgroundColor: "#ffffff", pixelRatio: 3 });
+        const imgEl = new Image();
+        await new Promise<void>((resolve) => { imgEl.onload = () => resolve(); imgEl.src = dataUrl; });
+
+        const imgAspect = imgEl.naturalWidth / imgEl.naturalHeight;
+        const usableW = pageWidth - margin * 2;
+        const imgH = usableW / imgAspect;
+
+        doc.addImage(dataUrl, "PNG", margin, startY, usableW, imgH);
+        startY = startY + imgH + 4;
+      } catch {
+        startY = 15;
+      }
+
+      document.body.removeChild(container);
+    }
 
     doc.setFontSize(14);
     const filterTitle = typeFilter === "all" ? "تقرير السلوك" : `تقرير السلوك - ${TYPE_LABELS[typeFilter]}`;
