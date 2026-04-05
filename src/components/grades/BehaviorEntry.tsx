@@ -136,13 +136,20 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       }
     }
 
-    const ops: PromiseLike<any>[] = [...updates];
+    let hasError = false;
+    await Promise.all(updates);
     if (inserts.length > 0) {
-      ops.push(supabase.from("behavior_records").insert(inserts).then());
+      const { error } = await supabase.from("behavior_records").insert(inserts);
+      if (error) {
+        console.error("behavior insert error:", error);
+        hasError = true;
+        toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
+      }
     }
-    await Promise.all(ops);
 
-    toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
+    if (!hasError) {
+      toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
+    }
     setSaving(false);
     loadData();
   };
