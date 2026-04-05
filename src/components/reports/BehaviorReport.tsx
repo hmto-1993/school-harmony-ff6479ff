@@ -15,7 +15,8 @@ import {
   PieChart, Pie, Cell,
 } from "recharts";
 import { Heart, User, CalendarDays } from "lucide-react";
-import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 type SeverityLevel = "low" | "medium" | "high" | "critical";
 
@@ -279,11 +280,10 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>
         )}
         {data.length > 0 && (
-          <ReportExportDialog
-            title="تصدير تقرير السلوك"
-            onExportExcel={exportPDF}
-            onExportPDF={exportPDF}
-          />
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
+            <FileText className="h-4 w-4" />
+            تصدير PDF
+          </Button>
         )}
       </div>
 
