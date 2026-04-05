@@ -218,7 +218,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         summaryData.map((s, i) => [i, { textColor: summaryColorMap[s.type] || [0, 0, 0] }])
       ),
       theme: "grid",
-      margin: { left: pageWidth * 0.2, right: pageWidth * 0.2 },
+      margin: { left: 15, right: 15 },
     });
 
     let currentY = (doc as any).lastAutoTable.finalY + 8;
