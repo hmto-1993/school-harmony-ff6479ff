@@ -201,6 +201,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
     if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
 
+    // Apply margins from config
+    const configMarginTop = headerConfig?.margins?.top ?? 5;
+    const configMarginSide = headerConfig?.margins?.side ?? 8;
+    startY = configMarginTop;
+
     if (headerConfig) {
       // Build header HTML exactly like grades-print.ts
       const rightLines = (headerConfig.rightSection?.lines || [])
@@ -210,12 +215,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       const images = (headerConfig.centerSection?.images || [])
         .map((img: string, i: number) => {
           if (!img) return "";
-          const size = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-          return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${size}px;height:${size}px;object-fit:contain;" />`;
+          const height = headerConfig.centerSection?.imagesSizes?.[i] || 60;
+          const width = headerConfig.centerSection?.imagesWidths?.[i] ?? height;
+          return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
         }).join("");
 
       const headerHTML = `
-        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px 4px 0;background:#fff;">
+        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px ${configMarginSide}px 0;background:#fff;">
           <div style="padding-bottom:8px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
             <div style="max-width:46%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
               ${rightLines}
