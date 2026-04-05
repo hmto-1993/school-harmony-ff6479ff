@@ -264,6 +264,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           fillColor: group.rowColor,
         },
         columnStyles: { 3: { halign: "right" } },
+        margin: { left: margin, right: margin },
       });
 
       currentY = (doc as any).lastAutoTable.finalY + 10;
