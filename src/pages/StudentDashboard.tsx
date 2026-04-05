@@ -459,7 +459,7 @@ export default function StudentDashboard() {
             const allIcons = catGrades.flatMap((g: any) => 
               pdfGetIconLevel(g.score, g.grade_categories?.max_score || 100, catName)
             );
-            const pdfIconsCount = isParent ? parentClassworkIconsCount : (studentEval?.iconsCount || 15);
+            const pdfIconsCount = isParent ? parentClassworkIconsCount : (student.evalSettings?.iconsCount || 15);
             const displayIcons = allIcons.slice(-pdfIconsCount);
             const bg = ci % 2 === 0 ? "#fff" : "#fafbfc";
             html += `<tr style="background:${bg}">`;
