@@ -44,25 +44,6 @@ const formatSeverity = (severity: SeverityLevel | null): string => {
   return SEVERITY_LABELS[severity];
 };
 
-const renderPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
-  const radius = outerRadius + 24;
-  const angle = (-midAngle * Math.PI) / 180;
-  const x = cx + radius * Math.cos(angle);
-  const y = cy + radius * Math.sin(angle);
-
-  return (
-    <text
-      x={x}
-      y={y}
-      fill="hsl(var(--foreground))"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={12}
-    >
-      {`${name} ${(percent * 100).toFixed(0)}%`}
-    </text>
-  );
-};
 
 interface BehaviorRow {
   student_name: string;
@@ -253,35 +234,59 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">توزيع السلوك</CardTitle>
               </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="48%"
-                      innerRadius={60}
-                      outerRadius={88}
-                      paddingAngle={3}
-                      dataKey="value"
-                      label={renderPieLabel}
-                      labelLine={true}
-                    >
-                      {pieData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={
-                            entry.name === "إيجابي" ? TYPE_COLORS.positive :
-                            entry.name === "سلبي" ? TYPE_COLORS.negative :
-                            TYPE_COLORS.neutral
-                          }
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+              <CardContent className="flex flex-col items-center">
+                <div className="relative w-full" style={{ height: 260 }}>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={65}
+                        outerRadius={95}
+                        paddingAngle={4}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              entry.name === "إيجابي" ? TYPE_COLORS.positive :
+                              entry.name === "سلبي" ? TYPE_COLORS.negative :
+                              TYPE_COLORS.neutral
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [`${value}`, ""]} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  {/* Center label */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-foreground">{data.length}</p>
+                      <p className="text-[10px] text-muted-foreground">إجمالي</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Custom legend */}
+                <div className="flex flex-wrap justify-center gap-4 mt-2">
+                  {pieData.map((entry) => {
+                    const pct = ((entry.value / data.length) * 100).toFixed(0);
+                    const color =
+                      entry.name === "إيجابي" ? TYPE_COLORS.positive :
+                      entry.name === "سلبي" ? TYPE_COLORS.negative :
+                      TYPE_COLORS.neutral;
+                    return (
+                      <div key={entry.name} className="flex items-center gap-1.5 text-xs">
+                        <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-foreground font-medium">{entry.name}</span>
+                        <span className="text-muted-foreground">{entry.value} ({pct}%)</span>
+                      </div>
+                    );
+                  })}
+                </div>
               </CardContent>
             </Card>
 
