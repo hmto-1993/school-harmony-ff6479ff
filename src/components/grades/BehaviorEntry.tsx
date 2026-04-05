@@ -123,7 +123,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       if (s.existingId) {
         updates.push(supabase.from("behavior_records").update({
           type: s.type, note: s.note || null,
-        }).eq("id", s.existingId));
+        }).eq("id", s.existingId).then());
       } else {
         inserts.push({
           student_id: s.student_id,
