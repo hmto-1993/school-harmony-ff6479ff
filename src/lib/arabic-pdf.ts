@@ -123,33 +123,35 @@ async function renderPrintHeaderFromConfig(
   config: PrintHeaderConfig
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 10; // Match grades HTML: padding 3mm 5mm → ~10mm side margins
+  const margin = 10;
   const usableWidth = pageWidth - margin * 2;
-  const sectionWidth = usableWidth * 0.40; // 40% each side — matches grades HTML max-width:40%
+  const sectionWidth = usableWidth * 0.38; // slightly less than 40% to add breathing room
+  const centerWidth = usableWidth * 0.24; // 24% center for images
 
   const startY = 10;
   let rightY = startY;
   let leftY = startY;
 
-  // --- Right section text (centered within its area) ---
-  // Grades HTML: font-size in px, line-height 1.8 → convert px to pt (1px ≈ 0.75pt)
+  // --- Right section text (centered within its area, with maxWidth for wrapping) ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
   const rightFontPt = rightFontPx * 0.75;
   doc.setFontSize(rightFontPt);
-  // line-height:1.8 in HTML → spacing = fontSize_mm * 1.8; fontSize in mm ≈ pt * 0.3528
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
   const rightCenterX = pageWidth - margin - sectionWidth / 2;
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
-      doc.text(line, rightCenterX, rightY, { align: "center" });
-      rightY += rightSpacing;
+      const wrapped = doc.splitTextToSize(line, sectionWidth);
+      wrapped.forEach((wl: string) => {
+        doc.text(wl, rightCenterX, rightY, { align: "center" });
+        rightY += rightSpacing;
+      });
     }
   });
 
-  // --- Left section text (centered within its area) ---
+  // --- Left section text (centered within its area, with maxWidth for wrapping) ---
   const leftFontPx = config.leftSection.fontSize || 12;
   const leftFontPt = leftFontPx * 0.75;
   doc.setFontSize(leftFontPt);
@@ -159,27 +161,32 @@ async function renderPrintHeaderFromConfig(
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
-      doc.text(line, leftCenterX, leftY, { align: "center" });
-      leftY += leftSpacing;
+      const wrapped = doc.splitTextToSize(line, sectionWidth);
+      wrapped.forEach((wl: string) => {
+        doc.text(wl, leftCenterX, leftY, { align: "center" });
+        leftY += leftSpacing;
+      });
     }
   });
 
   const textMaxY = Math.max(rightY, leftY);
   const textHeight = textMaxY - startY;
 
-  // --- Center images (use exact px→mm conversion like grades HTML) ---
+  // --- Center images (constrained to center column) ---
   const images = config.centerSection.images.filter(Boolean);
   if (images.length > 0) {
     const centerX = pageWidth / 2;
-    // Convert px to mm: 1px ≈ 0.2646mm (96 DPI)
     const pxToMm = 0.2646;
-    const gap = 10 * pxToMm; // gap:10px in HTML
+    const gap = 10 * pxToMm;
 
+    // Limit image sizes to fit within center column
+    const maxImgSize = Math.min(centerWidth * 0.8, 18); // max 18mm or 80% of center
     const imgSizes = images.map((_, i) => {
       const sizePx = config.centerSection.imagesSizes[
         config.centerSection.images.indexOf(images[i])
       ] || 60;
-      return sizePx * pxToMm;
+      const sizeMm = sizePx * pxToMm;
+      return Math.min(sizeMm, maxImgSize);
     });
 
     const totalImgWidth = imgSizes.reduce((sum, s) => sum + s, 0) + gap * (images.length - 1);
@@ -201,14 +208,12 @@ async function renderPrintHeaderFromConfig(
     }
   }
 
-  // --- Blue bottom border (grades HTML: 3px solid #3b82f6, padding-bottom:6px) ---
-  // 3px ≈ 0.8mm, padding-bottom 6px ≈ 1.6mm
+  // --- Blue bottom border ---
   const borderY = textMaxY + 1.6;
   doc.setDrawColor(59, 130, 246);
   doc.setLineWidth(0.8);
   doc.line(margin, borderY, pageWidth - margin, borderY);
 
-  // margin-bottom:10px ≈ 2.6mm after border
   doc.setFont("Amiri", "normal");
   return borderY + 3.4;
 }
