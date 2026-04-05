@@ -564,9 +564,9 @@ export default function PrintHeaderEditor() {
                     {config.centerSection.images.map((img, i) => (
                       <div key={i}>
                         {img ? (
-                          <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
+                          <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
                         ) : (
-                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
+                          <div className="border-2 border-dashed rounded-lg flex items-center justify-center bg-muted/30" style={{ width: `${(config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px` }}>
                             <ImageIcon className="h-4 w-4 text-muted-foreground/40" />
                           </div>
                         )}
