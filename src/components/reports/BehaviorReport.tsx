@@ -171,12 +171,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "behavior", includeHeader: true });
     const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10; // A4 portrait consistent margin
 
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     const filterTitle = typeFilter === "all" ? "تقرير السلوك" : `تقرير السلوك - ${TYPE_LABELS[typeFilter]}`;
     doc.text(filterTitle, pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
+    doc.setFontSize(9);
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
     // Summary statistics table
     const totalFiltered = filteredData.length;
@@ -185,8 +186,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       : ([typeFilter] as const);
     const summaryData = summaryTypes.map((t) => {
       const count = filteredData.filter((r) => r.type === t).length;
-      const pct = totalFiltered > 0 ? ((count / totalFiltered) * 100).toFixed(1) : "0";
-      return { type: t, label: TYPE_LABELS[t], count, pct };
+      return { type: t, label: TYPE_LABELS[t], count };
     });
 
     const summaryColorMap: Record<string, [number, number, number]> = {
@@ -196,21 +196,19 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     };
 
     autoTable(doc, {
-      startY: startY + 12,
-      head: [summaryData.map((s) => `${s.label}`)],
-      body: [
-        summaryData.map((s) => `${s.count}`),
-      ],
+      startY: startY + 10,
+      head: [summaryData.map((s) => s.label)],
+      body: [summaryData.map((s) => `${s.count}`)],
       ...tableStyles,
       headStyles: {
         ...tableStyles.headStyles,
         fillColor: [240, 240, 240],
         textColor: [30, 30, 30],
-        fontSize: 11,
+        fontSize: 10,
       },
       bodyStyles: {
         ...tableStyles.bodyStyles,
-        fontSize: 12,
+        fontSize: 11,
         fontStyle: "bold",
         halign: "center",
       },
@@ -218,7 +216,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         summaryData.map((s, i) => [i, { textColor: summaryColorMap[s.type] || [0, 0, 0] }])
       ),
       theme: "grid",
-      margin: { left: 15, right: 15 },
+      margin: { left: margin, right: margin },
     });
 
     let currentY = (doc as any).lastAutoTable.finalY + 8;
