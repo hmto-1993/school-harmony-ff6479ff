@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,13 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     }
     setLoading(false);
   };
+
+  // Auto-fetch when filters change
+  useEffect(() => {
+    if (selectedClass && dateFrom && dateTo) {
+      fetchBehavior();
+    }
+  }, [selectedClass, dateFrom, dateTo, selectedStudent]);
 
   // Summary counts
   const positive = data.filter((r) => r.type === "positive").length;
