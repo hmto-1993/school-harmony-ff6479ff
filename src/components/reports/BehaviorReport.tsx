@@ -453,7 +453,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         </div>
       )}
 
-      {!loading && data.length === 0 && (
       <Dialog open={!!selectedStudentName} onOpenChange={(open) => !open && setSelectedStudentName(null)}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col" dir="rtl">
           <DialogHeader>
