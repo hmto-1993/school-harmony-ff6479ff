@@ -387,7 +387,9 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                       type="button"
                       onClick={() => {
                         setStudents((prev) =>
-                          prev.map((s) => s.student_id === noteDialog.studentId ? { ...s, type: item.type } : s)
+                          prev.map((s) => s.student_id === noteDialog.studentId
+                            ? { ...s, type: item.type, note: s.type !== item.type ? "" : s.note, severity: item.type === "negative" ? s.severity : "low" }
+                            : s)
                         );
                       }}
                       className={cn(
