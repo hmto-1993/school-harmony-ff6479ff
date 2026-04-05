@@ -166,7 +166,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
   const exportPDF = async () => {
     const { registerArabicFont, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
-    const { toPng } = await import("html-to-image");
+    const html2canvas = (await import("html2canvas")).default;
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const jsPDFModule = await import("jspdf");
