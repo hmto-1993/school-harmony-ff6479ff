@@ -219,6 +219,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       paddingAngle={3}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={true}
                     >
                       {pieData.map((entry, index) => (
                         <Cell
@@ -247,7 +248,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-20} textAnchor="end" height={60} />
+                    <XAxis dataKey="name" tick={{ fontSize: 10, fontStyle: "normal" }} angle={-20} textAnchor="end" height={60} />
                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                     <Tooltip />
                     <Legend />
@@ -288,7 +289,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                             {TYPE_LABELS[row.type] || row.type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{row.note || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{cleanNote(row.note)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
