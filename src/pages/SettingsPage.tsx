@@ -844,27 +844,43 @@ export default function SettingsPage() {
     let hasError = false;
 
     if (catClassFilter === "all") {
-      const firstClassId = classes[0]?.id;
-      const templateCats = categories.filter((c) => c.class_id === firstClassId);
+      // Get all unique template categories shown in "all" view
+      const classCats = categories.filter((c) => c.class_id !== null);
+      const seen = new Map<string, GradeCategory>();
+      classCats.forEach(c => { if (!seen.has(c.name)) seen.set(c.name, c); });
+      const templateCats = Array.from(seen.values());
 
       for (const tpl of templateCats) {
         const editedVals = editingCats[tpl.id];
-        if (!editedVals) continue;
+        const finalName = editedVals?.name || tpl.name;
+        const finalMaxScore = editedVals?.max_score ?? tpl.max_score;
+        const finalGroup = editedVals?.category_group || tpl.category_group;
         const originalName = tpl.name;
-        const matchingCats = categories.filter((c) => c.name === originalName);
+
+        // Update existing matching categories in all classes
+        const matchingCats = categories.filter((c) => c.name === originalName && c.class_id !== null);
         for (const mc of matchingCats) {
-          const updateData: Record<string, any> = { max_score: editedVals.max_score };
-          if (editedVals.name && editedVals.name !== originalName) {
-            updateData.name = editedVals.name;
-          }
-          if (editedVals.category_group) {
-            updateData.category_group = editedVals.category_group;
-          }
-          const { error } = await supabase
-            .from("grade_categories")
-            .update(updateData)
-            .eq("id", mc.id);
+          const updateData: Record<string, any> = { max_score: finalMaxScore };
+          if (finalName !== originalName) updateData.name = finalName;
+          if (finalGroup) updateData.category_group = finalGroup;
+          const { error } = await supabase.from("grade_categories").update(updateData).eq("id", mc.id);
           if (error) hasError = true;
+        }
+
+        // Create missing categories for classes that don't have this category
+        const classIdsWithCat = new Set(matchingCats.map(c => c.class_id));
+        const missingClasses = classes.filter(cls => !classIdsWithCat.has(cls.id));
+        if (missingClasses.length > 0) {
+          const inserts = missingClasses.map(cls => ({
+            name: finalName,
+            weight: tpl.weight,
+            max_score: finalMaxScore,
+            class_id: cls.id,
+            sort_order: tpl.sort_order,
+            category_group: finalGroup,
+          }));
+          const { error: insertErr } = await supabase.from("grade_categories").insert(inserts);
+          if (insertErr) hasError = true;
         }
       }
       if (hasError) {
