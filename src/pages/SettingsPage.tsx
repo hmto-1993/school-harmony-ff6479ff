@@ -1831,7 +1831,7 @@ export default function SettingsPage() {
 
             {catClassFilter === "all" && (
               <p className="text-xs text-muted-foreground text-center">
-                💡 أي تعديل سيُطبق على جميع الفصول تلقائياً
+                💡 أي تعديل سيُطبق على جميع الفصول تلقائياً — الفئات الناقصة ستُضاف للفصول المفقودة عند الحفظ
               </p>
             )}
 
