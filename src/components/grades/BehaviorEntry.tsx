@@ -18,6 +18,7 @@ interface StudentBehavior {
   parent_phone: string | null;
   type: BehaviorType;
   note: string;
+  severity: string;
   existingId: string | null;
   notified: boolean;
 }
@@ -122,12 +123,17 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     setStudents(
       (studs || []).map((s) => {
         const rec = recordsMap.get(s.id);
+        const rawNote = rec?.note || "";
+        const severityMatch = rawNote.match(/\[severity:(\w+)\]/);
+        const severity = severityMatch ? severityMatch[1] : "low";
+        const note = rawNote.replace(/\[severity:\w+\]\s*/, "");
         return {
           student_id: s.id,
           full_name: s.full_name,
           parent_phone: s.parent_phone,
           type: (rec?.type as BehaviorType) || null,
-          note: rec?.note || "",
+          note,
+          severity,
           existingId: rec?.id || null,
           notified: rec?.notified || false,
         };
@@ -162,11 +168,23 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
 
+    const buildNote = (s: StudentBehavior) => {
+      const base = s.note || "";
+      if (s.type === "negative" && s.severity && s.severity !== "low") {
+        return `[severity:${s.severity}] ${base}`.trim();
+      }
+      if (s.type === "negative" && s.severity === "low") {
+        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
+      }
+      return base || null;
+    };
+
     for (const s of students) {
       if (s.type === null) continue;
+      const note = buildNote(s);
       if (s.existingId) {
         updates.push(supabase.from("behavior_records").update({
-          type: s.type, note: s.note || null,
+          type: s.type, note,
         }).eq("id", s.existingId).then());
       } else {
         inserts.push({
@@ -174,7 +192,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
           class_id: selectedClass,
           date: today,
           type: s.type,
-          note: s.note || null,
+          note,
           recorded_by: user.id,
         });
       }
@@ -386,6 +404,43 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                   ))}
                 </div>
               </div>
+
+              {/* Severity Level for Negative */}
+              {currentNoteStudent.type === "negative" && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">مستوى الخطورة</p>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {([
+                      { key: "none", label: "غير خطر" },
+                      { key: "low", label: "منخفض" },
+                      { key: "medium", label: "متوسط" },
+                      { key: "high", label: "عالي" },
+                      { key: "critical", label: "حرج" },
+                    ]).map((sev) => {
+                      const currentSeverity = currentNoteStudent.severity || "low";
+                      return (
+                        <button
+                          key={sev.key}
+                          type="button"
+                          onClick={() => {
+                            setStudents((prev) =>
+                              prev.map((s) => s.student_id === noteDialog.studentId ? { ...s, severity: sev.key } : s)
+                            );
+                          }}
+                          className={cn(
+                            "px-2 py-2.5 rounded-xl border-2 text-xs font-bold transition-all text-center",
+                            currentSeverity === sev.key
+                              ? "bg-emerald-600 text-white border-transparent shadow-lg"
+                              : "border-border bg-card text-foreground hover:bg-muted/30"
+                          )}
+                        >
+                          {sev.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Quick Suggestions */}
               {currentNoteType && currentSuggestions.length > 0 && (
