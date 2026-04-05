@@ -215,15 +215,15 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         }).join("");
 
       const headerHTML = `
-        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:12px 8px 0;background:#fff;">
+        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px 4px 0;background:#fff;">
           <div style="padding-bottom:8px;border-bottom:3px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-            <div style="max-width:44%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
+            <div style="max-width:46%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
               ${rightLines}
             </div>
             <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
               ${images}
             </div>
-            <div style="max-width:44%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || '#1e293b'};">
+            <div style="max-width:46%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || '#1e293b'};">
               ${leftLines}
             </div>
           </div>
