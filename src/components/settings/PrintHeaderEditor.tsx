@@ -172,26 +172,9 @@ export default function PrintHeaderEditor() {
         const parsed = JSON.parse(data.value);
         if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
         if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
-        if (!parsed.watermark) parsed.watermark = defaultWatermark;
-        if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
-        setConfig(parsed);
-      } catch {
-        setConfig(defaultConfig);
-      }
-    } else if (reportType !== "__default__") {
-      // If no class-specific config, load default as base
-      const { data: defData } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-      if (defData?.value) {
-        try {
-          const parsed = JSON.parse(defData.value);
-          if (!parsed.rightSection.color) parsed.rightSection.color = "#1e293b";
-          if (!parsed.leftSection.color) parsed.leftSection.color = "#1e293b";
           if (!parsed.watermark) parsed.watermark = defaultWatermark;
           if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
+          if (!parsed.margins) parsed.margins = defaultMargins;
           setConfig(parsed);
         } catch {
           setConfig(defaultConfig);
