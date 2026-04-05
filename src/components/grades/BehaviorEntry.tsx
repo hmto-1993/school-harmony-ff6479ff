@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +21,35 @@ interface StudentBehavior {
   existingId: string | null;
   notified: boolean;
 }
+
+const DEFAULT_SUGGESTIONS: Record<string, string[]> = {
+  positive: [
+    "أظهر احتراماً للقوانين الصفية",
+    "ساعد في ترتيب الفصل",
+    "أظهر تعاوناً مع زملائه",
+    "حافظ على الهدوء أثناء الدرس",
+    "أظهر مسؤولية في أداء مهامه",
+    "ساعد في حل النزاعات بين الطلاب",
+    "أظهر قيادة إيجابية في المجموعة",
+    "حافظ على النظام في الفصل",
+  ],
+  negative: [
+    "أحدث ضوضاء في الفصل",
+    "لم يتبع قوانين الفصل",
+    "أزعج زملاءه أثناء الدرس",
+    "لم يحترم دور المعلم",
+    "أظهر سلوكاً غير لائق",
+    "لم يشارك في أنشطة الفصل",
+    "أظهر عدم احترام للآخرين",
+    "أحدث فوضى في الفصل",
+  ],
+  neutral: [
+    "أظهر سلوكاً مقبولاً في الفصل",
+    "يحتاج تذكيراً ببعض القوانين",
+    "أظهر تحسناً في السلوك",
+    "أنجز المهام المطلوبة منه",
+  ],
+};
 
 const BehaviorIcon = ({ type }: { type: BehaviorType }) => {
   if (type === "positive") return <ThumbsUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />;
@@ -50,9 +78,25 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   const [saving, setSaving] = useState(false);
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; studentId: string; name: string }>({ open: false, studentId: "", name: "" });
   const [sendingNotif, setSendingNotif] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<Record<string, string[]>>(DEFAULT_SUGGESTIONS);
 
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
+    // Load custom suggestions
+    supabase.from("site_settings").select("id, value").in("id", [
+      "behavior_suggestions_positive",
+      "behavior_suggestions_negative",
+      "behavior_suggestions_neutral",
+    ]).then(({ data }) => {
+      if (data && data.length > 0) {
+        const custom: Record<string, string[]> = { ...DEFAULT_SUGGESTIONS };
+        data.forEach((s: any) => {
+          const type = s.id.replace("behavior_suggestions_", "");
+          try { custom[type] = JSON.parse(s.value); } catch {}
+        });
+        setSuggestions(custom);
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -171,7 +215,6 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       toast({ title: "خطأ في الإرسال", description: data?.error || error?.message || "فشل إرسال الرسالة", variant: "destructive" });
     } else {
       toast({ title: "تم الإرسال", description: `تم إرسال إشعار لولي أمر ${student.full_name}` });
-      // Mark as notified
       if (student.existingId) {
         await supabase.from("behavior_records").update({ notified: true }).eq("id", student.existingId);
       }
@@ -183,6 +226,8 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   };
 
   const currentNoteStudent = students.find((s) => s.student_id === noteDialog.studentId);
+  const currentNoteType = currentNoteStudent?.type;
+  const currentSuggestions = currentNoteType ? (suggestions[currentNoteType] || []) : [];
 
   return (
     <>
@@ -301,18 +346,88 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
         </CardContent>
       </Card>
 
-      {/* Note Dialog */}
+      {/* Note Dialog with behavior type selection & suggestions */}
       <Dialog open={noteDialog.open} onOpenChange={(open) => setNoteDialog((p) => ({ ...p, open }))}>
-        <DialogContent dir="rtl">
+        <DialogContent dir="rtl" className="max-w-lg">
           <DialogHeader>
             <DialogTitle>ملاحظة السلوك - {noteDialog.name}</DialogTitle>
           </DialogHeader>
-          <Textarea
-            value={currentNoteStudent?.note || ""}
-            onChange={(e) => setNote(noteDialog.studentId, e.target.value)}
-            placeholder="اكتب ملاحظة عن سلوك الطالب..."
-            rows={4}
-          />
+
+          {/* Behavior Type Cards */}
+          {currentNoteStudent && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-semibold mb-2">نوع السلوك</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    { type: "positive" as const, label: "إيجابي", desc: "سلوك إيجابي يستحق التقدير", icon: ThumbsUp, bg: "bg-emerald-600", border: "border-emerald-500", text: "text-emerald-700 dark:text-emerald-300" },
+                    { type: "negative" as const, label: "سلبي", desc: "سلوك سلبي يحتاج تصحيح", icon: ThumbsDown, bg: "bg-rose-500", border: "border-rose-500", text: "text-rose-700 dark:text-rose-300" },
+                    { type: "neutral" as const, label: "محايد", desc: "سلوك محايد أو ملاحظة عامة", icon: Minus, bg: "bg-amber-500", border: "border-amber-500", text: "text-amber-700 dark:text-amber-300" },
+                  ]).map((item) => (
+                    <button
+                      key={item.type}
+                      type="button"
+                      onClick={() => {
+                        setStudents((prev) =>
+                          prev.map((s) => s.student_id === noteDialog.studentId ? { ...s, type: item.type } : s)
+                        );
+                      }}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
+                        currentNoteStudent.type === item.type
+                          ? `${item.bg} text-white border-transparent shadow-lg`
+                          : "border-border bg-card hover:border-border/80"
+                      )}
+                    >
+                      <item.icon className={cn("h-6 w-6", currentNoteStudent.type === item.type ? "text-white" : item.text)} />
+                      <span className={cn("text-sm font-bold", currentNoteStudent.type !== item.type && item.text)}>{item.label}</span>
+                      <span className={cn("text-[10px] leading-tight", currentNoteStudent.type === item.type ? "text-white/80" : "text-muted-foreground")}>{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Suggestions */}
+              {currentNoteType && currentSuggestions.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold mb-2">وصف السلوك</p>
+                  <p className="text-xs text-muted-foreground mb-2">مقترحات سريعة:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {currentSuggestions.map((sug, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          const current = currentNoteStudent?.note || "";
+                          const newNote = current ? `${current}، ${sug}` : sug;
+                          setNote(noteDialog.studentId, newNote);
+                        }}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg border text-xs font-medium transition-all hover:scale-[1.02]",
+                          currentNoteStudent?.note?.includes(sug)
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "border-border bg-card hover:bg-muted/50 text-foreground"
+                        )}
+                      >
+                        {sug}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm font-semibold mb-2">ملاحظة مخصصة</p>
+                <Textarea
+                  value={currentNoteStudent?.note || ""}
+                  onChange={(e) => setNote(noteDialog.studentId, e.target.value)}
+                  placeholder="اكتب ملاحظة عن سلوك الطالب..."
+                  rows={3}
+                />
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button onClick={() => setNoteDialog((p) => ({ ...p, open: false }))}>تم</Button>
           </DialogFooter>

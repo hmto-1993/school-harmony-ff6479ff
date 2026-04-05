@@ -61,6 +61,7 @@ import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
 import TimetableEditor from "@/components/settings/TimetableEditor";
+import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
 import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import { useCalendarType } from "@/hooks/useCalendarType";
@@ -1131,6 +1132,7 @@ export default function SettingsPage() {
           { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
           { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
+          { key: "behavior_suggestions", icon: Heart, label: "وصف السلوك", desc: "مقترحات وصف السلوك", gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || isAdmin).map((card) => (
           <button
             key={card.key}
@@ -3350,6 +3352,10 @@ export default function SettingsPage() {
             <TimetableEditor classes={classes.map(c => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
+      )}
+
+      {activeCard === "behavior_suggestions" && isAdmin && (
+        <BehaviorSuggestionsSettings onClose={() => setActiveCard(null)} />
       )}
 
 
