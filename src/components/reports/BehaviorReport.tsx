@@ -175,7 +175,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     await registerArabicFont(doc);
     const tableStyles = getArabicTableStyles();
-    const pageWidth = doc.internal.pageSize.getWidth(); // 210mm
+    const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 10;
 
     // --- Render header as HTML image (same approach as grades export) ---
