@@ -19,6 +19,7 @@ interface SectionConfig {
 interface CenterSectionConfig {
   images: string[];
   imagesSizes: number[];
+  imagesWidths?: number[];
 }
 
 interface WatermarkConfig {
@@ -31,11 +32,17 @@ interface WatermarkConfig {
   repeat: boolean;
 }
 
+interface MarginsConfig {
+  top: number;
+  side: number;
+}
+
 interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
   leftSection: SectionConfig;
   watermark?: WatermarkConfig;
+  margins?: MarginsConfig;
 }
 
 async function fetchFontAsBase64(url: string): Promise<string> {
