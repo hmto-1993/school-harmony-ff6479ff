@@ -326,6 +326,14 @@ export default function PrintHeaderEditor() {
     });
   };
 
+  const updateImageWidth = (index: number, width: number) => {
+    setConfig((prev) => {
+      const imagesWidths = [...(prev.centerSection.imagesWidths || prev.centerSection.imagesSizes)];
+      imagesWidths[index] = width;
+      return { ...prev, centerSection: { ...prev.centerSection, imagesWidths } };
+    });
+  };
+
   const addImageSlot = () => {
     setConfig((prev) => ({
       ...prev,
