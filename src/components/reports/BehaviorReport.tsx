@@ -182,15 +182,14 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     let startY = 10;
     let watermark: any = undefined;
 
-    // Fetch header config from daily grades first, then behavior, then default
-    const [gradesHeaderRes, behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
-      supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single(),
+    // Fetch behavior-specific header first, then default — independent from grades
+    const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
       supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
       supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
     ]);
 
     let headerConfig: any = null;
-    for (const result of [gradesHeaderRes, behaviorHeaderRes, defaultHeaderRes]) {
+    for (const result of [behaviorHeaderRes, defaultHeaderRes]) {
       if (!result.data?.value) continue;
       try {
         headerConfig = JSON.parse(result.data.value);
