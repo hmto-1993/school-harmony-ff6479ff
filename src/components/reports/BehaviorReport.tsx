@@ -182,17 +182,22 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     let startY = 10;
     let watermark: any = undefined;
 
-    // Fetch header config
-    const { data: hdrData } = await supabase
-      .from("site_settings").select("value")
-      .eq("id", "print_header_config_behavior").single();
+    // Fetch header config from daily grades first, then behavior, then default
+    const [gradesHeaderRes, behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
+      supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single(),
+      supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
+      supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
+    ]);
+
     let headerConfig: any = null;
-    if (hdrData?.value) try { headerConfig = JSON.parse(hdrData.value); } catch {}
-    if (!headerConfig) {
-      const { data: defData } = await supabase
-        .from("site_settings").select("value")
-        .eq("id", "print_header_config").single();
-      if (defData?.value) try { headerConfig = JSON.parse(defData.value); } catch {}
+    for (const result of [gradesHeaderRes, behaviorHeaderRes, defaultHeaderRes]) {
+      if (!result.data?.value) continue;
+      try {
+        headerConfig = JSON.parse(result.data.value);
+        break;
+      } catch {
+        // ignore invalid config and continue to next fallback
+      }
     }
 
     if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
