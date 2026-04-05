@@ -844,27 +844,43 @@ export default function SettingsPage() {
     let hasError = false;
 
     if (catClassFilter === "all") {
-      const firstClassId = classes[0]?.id;
-      const templateCats = categories.filter((c) => c.class_id === firstClassId);
+      // Get all unique template categories shown in "all" view
+      const classCats = categories.filter((c) => c.class_id !== null);
+      const seen = new Map<string, GradeCategory>();
+      classCats.forEach(c => { if (!seen.has(c.name)) seen.set(c.name, c); });
+      const templateCats = Array.from(seen.values());
 
       for (const tpl of templateCats) {
         const editedVals = editingCats[tpl.id];
-        if (!editedVals) continue;
+        const finalName = editedVals?.name || tpl.name;
+        const finalMaxScore = editedVals?.max_score ?? tpl.max_score;
+        const finalGroup = editedVals?.category_group || tpl.category_group;
         const originalName = tpl.name;
-        const matchingCats = categories.filter((c) => c.name === originalName);
+
+        // Update existing matching categories in all classes
+        const matchingCats = categories.filter((c) => c.name === originalName && c.class_id !== null);
         for (const mc of matchingCats) {
-          const updateData: Record<string, any> = { max_score: editedVals.max_score };
-          if (editedVals.name && editedVals.name !== originalName) {
-            updateData.name = editedVals.name;
-          }
-          if (editedVals.category_group) {
-            updateData.category_group = editedVals.category_group;
-          }
-          const { error } = await supabase
-            .from("grade_categories")
-            .update(updateData)
-            .eq("id", mc.id);
+          const updateData: Record<string, any> = { max_score: finalMaxScore };
+          if (finalName !== originalName) updateData.name = finalName;
+          if (finalGroup) updateData.category_group = finalGroup;
+          const { error } = await supabase.from("grade_categories").update(updateData).eq("id", mc.id);
           if (error) hasError = true;
+        }
+
+        // Create missing categories for classes that don't have this category
+        const classIdsWithCat = new Set(matchingCats.map(c => c.class_id));
+        const missingClasses = classes.filter(cls => !classIdsWithCat.has(cls.id));
+        if (missingClasses.length > 0) {
+          const inserts = missingClasses.map(cls => ({
+            name: finalName,
+            weight: tpl.weight,
+            max_score: finalMaxScore,
+            class_id: cls.id,
+            sort_order: tpl.sort_order,
+            category_group: finalGroup,
+          }));
+          const { error: insertErr } = await supabase.from("grade_categories").insert(inserts);
+          if (insertErr) hasError = true;
         }
       }
       if (hasError) {
@@ -1043,15 +1059,20 @@ export default function SettingsPage() {
   // Orphaned categories (class was deleted, category preserved)
   const orphanedCategories = categories.filter((c) => c.class_id === null);
 
-  // When "all", show unique categories by name (from first class as template), plus orphaned
+  // When "all", show unique categories by name across ALL classes (union), plus orphaned
   const filteredCategories = catClassFilter === "all"
     ? (() => {
-        const firstClassId = classes[0]?.id;
-        const classCats = firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        // Collect all unique category names across all classes
+        const classCats = categories.filter((c) => c.class_id !== null);
+        const seen = new Map<string, GradeCategory>();
+        classCats.forEach(c => {
+          if (!seen.has(c.name)) seen.set(c.name, c);
+        });
+        const uniqueCats = Array.from(seen.values()).sort((a, b) => a.sort_order - b.sort_order);
         // Include orphaned categories not already represented
-        const classNames = new Set(classCats.map(c => c.name));
+        const classNames = new Set(uniqueCats.map(c => c.name));
         const uniqueOrphaned = orphanedCategories.filter(c => !classNames.has(c.name));
-        return [...classCats, ...uniqueOrphaned];
+        return [...uniqueCats, ...uniqueOrphaned];
       })()
     : catClassFilter === "orphaned"
       ? orphanedCategories
@@ -1601,18 +1622,33 @@ export default function SettingsPage() {
                     ) : classworkCategories.map((cat) => (
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">
-                          {isAdmin ? (
-                            <Input
-                              value={editingCats[cat.id]?.name ?? cat.name}
-                              onChange={(e) =>
-                                setEditingCats((prev) => ({
-                                  ...prev,
-                                  [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
-                                }))
+                          <div className="flex items-center gap-2">
+                            {isAdmin ? (
+                              <Input
+                                value={editingCats[cat.id]?.name ?? cat.name}
+                                onChange={(e) =>
+                                  setEditingCats((prev) => ({
+                                    ...prev,
+                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
+                                  }))
+                                }
+                                className="h-8 w-40"
+                              />
+                            ) : <span>{cat.name}</span>}
+                            {catClassFilter === "all" && (() => {
+                              const classesWithCat = categories.filter(c => c.name === cat.name && c.class_id !== null);
+                              const missingCount = classes.length - classesWithCat.length;
+                              if (missingCount > 0) {
+                                const missingNames = classes.filter(cls => !classesWithCat.some(c => c.class_id === cls.id)).map(c => c.name);
+                                return (
+                                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600 dark:text-amber-400 whitespace-nowrap" title={`ناقصة في: ${missingNames.join("، ")}`}>
+                                    ⚠ ناقصة في {missingCount} فصل
+                                  </Badge>
+                                );
                               }
-                              className="h-8 w-40"
-                            />
-                          ) : <span>{cat.name}</span>}
+                              return null;
+                            })()}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {isAdmin ? (
@@ -1702,18 +1738,33 @@ export default function SettingsPage() {
                     ) : examCategories.map((cat) => (
                       <TableRow key={cat.id}>
                         <TableCell className="font-medium">
-                          {isAdmin ? (
-                            <Input
-                              value={editingCats[cat.id]?.name ?? cat.name}
-                              onChange={(e) =>
-                                setEditingCats((prev) => ({
-                                  ...prev,
-                                  [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
-                                }))
+                          <div className="flex items-center gap-2">
+                            {isAdmin ? (
+                              <Input
+                                value={editingCats[cat.id]?.name ?? cat.name}
+                                onChange={(e) =>
+                                  setEditingCats((prev) => ({
+                                    ...prev,
+                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
+                                  }))
+                                }
+                                className="h-8 w-40"
+                              />
+                            ) : <span>{cat.name}</span>}
+                            {catClassFilter === "all" && (() => {
+                              const classesWithCat = categories.filter(c => c.name === cat.name && c.class_id !== null);
+                              const missingCount = classes.length - classesWithCat.length;
+                              if (missingCount > 0) {
+                                const missingNames = classes.filter(cls => !classesWithCat.some(c => c.class_id === cls.id)).map(c => c.name);
+                                return (
+                                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600 dark:text-amber-400 whitespace-nowrap" title={`ناقصة في: ${missingNames.join("، ")}`}>
+                                    ⚠ ناقصة في {missingCount} فصل
+                                  </Badge>
+                                );
                               }
-                              className="h-8 w-40"
-                            />
-                          ) : <span>{cat.name}</span>}
+                              return null;
+                            })()}
+                          </div>
                         </TableCell>
                         <TableCell>
                           {isAdmin ? (
@@ -1780,7 +1831,7 @@ export default function SettingsPage() {
 
             {catClassFilter === "all" && (
               <p className="text-xs text-muted-foreground text-center">
-                💡 أي تعديل سيُطبق على جميع الفصول تلقائياً
+                💡 أي تعديل سيُطبق على جميع الفصول تلقائياً — الفئات الناقصة ستُضاف للفصول المفقودة عند الحفظ
               </p>
             )}
 
