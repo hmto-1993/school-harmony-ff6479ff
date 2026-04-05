@@ -188,31 +188,35 @@ async function renderPrintHeaderFromConfig(
     const gap = 10 * pxToMm;
 
     // Limit image sizes to fit within center column
-    const maxImgSize = Math.min(centerWidth * 0.8, 18); // max 18mm or 80% of center
-    const imgSizes = images.map((_, i) => {
-      const sizePx = config.centerSection.imagesSizes[
-        config.centerSection.images.indexOf(images[i])
-      ] || 60;
-      const sizeMm = sizePx * pxToMm;
-      return Math.min(sizeMm, maxImgSize);
+    const maxImgSize = Math.min(centerWidth * 0.8, 18);
+    const imgHeights = images.map((_, i) => {
+      const origIdx = config.centerSection.images.indexOf(images[i]);
+      const sizePx = config.centerSection.imagesSizes[origIdx] || 60;
+      return Math.min(sizePx * pxToMm, maxImgSize);
+    });
+    const imgWidths = images.map((_, i) => {
+      const origIdx = config.centerSection.images.indexOf(images[i]);
+      const widthPx = config.centerSection.imagesWidths?.[origIdx] ?? config.centerSection.imagesSizes[origIdx] ?? 60;
+      return Math.min(widthPx * pxToMm, maxImgSize * 1.5);
     });
 
-    const totalImgWidth = imgSizes.reduce((sum, s) => sum + s, 0) + gap * (images.length - 1);
+    const totalImgWidth = imgWidths.reduce((sum, s) => sum + s, 0) + gap * (images.length - 1);
     let imgX = centerX - totalImgWidth / 2;
 
     for (let i = 0; i < images.length; i++) {
-      const sizeMm = imgSizes[i];
-      const imgY = startY + (textHeight - sizeMm) / 2;
+      const wMm = imgWidths[i];
+      const hMm = imgHeights[i];
+      const imgY = startY + (textHeight - hMm) / 2;
 
       const base64 = await imageUrlToBase64(images[i]);
       if (base64) {
         try {
-          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), sizeMm, sizeMm);
+          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), wMm, hMm);
         } catch {
           // Skip if image fails
         }
       }
-      imgX += sizeMm + gap;
+      imgX += wMm + gap;
     }
   }
 
