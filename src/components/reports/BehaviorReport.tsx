@@ -151,16 +151,15 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 print:hidden">
-        <Button onClick={fetchBehavior} disabled={loading || !selectedClass}>
-          <BarChart3 className="h-4 w-4 ml-1.5" />
-          {loading ? "جارٍ التحميل..." : "عرض التقرير"}
-        </Button>
-      {data.length > 0 && (
-            <ReportExportDialog
-              title="تصدير تقرير السلوك"
-              onExportExcel={exportExcel}
-              onExportPDF={exportPDF}
-            />
+        {loading && (
+          <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>
+        )}
+        {data.length > 0 && (
+          <ReportExportDialog
+            title="تصدير تقرير السلوك"
+            onExportExcel={exportExcel}
+            onExportPDF={exportPDF}
+          />
         )}
       </div>
 
