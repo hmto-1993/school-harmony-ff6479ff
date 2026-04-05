@@ -124,9 +124,9 @@ async function renderPrintHeaderFromConfig(
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 10;
-  const headerMargin = 22; // extra inset for text sections
+  const headerMargin = 8;
   const usableWidth = pageWidth - margin * 2;
-  const sectionWidth = usableWidth * 0.32;
+  const sectionWidth = usableWidth * 0.42;
   const centerWidth = usableWidth * 0.24; // 24% center for images
 
   const startY = 10;
