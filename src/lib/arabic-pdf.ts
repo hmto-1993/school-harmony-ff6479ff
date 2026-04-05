@@ -224,7 +224,7 @@ async function renderPrintHeaderFromConfig(
   const borderY = textMaxY + 1.6;
   doc.setDrawColor(59, 130, 246);
   doc.setLineWidth(0.8);
-  doc.line(margin, borderY, pageWidth - margin, borderY);
+  doc.line(headerMargin, borderY, pageWidth - headerMargin, borderY);
 
   doc.setFont("Amiri", "normal");
   return borderY + 3.4;
