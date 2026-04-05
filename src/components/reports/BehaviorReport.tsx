@@ -393,7 +393,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {data.map((row, i) => (
                     {filteredData.map((row, i) => (
                       <TableRow key={i}>
                         <TableCell className="font-medium">{row.student_name}</TableCell>
