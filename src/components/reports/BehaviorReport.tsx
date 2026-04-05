@@ -10,7 +10,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { safeWriteXLSX } from "@/lib/download-utils";
 import {
   Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
@@ -164,78 +163,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ].filter((g) => g.students.length > 0)
     : [{ key: typeFilter, label: "", color: "", students: studentCards }];
 
-  const exportExcel = async () => {
-    const XLSX = await import("xlsx");
-    const wb = XLSX.utils.book_new();
-
-    const typeGroups: { type: string; label: string; color: string }[] =
-      typeFilter === "all"
-        ? [
-            { type: "positive", label: "إيجابي", color: "C6EFCE" },
-            { type: "neutral", label: "محايد", color: "FFEB9C" },
-            { type: "negative", label: "سلبي", color: "FFC7CE" },
-          ]
-        : [{ type: typeFilter, label: TYPE_LABELS[typeFilter], color: typeFilter === "positive" ? "C6EFCE" : typeFilter === "negative" ? "FFC7CE" : "FFEB9C" }];
-
-    const ws = XLSX.utils.aoa_to_sheet([]);
-    let row = 0;
-
-    for (const group of typeGroups) {
-      const rows = filteredData.filter((r) => r.type === group.type);
-      if (rows.length === 0) continue;
-
-      // Section header
-      XLSX.utils.sheet_add_aoa(ws, [[`${group.label} (${rows.length})`]], { origin: { r: row, c: 0 } });
-      const headerCell = XLSX.utils.encode_cell({ r: row, c: 0 });
-      ws[headerCell].s = {
-        font: { bold: true, sz: 13, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: group.type === "positive" ? "2E7D32" : group.type === "negative" ? "C62828" : "F9A825" } },
-        alignment: { horizontal: "center" },
-      };
-      if (!ws["!merges"]) ws["!merges"] = [];
-      ws["!merges"].push({ s: { r: row, c: 0 }, e: { r: row, c: 4 } });
-      row++;
-
-      // Column headers
-      const cols = ["#", "اسم الطالب", "التاريخ", "مستوى الخطورة", "ملاحظات"];
-      XLSX.utils.sheet_add_aoa(ws, [cols], { origin: { r: row, c: 0 } });
-      cols.forEach((_, ci) => {
-        const cell = XLSX.utils.encode_cell({ r: row, c: ci });
-        if (ws[cell]) ws[cell].s = {
-          font: { bold: true, color: { rgb: "000000" } },
-          fill: { fgColor: { rgb: group.color } },
-          alignment: { horizontal: "center" },
-          border: { bottom: { style: "thin", color: { rgb: "999999" } } },
-        };
-      });
-      row++;
-
-      // Data rows
-      rows.forEach((r, i) => {
-        XLSX.utils.sheet_add_aoa(ws, [[i + 1, r.student_name, r.date, formatSeverity(r.severity), r.note]], { origin: { r: row, c: 0 } });
-        // Zebra striping
-        if (i % 2 === 0) {
-          for (let ci = 0; ci <= 4; ci++) {
-            const cell = XLSX.utils.encode_cell({ r: row, c: ci });
-            if (ws[cell]) ws[cell].s = { fill: { fgColor: { rgb: "F5F5F5" } } };
-          }
-        }
-        row++;
-      });
-
-      row++; // Spacer
-    }
-
-    // Set column widths
-    ws["!cols"] = [{ wch: 5 }, { wch: 28 }, { wch: 14 }, { wch: 14 }, { wch: 40 }];
-    const ref = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: row, c: 4 } });
-    ws["!ref"] = ref;
-
-    const filterLabel = typeFilter === "all" ? "الكل" : TYPE_LABELS[typeFilter];
-    XLSX.utils.book_append_sheet(wb, ws, `تقرير السلوك - ${filterLabel}`);
-    safeWriteXLSX(wb, `تقرير_السلوك_${dateFrom}_${dateTo}.xlsx`);
-  };
-
   const exportPDF = async () => {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
@@ -250,6 +177,56 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     doc.setFontSize(10);
     doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 7, { align: "center" });
 
+    // Summary statistics table
+    const totalFiltered = filteredData.length;
+    const summaryTypes = typeFilter === "all"
+      ? (["positive", "neutral", "negative"] as const)
+      : ([typeFilter] as const);
+    const summaryData = summaryTypes.map((t) => {
+      const count = filteredData.filter((r) => r.type === t).length;
+      const pct = totalFiltered > 0 ? ((count / totalFiltered) * 100).toFixed(1) : "0";
+      return { type: t, label: TYPE_LABELS[t], count, pct };
+    });
+
+    const summaryColorMap: Record<string, [number, number, number]> = {
+      positive: [46, 125, 50],
+      neutral: [249, 168, 37],
+      negative: [198, 40, 40],
+    };
+
+    autoTable(doc, {
+      startY: startY + 12,
+      head: [summaryData.map((s) => `${s.label}`)],
+      body: [
+        summaryData.map((s) => `${s.count}  (${s.pct}%)`),
+      ],
+      ...tableStyles,
+      headStyles: {
+        ...tableStyles.headStyles,
+        fillColor: [60, 60, 60],
+        fontSize: 11,
+      },
+      bodyStyles: {
+        ...tableStyles.bodyStyles,
+        fontSize: 12,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      columnStyles: Object.fromEntries(
+        summaryData.map((s, i) => [i, { textColor: summaryColorMap[s.type] || [0, 0, 0] }])
+      ),
+      theme: "grid",
+      margin: { left: pageWidth * 0.2, right: pageWidth * 0.2 },
+    });
+
+    let currentY = (doc as any).lastAutoTable.finalY + 8;
+
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`إجمالي السجلات: ${totalFiltered}`, pageWidth / 2, currentY, { align: "center" });
+    doc.setTextColor(0, 0, 0);
+    currentY += 8;
+
     const pdfTypeGroups =
       typeFilter === "all"
         ? [
@@ -263,8 +240,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
             headerColor: (typeFilter === "positive" ? [46, 125, 50] : typeFilter === "negative" ? [198, 40, 40] : [249, 168, 37]) as [number, number, number],
             rowColor: (typeFilter === "positive" ? [232, 245, 233] : typeFilter === "negative" ? [255, 235, 238] : [255, 249, 230]) as [number, number, number],
           }];
-
-    let currentY = startY + 12;
 
     for (const group of pdfTypeGroups) {
       const rows = filteredData.filter((r) => r.type === group.type);
@@ -306,7 +281,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         {data.length > 0 && (
           <ReportExportDialog
             title="تصدير تقرير السلوك"
-            onExportExcel={exportExcel}
+            onExportExcel={exportPDF}
             onExportPDF={exportPDF}
           />
         )}
