@@ -946,7 +946,8 @@ export default function StudentsPage() {
                     key={s.id}
                     className={cn(
                       isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                      !isLast && "border-b border-border/20"
+                      !isLast && "border-b border-border/20",
+                      "hover:bg-primary/10 transition-colors"
                     )}
                   >
                     {role === "admin" && (
