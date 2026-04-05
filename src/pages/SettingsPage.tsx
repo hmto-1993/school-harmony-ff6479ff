@@ -1043,15 +1043,20 @@ export default function SettingsPage() {
   // Orphaned categories (class was deleted, category preserved)
   const orphanedCategories = categories.filter((c) => c.class_id === null);
 
-  // When "all", show unique categories by name (from first class as template), plus orphaned
+  // When "all", show unique categories by name across ALL classes (union), plus orphaned
   const filteredCategories = catClassFilter === "all"
     ? (() => {
-        const firstClassId = classes[0]?.id;
-        const classCats = firstClassId ? categories.filter((c) => c.class_id === firstClassId) : [];
+        // Collect all unique category names across all classes
+        const classCats = categories.filter((c) => c.class_id !== null);
+        const seen = new Map<string, GradeCategory>();
+        classCats.forEach(c => {
+          if (!seen.has(c.name)) seen.set(c.name, c);
+        });
+        const uniqueCats = Array.from(seen.values()).sort((a, b) => a.sort_order - b.sort_order);
         // Include orphaned categories not already represented
-        const classNames = new Set(classCats.map(c => c.name));
+        const classNames = new Set(uniqueCats.map(c => c.name));
         const uniqueOrphaned = orphanedCategories.filter(c => !classNames.has(c.name));
-        return [...classCats, ...uniqueOrphaned];
+        return [...uniqueCats, ...uniqueOrphaned];
       })()
     : catClassFilter === "orphaned"
       ? orphanedCategories
