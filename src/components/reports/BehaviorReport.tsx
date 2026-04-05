@@ -1,32 +1,75 @@
 import { useState, useEffect } from "react";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
+import { safeWriteXLSX } from "@/lib/download-utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
 } from "recharts";
-import { BarChart3, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
-// Strip [severity:xxx] prefix from note for display
+type SeverityLevel = "low" | "medium" | "high" | "critical";
+
+const SEVERITY_LABELS: Record<SeverityLevel, string> = {
+  low: "منخفض",
+  medium: "متوسط",
+  high: "مرتفع",
+  critical: "حرج",
+};
+
+const extractSeverity = (note: string | null): SeverityLevel | null => {
+  if (!note) return null;
+  const match = note.match(/\[severity:(\w+)\]/i);
+  const severity = match?.[1]?.toLowerCase();
+
+  if (!severity || !(severity in SEVERITY_LABELS)) return null;
+
+  return severity as SeverityLevel;
+};
+
 const cleanNote = (note: string | null): string => {
   if (!note) return "—";
   return note.replace(/\[severity:\w+\]\s*/g, "").trim() || "—";
+};
+
+const formatSeverity = (severity: SeverityLevel | null): string => {
+  if (!severity) return "—";
+  return SEVERITY_LABELS[severity];
+};
+
+const renderPieLabel = ({ cx, cy, midAngle, outerRadius, percent, name }: any) => {
+  const radius = outerRadius + 24;
+  const angle = (-midAngle * Math.PI) / 180;
+  const x = cx + radius * Math.cos(angle);
+  const y = cy + radius * Math.sin(angle);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="hsl(var(--foreground))"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      fontSize={12}
+    >
+      {`${name} ${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
 };
 
 interface BehaviorRow {
   student_name: string;
   date: string;
   type: string;
-  note: string | null;
+  note: string;
+  severity: SeverityLevel | null;
 }
 
 interface BehaviorReportProps {
@@ -77,7 +120,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           student_name: r.students?.full_name || "—",
           date: r.date,
           type: r.type,
-          note: r.note,
+          note: cleanNote(r.note),
+          severity: extractSeverity(r.note),
         }))
       );
     }
@@ -117,6 +161,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     سلبي: counts.negative,
     محايد: counts.neutral,
   }));
+  const barChartHeight = Math.max(280, barData.length * 52);
 
   const exportExcel = async () => {
     const XLSX = await import("xlsx");
@@ -125,7 +170,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         "اسم الطالب": r.student_name,
         التاريخ: r.date,
         النوع: TYPE_LABELS[r.type] || r.type,
-        ملاحظات: cleanNote(r.note),
+        "مستوى الخطورة": formatSeverity(r.severity),
+        ملاحظات: r.note,
       }))
     );
     const wb = XLSX.utils.book_new();
@@ -146,10 +192,10 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
     (doc as any).autoTable({
       startY: startY + 12,
-      head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
-      body: data.map((r, i) => [cleanNote(r.note), TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
+      head: [["ملاحظات", "مستوى الخطورة", "النوع", "التاريخ", "اسم الطالب", "#"]],
+      body: data.map((r, i) => [r.note, formatSeverity(r.severity), TYPE_LABELS[r.type] || r.type, r.date, r.student_name, String(i + 1)]),
       ...tableStyles,
-      columnStyles: { 3: { halign: "right" } },
+      columnStyles: { 4: { halign: "right" } },
     });
     finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark);
   };
@@ -208,17 +254,17 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 <CardTitle className="text-base">توزيع السلوك</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={320}>
                   <PieChart>
                     <Pie
                       data={pieData}
                       cx="50%"
-                      cy="50%"
+                      cy="48%"
                       innerRadius={60}
-                      outerRadius={100}
+                      outerRadius={88}
                       paddingAngle={3}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={renderPieLabel}
                       labelLine={true}
                     >
                       {pieData.map((entry, index) => (
@@ -245,18 +291,26 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 <CardTitle className="text-base">السلوك حسب الطالب</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={barData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+                <div className="max-h-[360px] overflow-auto">
+                  <ResponsiveContainer width="100%" height={barChartHeight}>
+                    <BarChart data={barData} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fontStyle: "normal" }} angle={-20} textAnchor="end" height={60} />
-                    <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="إيجابي" fill={TYPE_COLORS.positive} radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="سلبي" fill={TYPE_COLORS.negative} radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="محايد" fill={TYPE_COLORS.neutral} radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                      <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="name"
+                        width={130}
+                        interval={0}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <Tooltip />
+                      <Legend />
+                      <Bar dataKey="إيجابي" fill={TYPE_COLORS.positive} radius={[0, 2, 2, 0]} />
+                      <Bar dataKey="سلبي" fill={TYPE_COLORS.negative} radius={[0, 2, 2, 0]} />
+                      <Bar dataKey="محايد" fill={TYPE_COLORS.neutral} radius={[0, 2, 2, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -271,6 +325,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       <TableHead className="text-right">اسم الطالب</TableHead>
                       <TableHead className="text-right">التاريخ</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
+                        <TableHead className="text-right">مستوى الخطورة</TableHead>
                       <TableHead className="text-right">ملاحظات</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -289,7 +344,17 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                             {TYPE_LABELS[row.type] || row.type}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{cleanNote(row.note)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              row.severity === "high" || row.severity === "critical" ? "destructive" :
+                              row.severity === "medium" ? "secondary" : "outline"
+                            }
+                          >
+                            {formatSeverity(row.severity)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">{row.note}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
