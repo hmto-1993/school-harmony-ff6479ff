@@ -72,6 +72,7 @@ export interface MarginsConfig {
   top: number;
   side: number;
   borderWidth?: number;
+  borderColor?: string;
 }
 
 export interface PrintHeaderConfig {
