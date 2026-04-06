@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye, Clock } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -293,6 +293,42 @@ export default function AttendancePage() {
     setAbsenceAlerts(alerts);
   };
 
+const DELAY_PRESETS = [5, 10, 15, 20, 30, 45];
+
+/** Extract minutes from a note like "تأخر 15 دقيقة" */
+const extractMinutes = (notes: string): number => {
+  const match = notes.match(/تأخر\s*(\d+)\s*دقيقة/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+/** Smart delay minutes picker shown when student is marked as late */
+function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 mt-1.5 animate-fade-in">
+      <Clock className="h-3 w-3 text-warning shrink-0" />
+      <div className="flex gap-0.5 flex-wrap">
+        {DELAY_PRESETS.map((mins) => {
+          const isActive = value === mins;
+          return (
+            <button
+              key={mins}
+              type="button"
+              onClick={() => onChange(isActive ? 0 : mins)}
+              className={cn(
+                "h-6 min-w-[32px] px-1.5 rounded-md text-[10px] font-bold border transition-all duration-200",
+                isActive
+                  ? "bg-warning/20 text-warning border-warning/40 ring-1 ring-warning/20 shadow-sm scale-105"
+                  : "bg-background text-muted-foreground border-border/50 hover:bg-warning/10 hover:text-warning hover:border-warning/30 hover:scale-105"
+              )}
+            >
+              {mins}د
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
   const loadStudents = async () => {
     setStudentsLoading(true);
@@ -840,7 +876,13 @@ export default function AttendancePage() {
                             {statusOptions.map((opt) => (
                               <button
                                 key={opt.value}
-                                onClick={() => updateStatus(record.student_id, opt.value)}
+                                onClick={() => {
+                                  updateStatus(record.student_id, opt.value);
+                                  // Auto-add delay note when switching to late
+                                  if (opt.value === "late" && !record.notes.match(/تأخر.*دقيقة/)) {
+                                    updateNotes(record.student_id, record.notes ? record.notes : "");
+                                  }
+                                }}
                                 className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
                                   record.status === opt.value
                                     ? opt.color + " font-medium ring-1 ring-current/20 shadow-sm"
@@ -851,6 +893,17 @@ export default function AttendancePage() {
                               </button>
                             ))}
                           </div>
+                          {/* Delay minutes picker for late students */}
+                          {record.status === "late" && (
+                            <LateMinutesPicker
+                              value={extractMinutes(record.notes)}
+                              onChange={(mins) => {
+                                const cleanNote = record.notes.replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "").trim();
+                                const prefix = mins > 0 ? `تأخر ${mins} دقيقة${cleanNote ? " · " : ""}` : "";
+                                updateNotes(record.student_id, prefix + cleanNote);
+                              }}
+                            />
+                          )}
                         </td>
                         <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
                           <Textarea
