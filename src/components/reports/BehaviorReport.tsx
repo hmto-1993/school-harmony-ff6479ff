@@ -14,7 +14,7 @@ import {
   Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell,
 } from "recharts";
-import { Heart, User, CalendarDays } from "lucide-react";
+import { Heart, User, CalendarDays, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 
