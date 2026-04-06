@@ -71,6 +71,7 @@ export interface FooterSignaturesConfig {
 export interface MarginsConfig {
   top: number;
   side: number;
+  borderWidth?: number;
 }
 
 export interface PrintHeaderConfig {
@@ -103,6 +104,7 @@ const defaultFooterSignatures: FooterSignaturesConfig = {
 const defaultMargins: MarginsConfig = {
   top: 5,
   side: 8,
+  borderWidth: 3,
 };
 
 const defaultConfig: PrintHeaderConfig = {
@@ -942,6 +944,23 @@ export default function PrintHeaderEditor() {
                       className="flex-1"
                     />
                     <span className="text-xs font-mono w-10 text-center">{config.margins?.side ?? 8}mm</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">سمك الخط الفاصل (px)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={0}
+                      max={8}
+                      step={0.5}
+                      value={[config.margins?.borderWidth ?? 3]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), borderWidth: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.borderWidth ?? 3}px</span>
                   </div>
                 </div>
               </div>
