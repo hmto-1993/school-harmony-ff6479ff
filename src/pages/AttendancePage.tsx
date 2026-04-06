@@ -564,7 +564,8 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     const fileName = `حضور_${className}_${date}${suffix}.pdf`;
 
     // Apply watermark & advanced settings exactly like finalizePDF
-    finalizePDF(doc, fileName, watermark, advanced, true); // true = skip auto-save
+    const { finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
+    const pdfBlob = finalizePDFAsBlob(doc, watermark, advanced);
 
     const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
