@@ -371,117 +371,22 @@ export default function ReportsPage() {
   };
 
   const shareAttendanceWhatsApp = async () => {
-    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
-    const autoTableImport = await import("jspdf-autotable");
-    const autoTable = autoTableImport.default;
-    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
-    const tableStyles = getArabicTableStyles(advanced);
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFontSize(14);
-    doc.setFont("Amiri", "bold");
-    doc.text("تقرير الحضور", pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(9);
-    doc.setFont("Amiri", "normal");
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
-
-    const tableData = attendanceData.map((r, i) => [
-      r.notes || "",
-      STATUS_LABELS[r.status] || r.status,
-      r.date,
-      r.student_name,
-      String(i + 1),
-    ]);
-
-    autoTable(doc, {
-      startY: startY + 12,
-      head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
-      body: tableData,
-      ...tableStyles,
-      columnStyles: {
-        3: { halign: "right" as const, fontStyle: "bold" as const },
-        4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-      },
-    });
-
-    const fileName = `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`;
-    const blob = finalizePDFAsBlob(doc, watermark, advanced);
-    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
-    const result = await sharePDFViaWhatsApp(blob, fileName, `📋 تقرير الحضور — من ${dateFrom} إلى ${dateTo}`);
+    const { buildAttendancePDF, sharePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildAttendancePDF(attendanceData, dateFrom, dateTo);
+    const result = await sharePDFBlob(blob, fileName, `📋 تقرير الحضور — من ${dateFrom} إلى ${dateTo}`);
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
   const exportGradesPDF = async () => {
-    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
-    const autoTableImport = await import("jspdf-autotable");
-    const autoTable = autoTableImport.default;
-    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
-    const tableStyles = getArabicTableStyles(advanced);
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFontSize(14);
-    doc.setFont("Amiri", "bold");
-    doc.text("تقرير الدرجات", pageWidth / 2, startY, { align: "center" });
-
-    const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب", "#"];
-    const body = gradeData.map((r, i) => [
-      String(r.total),
-      ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
-      r.student_name,
-      String(i + 1),
-    ]);
-
-    autoTable(doc, {
-      startY: startY + 6,
-      head: [head],
-      body,
-      ...tableStyles,
-      columnStyles: {
-        [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
-        [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-        0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
-      },
-    });
-
-    finalizePDF(doc, `تقرير_الدرجات.pdf`, watermark, advanced);
+    const { buildGradesPDF, savePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildGradesPDF(gradeData, categoryNames);
+    savePDFBlob(blob, fileName);
   };
 
   const shareGradesWhatsApp = async () => {
-    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
-    const autoTableImport = await import("jspdf-autotable");
-    const autoTable = autoTableImport.default;
-    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
-    const tableStyles = getArabicTableStyles(advanced);
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFontSize(14);
-    doc.setFont("Amiri", "bold");
-    doc.text("تقرير الدرجات", pageWidth / 2, startY, { align: "center" });
-
-    const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب", "#"];
-    const body = gradeData.map((r, i) => [
-      String(r.total),
-      ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
-      r.student_name,
-      String(i + 1),
-    ]);
-
-    autoTable(doc, {
-      startY: startY + 6,
-      head: [head],
-      body,
-      ...tableStyles,
-      columnStyles: {
-        [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
-        [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-        0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
-      },
-    });
-
-    const fileName = `تقرير_الدرجات.pdf`;
-    const blob = finalizePDFAsBlob(doc, watermark, advanced);
-    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
-    const result = await sharePDFViaWhatsApp(blob, fileName, `📋 تقرير الدرجات`);
+    const { buildGradesPDF, sharePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildGradesPDF(gradeData, categoryNames);
+    const result = await sharePDFBlob(blob, fileName, `📋 تقرير الدرجات`);
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
