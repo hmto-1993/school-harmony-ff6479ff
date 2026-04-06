@@ -460,6 +460,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
                   title="تصدير تقرير المتميزين"
                   onExportExcel={exportExcellenceExcel}
                   onExportPDF={exportExcellencePDF}
+                  onShareWhatsApp={shareExcellenceWhatsApp}
                 />
               </div>
             </CardHeader>
@@ -526,6 +527,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
                   title="تصدير تقرير الغياب"
                   onExportExcel={exportDisciplinaryExcel}
                   onExportPDF={exportDisciplinaryPDF}
+                  onShareWhatsApp={shareDisciplinaryWhatsApp}
                 />
               </div>
             </CardHeader>
