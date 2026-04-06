@@ -492,8 +492,8 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
       ? ` (${statusOptions.find(o => o.value === statusFilter)?.label || statusFilter})` 
       : "";
 
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
-    const tableStyles = getArabicTableStyles();
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
     doc.setFontSize(14);
     doc.setFont("Amiri", "bold");
     doc.text(`تقرير الحضور — ${className} — ${date}${filterLabel}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
@@ -518,7 +518,7 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     });
 
     const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
-    finalizePDF(doc, `حضور_${className}_${date}${suffix}.pdf`, watermark);
+    finalizePDF(doc, `حضور_${className}_${date}${suffix}.pdf`, watermark, advanced);
     toast({ title: "تم", description: `تم تصدير ${data.length} سجل إلى PDF` });
   };
 
