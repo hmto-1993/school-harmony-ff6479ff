@@ -147,7 +147,7 @@ export default function QuizStatistics() {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTable = (await import("jspdf-autotable")).default;
 
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
     const pageWidth = doc.internal.pageSize.getWidth();
 
     // Title

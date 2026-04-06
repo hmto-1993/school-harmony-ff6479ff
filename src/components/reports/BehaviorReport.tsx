@@ -174,7 +174,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     await registerArabicFont(doc);
-    const tableStyles = getArabicTableStyles((headerConfig as any)?.advanced);
+    const tableStyles = getArabicTableStyles();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 10;
 
