@@ -141,8 +141,19 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     );
   };
 
-  const autoSaveRecord = async (student: StudentBehavior, newType: BehaviorType, newNote?: string, newSeverity?: string) => {
+  const autoSaveRecord = useCallback(async (student: StudentBehavior, newType: BehaviorType, newNote?: string, newSeverity?: string) => {
     if (!user) return;
+    
+    // Cancel any pending save for this student
+    const prevController = saveQueueRef.current.get(student.student_id);
+    if (prevController) prevController.abort();
+    const controller = new AbortController();
+    saveQueueRef.current.set(student.student_id, controller);
+    
+    // Small delay to debounce rapid clicks
+    await new Promise(r => setTimeout(r, 150));
+    if (controller.signal.aborted) return;
+    
     const today = new Date().toISOString().split("T")[0];
     const note = newNote !== undefined ? newNote : student.note;
     const severity = newSeverity !== undefined ? newSeverity : student.severity;
@@ -159,11 +170,12 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     };
 
     if (newType === null && student.existingId) {
-      // Delete if type cleared
       await supabase.from("behavior_records").delete().eq("id", student.existingId);
-      setStudents((prev) =>
-        prev.map((s) => s.student_id === student.student_id ? { ...s, type: null, existingId: null, notified: false } : s)
-      );
+      if (!controller.signal.aborted) {
+        setStudents((prev) =>
+          prev.map((s) => s.student_id === student.student_id ? { ...s, type: null, existingId: null, notified: false } : s)
+        );
+      }
       return;
     }
 
@@ -180,9 +192,11 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       await supabase.from("behavior_records").update({
         type: newType, note: builtNote,
       }).eq("id", student.existingId);
-      setStudents((prev) =>
-        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity } : s)
-      );
+      if (!controller.signal.aborted) {
+        setStudents((prev) =>
+          prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity } : s)
+        );
+      }
     } else {
       const { data } = await supabase.from("behavior_records").insert({
         student_id: student.student_id,
@@ -192,11 +206,15 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
         note: builtNote,
         recorded_by: user.id,
       }).select("id").single();
-      setStudents((prev) =>
-        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity, existingId: data?.id || null } : s)
-      );
+      if (!controller.signal.aborted) {
+        setStudents((prev) =>
+          prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity, existingId: data?.id || null } : s)
+        );
+      }
     }
-  };
+    
+    saveQueueRef.current.delete(student.student_id);
+  }, [user, selectedClass]);
 
   const cycleType = (studentId: string) => {
     const student = students.find((s) => s.student_id === studentId);
