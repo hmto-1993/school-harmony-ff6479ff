@@ -149,7 +149,7 @@ function ReportPrintHeaderInline({
         style={{
           borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
           paddingBottom: "12px",
-          marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
+          marginBottom: `${config.margins?.borderBottomMargin ?? 8}mm`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
