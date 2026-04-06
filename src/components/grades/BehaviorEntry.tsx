@@ -374,7 +374,13 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       </Card>
 
       {/* Note Dialog with behavior type selection & suggestions */}
-      <Dialog open={noteDialog.open} onOpenChange={(open) => setNoteDialog((p) => ({ ...p, open }))}>
+      <Dialog open={noteDialog.open} onOpenChange={(open) => {
+        if (!open && currentNoteStudent && currentNoteStudent.type) {
+          // Auto-save note/severity on close
+          autoSaveRecord(currentNoteStudent, currentNoteStudent.type, currentNoteStudent.note, currentNoteStudent.severity);
+        }
+        setNoteDialog((p) => ({ ...p, open }));
+      }}>
         <DialogContent dir="rtl" className="max-w-lg">
           <DialogHeader>
             <DialogTitle>ملاحظة السلوك - {noteDialog.name}</DialogTitle>
