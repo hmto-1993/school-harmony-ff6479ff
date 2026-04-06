@@ -106,6 +106,7 @@ const defaultMargins: MarginsConfig = {
   top: 5,
   side: 8,
   borderWidth: 3,
+  borderColor: "#3b82f6",
 };
 
 const defaultConfig: PrintHeaderConfig = {
