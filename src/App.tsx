@@ -40,7 +40,9 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
+const App = () => {
+  useDynamicFavicon();
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <CalendarTypeProvider>
