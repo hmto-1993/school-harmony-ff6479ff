@@ -566,8 +566,6 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     // Apply watermark & advanced settings exactly like finalizePDF
     const { finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
     const pdfBlob = finalizePDFAsBlob(doc, watermark, advanced);
-
-    const pdfBlob = doc.output("blob");
     const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
     // Try Web Share API first (best for mobile)
