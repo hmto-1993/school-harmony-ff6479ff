@@ -75,9 +75,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     if (studentIds.length > 0) {
       const [{ data: gradesData }, { data: manualData }] = await Promise.all([
         supabase.from("grades").select("id, student_id, category_id, score, period")
-          .in("student_id", studentIds).eq("period", selectedPeriod),
+          .in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
         supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
-          .in("student_id", studentIds).eq("period", selectedPeriod),
+          .in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
       ]);
       allGrades = gradesData || [];
       allManualScores = (manualData as any[]) || [];

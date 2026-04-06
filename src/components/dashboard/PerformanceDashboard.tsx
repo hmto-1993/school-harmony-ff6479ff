@@ -77,7 +77,7 @@ export default function PerformanceDashboard() {
     const [{ data: cls }, { data: stu }, { data: grd }, { data: cat }] = await Promise.all([
       supabase.from("classes").select("id, name").order("name"),
       supabase.from("students").select("id, full_name, class_id"),
-      supabase.from("grades").select("score, category_id, student_id").not("score", "is", null),
+      supabase.from("grades").select("score, category_id, student_id").not("score", "is", null).limit(5000),
       supabase.from("grade_categories").select("id, name, max_score, class_id").order("sort_order"),
     ]);
     setClasses(cls || []);

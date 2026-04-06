@@ -246,10 +246,18 @@ export default function AttendancePage() {
     if (!students || students.length === 0) return;
     
     const studentIds = students.map(s => s.id);
-    const { data: allAtt } = await supabase
-      .from("attendance_records")
-      .select("student_id, status")
-      .in("student_id", studentIds);
+    // Fetch in batches to avoid 1000-row limit
+    let allAtt: any[] = [];
+    const batchSize = 500;
+    for (let i = 0; i < studentIds.length; i += batchSize) {
+      const batch = studentIds.slice(i, i + batchSize);
+      const { data } = await supabase
+        .from("attendance_records")
+        .select("student_id, status")
+        .in("student_id", batch)
+        .limit(5000);
+      allAtt = allAtt.concat(data || []);
+    }
 
     const alerts: Record<string, AbsenceAlert> = {};
     const studentAbsences: Record<string, { absent: number; total: number }> = {};

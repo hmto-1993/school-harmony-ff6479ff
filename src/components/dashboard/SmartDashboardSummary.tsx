@@ -143,7 +143,7 @@ export default function SmartDashboardSummary() {
     if (teacherClassIds) behaviorQuery = behaviorQuery.in("class_id", teacherClassIds);
 
     // Build full attendance query for at-risk calculation (include in parallel)
-    let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date");
+    let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date").limit(5000);
     if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
 
     const [absRes, allAttRes, classesRes, lessonRes, settingsRes, gradesRes, behaviorRes, fullAttRes] = await Promise.all([

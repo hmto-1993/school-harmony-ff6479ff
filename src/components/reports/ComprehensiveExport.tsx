@@ -83,8 +83,8 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
     let manualScores: any[] = [];
     if (studentIds.length > 0) {
       const [g, m] = await Promise.all([
-        supabase.from("grades").select("student_id, category_id, score, period, date").in("student_id", studentIds),
-        supabase.from("manual_category_scores").select("student_id, category_id, score, period").in("student_id", studentIds),
+        supabase.from("grades").select("student_id, category_id, score, period, date").in("student_id", studentIds).limit(5000),
+        supabase.from("manual_category_scores").select("student_id, category_id, score, period").in("student_id", studentIds).limit(5000),
       ]);
       grades = g.data || [];
       manualScores = m.data || [];

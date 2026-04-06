@@ -221,7 +221,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
           .from("manual_category_scores" as any)
           .select("id, student_id, category_id, score, period")
           .in("student_id", studentIds)
-          .eq("period", selectedPeriod),
+          .eq("period", selectedPeriod)
+          .limit(5000),
         catIds.length > 0
           ? supabase
               .from("grades")
@@ -230,6 +231,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               .in("category_id", catIds)
               .eq("period", selectedPeriod)
               .order("date")
+              .limit(5000)
           : Promise.resolve({ data: [] }),
       ]);
       allManualScores = (manualRes.data as any[]) || [];
