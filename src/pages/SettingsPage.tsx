@@ -3476,117 +3476,102 @@ export default function SettingsPage() {
               </DialogContent>
             </Dialog>
 
-            {/* ===== صفحة الدخول ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20 text-white">
-                        <SettingsIcon className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">إعدادات صفحة تسجيل الدخول</h3>
-                        <p className="text-xs text-muted-foreground">تخصيص شعار واسم المدرسة</p>
-                      </div>
+            <CollapsibleSettingsCard
+              icon={SettingsIcon}
+              iconGradient="from-indigo-500 to-violet-600"
+              iconShadow="shadow-lg shadow-indigo-500/20"
+              title="إعدادات صفحة تسجيل الدخول"
+              description="تخصيص شعار واسم المدرسة"
+            >
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>شعار المدرسة</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
+                      {schoolLogoUrl ? (
+                        <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    <div className="flex flex-col gap-2">
+                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingLogo(true);
+                          const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
+                          const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
+                          if (uploadError) {
+                            toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
+                            setUploadingLogo(false);
+                            return;
+                          }
+                          const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
+                          const logoUrl = urlData.publicUrl;
+                          await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
+                          setSchoolLogoUrl(logoUrl);
+                          setUploadingLogo(false);
+                          toast({ title: "تم رفع الشعار بنجاح" });
+                          e.target.value = "";
+                        }} />
+                      <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
+                        onClick={() => logoInputRef.current?.click()} className="gap-1.5">
+                        <Upload className="h-4 w-4" />
+                        {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
+                      </Button>
+                      {schoolLogoUrl && (
+                        <Button type="button" variant="ghost" size="sm"
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
+                            setSchoolLogoUrl("");
+                            toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
+                          }}>
+                          <Trash2 className="h-4 w-4" />
+                          إزالة
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                    {/* School Logo Upload */}
-                    <div className="space-y-2">
-                      <Label>شعار المدرسة</Label>
-                      <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-                          {schoolLogoUrl ? (
-                            <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
-                          ) : (
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setUploadingLogo(true);
-                              const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
-                              const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
-                              if (uploadError) {
-                                toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
-                                setUploadingLogo(false);
-                                return;
-                              }
-                              const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
-                              const logoUrl = urlData.publicUrl;
-                              await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
-                              setSchoolLogoUrl(logoUrl);
-                              setUploadingLogo(false);
-                              toast({ title: "تم رفع الشعار بنجاح" });
-                              e.target.value = "";
-                            }} />
-                          <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
-                            onClick={() => logoInputRef.current?.click()} className="gap-1.5">
-                            <Upload className="h-4 w-4" />
-                            {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
-                          </Button>
-                          {schoolLogoUrl && (
-                            <Button type="button" variant="ghost" size="sm"
-                              className="gap-1.5 text-destructive hover:text-destructive"
-                              onClick={async () => {
-                                await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
-                                setSchoolLogoUrl("");
-                                toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
-                              }}>
-                              <Trash2 className="h-4 w-4" />
-                              إزالة
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>اسم المدرسة</Label>
-                      <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
-                        placeholder="مثال: ثانوية الفيصلية" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>الوصف الفرعي</Label>
-                      <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
-                        placeholder="مثال: نظام إدارة المدرسة" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>عنوان لوحة التحكم</Label>
-                      <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
-                        placeholder="لوحة التحكم" />
-                      <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
-                    </div>
-                    <Button disabled={savingLogin} className="gap-1.5"
-                      onClick={async () => {
-                        setSavingLogin(true);
-                        const updates = [
-                          supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
-                          supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
-                          supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
-                        ];
-                        const results = await Promise.all(updates);
-                        setSavingLogin(false);
-                        if (results.some((r) => r.error)) {
-                          toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
-                        } else {
-                          toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
-                        }
-                      }}>
-                      <Save className="h-4 w-4" />
-                      {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم المدرسة</Label>
+                  <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
+                    placeholder="مثال: ثانوية الفيصلية" />
+                </div>
+                <div className="space-y-2">
+                  <Label>الوصف الفرعي</Label>
+                  <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
+                    placeholder="مثال: نظام إدارة المدرسة" />
+                </div>
+                <div className="space-y-2">
+                  <Label>عنوان لوحة التحكم</Label>
+                  <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
+                    placeholder="لوحة التحكم" />
+                  <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
+                </div>
+                <Button disabled={savingLogin} className="gap-1.5"
+                  onClick={async () => {
+                    setSavingLogin(true);
+                    const updates = [
+                      supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
+                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
+                      supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
+                    ];
+                    const results = await Promise.all(updates);
+                    setSavingLogin(false);
+                    if (results.some((r) => r.error)) {
+                      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+                    } else {
+                      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
+                    }
+                  }}>
+                  <Save className="h-4 w-4" />
+                  {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
+                </Button>
+              </div>
+            </CollapsibleSettingsCard>
           </>
         )}
       </div>
