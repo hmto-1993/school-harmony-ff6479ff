@@ -298,7 +298,7 @@ export async function buildSummaryPDF(
   data: SummaryPDFData,
   options: { includeAISummary: boolean; aiSummaryText?: string }
 ) {
-  const { doc, startY, watermark } = await createArabicPDF({
+  const { doc, startY, watermark, advanced } = await createArabicPDF({
     orientation: "landscape",
     reportType: "grades",
     includeHeader: true,
@@ -306,7 +306,7 @@ export async function buildSummaryPDF(
 
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
-  const tableStyles = getArabicTableStyles();
+  const tableStyles = getArabicTableStyles(advanced);
   const today = format(new Date(), "yyyy/MM/dd");
 
   // Pre-compute all student averages
