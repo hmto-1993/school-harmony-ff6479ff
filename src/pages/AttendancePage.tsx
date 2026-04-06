@@ -840,7 +840,13 @@ export default function AttendancePage() {
                             {statusOptions.map((opt) => (
                               <button
                                 key={opt.value}
-                                onClick={() => updateStatus(record.student_id, opt.value)}
+                                onClick={() => {
+                                  updateStatus(record.student_id, opt.value);
+                                  // Auto-add delay note when switching to late
+                                  if (opt.value === "late" && !record.notes.match(/تأخر.*دقيقة/)) {
+                                    updateNotes(record.student_id, record.notes ? record.notes : "");
+                                  }
+                                }}
                                 className={`px-2.5 py-1 rounded-md text-xs border transition-all ${
                                   record.status === opt.value
                                     ? opt.color + " font-medium ring-1 ring-current/20 shadow-sm"
@@ -851,6 +857,17 @@ export default function AttendancePage() {
                               </button>
                             ))}
                           </div>
+                          {/* Delay minutes picker for late students */}
+                          {record.status === "late" && (
+                            <LateMinutesPicker
+                              value={extractMinutes(record.notes)}
+                              onChange={(mins) => {
+                                const cleanNote = record.notes.replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "").trim();
+                                const prefix = mins > 0 ? `تأخر ${mins} دقيقة${cleanNote ? " · " : ""}` : "";
+                                updateNotes(record.student_id, prefix + cleanNote);
+                              }}
+                            />
+                          )}
                         </td>
                         <td className={cn("p-3", isLast && "last:rounded-bl-xl")}>
                           <Textarea
