@@ -1014,6 +1014,38 @@ export default function PrintHeaderEditor() {
                         <span className="text-xs font-mono w-10 text-center">{config.advanced?.tableRowHeight ?? 28}px</span>
                       </div>
                     </div>
+
+                    {/* Table Header Colors */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Palette className="h-3 w-3" />
+                          لون خلفية رأس الجدول
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <input type="color" value={config.advanced?.tableHeaderBg ?? "#eff6ff"}
+                            onChange={(e) => setConfig((prev) => ({
+                              ...prev, advanced: { ...(prev.advanced || defaultAdvanced), tableHeaderBg: e.target.value },
+                            }))}
+                            className="h-8 w-10 rounded border cursor-pointer" />
+                          <span className="text-xs font-mono text-muted-foreground">{config.advanced?.tableHeaderBg ?? "#eff6ff"}</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Type className="h-3 w-3" />
+                          لون نص رأس الجدول
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          <input type="color" value={config.advanced?.tableHeaderText ?? "#1e40af"}
+                            onChange={(e) => setConfig((prev) => ({
+                              ...prev, advanced: { ...(prev.advanced || defaultAdvanced), tableHeaderText: e.target.value },
+                            }))}
+                            className="h-8 w-10 rounded border cursor-pointer" />
+                          <span className="text-xs font-mono text-muted-foreground">{config.advanced?.tableHeaderText ?? "#1e40af"}</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Live Table Preview */}
@@ -1023,11 +1055,10 @@ export default function PrintHeaderEditor() {
                       <table className="w-full border-collapse" style={{ fontSize: `${Math.round((config.advanced?.pdfFontSize ?? 12) * 0.85)}px` }}>
                         <thead>
                           <tr style={{ height: `${config.advanced?.tableRowHeight ?? 28}px` }}>
-                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>#</th>
-                            <th className="border px-2 text-right font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>اسم الطالب</th>
-                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الفصل</th>
-                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الدرجة</th>
-                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الحالة</th>
+                            {["#", "اسم الطالب", "الفصل", "الدرجة", "الحالة"].map((h, i) => (
+                              <th key={i} className={cn("border px-2 font-bold", i === 1 ? "text-right" : "text-center")}
+                                style={{ backgroundColor: config.advanced?.tableHeaderBg ?? "#eff6ff", color: config.advanced?.tableHeaderText ?? "#1e40af" }}>{h}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
