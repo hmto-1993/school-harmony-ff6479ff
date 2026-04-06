@@ -164,8 +164,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ].filter((g) => g.students.length > 0)
     : [{ key: typeFilter, label: "", color: "", students: studentCards }];
 
-  const exportPDF = async () => {
-    const { registerArabicFont, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+  const buildBehaviorPDFBlob = async (): Promise<{ blob: Blob; fileName: string }> => {
+    const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
     const html2canvas = (await import("html2canvas")).default;
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
@@ -178,11 +178,9 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 10;
 
-    // --- Render header as HTML image (same approach as grades export) ---
     let startY = 5;
     let watermark: any = undefined;
 
-    // Fetch behavior-specific header first, then default — independent from grades
     const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
       supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
       supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
@@ -195,19 +193,17 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         headerConfig = JSON.parse(result.data.value);
         break;
       } catch {
-        // ignore invalid config and continue to next fallback
+        // ignore invalid config
       }
     }
 
     if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
 
-    // Apply margins from config
     const configMarginTop = headerConfig?.margins?.top ?? 5;
     const configMarginSide = headerConfig?.margins?.side ?? 8;
     startY = configMarginTop;
 
     if (headerConfig) {
-      // Build header HTML exactly like grades-print.ts
       const rightLines = (headerConfig.rightSection?.lines || [])
         .map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
       const leftLines = (headerConfig.leftSection?.lines || [])
@@ -236,13 +232,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         </div>
       `;
 
-      // Create offscreen container, capture as image
       const container = document.createElement("div");
       container.style.cssText = "position:fixed;left:-9999px;top:0;width:760px;background:#fff;";
       container.innerHTML = headerHTML;
       document.body.appendChild(container);
 
-      // Wait for images to load
       const imgs = container.querySelectorAll("img");
       await Promise.all(Array.from(imgs).map(img =>
         img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
@@ -336,7 +330,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       const rows = filteredData.filter((r) => r.type === group.type);
       if (rows.length === 0) continue;
 
-      // Section title
       doc.setFontSize(12);
       doc.setTextColor(group.headerColor[0], group.headerColor[1], group.headerColor[2]);
       doc.text(`${group.label} (${rows.length})`, pageWidth / 2, currentY, { align: "center" });
@@ -361,20 +354,18 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       currentY = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // --- Footer Signatures ---
+    // Footer Signatures
     const footerConfig = headerConfig?.footerSignatures;
     if (footerConfig?.enabled && footerConfig.signatures?.length) {
       const pageHeight = doc.internal.pageSize.getHeight();
       const sigCount = footerConfig.signatures.length;
       const sigWidth = (pageWidth - margin * 2) / sigCount;
 
-      // Check if we need a new page for signatures
       if (currentY + 40 > pageHeight - 15) {
         doc.addPage();
         currentY = 20;
       }
 
-      // Dashed line separator
       doc.setDrawColor(200, 200, 200);
       doc.setLineDashPattern([2, 2], 0);
       doc.line(margin, currentY, pageWidth - margin, currentY);
@@ -389,103 +380,26 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         doc.setFontSize(9);
         doc.setTextColor(71, 85, 105);
         doc.text(sig.name || "........................", x, currentY + 6, { align: "center" });
-        // Signature line
         doc.setDrawColor(148, 163, 184);
         doc.line(x - 25, currentY + 18, x + 25, currentY + 18);
       });
     }
 
-    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark, (headerConfig as any)?.advanced);
+    const fileName = `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`;
+    const blob = finalizePDFAsBlob(doc, watermark, (headerConfig as any)?.advanced);
+    return { blob, fileName };
+  };
+
+  const exportPDF = async () => {
+    const { blob, fileName } = await buildBehaviorPDFBlob();
+    const { savePDFBlob } = await import("@/lib/report-pdf-builders");
+    savePDFBlob(blob, fileName);
   };
 
   const shareBehaviorWhatsApp = async () => {
-    const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
-    const html2canvas = (await import("html2canvas")).default;
-    const autoTableImport = await import("jspdf-autotable");
-    const autoTable = autoTableImport.default;
-    const jsPDFModule = await import("jspdf");
-    const jsPDF = jsPDFModule.default;
-
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    await registerArabicFont(doc);
-    const tableStyles = getArabicTableStyles();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 10;
-    let startY = 5;
-    let watermark: any = undefined;
-
-    const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
-      supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
-      supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
-    ]);
-
-    let headerConfig: any = null;
-    for (const result of [behaviorHeaderRes, defaultHeaderRes]) {
-      if (!result.data?.value) continue;
-      try { headerConfig = JSON.parse(result.data.value); break; } catch {}
-    }
-
-    if (headerConfig) {
-      watermark = headerConfig.watermark;
-      const headerEl = document.querySelector(".print-area .report-header-container") as HTMLElement | null;
-      if (headerEl) {
-        try {
-          const canvas = await html2canvas(headerEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-          const imgData = canvas.toDataURL("image/png");
-          const imgWidth = pageWidth - margin * 2;
-          const imgHeight = (canvas.height / canvas.width) * imgWidth;
-          doc.addImage(imgData, "PNG", margin, startY, imgWidth, imgHeight);
-          startY += imgHeight + 4;
-        } catch { startY = 15; }
-      }
-    }
-
-    doc.setFontSize(14);
-    doc.setFont("Amiri", "bold");
-    doc.text("تقرير السلوك", pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(9);
-    doc.setFont("Amiri", "normal");
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
-
-    let currentY = startY + 12;
-    const pdfTypeGroups =
-      typeFilter === "all"
-        ? [
-            { type: "positive", label: "إيجابي", headerColor: [46, 125, 50] as [number, number, number], rowColor: [232, 245, 233] as [number, number, number] },
-            { type: "neutral", label: "محايد", headerColor: [249, 168, 37] as [number, number, number], rowColor: [255, 249, 230] as [number, number, number] },
-            { type: "negative", label: "سلبي", headerColor: [198, 40, 40] as [number, number, number], rowColor: [255, 235, 238] as [number, number, number] },
-          ]
-        : [{
-            type: typeFilter,
-            label: TYPE_LABELS[typeFilter],
-            headerColor: (typeFilter === "positive" ? [46, 125, 50] : typeFilter === "negative" ? [198, 40, 40] : [249, 168, 37]) as [number, number, number],
-            rowColor: (typeFilter === "positive" ? [232, 245, 233] : typeFilter === "negative" ? [255, 235, 238] : [255, 249, 230]) as [number, number, number],
-          }];
-
-    for (const group of pdfTypeGroups) {
-      const rows = filteredData.filter((r) => r.type === group.type);
-      if (rows.length === 0) continue;
-      doc.setFontSize(12);
-      doc.setTextColor(group.headerColor[0], group.headerColor[1], group.headerColor[2]);
-      doc.text(`${group.label} (${rows.length})`, pageWidth / 2, currentY, { align: "center" });
-      doc.setTextColor(0, 0, 0);
-      autoTable(doc, {
-        startY: currentY + 3,
-        head: [["ملاحظات", "مستوى الخطورة", "التاريخ", "اسم الطالب", "#"]],
-        body: rows.map((r, i) => [r.note, formatSeverity(r.severity), r.date, r.student_name, String(i + 1)]),
-        ...tableStyles,
-        headStyles: { ...tableStyles.headStyles, fillColor: group.headerColor },
-        alternateRowStyles: { fillColor: group.rowColor },
-        columnStyles: { 3: { halign: "right" } },
-        margin: { left: margin, right: margin },
-      });
-      currentY = (doc as any).lastAutoTable.finalY + 10;
-    }
-
-    const fileName = `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`;
-    const blob = finalizePDFAsBlob(doc, watermark, (headerConfig as any)?.advanced);
-    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
-    await sharePDFViaWhatsApp(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
+    const { blob, fileName } = await buildBehaviorPDFBlob();
+    const { sharePDFBlob } = await import("@/lib/report-pdf-builders");
+    await sharePDFBlob(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
   };
 
   return (
