@@ -525,7 +525,7 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
   const exportAttendanceWhatsApp = async (scope: "all" | "filtered" = "all") => {
     const data = scope === "filtered" ? filteredRecords : records;
     if (!data.length) return;
-    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const className = classes.find(c => c.id === selectedClass)?.name || "";
@@ -536,32 +536,10 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
 
     const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
     const tableStyles = getArabicTableStyles(advanced);
-
-    // Title
     doc.setFontSize(14);
     doc.setFont("Amiri", "bold");
     doc.text(`تقرير الحضور — ${className} — ${date}${filterLabel}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
 
-    // Summary stats
-    const presentCount = data.filter(r => r.status === "present").length;
-    const absentCount = data.filter(r => r.status === "absent").length;
-    const lateCount = data.filter(r => r.status === "late").length;
-    const earlyLeaveCount = data.filter(r => r.status === "early_leave").length;
-    const sickLeaveCount = data.filter(r => r.status === "sick_leave").length;
-
-    doc.setFontSize(10);
-    doc.setFont("Amiri", "normal");
-    const summaryParts = [
-      `الإجمالي: ${data.length}`,
-      `حاضر: ${presentCount}`,
-      `غائب: ${absentCount}`,
-      lateCount > 0 ? `متأخر: ${lateCount}` : "",
-      earlyLeaveCount > 0 ? `منصرف: ${earlyLeaveCount}` : "",
-      sickLeaveCount > 0 ? `إجازة: ${sickLeaveCount}` : "",
-    ].filter(Boolean).join("  |  ");
-    doc.text(summaryParts, doc.internal.pageSize.getWidth() / 2, startY + 8, { align: "center" });
-
-    // Table
     const head = [["الملاحظات", "الحالة", "الاسم", "#"]];
     const body = data.map((r, i) => [
       r.notes || "",
@@ -573,7 +551,7 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     autoTable(doc, {
       head,
       body,
-      startY: startY + 14,
+      startY: startY + 8,
       ...tableStyles,
       columnStyles: {
         2: { halign: "right" as const, fontStyle: "bold" as const },
@@ -581,26 +559,12 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
       },
     });
 
-    // Generate blob and share via WhatsApp
+    // Generate PDF blob (same as exportAttendancePDF via finalizePDF logic)
     const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
     const fileName = `حضور_${className}_${date}${suffix}.pdf`;
 
-    // Apply watermark if needed
-    if (watermark?.enabled && watermark?.text) {
-      const pageCount = doc.getNumberOfPages();
-      for (let p = 1; p <= pageCount; p++) {
-        doc.setPage(p);
-        doc.setFontSize(40);
-        doc.setTextColor(200, 200, 200);
-        doc.setFont("Amiri", "bold");
-        const pw = doc.internal.pageSize.getWidth();
-        const ph = doc.internal.pageSize.getHeight();
-        doc.text(watermark.text, pw / 2, ph / 2, { align: "center", angle: 45 });
-      }
-      doc.setTextColor(0, 0, 0);
-    }
-
-    const pdfBlob = doc.output("blob");
+    // Apply watermark & advanced settings exactly like finalizePDF
+    const pdfBlob = finalizePDFAsBlob(doc, watermark, advanced);
     const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
 
     // Try Web Share API first (best for mobile)
