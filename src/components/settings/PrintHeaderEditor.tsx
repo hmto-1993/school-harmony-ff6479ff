@@ -100,6 +100,8 @@ export interface AdvancedConfig {
   showDate: boolean;
   showReportTitle: boolean;
   headerOnEveryPage: boolean;
+  tableHeaderBg: string;
+  tableHeaderText: string;
 }
 
 export interface PrintHeaderConfig {
@@ -148,6 +150,8 @@ const defaultAdvanced: AdvancedConfig = {
   showDate: true,
   showReportTitle: true,
   headerOnEveryPage: true,
+  tableHeaderBg: "#eff6ff",
+  tableHeaderText: "#1e40af",
 };
 
 const defaultConfig: PrintHeaderConfig = {
