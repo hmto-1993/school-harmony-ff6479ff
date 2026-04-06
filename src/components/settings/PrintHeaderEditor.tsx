@@ -936,10 +936,20 @@ export default function PrintHeaderEditor() {
             <TabsContent value="advanced" className="space-y-4">
               <Card>
                 <CardContent className="p-4 space-y-5">
-                  <div className="flex items-center gap-2">
-                    <Wrench className="h-4 w-4" />
-                    <Label className="font-semibold text-sm">إعدادات متقدمة</Label>
-                    <span className="text-xs text-muted-foreground">(تُطبق على الطباعة والتصدير)</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wrench className="h-4 w-4" />
+                      <Label className="font-semibold text-sm">إعدادات متقدمة</Label>
+                      <span className="text-xs text-muted-foreground">(تُطبق على الطباعة والتصدير)</span>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-7"
+                      onClick={() => {
+                        setConfig((prev) => ({ ...prev, advanced: { ...defaultAdvanced } }));
+                        toast({ title: "تم", description: "تمت استعادة الإعدادات المتقدمة الافتراضية" });
+                      }}>
+                      <RotateCcw className="h-3 w-3" />
+                      استعادة الافتراضي
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
