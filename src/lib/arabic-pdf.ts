@@ -304,6 +304,8 @@ export interface AdvancedPDFConfig {
   showDate?: boolean;
   showReportTitle?: boolean;
   headerOnEveryPage?: boolean;
+  tableHeaderBg?: string;
+  tableHeaderText?: string;
 }
 
 const PAPER_FORMATS: Record<string, string> = {
@@ -401,6 +403,14 @@ export function getArabicTableStyles(advanced?: AdvancedPDFConfig) {
   const fontSize = advanced?.pdfFontSize ? Math.round(advanced.pdfFontSize * 0.75) : 9;
   const cellPadding = advanced?.tableRowHeight ? Math.max(1.5, (advanced.tableRowHeight - 10) * 0.15) : 2.5;
 
+  const hexToRgbTuple = (hex: string): [number, number, number] => {
+    const h = hex.replace("#", "");
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  };
+
+  const headFill = advanced?.tableHeaderBg ? hexToRgbTuple(advanced.tableHeaderBg) : [239, 246, 255] as [number, number, number];
+  const headText = advanced?.tableHeaderText ? hexToRgbTuple(advanced.tableHeaderText) : [30, 64, 175] as [number, number, number];
+
   return {
     styles: {
       font: "Amiri",
@@ -412,8 +422,8 @@ export function getArabicTableStyles(advanced?: AdvancedPDFConfig) {
       textColor: [30, 30, 30] as [number, number, number],
     },
     headStyles: {
-      fillColor: [239, 246, 255] as [number, number, number],
-      textColor: [30, 64, 175] as [number, number, number],
+      fillColor: headFill,
+      textColor: headText,
       halign: "center" as const,
       fontStyle: "bold" as const,
       lineColor: [203, 213, 225] as [number, number, number],
