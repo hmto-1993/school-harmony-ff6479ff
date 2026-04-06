@@ -2934,58 +2934,16 @@ export default function SettingsPage() {
                 </Collapsible>
               )}
 
-              {/* Continuous Evaluation Settings */}
-              <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
-                  <h4 className="text-sm font-bold flex items-center gap-1.5">
-                    <ClipboardList className="h-4 w-4 text-emerald-600" />
-                    التقييم المستمر
-                  </h4>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-3 pb-3 space-y-2">
-                  {[
-                    { label: "📅 تفاعل اليوم", desc: "الإدخال اليومي", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
-                    { label: "📊 التفاعل الكلي", desc: "ملخص تراكمي", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
-                  ].map((item, i) => (
-                    <div key={i} className={cn(
-                      "flex items-center justify-between p-2.5 rounded-lg border transition-all",
-                      item.state ? "border-success/40 bg-success/5" : "border-border/40 bg-card"
-                    )}>
-                      <div>
-                        <h4 className="text-xs font-bold">{item.label}</h4>
-                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => item.setter(!item.state)}
-                        className={cn("flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all",
-                          item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {item.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                        {item.state ? "ظاهر" : "مخفي"}
-                      </button>
-                    </div>
-                  ))}
-
-                  {parentShowClassworkIcons && (
-                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
-                      <span className="text-xs font-bold">عدد الأيقونات</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >−</button>
-                        <span className="w-6 text-center font-bold text-xs">{parentClassworkIconsCount}</span>
-                        <button
-                          onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >+</button>
-                      </div>
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
+              <EvaluationToggles
+                showDailyGrades={parentShowDailyGrades}
+                setShowDailyGrades={setParentShowDailyGrades}
+                showClassworkIcons={parentShowClassworkIcons}
+                setShowClassworkIcons={setParentShowClassworkIcons}
+                classworkIconsCount={parentClassworkIconsCount}
+                setClassworkIconsCount={setParentClassworkIconsCount}
+                dailyDesc="الإدخال اليومي"
+                cumulativeDesc="ملخص تراكمي"
+              />
             </div>
 
             {/* ─── Section 3: PDF Header ─── */}
