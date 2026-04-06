@@ -64,7 +64,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         {/* Right text — anchored to right edge */}
         <div
           style={{
-            maxWidth: "40%",
+            flex: "1 1 0%",
             textAlign: "center",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
