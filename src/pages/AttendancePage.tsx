@@ -522,36 +522,108 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     toast({ title: "تم", description: `تم تصدير ${data.length} سجل إلى PDF` });
   };
 
-  const exportAttendanceWhatsApp = (scope: "all" | "filtered" = "all") => {
+  const exportAttendanceWhatsApp = async (scope: "all" | "filtered" = "all") => {
     const data = scope === "filtered" ? filteredRecords : records;
     if (!data.length) return;
+    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
     const className = classes.find(c => c.id === selectedClass)?.name || "";
     const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
     const filterLabel = scope === "filtered" && statusFilter !== "all"
       ? ` (${statusOptions.find(o => o.value === statusFilter)?.label || statusFilter})`
       : "";
 
-    const header = `📋 تقرير الحضور — ${className} — ${date}${filterLabel}`;
-    const summary = [
-      `👥 الإجمالي: ${data.length}`,
-      `✅ حاضر: ${data.filter(r => r.status === "present").length}`,
-      `❌ غائب: ${data.filter(r => r.status === "absent").length}`,
-      `⏰ متأخر: ${data.filter(r => r.status === "late").length}`,
-      data.filter(r => r.status === "early_leave").length > 0 ? `🚪 منصرف مبكرًا: ${data.filter(r => r.status === "early_leave").length}` : "",
-      data.filter(r => r.status === "sick_leave").length > 0 ? `🏥 إجازة مرضية: ${data.filter(r => r.status === "sick_leave").length}` : "",
-    ].filter(Boolean).join("\n");
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
 
-    const studentsList = data.map((r, i) => {
-      const statusEmoji: Record<string, string> = { present: "✅", absent: "❌", late: "⏰", early_leave: "🚪", sick_leave: "🏥" };
-      const emoji = statusEmoji[r.status] || "•";
-      const note = r.notes ? ` — ${r.notes}` : "";
-      return `${i + 1}. ${emoji} ${r.full_name} (${statusLabel[r.status]})${note}`;
-    }).join("\n");
+    // Title
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
+    doc.text(`تقرير الحضور — ${className} — ${date}${filterLabel}`, doc.internal.pageSize.getWidth() / 2, startY, { align: "center" });
 
-    const message = `${header}\n\n${summary}\n\n${studentsList}`;
-    const encodedMsg = encodeURIComponent(message);
-    window.open(`https://wa.me/?text=${encodedMsg}`, "_blank");
-    toast({ title: "تم فتح واتساب", description: "يمكنك اختيار جهة الإرسال من واتساب" });
+    // Summary stats
+    const presentCount = data.filter(r => r.status === "present").length;
+    const absentCount = data.filter(r => r.status === "absent").length;
+    const lateCount = data.filter(r => r.status === "late").length;
+    const earlyLeaveCount = data.filter(r => r.status === "early_leave").length;
+    const sickLeaveCount = data.filter(r => r.status === "sick_leave").length;
+
+    doc.setFontSize(10);
+    doc.setFont("Amiri", "normal");
+    const summaryParts = [
+      `الإجمالي: ${data.length}`,
+      `حاضر: ${presentCount}`,
+      `غائب: ${absentCount}`,
+      lateCount > 0 ? `متأخر: ${lateCount}` : "",
+      earlyLeaveCount > 0 ? `منصرف: ${earlyLeaveCount}` : "",
+      sickLeaveCount > 0 ? `إجازة: ${sickLeaveCount}` : "",
+    ].filter(Boolean).join("  |  ");
+    doc.text(summaryParts, doc.internal.pageSize.getWidth() / 2, startY + 8, { align: "center" });
+
+    // Table
+    const head = [["الملاحظات", "الحالة", "الاسم", "#"]];
+    const body = data.map((r, i) => [
+      r.notes || "",
+      statusLabel[r.status] || r.status,
+      r.full_name,
+      String(i + 1),
+    ]);
+
+    autoTable(doc, {
+      head,
+      body,
+      startY: startY + 14,
+      ...tableStyles,
+      columnStyles: {
+        2: { halign: "right" as const, fontStyle: "bold" as const },
+        3: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+      },
+    });
+
+    // Generate blob and share via WhatsApp
+    const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
+    const fileName = `حضور_${className}_${date}${suffix}.pdf`;
+
+    // Apply watermark if needed
+    if (watermark?.enabled && watermark?.text) {
+      const pageCount = doc.getNumberOfPages();
+      for (let p = 1; p <= pageCount; p++) {
+        doc.setPage(p);
+        doc.setFontSize(40);
+        doc.setTextColor(200, 200, 200);
+        doc.setFont("Amiri", "bold");
+        const pw = doc.internal.pageSize.getWidth();
+        const ph = doc.internal.pageSize.getHeight();
+        doc.text(watermark.text, pw / 2, ph / 2, { align: "center", angle: 45 });
+      }
+      doc.setTextColor(0, 0, 0);
+    }
+
+    const pdfBlob = doc.output("blob");
+    const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+    // Try Web Share API first (best for mobile)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      try {
+        await navigator.share({
+          files: [pdfFile],
+          title: `تقرير الحضور — ${className}`,
+          text: `تقرير الحضور — ${className} — ${date}`,
+        });
+        toast({ title: "تم المشاركة", description: "تم مشاركة ملف PDF بنجاح" });
+        return;
+      } catch {
+        // User cancelled or share failed
+      }
+    }
+
+    // Fallback: download PDF + open WhatsApp with caption
+    const { safeDownload } = await import("@/lib/download-utils");
+    await safeDownload(pdfBlob, fileName);
+    const caption = encodeURIComponent(`📋 تقرير الحضور — ${className} — ${date}${filterLabel}`);
+    window.open(`https://wa.me/?text=${caption}`, "_blank");
+    toast({ title: "تم تصدير PDF", description: "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
   const filteredRecords = useMemo(() => {
