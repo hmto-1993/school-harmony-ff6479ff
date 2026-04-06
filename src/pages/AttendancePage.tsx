@@ -525,7 +525,7 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
   const exportAttendanceWhatsApp = async (scope: "all" | "filtered" = "all") => {
     const data = scope === "filtered" ? filteredRecords : records;
     if (!data.length) return;
-    const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
+    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
     const className = classes.find(c => c.id === selectedClass)?.name || "";
