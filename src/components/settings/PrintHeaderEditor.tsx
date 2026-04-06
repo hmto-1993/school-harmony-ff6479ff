@@ -584,6 +584,7 @@ export default function PrintHeaderEditor() {
                   zIndex: 2,
                   paddingBottom: "8px",
                   borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
+                  marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
                 }}>
                   <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
                     {config.rightSection.lines.map((line, i) => (
