@@ -399,7 +399,6 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   };
 
   const shareBehaviorWhatsApp = async () => {
-    // Reuse same PDF generation but share via WhatsApp
     const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
     const html2canvas = (await import("html2canvas")).default;
     const autoTableImport = await import("jspdf-autotable");
@@ -448,19 +447,39 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     doc.setFont("Amiri", "normal");
     doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
-    for (const group of groupedData) {
-      const body = group.students.map((s: any, i: number) => [
-        s.notes || "", s.typeName, s.date, s.student_name, String(i + 1),
-      ]);
+    let currentY = startY + 12;
+    const pdfTypeGroups =
+      typeFilter === "all"
+        ? [
+            { type: "positive", label: "إيجابي", headerColor: [46, 125, 50] as [number, number, number], rowColor: [232, 245, 233] as [number, number, number] },
+            { type: "neutral", label: "محايد", headerColor: [249, 168, 37] as [number, number, number], rowColor: [255, 249, 230] as [number, number, number] },
+            { type: "negative", label: "سلبي", headerColor: [198, 40, 40] as [number, number, number], rowColor: [255, 235, 238] as [number, number, number] },
+          ]
+        : [{
+            type: typeFilter,
+            label: TYPE_LABELS[typeFilter],
+            headerColor: (typeFilter === "positive" ? [46, 125, 50] : typeFilter === "negative" ? [198, 40, 40] : [249, 168, 37]) as [number, number, number],
+            rowColor: (typeFilter === "positive" ? [232, 245, 233] : typeFilter === "negative" ? [255, 235, 238] : [255, 249, 230]) as [number, number, number],
+          }];
+
+    for (const group of pdfTypeGroups) {
+      const rows = filteredData.filter((r) => r.type === group.type);
+      if (rows.length === 0) continue;
+      doc.setFontSize(12);
+      doc.setTextColor(group.headerColor[0], group.headerColor[1], group.headerColor[2]);
+      doc.text(`${group.label} (${rows.length})`, pageWidth / 2, currentY, { align: "center" });
+      doc.setTextColor(0, 0, 0);
       autoTable(doc, {
-        startY: startY + 12,
-        head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
-        body, ...tableStyles,
-        columnStyles: {
-          3: { halign: "right" as const, fontStyle: "bold" as const },
-          4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-        },
+        startY: currentY + 3,
+        head: [["ملاحظات", "مستوى الخطورة", "التاريخ", "اسم الطالب", "#"]],
+        body: rows.map((r, i) => [r.note, formatSeverity(r.severity), r.date, r.student_name, String(i + 1)]),
+        ...tableStyles,
+        headStyles: { ...tableStyles.headStyles, fillColor: group.headerColor },
+        alternateRowStyles: { fillColor: group.rowColor },
+        columnStyles: { 3: { halign: "right" } },
+        margin: { left: margin, right: margin },
       });
+      currentY = (doc as any).lastAutoTable.finalY + 10;
     }
 
     const fileName = `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`;
