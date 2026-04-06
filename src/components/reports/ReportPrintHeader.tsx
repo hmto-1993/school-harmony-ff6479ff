@@ -56,7 +56,9 @@ export default function ReportPrintHeader({ reportType }: Props) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: "16px",
+          gap: "8px",
+          paddingRight: "0px",
+          paddingLeft: "0px",
         }}
       >
         {/* Right text — anchored to right edge */}
