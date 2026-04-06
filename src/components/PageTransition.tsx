@@ -5,28 +5,18 @@ import { useLocation } from "react-router-dom";
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 24,
-    scale: 0.98,
-    filter: "blur(6px)",
   },
   animate: {
     opacity: 1,
-    y: 0,
-    scale: 1,
-    filter: "blur(0px)",
     transition: {
-      duration: 0.4,
+      duration: 0.25,
       ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
-      staggerChildren: 0.08,
     },
   },
   exit: {
     opacity: 0,
-    y: -16,
-    scale: 0.98,
-    filter: "blur(4px)",
     transition: {
-      duration: 0.25,
+      duration: 0.15,
       ease: [0.4, 0, 1, 1] as [number, number, number, number],
     },
   },
