@@ -188,6 +188,10 @@ export default function SettingsPage() {
   const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
   const pendingScheduleUpdates = useRef<Record<string, { periodsPerWeek: number; timeout: NodeJS.Timeout }>>({});
 
+  // Admin read-only setting
+  const [adminReadOnly, setAdminReadOnly] = useState(false);
+  const [savingAdminReadOnly, setSavingAdminReadOnly] = useState(false);
+
   // Debounced save for class schedules (300ms delay)
   const saveClassSchedule = useCallback(async (classId: string, newVal: number) => {
     // Cancel any pending update for this class
