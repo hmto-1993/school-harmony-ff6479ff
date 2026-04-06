@@ -363,10 +363,10 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
-                  <Save className="h-4 w-4 ml-2" />
-                  {saving ? "جارٍ الحفظ..." : "حفظ السلوك"}
-                </Button>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Save className="h-3.5 w-3.5" />
+                  يتم الحفظ تلقائياً عند كل تغيير
+                </p>
               </div>
             </>
           )}
