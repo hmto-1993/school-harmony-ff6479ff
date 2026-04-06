@@ -76,7 +76,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [students, setStudents] = useState<StudentBehavior[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [saving] = useState(false); // kept for compatibility
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; studentId: string; name: string }>({ open: false, studentId: "", name: "" });
   const [sendingNotif, setSendingNotif] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Record<string, string[]>>(DEFAULT_SUGGESTIONS);
@@ -141,17 +141,75 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     );
   };
 
+  const autoSaveRecord = async (student: StudentBehavior, newType: BehaviorType, newNote?: string, newSeverity?: string) => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    const note = newNote !== undefined ? newNote : student.note;
+    const severity = newSeverity !== undefined ? newSeverity : student.severity;
+
+    const buildNote = (type: BehaviorType, n: string, sev: string) => {
+      const base = n || "";
+      if (type === "negative" && sev && sev !== "low") {
+        return `[severity:${sev}] ${base}`.trim();
+      }
+      if (type === "negative" && sev === "low") {
+        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
+      }
+      return base || null;
+    };
+
+    if (newType === null && student.existingId) {
+      // Delete if type cleared
+      await supabase.from("behavior_records").delete().eq("id", student.existingId);
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: null, existingId: null, notified: false } : s)
+      );
+      return;
+    }
+
+    if (newType === null) {
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: null } : s)
+      );
+      return;
+    }
+
+    const builtNote = buildNote(newType, note, severity);
+
+    if (student.existingId) {
+      await supabase.from("behavior_records").update({
+        type: newType, note: builtNote,
+      }).eq("id", student.existingId);
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity } : s)
+      );
+    } else {
+      const { data } = await supabase.from("behavior_records").insert({
+        student_id: student.student_id,
+        class_id: selectedClass,
+        date: today,
+        type: newType,
+        note: builtNote,
+        recorded_by: user.id,
+      }).select("id").single();
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity, existingId: data?.id || null } : s)
+      );
+    }
+  };
+
   const cycleType = (studentId: string) => {
+    const student = students.find((s) => s.student_id === studentId);
+    if (!student) return;
+    const next: BehaviorType =
+      student.type === null ? "positive" :
+      student.type === "positive" ? "neutral" :
+      student.type === "neutral" ? "negative" : null;
+    // Optimistic update
     setStudents((prev) =>
-      prev.map((s) => {
-        if (s.student_id !== studentId) return s;
-        const next: BehaviorType =
-          s.type === null ? "positive" :
-          s.type === "positive" ? "neutral" :
-          s.type === "neutral" ? "negative" : null;
-        return { ...s, type: next };
-      })
+      prev.map((s) => s.student_id !== studentId ? s : { ...s, type: next })
     );
+    autoSaveRecord(student, next);
   };
 
   const setNote = (studentId: string, note: string) => {
@@ -160,60 +218,10 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     );
   };
 
+  // Manual save no longer needed - auto-save handles it
+  // Keep a lightweight "save all" for edge cases
   const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    const today = new Date().toISOString().split("T")[0];
-
-    const updates: PromiseLike<any>[] = [];
-    const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
-
-    const buildNote = (s: StudentBehavior) => {
-      const base = s.note || "";
-      if (s.type === "negative" && s.severity && s.severity !== "low") {
-        return `[severity:${s.severity}] ${base}`.trim();
-      }
-      if (s.type === "negative" && s.severity === "low") {
-        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
-      }
-      return base || null;
-    };
-
-    for (const s of students) {
-      if (s.type === null) continue;
-      const note = buildNote(s);
-      if (s.existingId) {
-        updates.push(supabase.from("behavior_records").update({
-          type: s.type, note,
-        }).eq("id", s.existingId).then());
-      } else {
-        inserts.push({
-          student_id: s.student_id,
-          class_id: selectedClass,
-          date: today,
-          type: s.type,
-          note,
-          recorded_by: user.id,
-        });
-      }
-    }
-
-    let hasError = false;
-    await Promise.all(updates);
-    if (inserts.length > 0) {
-      const { error } = await supabase.from("behavior_records").insert(inserts);
-      if (error) {
-        console.error("behavior insert error:", error);
-        hasError = true;
-        toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
-      }
-    }
-
-    if (!hasError) {
-      toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
-    }
-    setSaving(false);
-    loadData();
+    toast({ title: "✓ محفوظ", description: "يتم الحفظ تلقائياً عند كل تغيير" });
   };
 
   const sendNotification = async (student: StudentBehavior) => {
@@ -355,10 +363,10 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                 </table>
               </div>
               <div className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
-                  <Save className="h-4 w-4 ml-2" />
-                  {saving ? "جارٍ الحفظ..." : "حفظ السلوك"}
-                </Button>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Save className="h-3.5 w-3.5" />
+                  يتم الحفظ تلقائياً عند كل تغيير
+                </p>
               </div>
             </>
           )}
@@ -366,7 +374,13 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
       </Card>
 
       {/* Note Dialog with behavior type selection & suggestions */}
-      <Dialog open={noteDialog.open} onOpenChange={(open) => setNoteDialog((p) => ({ ...p, open }))}>
+      <Dialog open={noteDialog.open} onOpenChange={(open) => {
+        if (!open && currentNoteStudent && currentNoteStudent.type) {
+          // Auto-save note/severity on close
+          autoSaveRecord(currentNoteStudent, currentNoteStudent.type, currentNoteStudent.note, currentNoteStudent.severity);
+        }
+        setNoteDialog((p) => ({ ...p, open }));
+      }}>
         <DialogContent dir="rtl" className="max-w-lg">
           <DialogHeader>
             <DialogTitle>ملاحظة السلوك - {noteDialog.name}</DialogTitle>
@@ -387,11 +401,14 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                       key={item.type}
                       type="button"
                       onClick={() => {
+                        const newNote = currentNoteStudent.type !== item.type ? "" : currentNoteStudent.note;
+                        const newSeverity = item.type === "negative" ? currentNoteStudent.severity : "low";
                         setStudents((prev) =>
                           prev.map((s) => s.student_id === noteDialog.studentId
-                            ? { ...s, type: item.type, note: s.type !== item.type ? "" : s.note, severity: item.type === "negative" ? s.severity : "low" }
+                            ? { ...s, type: item.type, note: newNote, severity: newSeverity }
                             : s)
                         );
+                        autoSaveRecord(currentNoteStudent, item.type, newNote, newSeverity);
                       }}
                       className={cn(
                         "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
