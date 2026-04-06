@@ -513,7 +513,22 @@ export default function PrintHeaderEditor() {
                   {exporting ? "جارٍ التصدير..." : "تصدير PNG"}
                 </Button>
               </div>
-              <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white relative overflow-hidden" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+              <div
+                ref={previewRef}
+                dir="rtl"
+                className="border rounded-lg bg-white relative overflow-hidden mx-auto shadow-md"
+                style={{
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  width: "100%",
+                  maxWidth: "595px",
+                  minHeight: "842px",
+                  aspectRatio: "210 / 297",
+                  paddingTop: `${(config.margins?.top ?? 5) * 2.5}px`,
+                  paddingLeft: `${(config.margins?.side ?? 8) * 2.5}px`,
+                  paddingRight: `${(config.margins?.side ?? 8) * 2.5}px`,
+                  paddingBottom: "20px",
+                }}
+              >
                 {/* Watermark preview overlay */}
                 {config.watermark?.enabled && config.watermark.text && (
                   <div style={{
@@ -558,7 +573,16 @@ export default function PrintHeaderEditor() {
                     )}
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", position: "relative", zIndex: 2 }}>
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  position: "relative",
+                  zIndex: 2,
+                  paddingBottom: "8px",
+                  borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
+                }}>
                   <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
                     {config.rightSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
@@ -583,9 +607,17 @@ export default function PrintHeaderEditor() {
                     ))}
                   </div>
                 </div>
+
+                {/* Simulated content area */}
+                <div style={{ position: "relative", zIndex: 2, marginTop: "20px" }}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} style={{ height: "10px", background: "#f1f5f9", borderRadius: "4px", marginBottom: "8px", width: `${90 - i * 5}%` }} />
+                  ))}
+                </div>
+
                 {/* Footer signatures preview */}
                 {config.footerSignatures?.enabled && config.footerSignatures.signatures.length > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1", position: "relative", zIndex: 2 }}>
+                  <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "auto", paddingTop: "16px", borderTop: "1px dashed #cbd5e1", position: "absolute", bottom: "20px", left: `${(config.margins?.side ?? 8) * 2.5}px`, right: `${(config.margins?.side ?? 8) * 2.5}px`, zIndex: 2 }}>
                     {config.footerSignatures.signatures.map((sig, i) => (
                       <div key={i} style={{ textAlign: "center", minWidth: "120px" }}>
                         <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: "#1e293b" }}>{sig.label}</p>
