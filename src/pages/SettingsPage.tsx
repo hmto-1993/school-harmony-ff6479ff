@@ -65,6 +65,8 @@ import TimetableEditor from "@/components/settings/TimetableEditor";
 import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
 import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
+import CategoryTable from "@/components/settings/CategoryTable";
+import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
