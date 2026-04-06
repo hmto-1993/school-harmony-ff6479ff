@@ -223,7 +223,11 @@ async function renderPrintHeaderFromConfig(
   // --- Blue bottom border ---
   const borderY = textMaxY + 1.6;
   const borderWidthMm = ((config as any).margins?.borderWidth ?? 3) * 0.264583; // px to mm
-  doc.setDrawColor(59, 130, 246);
+  const borderColorHex: string = (config as any).margins?.borderColor ?? "#3b82f6";
+  const bR = parseInt(borderColorHex.slice(1, 3), 16);
+  const bG = parseInt(borderColorHex.slice(3, 5), 16);
+  const bB = parseInt(borderColorHex.slice(5, 7), 16);
+  doc.setDrawColor(bR, bG, bB);
   doc.setLineWidth(borderWidthMm);
   doc.line(headerMargin, borderY, pageWidth - headerMargin, borderY);
 
