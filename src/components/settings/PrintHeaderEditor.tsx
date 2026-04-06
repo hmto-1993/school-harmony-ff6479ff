@@ -584,7 +584,7 @@ export default function PrintHeaderEditor() {
                   zIndex: 2,
                   paddingBottom: "8px",
                   borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
-                  marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
+                  marginBottom: `${config.margins?.borderBottomMargin ?? 8}mm`,
                 }}>
                   <div style={{ textAlign: "right", fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "1 1 0%" }}>
                     {config.rightSection.lines.map((line, i) => (
@@ -1007,14 +1007,14 @@ export default function PrintHeaderEditor() {
                       min={0}
                       max={20}
                       step={1}
-                      value={[config.margins?.borderBottomMargin ?? 4]}
+                      value={[config.margins?.borderBottomMargin ?? 8]}
                       onValueChange={([v]) => setConfig((prev) => ({
                         ...prev,
                         margins: { ...(prev.margins || defaultMargins), borderBottomMargin: v },
                       }))}
                       className="flex-1"
                     />
-                    <span className="text-xs font-mono w-10 text-center">{config.margins?.borderBottomMargin ?? 4}mm</span>
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.borderBottomMargin ?? 8}mm</span>
                   </div>
                 </div>
                 <div className="space-y-2 sm:col-span-2">

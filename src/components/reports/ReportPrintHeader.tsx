@@ -52,7 +52,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         style={{
           borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
           paddingBottom: "4px",
-          marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
+          marginBottom: `${config.margins?.borderBottomMargin ?? 8}mm`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
