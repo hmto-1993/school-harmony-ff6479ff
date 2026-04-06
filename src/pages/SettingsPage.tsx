@@ -132,21 +132,7 @@ export default function SettingsPage() {
   const [profileNationalId, setProfileNationalId] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Teacher password management
-  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
-  const [selectedTeacher, setSelectedTeacher] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
-
-  // New teacher form
-  const [newTeacherName, setNewTeacherName] = useState("");
-  const [newTeacherEmail, setNewTeacherEmail] = useState("");
-  const [newTeacherPassword, setNewTeacherPassword] = useState("");
-  const [newTeacherNationalId, setNewTeacherNationalId] = useState("");
-  const [creatingTeacher, setCreatingTeacher] = useState(false);
-  const [newTeacherRole, setNewTeacherRole] = useState<"admin" | "teacher">("teacher");
-  const [showNewTeacherPass, setShowNewTeacherPass] = useState(false);
-  const [showChangePass, setShowChangePass] = useState(false);
+  // Teachers list (shared with TeacherManagementCard and StaffLoginHistory)
 
   // Letterhead
   const [letterheadUrl, setLetterheadUrl] = useState("");
