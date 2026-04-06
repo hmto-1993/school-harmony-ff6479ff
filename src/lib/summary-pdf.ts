@@ -557,5 +557,5 @@ export async function buildSummaryPDF(
     addPageFooter(doc, currentPage, totalPages, pw, ph);
   });
 
-  return { doc, watermark };
+  return { doc, watermark, advanced };
 }
