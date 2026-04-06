@@ -71,6 +71,7 @@ export interface FooterSignaturesConfig {
 export interface MarginsConfig {
   top: number;
   side: number;
+  borderWidth?: number;
 }
 
 export interface PrintHeaderConfig {
