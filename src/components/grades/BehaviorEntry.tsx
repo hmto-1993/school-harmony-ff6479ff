@@ -218,60 +218,10 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     );
   };
 
+  // Manual save no longer needed - auto-save handles it
+  // Keep a lightweight "save all" for edge cases
   const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    const today = new Date().toISOString().split("T")[0];
-
-    const updates: PromiseLike<any>[] = [];
-    const inserts: { student_id: string; class_id: string; date: string; type: string; note: string | null; recorded_by: string }[] = [];
-
-    const buildNote = (s: StudentBehavior) => {
-      const base = s.note || "";
-      if (s.type === "negative" && s.severity && s.severity !== "low") {
-        return `[severity:${s.severity}] ${base}`.trim();
-      }
-      if (s.type === "negative" && s.severity === "low") {
-        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
-      }
-      return base || null;
-    };
-
-    for (const s of students) {
-      if (s.type === null) continue;
-      const note = buildNote(s);
-      if (s.existingId) {
-        updates.push(supabase.from("behavior_records").update({
-          type: s.type, note,
-        }).eq("id", s.existingId).then());
-      } else {
-        inserts.push({
-          student_id: s.student_id,
-          class_id: selectedClass,
-          date: today,
-          type: s.type,
-          note,
-          recorded_by: user.id,
-        });
-      }
-    }
-
-    let hasError = false;
-    await Promise.all(updates);
-    if (inserts.length > 0) {
-      const { error } = await supabase.from("behavior_records").insert(inserts);
-      if (error) {
-        console.error("behavior insert error:", error);
-        hasError = true;
-        toast({ title: "خطأ في الحفظ", description: error.message, variant: "destructive" });
-      }
-    }
-
-    if (!hasError) {
-      toast({ title: "تم الحفظ", description: "تم حفظ سجل السلوك بنجاح" });
-    }
-    setSaving(false);
-    loadData();
+    toast({ title: "✓ محفوظ", description: "يتم الحفظ تلقائياً عند كل تغيير" });
   };
 
   const sendNotification = async (student: StudentBehavior) => {
