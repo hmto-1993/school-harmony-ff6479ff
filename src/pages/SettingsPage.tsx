@@ -3087,73 +3087,60 @@ export default function SettingsPage() {
       </div>
       <div className="space-y-4">
 
-        {/* ===== الملف الشخصي ===== */}
-        <Collapsible>
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-            <CollapsibleTrigger className="w-full group">
-              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/20 text-white">
-                    <UserCircle className="h-5 w-5" />
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-base font-bold text-foreground">الملف الشخصي</h3>
-                    <p className="text-xs text-muted-foreground">تعديل بياناتك الشخصية وكلمة المرور</p>
-                  </div>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>الاسم الكامل</Label>
-                  <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الجوال</Label>
-                  <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
-                    placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الهوية الوطنية</Label>
-                  <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
-                    placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
-                  <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
-                </div>
-                <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
-                  <Save className="h-4 w-4" />
-                  {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-                </Button>
+        <CollapsibleSettingsCard
+          icon={UserCircle}
+          iconGradient="from-pink-500 to-rose-600"
+          iconShadow="shadow-lg shadow-pink-500/20"
+          title="الملف الشخصي"
+          description="تعديل بياناتك الشخصية وكلمة المرور"
+        >
+          <div className="space-y-4 max-w-md">
+            <div className="space-y-2">
+              <Label>الاسم الكامل</Label>
+              <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الجوال</Label>
+              <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
+                placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الهوية الوطنية</Label>
+              <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
+                placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+              <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
+            </div>
+            <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
+              <Save className="h-4 w-4" />
+              {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+            </Button>
 
-                <div className="border-t pt-4 mt-4 space-y-4">
-                  <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
-                  <div className="space-y-2">
-                    <Label>كلمة المرور الحالية</Label>
-                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>كلمة المرور الجديدة</Label>
-                    <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
-                      placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>تأكيد كلمة المرور الجديدة</Label>
-                    <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
-                      placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
-                  </div>
-                  <Button onClick={handleChangeOwnPassword}
-                    disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
-                    className="gap-1.5">
-                    <KeyRound className="h-4 w-4" />
-                    {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-                  </Button>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+            <div className="border-t pt-4 mt-4 space-y-4">
+              <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
+              <div className="space-y-2">
+                <Label>كلمة المرور الحالية</Label>
+                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
+              </div>
+              <div className="space-y-2">
+                <Label>كلمة المرور الجديدة</Label>
+                <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
+              </div>
+              <div className="space-y-2">
+                <Label>تأكيد كلمة المرور الجديدة</Label>
+                <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
+                  placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
+              </div>
+              <Button onClick={handleChangeOwnPassword}
+                disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
+                className="gap-1.5">
+                <KeyRound className="h-4 w-4" />
+                {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+              </Button>
+            </div>
+          </div>
+        </CollapsibleSettingsCard>
 
         {isAdmin && (
           <>
