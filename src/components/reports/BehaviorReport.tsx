@@ -398,6 +398,77 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark, (headerConfig as any)?.advanced);
   };
 
+  const shareBehaviorWhatsApp = async () => {
+    // Reuse same PDF generation but share via WhatsApp
+    const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
+    const html2canvas = (await import("html2canvas")).default;
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
+    const jsPDFModule = await import("jspdf");
+    const jsPDF = jsPDFModule.default;
+
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    await registerArabicFont(doc);
+    const tableStyles = getArabicTableStyles();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 10;
+    let startY = 5;
+    let watermark: any = undefined;
+
+    const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
+      supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
+      supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
+    ]);
+
+    let headerConfig: any = null;
+    for (const result of [behaviorHeaderRes, defaultHeaderRes]) {
+      if (!result.data?.value) continue;
+      try { headerConfig = JSON.parse(result.data.value); break; } catch {}
+    }
+
+    if (headerConfig) {
+      watermark = headerConfig.watermark;
+      const headerEl = document.querySelector(".print-area .report-header-container") as HTMLElement | null;
+      if (headerEl) {
+        try {
+          const canvas = await html2canvas(headerEl, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+          const imgData = canvas.toDataURL("image/png");
+          const imgWidth = pageWidth - margin * 2;
+          const imgHeight = (canvas.height / canvas.width) * imgWidth;
+          doc.addImage(imgData, "PNG", margin, startY, imgWidth, imgHeight);
+          startY += imgHeight + 4;
+        } catch { startY = 15; }
+      }
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
+    doc.text("تقرير السلوك", pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("Amiri", "normal");
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
+
+    for (const group of groupedData) {
+      const body = group.students.map((s: any, i: number) => [
+        s.notes || "", s.typeName, s.date, s.student_name, String(i + 1),
+      ]);
+      autoTable(doc, {
+        startY: startY + 12,
+        head: [["ملاحظات", "النوع", "التاريخ", "اسم الطالب", "#"]],
+        body, ...tableStyles,
+        columnStyles: {
+          3: { halign: "right" as const, fontStyle: "bold" as const },
+          4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+        },
+      });
+    }
+
+    const fileName = `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`;
+    const blob = finalizePDFAsBlob(doc, watermark, (headerConfig as any)?.advanced);
+    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+    await sharePDFViaWhatsApp(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 print:hidden">
@@ -405,10 +476,16 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>
         )}
         {data.length > 0 && (
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
-            <FileText className="h-4 w-4" />
-            تصدير PDF
-          </Button>
+          <>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
+              <FileText className="h-4 w-4" />
+              تصدير PDF
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-green-600 hover:text-green-700" onClick={shareBehaviorWhatsApp}>
+              <MessageCircle className="h-4 w-4" />
+              واتساب
+            </Button>
+          </>
         )}
       </div>
 
