@@ -104,6 +104,7 @@ const defaultFooterSignatures: FooterSignaturesConfig = {
 const defaultMargins: MarginsConfig = {
   top: 5,
   side: 8,
+  borderWidth: 3,
 };
 
 const defaultConfig: PrintHeaderConfig = {
