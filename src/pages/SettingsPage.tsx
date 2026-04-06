@@ -2524,15 +2524,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       )}
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4 max-w-md">
-            <p className="text-sm text-muted-foreground">
-              اختر نوع التقويم الافتراضي الذي سيُستخدم في جميع صفحات التحضير والدرجات والتقارير.
             </p>
             <div className="grid grid-cols-2 gap-3">
               {[
