@@ -222,8 +222,9 @@ async function renderPrintHeaderFromConfig(
 
   // --- Blue bottom border ---
   const borderY = textMaxY + 1.6;
+  const borderWidthMm = ((config as any).margins?.borderWidth ?? 3) * 0.264583; // px to mm
   doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.8);
+  doc.setLineWidth(borderWidthMm);
   doc.line(headerMargin, borderY, pageWidth - headerMargin, borderY);
 
   doc.setFont("Amiri", "normal");
