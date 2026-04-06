@@ -56,7 +56,7 @@ import {
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
-import PrintOrientationToggle from "@/components/shared/PrintOrientationToggle";
+
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
@@ -1136,7 +1136,7 @@ export default function SettingsPage() {
         {[
           { key: "classes", icon: Users, label: "الفصول الدراسية", desc: `${classes.length} فصل`, gradient: "from-sky-500 to-blue-600", shadow: "shadow-sky-500/20" },
           { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
-          { key: "print", icon: Printer, label: "ورقة الطباعة", desc: "ترويسة التقارير", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
+          { key: "print", icon: Printer, label: "ورقة الطباعة والتصدير", desc: "ترويسة وتنسيق مشترك", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
           { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
@@ -1973,18 +1973,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Printer className="h-5 w-5 text-primary" />
-                ورقة الطباعة
+                ورقة الطباعة والتصدير
               </CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <span className="text-sm font-medium">اتجاه الطباعة والتصدير:</span>
-              <PrintOrientationToggle />
-            </div>
+          <CardContent className="space-y-4">
             <PrintHeaderEditor />
           </CardContent>
         </Card>
