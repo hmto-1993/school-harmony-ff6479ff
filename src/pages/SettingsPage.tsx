@@ -1973,18 +1973,14 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Printer className="h-5 w-5 text-primary" />
-                ورقة الطباعة
+                ورقة الطباعة والتصدير
               </CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <span className="text-sm font-medium">اتجاه الطباعة والتصدير:</span>
-              <PrintOrientationToggle />
-            </div>
+          <CardContent className="space-y-4">
             <PrintHeaderEditor />
           </CardContent>
         </Card>
