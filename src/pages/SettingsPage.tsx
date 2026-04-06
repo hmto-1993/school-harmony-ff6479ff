@@ -67,6 +67,8 @@ import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import CategoryTable from "@/components/settings/CategoryTable";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
+import EvaluationToggles from "@/components/settings/EvaluationToggles";
+import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
