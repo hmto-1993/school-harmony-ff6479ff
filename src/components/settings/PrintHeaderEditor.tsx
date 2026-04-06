@@ -74,6 +74,7 @@ export interface MarginsConfig {
   side: number;
   borderWidth?: number;
   borderColor?: string;
+  borderBottomMargin?: number;
 }
 
 export interface PrintHeaderConfig {
@@ -996,6 +997,23 @@ export default function PrintHeaderEditor() {
                       className="flex-1"
                     />
                     <span className="text-xs font-mono w-10 text-center">{config.margins?.borderWidth ?? 3}px</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">مسافة أسفل الخط (mm)</Label>
+                  <div className="flex items-center gap-3">
+                    <Slider
+                      min={0}
+                      max={20}
+                      step={1}
+                      value={[config.margins?.borderBottomMargin ?? 4]}
+                      onValueChange={([v]) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), borderBottomMargin: v },
+                      }))}
+                      className="flex-1"
+                    />
+                    <span className="text-xs font-mono w-10 text-center">{config.margins?.borderBottomMargin ?? 4}mm</span>
                   </div>
                 </div>
                 <div className="space-y-2 sm:col-span-2">

@@ -147,9 +147,9 @@ function ReportPrintHeaderInline({
     <div className="mb-6">
       <div
         style={{
-          borderBottom: "3px solid #3b82f6",
+          borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
           paddingBottom: "12px",
-          marginBottom: "16px",
+          marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
