@@ -1012,6 +1012,40 @@ export default function PrintHeaderEditor() {
                     </div>
                   </div>
 
+                  {/* Live Table Preview */}
+                  <div className="border rounded-lg p-3 bg-muted/30 space-y-2">
+                    <Label className="text-xs text-muted-foreground font-semibold">معاينة حية للجدول</Label>
+                    <div className="overflow-hidden rounded border bg-background" dir="rtl">
+                      <table className="w-full border-collapse" style={{ fontSize: `${Math.round((config.advanced?.pdfFontSize ?? 12) * 0.85)}px` }}>
+                        <thead>
+                          <tr style={{ height: `${config.advanced?.tableRowHeight ?? 28}px` }}>
+                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>#</th>
+                            <th className="border px-2 text-right font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>اسم الطالب</th>
+                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الفصل</th>
+                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الدرجة</th>
+                            <th className="border px-2 text-center font-bold" style={{ backgroundColor: '#eff6ff', color: '#1e40af' }}>الحالة</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { n: 1, name: "أحمد محمد العتيبي", cls: "١/أ", grade: "95", status: "ممتاز" },
+                            { n: 2, name: "عبدالله سعد الشمري", cls: "١/أ", grade: "88", status: "جيد جداً" },
+                            { n: 3, name: "فيصل خالد القحطاني", cls: "١/ب", grade: "76", status: "جيد" },
+                          ].map((row, i) => (
+                            <tr key={i} style={{ height: `${config.advanced?.tableRowHeight ?? 28}px`, backgroundColor: i % 2 === 1 ? '#f8fafc' : '#ffffff' }}>
+                              <td className="border px-2 text-center">{row.n}</td>
+                              <td className="border px-2 text-right font-medium">{row.name}</td>
+                              <td className="border px-2 text-center">{row.cls}</td>
+                              <td className="border px-2 text-center">{row.grade}</td>
+                              <td className="border px-2 text-center">{row.status}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground text-center">هذه معاينة تقريبية — النتيجة الفعلية في PDF قد تختلف قليلاً</p>
+                  </div>
+
                   {/* Toggle options */}
                   <div className="border-t pt-4 space-y-3">
                     <Label className="text-xs text-muted-foreground font-semibold">خيارات إضافية</Label>
