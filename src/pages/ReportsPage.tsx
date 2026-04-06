@@ -448,8 +448,8 @@ export default function ReportsPage() {
       const autoTableImport = await import("jspdf-autotable");
       const autoTable = autoTableImport.default;
       const reportType = sections.attendance && !sections.grades ? "attendance" : sections.grades && !sections.attendance ? "grades" : "attendance";
-      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
-      const tableStyles = getArabicTableStyles();
+      const { doc, startY, advanced } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
+      const tableStyles = getArabicTableStyles(advanced);
       const pageWidth = doc.internal.pageSize.getWidth();
 
       const titleText = sections.attendance && sections.grades
