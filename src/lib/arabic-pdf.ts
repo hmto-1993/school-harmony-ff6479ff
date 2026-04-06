@@ -294,6 +294,25 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
   }
 }
 
+/** Advanced PDF config interface */
+export interface AdvancedPDFConfig {
+  paperSize?: "A4" | "A5" | "Letter" | "Legal";
+  exportQuality?: "standard" | "high" | "max";
+  pdfFontSize?: number;
+  tableRowHeight?: number;
+  showPageNumbers?: boolean;
+  showDate?: boolean;
+  showReportTitle?: boolean;
+  headerOnEveryPage?: boolean;
+}
+
+const PAPER_FORMATS: Record<string, string> = {
+  A4: "a4",
+  A5: "a5",
+  Letter: "letter",
+  Legal: "legal",
+};
+
 /** Create a pre-configured Arabic PDF document with optional print header */
 export async function createArabicPDF(
   options: {
@@ -302,21 +321,24 @@ export async function createArabicPDF(
     reportType?: string;
     includeHeader?: boolean;
   } = {}
-): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig }> {
+): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig; advanced?: AdvancedPDFConfig }> {
+  // Fetch config once for header, watermark, and advanced
+  const config = await fetchPrintHeaderConfig(options.reportType);
+  const advanced: AdvancedPDFConfig = (config as any)?.advanced ?? {};
+
   const orientation = options.orientation || getPrintOrientation();
+  const paperFormat = options.format || PAPER_FORMATS[advanced.paperSize || "A4"] || "a4";
+
   const doc = new jsPDF({
     orientation,
     unit: "mm",
-    format: options.format || "a4",
+    format: paperFormat,
   });
 
   await registerArabicFont(doc);
 
   let startY = 15;
   let watermark: WatermarkConfig | undefined;
-
-  // Fetch config once for both header and watermark
-  const config = await fetchPrintHeaderConfig(options.reportType);
 
   if (options.includeHeader !== false && config) {
     startY = await renderPrintHeaderFromConfig(doc, config);
@@ -326,7 +348,7 @@ export async function createArabicPDF(
     watermark = config.watermark;
   }
 
-  return { doc, startY, watermark };
+  return { doc, startY, watermark, advanced };
 }
 
 /** Apply watermark to all pages and save the PDF */
