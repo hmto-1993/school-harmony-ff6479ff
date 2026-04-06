@@ -368,8 +368,8 @@ export default function ReportsPage() {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
-    const tableStyles = getArabicTableStyles();
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(14);
@@ -398,15 +398,15 @@ export default function ReportsPage() {
       },
     });
 
-    finalizePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`, watermark);
+    finalizePDF(doc, `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`, watermark, advanced);
   };
 
   const exportGradesPDF = async () => {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
-    const tableStyles = getArabicTableStyles();
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "grades", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(14);
@@ -433,7 +433,7 @@ export default function ReportsPage() {
       },
     });
 
-    finalizePDF(doc, `تقرير_الدرجات.pdf`, watermark);
+    finalizePDF(doc, `تقرير_الدرجات.pdf`, watermark, advanced);
   };
 
   // ============ Print & Send ============
@@ -448,8 +448,8 @@ export default function ReportsPage() {
       const autoTableImport = await import("jspdf-autotable");
       const autoTable = autoTableImport.default;
       const reportType = sections.attendance && !sections.grades ? "attendance" : sections.grades && !sections.attendance ? "grades" : "attendance";
-      const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
-      const tableStyles = getArabicTableStyles();
+      const { doc, startY, advanced } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
+      const tableStyles = getArabicTableStyles(advanced);
       const pageWidth = doc.internal.pageSize.getWidth();
 
       const titleText = sections.attendance && sections.grades

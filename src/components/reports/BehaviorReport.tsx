@@ -395,7 +395,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       });
     }
 
-    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark);
+    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark, (headerConfig as any)?.advanced);
   };
 
   return (

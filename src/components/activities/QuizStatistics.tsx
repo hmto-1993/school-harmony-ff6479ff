@@ -147,7 +147,7 @@ export default function QuizStatistics() {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTable = (await import("jspdf-autotable")).default;
 
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "landscape", reportType: "default" });
     const pageWidth = doc.internal.pageSize.getWidth();
 
     // Title
@@ -189,7 +189,7 @@ export default function QuizStatistics() {
       i + 1,
     ]);
 
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles(advanced);
     autoTable(doc, {
       head: headers,
       body,
@@ -198,7 +198,7 @@ export default function QuizStatistics() {
       theme: "grid",
     });
 
-    finalizePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+    finalizePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark, advanced);
     setExporting(false);
   };
 

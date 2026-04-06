@@ -109,9 +109,9 @@ export default function ExportDialog({
   };
 
   const exportPDF = async () => {
-    const { doc, startY: headerEndY, watermark } = await createArabicPDF({ reportType: "student_logins", includeHeader: true });
+    const { doc, startY: headerEndY, watermark, advanced } = await createArabicPDF({ reportType: "student_logins", includeHeader: true });
     const pageWidth = doc.internal.pageSize.getWidth();
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles(advanced);
 
     doc.setFontSize(14);
     doc.setFont("Amiri", "bold");
@@ -180,7 +180,7 @@ export default function ExportDialog({
       });
     }
 
-    finalizePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+    finalizePDF(doc, `سجل_دخول_الطلاب_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark, advanced);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

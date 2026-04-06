@@ -294,6 +294,25 @@ export function renderWatermarkOnAllPages(doc: jsPDF, watermark: WatermarkConfig
   }
 }
 
+/** Advanced PDF config interface */
+export interface AdvancedPDFConfig {
+  paperSize?: "A4" | "A5" | "Letter" | "Legal";
+  exportQuality?: "standard" | "high" | "max";
+  pdfFontSize?: number;
+  tableRowHeight?: number;
+  showPageNumbers?: boolean;
+  showDate?: boolean;
+  showReportTitle?: boolean;
+  headerOnEveryPage?: boolean;
+}
+
+const PAPER_FORMATS: Record<string, string> = {
+  A4: "a4",
+  A5: "a5",
+  Letter: "letter",
+  Legal: "legal",
+};
+
 /** Create a pre-configured Arabic PDF document with optional print header */
 export async function createArabicPDF(
   options: {
@@ -302,21 +321,24 @@ export async function createArabicPDF(
     reportType?: string;
     includeHeader?: boolean;
   } = {}
-): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig }> {
+): Promise<{ doc: jsPDF; startY: number; watermark?: WatermarkConfig; advanced?: AdvancedPDFConfig }> {
+  // Fetch config once for header, watermark, and advanced
+  const config = await fetchPrintHeaderConfig(options.reportType);
+  const advanced: AdvancedPDFConfig = (config as any)?.advanced ?? {};
+
   const orientation = options.orientation || getPrintOrientation();
+  const paperFormat = options.format || PAPER_FORMATS[advanced.paperSize || "A4"] || "a4";
+
   const doc = new jsPDF({
     orientation,
     unit: "mm",
-    format: options.format || "a4",
+    format: paperFormat,
   });
 
   await registerArabicFont(doc);
 
   let startY = 15;
   let watermark: WatermarkConfig | undefined;
-
-  // Fetch config once for both header and watermark
-  const config = await fetchPrintHeaderConfig(options.reportType);
 
   if (options.includeHeader !== false && config) {
     startY = await renderPrintHeaderFromConfig(doc, config);
@@ -326,11 +348,38 @@ export async function createArabicPDF(
     watermark = config.watermark;
   }
 
-  return { doc, startY, watermark };
+  return { doc, startY, watermark, advanced };
 }
 
 /** Apply watermark to all pages and save the PDF */
-export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkConfig) {
+/** Render page numbers and date on all pages */
+function renderPageExtras(doc: jsPDF, advanced?: AdvancedPDFConfig) {
+  if (!advanced) return;
+  const totalPages = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+
+    if (advanced.showPageNumbers) {
+      doc.text(`${p} / ${totalPages}`, pageWidth / 2, pageHeight - 6, { align: "center" });
+    }
+
+    if (advanced.showDate && p === 1) {
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, "0")}/${String(now.getDate()).padStart(2, "0")}`;
+      doc.text(dateStr, 10, pageHeight - 6, { align: "left" });
+    }
+  }
+}
+
+/** Apply watermark to all pages and save the PDF */
+export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkConfig, advanced?: AdvancedPDFConfig) {
+  renderPageExtras(doc, advanced);
   if (watermark?.enabled) {
     renderWatermarkOnAllPages(doc, watermark);
   }
@@ -339,21 +388,25 @@ export function finalizePDF(doc: jsPDF, fileName: string, watermark?: WatermarkC
 }
 
 /** Apply watermark and return the blob without downloading */
-export function finalizePDFAsBlob(doc: jsPDF, watermark?: WatermarkConfig): Blob {
+export function finalizePDFAsBlob(doc: jsPDF, watermark?: WatermarkConfig, advanced?: AdvancedPDFConfig): Blob {
+  renderPageExtras(doc, advanced);
   if (watermark?.enabled) {
     renderWatermarkOnAllPages(doc, watermark);
   }
   return doc.output("blob") as Blob;
 }
 
-/** Get autoTable styles pre-configured for Arabic font — matches grades-print.ts look */
-export function getArabicTableStyles() {
+/** Get autoTable styles pre-configured for Arabic font — accepts optional advanced config */
+export function getArabicTableStyles(advanced?: AdvancedPDFConfig) {
+  const fontSize = advanced?.pdfFontSize ? Math.round(advanced.pdfFontSize * 0.75) : 9;
+  const cellPadding = advanced?.tableRowHeight ? Math.max(1.5, (advanced.tableRowHeight - 10) * 0.15) : 2.5;
+
   return {
     styles: {
       font: "Amiri",
       halign: "center" as const,
-      fontSize: 9,
-      cellPadding: 2.5,
+      fontSize,
+      cellPadding,
       lineColor: [203, 213, 225] as [number, number, number],
       lineWidth: 0.3,
       textColor: [30, 30, 30] as [number, number, number],

@@ -257,8 +257,8 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "grades", includeHeader: true });
-    const tableStyles = getArabicTableStyles();
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "grades", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(18);
@@ -282,15 +282,15 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    finalizePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark);
+    finalizePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark, advanced);
   };
 
   const exportDisciplinaryPDF = async () => {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
     const autoTable = autoTableImport.default;
-    const { doc, startY, watermark } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
-    const tableStyles = getArabicTableStyles();
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
     const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFontSize(18);
@@ -313,7 +313,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
       ...tableStyles,
     });
 
-    finalizePDF(doc, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark);
+    finalizePDF(doc, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark, advanced);
   };
 
   const currentYear = new Date().getFullYear();
