@@ -610,7 +610,7 @@ export default function StudentDashboard() {
         <div className="container mx-auto flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             {schoolLogoUrl ? (
-              <img src={schoolLogoUrl} alt="الشعار" className="h-10 w-10 rounded-xl object-contain shadow-md" />
+              <img src={schoolLogoUrl} alt="الشعار" className="h-10 w-10 rounded-xl object-cover shadow-md" />
             ) : (
               <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md">
                 <GraduationCap className="h-5 w-5 text-primary-foreground" />
