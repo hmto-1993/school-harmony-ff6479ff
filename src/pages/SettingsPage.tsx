@@ -573,6 +573,11 @@ export default function SettingsPage() {
     // Attendance override
     setAttendanceOverrideLock((overrideRes as any).data?.value === "true");
 
+    // Admin read-only
+    ((adminReadOnlyRes as any).data || []).forEach((s: any) => {
+      if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true");
+    });
+
     // Class schedules
     const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
     ((schedulesRes as any).data || []).forEach((s: any) => {
