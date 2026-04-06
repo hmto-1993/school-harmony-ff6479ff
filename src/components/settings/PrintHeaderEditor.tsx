@@ -39,6 +39,10 @@ import {
   FileText,
   Settings2,
   Sparkles,
+  Wrench,
+  FileDigit,
+  Hash,
+  CalendarDays,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
