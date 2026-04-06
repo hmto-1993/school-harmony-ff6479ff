@@ -401,11 +401,14 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                       key={item.type}
                       type="button"
                       onClick={() => {
+                        const newNote = currentNoteStudent.type !== item.type ? "" : currentNoteStudent.note;
+                        const newSeverity = item.type === "negative" ? currentNoteStudent.severity : "low";
                         setStudents((prev) =>
                           prev.map((s) => s.student_id === noteDialog.studentId
-                            ? { ...s, type: item.type, note: s.type !== item.type ? "" : s.note, severity: item.type === "negative" ? s.severity : "low" }
+                            ? { ...s, type: item.type, note: newNote, severity: newSeverity }
                             : s)
                         );
+                        autoSaveRecord(currentNoteStudent, item.type, newNote, newSeverity);
                       }}
                       className={cn(
                         "flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center",
