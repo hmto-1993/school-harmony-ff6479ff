@@ -2080,6 +2080,33 @@ export default function SettingsPage() {
               );
             })()}
 
+            {/* Honor Roll Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-950/10">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <div>
+                  <h4 className="text-sm font-bold">لوحة الشرف</h4>
+                  <p className="text-[10px] text-muted-foreground">عرض الطلاب المتميزين (انتظام كامل + درجة كاملة)</p>
+                </div>
+              </div>
+              <Button
+                variant={honorRollEnabled ? "default" : "outline"}
+                size="sm"
+                className={cn("gap-1.5 min-w-[90px]", honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950")}
+                disabled={savingHonorRoll}
+                onClick={async () => {
+                  setSavingHonorRoll(true);
+                  const newVal = !honorRollEnabled;
+                  await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
+                  setHonorRollEnabled(newVal);
+                  setSavingHonorRoll(false);
+                  toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب" : "تم إخفاء لوحة الشرف" });
+                }}
+              >
+                {honorRollEnabled ? <><Eye className="h-3.5 w-3.5" /> مفعّلة</> : <><EyeOff className="h-3.5 w-3.5" /> معطّلة</>}
+              </Button>
+            </div>
+
             {/* Save + Reset */}
             <div className="flex items-center gap-2 flex-wrap">
               <Button
