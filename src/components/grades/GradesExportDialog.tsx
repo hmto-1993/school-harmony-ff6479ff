@@ -270,12 +270,12 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
     }
 
     // Fallback: autoTable
-    const { doc, startY: headerEndY, watermark } = await createArabicPDF({
+    const { doc, startY: headerEndY, watermark, advanced } = await createArabicPDF({
       reportType: "grades",
       includeHeader: true,
     });
     const pageWidth = doc.internal.pageSize.getWidth();
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles(advanced);
 
     doc.setFontSize(16);
     doc.text(title, pageWidth / 2, headerEndY, { align: "center" });
@@ -334,7 +334,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       });
     });
 
-    finalizePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+    finalizePDF(doc, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark, advanced);
     toast.success("تم تصدير ملف PDF بنجاح");
     setOpen(false);
   };

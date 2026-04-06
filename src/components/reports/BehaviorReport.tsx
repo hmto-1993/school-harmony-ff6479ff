@@ -174,7 +174,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     await registerArabicFont(doc);
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles((headerConfig as any)?.advanced);
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 10;
 
@@ -395,7 +395,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       });
     }
 
-    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark);
+    finalizePDF(doc, `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`, watermark, (headerConfig as any)?.advanced);
   };
 
   return (

@@ -189,7 +189,7 @@ export default function QuizStatistics() {
       i + 1,
     ]);
 
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles(advanced);
     autoTable(doc, {
       head: headers,
       body,
@@ -198,7 +198,7 @@ export default function QuizStatistics() {
       theme: "grid",
     });
 
-    finalizePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark);
+    finalizePDF(doc, `إحصائيات_الاختبارات_${format(new Date(), "yyyy-MM-dd")}.pdf`, watermark, advanced);
     setExporting(false);
   };
 

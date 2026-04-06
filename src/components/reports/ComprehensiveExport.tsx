@@ -215,10 +215,10 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
       summaryPromise,
     ]);
 
-    const { doc, startY, watermark } = pdfSetup;
+    const { doc, startY, watermark, advanced } = pdfSetup;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const tableStyles = getArabicTableStyles();
+    const tableStyles = getArabicTableStyles(advanced);
     const today = format(new Date(), "yyyy/MM/dd");
 
     doc.setFontSize(16);
