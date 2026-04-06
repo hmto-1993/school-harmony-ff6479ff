@@ -87,6 +87,17 @@ export interface MarginsConfig {
   borderBottomMargin?: number;
 }
 
+export interface AdvancedConfig {
+  paperSize: "A4" | "A5" | "Letter" | "Legal";
+  exportQuality: "standard" | "high" | "max";
+  pdfFontSize: number;
+  tableRowHeight: number;
+  showPageNumbers: boolean;
+  showDate: boolean;
+  showReportTitle: boolean;
+  headerOnEveryPage: boolean;
+}
+
 export interface PrintHeaderConfig {
   rightSection: SectionConfig;
   centerSection: CenterSectionConfig;
@@ -94,6 +105,7 @@ export interface PrintHeaderConfig {
   watermark?: WatermarkConfig;
   footerSignatures?: FooterSignaturesConfig;
   margins?: MarginsConfig;
+  advanced?: AdvancedConfig;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────
