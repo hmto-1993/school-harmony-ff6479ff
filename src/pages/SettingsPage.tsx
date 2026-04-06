@@ -3451,6 +3451,43 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <>
+            {/* ===== تقييد المدير ===== */}
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 text-white">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-base font-bold text-foreground">تقييد المدير للاطلاع فقط</h3>
+                      <p className="text-xs text-muted-foreground">عند التفعيل، يستطيع المدير الآخر الاطلاع على جميع البيانات دون تعديل أو حذف</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={adminReadOnly}
+                    disabled={savingAdminReadOnly}
+                    onCheckedChange={async (checked) => {
+                      setSavingAdminReadOnly(true);
+                      setAdminReadOnly(checked);
+                      // Save both admin_read_only and admin_primary_id (current user)
+                      await Promise.all([
+                        supabase.from("site_settings").upsert({ id: "admin_read_only", value: String(checked) }),
+                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user?.id || "" }),
+                      ]);
+                      setSavingAdminReadOnly(false);
+                      toast({
+                        title: checked ? "تم التفعيل" : "تم التعطيل",
+                        description: checked
+                          ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل"
+                          : "تم إلغاء تقييد المديرين",
+                      });
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* ===== إدارة المعلمين ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
