@@ -304,6 +304,8 @@ export interface AdvancedPDFConfig {
   showDate?: boolean;
   showReportTitle?: boolean;
   headerOnEveryPage?: boolean;
+  tableHeaderBg?: string;
+  tableHeaderText?: string;
 }
 
 const PAPER_FORMATS: Record<string, string> = {
