@@ -115,7 +115,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         isCollapsed && "justify-center"
       )}>
         <div className="relative">
-          <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-contain bg-sidebar-accent p-1 ring-1 ring-sidebar-border/30" />
+          <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-cover ring-1 ring-sidebar-border/30" />
           <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
         </div>
         {!isCollapsed && (

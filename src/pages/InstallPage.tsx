@@ -47,7 +47,7 @@ export default function InstallPage() {
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={schoolLogo} alt="شعار المدرسة" className="h-10 w-10 rounded-xl object-contain shadow-md" />
+            <img src={schoolLogo} alt="شعار المدرسة" className="h-10 w-10 rounded-xl object-cover shadow-md" />
             <div>
               <h1 className="text-lg font-bold text-foreground">تثبيت التطبيق</h1>
               <p className="text-xs text-muted-foreground">Alpha Physics</p>
