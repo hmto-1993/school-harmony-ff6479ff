@@ -249,6 +249,7 @@ export default function PrintHeaderEditor() {
     if (!parsed.watermark) parsed.watermark = defaultWatermark;
     if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
     if (!parsed.margins) parsed.margins = defaultMargins;
+    if (!parsed.advanced) parsed.advanced = defaultAdvanced;
   };
 
   const handleSave = async () => {
