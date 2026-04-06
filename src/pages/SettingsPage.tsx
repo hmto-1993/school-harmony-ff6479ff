@@ -1140,13 +1140,11 @@ export default function SettingsPage() {
           { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
           { key: "print", icon: Printer, label: "ورقة الطباعة والتصدير", desc: "ترويسة وتنسيق مشترك", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
-          { key: "visibility", icon: Eye, label: "عرض الطالب", desc: "التحكم بالبيانات المعروضة", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
+          { key: "visibility", icon: Eye, label: "عرض الطالب", desc: honorRollEnabled ? "لوحة الشرف مفعّلة" : "التحكم بالبيانات", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
           { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
-          { key: "calendar", icon: CalendarDays, label: "نوع التقويم", desc: calendarTypeLocal === "hijri" ? "هجري" : "ميلادي", gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
-          { key: "academic_year", icon: GraduationCap, label: "العام الدراسي", desc: defaultAcademicYear, gradient: "from-cyan-500 to-blue-600", shadow: "shadow-cyan-500/20", adminOnly: true },
+          { key: "calendar_year", icon: CalendarDays, label: "التقويم والعام الدراسي", desc: `${calendarTypeLocal === "hijri" ? "هجري" : "ميلادي"} · ${defaultAcademicYear}`, gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
-          { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي", gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
-          { key: "honor_roll", icon: Trophy, label: "لوحة الشرف", desc: honorRollEnabled ? "مفعّلة" : "معطّلة", gradient: "from-amber-500 to-yellow-500", shadow: "shadow-amber-500/20", adminOnly: true },
+          { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: `${attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي"} · حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}`, gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
           { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
           { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
@@ -2082,6 +2080,33 @@ export default function SettingsPage() {
               );
             })()}
 
+            {/* Honor Roll Toggle */}
+            <div className="flex items-center justify-between p-3 rounded-xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-950/10">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <div>
+                  <h4 className="text-sm font-bold">لوحة الشرف</h4>
+                  <p className="text-[10px] text-muted-foreground">عرض الطلاب المتميزين (انتظام كامل + درجة كاملة)</p>
+                </div>
+              </div>
+              <Button
+                variant={honorRollEnabled ? "default" : "outline"}
+                size="sm"
+                className={cn("gap-1.5 min-w-[90px]", honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950")}
+                disabled={savingHonorRoll}
+                onClick={async () => {
+                  setSavingHonorRoll(true);
+                  const newVal = !honorRollEnabled;
+                  await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
+                  setHonorRollEnabled(newVal);
+                  setSavingHonorRoll(false);
+                  toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب" : "تم إخفاء لوحة الشرف" });
+                }}
+              >
+                {honorRollEnabled ? <><Eye className="h-3.5 w-3.5" /> مفعّلة</> : <><EyeOff className="h-3.5 w-3.5" /> معطّلة</>}
+              </Button>
+            </div>
+
             {/* Save + Reset */}
             <div className="flex items-center gap-2 flex-wrap">
               <Button
@@ -2372,165 +2397,163 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {activeCard === "calendar" && isAdmin && (
+      {activeCard === "calendar_year" && isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <CalendarDays className="h-5 w-5 text-primary" />
-                نوع التقويم الافتراضي
+                التقويم والعام الدراسي
               </CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 max-w-md">
-            <p className="text-sm text-muted-foreground">
-              اختر نوع التقويم الافتراضي الذي سيُستخدم في جميع صفحات التحضير والدرجات والتقارير.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {[
-                { value: "gregorian" as const, label: "ميلادي", sub: "Gregorian", emoji: "🌍" },
-                { value: "hijri" as const, label: "هجري", sub: "Hijri (أم القرى)", emoji: "🕌" },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setGlobalCalendarType(opt.value)}
-                  className={cn(
-                    "flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-all duration-200",
-                    calendarTypeLocal === opt.value
-                      ? "border-primary bg-primary/10 shadow-lg scale-[1.02]"
-                      : "border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50"
-                  )}
+          <CardContent className="space-y-6">
+            {/* Calendar Type */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
+                🗓️ نوع التقويم الافتراضي
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                يُستخدم في جميع صفحات التحضير والدرجات والتقارير.
+              </p>
+              <div className="grid grid-cols-2 gap-3 max-w-sm">
+                {[
+                  { value: "gregorian" as const, label: "ميلادي", sub: "Gregorian", emoji: "🌍" },
+                  { value: "hijri" as const, label: "هجري", sub: "Hijri (أم القرى)", emoji: "🕌" },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setGlobalCalendarType(opt.value)}
+                    className={cn(
+                      "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200",
+                      calendarTypeLocal === opt.value
+                        ? "border-primary bg-primary/10 shadow-lg scale-[1.02]"
+                        : "border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50"
+                    )}
+                  >
+                    <span className="text-2xl">{opt.emoji}</span>
+                    <span className="text-sm font-bold text-foreground">{opt.label}</span>
+                    <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
+                    {calendarTypeLocal === opt.value && (
+                      <Badge variant="default" className="text-[10px] px-2 py-0">
+                        <Check className="h-3 w-3 ml-1" />
+                        مُفعّل
+                      </Badge>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="h-px bg-border/50" />
+
+            {/* Academic Year */}
+            <div className="space-y-3 max-w-md">
+              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
+                🎓 العام الدراسي الافتراضي
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                يُستخدم عند إنشاء فصول جديدة.
+              </p>
+              <div className="space-y-2">
+                <Label>العام الدراسي</Label>
+                <Input
+                  value={defaultAcademicYear}
+                  onChange={(e) => setDefaultAcademicYear(e.target.value)}
+                  placeholder="مثال: 1446-1447"
+                  dir="ltr"
+                  className="text-center text-lg font-bold"
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["1445-1446", "1446-1447", "1447-1448", "1448-1449"].map((yr) => (
+                  <button
+                    key={yr}
+                    onClick={() => setDefaultAcademicYear(yr)}
+                    className={cn(
+                      "px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200",
+                      defaultAcademicYear === yr
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
+                    )}
+                  >
+                    {yr}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  disabled={savingAcademicYear || !defaultAcademicYear.trim()}
+                  className="gap-1.5"
+                  onClick={async () => {
+                    setSavingAcademicYear(true);
+                    const { error } = await supabase
+                      .from("site_settings")
+                      .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
+                    setSavingAcademicYear(false);
+                    if (error) {
+                      toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
+                    } else {
+                      setNewYear(defaultAcademicYear);
+                      toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
+                    }
+                  }}
                 >
-                  <span className="text-3xl">{opt.emoji}</span>
-                  <span className="text-sm font-bold text-foreground">{opt.label}</span>
-                  <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
-                  {calendarTypeLocal === opt.value && (
-                    <Badge variant="default" className="text-[10px] px-2 py-0">
-                      <Check className="h-3 w-3 ml-1" />
-                      مُفعّل
-                    </Badge>
-                  )}
-                </button>
-              ))}
+                  <Save className="h-4 w-4" />
+                  {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
+                      <RotateCcw className="h-4 w-4" />
+                      تحديث جميع الفصول ({classes.length})
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent dir="rtl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>تحديث العام الدراسي لجميع الفصول؟</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        سيتم تغيير العام الدراسي لجميع الفصول الموجودة ({classes.length} فصل) إلى <strong className="text-foreground">{defaultAcademicYear}</strong>. هذا الإجراء لا يمكن التراجع عنه.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          setSavingAcademicYear(true);
+                          const { error } = await supabase
+                            .from("classes")
+                            .update({ academic_year: defaultAcademicYear })
+                            .neq("academic_year", "__never__");
+                          await supabase
+                            .from("site_settings")
+                            .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
+                          setSavingAcademicYear(false);
+                          if (error) {
+                            toast({ title: "خطأ", description: error.message, variant: "destructive" });
+                          } else {
+                            setNewYear(defaultAcademicYear);
+                            setClasses(prev => prev.map(c => ({ ...c, academic_year: defaultAcademicYear })));
+                            toast({ title: "تم التحديث", description: `تم تغيير العام الدراسي لجميع الفصول إلى ${defaultAcademicYear}` });
+                          }
+                        }}
+                      >
+                        تحديث الكل
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "academic_year" && isAdmin && (
-        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <GraduationCap className="h-5 w-5 text-primary" />
-                العام الدراسي الافتراضي
-              </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4 max-w-md">
-            <p className="text-sm text-muted-foreground">
-              حدد العام الدراسي الافتراضي الذي سيُستخدم عند إنشاء فصول جديدة.
-            </p>
-            <div className="space-y-2">
-              <Label>العام الدراسي</Label>
-              <Input
-                value={defaultAcademicYear}
-                onChange={(e) => setDefaultAcademicYear(e.target.value)}
-                placeholder="مثال: 1446-1447"
-                dir="ltr"
-                className="text-center text-lg font-bold"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {["1445-1446", "1446-1447", "1447-1448", "1448-1449"].map((yr) => (
-                <button
-                  key={yr}
-                  onClick={() => setDefaultAcademicYear(yr)}
-                  className={cn(
-                    "px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200",
-                    defaultAcademicYear === yr
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
-                  )}
-                >
-                  {yr}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                disabled={savingAcademicYear || !defaultAcademicYear.trim()}
-                className="gap-1.5"
-                onClick={async () => {
-                  setSavingAcademicYear(true);
-                  const { error } = await supabase
-                    .from("site_settings")
-                    .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
-                  setSavingAcademicYear(false);
-                  if (error) {
-                    toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
-                  } else {
-                    setNewYear(defaultAcademicYear);
-                    toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
-                  }
-                }}
-              >
-                <Save className="h-4 w-4" />
-                {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
-              </Button>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
-                    <RotateCcw className="h-4 w-4" />
-                    تحديث جميع الفصول ({classes.length})
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent dir="rtl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>تحديث العام الدراسي لجميع الفصول؟</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      سيتم تغيير العام الدراسي لجميع الفصول الموجودة ({classes.length} فصل) إلى <strong className="text-foreground">{defaultAcademicYear}</strong>. هذا الإجراء لا يمكن التراجع عنه.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={async () => {
-                        setSavingAcademicYear(true);
-                        const { error } = await supabase
-                          .from("classes")
-                          .update({ academic_year: defaultAcademicYear })
-                          .neq("academic_year", "__never__");
-                        // Also save as default
-                        await supabase
-                          .from("site_settings")
-                          .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
-                        setSavingAcademicYear(false);
-                        if (error) {
-                          toast({ title: "خطأ", description: error.message, variant: "destructive" });
-                        } else {
-                          setNewYear(defaultAcademicYear);
-                          setClasses(prev => prev.map(c => ({ ...c, academic_year: defaultAcademicYear })));
-                          toast({ title: "تم التحديث", description: `تم تغيير العام الدراسي لجميع الفصول إلى ${defaultAcademicYear}` });
-                        }
-                      }}
-                    >
-                      تحديث الكل
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+
 
       {activeCard === "academic_calendar" && isAdmin && (
         <AcademicCalendarSettings onClose={() => setActiveCard(null)} />
@@ -2645,93 +2668,57 @@ export default function SettingsPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-      )}
 
-      {/* Honor Roll Panel */}
-      {activeCard === "honor_roll" && isAdmin && (
-        <Card className="border-2 border-amber-400/30 shadow-xl bg-card animate-fade-in overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Trophy className="h-5 w-5 text-amber-500" />
-                لوحة الشرف
-              </CardTitle>
-              <Badge variant={honorRollEnabled ? "default" : "secondary"} className={cn(honorRollEnabled && "bg-amber-500 text-amber-950")}>
-                {honorRollEnabled ? "مفعّلة" : "معطّلة"}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="bg-gradient-to-br from-amber-50/50 to-yellow-50/30 dark:from-amber-950/20 dark:to-yellow-950/10 border border-amber-200/50 dark:border-amber-800/30 rounded-xl p-5">
-              <div className="flex items-start gap-4">
-                <div className="shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-400/20">
-                  <Crown className="h-7 w-7 text-amber-950" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-bold text-foreground mb-1">نظام لوحة الشرف</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    يتم عرض الطلاب المتميزين تلقائياً بناءً على المعايير التالية:
-                  </p>
-                  <ul className="mt-2 text-sm text-muted-foreground space-y-1">
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                      <strong>انتظام كامل:</strong> صفر غياب خلال الشهر الحالي
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                      <strong>درجة كاملة:</strong> في أحدث اختبار فترة
-                    </li>
-                  </ul>
-                </div>
+          {/* Absence Threshold - integrated */}
+          <CardContent className="space-y-5 border-t border-border/30 pt-5">
+            <h3 className="font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              حد إنذار الغياب
+            </h3>
+            <div className="space-y-2">
+              <Label>طريقة تحديد الحد</Label>
+              <div className="flex gap-2">
+                <Button variant={absenceMode === "percentage" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("percentage")}>بالنسبة المئوية (%)</Button>
+                <Button variant={absenceMode === "sessions" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("sessions")}>بعدد الحصص</Button>
               </div>
             </div>
-
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border/50 bg-muted/20">
-              <div>
-                <p className="font-medium text-foreground">نشر لوحة الشرف</p>
-                <p className="text-xs text-muted-foreground mt-0.5">تظهر للطلاب في صفحتهم الرئيسية</p>
+            <div className="space-y-2">
+              <Label>إجمالي حصص الفصل الدراسي</Label>
+              <div className="flex items-center gap-3">
+                <Input type="number" min={10} max={500} value={totalTermSessions || ""} onChange={(e) => { const val = Math.min(500, Math.max(0, Number(e.target.value) || 0)); setTotalTermSessions(val); if (absenceMode === "percentage" && val > 0) setAbsenceAllowedSessions(Math.round((absenceThreshold / 100) * val)); if (absenceMode === "sessions" && val > 0 && absenceAllowedSessions > 0) setAbsenceThreshold(Math.round((absenceAllowedSessions / val) * 100)); }} className="w-28 text-center font-bold text-lg" dir="ltr" placeholder="مثال: 90" />
+                <span className="text-sm text-muted-foreground">حصة</span>
               </div>
-              <Button
-                variant={honorRollEnabled ? "default" : "outline"}
-                size="sm"
-                className={cn(
-                  "gap-2 min-w-[100px]",
-                  honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950"
-                )}
-                disabled={savingHonorRoll}
-                onClick={async () => {
-                  setSavingHonorRoll(true);
-                  const newVal = !honorRollEnabled;
-                  await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
-                  setHonorRollEnabled(newVal);
-                  setSavingHonorRoll(false);
-                  toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب الآن" : "تم إخفاء لوحة الشرف" });
-                }}
-              >
-                {savingHonorRoll ? (
-                  <span className="animate-spin">⏳</span>
-                ) : honorRollEnabled ? (
-                  <>
-                    <Eye className="h-4 w-4" />
-                    مفعّلة
-                  </>
-                ) : (
-                  <>
-                    <EyeOff className="h-4 w-4" />
-                    معطّلة
-                  </>
-                )}
-              </Button>
             </div>
-
-            <div className="text-xs text-muted-foreground p-3 bg-muted/30 rounded-lg">
-              <strong>ملاحظة:</strong> يظهر شعار النجمة الماسية 💎⭐ بجانب أسماء الطلاب المتميزين في جميع أنحاء التطبيق.
-              الخصوصية محفوظة: تُعرض الأسماء والإنجازات فقط، بدون درجات خاصة.
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>نسبة الغياب المسموح (%)</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="number" min={5} max={50} value={absenceThreshold} onChange={(e) => { const val = Math.min(50, Math.max(5, Number(e.target.value) || 20)); setAbsenceThreshold(val); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((val / 100) * totalTermSessions)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "percentage" && "ring-2 ring-primary")} dir="ltr" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[10, 15, 20, 25, 30].map((v) => (<Button key={v} variant={absenceThreshold === v ? "default" : "outline"} size="sm" className="h-8 text-xs" onClick={() => { setAbsenceThreshold(v); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((v / 100) * totalTermSessions)); }}>{v}%</Button>))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>عدد الحصص المسموح بها</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="number" min={1} max={200} value={absenceAllowedSessions || ""} onChange={(e) => { const val = Math.min(200, Math.max(0, Number(e.target.value) || 0)); setAbsenceAllowedSessions(val); if (totalTermSessions > 0 && val > 0) setAbsenceThreshold(Math.round((val / totalTermSessions) * 100)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "sessions" && "ring-2 ring-primary")} dir="ltr" placeholder="مثال: 5" />
+                  <span className="text-sm text-muted-foreground">حصة</span>
+                </div>
+                {totalTermSessions > 0 && absenceAllowedSessions > 0 && (<p className="text-xs text-info font-medium">= {Math.round((absenceAllowedSessions / totalTermSessions) * 100)}% من إجمالي {totalTermSessions} حصة</p>)}
+              </div>
             </div>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+              <p className="text-xs font-bold text-destructive flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />إجراء تلقائي عند التجاوز</p>
+              <p className="text-xs text-muted-foreground">عند تجاوز الطالب عدد الحصص المسموح بها ({absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`})، يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong>.</p>
+            </div>
+            <Button onClick={async () => { setSavingThreshold(true); await Promise.all([supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) }), supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(absenceAllowedSessions) }), supabase.from("site_settings").upsert({ id: "absence_mode", value: absenceMode }), supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(totalTermSessions) })]); setSavingThreshold(false); toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}` }); }} disabled={savingThreshold} className="gap-1.5"><Save className="h-4 w-4" />{savingThreshold ? "جارٍ الحفظ..." : "حفظ حد الإنذار"}</Button>
           </CardContent>
         </Card>
       )}
+
+
 
       {/* Parent Portal Settings */}
       {activeCard === "parent_portal" && isAdmin && (
