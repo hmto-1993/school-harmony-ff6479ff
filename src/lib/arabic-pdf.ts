@@ -232,7 +232,7 @@ async function renderPrintHeaderFromConfig(
   doc.line(headerMargin, borderY, pageWidth - headerMargin, borderY);
 
   doc.setFont("Amiri", "normal");
-  const bottomMargin = (config as any).margins?.borderBottomMargin ?? 4;
+  const bottomMargin = (config as any).margins?.borderBottomMargin ?? 8;
   return borderY + bottomMargin;
 }
 
