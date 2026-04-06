@@ -2668,6 +2668,52 @@ export default function SettingsPage() {
               </div>
             </div>
           </CardContent>
+
+          {/* Absence Threshold - integrated */}
+          <CardContent className="space-y-5 border-t border-border/30 pt-5">
+            <h3 className="font-semibold flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" />
+              حد إنذار الغياب
+            </h3>
+            <div className="space-y-2">
+              <Label>طريقة تحديد الحد</Label>
+              <div className="flex gap-2">
+                <Button variant={absenceMode === "percentage" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("percentage")}>بالنسبة المئوية (%)</Button>
+                <Button variant={absenceMode === "sessions" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("sessions")}>بعدد الحصص</Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>إجمالي حصص الفصل الدراسي</Label>
+              <div className="flex items-center gap-3">
+                <Input type="number" min={10} max={500} value={totalTermSessions || ""} onChange={(e) => { const val = Math.min(500, Math.max(0, Number(e.target.value) || 0)); setTotalTermSessions(val); if (absenceMode === "percentage" && val > 0) setAbsenceAllowedSessions(Math.round((absenceThreshold / 100) * val)); if (absenceMode === "sessions" && val > 0 && absenceAllowedSessions > 0) setAbsenceThreshold(Math.round((absenceAllowedSessions / val) * 100)); }} className="w-28 text-center font-bold text-lg" dir="ltr" placeholder="مثال: 90" />
+                <span className="text-sm text-muted-foreground">حصة</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>نسبة الغياب المسموح (%)</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="number" min={5} max={50} value={absenceThreshold} onChange={(e) => { const val = Math.min(50, Math.max(5, Number(e.target.value) || 20)); setAbsenceThreshold(val); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((val / 100) * totalTermSessions)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "percentage" && "ring-2 ring-primary")} dir="ltr" />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {[10, 15, 20, 25, 30].map((v) => (<Button key={v} variant={absenceThreshold === v ? "default" : "outline"} size="sm" className="h-8 text-xs" onClick={() => { setAbsenceThreshold(v); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((v / 100) * totalTermSessions)); }}>{v}%</Button>))}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>عدد الحصص المسموح بها</Label>
+                <div className="flex items-center gap-3">
+                  <Input type="number" min={1} max={200} value={absenceAllowedSessions || ""} onChange={(e) => { const val = Math.min(200, Math.max(0, Number(e.target.value) || 0)); setAbsenceAllowedSessions(val); if (totalTermSessions > 0 && val > 0) setAbsenceThreshold(Math.round((val / totalTermSessions) * 100)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "sessions" && "ring-2 ring-primary")} dir="ltr" placeholder="مثال: 5" />
+                  <span className="text-sm text-muted-foreground">حصة</span>
+                </div>
+                {totalTermSessions > 0 && absenceAllowedSessions > 0 && (<p className="text-xs text-info font-medium">= {Math.round((absenceAllowedSessions / totalTermSessions) * 100)}% من إجمالي {totalTermSessions} حصة</p>)}
+              </div>
+            </div>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
+              <p className="text-xs font-bold text-destructive flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />إجراء تلقائي عند التجاوز</p>
+              <p className="text-xs text-muted-foreground">عند تجاوز الطالب عدد الحصص المسموح بها ({absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`})، يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong>.</p>
+            </div>
+            <Button onClick={async () => { setSavingThreshold(true); await Promise.all([supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) }), supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(absenceAllowedSessions) }), supabase.from("site_settings").upsert({ id: "absence_mode", value: absenceMode }), supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(totalTermSessions) })]); setSavingThreshold(false); toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}` }); }} disabled={savingThreshold} className="gap-1.5"><Save className="h-4 w-4" />{savingThreshold ? "جارٍ الحفظ..." : "حفظ حد الإنذار"}</Button>
         </Card>
       )}
 
