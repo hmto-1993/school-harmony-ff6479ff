@@ -1,44 +1,20 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { safePrint } from "@/lib/print-utils";
 import { safeWriteXLSX } from "@/lib/download-utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import {
-  BarChart3,
   ClipboardCheck,
   GraduationCap,
-  Calendar,
-  Users,
   Heart,
   Printer,
-  Eye,
   Send,
-  UserCircle,
   ChevronDown,
   MessageCircle,
   Users2,
@@ -48,51 +24,16 @@ import {
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
-import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
-import { Badge } from "@/components/ui/badge";
-import AttendanceChart from "@/components/reports/AttendanceChart";
-import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
-import GradesChart from "@/components/reports/GradesChart";
-import BehaviorReport from "@/components/reports/BehaviorReport";
-import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
-import PrintWatermark from "@/components/shared/PrintWatermark";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
-import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import BehaviorReport from "@/components/reports/BehaviorReport";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
 import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
-
-
-// ============ Types ============
-
-interface ClassOption {
-  id: string;
-  name: string;
-}
-
-interface AttendanceRow {
-  student_name: string;
-  student_id?: string;
-  date: string;
-  status: string;
-  notes: string | null;
-}
-
-interface GradeRow {
-  student_name: string;
-  categories: Record<string, number | null>;
-  total: number;
-}
+import ReportFilters from "@/components/reports/ReportFilters";
+import AttendanceReportTab from "@/components/reports/AttendanceReportTab";
+import GradesReportTab from "@/components/reports/GradesReportTab";
+import BulkSendConfirmDialog from "@/components/reports/BulkSendConfirmDialog";
+import { useReportSending, type AttendanceRow, type GradeRow } from "@/hooks/useReportSending";
 
 const STATUS_LABELS: Record<string, string> = {
   present: "حاضر",
@@ -102,7 +43,10 @@ const STATUS_LABELS: Record<string, string> = {
   sick_leave: "إجازة مرضية",
 };
 
-// ============ Component ============
+interface ClassOption {
+  id: string;
+  name: string;
+}
 
 export default function ReportsPage() {
   const { role, user } = useAuth();
@@ -117,34 +61,8 @@ export default function ReportsPage() {
   const dateFrom = format(dateFromDate, "yyyy-MM-dd");
   const dateTo = format(dateToDate, "yyyy-MM-dd");
 
-  // Sync dateFromDate/dateToDate when selectedWeeks changes
-  useEffect(() => {
-    if (reportType !== "periodic" || selectedWeeks.length === 0) return;
-    const weeksInfo = getWeeksInfo();
-    const sorted = [...selectedWeeks].sort((a, b) => a - b);
-    const firstWeek = weeksInfo.find(w => w.weekNumber === sorted[0]);
-    const lastWeek = weeksInfo.find(w => w.weekNumber === sorted[sorted.length - 1]);
-    if (firstWeek) setDateFromDate(firstWeek.startDate);
-    if (lastWeek) setDateToDate(lastWeek.endDate);
-  }, [selectedWeeks, reportType, getWeeksInfo]);
-
-  const toggleWeek = useCallback((weekNum: number) => {
-    setSelectedWeeks(prev => 
-      prev.includes(weekNum) ? prev.filter(w => w !== weekNum) : [...prev, weekNum].sort((a, b) => a - b)
-    );
-  }, []);
-
-  const toggleAllWeeks = useCallback(() => {
-    const weeksInfo = getWeeksInfo();
-    setSelectedWeeks(prev => 
-      prev.length === weeksInfo.length ? [] : weeksInfo.map(w => w.weekNumber)
-    );
-  }, [getWeeksInfo]);
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
   const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
-  const [sendingSMS, setSendingSMS] = useState(false);
-  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; active: boolean }>({ current: 0, total: 0, active: false });
-  const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; sections: { attendance: boolean; grades: boolean } }>({ open: false, sections: { attendance: true, grades: true } });
 
   // Attendance data
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
@@ -162,6 +80,74 @@ export default function ReportsPage() {
   // Periods per week for weekly report
   const [periodsPerWeek, setPeriodsPerWeek] = useState(5);
 
+  const attendanceSummary = useMemo(() => {
+    const total = attendanceData.length;
+    const present = attendanceData.filter((r) => r.status === "present").length;
+    const absent = attendanceData.filter((r) => r.status === "absent").length;
+    const late = attendanceData.filter((r) => r.status === "late").length;
+    return { total, present, absent, late };
+  }, [attendanceData]);
+
+  // Report sending hook
+  const {
+    sendingSMS,
+    bulkProgress,
+    bulkConfirm,
+    setBulkConfirm,
+    handleSendSMS,
+    handleSendWhatsApp,
+    handleBulkSendSMS,
+  } = useReportSending({
+    selectedClass,
+    selectedStudent,
+    students,
+    dateFrom,
+    dateTo,
+    attendanceData,
+    attendanceSummary,
+    gradeData,
+    categoryNames,
+  });
+
+  // Sync dateFromDate/dateToDate when selectedWeeks changes
+  useEffect(() => {
+    if (reportType !== "periodic" || selectedWeeks.length === 0) return;
+    const weeksInfo = getWeeksInfo();
+    const sorted = [...selectedWeeks].sort((a, b) => a - b);
+    const firstWeek = weeksInfo.find(w => w.weekNumber === sorted[0]);
+    const lastWeek = weeksInfo.find(w => w.weekNumber === sorted[sorted.length - 1]);
+    if (firstWeek) setDateFromDate(firstWeek.startDate);
+    if (lastWeek) setDateToDate(lastWeek.endDate);
+  }, [selectedWeeks, reportType, getWeeksInfo]);
+
+  const toggleWeek = useCallback((weekNum: number) => {
+    setSelectedWeeks(prev =>
+      prev.includes(weekNum) ? prev.filter(w => w !== weekNum) : [...prev, weekNum].sort((a, b) => a - b)
+    );
+  }, []);
+
+  const toggleAllWeeks = useCallback(() => {
+    const weeksInfo = getWeeksInfo();
+    setSelectedWeeks(prev =>
+      prev.length === weeksInfo.length ? [] : weeksInfo.map(w => w.weekNumber)
+    );
+  }, [getWeeksInfo]);
+
+  const handleReportTypeChange = useCallback((v: "daily" | "periodic") => {
+    setReportType(v);
+    if (v === "daily") {
+      setDateToDate(dateFromDate);
+      setSelectedWeeks([]);
+    } else {
+      const weeksInfo = getWeeksInfo();
+      const activeWeek = weeksInfo.find(w => w.weekNumber === currentWeek) || weeksInfo[0];
+      if (activeWeek) {
+        setSelectedWeeks([activeWeek.weekNumber]);
+        setDateFromDate(activeWeek.startDate);
+        setDateToDate(activeWeek.endDate);
+      }
+    }
+  }, [dateFromDate, getWeeksInfo, currentWeek]);
 
   // Fetch periods per week when class changes
   useEffect(() => {
@@ -177,7 +163,6 @@ export default function ReportsPage() {
   useEffect(() => {
     if (!permsLoaded) return;
     const fetchClasses = async () => {
-      // Admins and read-only viewers see all classes
       if (role === "admin" || teacherPerms.read_only_mode) {
         const { data } = await supabase.from("classes").select("id, name").order("name");
         setClasses(data || []);
@@ -209,8 +194,6 @@ export default function ReportsPage() {
     };
     fetchStudents();
   }, [selectedClass]);
-
-  // ============ Attendance Report ============
 
   // Auto-fetch attendance when filters change
   useEffect(() => {
@@ -251,22 +234,10 @@ export default function ReportsPage() {
     setLoadingAttendance(false);
   };
 
-  // Attendance summary stats
-  const attendanceSummary = useMemo(() => {
-    const total = attendanceData.length;
-    const present = attendanceData.filter((r) => r.status === "present").length;
-    const absent = attendanceData.filter((r) => r.status === "absent").length;
-    const late = attendanceData.filter((r) => r.status === "late").length;
-    return { total, present, absent, late };
-  }, [attendanceData]);
-
-  // ============ Grades Report ============
-
   const fetchGrades = async () => {
     if (!selectedClass) return;
     setLoadingGrades(true);
 
-    // Fetch categories for this class
     const { data: cats } = await supabase
       .from("grade_categories")
       .select("id, name, weight, max_score")
@@ -276,7 +247,6 @@ export default function ReportsPage() {
     const categories = cats || [];
     setCategoryNames(categories.map((c) => c.name));
 
-    // Fetch students in class (or single student)
     let studentsQuery = supabase
       .from("students")
       .select("id, full_name")
@@ -296,7 +266,6 @@ export default function ReportsPage() {
       return;
     }
 
-    // Fetch grades filtered by date range
     const studentIds = filteredStudents.map((s) => s.id);
     let gradesQuery = supabase
       .from("grades")
@@ -307,7 +276,6 @@ export default function ReportsPage() {
 
     const { data: grades } = await gradesQuery;
 
-    // Build lookup
     const gradeMap: Record<string, Record<string, number | null>> = {};
     (grades || []).forEach((g: any) => {
       if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
@@ -331,8 +299,7 @@ export default function ReportsPage() {
     setLoadingGrades(false);
   };
 
-  // ============ Export Functions ============
-
+  // Export functions
   const exportAttendanceExcel = async () => {
     const XLSX = await import("xlsx");
     const ws = XLSX.utils.json_to_sheet(
@@ -390,387 +357,6 @@ export default function ReportsPage() {
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
-  // ============ Print & Send ============
-
-  const handlePrint = () => {
-    safePrint();
-  };
-
-  const generateStudentReportPDF = async (studentName: string, sections: { attendance: boolean; grades: boolean }): Promise<ArrayBuffer | null> => {
-    try {
-      const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-      const autoTableImport = await import("jspdf-autotable");
-      const autoTable = autoTableImport.default;
-      const reportType = sections.attendance && !sections.grades ? "attendance" : sections.grades && !sections.attendance ? "grades" : "attendance";
-      const { doc, startY, advanced } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
-      const tableStyles = getArabicTableStyles(advanced);
-      const pageWidth = doc.internal.pageSize.getWidth();
-
-      const titleText = sections.attendance && sections.grades
-        ? `تقرير الطالب: ${studentName}`
-        : sections.attendance
-        ? `تقرير حضور الطالب: ${studentName}`
-        : `تقرير درجات الطالب: ${studentName}`;
-
-      doc.setFontSize(14);
-      doc.setFont("Amiri", "bold");
-      doc.text(titleText, pageWidth / 2, startY, { align: "center" });
-      doc.setFontSize(9);
-      doc.setFont("Amiri", "normal");
-      doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
-
-      let currentY = startY + 15;
-
-      // Attendance section
-      if (sections.attendance && attendanceData.length > 0) {
-        doc.setFontSize(13);
-        doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
-
-        const attTableData = attendanceData.map((r, i) => [
-          r.notes || "",
-          STATUS_LABELS[r.status] || r.status,
-          r.date,
-          r.student_name,
-          String(i + 1),
-        ]);
-
-        autoTable(doc, {
-          startY: currentY + 5,
-          head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
-          body: attTableData,
-          ...tableStyles,
-          columnStyles: {
-            3: { halign: "right" as const, fontStyle: "bold" as const },
-            4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-          },
-        });
-
-        currentY = (doc as any).lastAutoTable.finalY + 10;
-
-        doc.setFontSize(10);
-        doc.text(
-          `حاضر: ${attendanceSummary.present} | غائب: ${attendanceSummary.absent} | متأخر: ${attendanceSummary.late} | الإجمالي: ${attendanceSummary.total}`,
-          pageWidth / 2,
-          currentY,
-          { align: "center" }
-        );
-        currentY += 10;
-      }
-
-      // Grades section
-      if (sections.grades && gradeData.length > 0) {
-        if (sections.attendance && currentY > doc.internal.pageSize.getHeight() - 40) {
-          doc.addPage("a4", "landscape");
-          currentY = 15;
-        }
-        doc.setFontSize(13);
-        doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
-
-        const head = ["المجموع", ...categoryNames.slice().reverse(), "اسم الطالب", "#"];
-        const body = gradeData.map((r, i) => [
-          String(r.total),
-          ...categoryNames.slice().reverse().map((n) => (r.categories[n] !== null ? String(r.categories[n]) : "—")),
-          r.student_name,
-          String(i + 1),
-        ]);
-
-        autoTable(doc, {
-          startY: currentY + 5,
-          head: [head],
-          body,
-          ...tableStyles,
-          columnStyles: {
-            [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
-            [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-            0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
-          },
-        });
-      }
-
-      return doc.output("arraybuffer");
-    } catch (err) {
-      console.error("PDF generation error:", err);
-      return null;
-    }
-  };
-
-  const generateAndUploadPDF = async (studentName: string, studentId: string, sections: { attendance: boolean; grades: boolean }): Promise<string | null> => {
-    toast({ title: "جارٍ إعداد التقرير...", description: "يتم إنشاء ملف PDF" });
-    const pdfBuffer = await generateStudentReportPDF(studentName, sections);
-    if (!pdfBuffer) {
-      toast({ title: "خطأ", description: "فشل إنشاء ملف PDF", variant: "destructive" });
-      return null;
-    }
-
-    const fileName = `report_${studentId}_${dateFrom}_${Date.now()}.pdf`;
-    const { error: uploadError } = await supabase.storage
-      .from("reports")
-      .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
-
-    if (uploadError) {
-      toast({ title: "خطأ", description: "فشل رفع الملف: " + uploadError.message, variant: "destructive" });
-      return null;
-    }
-
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from("reports").createSignedUrl(fileName, 3600);
-    if (signedUrlError) {
-      toast({ title: "خطأ", description: "فشل إنشاء رابط التقرير", variant: "destructive" });
-      return null;
-    }
-    return signedUrlData?.signedUrl || null;
-  };
-
-  const getReportLabel = (sections: { attendance: boolean; grades: boolean }) => {
-    if (sections.attendance && sections.grades) return "تقرير شامل";
-    if (sections.attendance) return "تقرير الحضور";
-    return "تقرير الدرجات";
-  };
-
-  const validateStudentForSend = (): { id: string; full_name: string; parent_phone: string } | null => {
-    if (selectedStudent === "all") {
-      toast({ title: "تنبيه", description: "اختر طالب محدد لإرسال التقرير لولي أمره", variant: "destructive" });
-      return null;
-    }
-    const student = students.find((s) => s.id === selectedStudent);
-    if (!student?.parent_phone) {
-      toast({ title: "تنبيه", description: "لا يوجد رقم هاتف لولي أمر هذا الطالب", variant: "destructive" });
-      return null;
-    }
-    return student as { id: string; full_name: string; parent_phone: string };
-  };
-
-  const handleSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
-    const student = validateStudentForSend();
-    if (!student) return;
-
-    setSendingSMS(true);
-    try {
-      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
-      if (!pdfUrl) { setSendingSMS(false); return; }
-
-      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
-
-      const { data, error } = await supabase.functions.invoke("send-sms", {
-        body: { phone: student.parent_phone, message },
-      });
-
-      if (error || !data?.success) {
-        toast({ title: "خطأ", description: "فشل إرسال الرسالة", variant: "destructive" });
-      } else {
-        toast({ title: "تم ✅", description: "تم إرسال التقرير عبر SMS بنجاح" });
-      }
-    } catch (err: any) {
-      toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
-    }
-    setSendingSMS(false);
-  };
-
-  const handleSendWhatsApp = async (sections: { attendance: boolean; grades: boolean }) => {
-    const student = validateStudentForSend();
-    if (!student) return;
-
-    setSendingSMS(true);
-    try {
-      const pdfUrl = await generateAndUploadPDF(student.full_name, student.id, sections);
-      if (!pdfUrl) { setSendingSMS(false); return; }
-
-      // Format phone for wa.me (remove leading 0, add 966)
-      let phone = student.parent_phone.replace(/[\s\-\+]/g, "");
-      if (phone.startsWith("0")) phone = "966" + phone.slice(1);
-      if (!phone.startsWith("966")) phone = "966" + phone;
-
-      const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
-      const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, "_blank");
-
-      toast({ title: "تم ✅", description: "تم فتح واتساب مع رسالة التقرير" });
-    } catch (err: any) {
-      toast({ title: "خطأ", description: err.message || "حدث خطأ غير متوقع", variant: "destructive" });
-    }
-    setSendingSMS(false);
-  };
-
-  const handleBulkSendSMS = async (sections: { attendance: boolean; grades: boolean }) => {
-    if (!selectedClass) return;
-
-    const studentsWithPhone = students.filter((s) => s.parent_phone);
-    if (studentsWithPhone.length === 0) {
-      toast({ title: "تنبيه", description: "لا يوجد طلاب بأرقام هواتف أولياء أمور في هذا الفصل", variant: "destructive" });
-      return;
-    }
-
-    setSendingSMS(true);
-    setBulkProgress({ current: 0, total: studentsWithPhone.length, active: true });
-
-    let successCount = 0;
-    let failCount = 0;
-
-    // Fetch all class attendance and grades data once
-    const allAttendance: Record<string, AttendanceRow[]> = {};
-    const allGrades: Record<string, GradeRow> = {};
-
-    if (sections.attendance) {
-      const { data: attData } = await supabase
-        .from("attendance_records")
-        .select("status, notes, date, student_id, students(full_name)")
-        .eq("class_id", selectedClass)
-        .gte("date", dateFrom)
-        .lte("date", dateTo)
-        .order("date", { ascending: false });
-
-      (attData || []).forEach((r: any) => {
-        const sid = r.student_id;
-        if (!allAttendance[sid]) allAttendance[sid] = [];
-        allAttendance[sid].push({
-          student_name: r.students?.full_name || "—",
-          student_id: sid,
-          date: r.date,
-          status: r.status,
-          notes: r.notes,
-        });
-      });
-    }
-
-    if (sections.grades) {
-      const { data: cats } = await supabase
-        .from("grade_categories")
-        .select("id, name, weight, max_score")
-        .eq("class_id", selectedClass)
-        .order("sort_order");
-      const categories = cats || [];
-
-      const studentIds = studentsWithPhone.map((s) => s.id);
-      const { data: gradesData } = await supabase
-        .from("grades")
-        .select("student_id, category_id, score")
-        .in("student_id", studentIds);
-
-      const gradeMap: Record<string, Record<string, number | null>> = {};
-      (gradesData || []).forEach((g: any) => {
-        if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
-        gradeMap[g.student_id][g.category_id] = g.score;
-      });
-
-      studentsWithPhone.forEach((s) => {
-        const catScores: Record<string, number | null> = {};
-        let total = 0;
-        categories.forEach((cat) => {
-          const score = gradeMap[s.id]?.[cat.id] ?? null;
-          catScores[cat.name] = score;
-          if (score !== null) total += (score / cat.max_score) * cat.weight;
-        });
-        allGrades[s.id] = { student_name: s.full_name, categories: catScores, total: Math.round(total * 100) / 100 };
-      });
-    }
-
-    for (let i = 0; i < studentsWithPhone.length; i++) {
-      const student = studentsWithPhone[i];
-      setBulkProgress({ current: i + 1, total: studentsWithPhone.length, active: true });
-
-      try {
-        // Temporarily set student-specific data for PDF generation
-        const studentAttendance = allAttendance[student.id] || [];
-        const studentGrade = allGrades[student.id];
-        const studentAttSummary = {
-          total: studentAttendance.length,
-          present: studentAttendance.filter((r) => r.status === "present").length,
-          absent: studentAttendance.filter((r) => r.status === "absent").length,
-          late: studentAttendance.filter((r) => r.status === "late").length,
-        };
-
-        // Generate PDF for this specific student
-        const { createArabicPDF, getArabicTableStyles } = await import("@/lib/arabic-pdf");
-        const autoTableImport = await import("jspdf-autotable");
-        const autoTable = autoTableImport.default;
-        const reportType = sections.attendance && !sections.grades ? "attendance" : "grades";
-        const { doc, startY } = await createArabicPDF({ orientation: "landscape", reportType, includeHeader: true });
-        const tableStyles = getArabicTableStyles();
-        const pageWidth = doc.internal.pageSize.getWidth();
-
-        doc.setFontSize(14);
-        doc.setFont("Amiri", "bold");
-        doc.text(`تقرير الطالب: ${student.full_name}`, pageWidth / 2, startY, { align: "center" });
-        doc.setFontSize(9);
-        doc.setFont("Amiri", "normal");
-        doc.text(`الفترة: ${dateFrom} إلى ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
-
-        let currentY = startY + 15;
-
-        if (sections.attendance && studentAttendance.length > 0) {
-          doc.setFontSize(13);
-          doc.text("تقرير الحضور", pageWidth / 2, currentY, { align: "center" });
-          autoTable(doc, {
-            startY: currentY + 5,
-            head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
-            body: studentAttendance.map((r, i) => [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.student_name, String(i + 1)]),
-            ...tableStyles,
-            columnStyles: {
-              3: { halign: "right" as const, fontStyle: "bold" as const },
-              4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-            },
-          });
-          currentY = (doc as any).lastAutoTable.finalY + 10;
-          doc.setFontSize(10);
-          doc.text(`حاضر: ${studentAttSummary.present} | غائب: ${studentAttSummary.absent} | متأخر: ${studentAttSummary.late}`, pageWidth / 2, currentY, { align: "center" });
-          currentY += 10;
-        }
-
-        if (sections.grades && studentGrade) {
-          if (sections.attendance && currentY > doc.internal.pageSize.getHeight() - 40) {
-            doc.addPage("a4", "landscape");
-            currentY = 15;
-          }
-          doc.setFontSize(13);
-          doc.text("تقرير الدرجات", pageWidth / 2, currentY, { align: "center" });
-          const catNames = Object.keys(studentGrade.categories);
-          const head = ["المجموع", ...catNames.slice().reverse(), "اسم الطالب", "#"];
-          autoTable(doc, {
-            startY: currentY + 5,
-            head: [head],
-            body: [[String(studentGrade.total), ...catNames.slice().reverse().map((n) => studentGrade.categories[n] !== null ? String(studentGrade.categories[n]) : "—"), studentGrade.student_name, "1"]],
-            ...tableStyles,
-            columnStyles: {
-              [head.length - 2]: { halign: "right" as const, fontStyle: "bold" as const },
-              [head.length - 1]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-              0: { fillColor: [219, 234, 254] as [number, number, number], fontStyle: "bold" as const },
-            },
-          });
-        }
-
-        const pdfBuffer = doc.output("arraybuffer");
-        const fileName = `report_${student.id}_${dateFrom}_${Date.now()}.pdf`;
-        const { error: uploadError } = await supabase.storage
-          .from("reports")
-          .upload(fileName, pdfBuffer, { contentType: "application/pdf", upsert: true });
-
-        if (uploadError) { failCount++; continue; }
-
-        const { data: signedUrlData, error: signedUrlError } = await supabase.storage.from("reports").createSignedUrl(fileName, 3600);
-        if (signedUrlError) { failCount++; continue; }
-        const pdfUrl = signedUrlData?.signedUrl;
-
-        const message = `${getReportLabel(sections)} للطالب: ${student.full_name}\nالفترة: ${dateFrom} - ${dateTo}\n\nلتحميل التقرير PDF:\n${pdfUrl}`;
-        const { data, error } = await supabase.functions.invoke("send-sms", {
-          body: { phone: student.parent_phone, message },
-        });
-
-        if (error || !data?.success) failCount++;
-        else successCount++;
-      } catch {
-        failCount++;
-      }
-    }
-
-    setBulkProgress({ current: 0, total: 0, active: false });
-    setSendingSMS(false);
-    toast({
-      title: "تم الإرسال الجماعي ✅",
-      description: `نجح: ${successCount} | فشل: ${failCount} من أصل ${studentsWithPhone.length} طالب`,
-    });
-  };
-
-  // ============ Render ============
-
   const className = classes.find((c) => c.id === selectedClass)?.name || "";
 
   if (permsLoaded && !teacherPerms.can_view_reports && !teacherPerms.read_only_mode) {
@@ -789,16 +375,16 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3 print:hidden">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">التقارير والإحصائيات</h1>
           <p className="text-muted-foreground">تقارير يومية وأسبوعية للحضور والدرجات مع إمكانية التصدير</p>
         </div>
         <div className="flex items-center gap-2">
-          
           <Button
             size="sm"
-            onClick={handlePrint}
+            onClick={() => safePrint()}
             className="gap-1.5 text-white"
             style={{ backgroundColor: "hsl(var(--report-btn-print))" }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "hsl(var(--report-btn-print-hover))")}
@@ -807,7 +393,7 @@ export default function ReportsPage() {
             <Printer className="h-4 w-4" />
             طباعة
           </Button>
-           <DropdownMenu>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 size="sm"
@@ -895,139 +481,27 @@ export default function ReportsPage() {
       )}
 
       {/* Filters */}
-      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 print:hidden">
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="space-y-1.5 min-w-[180px]">
-              <Label className="text-xs font-semibold text-muted-foreground">الفصل</Label>
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الفصل" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes.map((cls) => (
-                    <SelectItem key={cls.id} value={cls.id}>
-                      {cls.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5 min-w-[180px]">
-              <Label className="text-xs font-semibold text-muted-foreground">الطالب</Label>
-              <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                <SelectTrigger>
-                  <SelectValue placeholder="جميع الطلاب" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الطلاب</SelectItem>
-                  {students.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-muted-foreground">نوع التقرير</Label>
-              <Select value={reportType} onValueChange={(v: "daily" | "periodic") => {
-                setReportType(v);
-                if (v === "daily") {
-                  setDateToDate(dateFromDate);
-                  setSelectedWeeks([]);
-                } else {
-                  const weeksInfo = getWeeksInfo();
-                  const activeWeek = weeksInfo.find(w => w.weekNumber === currentWeek) || weeksInfo[0];
-                  if (activeWeek) {
-                    setSelectedWeeks([activeWeek.weekNumber]);
-                    setDateFromDate(activeWeek.startDate);
-                    setDateToDate(activeWeek.endDate);
-                  }
-                }
-              }}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">يومي</SelectItem>
-                  <SelectItem value="periodic">أسبوعي</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {reportType === "daily" ? (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">التاريخ</Label>
-                <HijriDatePicker
-                  date={dateFromDate}
-                  onDateChange={(d) => {
-                    setDateFromDate(d);
-                    setDateToDate(d);
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-muted-foreground">الأسابيع</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-64 justify-between text-sm font-normal" dir="rtl">
-                      <span className="truncate">
-                        {selectedWeeks.length === 0
-                          ? "اختر الأسابيع"
-                           : selectedWeeks.length === getWeeksInfo().length
-                             ? "الجميع (كل الأسابيع)"
-                             : (() => {
-                                 const sorted = [...selectedWeeks].sort((a, b) => a - b);
-                                 return `الأسبوع ${sorted[0]} - ${sorted[sorted.length - 1]}`;
-                               })()}
-                      </span>
-                      <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-72 p-0" align="start" dir="rtl">
-                    <div className="max-h-72 overflow-y-auto">
-                      {/* Select All */}
-                      <div
-                        className="flex items-center gap-2 px-3 py-2 border-b border-border cursor-pointer hover:bg-muted/50"
-                        onClick={toggleAllWeeks}
-                      >
-                        <Checkbox
-                          checked={selectedWeeks.length === getWeeksInfo().length && getWeeksInfo().length > 0}
-                          onCheckedChange={toggleAllWeeks}
-                        />
-                        <span className="text-sm font-medium">📋 الجميع</span>
-                      </div>
-                      {/* Individual weeks */}
-                      {getWeeksInfo().map((w) => (
-                        <div
-                          key={w.weekNumber}
-                          className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-muted/50"
-                          onClick={() => toggleWeek(w.weekNumber)}
-                        >
-                          <Checkbox
-                            checked={selectedWeeks.includes(w.weekNumber)}
-                            onCheckedChange={() => toggleWeek(w.weekNumber)}
-                          />
-                          <span className="text-sm">
-                            {w.weekNumber === currentWeek ? "● " : ""}أسبوع {w.weekNumber} — {w.type !== "normal" ? w.label : "دراسة"}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                {selectedWeeks.length > 0 && (
-                  <p className="text-[11px] text-muted-foreground mt-1">
-                    {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <ReportFilters
+        classes={classes}
+        selectedClass={selectedClass}
+        setSelectedClass={setSelectedClass}
+        students={students}
+        selectedStudent={selectedStudent}
+        setSelectedStudent={setSelectedStudent}
+        reportType={reportType}
+        setReportType={handleReportTypeChange}
+        dateFromDate={dateFromDate}
+        setDateFromDate={setDateFromDate}
+        dateToDate={dateToDate}
+        setDateToDate={setDateToDate}
+        selectedWeeks={selectedWeeks}
+        toggleWeek={toggleWeek}
+        toggleAllWeeks={toggleAllWeeks}
+        getWeeksInfo={getWeeksInfo}
+        currentWeek={currentWeek}
+      />
 
+      {/* Report Tabs */}
       <Tabs defaultValue="attendance" dir="rtl">
         <TabsList className="report-tabs-list w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
           <TabsTrigger value="attendance" className="report-tab report-tab--attendance gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
@@ -1052,237 +526,47 @@ export default function ReportsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* ===== Attendance Report ===== */}
-        <TabsContent value="attendance" className="space-y-4">
-          <div className="flex items-center gap-2 print:hidden">
-            <Button onClick={fetchAttendance} disabled={loadingAttendance || !selectedClass}>
-              <BarChart3 className="h-4 w-4 ml-1.5" />
-              {loadingAttendance ? "جارٍ التحميل..." : "عرض التقرير"}
-            </Button>
-            {attendanceData.length > 0 && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => { setPreviewType("attendance"); setPreviewOpen(true); }} className="gap-1.5">
-                  <Eye className="h-4 w-4" />
-                  معاينة
-                </Button>
-                <ReportExportDialog
-                  title="تصدير تقرير الحضور"
-                  onExportExcel={exportAttendanceExcel}
-                  onExportPDF={exportAttendancePDF}
-                  onShareWhatsApp={shareAttendanceWhatsApp}
-                />
-              </>
-            )}
-          </div>
-
-          {attendanceData.length > 0 && (
-            <div className="print-area space-y-4">
-              <ReportPrintHeader reportType="attendance" />
-              <PrintWatermark reportType="attendance" />
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 no-print">
-                <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 via-card to-primary/10 dark:from-primary/10 dark:via-card dark:to-primary/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-md shadow-primary/20">
-                      <UserCircle className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <p className="text-2xl font-bold text-foreground">{attendanceSummary.total}</p>
-                    <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-md bg-gradient-to-br from-success/5 via-card to-success/10 dark:from-success/10 dark:via-card dark:to-success/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--success)), hsl(var(--success) / 0.7))", boxShadow: "0 4px 12px hsl(var(--success) / 0.2)" }}>
-                      <ClipboardCheck className="h-5 w-5 text-success-foreground" />
-                    </div>
-                    <p className="text-2xl font-bold" style={{ color: "hsl(var(--success))" }}>{attendanceSummary.present}</p>
-                    <p className="text-xs text-muted-foreground">حاضر</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-md bg-gradient-to-br from-destructive/5 via-card to-destructive/10 dark:from-destructive/10 dark:via-card dark:to-destructive/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl bg-gradient-to-br from-destructive to-destructive/70 flex items-center justify-center shadow-md shadow-destructive/20">
-                      <Users className="h-5 w-5 text-destructive-foreground" />
-                    </div>
-                    <p className="text-2xl font-bold text-destructive">{attendanceSummary.absent}</p>
-                    <p className="text-xs text-muted-foreground">غائب</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-md bg-gradient-to-br from-warning/5 via-card to-warning/10 dark:from-warning/10 dark:via-card dark:to-warning/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="mx-auto mb-2 w-10 h-10 rounded-2xl flex items-center justify-center shadow-md" style={{ background: "linear-gradient(135deg, hsl(var(--warning)), hsl(var(--warning) / 0.7))", boxShadow: "0 4px 12px hsl(var(--warning) / 0.2)" }}>
-                      <Calendar className="h-5 w-5 text-warning-foreground" />
-                    </div>
-                    <p className="text-2xl font-bold" style={{ color: "hsl(var(--warning))" }}>{attendanceSummary.late}</p>
-                    <p className="text-xs text-muted-foreground">متأخر</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Attendance Chart */}
-              <AttendanceChart data={attendanceData} />
-
-              {/* Data Table */}
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-                <CardContent className="pt-4">
-                  <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
-                          <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
-                          <TableHead className="text-right font-semibold">التاريخ</TableHead>
-                          <TableHead className="text-right font-semibold">الحالة</TableHead>
-                          <TableHead className="text-right font-semibold">ملاحظات</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {attendanceData.map((row, i) => (
-                          <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
-                            <TableCell className="font-medium">{row.student_name}</TableCell>
-                            <TableCell className="text-muted-foreground">{row.date}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className={
-                                  row.status === "present"
-                                    ? "bg-success/15 text-success hover:bg-success/20 border-0"
-                                    : row.status === "absent"
-                                    ? "bg-destructive/15 text-destructive hover:bg-destructive/20 border-0"
-                                    : "bg-warning/15 hover:bg-warning/20 border-0"
-                                }
-                                style={row.status !== "present" && row.status !== "absent" ? { color: "hsl(var(--warning))" } : undefined}
-                              >
-                                {STATUS_LABELS[row.status] || row.status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {row.notes || "—"}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Weekly Grid Report */}
-              {reportType === "periodic" && (
-                <AttendanceWeeklyReport
-                  attendanceData={attendanceData}
-                  students={students}
-                  periodsPerWeek={periodsPerWeek}
-                  dateFrom={dateFrom}
-                  dateTo={dateTo}
-                  className={className}
-                />
-              )}
-            </div>
-          )}
-
-          {!loadingAttendance && attendanceData.length === 0 && (
-            <Card className="print:hidden border-0 shadow-lg bg-card/80">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <div className="rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 p-4 mb-4">
-                  <Calendar className="h-10 w-10 text-primary/40" />
-                </div>
-                <p className="text-sm">اختر الفصل والتواريخ ثم اضغط "عرض التقرير"</p>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="attendance">
+          <AttendanceReportTab
+            attendanceData={attendanceData}
+            loadingAttendance={loadingAttendance}
+            selectedClass={selectedClass}
+            fetchAttendance={fetchAttendance}
+            onPreview={() => { setPreviewType("attendance"); setPreviewOpen(true); }}
+            exportAttendanceExcel={exportAttendanceExcel}
+            exportAttendancePDF={exportAttendancePDF}
+            shareAttendanceWhatsApp={shareAttendanceWhatsApp}
+            reportType={reportType}
+            students={students}
+            periodsPerWeek={periodsPerWeek}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            className={className}
+          />
         </TabsContent>
 
-        {/* ===== Grades Report ===== */}
-        <TabsContent value="grades" className="space-y-4">
-          <div className="flex items-center gap-2 print:hidden">
-            <Button onClick={fetchGrades} disabled={loadingGrades || !selectedClass}>
-              <BarChart3 className="h-4 w-4 ml-1.5" />
-              {loadingGrades ? "جارٍ التحميل..." : "عرض التقرير"}
-            </Button>
-            {gradeData.length > 0 && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => { setPreviewType("grades"); setPreviewOpen(true); }} className="gap-1.5">
-                  <Eye className="h-4 w-4" />
-                  معاينة
-                </Button>
-                <ReportExportDialog
-                  title="تصدير تقرير الدرجات"
-                  onExportExcel={exportGradesExcel}
-                  onExportPDF={exportGradesPDF}
-                  onShareWhatsApp={shareGradesWhatsApp}
-                />
-              </>
-            )}
-          </div>
-
-          {gradeData.length > 0 && (
-            <div className="print-area space-y-4">
-              <ReportPrintHeader reportType="grades" />
-              <PrintWatermark reportType="grades" />
-              {/* Grades Chart */}
-              <GradesChart data={gradeData} categoryNames={categoryNames} />
-
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-              <CardContent className="pt-4">
-                <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gradient-to-l from-success/5 to-primary/5 dark:from-success/10 dark:to-primary/10">
-                        <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
-                        {categoryNames.map((name) => (
-                          <TableHead key={name} className="text-center font-semibold">
-                            {name}
-                          </TableHead>
-                        ))}
-                        <TableHead className="text-center font-semibold">المجموع</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {gradeData.map((row, i) => (
-                        <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
-                          <TableCell className="font-medium">{row.student_name}</TableCell>
-                          {categoryNames.map((name) => (
-                            <TableCell key={name} className="text-center text-muted-foreground">
-                              {row.categories[name] !== null ? row.categories[name] : "—"}
-                            </TableCell>
-                          ))}
-                          <TableCell className="text-center">
-                            <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-0 font-bold">
-                              {row.total}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-            </div>
-          )}
-
-          {!loadingGrades && gradeData.length === 0 && (
-            <Card className="print:hidden border-0 shadow-lg bg-card/80">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <div className="rounded-2xl bg-gradient-to-br from-success/10 to-primary/10 p-4 mb-4">
-                  <Users className="h-10 w-10 text-success/40" />
-                </div>
-                <p className="text-sm">اختر الفصل ثم اضغط "عرض التقرير"</p>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="grades">
+          <GradesReportTab
+            gradeData={gradeData}
+            categoryNames={categoryNames}
+            loadingGrades={loadingGrades}
+            selectedClass={selectedClass}
+            fetchGrades={fetchGrades}
+            onPreview={() => { setPreviewType("grades"); setPreviewOpen(true); }}
+            exportGradesExcel={exportGradesExcel}
+            exportGradesPDF={exportGradesPDF}
+            shareGradesWhatsApp={shareGradesWhatsApp}
+          />
         </TabsContent>
 
-        {/* ===== Behavior Report ===== */}
         <TabsContent value="behavior" className="space-y-4">
           <BehaviorReport selectedClass={selectedClass} dateFrom={dateFrom} dateTo={dateTo} selectedStudent={selectedStudent} />
         </TabsContent>
 
-        {/* ===== Monthly Analytics ===== */}
         <TabsContent value="analytics" className="space-y-4">
           <MonthlyAnalytics selectedClass={selectedClass} classes={classes} />
         </TabsContent>
 
-        {/* ===== Comprehensive Export ===== */}
         <TabsContent value="comprehensive" className="space-y-4">
           <ComprehensiveExport classes={classes} />
         </TabsContent>
@@ -1377,51 +661,14 @@ export default function ReportsPage() {
           </table>
         )}
       </PrintPreviewDialog>
+
       {/* Bulk send confirmation dialog */}
-      <AlertDialog open={bulkConfirm.open} onOpenChange={(open) => setBulkConfirm((prev) => ({ ...prev, open }))}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الإرسال الجماعي</AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-3 text-sm">
-                <p>أنت على وشك إرسال التقارير لجميع أولياء أمور الفصل.</p>
-                <div className="rounded-xl bg-muted/60 p-3 space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">إجمالي الطلاب:</span>
-                    <Badge variant="secondary" className="text-sm">{students.length}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">طلاب بأرقام هواتف (سيتم الإرسال):</span>
-                    <Badge className="text-sm bg-primary">{students.filter((s) => s.parent_phone).length}</Badge>
-                  </div>
-                  {students.filter((s) => !s.parent_phone).length > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-destructive">طلاب بدون أرقام (لن يتم الإرسال):</span>
-                      <Badge variant="destructive" className="text-sm">{students.filter((s) => !s.parent_phone).length}</Badge>
-                    </div>
-                  )}
-                </div>
-                {students.filter((s) => !s.parent_phone).length > 0 && (
-                  <div className="text-xs text-muted-foreground bg-muted/40 rounded-lg p-2">
-                    <strong>الطلاب بدون أرقام:</strong>{" "}
-                    {students.filter((s) => !s.parent_phone).map((s) => s.full_name).join("، ")}
-                  </div>
-                )}
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => handleBulkSendSMS(bulkConfirm.sections)}
-              disabled={students.filter((s) => s.parent_phone).length === 0}
-            >
-              <Send className="h-4 w-4 ml-2" />
-              إرسال ({students.filter((s) => s.parent_phone).length} طالب)
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BulkSendConfirmDialog
+        open={bulkConfirm.open}
+        onOpenChange={(open) => setBulkConfirm((prev) => ({ ...prev, open }))}
+        students={students}
+        onConfirm={() => handleBulkSendSMS(bulkConfirm.sections)}
+      />
     </div>
   );
 }
