@@ -7,14 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import {
-  Trophy, Star, AlertTriangle, Download, FileSpreadsheet, FileText, Users, GraduationCap,
-
+  Trophy, Star, AlertTriangle, Users, GraduationCap,
   Shield, ShieldAlert, Award, TrendingUp, Loader2, Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { format } from "date-fns";
-import { safeWriteXLSX, safeSavePDF } from "@/lib/download-utils";
+import { safeWriteXLSX } from "@/lib/download-utils";
 import { toast } from "@/hooks/use-toast";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
 
