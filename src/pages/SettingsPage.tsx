@@ -2714,6 +2714,7 @@ export default function SettingsPage() {
               <p className="text-xs text-muted-foreground">عند تجاوز الطالب عدد الحصص المسموح بها ({absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`})، يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong>.</p>
             </div>
             <Button onClick={async () => { setSavingThreshold(true); await Promise.all([supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) }), supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(absenceAllowedSessions) }), supabase.from("site_settings").upsert({ id: "absence_mode", value: absenceMode }), supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(totalTermSessions) })]); setSavingThreshold(false); toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}` }); }} disabled={savingThreshold} className="gap-1.5"><Save className="h-4 w-4" />{savingThreshold ? "جارٍ الحفظ..." : "حفظ حد الإنذار"}</Button>
+          </CardContent>
         </Card>
       )}
 
