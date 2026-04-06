@@ -109,10 +109,17 @@ function InlineContactSection({ studentId, studentName, classId }: { studentId: 
 }
 
 export default function StudentDashboard() {
-  const { student, signOut } = useAuth();
+  const { student, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const isParent = student?.login_type === "parent";
+
+  // Redirect to login if no student session and not loading
+  useEffect(() => {
+    if (!loading && !student) {
+      navigate("/login", { replace: true });
+    }
+  }, [loading, student, navigate]);
 
   // Resource library state
   const [folders, setFolders] = useState<ResourceFolder[]>([]);

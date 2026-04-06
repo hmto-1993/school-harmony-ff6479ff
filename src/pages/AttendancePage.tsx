@@ -138,20 +138,26 @@ export default function AttendancePage() {
 
   const loadWeeklyProgress = async () => {
     setWeeklyProgressLoaded(false);
-    // 1. Fetch class_schedules for periods_per_week limits
+    const classIds = classes.map(c => c.id);
+    if (classIds.length === 0) { setWeeklyProgressLoaded(true); return; }
+
+    // 1. Fetch class_schedules only for teacher's classes
     const { data: schedules } = await supabase
       .from("class_schedules")
-      .select("class_id, periods_per_week");
+      .select("class_id, periods_per_week")
+      .in("class_id", classIds);
 
     const limitsMap: Record<string, number> = {};
     (schedules || []).forEach(s => { limitsMap[s.class_id] = s.periods_per_week; });
 
-    // 2. Fetch distinct attendance dates per class within the academic week
+    // 2. Fetch attendance dates scoped to teacher's classes only
     const { data: records } = await supabase
       .from("attendance_records")
       .select("class_id, date")
+      .in("class_id", classIds)
       .gte("date", weekBounds.start)
-      .lte("date", weekBounds.end);
+      .lte("date", weekBounds.end)
+      .limit(5000);
 
     // Count distinct dates per class
     const sessionMap: Record<string, Set<string>> = {};
@@ -379,13 +385,24 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     const newDate = format(moveTargetDate, "yyyy-MM-dd");
     if (newDate === date) return;
     setMovingDate(true);
-    const { error } = await supabase
+
+    // Only move records that belong to this user (or all if admin)
+    let query = supabase
       .from("attendance_records")
       .update({ date: newDate })
       .eq("class_id", selectedClass)
       .eq("date", date);
+
+    if (role !== "admin") {
+      query = query.eq("recorded_by", user.id);
+    }
+
+    const { error, count } = await query.select("id");
     if (error) {
-      toast({ title: "خطأ", description: "فشل نقل الحصة", variant: "destructive" });
+      const msg = error.message?.includes("row-level security")
+        ? "لا يمكنك نقل سجلات ليست من تسجيلك أو في تاريخ سابق"
+        : "فشل نقل الحصة";
+      toast({ title: "خطأ", description: msg, variant: "destructive" });
     } else {
       toast({ title: "تم النقل", description: `تم نقل حصة التحضير إلى ${newDate}` });
       setSelectedDate(moveTargetDate);
