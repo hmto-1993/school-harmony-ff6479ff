@@ -44,7 +44,7 @@ export default function DashboardLayout() {
           >
             <Menu className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-primary">القائمة</span>
-            <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-contain mr-auto" />
+            <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-cover mr-auto" />
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden min-h-[calc(100vh-60px)]">
