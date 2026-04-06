@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
 import { useToast } from "@/hooks/use-toast";
-import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye, Clock } from "lucide-react";
+import { Save, CheckCircle2, Filter, ClipboardCheck, Users, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, Upload, FileSpreadsheet, FileText, Eye, Clock, MessageCircle } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -522,6 +522,38 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     toast({ title: "تم", description: `تم تصدير ${data.length} سجل إلى PDF` });
   };
 
+  const exportAttendanceWhatsApp = (scope: "all" | "filtered" = "all") => {
+    const data = scope === "filtered" ? filteredRecords : records;
+    if (!data.length) return;
+    const className = classes.find(c => c.id === selectedClass)?.name || "";
+    const statusLabel: Record<string, string> = { present: "حاضر", absent: "غائب", late: "متأخر", early_leave: "منصرف مبكرًا", sick_leave: "إجازة مرضية" };
+    const filterLabel = scope === "filtered" && statusFilter !== "all"
+      ? ` (${statusOptions.find(o => o.value === statusFilter)?.label || statusFilter})`
+      : "";
+
+    const header = `📋 تقرير الحضور — ${className} — ${date}${filterLabel}`;
+    const summary = [
+      `👥 الإجمالي: ${data.length}`,
+      `✅ حاضر: ${data.filter(r => r.status === "present").length}`,
+      `❌ غائب: ${data.filter(r => r.status === "absent").length}`,
+      `⏰ متأخر: ${data.filter(r => r.status === "late").length}`,
+      data.filter(r => r.status === "early_leave").length > 0 ? `🚪 منصرف مبكرًا: ${data.filter(r => r.status === "early_leave").length}` : "",
+      data.filter(r => r.status === "sick_leave").length > 0 ? `🏥 إجازة مرضية: ${data.filter(r => r.status === "sick_leave").length}` : "",
+    ].filter(Boolean).join("\n");
+
+    const studentsList = data.map((r, i) => {
+      const statusEmoji: Record<string, string> = { present: "✅", absent: "❌", late: "⏰", early_leave: "🚪", sick_leave: "🏥" };
+      const emoji = statusEmoji[r.status] || "•";
+      const note = r.notes ? ` — ${r.notes}` : "";
+      return `${i + 1}. ${emoji} ${r.full_name} (${statusLabel[r.status]})${note}`;
+    }).join("\n");
+
+    const message = `${header}\n\n${summary}\n\n${studentsList}`;
+    const encodedMsg = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${encodedMsg}`, "_blank");
+    toast({ title: "تم فتح واتساب", description: "يمكنك اختيار جهة الإرسال من واتساب" });
+  };
+
   const filteredRecords = useMemo(() => {
     let result = records;
     if (statusFilter !== "all") result = result.filter((r) => r.status === statusFilter);
@@ -838,6 +870,17 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
                           تصدير المفلتر PDF ({statusOptions.find(o => o.value === statusFilter)?.label})
                         </DropdownMenuItem>
                       </>
+                    )}
+                    <div className="h-px bg-border/50 my-1" />
+                    <DropdownMenuItem onClick={() => exportAttendanceWhatsApp("all")} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
+                      <MessageCircle className="h-4 w-4" />
+                      إرسال الكل واتساب
+                    </DropdownMenuItem>
+                    {statusFilter !== "all" && (
+                      <DropdownMenuItem onClick={() => exportAttendanceWhatsApp("filtered")} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
+                        <MessageCircle className="h-4 w-4" />
+                        إرسال المفلتر واتساب ({statusOptions.find(o => o.value === statusFilter)?.label})
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
