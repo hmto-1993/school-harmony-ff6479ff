@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ export interface MarginsConfig {
   top: number;
   side: number;
   borderWidth?: number;
+  borderColor?: string;
 }
 
 export interface PrintHeaderConfig {
@@ -105,6 +107,7 @@ const defaultMargins: MarginsConfig = {
   top: 5,
   side: 8,
   borderWidth: 3,
+  borderColor: "#3b82f6",
 };
 
 const defaultConfig: PrintHeaderConfig = {
@@ -511,7 +514,22 @@ export default function PrintHeaderEditor() {
                   {exporting ? "جارٍ التصدير..." : "تصدير PNG"}
                 </Button>
               </div>
-              <div ref={previewRef} dir="rtl" className="border rounded-lg p-4 bg-white relative overflow-hidden" style={{ fontFamily: "'IBM Plex Sans Arabic', sans-serif" }}>
+              <div
+                ref={previewRef}
+                dir="rtl"
+                className="border rounded-lg bg-white relative overflow-hidden mx-auto shadow-md"
+                style={{
+                  fontFamily: "'IBM Plex Sans Arabic', sans-serif",
+                  width: "100%",
+                  maxWidth: "595px",
+                  minHeight: "842px",
+                  aspectRatio: "210 / 297",
+                  paddingTop: `${(config.margins?.top ?? 5) * 2.5}px`,
+                  paddingLeft: `${(config.margins?.side ?? 8) * 2.5}px`,
+                  paddingRight: `${(config.margins?.side ?? 8) * 2.5}px`,
+                  paddingBottom: "20px",
+                }}
+              >
                 {/* Watermark preview overlay */}
                 {config.watermark?.enabled && config.watermark.text && (
                   <div style={{
@@ -556,7 +574,16 @@ export default function PrintHeaderEditor() {
                     )}
                   </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "16px", position: "relative", zIndex: 2 }}>
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  gap: "16px",
+                  position: "relative",
+                  zIndex: 2,
+                  paddingBottom: "8px",
+                  borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
+                }}>
                   <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
                     {config.rightSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
@@ -581,9 +608,17 @@ export default function PrintHeaderEditor() {
                     ))}
                   </div>
                 </div>
+
+                {/* Simulated content area */}
+                <div style={{ position: "relative", zIndex: 2, marginTop: "20px" }}>
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <div key={i} style={{ height: "10px", background: "#f1f5f9", borderRadius: "4px", marginBottom: "8px", width: `${90 - i * 5}%` }} />
+                  ))}
+                </div>
+
                 {/* Footer signatures preview */}
                 {config.footerSignatures?.enabled && config.footerSignatures.signatures.length > 0 && (
-                  <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "24px", paddingTop: "16px", borderTop: "1px dashed #cbd5e1", position: "relative", zIndex: 2 }}>
+                  <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "auto", paddingTop: "16px", borderTop: "1px dashed #cbd5e1", position: "absolute", bottom: "20px", left: `${(config.margins?.side ?? 8) * 2.5}px`, right: `${(config.margins?.side ?? 8) * 2.5}px`, zIndex: 2 }}>
                     {config.footerSignatures.signatures.map((sig, i) => (
                       <div key={i} style={{ textAlign: "center", minWidth: "120px" }}>
                         <p style={{ margin: 0, fontSize: "11px", fontWeight: 600, color: "#1e293b" }}>{sig.label}</p>
@@ -961,6 +996,36 @@ export default function PrintHeaderEditor() {
                       className="flex-1"
                     />
                     <span className="text-xs font-mono w-10 text-center">{config.margins?.borderWidth ?? 3}px</span>
+                  </div>
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-xs text-muted-foreground">لون الخط الفاصل</Label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {["#3b82f6", "#1d4ed8", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#1e293b", "#64748b"].map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setConfig((prev) => ({
+                          ...prev,
+                          margins: { ...(prev.margins || defaultMargins), borderColor: color },
+                        }))}
+                        className={cn(
+                          "w-7 h-7 rounded-full border-2 transition-all hover:scale-110",
+                          (config.margins?.borderColor ?? "#3b82f6") === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent"
+                        )}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                    <input
+                      type="color"
+                      value={config.margins?.borderColor ?? "#3b82f6"}
+                      onChange={(e) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), borderColor: e.target.value },
+                      }))}
+                      className="w-7 h-7 rounded cursor-pointer border-0 p-0"
+                      title="لون مخصص"
+                    />
                   </div>
                 </div>
               </div>

@@ -222,7 +222,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
       const headerHTML = `
         <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px ${configMarginSide}px 0;background:#fff;">
-          <div style="padding-bottom:8px;border-bottom:${headerConfig.margins?.borderWidth ?? 3}px solid #3b82f6;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
+          <div style="padding-bottom:8px;border-bottom:${headerConfig.margins?.borderWidth ?? 3}px solid ${headerConfig.margins?.borderColor ?? '#3b82f6'};display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
             <div style="max-width:46%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
               ${rightLines}
             </div>
