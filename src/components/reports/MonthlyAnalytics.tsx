@@ -285,6 +285,27 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     finalizePDF(doc, `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark, advanced);
   };
 
+  const shareExcellenceWhatsApp = async () => {
+    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "grades", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFontSize(18);
+    doc.text("تقرير المتميزين الشهري", pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(11);
+    doc.text(`${MONTHS_AR[parseInt(selectedMonth)]} ${selectedYear}`, pageWidth / 2, startY + 8, { align: "center" });
+    const body = excellenceStudents.map((s, i) => [
+      s.fullMarkTests.join(", ") || "انتظام كامل", s.fullMarks ? "✓" : "—", s.perfectAttendance ? "✓" : "—", s.class_name, s.full_name, String(i + 1),
+    ]);
+    autoTable(doc, { startY: startY + 14, head: [["التفاصيل", "درجة كاملة", "حضور كامل", "الفصل", "اسم الطالب", "#"]], body, ...tableStyles });
+    const fileName = `تقرير_المتميزون_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`;
+    const blob = finalizePDFAsBlob(doc, watermark, advanced);
+    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+    await sharePDFViaWhatsApp(blob, fileName, `🏆 تقرير المتميزين — ${MONTHS_AR[parseInt(selectedMonth)]} ${selectedYear}`);
+  };
+
   const exportDisciplinaryPDF = async () => {
     const { createArabicPDF, getArabicTableStyles, finalizePDF } = await import("@/lib/arabic-pdf");
     const autoTableImport = await import("jspdf-autotable");
@@ -314,6 +335,27 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     });
 
     finalizePDF(doc, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`, watermark, advanced);
+  };
+
+  const shareDisciplinaryWhatsApp = async () => {
+    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
+    const autoTableImport = await import("jspdf-autotable");
+    const autoTable = autoTableImport.default;
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFontSize(18);
+    doc.text("تقرير الغياب والانضباط", pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(11);
+    doc.text(`${MONTHS_AR[parseInt(selectedMonth)]} ${selectedYear}`, pageWidth / 2, startY + 8, { align: "center" });
+    const body = disciplinaryStudents.map((s, i) => [
+      s.warningStatus === "sent" ? "تم الإرسال" : "معلق", String(s.absenceDays), s.class_name, s.full_name, String(i + 1),
+    ]);
+    autoTable(doc, { startY: startY + 14, head: [["حالة الإنذار", "أيام الغياب", "الفصل", "اسم الطالب", "#"]], body, ...tableStyles });
+    const fileName = `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.pdf`;
+    const blob = finalizePDFAsBlob(doc, watermark, advanced);
+    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+    await sharePDFViaWhatsApp(blob, fileName, `📋 تقرير الغياب — ${MONTHS_AR[parseInt(selectedMonth)]} ${selectedYear}`);
   };
 
   const currentYear = new Date().getFullYear();
