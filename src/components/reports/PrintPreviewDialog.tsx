@@ -158,8 +158,8 @@ function ReportPrintHeaderInline({
       >
         <div
           style={{
-            maxWidth: "40%",
-            textAlign: "center",
+            flex: "1 1 0%",
+            textAlign: "right",
             fontSize: `${config.rightSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.rightSection?.color || "#1e293b",
@@ -170,7 +170,7 @@ function ReportPrintHeaderInline({
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, margin: "0 auto" }}>
           {(config.centerSection?.images || []).map((img: string, i: number) =>
             img ? (
               <img
@@ -189,8 +189,8 @@ function ReportPrintHeaderInline({
 
         <div
           style={{
-            maxWidth: "40%",
-            textAlign: "center",
+            flex: "1 1 0%",
+            textAlign: "left",
             fontSize: `${config.leftSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.leftSection?.color || "#1e293b",

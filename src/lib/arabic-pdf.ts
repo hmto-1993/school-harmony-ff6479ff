@@ -133,45 +133,45 @@ async function renderPrintHeaderFromConfig(
   const margin = 10;
   const headerMargin = config.margins?.side ?? 8;
   const usableWidth = pageWidth - headerMargin * 2;
-  const sectionWidth = usableWidth * 0.50;
-  const centerWidth = usableWidth * 0.10;
+  const sectionWidth = usableWidth * 0.32;
+  const centerWidth = usableWidth * 0.36;
 
   const startY = config.margins?.top ?? 10;
   let rightY = startY;
   let leftY = startY;
 
-  // --- Right section text (centered within its area, with maxWidth for wrapping) ---
+  // --- Right section text (anchored to the outer right edge) ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
   const rightFontPt = rightFontPx * 0.75;
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightCenterX = pageWidth - headerMargin - sectionWidth / 2;
+  const rightAnchorX = pageWidth - headerMargin;
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, rightCenterX, rightY, { align: "center" });
+        doc.text(wl, rightAnchorX, rightY, { align: "right" });
         rightY += rightSpacing;
       });
     }
   });
 
-  // --- Left section text (centered within its area, with maxWidth for wrapping) ---
+  // --- Left section text (anchored to the outer left edge) ---
   const leftFontPx = config.leftSection.fontSize || 12;
   const leftFontPt = leftFontPx * 0.75;
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftCenterX = headerMargin + sectionWidth / 2;
+  const leftAnchorX = headerMargin;
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, leftCenterX, leftY, { align: "center" });
+        doc.text(wl, leftAnchorX, leftY, { align: "left" });
         leftY += leftSpacing;
       });
     }

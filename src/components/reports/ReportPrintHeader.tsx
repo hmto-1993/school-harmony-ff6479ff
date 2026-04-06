@@ -61,11 +61,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
           paddingLeft: "0px",
         }}
       >
-        {/* Right text — anchored to right edge */}
+        {/* Right text — anchored to outer edge */}
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "center",
+            textAlign: "right",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.rightSection.color || "#1e293b",
@@ -94,11 +94,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
           )}
         </div>
 
-        {/* Left text — anchored to left edge */}
+        {/* Left text — anchored to outer edge */}
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "center",
+            textAlign: "left",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",
