@@ -139,6 +139,17 @@ const defaultMargins: MarginsConfig = {
   borderColor: "#3b82f6",
 };
 
+const defaultAdvanced: AdvancedConfig = {
+  paperSize: "A4",
+  exportQuality: "high",
+  pdfFontSize: 12,
+  tableRowHeight: 28,
+  showPageNumbers: true,
+  showDate: true,
+  showReportTitle: true,
+  headerOnEveryPage: true,
+};
+
 const defaultConfig: PrintHeaderConfig = {
   rightSection: {
     lines: ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "مدرسة ..."],
