@@ -91,6 +91,7 @@ const App = () => {
       </CalendarTypeProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
