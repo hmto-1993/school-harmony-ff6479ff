@@ -663,6 +663,21 @@ export default function PrintHeaderEditor() {
 
             {/* ─ Tab 1: Header content ─ */}
             <TabsContent value="header" className="space-y-4">
+              <div className="flex justify-end">
+                <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-7"
+                  onClick={() => {
+                    setConfig((prev) => ({
+                      ...prev,
+                      rightSection: { ...defaultConfig.rightSection },
+                      centerSection: { ...defaultConfig.centerSection },
+                      leftSection: { ...defaultConfig.leftSection },
+                    }));
+                    toast({ title: "تم", description: "تمت استعادة الترويسة الافتراضية" });
+                  }}>
+                  <RotateCcw className="h-3 w-3" />
+                  استعادة الافتراضي
+                </Button>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card><CardContent className="p-4">{renderTextSection("rightSection", "الجانب الأيمن", <Type className="h-4 w-4" />)}</CardContent></Card>
 
@@ -726,10 +741,20 @@ export default function PrintHeaderEditor() {
             <TabsContent value="formatting" className="space-y-4">
               <Card>
                 <CardContent className="p-4 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Ruler className="h-4 w-4" />
-                    <Label className="font-semibold text-sm">الهوامش والخط الفاصل</Label>
-                    <span className="text-xs text-muted-foreground">(مشترك بين الطباعة والتصدير)</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Ruler className="h-4 w-4" />
+                      <Label className="font-semibold text-sm">الهوامش والخط الفاصل</Label>
+                      <span className="text-xs text-muted-foreground">(مشترك بين الطباعة والتصدير)</span>
+                    </div>
+                    <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-7"
+                      onClick={() => {
+                        setConfig((prev) => ({ ...prev, margins: { ...defaultMargins } }));
+                        toast({ title: "تم", description: "تمت استعادة إعدادات التنسيق الافتراضية" });
+                      }}>
+                      <RotateCcw className="h-3 w-3" />
+                      استعادة الافتراضي
+                    </Button>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -800,12 +825,26 @@ export default function PrintHeaderEditor() {
                       <Droplets className="h-4 w-4" />
                       العلامة المائية
                     </Label>
-                    <Switch
-                      checked={config.watermark?.enabled || false}
-                      onCheckedChange={(v) => setConfig((prev) => ({
-                        ...prev, watermark: { ...(prev.watermark || defaultWatermark), enabled: v },
-                      }))}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" size="sm" className="gap-1.5 text-xs h-7"
+                        onClick={() => {
+                          setConfig((prev) => ({
+                            ...prev,
+                            watermark: { ...defaultWatermark },
+                            footerSignatures: { ...defaultFooterSignatures, signatures: defaultFooterSignatures.signatures.map(s => ({ ...s })) },
+                          }));
+                          toast({ title: "تم", description: "تمت استعادة إعدادات الإضافات الافتراضية" });
+                        }}>
+                        <RotateCcw className="h-3 w-3" />
+                        استعادة الافتراضي
+                      </Button>
+                      <Switch
+                        checked={config.watermark?.enabled || false}
+                        onCheckedChange={(v) => setConfig((prev) => ({
+                          ...prev, watermark: { ...(prev.watermark || defaultWatermark), enabled: v },
+                        }))}
+                      />
+                    </div>
                   </div>
                   {config.watermark?.enabled && (
                     <div className="space-y-4 pt-2 border-t">
