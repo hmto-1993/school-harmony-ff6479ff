@@ -648,72 +648,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleChangePassword = async () => {
-    if (!selectedTeacher || !newPassword.trim()) return;
-    if (newPassword.trim().length < 8) {
-      toast({ title: "خطأ", description: "كلمة المرور يجب أن تكون 8 أحرف على الأقل", variant: "destructive" });
-      return;
-    }
-    const teacher = teachers.find((t) => t.user_id === selectedTeacher);
-    if (!teacher) return;
 
-    setChangingPassword(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("manage-users", {
-        body: { action: "change_password", user_id: teacher.user_id, password: newPassword },
-      });
-      setChangingPassword(false);
-
-      const errMsg = data?.error || (error as any)?.message || (typeof error === "string" ? error : null);
-      if (errMsg) {
-        toast({ title: "خطأ", description: errMsg, variant: "destructive" });
-      } else {
-        toast({ title: "تم التغيير", description: `تم تغيير كلمة المرور لـ ${teacher.full_name}` });
-        setNewPassword("");
-        setSelectedTeacher("");
-      }
-    } catch {
-      setChangingPassword(false);
-      toast({ title: "خطأ", description: "فشل في الاتصال بالخادم", variant: "destructive" });
-    }
-  };
-
-  const handleCreateTeacher = async () => {
-    if (!newTeacherName.trim() || !newTeacherPassword.trim()) return;
-    const email = newTeacherEmail.trim() || `teacher_${Date.now()}@auto.local`;
-    setCreatingTeacher(true);
-
-    const { data, error } = await supabase.functions.invoke("manage-users", {
-      body: {
-        action: "create_user",
-        email,
-        password: newTeacherPassword,
-        full_name: newTeacherName,
-        role: newTeacherRole,
-        national_id: newTeacherNationalId.trim() || null,
-      },
-    });
-
-    if (error || data?.error) {
-      toast({ title: "خطأ", description: data?.error || "فشل في إنشاء الحساب", variant: "destructive" });
-      setCreatingTeacher(false);
-      return;
-    }
-
-    toast({ title: "تم الإنشاء", description: `تم إنشاء حساب ${newTeacherName} بنجاح` });
-    setNewTeacherName("");
-    setNewTeacherEmail("");
-    setNewTeacherPassword("");
-    setNewTeacherNationalId("");
-    setCreatingTeacher(false);
-    // Refresh only teachers list to avoid collapsing the settings panel
-    const { data: teachersData } = await supabase.functions.invoke("manage-users", {
-      body: { action: "list_teachers" },
-    });
-    if (teachersData?.teachers) {
-      setTeachers(teachersData.teachers);
-    }
-  };
 
   const handleUploadLetterhead = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
