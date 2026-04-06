@@ -563,31 +563,11 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
     const suffix = scope === "filtered" && statusFilter !== "all" ? `_${statusFilter}` : "";
     const fileName = `حضور_${className}_${date}${suffix}.pdf`;
 
-    // Apply watermark & advanced settings exactly like finalizePDF
+    // Share via WhatsApp
     const pdfBlob = finalizePDFAsBlob(doc, watermark, advanced);
-    const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
-
-    // Try Web Share API first (best for mobile)
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
-      try {
-        await navigator.share({
-          files: [pdfFile],
-          title: `تقرير الحضور — ${className}`,
-          text: `تقرير الحضور — ${className} — ${date}`,
-        });
-        toast({ title: "تم المشاركة", description: "تم مشاركة ملف PDF بنجاح" });
-        return;
-      } catch {
-        // User cancelled or share failed
-      }
-    }
-
-    // Fallback: download PDF + open WhatsApp with caption
-    const { safeDownload } = await import("@/lib/download-utils");
-    await safeDownload(pdfBlob, fileName);
-    const caption = encodeURIComponent(`📋 تقرير الحضور — ${className} — ${date}${filterLabel}`);
-    window.open(`https://wa.me/?text=${caption}`, "_blank");
-    toast({ title: "تم تصدير PDF", description: "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
+    const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+    const result = await sharePDFViaWhatsApp(pdfBlob, fileName, `📋 تقرير الحضور — ${className} — ${date}${filterLabel}`);
+    toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
   const filteredRecords = useMemo(() => {
