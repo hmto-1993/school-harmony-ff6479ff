@@ -141,17 +141,75 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
     );
   };
 
+  const autoSaveRecord = async (student: StudentBehavior, newType: BehaviorType, newNote?: string, newSeverity?: string) => {
+    if (!user) return;
+    const today = new Date().toISOString().split("T")[0];
+    const note = newNote !== undefined ? newNote : student.note;
+    const severity = newSeverity !== undefined ? newSeverity : student.severity;
+
+    const buildNote = (type: BehaviorType, n: string, sev: string) => {
+      const base = n || "";
+      if (type === "negative" && sev && sev !== "low") {
+        return `[severity:${sev}] ${base}`.trim();
+      }
+      if (type === "negative" && sev === "low") {
+        return base ? `[severity:low] ${base}`.trim() : `[severity:low]`;
+      }
+      return base || null;
+    };
+
+    if (newType === null && student.existingId) {
+      // Delete if type cleared
+      await supabase.from("behavior_records").delete().eq("id", student.existingId);
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: null, existingId: null, notified: false } : s)
+      );
+      return;
+    }
+
+    if (newType === null) {
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: null } : s)
+      );
+      return;
+    }
+
+    const builtNote = buildNote(newType, note, severity);
+
+    if (student.existingId) {
+      await supabase.from("behavior_records").update({
+        type: newType, note: builtNote,
+      }).eq("id", student.existingId);
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity } : s)
+      );
+    } else {
+      const { data } = await supabase.from("behavior_records").insert({
+        student_id: student.student_id,
+        class_id: selectedClass,
+        date: today,
+        type: newType,
+        note: builtNote,
+        recorded_by: user.id,
+      }).select("id").single();
+      setStudents((prev) =>
+        prev.map((s) => s.student_id === student.student_id ? { ...s, type: newType, note: note, severity, existingId: data?.id || null } : s)
+      );
+    }
+  };
+
   const cycleType = (studentId: string) => {
+    const student = students.find((s) => s.student_id === studentId);
+    if (!student) return;
+    const next: BehaviorType =
+      student.type === null ? "positive" :
+      student.type === "positive" ? "neutral" :
+      student.type === "neutral" ? "negative" : null;
+    // Optimistic update
     setStudents((prev) =>
-      prev.map((s) => {
-        if (s.student_id !== studentId) return s;
-        const next: BehaviorType =
-          s.type === null ? "positive" :
-          s.type === "positive" ? "neutral" :
-          s.type === "neutral" ? "negative" : null;
-        return { ...s, type: next };
-      })
+      prev.map((s) => s.student_id !== studentId ? s : { ...s, type: next })
     );
+    autoSaveRecord(student, next);
   };
 
   const setNote = (studentId: string, note: string) => {
