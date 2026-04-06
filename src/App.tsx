@@ -13,6 +13,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import NotificationOptIn from "@/components/NotificationOptIn";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
+import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
 
 // Lazy-loaded pages
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -39,7 +40,9 @@ const PageLoader = () => (
   </div>
 );
 
-const App = () => (
+const App = () => {
+  useDynamicFavicon();
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <CalendarTypeProvider>
@@ -88,6 +91,7 @@ const App = () => (
       </CalendarTypeProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
