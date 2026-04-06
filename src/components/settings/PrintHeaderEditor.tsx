@@ -586,12 +586,12 @@ export default function PrintHeaderEditor() {
                   borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
                   marginBottom: `${config.margins?.borderBottomMargin ?? 4}mm`,
                 }}>
-                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
+                  <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "1 1 0%"  }}>
                     {config.rightSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                     ))}
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0" style={{ margin: "0 auto" }}>
                     {config.centerSection.images.map((img, i) => (
                       <div key={i}>
                         {img ? (
@@ -604,7 +604,7 @@ export default function PrintHeaderEditor() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", flex: "0 1 auto", maxWidth: "40%" }}>
+                  <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", flex: "1 1 0%" }}>
                     {config.leftSection.lines.map((line, i) => (
                       <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                     ))}
