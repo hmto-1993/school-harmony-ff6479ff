@@ -80,7 +80,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; studentId: string; name: string }>({ open: false, studentId: "", name: "" });
   const [sendingNotif, setSendingNotif] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Record<string, string[]>>(DEFAULT_SUGGESTIONS);
-
+  const saveQueueRef = useRef<Map<string, AbortController>>(new Map());
   useEffect(() => {
     supabase.from("classes").select("id, name").order("name").then(({ data }) => setClasses(data || []));
     // Load custom suggestions
