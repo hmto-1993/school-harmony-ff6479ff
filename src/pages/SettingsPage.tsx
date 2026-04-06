@@ -416,6 +416,7 @@ export default function SettingsPage() {
       popupHistoryRes,
       overrideRes,
       schedulesRes,
+      adminReadOnlyRes,
     ] = await Promise.all([
       coreQueries,
       profileQuery,
@@ -427,6 +428,7 @@ export default function SettingsPage() {
       popupHistoryQuery,
       overrideQuery,
       schedulesQuery,
+      adminReadOnlyQuery,
     ]);
 
     // Process core data
