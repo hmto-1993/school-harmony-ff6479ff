@@ -997,6 +997,36 @@ export default function PrintHeaderEditor() {
                     <span className="text-xs font-mono w-10 text-center">{config.margins?.borderWidth ?? 3}px</span>
                   </div>
                 </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label className="text-xs text-muted-foreground">لون الخط الفاصل</Label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {["#3b82f6", "#1d4ed8", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#1e293b", "#64748b"].map((color) => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setConfig((prev) => ({
+                          ...prev,
+                          margins: { ...(prev.margins || defaultMargins), borderColor: color },
+                        }))}
+                        className={cn(
+                          "w-7 h-7 rounded-full border-2 transition-all hover:scale-110",
+                          (config.margins?.borderColor ?? "#3b82f6") === color ? "border-foreground scale-110 ring-2 ring-primary/30" : "border-transparent"
+                        )}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                    <input
+                      type="color"
+                      value={config.margins?.borderColor ?? "#3b82f6"}
+                      onChange={(e) => setConfig((prev) => ({
+                        ...prev,
+                        margins: { ...(prev.margins || defaultMargins), borderColor: e.target.value },
+                      }))}
+                      className="w-7 h-7 rounded cursor-pointer border-0 p-0"
+                      title="لون مخصص"
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
