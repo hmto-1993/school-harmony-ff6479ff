@@ -56,13 +56,15 @@ export default function ReportPrintHeader({ reportType }: Props) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: "16px",
+          gap: "8px",
+          paddingRight: "0px",
+          paddingLeft: "0px",
         }}
       >
         {/* Right text — anchored to right edge */}
         <div
           style={{
-            maxWidth: "40%",
+            flex: "1 1 0%",
             textAlign: "center",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
@@ -75,7 +77,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         </div>
 
         {/* Center images */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, margin: "0 auto" }}>
           {config.centerSection.images.map((img, i) =>
             img ? (
               <img
@@ -95,7 +97,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         {/* Left text — anchored to left edge */}
         <div
           style={{
-            maxWidth: "40%",
+            flex: "1 1 0%",
             textAlign: "center",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
