@@ -132,7 +132,7 @@ export default function SettingsPage() {
   const [profileNationalId, setProfileNationalId] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Teachers list (shared with TeacherManagementCard and StaffLoginHistory)
+  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
 
   // Letterhead
   const [letterheadUrl, setLetterheadUrl] = useState("");
