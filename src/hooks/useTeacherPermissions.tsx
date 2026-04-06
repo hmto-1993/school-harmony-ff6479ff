@@ -34,6 +34,22 @@ const allTrue: TeacherPerms = {
   read_only_mode: false,
 };
 
+const viewOnly: TeacherPerms = {
+  can_print: true,
+  can_export: true,
+  can_send_notifications: false,
+  can_delete_records: false,
+  can_manage_grades: false,
+  can_manage_attendance: false,
+  can_view_grades: true,
+  can_view_reports: true,
+  can_view_attendance: true,
+  can_view_activities: true,
+  can_view_dashboard: true,
+  can_view_students: true,
+  read_only_mode: true,
+};
+
 export function useTeacherPermissions() {
   const { user, role } = useAuth();
   const [perms, setPerms] = useState<TeacherPerms>(allTrue);
@@ -41,7 +57,30 @@ export function useTeacherPermissions() {
 
   useEffect(() => {
     if (!user) { setLoaded(true); return; }
-    if (role === "admin") { setPerms(allTrue); setLoaded(true); return; }
+
+    if (role === "admin") {
+      // Check if admin_read_only is enabled and this user is NOT the primary admin
+      supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["admin_read_only", "admin_primary_id"])
+        .then(({ data }) => {
+          let readOnly = false;
+          let primaryId = "";
+          (data || []).forEach((s: any) => {
+            if (s.id === "admin_read_only") readOnly = s.value === "true";
+            if (s.id === "admin_primary_id") primaryId = s.value || "";
+          });
+
+          if (readOnly && primaryId && user.id !== primaryId) {
+            setPerms(viewOnly);
+          } else {
+            setPerms(allTrue);
+          }
+          setLoaded(true);
+        });
+      return;
+    }
 
     supabase
       .from("teacher_permissions")

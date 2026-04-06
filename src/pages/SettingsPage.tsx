@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -187,6 +188,10 @@ export default function SettingsPage() {
   const [classSchedules, setClassSchedules] = useState<Record<string, { periodsPerWeek: number; daysOfWeek: number[] }>>({});
   const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
   const pendingScheduleUpdates = useRef<Record<string, { periodsPerWeek: number; timeout: NodeJS.Timeout }>>({});
+
+  // Admin read-only setting
+  const [adminReadOnly, setAdminReadOnly] = useState(false);
+  const [savingAdminReadOnly, setSavingAdminReadOnly] = useState(false);
 
   // Debounced save for class schedules (300ms delay)
   const saveClassSchedule = useCallback(async (classId: string, newVal: number) => {
@@ -392,6 +397,10 @@ export default function SettingsPage() {
       ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle()
       : Promise.resolve({ data: null });
 
+    const adminReadOnlyQuery = isAdmin
+      ? supabase.from("site_settings").select("id, value").in("id", ["admin_read_only"])
+      : Promise.resolve({ data: null });
+
     const schedulesQuery = isAdmin
       ? supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week")
       : Promise.resolve({ data: null });
@@ -408,6 +417,7 @@ export default function SettingsPage() {
       popupHistoryRes,
       overrideRes,
       schedulesRes,
+      adminReadOnlyRes,
     ] = await Promise.all([
       coreQueries,
       profileQuery,
@@ -419,6 +429,7 @@ export default function SettingsPage() {
       popupHistoryQuery,
       overrideQuery,
       schedulesQuery,
+      adminReadOnlyQuery,
     ]);
 
     // Process core data
@@ -562,6 +573,11 @@ export default function SettingsPage() {
 
     // Attendance override
     setAttendanceOverrideLock((overrideRes as any).data?.value === "true");
+
+    // Admin read-only
+    ((adminReadOnlyRes as any).data || []).forEach((s: any) => {
+      if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true");
+    });
 
     // Class schedules
     const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
@@ -3436,6 +3452,43 @@ export default function SettingsPage() {
 
         {isAdmin && (
           <>
+            {/* ===== تقييد المدير ===== */}
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/20 text-white">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-base font-bold text-foreground">تقييد المدير للاطلاع فقط</h3>
+                      <p className="text-xs text-muted-foreground">عند التفعيل، يستطيع المدير الآخر الاطلاع على جميع البيانات دون تعديل أو حذف</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={adminReadOnly}
+                    disabled={savingAdminReadOnly}
+                    onCheckedChange={async (checked) => {
+                      setSavingAdminReadOnly(true);
+                      setAdminReadOnly(checked);
+                      // Save both admin_read_only and admin_primary_id (current user)
+                      await Promise.all([
+                        supabase.from("site_settings").upsert({ id: "admin_read_only", value: String(checked) }),
+                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user?.id || "" }),
+                      ]);
+                      setSavingAdminReadOnly(false);
+                      toast({
+                        title: checked ? "تم التفعيل" : "تم التعطيل",
+                        description: checked
+                          ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل"
+                          : "تم إلغاء تقييد المديرين",
+                      });
+                    }}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* ===== إدارة المعلمين ===== */}
             <Collapsible>
               <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
