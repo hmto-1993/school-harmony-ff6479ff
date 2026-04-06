@@ -77,7 +77,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         </div>
 
         {/* Center images */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, margin: "0 auto" }}>
           {config.centerSection.images.map((img, i) =>
             img ? (
               <img
@@ -97,7 +97,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         {/* Left text — anchored to left edge */}
         <div
           style={{
-            maxWidth: "40%",
+            flex: "1 1 0%",
             textAlign: "center",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
