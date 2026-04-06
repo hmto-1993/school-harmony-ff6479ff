@@ -1195,6 +1195,7 @@ export default function ReportsPage() {
                   title="تصدير تقرير الحضور"
                   onExportExcel={exportAttendanceExcel}
                   onExportPDF={exportAttendancePDF}
+                  onShareWhatsApp={shareAttendanceWhatsApp}
                 />
               </>
             )}
@@ -1333,6 +1334,7 @@ export default function ReportsPage() {
                   title="تصدير تقرير الدرجات"
                   onExportExcel={exportGradesExcel}
                   onExportPDF={exportGradesPDF}
+                  onShareWhatsApp={shareGradesWhatsApp}
                 />
               </>
             )}
