@@ -170,6 +170,7 @@ const defaultConfig: PrintHeaderConfig = {
   watermark: defaultWatermark,
   footerSignatures: defaultFooterSignatures,
   margins: defaultMargins,
+  advanced: defaultAdvanced,
 };
 
 interface ReportTypeOption {
