@@ -50,7 +50,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
     >
       <div
         style={{
-          borderBottom: `${config.margins?.borderWidth ?? 3}px solid #3b82f6`,
+          borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
           paddingBottom: "4px",
           marginBottom: "6px",
           display: "flex",
