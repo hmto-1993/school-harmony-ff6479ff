@@ -396,6 +396,10 @@ export default function SettingsPage() {
       ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle()
       : Promise.resolve({ data: null });
 
+    const adminReadOnlyQuery = isAdmin
+      ? supabase.from("site_settings").select("id, value").in("id", ["admin_read_only"])
+      : Promise.resolve({ data: null });
+
     const schedulesQuery = isAdmin
       ? supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week")
       : Promise.resolve({ data: null });
