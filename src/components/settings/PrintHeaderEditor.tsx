@@ -927,6 +927,140 @@ export default function PrintHeaderEditor() {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* ─ Tab 4: Advanced ─ */}
+            <TabsContent value="advanced" className="space-y-4">
+              <Card>
+                <CardContent className="p-4 space-y-5">
+                  <div className="flex items-center gap-2">
+                    <Wrench className="h-4 w-4" />
+                    <Label className="font-semibold text-sm">إعدادات متقدمة</Label>
+                    <span className="text-xs text-muted-foreground">(تُطبق على الطباعة والتصدير)</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Paper Size */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                        <FileDigit className="h-3 w-3" />
+                        حجم الورقة
+                      </Label>
+                      <Select
+                        value={config.advanced?.paperSize ?? "A4"}
+                        onValueChange={(v) => setConfig((prev) => ({
+                          ...prev, advanced: { ...(prev.advanced || defaultAdvanced), paperSize: v as any },
+                        }))}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="A4">A4 (210 × 297 mm)</SelectItem>
+                          <SelectItem value="A5">A5 (148 × 210 mm)</SelectItem>
+                          <SelectItem value="Letter">Letter (216 × 279 mm)</SelectItem>
+                          <SelectItem value="Legal">Legal (216 × 356 mm)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Export Quality */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">جودة التصدير (PNG / PDF)</Label>
+                      <Select
+                        value={config.advanced?.exportQuality ?? "high"}
+                        onValueChange={(v) => setConfig((prev) => ({
+                          ...prev, advanced: { ...(prev.advanced || defaultAdvanced), exportQuality: v as any },
+                        }))}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">عادية — أصغر حجم</SelectItem>
+                          <SelectItem value="high">عالية — متوازنة (افتراضي)</SelectItem>
+                          <SelectItem value="max">قصوى — أعلى دقة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* PDF Font Size */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">حجم خط الجدول في PDF</Label>
+                      <div className="flex items-center gap-3">
+                        <Slider min={8} max={18} step={1}
+                          value={[config.advanced?.pdfFontSize ?? 12]}
+                          onValueChange={([v]) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), pdfFontSize: v },
+                          }))}
+                          className="flex-1" />
+                        <span className="text-xs font-mono w-10 text-center">{config.advanced?.pdfFontSize ?? 12}px</span>
+                      </div>
+                    </div>
+
+                    {/* Table Row Height */}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">ارتفاع صف الجدول</Label>
+                      <div className="flex items-center gap-3">
+                        <Slider min={18} max={50} step={2}
+                          value={[config.advanced?.tableRowHeight ?? 28]}
+                          onValueChange={([v]) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), tableRowHeight: v },
+                          }))}
+                          className="flex-1" />
+                        <span className="text-xs font-mono w-10 text-center">{config.advanced?.tableRowHeight ?? 28}px</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Toggle options */}
+                  <div className="border-t pt-4 space-y-3">
+                    <Label className="text-xs text-muted-foreground font-semibold">خيارات إضافية</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                        <Label className="text-sm flex items-center gap-2">
+                          <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+                          أرقام الصفحات
+                        </Label>
+                        <Switch checked={config.advanced?.showPageNumbers ?? true}
+                          onCheckedChange={(v) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), showPageNumbers: v },
+                          }))} />
+                      </div>
+                      <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                        <Label className="text-sm flex items-center gap-2">
+                          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                          تاريخ التقرير
+                        </Label>
+                        <Switch checked={config.advanced?.showDate ?? true}
+                          onCheckedChange={(v) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), showDate: v },
+                          }))} />
+                      </div>
+                      <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                        <Label className="text-sm flex items-center gap-2">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                          عنوان التقرير
+                        </Label>
+                        <Switch checked={config.advanced?.showReportTitle ?? true}
+                          onCheckedChange={(v) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), showReportTitle: v },
+                          }))} />
+                      </div>
+                      <div className="flex items-center justify-between p-2.5 rounded-lg border">
+                        <Label className="text-sm flex items-center gap-2">
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          الترويسة في كل صفحة
+                        </Label>
+                        <Switch checked={config.advanced?.headerOnEveryPage ?? true}
+                          onCheckedChange={(v) => setConfig((prev) => ({
+                            ...prev, advanced: { ...(prev.advanced || defaultAdvanced), headerOnEveryPage: v },
+                          }))} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           {/* ── Save button ── */}
