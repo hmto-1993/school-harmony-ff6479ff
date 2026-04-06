@@ -638,7 +638,7 @@ export default function PrintHeaderEditor() {
 
           {/* ── Settings Tabs ── */}
           <Tabs defaultValue="header" dir="rtl" className="space-y-4">
-            <TabsList className="w-full grid grid-cols-3">
+            <TabsList className="w-full grid grid-cols-4">
               <TabsTrigger value="header" className="gap-1.5 text-xs">
                 <FileText className="h-3.5 w-3.5" />
                 الترويسة
@@ -650,6 +650,10 @@ export default function PrintHeaderEditor() {
               <TabsTrigger value="extras" className="gap-1.5 text-xs">
                 <Sparkles className="h-3.5 w-3.5" />
                 الإضافات
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="gap-1.5 text-xs">
+                <Wrench className="h-3.5 w-3.5" />
+                متقدم
               </TabsTrigger>
             </TabsList>
 
