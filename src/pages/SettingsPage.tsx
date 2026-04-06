@@ -63,7 +63,7 @@ import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
 import TimetableEditor from "@/components/settings/TimetableEditor";
 import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
-import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
+import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import CategoryTable from "@/components/settings/CategoryTable";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
