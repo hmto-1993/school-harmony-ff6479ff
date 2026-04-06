@@ -76,7 +76,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
   const [students, setStudents] = useState<StudentBehavior[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [saving] = useState(false); // kept for compatibility
   const [noteDialog, setNoteDialog] = useState<{ open: boolean; studentId: string; name: string }>({ open: false, studentId: "", name: "" });
   const [sendingNotif, setSendingNotif] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Record<string, string[]>>(DEFAULT_SUGGESTIONS);
