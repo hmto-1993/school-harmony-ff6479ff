@@ -1617,237 +1617,41 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {/* Section 1: المهام الأدائية والمشاركة والتفاعل */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold flex items-center gap-2 px-1 text-emerald-600 dark:text-emerald-400">
-                <span>📝</span>
-                المهام الأدائية والمشاركة والتفاعل
-              </h3>
-              <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/50 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-emerald-50 dark:bg-emerald-900/20">
-                      <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">الدرجة القصوى</TableHead>
-                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {classworkCategories.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
-                          لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع
-                        </TableCell>
-                      </TableRow>
-                    ) : classworkCategories.map((cat) => (
-                      <TableRow key={cat.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {isAdmin ? (
-                              <Input
-                                value={editingCats[cat.id]?.name ?? cat.name}
-                                onChange={(e) =>
-                                  setEditingCats((prev) => ({
-                                    ...prev,
-                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
-                                  }))
-                                }
-                                className="h-8 w-40"
-                              />
-                            ) : <span>{cat.name}</span>}
-                            {catClassFilter === "all" && (() => {
-                              const classesWithCat = categories.filter(c => c.name === cat.name && c.class_id !== null);
-                              const missingCount = classes.length - classesWithCat.length;
-                              if (missingCount > 0) {
-                                const missingNames = classes.filter(cls => !classesWithCat.some(c => c.class_id === cls.id)).map(c => c.name);
-                                return (
-                                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600 dark:text-amber-400 whitespace-nowrap" title={`ناقصة في: ${missingNames.join("، ")}`}>
-                                    ⚠ ناقصة في {missingCount} فصل
-                                  </Badge>
-                                );
-                              }
-                              return null;
-                            })()}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin ? (
-                            <Input type="number" className="w-24 h-8"
-                              value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                              onChange={(e) =>
-                                setEditingCats((prev) => ({
-                                  ...prev,
-                                  [cat.id]: { ...prev[cat.id], name: prev[cat.id]?.name ?? cat.name, max_score: parseFloat(e.target.value) || 0 },
-                                }))
-                              }
-                            />
-                          ) : <span>{cat.max_score}</span>}
-                        </TableCell>
-                        {isAdmin && (
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                onClick={() => handleReorderCategory(cat.id, "up", classworkCategories)}
-                                disabled={classworkCategories.indexOf(cat) === 0} title="تحريك لأعلى">
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                onClick={() => handleReorderCategory(cat.id, "down", classworkCategories)}
-                                disabled={classworkCategories.indexOf(cat) === classworkCategories.length - 1} title="تحريك لأسفل">
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
-                                onClick={() =>
-                                  setEditingCats((prev) => ({
-                                    ...prev,
-                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: prev[cat.id]?.name ?? cat.name, category_group: "exam" },
-                                  }))
-                                }
-                                title="نقل إلى الاختبارات">
-                                ← الاختبارات
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent dir="rtl">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
-                                    <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها{catClassFilter === "all" ? " من جميع الفصول" : ""}.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <CategoryTable
+              title="المهام الأدائية والمشاركة والتفاعل"
+              emoji="📝"
+              colorScheme="emerald"
+              emptyText="لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع"
+              categories={classworkCategories}
+              allCategories={categories}
+              classes={classes}
+              editingCats={editingCats}
+              setEditingCats={setEditingCats}
+              isAdmin={isAdmin}
+              catClassFilter={catClassFilter}
+              targetGroupLabel="الاختبارات"
+              targetGroupKey="exam"
+              onReorder={handleReorderCategory}
+              onDelete={handleDeleteCategory}
+            />
 
-            {/* Section 2: الاختبارات */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold flex items-center gap-2 px-1 text-amber-600 dark:text-amber-400">
-                <span>📋</span>
-                الاختبارات
-              </h3>
-              <div className="rounded-lg border border-amber-200 dark:border-amber-800/50 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-amber-50 dark:bg-amber-900/20">
-                      <TableHead className="text-right">الفئة</TableHead>
-                      <TableHead className="text-right">الدرجة القصوى</TableHead>
-                      {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {examCategories.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={isAdmin ? 3 : 2} className="text-center text-muted-foreground py-4">
-                          لا توجد فئات — أضف: اختبار عملي، اختبار الفترة
-                        </TableCell>
-                      </TableRow>
-                    ) : examCategories.map((cat) => (
-                      <TableRow key={cat.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            {isAdmin ? (
-                              <Input
-                                value={editingCats[cat.id]?.name ?? cat.name}
-                                onChange={(e) =>
-                                  setEditingCats((prev) => ({
-                                    ...prev,
-                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: e.target.value },
-                                  }))
-                                }
-                                className="h-8 w-40"
-                              />
-                            ) : <span>{cat.name}</span>}
-                            {catClassFilter === "all" && (() => {
-                              const classesWithCat = categories.filter(c => c.name === cat.name && c.class_id !== null);
-                              const missingCount = classes.length - classesWithCat.length;
-                              if (missingCount > 0) {
-                                const missingNames = classes.filter(cls => !classesWithCat.some(c => c.class_id === cls.id)).map(c => c.name);
-                                return (
-                                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-600 dark:text-amber-400 whitespace-nowrap" title={`ناقصة في: ${missingNames.join("، ")}`}>
-                                    ⚠ ناقصة في {missingCount} فصل
-                                  </Badge>
-                                );
-                              }
-                              return null;
-                            })()}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {isAdmin ? (
-                            <Input type="number" className="w-24 h-8"
-                              value={editingCats[cat.id]?.max_score ?? cat.max_score}
-                              onChange={(e) =>
-                                setEditingCats((prev) => ({
-                                  ...prev,
-                                  [cat.id]: { ...prev[cat.id], name: prev[cat.id]?.name ?? cat.name, max_score: parseFloat(e.target.value) || 0 },
-                                }))
-                              }
-                            />
-                          ) : <span>{cat.max_score}</span>}
-                        </TableCell>
-                        {isAdmin && (
-                          <TableCell>
-                            <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                onClick={() => handleReorderCategory(cat.id, "up", examCategories)}
-                                disabled={examCategories.indexOf(cat) === 0} title="تحريك لأعلى">
-                                <ArrowUp className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                onClick={() => handleReorderCategory(cat.id, "down", examCategories)}
-                                disabled={examCategories.indexOf(cat) === examCategories.length - 1} title="تحريك لأسفل">
-                                <ArrowDown className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground hover:text-primary"
-                                onClick={() =>
-                                  setEditingCats((prev) => ({
-                                    ...prev,
-                                    [cat.id]: { ...prev[cat.id], max_score: prev[cat.id]?.max_score ?? cat.max_score, weight: prev[cat.id]?.weight ?? cat.weight, name: prev[cat.id]?.name ?? cat.name, category_group: "classwork" },
-                                  }))
-                                }
-                                title="نقل إلى أعمال الفصل">
-                                ← المهام الأدائية
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent dir="rtl">
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>حذف فئة التقييم "{cat.name}"؟</AlertDialogTitle>
-                                    <AlertDialogDescription>سيتم حذف الفئة وجميع الدرجات المسجلة فيها{catClassFilter === "all" ? " من جميع الفصول" : ""}.</AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={() => handleDeleteCategory(cat.id)}>حذف</AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+            <CategoryTable
+              title="الاختبارات"
+              emoji="📋"
+              colorScheme="amber"
+              emptyText="لا توجد فئات — أضف: اختبار عملي، اختبار الفترة"
+              categories={examCategories}
+              allCategories={categories}
+              classes={classes}
+              editingCats={editingCats}
+              setEditingCats={setEditingCats}
+              isAdmin={isAdmin}
+              catClassFilter={catClassFilter}
+              targetGroupLabel="المهام الأدائية"
+              targetGroupKey="classwork"
+              onReorder={handleReorderCategory}
+              onDelete={handleDeleteCategory}
+            />
 
             {catClassFilter === "all" && (
               <p className="text-xs text-muted-foreground text-center">
