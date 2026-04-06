@@ -67,6 +67,8 @@ import TeacherPermissionRow from "@/components/settings/TeacherPermissionRow";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import CategoryTable from "@/components/settings/CategoryTable";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
+import EvaluationToggles from "@/components/settings/EvaluationToggles";
+import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
@@ -1939,58 +1941,14 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Continuous Evaluation Settings */}
-              <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
-                  <h4 className="text-sm font-bold flex items-center gap-1.5">
-                    <ClipboardList className="h-4 w-4 text-emerald-600" />
-                    التقييم المستمر
-                  </h4>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-3 pb-3 space-y-2">
-                  {[
-                    { label: "📅 تفاعل اليوم", desc: "التقييم اليومي بالأيقونات", state: studentShowDailyGrades, setter: setStudentShowDailyGrades },
-                    { label: "📊 التفاعل الكلي", desc: "التقييم التراكمي بالأيقونات", state: studentShowClassworkIcons, setter: setStudentShowClassworkIcons },
-                  ].map((item, i) => (
-                    <div key={i} className={cn(
-                      "flex items-center justify-between p-2.5 rounded-lg border transition-all",
-                      item.state ? "border-success/40 bg-success/5" : "border-border/40 bg-card"
-                    )}>
-                      <div>
-                        <h4 className="text-xs font-bold">{item.label}</h4>
-                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => item.setter(!item.state)}
-                        className={cn("flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all",
-                          item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {item.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                        {item.state ? "ظاهر" : "مخفي"}
-                      </button>
-                    </div>
-                  ))}
-
-                  {studentShowClassworkIcons && (
-                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
-                      <span className="text-xs font-bold">عدد الأيقونات</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setStudentClassworkIconsCount(Math.max(5, studentClassworkIconsCount - 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >−</button>
-                        <span className="w-6 text-center font-bold text-xs">{studentClassworkIconsCount}</span>
-                        <button
-                          onClick={() => setStudentClassworkIconsCount(Math.min(30, studentClassworkIconsCount + 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >+</button>
-                      </div>
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
+              <EvaluationToggles
+                showDailyGrades={studentShowDailyGrades}
+                setShowDailyGrades={setStudentShowDailyGrades}
+                showClassworkIcons={studentShowClassworkIcons}
+                setShowClassworkIcons={setStudentShowClassworkIcons}
+                classworkIconsCount={studentClassworkIconsCount}
+                setClassworkIconsCount={setStudentClassworkIconsCount}
+              />
             </div>
 
             {/* ─── Row 2: Grade Categories per Period ─── */}
@@ -2976,58 +2934,16 @@ export default function SettingsPage() {
                 </Collapsible>
               )}
 
-              {/* Continuous Evaluation Settings */}
-              <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
-                  <h4 className="text-sm font-bold flex items-center gap-1.5">
-                    <ClipboardList className="h-4 w-4 text-emerald-600" />
-                    التقييم المستمر
-                  </h4>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="px-3 pb-3 space-y-2">
-                  {[
-                    { label: "📅 تفاعل اليوم", desc: "الإدخال اليومي", state: parentShowDailyGrades, setter: setParentShowDailyGrades },
-                    { label: "📊 التفاعل الكلي", desc: "ملخص تراكمي", state: parentShowClassworkIcons, setter: setParentShowClassworkIcons },
-                  ].map((item, i) => (
-                    <div key={i} className={cn(
-                      "flex items-center justify-between p-2.5 rounded-lg border transition-all",
-                      item.state ? "border-success/40 bg-success/5" : "border-border/40 bg-card"
-                    )}>
-                      <div>
-                        <h4 className="text-xs font-bold">{item.label}</h4>
-                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => item.setter(!item.state)}
-                        className={cn("flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold transition-all",
-                          item.state ? "bg-success text-white" : "bg-muted text-muted-foreground"
-                        )}
-                      >
-                        {item.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                        {item.state ? "ظاهر" : "مخفي"}
-                      </button>
-                    </div>
-                  ))}
-
-                  {parentShowClassworkIcons && (
-                    <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
-                      <span className="text-xs font-bold">عدد الأيقونات</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setParentClassworkIconsCount(Math.max(5, parentClassworkIconsCount - 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >−</button>
-                        <span className="w-6 text-center font-bold text-xs">{parentClassworkIconsCount}</span>
-                        <button
-                          onClick={() => setParentClassworkIconsCount(Math.min(30, parentClassworkIconsCount + 5))}
-                          className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground font-bold text-xs"
-                        >+</button>
-                      </div>
-                    </div>
-                  )}
-                </CollapsibleContent>
-              </Collapsible>
+              <EvaluationToggles
+                showDailyGrades={parentShowDailyGrades}
+                setShowDailyGrades={setParentShowDailyGrades}
+                showClassworkIcons={parentShowClassworkIcons}
+                setShowClassworkIcons={setParentShowClassworkIcons}
+                classworkIconsCount={parentClassworkIconsCount}
+                setClassworkIconsCount={setParentClassworkIconsCount}
+                dailyDesc="الإدخال اليومي"
+                cumulativeDesc="ملخص تراكمي"
+              />
             </div>
 
             {/* ─── Section 3: PDF Header ─── */}
@@ -3171,73 +3087,60 @@ export default function SettingsPage() {
       </div>
       <div className="space-y-4">
 
-        {/* ===== الملف الشخصي ===== */}
-        <Collapsible>
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-            <CollapsibleTrigger className="w-full group">
-              <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/20 text-white">
-                    <UserCircle className="h-5 w-5" />
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-base font-bold text-foreground">الملف الشخصي</h3>
-                    <p className="text-xs text-muted-foreground">تعديل بياناتك الشخصية وكلمة المرور</p>
-                  </div>
-                </div>
-                <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>الاسم الكامل</Label>
-                  <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الجوال</Label>
-                  <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
-                    placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
-                </div>
-                <div className="space-y-2">
-                  <Label>رقم الهوية الوطنية</Label>
-                  <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
-                    placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
-                  <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
-                </div>
-                <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
-                  <Save className="h-4 w-4" />
-                  {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
-                </Button>
+        <CollapsibleSettingsCard
+          icon={UserCircle}
+          iconGradient="from-pink-500 to-rose-600"
+          iconShadow="shadow-lg shadow-pink-500/20"
+          title="الملف الشخصي"
+          description="تعديل بياناتك الشخصية وكلمة المرور"
+        >
+          <div className="space-y-4 max-w-md">
+            <div className="space-y-2">
+              <Label>الاسم الكامل</Label>
+              <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الجوال</Label>
+              <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
+                placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
+            </div>
+            <div className="space-y-2">
+              <Label>رقم الهوية الوطنية</Label>
+              <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
+                placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+              <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
+            </div>
+            <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
+              <Save className="h-4 w-4" />
+              {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+            </Button>
 
-                <div className="border-t pt-4 mt-4 space-y-4">
-                  <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
-                  <div className="space-y-2">
-                    <Label>كلمة المرور الحالية</Label>
-                    <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                      placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>كلمة المرور الجديدة</Label>
-                    <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
-                      placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>تأكيد كلمة المرور الجديدة</Label>
-                    <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
-                      placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
-                  </div>
-                  <Button onClick={handleChangeOwnPassword}
-                    disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
-                    className="gap-1.5">
-                    <KeyRound className="h-4 w-4" />
-                    {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
-                  </Button>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+            <div className="border-t pt-4 mt-4 space-y-4">
+              <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
+              <div className="space-y-2">
+                <Label>كلمة المرور الحالية</Label>
+                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
+              </div>
+              <div className="space-y-2">
+                <Label>كلمة المرور الجديدة</Label>
+                <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
+                  placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
+              </div>
+              <div className="space-y-2">
+                <Label>تأكيد كلمة المرور الجديدة</Label>
+                <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
+                  placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
+              </div>
+              <Button onClick={handleChangeOwnPassword}
+                disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
+                className="gap-1.5">
+                <KeyRound className="h-4 w-4" />
+                {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+              </Button>
+            </div>
+          </div>
+        </CollapsibleSettingsCard>
 
         {isAdmin && (
           <>
@@ -3438,156 +3341,116 @@ export default function SettingsPage() {
               </Card>
             </Collapsible>
 
-            {/* ===== سجل دخول المعلمين ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white">
-                        <History className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">سجل الدخول</h3>
-                        <p className="text-xs text-muted-foreground">استعراض تاريخ دخول المعلمين والمديرين</p>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0 pb-5 px-5">
-                    <StaffLoginHistory
-                      teachers={teachers}
-                      currentUserId={user?.id || ""}
-                      currentUserName={profileName || "المدير"}
-                    />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <CollapsibleSettingsCard
+              icon={History}
+              iconGradient="from-cyan-500 to-blue-600"
+              iconShadow="shadow-lg shadow-cyan-500/20"
+              title="سجل الدخول"
+              description="استعراض تاريخ دخول المعلمين والمديرين"
+            >
+              <StaffLoginHistory
+                teachers={teachers}
+                currentUserId={user?.id || ""}
+                currentUserName={profileName || "المدير"}
+              />
+            </CollapsibleSettingsCard>
 
 
             {/* ===== قوالب واتساب ===== */}
             <WhatsAppTemplatesSettings />
 
-            {/* ===== مزود SMS ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/20 text-white">
-                        <MessageSquare className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">إعدادات مزود خدمة SMS</h3>
-                        <p className="text-xs text-muted-foreground">ربط مزود الرسائل النصية</p>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+            <CollapsibleSettingsCard
+              icon={MessageSquare}
+              iconGradient="from-cyan-500 to-blue-600"
+              iconShadow="shadow-lg shadow-cyan-500/20"
+              title="إعدادات مزود خدمة SMS"
+              description="ربط مزود الرسائل النصية"
+            >
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>المزود</Label>
+                  <Select value={smsProvider} onValueChange={setSmsProvider}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="msegat">MSEGAT</SelectItem>
+                      <SelectItem value="unifonic">Unifonic</SelectItem>
+                      <SelectItem value="taqnyat">Taqnyat (تقنيات)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {smsProvider === "msegat" && (
+                  <div className="space-y-2">
+                    <Label>اسم المستخدم</Label>
+                    <Input value={providerUsername} onChange={(e) => setProviderUsername(e.target.value)}
+                      placeholder="اسم مستخدم MSEGAT" dir="ltr" />
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                    <div className="space-y-2">
-                      <Label>المزود</Label>
-                      <Select value={smsProvider} onValueChange={setSmsProvider}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="msegat">MSEGAT</SelectItem>
-                          <SelectItem value="unifonic">Unifonic</SelectItem>
-                          <SelectItem value="taqnyat">Taqnyat (تقنيات)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                )}
 
-                    {smsProvider === "msegat" && (
-                      <div className="space-y-2">
-                        <Label>اسم المستخدم</Label>
-                        <Input value={providerUsername} onChange={(e) => setProviderUsername(e.target.value)}
-                          placeholder="اسم مستخدم MSEGAT" dir="ltr" />
-                      </div>
-                    )}
+                <div className="space-y-2">
+                  <Label>
+                    {smsProvider === "msegat" ? "مفتاح API" : smsProvider === "unifonic" ? "App SID" : "Bearer Token"}
+                  </Label>
+                  <Input type="password" value={providerApiKey} onChange={(e) => setProviderApiKey(e.target.value)}
+                    placeholder={smsProvider === "unifonic" ? "App SID" : smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
+                </div>
 
-                    <div className="space-y-2">
-                      <Label>
-                        {smsProvider === "msegat" ? "مفتاح API" : smsProvider === "unifonic" ? "App SID" : "Bearer Token"}
-                      </Label>
-                      <Input type="password" value={providerApiKey} onChange={(e) => setProviderApiKey(e.target.value)}
-                        placeholder={smsProvider === "unifonic" ? "App SID" : smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
-                    </div>
+                <div className="space-y-2">
+                  <Label>اسم المرسل (Sender ID)</Label>
+                  <Input value={providerSender} onChange={(e) => setProviderSender(e.target.value)}
+                    placeholder="Sender Name" dir="ltr" />
+                  {smsProvider === "unifonic" && (
+                    <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>
+                  )}
+                </div>
 
-                    <div className="space-y-2">
-                      <Label>اسم المرسل (Sender ID)</Label>
-                      <Input value={providerSender} onChange={(e) => setProviderSender(e.target.value)}
-                        placeholder="Sender Name" dir="ltr" />
-                      {smsProvider === "unifonic" && (
-                        <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>
-                      )}
-                    </div>
+                <div className="flex items-center gap-3">
+                  <Button onClick={handleSaveProvider} disabled={savingProvider} className="gap-1.5">
+                    <Save className="h-4 w-4" />
+                    {savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+                  </Button>
+                  <Button variant="outline" disabled={testingSms || !providerApiKey || !providerSender} className="gap-1.5"
+                    onClick={async () => {
+                      setTestingSms(true);
+                      try {
+                        const { data, error } = await supabase.functions.invoke("send-sms", {
+                          body: { phone: providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
+                        });
+                        if (error) {
+                          toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
+                        } else if (data?.success) {
+                          toast({ title: "نجح الاختبار ✅", description: "تم إرسال الرسالة الاختبارية بنجاح" });
+                        } else {
+                          toast({ title: "فشل الاختبار", description: data?.error || "لم يتم الإرسال", variant: "destructive" });
+                        }
+                      } catch (err: any) {
+                        toast({ title: "خطأ", description: err.message, variant: "destructive" });
+                      }
+                      setTestingSms(false);
+                    }}>
+                    <MessageSquare className="h-4 w-4" />
+                    {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
+                  </Button>
+                </div>
+              </div>
+            </CollapsibleSettingsCard>
 
-                    <div className="flex items-center gap-3">
-                      <Button onClick={handleSaveProvider} disabled={savingProvider} className="gap-1.5">
-                        <Save className="h-4 w-4" />
-                        {savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
-                      </Button>
-                      <Button variant="outline" disabled={testingSms || !providerApiKey || !providerSender} className="gap-1.5"
-                        onClick={async () => {
-                          setTestingSms(true);
-                          try {
-                            const { data, error } = await supabase.functions.invoke("send-sms", {
-                              body: { phone: providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
-                            });
-                            if (error) {
-                              toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
-                            } else if (data?.success) {
-                              toast({ title: "نجح الاختبار ✅", description: "تم إرسال الرسالة الاختبارية بنجاح" });
-                            } else {
-                              toast({ title: "فشل الاختبار", description: data?.error || "لم يتم الإرسال", variant: "destructive" });
-                            }
-                          } catch (err: any) {
-                            toast({ title: "خطأ", description: err.message, variant: "destructive" });
-                          }
-                          setTestingSms(false);
-                        }}>
-                        <MessageSquare className="h-4 w-4" />
-                        {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
-
-            {/* ===== تفريغ البيانات ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden border-destructive/20">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/20 text-white">
-                        <Trash2 className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">تفريغ البيانات</h3>
-                        <p className="text-xs text-muted-foreground">حذف جميع سجلات الدرجات أو الحضور</p>
-                      </div>
-                    </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4">
-                    <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 shrink-0" />
-                      <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
-                    </div>
-                    <DataPurgeSection />
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+            <CollapsibleSettingsCard
+              icon={Trash2}
+              iconGradient="from-red-500 to-rose-600"
+              iconShadow="shadow-lg shadow-red-500/20"
+              title="تفريغ البيانات"
+              description="حذف جميع سجلات الدرجات أو الحضور"
+              className="border-destructive/20"
+            >
+              <div className="space-y-4">
+                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
+                </div>
+                <DataPurgeSection />
+              </div>
+            </CollapsibleSettingsCard>
 
             {/* Popup Preview Dialog */}
             <Dialog open={popupPreviewOpen} onOpenChange={setPopupPreviewOpen}>
@@ -3613,117 +3476,102 @@ export default function SettingsPage() {
               </DialogContent>
             </Dialog>
 
-            {/* ===== صفحة الدخول ===== */}
-            <Collapsible>
-              <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
-                <CollapsibleTrigger className="w-full group">
-                  <div className="flex items-center justify-between p-5 hover:bg-muted/30 transition-colors duration-200">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/20 text-white">
-                        <SettingsIcon className="h-5 w-5" />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-base font-bold text-foreground">إعدادات صفحة تسجيل الدخول</h3>
-                        <p className="text-xs text-muted-foreground">تخصيص شعار واسم المدرسة</p>
-                      </div>
+            <CollapsibleSettingsCard
+              icon={SettingsIcon}
+              iconGradient="from-indigo-500 to-violet-600"
+              iconShadow="shadow-lg shadow-indigo-500/20"
+              title="إعدادات صفحة تسجيل الدخول"
+              description="تخصيص شعار واسم المدرسة"
+            >
+              <div className="space-y-4 max-w-md">
+                <div className="space-y-2">
+                  <Label>شعار المدرسة</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
+                      {schoolLogoUrl ? (
+                        <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
-                    <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+                    <div className="flex flex-col gap-2">
+                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingLogo(true);
+                          const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
+                          const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
+                          if (uploadError) {
+                            toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
+                            setUploadingLogo(false);
+                            return;
+                          }
+                          const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
+                          const logoUrl = urlData.publicUrl;
+                          await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
+                          setSchoolLogoUrl(logoUrl);
+                          setUploadingLogo(false);
+                          toast({ title: "تم رفع الشعار بنجاح" });
+                          e.target.value = "";
+                        }} />
+                      <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
+                        onClick={() => logoInputRef.current?.click()} className="gap-1.5">
+                        <Upload className="h-4 w-4" />
+                        {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
+                      </Button>
+                      {schoolLogoUrl && (
+                        <Button type="button" variant="ghost" size="sm"
+                          className="gap-1.5 text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
+                            setSchoolLogoUrl("");
+                            toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
+                          }}>
+                          <Trash2 className="h-4 w-4" />
+                          إزالة
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="px-5 pb-5 pt-0 space-y-4 max-w-md">
-                    {/* School Logo Upload */}
-                    <div className="space-y-2">
-                      <Label>شعار المدرسة</Label>
-                      <div className="flex items-center gap-4">
-                        <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-                          {schoolLogoUrl ? (
-                            <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
-                          ) : (
-                            <Upload className="h-6 w-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              setUploadingLogo(true);
-                              const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
-                              const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
-                              if (uploadError) {
-                                toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
-                                setUploadingLogo(false);
-                                return;
-                              }
-                              const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
-                              const logoUrl = urlData.publicUrl;
-                              await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
-                              setSchoolLogoUrl(logoUrl);
-                              setUploadingLogo(false);
-                              toast({ title: "تم رفع الشعار بنجاح" });
-                              e.target.value = "";
-                            }} />
-                          <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
-                            onClick={() => logoInputRef.current?.click()} className="gap-1.5">
-                            <Upload className="h-4 w-4" />
-                            {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
-                          </Button>
-                          {schoolLogoUrl && (
-                            <Button type="button" variant="ghost" size="sm"
-                              className="gap-1.5 text-destructive hover:text-destructive"
-                              onClick={async () => {
-                                await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
-                                setSchoolLogoUrl("");
-                                toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
-                              }}>
-                              <Trash2 className="h-4 w-4" />
-                              إزالة
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>اسم المدرسة</Label>
-                      <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
-                        placeholder="مثال: ثانوية الفيصلية" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>الوصف الفرعي</Label>
-                      <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
-                        placeholder="مثال: نظام إدارة المدرسة" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>عنوان لوحة التحكم</Label>
-                      <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
-                        placeholder="لوحة التحكم" />
-                      <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
-                    </div>
-                    <Button disabled={savingLogin} className="gap-1.5"
-                      onClick={async () => {
-                        setSavingLogin(true);
-                        const updates = [
-                          supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
-                          supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
-                          supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
-                        ];
-                        const results = await Promise.all(updates);
-                        setSavingLogin(false);
-                        if (results.some((r) => r.error)) {
-                          toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
-                        } else {
-                          toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
-                        }
-                      }}>
-                      <Save className="h-4 w-4" />
-                      {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
-                    </Button>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>
+                </div>
+                <div className="space-y-2">
+                  <Label>اسم المدرسة</Label>
+                  <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
+                    placeholder="مثال: ثانوية الفيصلية" />
+                </div>
+                <div className="space-y-2">
+                  <Label>الوصف الفرعي</Label>
+                  <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
+                    placeholder="مثال: نظام إدارة المدرسة" />
+                </div>
+                <div className="space-y-2">
+                  <Label>عنوان لوحة التحكم</Label>
+                  <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
+                    placeholder="لوحة التحكم" />
+                  <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
+                </div>
+                <Button disabled={savingLogin} className="gap-1.5"
+                  onClick={async () => {
+                    setSavingLogin(true);
+                    const updates = [
+                      supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
+                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
+                      supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
+                    ];
+                    const results = await Promise.all(updates);
+                    setSavingLogin(false);
+                    if (results.some((r) => r.error)) {
+                      toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
+                    } else {
+                      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" });
+                    }
+                  }}>
+                  <Save className="h-4 w-4" />
+                  {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
+                </Button>
+              </div>
+            </CollapsibleSettingsCard>
           </>
         )}
       </div>
