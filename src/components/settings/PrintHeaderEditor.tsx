@@ -188,6 +188,12 @@ const reportTypes: ReportTypeOption[] = [
   { id: "attendance", label: "تقرير الحضور والغياب", icon: "📋" },
   { id: "grades", label: "تقرير الدرجات", icon: "📊" },
   { id: "behavior", label: "تقرير السلوك", icon: "⭐" },
+  { id: "student_logins", label: "سجل دخول الطلاب", icon: "🔑" },
+  { id: "students", label: "بيانات الطلاب", icon: "👨‍🎓" },
+  { id: "weekly_attendance", label: "الحضور الأسبوعي", icon: "📅" },
+  { id: "comprehensive", label: "التقرير الشامل", icon: "📑" },
+  { id: "quiz_stats", label: "إحصائيات الاختبارات", icon: "✏️" },
+  { id: "monthly", label: "التقرير الشهري", icon: "🗓️" },
 ];
 
 const presetColors = ["#1e293b", "#000000", "#1d4ed8", "#047857", "#7c3aed", "#b91c1c", "#92400e", "#64748b"];
