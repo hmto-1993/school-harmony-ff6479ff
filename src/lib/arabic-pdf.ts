@@ -133,8 +133,8 @@ async function renderPrintHeaderFromConfig(
   const margin = 10;
   const headerMargin = config.margins?.side ?? 8;
   const usableWidth = pageWidth - headerMargin * 2;
-  const sectionWidth = usableWidth * 0.46;
-  const centerWidth = usableWidth * 0.16;
+  const sectionWidth = usableWidth * 0.50;
+  const centerWidth = usableWidth * 0.10;
 
   const startY = config.margins?.top ?? 10;
   let rightY = startY;
