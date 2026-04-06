@@ -293,6 +293,42 @@ export default function AttendancePage() {
     setAbsenceAlerts(alerts);
   };
 
+const DELAY_PRESETS = [5, 10, 15, 20, 30, 45];
+
+/** Extract minutes from a note like "تأخر 15 دقيقة" */
+const extractMinutes = (notes: string): number => {
+  const match = notes.match(/تأخر\s*(\d+)\s*دقيقة/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+/** Smart delay minutes picker shown when student is marked as late */
+function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 mt-1.5 animate-fade-in">
+      <Clock className="h-3 w-3 text-warning shrink-0" />
+      <div className="flex gap-0.5 flex-wrap">
+        {DELAY_PRESETS.map((mins) => {
+          const isActive = value === mins;
+          return (
+            <button
+              key={mins}
+              type="button"
+              onClick={() => onChange(isActive ? 0 : mins)}
+              className={cn(
+                "h-6 min-w-[32px] px-1.5 rounded-md text-[10px] font-bold border transition-all duration-200",
+                isActive
+                  ? "bg-warning/20 text-warning border-warning/40 ring-1 ring-warning/20 shadow-sm scale-105"
+                  : "bg-background text-muted-foreground border-border/50 hover:bg-warning/10 hover:text-warning hover:border-warning/30 hover:scale-105"
+              )}
+            >
+              {mins}د
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
   const loadStudents = async () => {
     setStudentsLoading(true);
