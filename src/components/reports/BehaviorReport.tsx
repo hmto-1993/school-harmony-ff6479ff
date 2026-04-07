@@ -1,39 +1,26 @@
 import { useState, useEffect } from "react";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import {
-  Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell,
-} from "recharts";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Heart, User, CalendarDays, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
+import { buildBehaviorPDFBlob } from "./behavior-pdf-builder";
 
 type SeverityLevel = "low" | "medium" | "high" | "critical";
 
-const SEVERITY_LABELS: Record<SeverityLevel, string> = {
-  low: "منخفض",
-  medium: "متوسط",
-  high: "مرتفع",
-  critical: "حرج",
-};
+const SEVERITY_LABELS: Record<SeverityLevel, string> = { low: "منخفض", medium: "متوسط", high: "مرتفع", critical: "حرج" };
 
 const extractSeverity = (note: string | null): SeverityLevel | null => {
   if (!note) return null;
   const match = note.match(/\[severity:(\w+)\]/i);
   const severity = match?.[1]?.toLowerCase();
-
   if (!severity || !(severity in SEVERITY_LABELS)) return null;
-
   return severity as SeverityLevel;
 };
 
@@ -46,7 +33,6 @@ const formatSeverity = (severity: SeverityLevel | null): string => {
   if (!severity) return "—";
   return SEVERITY_LABELS[severity];
 };
-
 
 interface BehaviorRow {
   student_name: string;
@@ -63,12 +49,7 @@ interface BehaviorReportProps {
   selectedStudent: string;
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  positive: "إيجابي",
-  negative: "سلبي",
-  neutral: "محايد",
-};
-
+const TYPE_LABELS: Record<string, string> = { positive: "إيجابي", negative: "سلبي", neutral: "محايد" };
 const TYPE_COLORS: Record<string, string> = {
   positive: "hsl(142, 71%, 45%)",
   negative: "hsl(0, 84%, 60%)",
@@ -84,53 +65,23 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   const fetchBehavior = async () => {
     if (!selectedClass) return;
     setLoading(true);
-    let query = supabase
-      .from("behavior_records")
-      .select("type, note, date, student_id, students(full_name)")
-      .eq("class_id", selectedClass)
-      .gte("date", dateFrom)
-      .lte("date", dateTo)
-      .order("date", { ascending: false });
-
-    if (selectedStudent !== "all") {
-      query = query.eq("student_id", selectedStudent);
-    }
-
+    let query = supabase.from("behavior_records").select("type, note, date, student_id, students(full_name)")
+      .eq("class_id", selectedClass).gte("date", dateFrom).lte("date", dateTo).order("date", { ascending: false });
+    if (selectedStudent !== "all") query = query.eq("student_id", selectedStudent);
     const { data: records, error } = await query;
-
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      setData(
-        (records || []).map((r: any) => ({
-          student_name: r.students?.full_name || "—",
-          date: r.date,
-          type: r.type,
-          note: cleanNote(r.note),
-          severity: extractSeverity(r.note),
-        }))
-      );
-    }
+    if (error) { toast({ title: "خطأ", description: error.message, variant: "destructive" }); }
+    else { setData((records || []).map((r: any) => ({ student_name: r.students?.full_name || "—", date: r.date, type: r.type, note: cleanNote(r.note), severity: extractSeverity(r.note) }))); }
     setLoading(false);
   };
 
-  // Auto-fetch when filters change
-  useEffect(() => {
-    if (selectedClass && dateFrom && dateTo) {
-      fetchBehavior();
-    }
-  }, [selectedClass, dateFrom, dateTo, selectedStudent]);
+  useEffect(() => { if (selectedClass && dateFrom && dateTo) fetchBehavior(); }, [selectedClass, dateFrom, dateTo, selectedStudent]);
 
-  // Summary counts
   const positive = data.filter((r) => r.type === "positive").length;
   const negative = data.filter((r) => r.type === "negative").length;
   const neutral = data.filter((r) => r.type === "neutral").length;
-
   const filteredData = typeFilter === "all" ? data : data.filter((r) => r.type === typeFilter);
 
-  const studentDetailRows = selectedStudentName
-    ? data.filter((r) => r.student_name === selectedStudentName).sort((a, b) => b.date.localeCompare(a.date))
-    : [];
+  const studentDetailRows = selectedStudentName ? data.filter((r) => r.student_name === selectedStudentName).sort((a, b) => b.date.localeCompare(a.date)) : [];
 
   const pieData = [
     { name: "إيجابي", value: positive },
@@ -138,13 +89,10 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     { name: "محايد", value: neutral },
   ].filter((d) => d.value > 0);
 
-  // Per-student bar chart
   const studentMap: Record<string, { positive: number; negative: number; neutral: number }> = {};
   filteredData.forEach((r) => {
     if (!studentMap[r.student_name]) studentMap[r.student_name] = { positive: 0, negative: 0, neutral: 0 };
-    if (r.type in studentMap[r.student_name]) {
-      studentMap[r.student_name][r.type as "positive" | "negative" | "neutral"]++;
-    }
+    if (r.type in studentMap[r.student_name]) studentMap[r.student_name][r.type as "positive" | "negative" | "neutral"]++;
   });
   const studentCards = Object.entries(studentMap)
     .map(([name, counts]) => {
@@ -153,8 +101,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         counts.negative >= counts.positive && counts.negative >= counts.neutral ? "negative" :
         counts.positive >= counts.neutral ? "positive" : "neutral";
       return { name, ...counts, total, dominant };
-    })
-    .sort((a, b) => b.total - a.total);
+    }).sort((a, b) => b.total - a.total);
 
   const groupedStudentCards = typeFilter === "all"
     ? [
@@ -164,240 +111,14 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
       ].filter((g) => g.students.length > 0)
     : [{ key: typeFilter, label: "", color: "", students: studentCards }];
 
-  const buildBehaviorPDFBlob = async (): Promise<{ blob: Blob; fileName: string }> => {
-    const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
-    const html2canvas = (await import("html2canvas")).default;
-    const autoTableImport = await import("jspdf-autotable");
-    const autoTable = autoTableImport.default;
-    const jsPDFModule = await import("jspdf");
-    const jsPDF = jsPDFModule.default;
-
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    await registerArabicFont(doc);
-    const tableStyles = getArabicTableStyles();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 10;
-
-    let startY = 5;
-    let watermark: any = undefined;
-
-    const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
-      supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
-      supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
-    ]);
-
-    let headerConfig: any = null;
-    for (const result of [behaviorHeaderRes, defaultHeaderRes]) {
-      if (!result.data?.value) continue;
-      try {
-        headerConfig = JSON.parse(result.data.value);
-        break;
-      } catch {
-        // ignore invalid config
-      }
-    }
-
-    if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
-
-    const configMarginTop = headerConfig?.margins?.top ?? 5;
-    const configMarginSide = headerConfig?.margins?.side ?? 8;
-    startY = configMarginTop;
-
-    if (headerConfig) {
-      const rightLines = (headerConfig.rightSection?.lines || [])
-        .map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
-      const leftLines = (headerConfig.leftSection?.lines || [])
-        .map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
-      const images = (headerConfig.centerSection?.images || [])
-        .map((img: string, i: number) => {
-          if (!img) return "";
-          const height = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-          const width = headerConfig.centerSection?.imagesWidths?.[i] ?? height;
-          return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
-        }).join("");
-
-      const headerHTML = `
-        <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px ${configMarginSide}px 0;background:#fff;">
-          <div style="padding-bottom:8px;border-bottom:${headerConfig.margins?.borderWidth ?? 3}px solid ${headerConfig.margins?.borderColor ?? '#3b82f6'};display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-            <div style="max-width:46%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">
-              ${rightLines}
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
-              ${images}
-            </div>
-            <div style="max-width:46%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || '#1e293b'};">
-              ${leftLines}
-            </div>
-          </div>
-        </div>
-      `;
-
-      const container = document.createElement("div");
-      container.style.cssText = "position:fixed;left:-9999px;top:0;width:760px;background:#fff;";
-      container.innerHTML = headerHTML;
-      document.body.appendChild(container);
-
-      const imgs = container.querySelectorAll("img");
-      await Promise.all(Array.from(imgs).map(img =>
-        img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })
-      ));
-
-      try {
-        const canvas = await html2canvas(container, { backgroundColor: "#ffffff", scale: 3, useCORS: true, allowTaint: true });
-        const dataUrl = canvas.toDataURL("image/png");
-        const aspect = canvas.width / canvas.height;
-        const usableW = pageWidth - margin * 2;
-        const imgH = usableW / aspect;
-
-        doc.addImage(dataUrl, "PNG", margin, startY, usableW, imgH);
-        startY = startY + imgH + 4;
-      } catch {
-        startY = 15;
-      }
-
-      document.body.removeChild(container);
-    }
-
-    doc.setFontSize(14);
-    const filterTitle = typeFilter === "all" ? "تقرير السلوك" : `تقرير السلوك - ${TYPE_LABELS[typeFilter]}`;
-    doc.text(filterTitle, pageWidth / 2, startY, { align: "center" });
-    doc.setFontSize(9);
-    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
-
-    // Summary statistics table
-    const totalFiltered = filteredData.length;
-    const summaryTypes = typeFilter === "all"
-      ? (["positive", "neutral", "negative"] as const)
-      : ([typeFilter] as const);
-    const summaryData = summaryTypes.map((t) => {
-      const count = filteredData.filter((r) => r.type === t).length;
-      return { type: t, label: TYPE_LABELS[t], count };
-    });
-
-    const summaryColorMap: Record<string, [number, number, number]> = {
-      positive: [46, 125, 50],
-      neutral: [249, 168, 37],
-      negative: [198, 40, 40],
-    };
-
-    autoTable(doc, {
-      startY: startY + 10,
-      head: [summaryData.map((s) => s.label)],
-      body: [summaryData.map((s) => `${s.count}`)],
-      ...tableStyles,
-      headStyles: {
-        ...tableStyles.headStyles,
-        fillColor: [240, 240, 240],
-        textColor: [30, 30, 30],
-        fontSize: 10,
-      },
-      bodyStyles: {
-        ...tableStyles.bodyStyles,
-        fontSize: 11,
-        fontStyle: "bold",
-        halign: "center",
-      },
-      columnStyles: Object.fromEntries(
-        summaryData.map((s, i) => [i, { textColor: summaryColorMap[s.type] || [0, 0, 0] }])
-      ),
-      theme: "grid",
-      margin: { left: margin, right: margin },
-    });
-
-    let currentY = (doc as any).lastAutoTable.finalY + 8;
-
-    doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
-    doc.text(`إجمالي السجلات: ${totalFiltered}`, pageWidth / 2, currentY, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-    currentY += 8;
-
-    const pdfTypeGroups =
-      typeFilter === "all"
-        ? [
-            { type: "positive", label: "إيجابي", headerColor: [46, 125, 50] as [number, number, number], rowColor: [232, 245, 233] as [number, number, number] },
-            { type: "neutral", label: "محايد", headerColor: [249, 168, 37] as [number, number, number], rowColor: [255, 249, 230] as [number, number, number] },
-            { type: "negative", label: "سلبي", headerColor: [198, 40, 40] as [number, number, number], rowColor: [255, 235, 238] as [number, number, number] },
-          ]
-        : [{
-            type: typeFilter,
-            label: TYPE_LABELS[typeFilter],
-            headerColor: (typeFilter === "positive" ? [46, 125, 50] : typeFilter === "negative" ? [198, 40, 40] : [249, 168, 37]) as [number, number, number],
-            rowColor: (typeFilter === "positive" ? [232, 245, 233] : typeFilter === "negative" ? [255, 235, 238] : [255, 249, 230]) as [number, number, number],
-          }];
-
-    for (const group of pdfTypeGroups) {
-      const rows = filteredData.filter((r) => r.type === group.type);
-      if (rows.length === 0) continue;
-
-      doc.setFontSize(12);
-      doc.setTextColor(group.headerColor[0], group.headerColor[1], group.headerColor[2]);
-      doc.text(`${group.label} (${rows.length})`, pageWidth / 2, currentY, { align: "center" });
-      doc.setTextColor(0, 0, 0);
-
-      autoTable(doc, {
-        startY: currentY + 3,
-        head: [["ملاحظات", "مستوى الخطورة", "التاريخ", "اسم الطالب", "#"]],
-        body: rows.map((r, i) => [r.note, formatSeverity(r.severity), r.date, r.student_name, String(i + 1)]),
-        ...tableStyles,
-        headStyles: {
-          ...tableStyles.headStyles,
-          fillColor: group.headerColor,
-        },
-        alternateRowStyles: {
-          fillColor: group.rowColor,
-        },
-        columnStyles: { 3: { halign: "right" } },
-        margin: { left: margin, right: margin },
-      });
-
-      currentY = (doc as any).lastAutoTable.finalY + 10;
-    }
-
-    // Footer Signatures
-    const footerConfig = headerConfig?.footerSignatures;
-    if (footerConfig?.enabled && footerConfig.signatures?.length) {
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const sigCount = footerConfig.signatures.length;
-      const sigWidth = (pageWidth - margin * 2) / sigCount;
-
-      if (currentY + 40 > pageHeight - 15) {
-        doc.addPage();
-        currentY = 20;
-      }
-
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineDashPattern([2, 2], 0);
-      doc.line(margin, currentY, pageWidth - margin, currentY);
-      doc.setLineDashPattern([], 0);
-      currentY += 10;
-
-      footerConfig.signatures.forEach((sig: any, idx: number) => {
-        const x = margin + sigWidth * idx + sigWidth / 2;
-        doc.setFontSize(10);
-        doc.setTextColor(30, 41, 59);
-        doc.text(sig.label || "", x, currentY, { align: "center" });
-        doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
-        doc.text(sig.name || "........................", x, currentY + 6, { align: "center" });
-        doc.setDrawColor(148, 163, 184);
-        doc.line(x - 25, currentY + 18, x + 25, currentY + 18);
-      });
-    }
-
-    const fileName = `تقرير_السلوك_${dateFrom}_${dateTo}.pdf`;
-    const blob = finalizePDFAsBlob(doc, watermark, (headerConfig as any)?.advanced);
-    return { blob, fileName };
-  };
-
   const exportPDF = async () => {
-    const { blob, fileName } = await buildBehaviorPDFBlob();
+    const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
     const { savePDFBlob } = await import("@/lib/report-pdf-builders");
     savePDFBlob(blob, fileName);
   };
 
   const shareBehaviorWhatsApp = async () => {
-    const { blob, fileName } = await buildBehaviorPDFBlob();
+    const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
     const { sharePDFBlob } = await import("@/lib/report-pdf-builders");
     await sharePDFBlob(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
   };
@@ -405,19 +126,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 print:hidden">
-        {loading && (
-          <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>
-        )}
+        {loading && <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>}
         {data.length > 0 && (
           <>
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
-              <FileText className="h-4 w-4" />
-              تصدير PDF
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 text-green-600 hover:text-green-700" onClick={shareBehaviorWhatsApp}>
-              <MessageCircle className="h-4 w-4" />
-              واتساب
-            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}><FileText className="h-4 w-4" />تصدير PDF</Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-green-600 hover:text-green-700" onClick={shareBehaviorWhatsApp}><MessageCircle className="h-4 w-4" />واتساب</Button>
           </>
         )}
       </div>
@@ -427,45 +140,19 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
           <ReportPrintHeader reportType="behavior" />
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card
-              className={`cursor-pointer transition-all ${typeFilter === "all" ? "ring-2 ring-primary shadow-md" : "hover:bg-muted/50"}`}
-              onClick={() => setTypeFilter("all")}
-            >
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{data.length}</p>
-                <p className="text-xs text-muted-foreground">إجمالي السجلات</p>
-              </CardContent>
+            <Card className={`cursor-pointer transition-all ${typeFilter === "all" ? "ring-2 ring-primary shadow-md" : "hover:bg-muted/50"}`} onClick={() => setTypeFilter("all")}>
+              <CardContent className="p-4 text-center"><p className="text-2xl font-bold">{data.length}</p><p className="text-xs text-muted-foreground">إجمالي السجلات</p></CardContent>
             </Card>
-            <Card
-              className={`cursor-pointer transition-all ${typeFilter === "positive" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
-              style={typeFilter === "positive" ? { borderColor: TYPE_COLORS.positive, boxShadow: `0 0 0 2px ${TYPE_COLORS.positive}40` } : {}}
-              onClick={() => setTypeFilter(typeFilter === "positive" ? "all" : "positive")}
-            >
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.positive }}>{positive}</p>
-                <p className="text-xs text-muted-foreground">إيجابي</p>
-              </CardContent>
-            </Card>
-            <Card
-              className={`cursor-pointer transition-all ${typeFilter === "negative" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
-              style={typeFilter === "negative" ? { borderColor: TYPE_COLORS.negative, boxShadow: `0 0 0 2px ${TYPE_COLORS.negative}40` } : {}}
-              onClick={() => setTypeFilter(typeFilter === "negative" ? "all" : "negative")}
-            >
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.negative }}>{negative}</p>
-                <p className="text-xs text-muted-foreground">سلبي</p>
-              </CardContent>
-            </Card>
-            <Card
-              className={`cursor-pointer transition-all ${typeFilter === "neutral" ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
-              style={typeFilter === "neutral" ? { borderColor: TYPE_COLORS.neutral, boxShadow: `0 0 0 2px ${TYPE_COLORS.neutral}40` } : {}}
-              onClick={() => setTypeFilter(typeFilter === "neutral" ? "all" : "neutral")}
-            >
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold" style={{ color: TYPE_COLORS.neutral }}>{neutral}</p>
-                <p className="text-xs text-muted-foreground">محايد</p>
-              </CardContent>
-            </Card>
+            {(["positive", "negative", "neutral"] as const).map(t => (
+              <Card key={t} className={`cursor-pointer transition-all ${typeFilter === t ? "ring-2 shadow-md" : "hover:bg-muted/50"}`}
+                style={typeFilter === t ? { borderColor: TYPE_COLORS[t], boxShadow: `0 0 0 2px ${TYPE_COLORS[t]}40` } : {}}
+                onClick={() => setTypeFilter(typeFilter === t ? "all" : t)}>
+                <CardContent className="p-4 text-center">
+                  <p className="text-2xl font-bold" style={{ color: TYPE_COLORS[t] }}>{t === "positive" ? positive : t === "negative" ? negative : neutral}</p>
+                  <p className="text-xs text-muted-foreground">{TYPE_LABELS[t]}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
 
           {typeFilter !== "all" && (
@@ -477,55 +164,28 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
 
           {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Pie Chart */}
             <Card className="shadow-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">توزيع السلوك</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-base">توزيع السلوك</CardTitle></CardHeader>
               <CardContent className="flex flex-col items-center">
                 <div className="relative w-full" style={{ height: 260 }}>
                   <ResponsiveContainer width="100%" height={260}>
                     <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={65}
-                        outerRadius={95}
-                        paddingAngle={4}
-                        dataKey="value"
-                        strokeWidth={0}
-                      >
+                      <Pie data={pieData} cx="50%" cy="50%" innerRadius={65} outerRadius={95} paddingAngle={4} dataKey="value" strokeWidth={0}>
                         {pieData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={
-                              entry.name === "إيجابي" ? TYPE_COLORS.positive :
-                              entry.name === "سلبي" ? TYPE_COLORS.negative :
-                              TYPE_COLORS.neutral
-                            }
-                          />
+                          <Cell key={`cell-${index}`} fill={entry.name === "إيجابي" ? TYPE_COLORS.positive : entry.name === "سلبي" ? TYPE_COLORS.negative : TYPE_COLORS.neutral} />
                         ))}
                       </Pie>
                       <Tooltip formatter={(value: number) => [`${value}`, ""]} />
                     </PieChart>
                   </ResponsiveContainer>
-                  {/* Center label */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-foreground">{data.length}</p>
-                      <p className="text-[10px] text-muted-foreground">إجمالي</p>
-                    </div>
+                    <div className="text-center"><p className="text-2xl font-bold text-foreground">{data.length}</p><p className="text-[10px] text-muted-foreground">إجمالي</p></div>
                   </div>
                 </div>
-                {/* Custom legend */}
                 <div className="flex flex-wrap justify-center gap-4 mt-2">
                   {pieData.map((entry) => {
                     const pct = ((entry.value / data.length) * 100).toFixed(0);
-                    const color =
-                      entry.name === "إيجابي" ? TYPE_COLORS.positive :
-                      entry.name === "سلبي" ? TYPE_COLORS.negative :
-                      TYPE_COLORS.neutral;
+                    const color = entry.name === "إيجابي" ? TYPE_COLORS.positive : entry.name === "سلبي" ? TYPE_COLORS.negative : TYPE_COLORS.neutral;
                     return (
                       <div key={entry.name} className="flex items-center gap-1.5 text-xs">
                         <span className="inline-block w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
@@ -538,11 +198,8 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
               </CardContent>
             </Card>
 
-            {/* Bar Chart per student */}
             <Card className="shadow-card md:col-span-1">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">السلوك حسب الطالب</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-base">السلوك حسب الطالب</CardTitle></CardHeader>
               <CardContent className="p-3">
                 <div className="max-h-[380px] overflow-auto space-y-3 pe-1">
                   {groupedStudentCards.map((group) => (
@@ -557,47 +214,21 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       )}
                       <div className="space-y-2">
                         {group.students.map((s) => (
-                          <div
-                            key={s.name}
-                            className="rounded-lg border border-border/60 bg-muted/30 p-2.5 space-y-1.5 hover:bg-muted/60 transition-colors cursor-pointer"
-                            onClick={() => setSelectedStudentName(s.name)}
-                            role="button"
-                            tabIndex={0}
-                          >
+                          <div key={s.name} className="rounded-lg border border-border/60 bg-muted/30 p-2.5 space-y-1.5 hover:bg-muted/60 transition-colors cursor-pointer"
+                            onClick={() => setSelectedStudentName(s.name)} role="button" tabIndex={0}>
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-medium text-foreground truncate max-w-[140px]">{s.name}</span>
                               <span className="text-xs text-muted-foreground">{s.total} سجل</span>
                             </div>
                             <div className="flex h-3 w-full rounded-full overflow-hidden bg-muted">
-                              {s.positive > 0 && (
-                                <div className="h-full transition-all" style={{ width: `${(s.positive / s.total) * 100}%`, backgroundColor: TYPE_COLORS.positive }} title={`إيجابي: ${s.positive}`} />
-                              )}
-                              {s.neutral > 0 && (
-                                <div className="h-full transition-all" style={{ width: `${(s.neutral / s.total) * 100}%`, backgroundColor: TYPE_COLORS.neutral }} title={`محايد: ${s.neutral}`} />
-                              )}
-                              {s.negative > 0 && (
-                                <div className="h-full transition-all" style={{ width: `${(s.negative / s.total) * 100}%`, backgroundColor: TYPE_COLORS.negative }} title={`سلبي: ${s.negative}`} />
-                              )}
+                              {s.positive > 0 && <div className="h-full transition-all" style={{ width: `${(s.positive / s.total) * 100}%`, backgroundColor: TYPE_COLORS.positive }} title={`إيجابي: ${s.positive}`} />}
+                              {s.neutral > 0 && <div className="h-full transition-all" style={{ width: `${(s.neutral / s.total) * 100}%`, backgroundColor: TYPE_COLORS.neutral }} title={`محايد: ${s.neutral}`} />}
+                              {s.negative > 0 && <div className="h-full transition-all" style={{ width: `${(s.negative / s.total) * 100}%`, backgroundColor: TYPE_COLORS.negative }} title={`سلبي: ${s.negative}`} />}
                             </div>
                             <div className="flex items-center gap-3 text-[10px]">
-                              {s.positive > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.positive }} />
-                                  <span className="text-muted-foreground">إيجابي {s.positive}</span>
-                                </span>
-                              )}
-                              {s.neutral > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.neutral }} />
-                                  <span className="text-muted-foreground">محايد {s.neutral}</span>
-                                </span>
-                              )}
-                              {s.negative > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.negative }} />
-                                  <span className="text-muted-foreground">سلبي {s.negative}</span>
-                                </span>
-                              )}
+                              {s.positive > 0 && <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.positive }} /><span className="text-muted-foreground">إيجابي {s.positive}</span></span>}
+                              {s.neutral > 0 && <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.neutral }} /><span className="text-muted-foreground">محايد {s.neutral}</span></span>}
+                              {s.negative > 0 && <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: TYPE_COLORS.negative }} /><span className="text-muted-foreground">سلبي {s.negative}</span></span>}
                             </div>
                           </div>
                         ))}
@@ -619,7 +250,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                       <TableHead className="text-right">اسم الطالب</TableHead>
                       <TableHead className="text-right">التاريخ</TableHead>
                       <TableHead className="text-right">النوع</TableHead>
-                        <TableHead className="text-right">مستوى الخطورة</TableHead>
+                      <TableHead className="text-right">مستوى الخطورة</TableHead>
                       <TableHead className="text-right">ملاحظات</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -629,24 +260,10 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                         <TableCell className="font-medium">{row.student_name}</TableCell>
                         <TableCell>{row.date}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              row.type === "positive" ? "default" :
-                              row.type === "negative" ? "destructive" : "secondary"
-                            }
-                          >
-                            {TYPE_LABELS[row.type] || row.type}
-                          </Badge>
+                          <Badge variant={row.type === "positive" ? "default" : row.type === "negative" ? "destructive" : "secondary"}>{TYPE_LABELS[row.type] || row.type}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            variant={
-                              row.severity === "high" || row.severity === "critical" ? "destructive" :
-                              row.severity === "medium" ? "secondary" : "outline"
-                            }
-                          >
-                            {formatSeverity(row.severity)}
-                          </Badge>
+                          <Badge variant={row.severity === "high" || row.severity === "critical" ? "destructive" : row.severity === "medium" ? "secondary" : "outline"}>{formatSeverity(row.severity)}</Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-sm">{row.note}</TableCell>
                       </TableRow>
@@ -659,13 +276,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
         </div>
       )}
 
+      {/* Student Detail Dialog */}
       <Dialog open={!!selectedStudentName} onOpenChange={(open) => !open && setSelectedStudentName(null)}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-hidden flex flex-col" dir="rtl">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <User className="h-4 w-4" />
-              تفاصيل سلوك: {selectedStudentName}
-            </DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-base"><User className="h-4 w-4" />تفاصيل سلوك: {selectedStudentName}</DialogTitle>
           </DialogHeader>
           {studentDetailRows.length > 0 && (
             <div className="space-y-3 overflow-auto flex-1 pe-1">
@@ -673,11 +288,7 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 {(["positive", "negative", "neutral"] as const).map((t) => {
                   const count = studentDetailRows.filter((r) => r.type === t).length;
                   if (count === 0) return null;
-                  return (
-                    <Badge key={t} variant={t === "positive" ? "default" : t === "negative" ? "destructive" : "secondary"} className="gap-1">
-                      {TYPE_LABELS[t]} <span className="font-bold">{count}</span>
-                    </Badge>
-                  );
+                  return <Badge key={t} variant={t === "positive" ? "default" : t === "negative" ? "destructive" : "secondary"} className="gap-1">{TYPE_LABELS[t]} <span className="font-bold">{count}</span></Badge>;
                 })}
                 <span className="text-xs text-muted-foreground mr-auto">إجمالي: {studentDetailRows.length}</span>
               </div>
@@ -685,18 +296,11 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
                 {studentDetailRows.map((row, i) => (
                   <div key={i} className="rounded-lg border border-border/50 p-3 space-y-1.5 bg-muted/20">
                     <div className="flex items-center justify-between">
-                      <Badge variant={row.type === "positive" ? "default" : row.type === "negative" ? "destructive" : "secondary"} className="text-[11px]">
-                        {TYPE_LABELS[row.type] || row.type}
-                      </Badge>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <CalendarDays className="h-3 w-3" />
-                        {row.date}
-                      </span>
+                      <Badge variant={row.type === "positive" ? "default" : row.type === "negative" ? "destructive" : "secondary"} className="text-[11px]">{TYPE_LABELS[row.type] || row.type}</Badge>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground"><CalendarDays className="h-3 w-3" />{row.date}</span>
                     </div>
                     {row.note !== "—" && <p className="text-sm text-foreground">{row.note}</p>}
-                    {row.severity && (
-                      <Badge variant="outline" className="text-[10px]">خطورة: {formatSeverity(row.severity)}</Badge>
-                    )}
+                    {row.severity && <Badge variant="outline" className="text-[10px]">خطورة: {formatSeverity(row.severity)}</Badge>}
                   </div>
                 ))}
               </div>
