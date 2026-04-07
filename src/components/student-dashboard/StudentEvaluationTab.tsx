@@ -76,20 +76,20 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   };
 
   const LevelIcon = ({ level, isStar }: { level: string; isStar?: boolean }) => {
-    if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-400 mx-auto" />;
-    if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-400 mx-auto" />;
-    if (level === "excellent") return <CircleCheck className="h-5 w-5 text-emerald-500 fill-emerald-100 dark:fill-emerald-500/20 mx-auto" />;
-    if (level === "average") return <CircleMinus className="h-5 w-5 text-amber-500 fill-amber-100 dark:fill-amber-500/20 mx-auto" />;
-    if (level === "zero") return <CircleX className="h-5 w-5 text-rose-500 fill-rose-100 dark:fill-rose-500/20 mx-auto" />;
+    if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" />;
+    if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" />;
+    if (level === "excellent") return <CircleCheck className="h-5 w-5 text-emerald-600 mx-auto" />;
+    if (level === "average") return <CircleMinus className="h-5 w-5 text-amber-500 mx-auto" />;
+    if (level === "zero") return <CircleX className="h-5 w-5 text-rose-500 mx-auto" />;
     return <span className="text-muted-foreground/30 text-sm">○</span>;
   };
 
   const Legend = () => (
     <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center flex-wrap">
-      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" /> متميز</span>
-      <span className="flex items-center gap-1"><CircleCheck className="h-3.5 w-3.5 text-emerald-500 fill-emerald-100 dark:fill-emerald-500/20" /> ممتاز</span>
-      <span className="flex items-center gap-1"><CircleMinus className="h-3.5 w-3.5 text-amber-500 fill-amber-100 dark:fill-amber-500/20" /> متوسط</span>
-      <span className="flex items-center gap-1"><CircleX className="h-3.5 w-3.5 text-rose-500 fill-rose-100 dark:fill-rose-500/20" /> ضعيف</span>
+      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500" /> متميز</span>
+      <span className="flex items-center gap-1"><CircleCheck className="h-3.5 w-3.5 text-emerald-600" /> ممتاز</span>
+      <span className="flex items-center gap-1"><CircleMinus className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
+      <span className="flex items-center gap-1"><CircleX className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
       {currentSubView === "daily" && <span className="flex items-center gap-1"><span className="text-muted-foreground/30">○</span> لم يُقيّم</span>}
     </div>
   );
