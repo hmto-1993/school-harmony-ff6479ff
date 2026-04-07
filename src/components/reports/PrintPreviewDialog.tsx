@@ -159,7 +159,7 @@ function ReportPrintHeaderInline({
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "right",
+            textAlign: config.rightSection?.align || "right",
             fontSize: `${config.rightSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.rightSection?.color || "#1e293b",
@@ -190,7 +190,7 @@ function ReportPrintHeaderInline({
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "left",
+            textAlign: config.leftSection?.align || "left",
             fontSize: `${config.leftSection?.fontSize || 12}px`,
             lineHeight: 1.8,
             color: config.leftSection?.color || "#1e293b",
