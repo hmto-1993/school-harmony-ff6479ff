@@ -65,7 +65,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: config.rightSection.align || "right",
+            textAlign: "right",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.rightSection.color || "#1e293b",
@@ -98,7 +98,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: config.leftSection.align || "left",
+            textAlign: "left",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",
