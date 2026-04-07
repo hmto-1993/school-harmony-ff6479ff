@@ -12,6 +12,7 @@ import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
+import { calcSubtotal, getSummaryPrintOptions } from "./grades-table-builders";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
@@ -42,7 +43,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [allCategories, setAllCategories] = useState<CategoryInfo[]>([]);
   const [summaryRows, setSummaryRows] = useState<SummaryRow[]>([]);
   const [searchName, setSearchName] = useState("");
-  // editingClassId: which class card is in edit mode (all its classwork "درجة" columns editable)
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [tempEdits, setTempEdits] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -50,12 +50,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   const [fillAllCatId, setFillAllCatId] = useState<string>("");
 
   useEffect(() => { loadAllData(); }, [selectedPeriod]);
-
-  const onClassSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const classId = e.target.value;
-    onClassChange(classId);
-    loadAllData();
-  };
 
   const loadAllData = async () => {
     setLoading(true);
@@ -74,10 +68,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
     let allManualScores: any[] = [];
     if (studentIds.length > 0) {
       const [{ data: gradesData }, { data: manualData }] = await Promise.all([
-        supabase.from("grades").select("id, student_id, category_id, score, period")
-          .in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
-        supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period")
-          .in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
+        supabase.from("grades").select("id, student_id, category_id, score, period").in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
+        supabase.from("manual_category_scores" as any).select("id, student_id, category_id, score, period").in("student_id", studentIds).eq("period", selectedPeriod).limit(5000),
       ]);
       allGrades = gradesData || [];
       allManualScores = (manualData as any[]) || [];
@@ -116,10 +108,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
       });
 
       let total = 0, maxTotal = 0;
-      classCats.forEach((cat) => {
-        maxTotal += Number(cat.max_score);
-        total += manualScores[cat.id] ?? 0;
-      });
+      classCats.forEach((cat) => { maxTotal += Number(cat.max_score); total += manualScores[cat.id] ?? 0; });
 
       return {
         student_id: s.id, full_name: s.full_name,
@@ -137,30 +126,20 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   const startEdit = (classId: string, students: SummaryRow[], editableCats: CategoryInfo[]) => {
     const edits: Record<string, string> = {};
-    students.forEach(s => {
-      editableCats.forEach(cat => {
-        edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0);
-      });
-    });
+    students.forEach(s => { editableCats.forEach(cat => { edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0); }); });
     setTempEdits(edits);
     setEditingClassId(classId);
     setFillAllValue("");
     setFillAllCatId("");
   };
 
-  const cancelEdit = () => {
-    setEditingClassId(null);
-    setTempEdits({});
-    setFillAllValue("");
-    setFillAllCatId("");
-  };
+  const cancelEdit = () => { setEditingClassId(null); setTempEdits({}); setFillAllValue(""); setFillAllCatId(""); };
 
   const saveEdits = async () => {
     if (!user?.id) return;
     setSaving(true);
     try {
       const upserts: any[] = [];
-
       for (const [key, val] of Object.entries(tempEdits)) {
         const [studentId, categoryId] = key.split("__");
         const row = summaryRows.find(r => r.student_id === studentId);
@@ -169,14 +148,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         if (!cat) continue;
         const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
         const existingId = row.manualScoreIds[categoryId];
-
         if (existingId) {
           upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
         } else {
           upserts.push(supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: user.id, period: selectedPeriod }).then(res => { if (res.error) throw res.error; }));
         }
       }
-
       await Promise.all(upserts);
       setSaving(false);
       cancelEdit();
@@ -195,129 +172,21 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
   });
 
   const groupedByClass = classes
-    .map((cls) => ({
-      ...cls,
-      students: filteredRows.filter((r) => r.class_id === cls.id),
-      categories: allCategories.filter((c) => c.class_id === cls.id),
-    }))
+    .map((cls) => ({ ...cls, students: filteredRows.filter((r) => r.class_id === cls.id), categories: allCategories.filter((c) => c.class_id === cls.id) }))
     .filter((g) => g.students.length > 0);
-
-  const calcSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
-    let score = 0, max = 0;
-    cats.forEach(cat => {
-      max += Number(cat.max_score);
-      score += scores[cat.id] ?? 0;
-    });
-    return { score, max };
-  };
 
   const handlePrintTable = async (classId: string, className: string) => {
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
-    const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
-    const examCats = group.categories.filter(c => c.category_group === 'exams');
-    const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
-    const hasClasswork = classworkCats.length > 0;
-    const hasExams = examCats.length > 0;
-
-    const tableHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th rowspan="2" style="width:30px;">#</th>
-            <th rowspan="2" style="width:20%;">الطالب</th>
-            ${hasClasswork ? `<th colspan="${classworkCats.length + 1}" class="subtotal-header">المهام الادائية والمشاركة والتفاعل</th>` : ""}
-            ${hasExams ? `<th colspan="${examCats.length + 1}" class="subtotal-header">الاختبارات</th>` : ""}
-            ${otherCats.map(cat => `<th rowspan="2">${cat.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>`).join("")}
-            <th rowspan="2">المجموع</th>
-          </tr>
-          <tr>
-            ${hasClasswork ? classworkCats.map(c => `<th>${c.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(c.max_score)}</span></th>`).join("") + `<th class="subtotal-header">الإجمالي</th>` : ""}
-            ${hasExams ? examCats.map(c => `<th>${c.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(c.max_score)}</span></th>`).join("") + `<th class="subtotal-header">المجموع</th>` : ""}
-          </tr>
-        </thead>
-        <tbody>
-          ${group.students.map((sg, i) => {
-            const cwSub = calcSubtotal(sg.manualScores, classworkCats);
-            const exSub = calcSubtotal(sg.manualScores, examCats);
-            const allSub = calcSubtotal(sg.manualScores, group.categories);
-            return `
-              <tr>
-                <td>${i + 1}</td>
-                <td>${sg.full_name}</td>
-                ${hasClasswork ? classworkCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("") + `<td class="subtotal-cell">${cwSub.score} / ${cwSub.max}</td>` : ""}
-                ${hasExams ? examCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("") + `<td class="subtotal-cell">${exSub.score} / ${exSub.max}</td>` : ""}
-                ${otherCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("")}
-                <td class="subtotal-cell">${allSub.score} / ${allSub.max}</td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
-
-    const opts = {
-      orientation: "landscape" as const,
-      title: `التقييم النهائي — ${className}`,
-      subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
-      reportType: "grades" as const,
-      tableHTML,
-    };
-    await printGradesTable(opts);
+    await printGradesTable(getSummaryPrintOptions(className, group.students, group.categories, selectedPeriod));
   };
 
   const handleExportPDF = async (classId: string, className: string) => {
     const group = groupedByClass.find(g => g.id === classId);
     if (!group) return;
-    const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
-    const examCats = group.categories.filter(c => c.category_group === 'exams');
-    const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
-    const hasClasswork = classworkCats.length > 0;
-    const hasExams = examCats.length > 0;
-
-    const tableHTML = `
-      <table>
-        <thead>
-          <tr>
-            <th rowspan="2" style="width:30px;">#</th>
-            <th rowspan="2" style="width:20%;">الطالب</th>
-            ${hasClasswork ? `<th colspan="${classworkCats.length + 1}" class="subtotal-header">المهام الادائية والمشاركة والتفاعل</th>` : ""}
-            ${hasExams ? `<th colspan="${examCats.length + 1}" class="subtotal-header">الاختبارات</th>` : ""}
-            ${otherCats.map(cat => `<th rowspan="2">${cat.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>`).join("")}
-            <th rowspan="2">المجموع</th>
-          </tr>
-          <tr>
-            ${hasClasswork ? classworkCats.map(c => `<th>${c.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(c.max_score)}</span></th>`).join("") + `<th class="subtotal-header">الإجمالي</th>` : ""}
-            ${hasExams ? examCats.map(c => `<th>${c.name}<br><span style="font-size:9px;color:#64748b;">من ${Number(c.max_score)}</span></th>`).join("") + `<th class="subtotal-header">المجموع</th>` : ""}
-          </tr>
-        </thead>
-        <tbody>
-          ${group.students.map((sg, i) => {
-            const cwSub = calcSubtotal(sg.manualScores, classworkCats);
-            const exSub = calcSubtotal(sg.manualScores, examCats);
-            const allSub = calcSubtotal(sg.manualScores, group.categories);
-            return `
-              <tr>
-                <td>${i + 1}</td>
-                <td>${sg.full_name}</td>
-                ${hasClasswork ? classworkCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("") + `<td class="subtotal-cell">${cwSub.score} / ${cwSub.max}</td>` : ""}
-                ${hasExams ? examCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("") + `<td class="subtotal-cell">${exSub.score} / ${exSub.max}</td>` : ""}
-                ${otherCats.map(c => `<td>${sg.manualScores[c.id] ?? 0}</td>`).join("")}
-                <td class="subtotal-cell">${allSub.score} / ${allSub.max}</td>
-              </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    `;
-
     try {
       await exportGradesTableAsPDF({
-        orientation: "landscape",
-        title: `التقييم النهائي — ${className}`,
-        subtitle: `${selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"} — ${format(new Date(), "yyyy/MM/dd")}`,
-        reportType: "grades",
-        tableHTML,
+        ...getSummaryPrintOptions(className, group.students, group.categories, selectedPeriod),
         fileName: `التقييم_النهائي_${className}_${format(new Date(), "yyyy-MM-dd")}`,
       });
     } catch { /* handled */ }
@@ -348,23 +217,13 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
               const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
               const examCats = group.categories.filter(c => c.category_group === 'exams');
               const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
-
-              // Build group headers (first row with colSpan)
               const groupHeaders: { label: string; colSpan: number }[] = [
-                { label: "#", colSpan: 1 },
-                { label: "الطالب", colSpan: 1 },
+                { label: "#", colSpan: 1 }, { label: "الطالب", colSpan: 1 },
               ];
-              if (classworkCats.length > 0) {
-                groupHeaders.push({ label: "المهام الادائية والمشاركة والتفاعل", colSpan: classworkCats.length + 1 });
-              }
-              if (examCats.length > 0) {
-                groupHeaders.push({ label: "الاختبارات", colSpan: examCats.length + 1 });
-              }
-              otherCats.forEach(cat => {
-                groupHeaders.push({ label: cat.name, colSpan: 1 });
-              });
+              if (classworkCats.length > 0) groupHeaders.push({ label: "المهام الادائية والمشاركة والتفاعل", colSpan: classworkCats.length + 1 });
+              if (examCats.length > 0) groupHeaders.push({ label: "الاختبارات", colSpan: examCats.length + 1 });
+              otherCats.forEach(cat => { groupHeaders.push({ label: cat.name, colSpan: 1 }); });
               groupHeaders.push({ label: "المجموع", colSpan: 1 });
-
               const headers = [
                 "#", "الطالب",
                 ...classworkCats.map(c => `${c.name}\nمن ${Number(c.max_score)}`),
@@ -400,7 +259,6 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
         const examCats = group.categories.filter(c => c.category_group === 'exams');
         const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
-
         const hasClasswork = classworkCats.length > 0;
         const hasExams = examCats.length > 0;
         const hasOther = otherCats.length > 0;
@@ -413,73 +271,40 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                 <div className="flex items-center gap-2">
                   <CardTitle className="text-lg">{group.name}</CardTitle>
                   <Badge variant="secondary">{group.students.length} طالب</Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {selectedPeriod === 1 ? "فترة أولى" : "فترة ثانية"}
-                  </Badge>
+                  <Badge variant="outline" className="text-xs">{selectedPeriod === 1 ? "فترة أولى" : "فترة ثانية"}</Badge>
                 </div>
-                {/* Edit / Save / Cancel buttons */}
-                
                 <div className="flex flex-wrap items-center gap-2 no-print">
                   {!isEditing && (
                     <div className="flex items-center gap-0.5">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => handleExportPDF(group.id, group.name)}>
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => handlePrintTable(group.id, group.name)}>
-                        <Printer className="h-4 w-4" />
-                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={() => handleExportPDF(group.id, group.name)}><FileText className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={() => handlePrintTable(group.id, group.name)}><Printer className="h-4 w-4" /></Button>
                     </div>
                   )}
                   {!isEditing ? (
-                    <Button
-                      size="sm" variant="outline"
-                      className="h-8 gap-1.5"
-                      disabled={editingClassId !== null && editingClassId !== group.id}
-                      onClick={() => startEdit(group.id, group.students, [...classworkCats, ...examCats])}
-                    >
+                    <Button size="sm" variant="outline" className="h-8 gap-1.5" disabled={editingClassId !== null && editingClassId !== group.id}
+                      onClick={() => startEdit(group.id, group.students, [...classworkCats, ...examCats])}>
                       <Pencil className="h-3.5 w-3.5" /> تعديل الدرجات
                     </Button>
                   ) : (
                     <>
-                      {/* Fill all controls */}
                       <div className="flex items-center gap-1.5 bg-muted/50 rounded-md px-2 py-1">
                         <Select value={fillAllCatId} onValueChange={setFillAllCatId}>
-                          <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs border-0 bg-transparent">
-                            <SelectValue placeholder="اختر الفئة" />
-                          </SelectTrigger>
+                          <SelectTrigger className="h-7 w-auto min-w-[120px] text-xs border-0 bg-transparent"><SelectValue placeholder="اختر الفئة" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="__all__">الجميع</SelectItem>
-                            {[...classworkCats, ...examCats].map(cat => (
-                              <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                            ))}
+                            {[...classworkCats, ...examCats].map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                        <Input
-                          type="number" min={0}
-                          placeholder="الدرجة"
-                          value={fillAllValue}
-                          onChange={(e) => setFillAllValue(e.target.value)}
-                          className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          dir="ltr"
-                        />
+                        <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue} onChange={(e) => setFillAllValue(e.target.value)}
+                          className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr" />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
                           const newEdits = { ...tempEdits };
                           if (fillAllCatId === "__all__") {
-                            const allEditCats = [...classworkCats, ...examCats];
-                            group.students.forEach(s => {
-                              allEditCats.forEach(cat => {
-                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
-                                newEdits[`${s.student_id}__${cat.id}`] = String(val);
-                              });
-                            });
+                            [...classworkCats, ...examCats].forEach(cat => { group.students.forEach(s => { newEdits[`${s.student_id}__${cat.id}`] = String(Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)))); }); });
                           } else {
                             const cat = [...classworkCats, ...examCats].find(c => c.id === fillAllCatId);
-                            if (!cat) return;
-                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
-                            group.students.forEach(s => {
-                              newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
-                            });
+                            if (cat) { const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue))); group.students.forEach(s => { newEdits[`${s.student_id}__${fillAllCatId}`] = String(val); }); }
                           }
                           setTempEdits(newEdits);
                         }}>
@@ -487,17 +312,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         </Button>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1">
-                          <Check className="h-3.5 w-3.5" /> حفظ
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1">
-                          <X className="h-3.5 w-3.5" /> إلغاء
-                        </Button>
+                        <Button size="sm" onClick={saveEdits} disabled={saving} className="h-8 text-xs gap-1"><Check className="h-3.5 w-3.5" /> حفظ</Button>
+                        <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving} className="h-8 text-xs gap-1"><X className="h-3.5 w-3.5" /> إلغاء</Button>
                       </div>
                     </>
                   )}
                 </div>
-                
               </div>
             </CardHeader>
             <CardContent>
@@ -510,20 +330,11 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                     <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
                       <th rowSpan={2} className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[160px]">الطالب</th>
-                      {hasClasswork && (
-                        <th colSpan={classworkCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">
-                          المهام الادائية والمشاركة والتفاعل
-                        </th>
-                      )}
-                      {hasExams && (
-                        <th colSpan={examCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-accent/5 text-primary">
-                          الاختبارات
-                        </th>
-                      )}
+                      {hasClasswork && <th colSpan={classworkCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-primary/5 text-primary">المهام الادائية والمشاركة والتفاعل</th>}
+                      {hasExams && <th colSpan={examCats.length + 1} className="text-center p-2 font-bold text-xs border-b border-primary/20 bg-accent/5 text-primary">الاختبارات</th>}
                       {hasOther && otherCats.map(cat => (
                         <th key={cat.id} rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">
-                          <div>{cat.name}</div>
-                          <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                          <div>{cat.name}</div><div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                         </th>
                       ))}
                       <th rowSpan={2} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">المجموع</th>
@@ -532,12 +343,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasClasswork && (
                         <>
                           {classworkCats.map(cat => (
-                            <th key={cat.id} className={cn(
-                              "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                              isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"
-                            )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                            <th key={cat.id} className={cn("text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]", isEditing ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" : "text-muted-foreground")}>
+                              <div>{cat.name}</div><div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-primary/10">الإجمالي</th>
@@ -546,12 +353,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       {hasExams && (
                         <>
                           {examCats.map(cat => (
-                            <th key={cat.id} className={cn(
-                              "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]",
-                              isEditing ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "text-muted-foreground"
-                            )}>
-                              <div>{cat.name}</div>
-                              <div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
+                            <th key={cat.id} className={cn("text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[60px]", isEditing ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "text-muted-foreground")}>
+                              <div>{cat.name}</div><div className="text-[10px] text-muted-foreground font-normal">من {Number(cat.max_score)}</div>
                             </th>
                           ))}
                           <th className="text-center p-2 font-bold text-xs border-b-2 border-primary/20 text-primary min-w-[60px] bg-accent/5">المجموع</th>
@@ -569,94 +372,55 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                       const allSub = calcSubtotal(currentManual, group.categories);
 
                       return (
-                        <tr key={sg.student_id} className={cn(
-                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          !isLast && "border-b border-border/20",
-                        )}>
+                        <tr key={sg.student_id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20")}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
-
                           {hasClasswork && (
                             <>
                               {classworkCats.map(cat => {
                                 const cellKey = `${sg.student_id}__${cat.id}`;
                                 return (
-                                  <td key={cat.id} className={cn(
-                                    "p-1.5 text-center border-l border-border/10",
-                                    isEditing ? "bg-emerald-500/10" : ""
-                                  )}>
+                                  <td key={cat.id} className={cn("p-1.5 text-center border-l border-border/10", isEditing ? "bg-emerald-500/10" : "")}>
                                     {isEditing ? (() => {
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                                       return (
-                                        <Input
-                                          type="number" min={0} max={Number(cat.max_score)}
-                                          value={tempEdits[cellKey] ?? ""}
+                                        <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
                                           onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                          className={cn(
-                                            "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                            locked && "opacity-40 pointer-events-none"
-                                          )}
-                                          dir="ltr"
-                                          disabled={!!locked}
-                                        />
+                                          className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
+                                          dir="ltr" disabled={!!locked} />
                                       );
-                                    })() : (
-                                      <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                    )}
+                                    })() : <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>}
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">
-                                {classworkSub.score} / {classworkSub.max}
-                              </td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">{classworkSub.score} / {classworkSub.max}</td>
                             </>
                           )}
-
                           {hasExams && (
                             <>
                               {examCats.map(cat => {
                                 const cellKey = `${sg.student_id}__${cat.id}`;
                                 return (
-                                  <td key={cat.id} className={cn(
-                                    "p-1.5 text-center border-l border-border/10",
-                                    isEditing ? "bg-amber-500/10" : ""
-                                  )}>
+                                  <td key={cat.id} className={cn("p-1.5 text-center border-l border-border/10", isEditing ? "bg-amber-500/10" : "")}>
                                     {isEditing ? (() => {
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                                       return (
-                                        <Input
-                                          type="number" min={0} max={Number(cat.max_score)}
-                                          value={tempEdits[cellKey] ?? ""}
+                                        <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
                                           onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                          className={cn(
-                                            "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                            locked && "opacity-40 pointer-events-none"
-                                          )}
-                                          dir="ltr"
-                                          disabled={!!locked}
-                                        />
+                                          className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
+                                          dir="ltr" disabled={!!locked} />
                                       );
-                                    })() : (
-                                      <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>
-                                    )}
+                                    })() : <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>}
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">
-                                {examSub.score} / {examSub.max}
-                              </td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">{examSub.score} / {examSub.max}</td>
                             </>
                           )}
-
                           {hasOther && otherCats.map(cat => (
-                            <td key={cat.id} className="p-2 text-center border-l border-border/10">
-                              {renderScore(sg.manualScores[cat.id] ?? null)}
-                            </td>
+                            <td key={cat.id} className="p-2 text-center border-l border-border/10">{renderScore(sg.manualScores[cat.id] ?? null)}</td>
                           ))}
-
-                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>
-                            {allSub.score} / {allSub.max}
-                          </td>
+                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{allSub.score} / {allSub.max}</td>
                         </tr>
                       );
                     })}
