@@ -261,21 +261,16 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
     });
   }
 
-  const reportDate = new Intl.DateTimeFormat("en-GB", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date());
-
-  cursorY = drawWrappedCenteredText(doc, "تاريخ التقرير", cursorY, {
-    fontSize: 9,
-    color: [148, 163, 184],
-  });
-
-  cursorY = drawWrappedCenteredText(doc, reportDate, cursorY, {
-    fontSize: 9,
-    color: [148, 163, 184],
-  });
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+  const pw = doc.internal.pageSize.getWidth();
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(148, 163, 184);
+  const labelPart = "تاريخ التقرير: ";
+  const fullLine = labelPart + dateStr;
+  doc.text(fullLine, pw / 2, cursorY, { align: "center" });
+  cursorY += lineAdvance(9);
 
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.35);
