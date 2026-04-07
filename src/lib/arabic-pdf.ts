@@ -140,38 +140,49 @@ async function renderPrintHeaderFromConfig(
   let rightY = startY;
   let leftY = startY;
 
-  // --- Right section text (anchored to the outer right edge) ---
+  // --- Helper to compute X position based on align ---
+  const getAlignX = (align: "right" | "center" | "left", sectionStart: number, sectionW: number): number => {
+    if (align === "right") return sectionStart + sectionW;
+    if (align === "center") return sectionStart + sectionW / 2;
+    return sectionStart;
+  };
+
+  // --- Right section text ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
   const rightFontPt = rightFontPx * 0.75;
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightAnchorX = pageWidth - headerMargin;
+  const rightAlign = config.rightSection.align || "right";
+  const rightSectionStart = pageWidth - headerMargin - sectionWidth;
+  const rightAnchorX = getAlignX(rightAlign, rightSectionStart, sectionWidth);
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, rightAnchorX, rightY, { align: "right" });
+        doc.text(wl, rightAnchorX, rightY, { align: rightAlign });
         rightY += rightSpacing;
       });
     }
   });
 
-  // --- Left section text (anchored to the outer left edge) ---
+  // --- Left section text ---
   const leftFontPx = config.leftSection.fontSize || 12;
   const leftFontPt = leftFontPx * 0.75;
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftAnchorX = headerMargin;
+  const leftAlign = config.leftSection.align || "left";
+  const leftSectionStart = headerMargin;
+  const leftAnchorX = getAlignX(leftAlign, leftSectionStart, sectionWidth);
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, leftAnchorX, leftY, { align: "left" });
+        doc.text(wl, leftAnchorX, leftY, { align: leftAlign });
         leftY += leftSpacing;
       });
     }
