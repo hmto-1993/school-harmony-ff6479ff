@@ -85,12 +85,12 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   };
 
   const Legend = () => (
-    <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center">
-      <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" /> متميز</span>
-      <span className="flex items-center gap-1"><CircleCheck className="h-3.5 w-3.5 text-emerald-500" /> ممتاز</span>
-      <span className="flex items-center gap-1"><CircleMinus className="h-3.5 w-3.5 text-amber-500" /> متوسط</span>
-      <span className="flex items-center gap-1"><CircleX className="h-3.5 w-3.5 text-rose-500" /> ضعيف</span>
-      {currentSubView === "daily" && <span className="flex items-center gap-1"><span className="text-muted-foreground/30">○</span> لم يُقيّم</span>}
+    <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground justify-center flex-wrap">
+      <span className="flex items-center gap-1"><span className="inline-flex p-0.5 rounded bg-yellow-100/80 dark:bg-yellow-500/15"><Star className="h-3.5 w-3.5 text-amber-500 fill-amber-400" /></span> متميز</span>
+      <span className="flex items-center gap-1"><span className="inline-flex p-0.5 rounded bg-emerald-100/80 dark:bg-emerald-500/15"><CircleCheck className="h-3.5 w-3.5 text-emerald-500" /></span> ممتاز</span>
+      <span className="flex items-center gap-1"><span className="inline-flex p-0.5 rounded bg-amber-100/80 dark:bg-amber-500/15"><CircleMinus className="h-3.5 w-3.5 text-amber-500" /></span> متوسط</span>
+      <span className="flex items-center gap-1"><span className="inline-flex p-0.5 rounded bg-rose-100/80 dark:bg-rose-500/15"><CircleX className="h-3.5 w-3.5 text-rose-500" /></span> ضعيف</span>
+      {currentSubView === "daily" && <span className="flex items-center gap-1"><span className="inline-flex p-0.5 rounded border border-dashed border-muted-foreground/30"><span className="h-3.5 w-3.5" /></span> لم يُقيّم</span>}
     </div>
   );
 
