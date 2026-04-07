@@ -102,7 +102,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
         const groupPct = groupMax > 0 ? Math.round((groupTotal / groupMax) * 100) : 0;
         return (
           <div key={groupKey} className="rounded-xl border border-border/40 overflow-hidden">
-            <div className="flex items-center justify-between p-3 bg-muted/30 dark:bg-muted/20">
+            <div className="flex items-center justify-between p-3 bg-muted/40">
               <span className={cn("text-sm font-bold flex items-center gap-2", info.color)}>
                 <span>{info.icon}</span> {info.label}
               </span>
@@ -129,7 +129,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
     <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
       <table className="w-full text-sm border-separate border-spacing-0">
         <thead>
-          <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
+          <tr className="bg-gradient-to-l from-primary/15 via-accent/5 to-primary/10">
             <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">المعيار</th>
             <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
             <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">من</th>
