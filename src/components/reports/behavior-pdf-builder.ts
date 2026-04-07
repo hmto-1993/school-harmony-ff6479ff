@@ -65,6 +65,7 @@ export async function buildBehaviorPDFBlob(
   const configMarginTop = headerConfig?.margins?.top ?? 10;
   const configMarginSide = headerConfig?.margins?.side ?? 12;
   startY = configMarginTop;
+  margin = configMarginSide;
 
   if (headerConfig) {
     const headerHTML = `
