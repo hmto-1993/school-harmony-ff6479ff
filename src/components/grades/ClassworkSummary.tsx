@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,89 +7,17 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Pencil, Check, X, ArrowDown, FileText, Printer, CircleCheck, CircleMinus, CircleX, Star } from "lucide-react";
+import { Search, Pencil, Check, X, ArrowDown, FileText, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { printGradesTable, getPrintIconSpan, exportGradesTableAsPDF } from "@/lib/grades-print";
-
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
-type GradeLevel = "excellent" | "average" | "zero" | null;
-
-const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
-const DEFAULT_MAX_SLOTS = 3;
-
-/** Maximum display icons per category in ClassworkSummary */
-function getMaxDisplayIcons(catName: string): number {
-  if (catName === "المشاركة") return 20;
-  if (catName === "الواجبات") return 8;
-  if (catName === "الكتاب") return 8;
-  if (catName === "الأعمال والمشاريع") return 8;
-  return 8;
-}
-
-/** Restore minimal slots from a saved score – matches DailyGradeEntry logic exactly */
-function restoreSlotsFromScore({
-  score,
-  maxScore,
-  slotCount,
-  isParticipationCategory,
-}: {
-  score: number | null;
-  maxScore: number;
-  slotCount: number;
-  isParticipationCategory: boolean;
-}): { slots: GradeLevel[]; starred: boolean } {
-  if (score === null) return { slots: [], starred: false };
-  if (score >= maxScore && isParticipationCategory) return { slots: [], starred: true };
-  if (score >= maxScore) return { slots: ["excellent"], starred: false };
-  if (score === 0) return { slots: ["zero"], starred: false };
-
-  const perSlot = Math.round(maxScore / slotCount);
-  const averageScore = Math.round(perSlot / 2);
-  const restoredSlots: GradeLevel[] = [];
-  let remaining = score;
-  while (remaining > 0 && restoredSlots.length < slotCount) {
-    if (remaining >= perSlot) { restoredSlots.push("excellent"); remaining -= perSlot; continue; }
-    if (remaining >= averageScore) { restoredSlots.push("average"); remaining -= averageScore; continue; }
-    restoredSlots.push("average"); remaining = 0;
-  }
-  return { slots: restoredSlots.length > 0 ? restoredSlots : [], starred: false };
-}
-
-interface DailyIcon {
-  level: GradeLevel;
-  isFullScore: boolean; // render as star instead of circle
-}
-
-const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?: string }) => {
-  if (icon.isFullScore) return <Star className={cn(size, "text-amber-500 fill-amber-400")} />;
-  if (icon.level === "excellent") return <CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} />;
-  if (icon.level === "average") return <CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} />;
-  return <CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} />;
-};
-
-/* getPrintIconHTML removed — using unified getPrintIconSpan from grades-print.ts */
-
-interface ClassInfo { id: string; name: string; }
-interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
-
-interface SummaryRow {
-  student_id: string;
-  full_name: string;
-  class_name: string;
-  class_id: string;
-  manualScores: Record<string, number>;
-  manualScoreIds: Record<string, string>;
-  dailyIcons: Record<string, DailyIcon[]>; // accumulated icons from daily grades per category
-}
-
-interface ClassworkSummaryProps {
-  selectedClass: string;
-  onClassChange: (classId: string) => void;
-  selectedPeriod?: number;
-}
+import type { ClassInfo, CategoryInfo, SummaryRow, ClassworkSummaryProps } from "./classwork/classwork-types";
+import { isParticipation, DEFAULT_MAX_SLOTS, getMaxDisplayIcons, restoreSlotsFromScore, calcManualSubtotal } from "./classwork/classwork-helpers";
+import ClassworkTable from "./classwork/ClassworkTable";
+import type { DailyIcon } from "./classwork/classwork-types";
 
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
   const { user } = useAuth();
@@ -185,7 +112,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     }
   };
 
-
   useEffect(() => {
     supabase.from("site_settings").select("id, value").in("id", ["daily_max_slots", "daily_max_slots_per_cat"]).then(({ data }) => {
       (data || []).forEach((s: any) => {
@@ -244,23 +170,19 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       manualMap.get(m.student_id)!.set(m.category_id, { score: Number(m.score), id: m.id });
     });
 
-    // Build daily icons map using same restoreSlotsFromScore logic as DailyGradeEntry
     const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
       const cat = cats.find(c => c.id === g.category_id);
       if (!cat) return;
-      
       if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
       const studentMap = dailyIconsMap.get(g.student_id)!;
       if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
-      
       const maxScore = Number(cat.max_score);
       const isPartCat = isParticipation(cat.name);
       const slotCount = getMaxSlots(cat.id);
       const restored = restoreSlotsFromScore({ score, maxScore, slotCount, isParticipationCategory: isPartCat });
-
       if (restored.starred) {
         studentMap.get(g.category_id)!.push({ level: "excellent", isFullScore: true });
       } else {
@@ -281,14 +203,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
       const dailyIcons: Record<string, DailyIcon[]> = {};
-
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
         manualScores[c.id] = m?.score ?? 0;
         if (m?.id) manualScoreIds[c.id] = m.id;
         dailyIcons[c.id] = studentDailyMap.get(c.id) || [];
       });
-
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
@@ -315,19 +235,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     setFillAllCatId("");
   };
 
-  const cancelEdit = () => {
-    setEditingClassId(null);
-    setTempEdits({});
-    setFillAllValue("");
-    setFillAllCatId("");
-  };
+  const cancelEdit = () => { setEditingClassId(null); setTempEdits({}); setFillAllValue(""); setFillAllCatId(""); };
 
   const saveEdits = async () => {
     if (!user?.id) return;
     setSaving(true);
     try {
       const upserts: any[] = [];
-
       for (const [key, val] of Object.entries(tempEdits)) {
         const [studentId, categoryId] = key.split("__");
         const row = summaryRows.find(r => r.student_id === studentId);
@@ -336,14 +250,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         if (!cat) continue;
         const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
         const existingId = row.manualScoreIds[categoryId];
-
         if (existingId) {
           upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
         } else {
           upserts.push(supabase.from("manual_category_scores" as any).insert({ student_id: studentId, category_id: categoryId, score: numVal, recorded_by: user.id, period: selectedPeriod }).then(res => { if (res.error) throw res.error; }));
         }
       }
-
       await Promise.all(upserts);
       setSaving(false);
       cancelEdit();
@@ -368,15 +280,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       categories: allCategories.filter((c) => c.class_id === cls.id || c.class_id === null),
     }))
     .filter((g) => g.students.length > 0), [classes, filteredRows, allCategories]);
-
-  const calcManualSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
-    let score = 0, max = 0;
-    cats.forEach(cat => {
-      max += Number(cat.max_score);
-      score += scores[cat.id] ?? 0;
-    });
-    return { score, max };
-  };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل المهام والمشاركة...</p>;
 
@@ -489,111 +392,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               </div>
             </CardHeader>
             <CardContent>
-              <div className="hidden print:block text-center mb-2">
-                <h2 className="text-sm font-bold">{group.name} — المهام والمشاركة — {selectedPeriod === 1 ? "الفترة الأولى" : "الفترة الثانية"}</h2>
-              </div>
-              <div ref={(el) => { if (el) tableRefs.current.set(group.id, el); }} className="w-full overflow-x-auto -mx-1 px-1 rounded-xl border border-border/40 shadow-sm" dir="rtl" style={{ printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" } as React.CSSProperties}>
-                <table className="w-full text-sm border-collapse" style={{ tableLayout: "auto" }} dir="rtl">
-                  <thead>
-                    <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
-                      <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 whitespace-nowrap w-0 bg-primary/10">الطالب</th>
-                      {classworkCats.map(cat => (
-                        <React.Fragment key={`sub-${cat.id}`}>
-                          <th className={cn(
-                            "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px] border-r-2 border-r-border",
-                            isEditing
-                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                              : "bg-info/10 text-info dark:bg-info/20"
-                          )}>
-                            <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1 
-                              ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
-                              : cat.name
-                            }</div>
-                          </th>
-                          <th className={cn(
-                            "text-center p-2 font-semibold text-xs border-b-2 border-primary/20 min-w-[55px]",
-                            isEditing
-                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                              : "bg-warning/10 text-warning dark:bg-warning/20"
-                          )}>
-                            <div>الدرجة</div>
-                            <div className="text-[10px] opacity-80">من {Number(cat.max_score)}</div>
-                          </th>
-                        </React.Fragment>
-                      ))}
-                      <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.students.map((sg, i) => {
-                      const isEven = i % 2 === 0;
-                      const isLast = i === group.students.length - 1;
-                      const sub = calcManualSubtotal(sg.manualScores, classworkCats);
-
-                      return (
-                        <tr key={sg.student_id} className={cn(
-                          isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          "border-b border-border/40",
-                        )}>
-                          <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                          <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">{sg.full_name}</td>
-
-                          {classworkCats.map(cat => {
-                            const cellKey = `${sg.student_id}__${cat.id}`;
-                            const allIcons = sg.dailyIcons[cat.id] || [];
-                            const maxDisplay = getMaxDisplayIcons(cat.name);
-                            const icons = allIcons.slice(0, maxDisplay);
-                            const manualScore = sg.manualScores[cat.id] ?? 0;
-                            return (
-                              <React.Fragment key={cat.id}>
-                                {/* Icons column */}
-                                <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
-                                  {icons.length > 0 && (
-                                    <div className="flex flex-wrap justify-center gap-0.5">
-                                      {icons.map((icon, idx) => (
-                                        <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
-                                      ))}
-                                    </div>
-                                  )}
-                                </td>
-                                {/* Score column */}
-                                <td className={cn(
-                                  "p-1.5 text-center border-l border-border/10",
-                                  isEditing ? "bg-emerald-500/10" : "bg-warning/5 dark:bg-warning/10"
-                                )}>
-                                  {isEditing ? (() => {
-                                    const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
-                                    return (
-                                      <Input
-                                        type="number" min={0} max={Number(cat.max_score)}
-                                        value={tempEdits[cellKey] ?? ""}
-                                        onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
-                                        className={cn(
-                                          "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
-                                          locked && "opacity-40 pointer-events-none"
-                                        )}
-                                        dir="ltr"
-                                        disabled={!!locked}
-                                      />
-                                    );
-                                  })() : (
-                                    <span className="text-xs font-semibold text-muted-foreground">{manualScore}</span>
-                                  )}
-                                </td>
-                              </React.Fragment>
-                            );
-                          })}
-
-                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>
-                            {sub.score} / {sub.max}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <ClassworkTable
+                students={group.students}
+                categories={classworkCats}
+                isEditing={isEditing}
+                tempEdits={tempEdits}
+                setTempEdits={setTempEdits}
+                fillAllCatId={fillAllCatId}
+                selectedPeriod={selectedPeriod}
+                tableRef={(el) => { if (el) tableRefs.current.set(group.id, el); }}
+              />
             </CardContent>
           </Card>
         );
