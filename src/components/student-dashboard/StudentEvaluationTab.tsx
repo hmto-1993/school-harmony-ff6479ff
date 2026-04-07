@@ -76,11 +76,11 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   };
 
   const LevelIcon = ({ level, isStar }: { level: string; isStar?: boolean }) => {
-    if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-500 inline-block" />;
-    if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" />;
-    if (level === "excellent") return <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" />;
-    if (level === "average") return <MinusCircle className="h-5 w-5 text-amber-500 mx-auto" />;
-    if (level === "zero") return <XCircle className="h-5 w-5 text-rose-500 mx-auto" />;
+    if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-400 inline-block" />;
+    if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-400 mx-auto" />;
+    if (level === "excellent") return <CircleCheck className="h-5 w-5 text-emerald-500 mx-auto" />;
+    if (level === "average") return <CircleMinus className="h-5 w-5 text-amber-500 mx-auto" />;
+    if (level === "zero") return <CircleX className="h-5 w-5 text-rose-500 mx-auto" />;
     return <span className="text-muted-foreground/30 text-sm">○</span>;
   };
 
