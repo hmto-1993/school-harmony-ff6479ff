@@ -15,6 +15,7 @@ interface Props {
 export default function StudentGradesTab({ student, isParent, parentVis, gradesView, setGradesView }: Props) {
   const studentClassId = student.class_id;
   const isCatHidden = (catId: string) => {
+    if (!isParent) return false;
     if (studentClassId && parentVis.parentGradesHiddenCategories.classes[studentClassId]?.length) {
       return parentVis.parentGradesHiddenCategories.classes[studentClassId].includes(catId);
     }
@@ -24,7 +25,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
   const filteredGrades = student.grades.filter((g: any) => {
     if (isCatHidden(g.category_id)) return false;
     if (g.grade_categories?.category_group === "classwork") return false;
-    if (parentVis.parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
+    if (isParent && parentVis.parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
       if (parentVis.parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
       if (parentVis.parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
     }
