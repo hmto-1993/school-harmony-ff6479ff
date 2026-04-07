@@ -1,5 +1,3 @@
-import { useEffect, useState, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,220 +11,27 @@ import {
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { safeWriteXLSX } from "@/lib/download-utils";
-import { toast } from "@/hooks/use-toast";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
-
-interface ExcellenceStudent {
-  id: string;
-  full_name: string;
-  class_name: string;
-  perfectAttendance: boolean;
-  fullMarks: boolean;
-  fullMarkTests: string[];
-}
-
-interface DisciplinaryStudent {
-  id: string;
-  full_name: string;
-  class_name: string;
-  absenceDays: number;
-  warningStatus: "sent" | "pending";
-}
-
-interface AnalyticsStats {
-  avgClassScore: number;
-  fullMarkCertificates: number;
-  absenceWarnings: number;
-  perfectAttendanceCount: number;
-  totalStudents: number;
-}
+import { useMonthlyAnalytics, MONTHS_AR } from "@/hooks/useMonthlyAnalytics";
 
 interface Props {
   selectedClass: string;
   classes: { id: string; name: string }[];
 }
 
-const MONTHS_AR = [
-  "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-  "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-];
-
 export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
-  const [loading, setLoading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth()));
-  const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
-  const [classFilter, setClassFilter] = useState(selectedClass || "all");
-
-  const [excellenceStudents, setExcellenceStudents] = useState<ExcellenceStudent[]>([]);
-  const [disciplinaryStudents, setDisciplinaryStudents] = useState<DisciplinaryStudent[]>([]);
-  const [stats, setStats] = useState<AnalyticsStats>({
-    avgClassScore: 0, fullMarkCertificates: 0, absenceWarnings: 0,
-    perfectAttendanceCount: 0, totalStudents: 0,
-  });
-
-  useEffect(() => {
-    setClassFilter(selectedClass || "all");
-  }, [selectedClass]);
-
-  const monthStart = useMemo(() => {
-    const m = parseInt(selectedMonth);
-    const y = parseInt(selectedYear);
-    return new Date(y, m, 1).toISOString().split("T")[0];
-  }, [selectedMonth, selectedYear]);
-
-  const monthEnd = useMemo(() => {
-    const m = parseInt(selectedMonth);
-    const y = parseInt(selectedYear);
-    return new Date(y, m + 1, 0).toISOString().split("T")[0];
-  }, [selectedMonth, selectedYear]);
-
-  const fetchAnalytics = async () => {
-    setLoading(true);
-
-    // Fetch students
-    let studentsQuery = supabase
-      .from("students")
-      .select("id, full_name, class_id, classes(name)")
-      .order("full_name");
-
-    if (classFilter !== "all") {
-      studentsQuery = studentsQuery.eq("class_id", classFilter);
-    }
-
-    const [
-      { data: students },
-      { data: attendance },
-      { data: grades },
-      { data: notifications },
-    ] = await Promise.all([
-      studentsQuery,
-      supabase.from("attendance_records")
-        .select("student_id, status, date")
-        .gte("date", monthStart)
-        .lte("date", monthEnd),
-      supabase.from("grades")
-        .select("student_id, score, category_id, grade_categories(name, max_score)")
-        .not("score", "is", null),
-      supabase.from("notifications")
-        .select("student_id, type, created_at")
-        .in("type", ["absent", "warning"])
-        .gte("created_at", `${monthStart}T00:00:00`)
-        .lte("created_at", `${monthEnd}T23:59:59`),
-    ]);
-
-    if (!students || students.length === 0) {
-      setExcellenceStudents([]);
-      setDisciplinaryStudents([]);
-      setStats({ avgClassScore: 0, fullMarkCertificates: 0, absenceWarnings: 0, perfectAttendanceCount: 0, totalStudents: 0 });
-      setLoading(false);
-      return;
-    }
-
-    // Build attendance map per student
-    const studentAbsences = new Map<string, number>();
-    const studentHasAttendance = new Set<string>();
-    (attendance || []).forEach(a => {
-      studentHasAttendance.add(a.student_id);
-      if (a.status === "absent") {
-        studentAbsences.set(a.student_id, (studentAbsences.get(a.student_id) || 0) + 1);
-      }
-    });
-
-    // Build full marks map
-    const studentFullMarks = new Map<string, string[]>();
-    let fullMarkCertCount = 0;
-    (grades || []).forEach(g => {
-      const catName = (g.grade_categories as any)?.name || "";
-      const maxScore = (g.grade_categories as any)?.max_score || 0;
-      if (g.score === maxScore && maxScore > 0) {
-        const existing = studentFullMarks.get(g.student_id) || [];
-        if (!existing.includes(catName)) {
-          studentFullMarks.set(g.student_id, [...existing, catName]);
-          fullMarkCertCount++;
-        }
-      }
-    });
-
-    // Build notification map
-    const studentWarnings = new Set<string>();
-    (notifications || []).forEach(n => {
-      studentWarnings.add(n.student_id);
-    });
-
-    // Calculate avg score
-    const scores = (grades || []).map(g => {
-      const max = (g.grade_categories as any)?.max_score || 100;
-      return max > 0 ? (g.score! / max) * 100 : 0;
-    });
-    const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-
-    // Build excellence and disciplinary lists
-    const excellence: ExcellenceStudent[] = [];
-    const disciplinary: DisciplinaryStudent[] = [];
-    let perfectCount = 0;
-
-    for (const student of students) {
-      const absences = studentAbsences.get(student.id) || 0;
-      const hasAttendance = studentHasAttendance.has(student.id);
-      const isPerfectAttendance = hasAttendance && absences === 0;
-      const fullMarks = studentFullMarks.get(student.id) || [];
-      const className = (student.classes as any)?.name || "";
-
-      if (isPerfectAttendance) perfectCount++;
-
-      // Excellence: perfect attendance OR full marks
-      if (isPerfectAttendance || fullMarks.length > 0) {
-        excellence.push({
-          id: student.id,
-          full_name: student.full_name,
-          class_name: className,
-          perfectAttendance: isPerfectAttendance,
-          fullMarks: fullMarks.length > 0,
-          fullMarkTests: fullMarks,
-        });
-      }
-
-      // Disciplinary: 3+ absences
-      if (absences >= 3) {
-        disciplinary.push({
-          id: student.id,
-          full_name: student.full_name,
-          class_name: className,
-          absenceDays: absences,
-          warningStatus: studentWarnings.has(student.id) ? "sent" : "pending",
-        });
-      }
-    }
-
-    // Sort: excellence by most achievements, disciplinary by most absences
-    excellence.sort((a, b) => {
-      const aScore = (a.perfectAttendance ? 1 : 0) + (a.fullMarks ? 1 : 0);
-      const bScore = (b.perfectAttendance ? 1 : 0) + (b.fullMarks ? 1 : 0);
-      return bScore - aScore;
-    });
-    disciplinary.sort((a, b) => b.absenceDays - a.absenceDays);
-
-    setExcellenceStudents(excellence);
-    setDisciplinaryStudents(disciplinary);
-    setStats({
-      avgClassScore: avgScore,
-      fullMarkCertificates: fullMarkCertCount,
-      absenceWarnings: disciplinary.length,
-      perfectAttendanceCount: perfectCount,
-      totalStudents: students.length,
-    });
-    setLoading(false);
-  };
+  const {
+    loading, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear,
+    classFilter, setClassFilter, excellenceStudents, disciplinaryStudents,
+    stats, fetchAnalytics, getMonthLabel, years,
+  } = useMonthlyAnalytics(selectedClass);
 
   // Excel exports
   const exportExcellenceExcel = async () => {
     const XLSX = await import("xlsx");
     const rows = excellenceStudents.map((s, i) => ({
-      "#": i + 1,
-      "اسم الطالب": s.full_name,
-      "الفصل": s.class_name,
-      "حضور كامل": s.perfectAttendance ? "✓" : "—",
-      "درجة كاملة": s.fullMarks ? "✓" : "—",
+      "#": i + 1, "اسم الطالب": s.full_name, "الفصل": s.class_name,
+      "حضور كامل": s.perfectAttendance ? "✓" : "—", "درجة كاملة": s.fullMarks ? "✓" : "—",
       "تفاصيل": s.fullMarkTests.join(", ") || (s.perfectAttendance ? "انتظام كامل" : ""),
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -238,19 +43,14 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
   const exportDisciplinaryExcel = async () => {
     const XLSX = await import("xlsx");
     const rows = disciplinaryStudents.map((s, i) => ({
-      "#": i + 1,
-      "اسم الطالب": s.full_name,
-      "الفصل": s.class_name,
-      "أيام الغياب": s.absenceDays,
-      "حالة الإنذار": s.warningStatus === "sent" ? "تم الإرسال" : "معلق",
+      "#": i + 1, "اسم الطالب": s.full_name, "الفصل": s.class_name,
+      "أيام الغياب": s.absenceDays, "حالة الإنذار": s.warningStatus === "sent" ? "تم الإرسال" : "معلق",
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "إنذارات الغياب");
     safeWriteXLSX(wb, `تقرير_الغياب_${MONTHS_AR[parseInt(selectedMonth)]}_${selectedYear}.xlsx`);
   };
-
-  const getMonthLabel = () => `${MONTHS_AR[parseInt(selectedMonth)]} ${selectedYear}`;
 
   const exportExcellencePDF = async () => {
     const { buildExcellencePDF, savePDFBlob } = await import("@/lib/report-pdf-builders");
@@ -276,9 +76,6 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
     await sharePDFBlob(blob, fileName, `📋 تقرير الغياب — ${getMonthLabel()}`);
   };
 
-  const currentYear = new Date().getFullYear();
-  const years = [currentYear - 1, currentYear, currentYear + 1];
-
   return (
     <div className="space-y-5">
       {/* Month & Class Filters */}
@@ -302,9 +99,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
             <div className="space-y-1.5 min-w-[100px]">
               <Label className="text-xs font-semibold text-muted-foreground">السنة</Label>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {years.map(y => (
                     <SelectItem key={y} value={String(y)}>{y}</SelectItem>
@@ -315,9 +110,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
             <div className="space-y-1.5 min-w-[180px]">
               <Label className="text-xs font-semibold text-muted-foreground">الفصل</Label>
               <Select value={classFilter} onValueChange={setClassFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الفصول</SelectItem>
                   {classes.map(c => (

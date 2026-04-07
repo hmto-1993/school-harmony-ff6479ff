@@ -1,7 +1,10 @@
-import { createArabicPDF, getArabicTableStyles, finalizePDF, finalizePDFAsBlob } from "@/lib/arabic-pdf";
-import autoTable from "jspdf-autotable";
+import { createArabicPDF, getArabicTableStyles } from "@/lib/arabic-pdf";
 import { format } from "date-fns";
-import type jsPDF from "jspdf";
+import {
+  levelLabels, levelColors, attColors, attLabels, getLevel,
+  drawSectionTitle, drawLevelCircles, drawAttendanceCircles,
+  drawStackedBars, drawMiniBar, addPageFooter, drawSideBySideTables,
+} from "@/lib/summary-pdf-helpers";
 
 // ============ Types ============
 interface ClassSummary {
@@ -24,24 +27,6 @@ interface SummaryPDFData {
   categories: any[];
 }
 
-// ============ Constants ============
-const levelLabels = ["ممتاز", "جيد جداً", "جيد", "مقبول", "ضعيف"];
-const levelColors: [number, number, number][] = [
-  [16, 185, 129], [59, 130, 246], [251, 191, 36], [249, 115, 22], [239, 68, 68],
-];
-const attColors: [number, number, number][] = [
-  [16, 185, 129], [239, 68, 68], [251, 191, 36], [156, 163, 175],
-];
-const attLabels = ["حاضر", "غائب", "متأخر", "لم يُسجل"];
-
-const getLevel = (avg: number) => {
-  if (avg >= 90) return 0;
-  if (avg >= 80) return 1;
-  if (avg >= 70) return 2;
-  if (avg >= 60) return 3;
-  return 4;
-};
-
 // ============ Compute ============
 function computeStudentAvg(cls: ClassSummary, studentId: string, categories: any[]): number | null {
   const classCategories = categories.filter((c: any) => c.class_id === cls.id || c.class_id === null);
@@ -63,234 +48,6 @@ function computeStudentAvg(cls: ClassSummary, studentId: string, categories: any
     if (v.count > 0) { totalScore += (v.sum / v.count); totalMax += v.max; }
   });
   return totalMax > 0 ? Math.round((totalScore / totalMax) * 100) : null;
-}
-
-// ============ Draw Helpers ============
-function drawSectionTitle(doc: jsPDF, title: string, y: number, pw: number) {
-  doc.setFontSize(13);
-  doc.setFont("Amiri", "bold");
-  doc.setTextColor(30, 64, 120);
-  doc.text(title, pw / 2, y, { align: "center" });
-  // Decorative line
-  const lineW = 60;
-  doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.5);
-  doc.line(pw / 2 - lineW, y + 3, pw / 2 + lineW, y + 3);
-  doc.setTextColor(0, 0, 0);
-  return y + 10;
-}
-
-function drawSubTitle(doc: jsPDF, title: string, x: number, y: number, color: [number, number, number]) {
-  doc.setFontSize(10);
-  doc.setFont("Amiri", "bold");
-  doc.setTextColor(...color);
-  doc.text(title, x, y, { align: "right" });
-  doc.setTextColor(0, 0, 0);
-}
-
-function drawLevelCircles(doc: jsPDF, counts: number[], total: number, centerX: number, y: number) {
-  const circleR = 9;
-  const gap = 40;
-  const startX = centerX + ((levelLabels.length - 1) * gap) / 2;
-  levelLabels.forEach((label, i) => {
-    const cx = startX - i * gap;
-    const cy = y;
-    const pct = total > 0 ? Math.round((counts[i] / total) * 100) : 0;
-    // Outer shadow
-    doc.setFillColor(230, 230, 230);
-    doc.circle(cx, cy, circleR + 0.5, "F");
-    // Color ring
-    doc.setFillColor(...levelColors[i]);
-    doc.circle(cx, cy, circleR, "F");
-    // Inner white
-    doc.setFillColor(255, 255, 255);
-    doc.circle(cx, cy, circleR - 2.5, "F");
-    // Percentage
-    doc.setFontSize(9);
-    doc.setFont("Amiri", "bold");
-    doc.setTextColor(...levelColors[i]);
-    doc.text(`${pct}%`, cx, cy + 2, { align: "center" });
-    doc.setTextColor(80, 80, 80);
-    // Label + count
-    doc.setFontSize(7);
-    doc.setFont("Amiri", "bold");
-    doc.text(label, cx, cy + circleR + 5, { align: "center" });
-    doc.setFont("Amiri", "normal");
-    doc.setTextColor(120, 120, 120);
-    doc.text(`(${counts[i]})`, cx, cy + circleR + 9, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-  });
-}
-
-function drawAttendanceCircles(doc: jsPDF, stats: { label: string; count: number; color: [number, number, number]; pct: number }[], centerX: number, y: number) {
-  const circleR = 9;
-  const gap = 40;
-  const startX = centerX + ((stats.length - 1) * gap) / 2;
-  stats.forEach((st, i) => {
-    const cx = startX - i * gap;
-    const cy = y;
-    doc.setFillColor(230, 230, 230);
-    doc.circle(cx, cy, circleR + 0.5, "F");
-    doc.setFillColor(...st.color);
-    doc.circle(cx, cy, circleR, "F");
-    doc.setFillColor(255, 255, 255);
-    doc.circle(cx, cy, circleR - 2.5, "F");
-    doc.setFontSize(9);
-    doc.setFont("Amiri", "bold");
-    doc.setTextColor(...st.color);
-    doc.text(`${st.pct}%`, cx, cy + 2, { align: "center" });
-    doc.setTextColor(80, 80, 80);
-    doc.setFontSize(7);
-    doc.setFont("Amiri", "bold");
-    doc.text(st.label, cx, cy + circleR + 5, { align: "center" });
-    doc.setFont("Amiri", "normal");
-    doc.setTextColor(120, 120, 120);
-    doc.text(`(${st.count})`, cx, cy + circleR + 9, { align: "center" });
-    doc.setTextColor(0, 0, 0);
-  });
-}
-
-function drawStackedBars(
-  doc: jsPDF, items: { name: string; values: number[]; total: number }[],
-  colors: [number, number, number][], labels: string[],
-  startY: number, pageWidth: number, maxHeight: number
-) {
-  const chartX = 25;
-  const chartW = pageWidth - 70;
-  const barH = Math.min(14, Math.max(8, (maxHeight - 10) / items.length - 3));
-  const barGap = 4;
-
-  // Legend - centered
-  const legY = startY;
-  const totalLegW = labels.length * 35;
-  const legStartX = pageWidth / 2 + totalLegW / 2;
-  labels.forEach((label, i) => {
-    const lx = legStartX - i * 35;
-    doc.setFillColor(...colors[i]);
-    doc.roundedRect(lx, legY - 3, 6, 6, 1, 1, "F");
-    doc.setFont("Amiri", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(80, 80, 80);
-    doc.text(label, lx - 2, legY + 1.5, { align: "right" });
-  });
-  doc.setTextColor(0, 0, 0);
-
-  const barsStartY = startY + 10;
-  items.forEach((item, idx) => {
-    const by = barsStartY + idx * (barH + barGap);
-    // Class name
-    doc.setFont("Amiri", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(60, 60, 60);
-    doc.text(item.name, pageWidth - 18, by + barH / 2 + 1.5, { align: "right" });
-    doc.setTextColor(0, 0, 0);
-
-    // Background track
-    doc.setFillColor(240, 240, 240);
-    doc.roundedRect(chartX, by, chartW, barH, 2, 2, "F");
-
-    // Stacked segments
-    let cx = chartX;
-    item.values.forEach((count, li) => {
-      if (count === 0) return;
-      const bw = item.total > 0 ? (count / item.total) * chartW : 0;
-      doc.setFillColor(...colors[li]);
-      doc.roundedRect(cx, by, bw, barH, 1.5, 1.5, "F");
-      if (bw > 14) {
-        doc.setFontSize(7);
-        doc.setFont("Amiri", "bold");
-        doc.setTextColor(255, 255, 255);
-        doc.text(String(count), cx + bw / 2, by + barH / 2 + 1.5, { align: "center" });
-        doc.setTextColor(0, 0, 0);
-      }
-      cx += bw;
-    });
-
-    // Total on the left
-    doc.setFontSize(7);
-    doc.setFont("Amiri", "normal");
-    doc.setTextColor(120, 120, 120);
-    doc.text(String(item.total), chartX - 3, by + barH / 2 + 1.5, { align: "right" });
-    doc.setTextColor(0, 0, 0);
-  });
-
-  return barsStartY + items.length * (barH + barGap);
-}
-
-function drawMiniBar(
-  doc: jsPDF, values: number[], total: number,
-  colors: [number, number, number][], labels: string[],
-  y: number, pageWidth: number
-) {
-  const barX = 30;
-  const barW = pageWidth - 60;
-  const barH = 8;
-
-  // Background
-  doc.setFillColor(235, 235, 235);
-  doc.roundedRect(barX, y, barW, barH, 2, 2, "F");
-
-  let cx = barX;
-  values.forEach((count, li) => {
-    if (count === 0) return;
-    const bw = total > 0 ? (count / total) * barW : 0;
-    doc.setFillColor(...colors[li]);
-    doc.roundedRect(cx, y, bw, barH, 1.5, 1.5, "F");
-    if (bw > 18) {
-      doc.setFontSize(6);
-      doc.setFont("Amiri", "bold");
-      doc.setTextColor(255, 255, 255);
-      doc.text(`${labels[li]} (${count})`, cx + bw / 2, y + barH / 2 + 1.5, { align: "center" });
-      doc.setTextColor(0, 0, 0);
-    }
-    cx += bw;
-  });
-
-  return y + barH + 6;
-}
-
-function addPageFooter(doc: jsPDF, pageNum: number, totalPages: number, pw: number, ph: number) {
-  doc.setFontSize(7);
-  doc.setFont("Amiri", "normal");
-  doc.setTextColor(160, 160, 160);
-  doc.text(`${pageNum} / ${totalPages}`, pw / 2, ph - 5, { align: "center" });
-  doc.setTextColor(0, 0, 0);
-}
-
-function drawSideBySideTables(
-  doc: jsPDF, tableStyles: any, pageWidth: number,
-  leftTitle: string, leftColor: [number, number, number],
-  leftHead: string[][], leftBody: string[][],
-  rightTitle: string, rightColor: [number, number, number],
-  rightHead: string[][], rightBody: string[][],
-  startY: number
-) {
-  const halfW = pageWidth / 2;
-  const gap = 8;
-
-  // Right table (appears first in RTL)
-  drawSubTitle(doc, leftTitle, pageWidth - 18, startY, leftColor);
-  autoTable(doc, {
-    startY: startY + 4,
-    head: leftHead,
-    body: leftBody,
-    ...tableStyles,
-    headStyles: { ...tableStyles.headStyles, fillColor: leftColor },
-    margin: { left: halfW + gap / 2, right: 14 },
-    tableWidth: halfW - gap / 2 - 14,
-  });
-
-  // Left table
-  drawSubTitle(doc, rightTitle, halfW - gap / 2 - 4, startY, rightColor);
-  autoTable(doc, {
-    startY: startY + 4,
-    head: rightHead,
-    body: rightBody,
-    ...tableStyles,
-    headStyles: { ...tableStyles.headStyles, fillColor: rightColor },
-    margin: { left: 14, right: halfW + gap / 2 },
-    tableWidth: halfW - gap / 2 - 14,
-  });
 }
 
 // ============ Main Builder ============
@@ -319,12 +76,10 @@ export async function buildSummaryPDF(
   });
   allStudentAvgs.sort((a, b) => b.avg - a.avg);
 
-  // Count total pages for footer
   const classCount = data.classes.length;
   const classesWithGrades = data.classes.filter(cls =>
     cls.students.some(s => computeStudentAvg(cls, s.id, data.categories) !== null)
   ).length;
-  // Page 1: Cover + Chart, Page 2: Top/Bottom 10 grades, Per-class grades pages, Attendance chart, Top/Bottom 10 attendance, Per-class attendance pages
   const totalPages = 1 + 1 + classesWithGrades + 1 + 1 + classCount;
   let currentPage = 1;
 
@@ -353,15 +108,13 @@ export async function buildSummaryPDF(
     doc.setFontSize(9);
     const lines = doc.splitTextToSize(options.aiSummaryText, boxWidth - 14);
     const boxHeight = lines.length * 4.5 + 14;
-    
-    // Check if AI summary fits on current page, if not start a new page
+
     if (curY + boxHeight > ph - 20) {
       doc.addPage("a4", "landscape");
       curY = 15;
     }
-    
+
     doc.roundedRect(margin, curY, boxWidth, boxHeight, 3, 3, "FD");
-    // Icon
     doc.setFontSize(10);
     doc.setFont("Amiri", "bold");
     doc.setTextColor(59, 130, 246);
@@ -373,7 +126,7 @@ export async function buildSummaryPDF(
     curY += boxHeight + 6;
   }
 
-  // Grade Distribution Chart - check if enough space, otherwise new page
+  // Grade Distribution Chart
   const minChartSpace = 80;
   if (curY + minChartSpace > ph - 20) {
     doc.addPage("a4", "landscape");
@@ -391,7 +144,6 @@ export async function buildSummaryPDF(
   const remainingHeight = ph - curY - 40;
   const barsEndY = drawStackedBars(doc, classDistributions, levelColors, levelLabels, curY, pw, remainingHeight);
 
-  // Overall circles
   const overallCounts = [0, 0, 0, 0, 0];
   allStudentAvgs.forEach(s => overallCounts[getLevel(s.avg)]++);
   const circleY = Math.min(barsEndY + 12, ph - 32);
@@ -435,7 +187,6 @@ export async function buildSummaryPDF(
     doc.addPage("a4", "landscape");
     let cy = drawSectionTitle(doc, `ترتيب الطلاب — ${cls.name}`, 15, pw);
 
-    // Mini distribution bar
     const classCounts = [0, 0, 0, 0, 0];
     classAvgs.forEach(s => classCounts[getLevel(s.avg)]++);
     cy = drawMiniBar(doc, classCounts, classAvgs.length, levelColors, levelLabels, cy, pw);
@@ -470,7 +221,6 @@ export async function buildSummaryPDF(
   const attRemaining = ph - attY - 40;
   const attEndY = drawStackedBars(doc, attItems, attColors, attLabels, attY, pw, attRemaining);
 
-  // Attendance summary circles
   const totalPresent = data.classes.reduce((s, c) => s + c.attendance.present, 0);
   const totalAbsent = data.classes.reduce((s, c) => s + c.attendance.absent, 0);
   const totalLate = data.classes.reduce((s, c) => s + c.attendance.late, 0);
@@ -531,7 +281,6 @@ export async function buildSummaryPDF(
     doc.addPage("a4", "landscape");
     let cy = drawSectionTitle(doc, `الحضور والغياب — ${cls.name}`, 15, pw);
 
-    // Mini attendance bar
     const attVals = [cls.attendance.present, cls.attendance.absent, cls.attendance.late];
     cy = drawMiniBar(doc, attVals, cls.studentCount, attColors.slice(0, 3), attLabels.slice(0, 3), cy, pw);
 
