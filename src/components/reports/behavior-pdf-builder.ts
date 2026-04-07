@@ -44,6 +44,7 @@ export async function buildBehaviorPDFBlob(
   await registerArabicFont(doc);
   const tableStyles = getArabicTableStyles();
   const pageWidth = doc.internal.pageSize.getWidth();
+  let margin = 10;
 
   let startY = 5;
   let watermark: any = undefined;
