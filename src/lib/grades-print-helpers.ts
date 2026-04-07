@@ -96,14 +96,18 @@ export function buildHeaderHTML(config: any): string {
 
   return `
     <div style="margin-bottom:10px;padding-bottom:6px;border-bottom:${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? '#3b82f6'};display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-      <div style="flex:1 1 0%;text-align:${rightAlign};font-size:${config.rightSection?.fontSize || 12}px;line-height:1.8;color:${config.rightSection?.color || '#1e293b'};">
-        ${rightLines}
+      <div style="flex:1 1 0%;">
+        <div style="width:fit-content;max-width:100%;margin-left:auto;text-align:${rightAlign};font-size:${config.rightSection?.fontSize || 12}px;line-height:1.8;color:${config.rightSection?.color || '#1e293b'};">
+          ${rightLines}
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
         ${images}
       </div>
-      <div style="flex:1 1 0%;text-align:${leftAlign};font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
-        ${leftLines}
+      <div style="flex:1 1 0%;">
+        <div style="width:fit-content;max-width:100%;margin-right:auto;text-align:${leftAlign};font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
+          ${leftLines}
+        </div>
       </div>
     </div>
   `;
