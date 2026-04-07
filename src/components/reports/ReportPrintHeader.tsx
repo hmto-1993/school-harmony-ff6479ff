@@ -61,19 +61,25 @@ export default function ReportPrintHeader({ reportType }: Props) {
           paddingLeft: "0px",
         }}
       >
-        {/* Right text — anchored to outer edge */}
+        {/* Right text */}
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "right",
+            display: "flex",
+            justifyContent: config.rightSection.align === "center" ? "center" : config.rightSection.align === "left" ? "flex-end" : "flex-start",
+          }}
+        >
+          <div style={{
+            textAlign: config.rightSection.align || "right",
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.rightSection.color || "#1e293b",
-          }}
-        >
-          {config.rightSection.lines.map((line, i) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+            width: "fit-content",
+          }}>
+            {config.rightSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
 
         {/* Center images */}
@@ -94,19 +100,25 @@ export default function ReportPrintHeader({ reportType }: Props) {
           )}
         </div>
 
-        {/* Left text — anchored to outer edge */}
+        {/* Left text */}
         <div
           style={{
             flex: "1 1 0%",
-            textAlign: "left",
+            display: "flex",
+            justifyContent: config.leftSection.align === "center" ? "center" : config.leftSection.align === "right" ? "flex-start" : "flex-end",
+          }}
+        >
+          <div style={{
+            textAlign: config.leftSection.align || "left",
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",
-          }}
-        >
-          {config.leftSection.lines.map((line, i) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+            width: "fit-content",
+          }}>
+            {config.leftSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
       </div>
     </div>
