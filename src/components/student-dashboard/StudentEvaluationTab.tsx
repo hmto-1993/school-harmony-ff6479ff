@@ -76,12 +76,12 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   };
 
   const LevelIcon = ({ level, isStar }: { level: string; isStar?: boolean }) => {
-    if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-400 inline-block" />;
-    if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-400 mx-auto" />;
-    if (level === "excellent") return <CircleCheck className="h-5 w-5 text-emerald-500 mx-auto" />;
-    if (level === "average") return <CircleMinus className="h-5 w-5 text-amber-500 mx-auto" />;
-    if (level === "zero") return <CircleX className="h-5 w-5 text-rose-500 mx-auto" />;
-    return <span className="text-muted-foreground/30 text-sm">○</span>;
+    if (isStar) return <span className="inline-flex p-1 rounded-lg bg-yellow-100/80 dark:bg-yellow-500/15 mx-auto"><Star className="h-5 w-5 text-amber-500 fill-amber-400" /></span>;
+    if (level === "star") return <span className="inline-flex p-1 rounded-lg bg-yellow-100/80 dark:bg-yellow-500/15 mx-auto"><Star className="h-5 w-5 text-amber-500 fill-amber-400" /></span>;
+    if (level === "excellent") return <span className="inline-flex p-1 rounded-lg bg-emerald-100/80 dark:bg-emerald-500/15 mx-auto"><CircleCheck className="h-5 w-5 text-emerald-500" /></span>;
+    if (level === "average") return <span className="inline-flex p-1 rounded-lg bg-amber-100/80 dark:bg-amber-500/15 mx-auto"><CircleMinus className="h-5 w-5 text-amber-500" /></span>;
+    if (level === "zero") return <span className="inline-flex p-1 rounded-lg bg-rose-100/80 dark:bg-rose-500/15 mx-auto"><CircleX className="h-5 w-5 text-rose-500" /></span>;
+    return <span className="inline-flex p-1 rounded-lg border-2 border-dashed border-muted-foreground/30 mx-auto"><span className="h-5 w-5" /></span>;
   };
 
   const Legend = () => (
