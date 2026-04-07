@@ -1,4 +1,3 @@
-import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,55 +7,20 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
-  Settings as SettingsIcon,
-  Plus,
-  Trash2,
-  Save,
-  GraduationCap,
-  Users,
-  Eye,
-  EyeOff,
-  UserCircle,
-  KeyRound,
-  Printer,
-  Upload,
-  Download,
-  FileSpreadsheet,
-  Pencil,
-  Check,
-  X,
-  MessageSquare,
-  Megaphone,
-  ChevronDown,
-  ArrowUp,
-  ArrowDown,
-  Palette,
-  History,
-  RotateCcw,
-  CalendarDays,
-  ClipboardCheck,
-  Lock,
-  LockOpen,
-  Trophy,
-  Crown,
-  AlertTriangle,
-  Heart,
-  ClipboardList,
-  Table2,
+  Settings as SettingsIcon, Plus, Trash2, Save, GraduationCap, Users,
+  Eye, EyeOff, UserCircle, KeyRound, Printer, Upload, Download,
+  FileSpreadsheet, Pencil, Check, X, MessageSquare, Megaphone,
+  ChevronDown, ArrowUp, ArrowDown, Palette, History, RotateCcw,
+  CalendarDays, ClipboardCheck, Lock, LockOpen, Trophy, Crown,
+  AlertTriangle, Heart, ClipboardList, Table2,
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
-
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import ClassScheduleDialog from "@/components/settings/ClassScheduleDialog";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
@@ -69,962 +33,23 @@ import CategoryTable from "@/components/settings/CategoryTable";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import EvaluationToggles from "@/components/settings/EvaluationToggles";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
-import { useCalendarType } from "@/hooks/useCalendarType";
 import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose,
 } from "@/components/ui/dialog";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface ClassRow {
-  id: string;
-  name: string;
-  grade: string;
-  section: string;
-  academic_year: string;
-  created_at: string;
-  studentCount?: number;
-}
-
-interface GradeCategory {
-  id: string;
-  name: string;
-  weight: number;
-  max_score: number;
-  sort_order: number;
-  class_id: string | null;
-  class_name?: string;
-  category_group: string;
-}
+import { useSettingsData } from "@/hooks/useSettingsData";
 
 export default function SettingsPage() {
-  const { role, user } = useAuth();
-  const isAdmin = role === "admin";
-  const { calendarType: calendarTypeLocal, setCalendarType: setGlobalCalendarType } = useCalendarType();
+  const s = useSettingsData();
 
-  // Profile state
-  const [profileName, setProfileName] = useState("");
-  const [profilePhone, setProfilePhone] = useState("");
-  const [profileNationalId, setProfileNationalId] = useState("");
-  const [savingProfile, setSavingProfile] = useState(false);
-
-  const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
-
-  // Letterhead
-  const [letterheadUrl, setLetterheadUrl] = useState("");
-  const [uploadingLetterhead, setUploadingLetterhead] = useState(false);
-
-  // Change own password
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newOwnPassword, setNewOwnPassword] = useState("");
-  const [confirmOwnPassword, setConfirmOwnPassword] = useState("");
-  const [changingOwnPassword, setChangingOwnPassword] = useState(false);
-
-  const [classes, setClasses] = useState<ClassRow[]>([]);
-  const [categories, setCategories] = useState<GradeCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeCard, setActiveCard] = useState<string | null>(null);
-
-  // Academic year
-  const [defaultAcademicYear, setDefaultAcademicYear] = useState("1446-1447");
-  const [savingAcademicYear, setSavingAcademicYear] = useState(false);
-
-  // New class form
-  const [newClassName, setNewClassName] = useState("");
-  const [newSection, setNewSection] = useState("");
-  const [newGrade, setNewGrade] = useState("الأول الثانوي");
-  const [newYear, setNewYear] = useState("1446-1447");
-
-  // Edit class inline
-  const [editingClassId, setEditingClassId] = useState<string | null>(null);
-  const [editingClassName, setEditingClassName] = useState("");
-  const [editingClassGrade, setEditingClassGrade] = useState("");
-  const [editingClassSection, setEditingClassSection] = useState("");
-  const [editingClassYear, setEditingClassYear] = useState("");
-
-  // Import classes from Excel
-  const [importClassesOpen, setImportClassesOpen] = useState(false);
-  const [importedClasses, setImportedClasses] = useState<{ name: string; grade: string; section: string }[]>([]);
-  const [importingClasses, setImportingClasses] = useState(false);
-  const classFileRef = useRef<HTMLInputElement>(null);
-  const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
-  
-  // Attendance settings
-  const [attendanceOverrideLock, setAttendanceOverrideLock] = useState(false);
-  const [classSchedules, setClassSchedules] = useState<Record<string, { periodsPerWeek: number; daysOfWeek: number[] }>>({});
-  const [savingAttendanceSettings, setSavingAttendanceSettings] = useState(false);
-  const pendingScheduleUpdates = useRef<Record<string, { periodsPerWeek: number; timeout: NodeJS.Timeout }>>({});
-
-  // Admin read-only setting
-  const [adminReadOnly, setAdminReadOnly] = useState(false);
-  const [savingAdminReadOnly, setSavingAdminReadOnly] = useState(false);
-
-  // Debounced save for class schedules (300ms delay)
-  const saveClassSchedule = useCallback(async (classId: string, newVal: number) => {
-    // Cancel any pending update for this class
-    if (pendingScheduleUpdates.current[classId]) {
-      clearTimeout(pendingScheduleUpdates.current[classId].timeout);
-    }
-
-    // Update UI immediately
-    setClassSchedules(prev => ({
-      ...prev,
-      [classId]: { ...prev[classId], periodsPerWeek: newVal, daysOfWeek: prev[classId]?.daysOfWeek || [0, 1, 2, 3, 4] }
-    }));
-
-    // Schedule database update after 300ms
-    pendingScheduleUpdates.current[classId] = {
-      periodsPerWeek: newVal,
-      timeout: setTimeout(async () => {
-        const { data: existing } = await supabase
-          .from("class_schedules")
-          .select("id")
-          .eq("class_id", classId)
-          .maybeSingle();
-        if (existing) {
-          await supabase.from("class_schedules").update({ periods_per_week: newVal }).eq("class_id", classId);
-        } else {
-          await supabase.from("class_schedules").insert({ class_id: classId, periods_per_week: newVal, days_of_week: [0, 1, 2, 3, 4] });
-        }
-        delete pendingScheduleUpdates.current[classId];
-      }, 300)
-    };
-  }, []);
-
-  // Edit category
-  const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
-  const [savingCats, setSavingCats] = useState(false);
-
-  // SMS Provider settings
-  const [smsProvider, setSmsProvider] = useState("msegat");
-  const [providerUsername, setProviderUsername] = useState("");
-  const [providerApiKey, setProviderApiKey] = useState("");
-  const [providerSender, setProviderSender] = useState("");
-  const [savingProvider, setSavingProvider] = useState(false);
-  const [testingSms, setTestingSms] = useState(false);
-
-  // Login page settings
-  const [loginSchoolName, setLoginSchoolName] = useState("");
-  const [loginSubtitle, setLoginSubtitle] = useState("");
-  const [dashboardTitle, setDashboardTitle] = useState("");
-  const [savingLogin, setSavingLogin] = useState(false);
-  const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
-
-  // Quiz color settings
-  const [quizColorMcq, setQuizColorMcq] = useState("#0ea5e9");
-  const [quizColorTf, setQuizColorTf] = useState("#f59e0b");
-  const [quizColorSelected, setQuizColorSelected] = useState("#14b8a6");
-  const [savingQuizColors, setSavingQuizColors] = useState(false);
-
-  // Student visibility settings
-  const [showGrades, setShowGrades] = useState(true);
-  const [showAttendance, setShowAttendance] = useState(true);
-  const [showBehavior, setShowBehavior] = useState(true);
-  const [savingVisibility, setSavingVisibility] = useState(false);
-  const [hiddenCategories, setHiddenCategories] = useState<{ p1: string[]; p2: string[] }>({ p1: [], p2: [] });
-  const [visibilityPeriod, setVisibilityPeriod] = useState<"p1" | "p2">("p1");
-  const [studentShowDailyGrades, setStudentShowDailyGrades] = useState(true);
-  const [studentShowClassworkIcons, setStudentShowClassworkIcons] = useState(true);
-  const [studentClassworkIconsCount, setStudentClassworkIconsCount] = useState(10);
-
-  // Student popup message
-  const [popupEnabled, setPopupEnabled] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
-  const [popupTitle, setPopupTitle] = useState("");
-  const [popupExpiry, setPopupExpiry] = useState("");
-  const [popupTargetType, setPopupTargetType] = useState<"all" | "specific">("all");
-  const [popupTargetClassIds, setPopupTargetClassIds] = useState<string[]>([]);
-  const [savingPopup, setSavingPopup] = useState(false);
-  const [popupAction, setPopupAction] = useState<string>("none");
-  const [popupRepeat, setPopupRepeat] = useState<string>("none");
-  const [popupHistory, setPopupHistory] = useState<{ id: string; title: string; message: string; expiry: string | null; target_type: string; target_class_ids: string[]; created_at: string }[]>([]);
-  const [popupPreviewOpen, setPopupPreviewOpen] = useState(false);
-  const [previewTitle, setPreviewTitle] = useState("");
-  const [previewMessage, setPreviewMessage] = useState("");
-  const [popupCountdown, setPopupCountdown] = useState("");
-  const popupExpiryNotified = useRef(false);
-
-  // Honor Roll settings
-  const [honorRollEnabled, setHonorRollEnabled] = useState(false);
-  const [savingHonorRoll, setSavingHonorRoll] = useState(false);
-
-  // Daily extra slots
-  const [dailyExtraSlotsEnabled, setDailyExtraSlotsEnabled] = useState(true);
-  const [dailyExtraSlotsDisabledCats, setDailyExtraSlotsDisabledCats] = useState<string[]>([]);
-  const [dailyMaxSlots, setDailyMaxSlots] = useState(3);
-  const [dailyMaxSlotsPerCat, setDailyMaxSlotsPerCat] = useState<Record<string, number>>({});
-
-  // Parent portal welcome message
-  const [parentWelcomeEnabled, setParentWelcomeEnabled] = useState(true);
-  const [parentWelcomeMessage, setParentWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
-  const [savingParentWelcome, setSavingParentWelcome] = useState(false);
-  const [parentShowNationalId, setParentShowNationalId] = useState(true);
-  const [parentShowGrades, setParentShowGrades] = useState(true);
-  const [parentShowAttendance, setParentShowAttendance] = useState(true);
-  const [parentShowBehavior, setParentShowBehavior] = useState(true);
-  const [parentShowHonorRoll, setParentShowHonorRoll] = useState(true);
-  const [parentShowAbsenceWarning, setParentShowAbsenceWarning] = useState(true);
-  const [parentShowContactTeacher, setParentShowContactTeacher] = useState(true);
-  const [parentShowLibrary, setParentShowLibrary] = useState(true);
-  const [parentShowActivities, setParentShowActivities] = useState(true);
-  const [parentGradesDefaultView, setParentGradesDefaultView] = useState<"cards" | "table">("cards");
-  const [parentGradesShowPercentage, setParentGradesShowPercentage] = useState(true);
-  const [parentGradesShowEval, setParentGradesShowEval] = useState(true);
-  const [parentGradesVisiblePeriods, setParentGradesVisiblePeriods] = useState<"both" | "1" | "2">("both");
-  const [parentGradesHiddenCategories, setParentGradesHiddenCategories] = useState<{ global: string[]; classes: Record<string, string[]> }>({ global: [], classes: {} });
-  const [hiddenCatScope, setHiddenCatScope] = useState<"global" | string>("global");
-  const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
-  const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
-  const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
-  const [parentPdfHeader, setParentPdfHeader] = useState({
-    line1: "",
-    line2: "",
-    line3: "",
-    showLogo: true,
-  });
-
-  const [absenceThreshold, setAbsenceThreshold] = useState(20);
-  const [absenceAllowedSessions, setAbsenceAllowedSessions] = useState(0);
-  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
-  const [totalTermSessions, setTotalTermSessions] = useState(0);
-  const [savingThreshold, setSavingThreshold] = useState(false);
-
-  // Countdown timer for popup expiry + admin notification
-  useEffect(() => {
-    if (!popupEnabled || !popupExpiry) { setPopupCountdown(""); popupExpiryNotified.current = false; return; }
-    const calc = () => {
-      const diff = new Date(popupExpiry).getTime() - Date.now();
-      if (diff <= 0) {
-        setPopupCountdown("منتهية");
-        if (!popupExpiryNotified.current) {
-          popupExpiryNotified.current = true;
-          toast({ title: "⏰ انتهت صلاحية الرسالة المنبثقة", description: "الرسالة المنبثقة للطلاب انتهت صلاحيتها ولم تعد تظهر. يمكنك تعطيلها أو تحديث تاريخ الانتهاء.", variant: "destructive" });
-        }
-        return;
-      }
-      popupExpiryNotified.current = false;
-      const d = Math.floor(diff / 86400000);
-      const h = Math.floor((diff % 86400000) / 3600000);
-      const m = Math.floor((diff % 3600000) / 60000);
-      const s = Math.floor((diff % 60000) / 1000);
-      setPopupCountdown(d > 0 ? `${d}ي ${h}س ${m}د` : h > 0 ? `${h}س ${m}د ${s}ث` : `${m}د ${s}ث`);
-    };
-    calc();
-    const id = setInterval(calc, 1000);
-    return () => clearInterval(id);
-  }, [popupEnabled, popupExpiry]);
-
-  // New category form
-  const [newCatClassId, setNewCatClassId] = useState("");
-  const [newCatName, setNewCatName] = useState("");
-  const [newCatWeight, setNewCatWeight] = useState(10);
-  const [newCatMaxScore, setNewCatMaxScore] = useState(100);
-  const [newCatGroup, setNewCatGroup] = useState("classwork");
-
-  const fetchData = async () => {
-    setLoading(true);
-
-    // Build all independent queries upfront
-    const coreQueries = Promise.all([
-      supabase.from("classes").select("*").order("name"),
-      supabase.from("grade_categories").select("*, classes(name)").order("sort_order"),
-      supabase.from("students").select("id, class_id"),
-    ]);
-
-    const profileQuery = user
-      ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single()
-      : Promise.resolve({ data: null });
-
-    const teachersQuery = user && isAdmin
-      ? supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } })
-      : Promise.resolve({ data: null });
-
-    const letterheadQuery = supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single();
-
-    const smsQuery = isAdmin
-      ? supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"])
-      : Promise.resolve({ data: null });
-
-    const loginQuery = isAdmin
-      ? supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"])
-      : Promise.resolve({ data: null });
-
-    const settingsQuery = isAdmin
-      ? supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"])
-      : Promise.resolve({ data: null });
-
-    const popupHistoryQuery = isAdmin
-      ? supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20)
-      : Promise.resolve({ data: null });
-
-    const overrideQuery = isAdmin
-      ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle()
-      : Promise.resolve({ data: null });
-
-    const adminReadOnlyQuery = isAdmin
-      ? supabase.from("site_settings").select("id, value").in("id", ["admin_read_only"])
-      : Promise.resolve({ data: null });
-
-    const schedulesQuery = isAdmin
-      ? supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week")
-      : Promise.resolve({ data: null });
-
-    // Execute ALL queries in parallel
-    const [
-      [classesRes, catsRes, studentsRes],
-      profileRes,
-      teachersRes,
-      lhRes,
-      smsRes,
-      loginRes,
-      settingsRes,
-      popupHistoryRes,
-      overrideRes,
-      schedulesRes,
-      adminReadOnlyRes,
-    ] = await Promise.all([
-      coreQueries,
-      profileQuery,
-      teachersQuery,
-      letterheadQuery,
-      smsQuery,
-      loginQuery,
-      settingsQuery,
-      popupHistoryQuery,
-      overrideQuery,
-      schedulesQuery,
-      adminReadOnlyQuery,
-    ]);
-
-    // Process core data
-    const classData = (classesRes.data || []) as ClassRow[];
-    const studentCounts: Record<string, number> = {};
-    (studentsRes.data || []).forEach((s: any) => {
-      if (s.class_id) studentCounts[s.class_id] = (studentCounts[s.class_id] || 0) + 1;
-    });
-    classData.forEach((c) => (c.studentCount = studentCounts[c.id] || 0));
-    setClasses(classData);
-
-    const catData = (catsRes.data || []).map((c: any) => ({
-      ...c,
-      class_name: c.classes?.name || "—",
-    }));
-    setCategories(catData);
-
-    const edits: Record<string, { weight: number; max_score: number }> = {};
-    catData.forEach((c: GradeCategory) => {
-      edits[c.id] = { weight: c.weight, max_score: c.max_score };
-    });
-    setEditingCats(edits);
-
-    // Profile
-    if (profileRes.data) {
-      const profile = profileRes.data as any;
-      setProfileName(profile.full_name || "");
-      setProfilePhone(profile.phone || "");
-      setProfileNationalId(profile.national_id || "");
-    }
-
-    // Teachers
-    if (teachersRes.data?.teachers) {
-      setTeachers(teachersRes.data.teachers);
-    }
-
-    // Letterhead
-    if ((lhRes as any).data?.value) setLetterheadUrl((lhRes as any).data.value);
-
-    // SMS
-    ((smsRes as any).data || []).forEach((s: any) => {
-      if (s.id === "sms_provider") setSmsProvider(s.value || "msegat");
-      if (s.id === "sms_provider_username") setProviderUsername(s.value || "");
-      if (s.id === "sms_provider_api_key") setProviderApiKey(s.value || "");
-      if (s.id === "sms_provider_sender") setProviderSender(s.value || "");
-    });
-
-    // Login settings
-    ((loginRes as any).data || []).forEach((s: any) => {
-      if (s.id === "school_name") setLoginSchoolName(s.value || "");
-      if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
-      if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
-      if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
-      if (s.id === "default_academic_year" && s.value) {
-        setDefaultAcademicYear(s.value);
-        setNewYear(s.value);
-      }
-    });
-
-    // All settings (quiz, student, parent, etc.)
-    ((settingsRes as any).data || []).forEach((s: any) => {
-      if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
-      if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
-      if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
-      if (s.id === "student_show_grades") setShowGrades(s.value !== "false");
-      if (s.id === "student_show_attendance") setShowAttendance(s.value !== "false");
-      if (s.id === "student_show_behavior") setShowBehavior(s.value !== "false");
-      if (s.id === "student_hidden_categories" && s.value) {
-        try {
-          const parsed = JSON.parse(s.value);
-          if (Array.isArray(parsed)) {
-            setHiddenCategories({ p1: parsed, p2: parsed });
-          } else {
-            setHiddenCategories({ p1: parsed.p1 || [], p2: parsed.p2 || [] });
-          }
-        } catch { setHiddenCategories({ p1: [], p2: [] }); }
-      }
-      if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
-      if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
-      if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
-      if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
-      if (s.id === "student_popup_title") setPopupTitle(s.value || "");
-      if (s.id === "student_popup_message") setPopupMessage(s.value || "");
-      if (s.id === "student_popup_expiry") setPopupExpiry(s.value || "");
-      if (s.id === "student_popup_target_type") setPopupTargetType((s.value as "all" | "specific") || "all");
-      if (s.id === "student_popup_target_classes" && s.value) {
-        try { setPopupTargetClassIds(JSON.parse(s.value)); } catch { setPopupTargetClassIds([]); }
-      }
-      if (s.id === "student_popup_action") setPopupAction(s.value || "none");
-      if (s.id === "student_popup_repeat") setPopupRepeat(s.value || "none");
-      if (s.id === "honor_roll_enabled") setHonorRollEnabled(s.value === "true");
-      if (s.id === "parent_welcome_enabled") setParentWelcomeEnabled(s.value !== "false");
-      if (s.id === "parent_welcome_message" && s.value) setParentWelcomeMessage(s.value);
-      if (s.id === "parent_show_national_id") setParentShowNationalId(s.value !== "false");
-      if (s.id === "parent_show_grades") setParentShowGrades(s.value !== "false");
-      if (s.id === "parent_show_attendance") setParentShowAttendance(s.value !== "false");
-      if (s.id === "parent_show_behavior") setParentShowBehavior(s.value !== "false");
-      if (s.id === "parent_show_honor_roll") setParentShowHonorRoll(s.value !== "false");
-      if (s.id === "parent_show_absence_warning") setParentShowAbsenceWarning(s.value !== "false");
-      if (s.id === "parent_show_contact_teacher") setParentShowContactTeacher(s.value !== "false");
-      if (s.id === "parent_show_library") setParentShowLibrary(s.value !== "false");
-      if (s.id === "parent_show_activities") setParentShowActivities(s.value !== "false");
-      if (s.id === "parent_grades_default_view") setParentGradesDefaultView(s.value === "table" ? "table" : "cards");
-      if (s.id === "parent_grades_show_percentage") setParentGradesShowPercentage(s.value !== "false");
-      if (s.id === "parent_grades_show_eval") setParentGradesShowEval(s.value !== "false");
-      if (s.id === "parent_grades_visible_periods") setParentGradesVisiblePeriods((s.value as "both" | "1" | "2") || "both");
-      if (s.id === "parent_grades_hidden_categories" && s.value) {
-        try {
-          const parsed = JSON.parse(s.value);
-          if (Array.isArray(parsed)) {
-            setParentGradesHiddenCategories({ global: parsed, classes: {} });
-          } else if (parsed.global !== undefined) {
-            setParentGradesHiddenCategories(parsed);
-          } else {
-            setParentGradesHiddenCategories({ global: [], classes: {} });
-          }
-        } catch { setParentGradesHiddenCategories({ global: [], classes: {} }); }
-      }
-      if (s.id === "parent_show_daily_grades") setParentShowDailyGrades(s.value === "true");
-      if (s.id === "parent_show_classwork_icons") setParentShowClassworkIcons(s.value === "true");
-      if (s.id === "parent_classwork_icons_count" && s.value) setParentClassworkIconsCount(Number(s.value) || 10);
-      if (s.id === "parent_pdf_header" && s.value) {
-        try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
-      }
-      if (s.id === "absence_threshold" && s.value) setAbsenceThreshold(Number(s.value) || 20);
-      if (s.id === "absence_allowed_sessions" && s.value) setAbsenceAllowedSessions(Number(s.value) || 0);
-      if (s.id === "absence_mode" && s.value) setAbsenceMode(s.value as "percentage" | "sessions");
-      if (s.id === "total_term_sessions" && s.value) setTotalTermSessions(Number(s.value) || 0);
-      if (s.id === "daily_extra_slots_enabled") setDailyExtraSlotsEnabled(s.value !== "false");
-      if (s.id === "daily_extra_slots_disabled_cats" && s.value) {
-        try { setDailyExtraSlotsDisabledCats(JSON.parse(s.value)); } catch { setDailyExtraSlotsDisabledCats([]); }
-      }
-      if (s.id === "daily_max_slots" && s.value) setDailyMaxSlots(Number(s.value) || 3);
-      if (s.id === "daily_max_slots_per_cat" && s.value) {
-        try { setDailyMaxSlotsPerCat(JSON.parse(s.value)); } catch { setDailyMaxSlotsPerCat({}); }
-      }
-    });
-
-    // Popup history
-    if ((popupHistoryRes as any).data) setPopupHistory((popupHistoryRes as any).data as any);
-
-    // Attendance override
-    setAttendanceOverrideLock((overrideRes as any).data?.value === "true");
-
-    // Admin read-only
-    ((adminReadOnlyRes as any).data || []).forEach((s: any) => {
-      if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true");
-    });
-
-    // Class schedules
-    const schedulesMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
-    ((schedulesRes as any).data || []).forEach((s: any) => {
-      schedulesMap[s.class_id] = { periodsPerWeek: s.periods_per_week, daysOfWeek: s.days_of_week };
-    });
-    setClassSchedules(schedulesMap);
-
-    setLoading(false);
-  };
-
-  const handleSaveProvider = async () => {
-    setSavingProvider(true);
-    const updates = [
-      supabase.from("site_settings").update({ value: smsProvider }).eq("id", "sms_provider"),
-      supabase.from("site_settings").update({ value: providerUsername }).eq("id", "sms_provider_username"),
-      supabase.from("site_settings").update({ value: providerApiKey }).eq("id", "sms_provider_api_key"),
-      supabase.from("site_settings").update({ value: providerSender }).eq("id", "sms_provider_sender"),
-    ];
-    const results = await Promise.all(updates);
-    setSavingProvider(false);
-    const hasError = results.some((r) => r.error);
-    if (hasError) {
-      toast({ title: "خطأ", description: "فشل حفظ إعدادات المزود", variant: "destructive" });
-    } else {
-      toast({ title: "تم الحفظ", description: "تم تحديث إعدادات مزود SMS" });
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    setSavingProfile(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: profileName,
-        phone: profilePhone,
-        national_id: profileNationalId || null,
-      })
-      .eq("user_id", user.id);
-    setSavingProfile(false);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم الحفظ", description: "تم تحديث الملف الشخصي بنجاح" });
-    }
-  };
-
-  const handleChangeOwnPassword = async () => {
-    if (!newOwnPassword.trim() || !currentPassword.trim()) return;
-    if (newOwnPassword !== confirmOwnPassword) {
-      toast({ title: "خطأ", description: "كلمة المرور الجديدة غير متطابقة", variant: "destructive" });
-      return;
-    }
-    setChangingOwnPassword(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user?.email || "",
-      password: currentPassword,
-    });
-    if (signInError) {
-      toast({ title: "خطأ", description: "كلمة المرور الحالية غير صحيحة", variant: "destructive" });
-      setChangingOwnPassword(false);
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ password: newOwnPassword });
-    setChangingOwnPassword(false);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم التغيير", description: "تم تغيير كلمة المرور بنجاح" });
-      setCurrentPassword("");
-      setNewOwnPassword("");
-      setConfirmOwnPassword("");
-    }
-  };
-
-
-
-  const handleUploadLetterhead = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingLetterhead(true);
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const { data, error } = await supabase.functions.invoke("upload-letterhead", {
-      body: formData,
-    });
-
-    setUploadingLetterhead(false);
-    if (error || data?.error) {
-      toast({ title: "خطأ", description: data?.error || "فشل رفع الملف", variant: "destructive" });
-    } else {
-      setLetterheadUrl(data.url);
-      toast({ title: "تم الرفع", description: "تم تحديث ورقة الطباعة بنجاح" });
-    }
-  };
-
-  const handleAddClass = async () => {
-    if (!newClassName.trim() || !newSection.trim()) return;
-    const { error } = await supabase.from("classes").insert({
-      name: newClassName,
-      section: newSection,
-      grade: newGrade,
-      academic_year: newYear,
-    });
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تمت الإضافة", description: `تمت إضافة الفصل ${newClassName}` });
-      setNewClassName("");
-      setNewSection("");
-      fetchData();
-    }
-  };
-
-  const handleSaveClassEdit = async (id: string) => {
-    if (!editingClassName.trim()) return;
-    const { error } = await supabase.from("classes").update({
-      name: editingClassName,
-      grade: editingClassGrade,
-      section: editingClassSection,
-      academic_year: editingClassYear,
-    }).eq("id", id);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم التعديل", description: "تم تعديل بيانات الفصل" });
-      setEditingClassId(null);
-      fetchData();
-    }
-  };
-
-  const startEditingClass = (cls: ClassRow) => {
-    setEditingClassId(cls.id);
-    setEditingClassName(cls.name);
-    setEditingClassGrade(cls.grade);
-    setEditingClassSection(cls.section);
-    setEditingClassYear(cls.academic_year);
-  };
-
-  const handleClassFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const XLSX = await import("xlsx");
-    const buffer = await file.arrayBuffer();
-    const wb = XLSX.read(buffer, { type: "array" });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json<Record<string, any>>(ws);
-
-    const columnMap: Record<string, string[]> = {
-       name: ["الفصل", "اسم الفصل", "اسم الفصل", "الفصل", "Class", "Name", "name"],
-       grade: ["الصف", "المرحلة", "Grade", "grade"],
-       section: ["رقم الفصل", "الفصل رقم", "رقم الفصل", "Section", "section"],
-    };
-
-    const find = (row: Record<string, any>, keys: string[]): string => {
-      for (const key of keys) {
-        if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
-          return String(row[key]).trim();
-        }
-      }
-      return "";
-    };
-
-    const rows = json
-      .map((row) => ({
-        name: find(row, columnMap.name),
-        grade: find(row, columnMap.grade) || newGrade,
-        section: find(row, columnMap.section) || "",
-      }))
-      .filter((r) => r.name);
-
-    setImportedClasses(rows);
-    if (classFileRef.current) classFileRef.current.value = "";
-  };
-
-  const handleImportClasses = async () => {
-    if (importedClasses.length === 0) return;
-    setImportingClasses(true);
-    const inserts = importedClasses.map((c) => ({
-      name: c.name,
-      grade: c.grade,
-      section: c.section || "1",
-      academic_year: newYear,
-    }));
-    const { error } = await supabase.from("classes").insert(inserts);
-    setImportingClasses(false);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تمت الإضافة", description: `تم استيراد ${inserts.length} فصل` });
-      setImportedClasses([]);
-      setImportClassesOpen(false);
-      fetchData();
-    }
-  };
-
-  const handleDeleteClass = async (id: string) => {
-    const { error } = await supabase.from("classes").delete().eq("id", id);
-    if (error) {
-      toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "تم الحذف", description: "تم حذف الفصل. فئات التقييم محفوظة ويمكن إعادة ربطها." });
-      fetchData();
-    }
-  };
-
-  const handleSaveCategories = async () => {
-    setSavingCats(true);
-    let hasError = false;
-
-    if (catClassFilter === "all") {
-      // Get all unique template categories shown in "all" view
-      const classCats = categories.filter((c) => c.class_id !== null);
-      const seen = new Map<string, GradeCategory>();
-      classCats.forEach(c => { if (!seen.has(c.name)) seen.set(c.name, c); });
-      const templateCats = Array.from(seen.values());
-
-      for (const tpl of templateCats) {
-        const editedVals = editingCats[tpl.id];
-        const finalName = editedVals?.name || tpl.name;
-        const finalMaxScore = editedVals?.max_score ?? tpl.max_score;
-        const finalGroup = editedVals?.category_group || tpl.category_group;
-        const originalName = tpl.name;
-
-        // Update existing matching categories in all classes
-        const matchingCats = categories.filter((c) => c.name === originalName && c.class_id !== null);
-        for (const mc of matchingCats) {
-          const updateData: Record<string, any> = { max_score: finalMaxScore };
-          if (finalName !== originalName) updateData.name = finalName;
-          if (finalGroup) updateData.category_group = finalGroup;
-          const { error } = await supabase.from("grade_categories").update(updateData).eq("id", mc.id);
-          if (error) hasError = true;
-        }
-
-        // Create missing categories for classes that don't have this category
-        const classIdsWithCat = new Set(matchingCats.map(c => c.class_id));
-        const missingClasses = classes.filter(cls => !classIdsWithCat.has(cls.id));
-        if (missingClasses.length > 0) {
-          const inserts = missingClasses.map(cls => ({
-            name: finalName,
-            weight: tpl.weight,
-            max_score: finalMaxScore,
-            class_id: cls.id,
-            sort_order: tpl.sort_order,
-            category_group: finalGroup,
-          }));
-          const { error: insertErr } = await supabase.from("grade_categories").insert(inserts);
-          if (insertErr) hasError = true;
-        }
-      }
-      if (hasError) {
-        toast({ title: "خطأ في الحفظ", variant: "destructive" });
-      } else {
-        toast({ title: "تم الحفظ", description: "تم تعميم التغييرات على جميع الفصول" });
-        fetchData();
-      }
-    } else {
-      const filtered = categories.filter((c) => c.class_id === catClassFilter);
-      const updates = filtered.map((cat) => {
-        const edited = editingCats[cat.id];
-        const updateData: Record<string, any> = { max_score: edited?.max_score ?? cat.max_score };
-        if (edited?.name) updateData.name = edited.name;
-        if (edited?.category_group) updateData.category_group = edited.category_group;
-        return supabase
-          .from("grade_categories")
-          .update(updateData)
-          .eq("id", cat.id);
-      });
-      const results = await Promise.all(updates);
-      const hasError = results.some((r) => r.error);
-      if (hasError) {
-        toast({ title: "خطأ في الحفظ", variant: "destructive" });
-      } else {
-        toast({ title: "تم الحفظ", description: "تم تحديث فئات التقييم بنجاح" });
-        fetchData();
-      }
-    }
-    setSavingCats(false);
-    setEditingCats({});
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCatName.trim() || !newCatClassId) return;
-
-    if (newCatClassId === "all") {
-      // Add to ALL classes
-      const inserts = classes.map((cls) => {
-        const classCats = categories.filter((c) => c.class_id === cls.id);
-        const maxOrder = classCats.length > 0 ? Math.max(...classCats.map((c) => c.sort_order)) : 0;
-        return supabase.from("grade_categories").insert({
-          name: newCatName,
-          weight: newCatWeight,
-          max_score: newCatMaxScore,
-          class_id: cls.id,
-          sort_order: maxOrder + 1,
-          category_group: newCatGroup,
-        });
-      });
-      const results = await Promise.all(inserts);
-      const hasError = results.some((r) => r.error);
-      if (hasError) {
-         toast({ title: "خطأ", description: "فشل في الإضافة لبعض الفصول", variant: "destructive" });
-       } else {
-         toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}" لجميع الفصول` });
-      }
-    } else {
-      const classCats = categories.filter((c) => c.class_id === newCatClassId);
-      const maxOrder = classCats.length > 0 ? Math.max(...classCats.map((c) => c.sort_order)) : 0;
-      const { error } = await supabase.from("grade_categories").insert({
-        name: newCatName,
-        weight: newCatWeight,
-        max_score: newCatMaxScore,
-        class_id: newCatClassId,
-        sort_order: maxOrder + 1,
-        category_group: newCatGroup,
-      });
-      if (error) {
-        toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}"` });
-      }
-    }
-    setNewCatName("");
-    setNewCatWeight(10);
-    setNewCatMaxScore(100);
-    setNewCatGroup("classwork");
-    fetchData();
-  };
-
-  const handleDeleteCategory = async (id: string) => {
-    const cat = categories.find((c) => c.id === id);
-    if (catClassFilter === "all" && cat) {
-      // Delete matching category name from ALL classes
-      const matchingIds = categories.filter((c) => c.name === cat.name).map((c) => c.id);
-      const deletes = matchingIds.map((mid) => supabase.from("grade_categories").delete().eq("id", mid));
-      const results = await Promise.all(deletes);
-      const hasError = results.some((r) => r.error);
-      if (hasError) {
-        toast({ title: "خطأ", description: "فشل حذف بعض الفئات", variant: "destructive" });
-      } else {
-        toast({ title: "تم الحذف", description: `تم حذف "${cat.name}" من جميع الفصول` });
-      }
-    } else {
-      const { error } = await supabase.from("grade_categories").delete().eq("id", id);
-      if (error) {
-        toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "تم الحذف" });
-      }
-    }
-    fetchData();
-  };
-
-  const handleReassignOrphanedCategories = async (targetClassId: string) => {
-    if (!targetClassId || orphanedCategories.length === 0) return;
-    if (targetClassId === "all_classes") {
-      // Reassign to all classes: for each orphaned category, create a copy in each class
-      const inserts = classes.flatMap(cls => 
-        orphanedCategories.map(cat => ({
-          name: cat.name,
-          weight: cat.weight,
-          max_score: cat.max_score,
-          class_id: cls.id,
-          sort_order: cat.sort_order,
-          category_group: cat.category_group,
-        }))
-      );
-      const { error: insertError } = await supabase.from("grade_categories").insert(inserts);
-      if (insertError) {
-        toast({ title: "خطأ", description: insertError.message, variant: "destructive" });
-        return;
-      }
-      // Delete orphaned originals
-      const ids = orphanedCategories.map(c => c.id);
-      await supabase.from("grade_categories").delete().in("id", ids);
-      toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بجميع الفصول` });
-    } else {
-      // Reassign to specific class
-      const updates = orphanedCategories.map(cat =>
-        supabase.from("grade_categories").update({ class_id: targetClassId }).eq("id", cat.id)
-      );
-      const results = await Promise.all(updates);
-      if (results.some(r => r.error)) {
-        toast({ title: "خطأ", description: "فشل ربط بعض الفئات", variant: "destructive" });
-      } else {
-        const className = classes.find(c => c.id === targetClassId)?.name || "";
-        toast({ title: "تم الربط", description: `تم ربط ${orphanedCategories.length} فئة بفصل ${className}` });
-      }
-    }
-    fetchData();
-  };
-
-  const handleReorderCategory = async (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => {
-    const idx = groupCats.findIndex(c => c.id === catId);
-    if (idx < 0) return;
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-    if (swapIdx < 0 || swapIdx >= groupCats.length) return;
-
-    const catA = groupCats[idx];
-    const catB = groupCats[swapIdx];
-
-    // Swap sort_order values
-    if (catClassFilter === "all") {
-      // Apply to all classes by matching name
-      const allCatsA = categories.filter(c => c.name === catA.name);
-      const allCatsB = categories.filter(c => c.name === catB.name);
-      const updates = [
-        ...allCatsA.map(c => supabase.from("grade_categories").update({ sort_order: catB.sort_order }).eq("id", c.id)),
-        ...allCatsB.map(c => supabase.from("grade_categories").update({ sort_order: catA.sort_order }).eq("id", c.id)),
-      ];
-      await Promise.all(updates);
-    } else {
-      await Promise.all([
-        supabase.from("grade_categories").update({ sort_order: catB.sort_order }).eq("id", catA.id),
-        supabase.from("grade_categories").update({ sort_order: catA.sort_order }).eq("id", catB.id),
-      ]);
-    }
-    fetchData();
-  };
-
-  // Filter categories by selected class
-  const [catClassFilter, setCatClassFilter] = useState("all");
-
-  // Orphaned categories (class was deleted, category preserved)
-  const orphanedCategories = categories.filter((c) => c.class_id === null);
-
-  // When "all", show unique categories by name across ALL classes (union), plus orphaned
-  const filteredCategories = catClassFilter === "all"
-    ? (() => {
-        // Collect all unique category names across all classes
-        const classCats = categories.filter((c) => c.class_id !== null);
-        const seen = new Map<string, GradeCategory>();
-        classCats.forEach(c => {
-          if (!seen.has(c.name)) seen.set(c.name, c);
-        });
-        const uniqueCats = Array.from(seen.values()).sort((a, b) => a.sort_order - b.sort_order);
-        // Include orphaned categories not already represented
-        const classNames = new Set(uniqueCats.map(c => c.name));
-        const uniqueOrphaned = orphanedCategories.filter(c => !classNames.has(c.name));
-        return [...uniqueCats, ...uniqueOrphaned];
-      })()
-    : catClassFilter === "orphaned"
-      ? orphanedCategories
-      : categories.filter((c) => c.class_id === catClassFilter);
-
-  const getEffectiveGroup = (cat: GradeCategory) => editingCats[cat.id]?.category_group ?? cat.category_group;
-  const classworkCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "classwork");
-  const examCategories = filteredCategories.filter((c) => getEffectiveGroup(c) === "exams");
-
-  if (loading) {
+  if (s.loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -1038,10 +63,10 @@ export default function SettingsPage() {
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">الإعدادات</h1>
           <p className="text-muted-foreground">
-            {isAdmin ? "إدارة الفصول وفئات التقييم" : "عرض إحصائيات الفصول والتقييمات"}
+            {s.isAdmin ? "إدارة الفصول وفئات التقييم" : "عرض إحصائيات الفصول والتقييمات"}
           </p>
         </div>
-        {!isAdmin && (
+        {!s.isAdmin && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
             <Eye className="h-3.5 w-3.5" />
             للاطلاع فقط
@@ -1059,26 +84,26 @@ export default function SettingsPage() {
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { key: "classes", icon: Users, label: "الفصول الدراسية", desc: `${classes.length} فصل`, gradient: "from-sky-500 to-blue-600", shadow: "shadow-sky-500/20" },
-          { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
+          { key: "classes", icon: Users, label: "الفصول الدراسية", desc: `${s.classes.length} فصل`, gradient: "from-sky-500 to-blue-600", shadow: "shadow-sky-500/20" },
+          { key: "categories", icon: GraduationCap, label: "فئات التقييم", desc: `${s.categories.length} فئة`, gradient: "from-emerald-500 to-teal-600", shadow: "shadow-emerald-500/20" },
           { key: "print", icon: Printer, label: "ورقة الطباعة والتصدير", desc: "ترويسة وتنسيق مشترك", gradient: "from-amber-500 to-orange-600", shadow: "shadow-amber-500/20", adminOnly: true },
           { key: "colors", icon: Palette, label: "ألوان الاختبارات", desc: "تخصيص الألوان", gradient: "", shadow: "", customBg: "linear-gradient(135deg, #0ea5e9, #f59e0b, #14b8a6)", adminOnly: true },
-          { key: "visibility", icon: Eye, label: "عرض الطالب", desc: honorRollEnabled ? "لوحة الشرف مفعّلة" : "التحكم بالبيانات", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
-          { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: popupEnabled ? (popupRepeat === "daily" ? "مفعّلة · يومياً" : popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
-          { key: "calendar_year", icon: CalendarDays, label: "التقويم والعام الدراسي", desc: `${calendarTypeLocal === "hijri" ? "هجري" : "ميلادي"} · ${defaultAcademicYear}`, gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
+          { key: "visibility", icon: Eye, label: "عرض الطالب", desc: s.honorRollEnabled ? "لوحة الشرف مفعّلة" : "التحكم بالبيانات", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20", adminOnly: true },
+          { key: "popup", icon: Megaphone, label: "رسالة منبثقة", desc: s.popupEnabled ? (s.popupRepeat === "daily" ? "مفعّلة · يومياً" : s.popupRepeat === "weekly" ? "مفعّلة · أسبوعياً" : "مفعّلة · مرة واحدة") : "معطّلة", gradient: "from-orange-500 to-amber-600", shadow: "shadow-orange-500/20", adminOnly: true },
+          { key: "calendar_year", icon: CalendarDays, label: "التقويم والعام الدراسي", desc: `${s.calendarTypeLocal === "hijri" ? "هجري" : "ميلادي"} · ${s.defaultAcademicYear}`, gradient: "from-rose-500 to-pink-600", shadow: "shadow-rose-500/20", adminOnly: true },
           { key: "academic_calendar", icon: CalendarDays, label: "التقويم الأكاديمي", desc: "الأسابيع والاختبارات", gradient: "from-violet-500 to-purple-600", shadow: "shadow-violet-500/20", adminOnly: true },
-          { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: `${attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي"} · حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}`, gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
-          { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
+          { key: "attendance_settings", icon: ClipboardCheck, label: "إعدادات التحضير", desc: `${s.attendanceOverrideLock ? "القفل معطّل" : "قفل تلقائي"} · حد الإنذار: ${s.absenceMode === "sessions" && s.absenceAllowedSessions > 0 ? `${s.absenceAllowedSessions} حصة` : `${s.absenceThreshold}%`}`, gradient: "from-teal-500 to-emerald-600", shadow: "shadow-teal-500/20", adminOnly: true },
+          { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: s.parentWelcomeEnabled ? "مفعّلة" : "معطّلة", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20", adminOnly: true },
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
           { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
           { key: "behavior_suggestions", icon: Heart, label: "وصف السلوك", desc: "مقترحات وصف السلوك", gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/20", adminOnly: true },
-        ].filter(c => !c.adminOnly || isAdmin).map((card) => (
+        ].filter(c => !c.adminOnly || s.isAdmin).map((card) => (
           <button
             key={card.key}
-            onClick={() => setActiveCard(activeCard === card.key ? null : card.key)}
+            onClick={() => s.setActiveCard(s.activeCard === card.key ? null : card.key)}
             className={cn(
               "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 transition-all duration-300 text-center group",
-              activeCard === card.key
+              s.activeCard === card.key
                 ? "border-primary bg-primary/5 shadow-xl scale-[1.02]"
                 : "border-border/50 bg-card/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:border-primary/30 hover:scale-[1.01]"
             )}
@@ -1095,16 +120,16 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-sm font-bold text-foreground">{card.label}</h3>
               <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
-              {card.key === "popup" && popupCountdown && (
+              {card.key === "popup" && s.popupCountdown && (
                 <div className={cn(
                   "mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full inline-block",
-                  popupCountdown === "منتهية" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"
+                  s.popupCountdown === "منتهية" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"
                 )}>
-                  ⏱ {popupCountdown === "منتهية" ? "منتهية الصلاحية" : `متبقي: ${popupCountdown}`}
+                  ⏱ {s.popupCountdown === "منتهية" ? "منتهية الصلاحية" : `متبقي: ${s.popupCountdown}`}
                 </div>
               )}
             </div>
-            {activeCard === card.key && (
+            {s.activeCard === card.key && (
               <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 bg-card border-b-2 border-r-2 border-primary" />
             )}
           </button>
@@ -1112,7 +137,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Active Card Content - Full Width */}
-      {activeCard === "classes" && (
+      {s.activeCard === "classes" && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -1120,15 +145,15 @@ export default function SettingsPage() {
                 <Users className="h-5 w-5 text-primary" />
                 الفصول الدراسية
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {isAdmin && (
+            {s.isAdmin && (
               <div className="flex gap-2 flex-wrap">
-                <Dialog open={importClassesOpen} onOpenChange={(v) => { setImportClassesOpen(v); if (!v) setImportedClasses([]); }}>
+                <Dialog open={s.importClassesOpen} onOpenChange={(v) => { s.setImportClassesOpen(v); if (!v) s.setImportedClasses([]); }}>
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1.5">
                       <Download className="h-4 w-4" />
@@ -1148,11 +173,11 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label>ملف Excel أو CSV</Label>
-                        <Input ref={classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleClassFileSelect} className="cursor-pointer" />
+                        <Input ref={s.classFileRef} type="file" accept=".xlsx,.xls,.csv" onChange={s.handleClassFileSelect} className="cursor-pointer" />
                       </div>
-                      {importedClasses.length > 0 && (
+                      {s.importedClasses.length > 0 && (
                         <div className="space-y-2">
-                          <Label>معاينة ({importedClasses.length} فصل)</Label>
+                          <Label>معاينة ({s.importedClasses.length} فصل)</Label>
                           <div className="max-h-[200px] overflow-auto rounded-lg border">
                             <Table>
                               <TableHeader>
@@ -1163,15 +188,15 @@ export default function SettingsPage() {
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {importedClasses.map((c, i) => (
+                                {s.importedClasses.map((c, i) => (
                                   <TableRow key={i}>
                                     <TableCell>
                                       <Input
                                         value={c.name}
                                         onChange={(e) => {
-                                          const updated = [...importedClasses];
+                                          const updated = [...s.importedClasses];
                                           updated[i] = { ...updated[i], name: e.target.value };
-                                          setImportedClasses(updated);
+                                          s.setImportedClasses(updated);
                                         }}
                                         className="h-8"
                                       />
@@ -1190,10 +215,10 @@ export default function SettingsPage() {
                       <DialogClose asChild>
                         <Button variant="outline">إلغاء</Button>
                       </DialogClose>
-                      {importedClasses.length > 0 && (
-                        <Button onClick={handleImportClasses} disabled={importingClasses}>
+                      {s.importedClasses.length > 0 && (
+                        <Button onClick={s.handleImportClasses} disabled={s.importingClasses}>
                           <Download className="h-4 w-4 ml-1.5" />
-                          {importingClasses ? "جارٍ الاستيراد..." : `استيراد ${importedClasses.length} فصل`}
+                          {s.importingClasses ? "جارٍ الاستيراد..." : `استيراد ${s.importedClasses.length} فصل`}
                         </Button>
                       )}
                     </DialogFooter>
@@ -1213,11 +238,11 @@ export default function SettingsPage() {
                     <div className="space-y-3 py-2">
                       <div className="space-y-1.5">
                         <Label>اسم الفصل</Label>
-                        <Input value={newClassName} onChange={(e) => setNewClassName(e.target.value)} placeholder="مثال: 1/1" />
+                        <Input value={s.newClassName} onChange={(e) => s.setNewClassName(e.target.value)} placeholder="مثال: 1/1" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>الصف</Label>
-                        <Select value={newGrade} onValueChange={setNewGrade}>
+                        <Select value={s.newGrade} onValueChange={s.setNewGrade}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             {["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي", "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي"].map(g => (
@@ -1229,11 +254,11 @@ export default function SettingsPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <Label>رقم الفصل</Label>
-                          <Input value={newSection} onChange={(e) => setNewSection(e.target.value)} placeholder="1" />
+                          <Input value={s.newSection} onChange={(e) => s.setNewSection(e.target.value)} placeholder="1" />
                         </div>
                         <div className="space-y-1.5">
                           <Label>السنة</Label>
-                          <Input value={newYear} onChange={(e) => setNewYear(e.target.value)} />
+                          <Input value={s.newYear} onChange={(e) => s.setNewYear(e.target.value)} />
                         </div>
                       </div>
                     </div>
@@ -1241,7 +266,7 @@ export default function SettingsPage() {
                       <DialogClose asChild>
                         <Button variant="outline">إلغاء</Button>
                       </DialogClose>
-                      <Button onClick={handleAddClass}>
+                      <Button onClick={s.handleAddClass}>
                         <Plus className="h-4 w-4 ml-1.5" />
                         إضافة
                       </Button>
@@ -1259,31 +284,27 @@ export default function SettingsPage() {
                     <TableHead className="text-right">رقم الفصل</TableHead>
                     <TableHead className="text-right">السنة</TableHead>
                     <TableHead className="text-right">الطلاب</TableHead>
-                    {isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
+                    {s.isAdmin && <TableHead className="text-right">إجراءات</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {classes.map((cls) => (
+                  {s.classes.map((cls) => (
                     <TableRow key={cls.id} className="group" onDoubleClick={() => {
-                      if (!isAdmin) return;
-                      setEditingClassId(cls.id);
-                      setEditingClassName(cls.name);
-                      setEditingClassGrade(cls.grade);
-                      setEditingClassSection(cls.section);
-                      setEditingClassYear(cls.academic_year);
+                      if (!s.isAdmin) return;
+                      s.startEditingClass(cls);
                     }}>
                       <TableCell className="font-medium">
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassName} onChange={(e) => setEditingClassName(e.target.value)} className="h-8 w-28"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        {s.isAdmin && s.editingClassId === cls.id ? (
+                          <Input value={s.editingClassName} onChange={(e) => s.setEditingClassName(e.target.value)} className="h-8 w-28"
+                            onKeyDown={(e) => { if (e.key === "Enter") s.handleSaveClassEdit(cls.id); if (e.key === "Escape") s.setEditingClassId(null); }} />
                         ) : cls.name}
                       </TableCell>
                       <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Select value={editingClassGrade} onValueChange={setEditingClassGrade}>
+                        {s.isAdmin && s.editingClassId === cls.id ? (
+                          <Select value={s.editingClassGrade} onValueChange={s.setEditingClassGrade}>
                             <SelectTrigger className="h-8 w-36"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {["الأول الثانوي","الثاني الثانوي","الثالث الثانوي","الأول المتوسط","الثاني المتوسط","الثالث المتوسط","الرابع الابتدائي","الخامس الابتدائي","السادس الابتدائي"].map(g => (
+                              {["الأول الثانوي", "الثاني الثانوي", "الثالث الثانوي", "الأول المتوسط", "الثاني المتوسط", "الثالث المتوسط", "الرابع الابتدائي", "الخامس الابتدائي", "السادس الابتدائي"].map(g => (
                                 <SelectItem key={g} value={g}>{g}</SelectItem>
                               ))}
                             </SelectContent>
@@ -1291,75 +312,62 @@ export default function SettingsPage() {
                         ) : cls.grade}
                       </TableCell>
                       <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassSection} onChange={(e) => setEditingClassSection(e.target.value)} className="h-8 w-16"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        {s.isAdmin && s.editingClassId === cls.id ? (
+                          <Input value={s.editingClassSection} onChange={(e) => s.setEditingClassSection(e.target.value)} className="h-8 w-16" />
                         ) : cls.section}
                       </TableCell>
                       <TableCell>
-                        {isAdmin && editingClassId === cls.id ? (
-                          <Input value={editingClassYear} onChange={(e) => setEditingClassYear(e.target.value)} className="h-8 w-24"
-                            onKeyDown={(e) => { if (e.key === "Enter") handleSaveClassEdit(cls.id); if (e.key === "Escape") setEditingClassId(null); }} />
+                        {s.isAdmin && s.editingClassId === cls.id ? (
+                          <Input value={s.editingClassYear} onChange={(e) => s.setEditingClassYear(e.target.value)} className="h-8 w-24" />
                         ) : cls.academic_year}
                       </TableCell>
-                      <TableCell>{cls.studentCount}</TableCell>
-                      {isAdmin && (
-                        <TableCell className="flex items-center gap-1">
-                          {editingClassId === cls.id ? (
-                            <>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveClassEdit(cls.id)}>
-                                <Check className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingClassId(null)}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                title="تعديل الفصل"
-                                onClick={() => startEditingClass(cls)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 text-primary hover:text-primary"
-                                title="جدول الحصص"
-                                onClick={() => setScheduleDialogClass({ id: cls.id, name: cls.name })}
-                              >
-                                <CalendarDays className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-7 w-7">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent dir="rtl">
-                                  <AlertDialogHeader>
-                                     <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
-                                     <AlertDialogDescription>
-                                       سيتم حذف الفصل وجميع البيانات المرتبطة به. هذا الإجراء لا يمكن التراجع عنه.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                      onClick={() => handleDeleteClass(cls.id)}
-                                    >
-                                      حذف
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </>
-                          )}
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">{cls.studentCount || 0}</Badge>
+                      </TableCell>
+                      {s.isAdmin && (
+                        <TableCell>
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {s.editingClassId === cls.id ? (
+                              <>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => s.handleSaveClassEdit(cls.id)}>
+                                  <Check className="h-3.5 w-3.5 text-success" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => s.setEditingClassId(null)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => s.startEditingClass(cls)}>
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => s.setScheduleDialogClass({ id: cls.id, name: cls.name })}>
+                                  <CalendarDays className="h-3.5 w-3.5" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive">
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent dir="rtl">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>حذف الفصل {cls.name}؟</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        سيتم حذف الفصل وفصل ربطه بالطلاب. فئات التقييم ستبقى محفوظة ويمكن إعادة ربطها لاحقاً.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                                      <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => s.handleDeleteClass(cls.id)}>
+                                        حذف
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       )}
                     </TableRow>
@@ -1367,17 +375,19 @@ export default function SettingsPage() {
                 </TableBody>
               </Table>
             </div>
-            <ClassScheduleDialog
-              open={!!scheduleDialogClass}
-              onOpenChange={(open) => !open && setScheduleDialogClass(null)}
-              classId={scheduleDialogClass?.id || ""}
-              className={scheduleDialogClass?.name || ""}
-            />
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "categories" && (
+      {s.scheduleDialogClass && (
+        <ClassScheduleDialog
+          classId={s.scheduleDialogClass.id}
+          className={s.scheduleDialogClass.name}
+          onClose={() => s.setScheduleDialogClass(null)}
+        />
+      )}
+
+      {s.activeCard === "categories" && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -1385,30 +395,29 @@ export default function SettingsPage() {
                 <GraduationCap className="h-5 w-5 text-primary" />
                 فئات التقييم
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Class filter */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <Label className="text-sm font-semibold whitespace-nowrap">تطبيق على:</Label>
-              <Select value={catClassFilter} onValueChange={setCatClassFilter}>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-bold shrink-0">الفصل:</Label>
+              <Select value={s.catClassFilter} onValueChange={s.setCatClassFilter}>
                 <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="اختر الفصل" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الفصول</SelectItem>
-                  {orphanedCategories.length > 0 && (
-                    <SelectItem value="orphaned">فئات غير مرتبطة ({orphanedCategories.length})</SelectItem>
+                  {s.orphanedCategories.length > 0 && (
+                    <SelectItem value="orphaned">فئات غير مرتبطة ({s.orphanedCategories.length})</SelectItem>
                   )}
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  {s.classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            {isAdmin && (
+            {s.isAdmin && (
               <div className="flex gap-2 flex-wrap">
                 <Dialog>
                   <DialogTrigger asChild>
@@ -1425,11 +434,11 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label>الفصل الدراسي</Label>
-                        <Select value={newCatClassId} onValueChange={setNewCatClassId}>
+                        <Select value={s.newCatClassId} onValueChange={s.setNewCatClassId}>
                           <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">جميع الفصول</SelectItem>
-                            {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
+                            {s.classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
@@ -1437,24 +446,24 @@ export default function SettingsPage() {
                         <Label>ملف Excel أو CSV</Label>
                         <Input type="file" accept=".xlsx,.xls,.csv" onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (!file || !newCatClassId) return;
+                          if (!file || !s.newCatClassId) return;
                           const XLSX = await import("xlsx");
                           const data = await file.arrayBuffer();
                           const wb = XLSX.read(data);
                           const ws = wb.Sheets[wb.SheetNames[0]];
                           const json: any[] = XLSX.utils.sheet_to_json(ws);
-                          let order = categories.filter(c => c.class_id === newCatClassId).length;
+                          let order = s.categories.filter(c => c.class_id === s.newCatClassId).length;
                           for (const row of json) {
                             const name = row["اسم الفئة"] || row["name"] || row["الفئة"];
                             const max = parseFloat(row["الدرجة القصوى"] || row["max_score"] || row["الدرجة"] || 100);
                             if (!name) continue;
                             order++;
                             await supabase.from("grade_categories").insert({
-                              name, max_score: max, class_id: newCatClassId, sort_order: order, category_group: "classwork", weight: 10
+                              name, max_score: max, class_id: s.newCatClassId, sort_order: order, category_group: "classwork", weight: 10
                             });
                           }
                           toast({ title: "تم الاستيراد", description: `تم استيراد الفئات بنجاح` });
-                          fetchData();
+                          s.fetchData();
                         }} className="cursor-pointer" />
                       </div>
                     </div>
@@ -1472,17 +481,17 @@ export default function SettingsPage() {
                     <div className="space-y-3 py-2">
                       <div className="space-y-1.5">
                         <Label>الفصل الدراسي</Label>
-                        <Select value={newCatClassId} onValueChange={setNewCatClassId}>
+                        <Select value={s.newCatClassId} onValueChange={s.setNewCatClassId}>
                           <SelectTrigger><SelectValue placeholder="اختر الفصل" /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">جميع الفصول</SelectItem>
-                            {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
+                            {s.classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name} - {c.grade}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
                         <Label>القسم</Label>
-                        <Select value={newCatGroup} onValueChange={setNewCatGroup}>
+                        <Select value={s.newCatGroup} onValueChange={s.setNewCatGroup}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="classwork">المهام الأدائية والمشاركة والتفاعل</SelectItem>
@@ -1492,46 +501,45 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-1.5">
                         <Label>اسم الفئة</Label>
-                        <Input value={newCatName} onChange={(e) => setNewCatName(e.target.value)} placeholder="مثال: المشاركة" />
+                        <Input value={s.newCatName} onChange={(e) => s.setNewCatName(e.target.value)} placeholder="مثال: المشاركة" />
                       </div>
                       <div className="space-y-1.5">
                         <Label>الدرجة القصوى</Label>
-                        <Input type="number" value={newCatMaxScore} onChange={(e) => setNewCatMaxScore(parseFloat(e.target.value) || 0)} />
+                        <Input type="number" value={s.newCatMaxScore} onChange={(e) => s.setNewCatMaxScore(parseFloat(e.target.value) || 0)} />
                       </div>
                     </div>
                     <DialogFooter>
                       <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
-                      <Button onClick={handleAddCategory}><Plus className="h-4 w-4 ml-1.5" />إضافة</Button>
+                      <Button onClick={s.handleAddCategory}><Plus className="h-4 w-4 ml-1.5" />إضافة</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
-                {Object.keys(editingCats).length > 0 && (
-                  <Button size="sm" variant="default" className="gap-1.5" onClick={handleSaveCategories} disabled={savingCats}>
+                {Object.keys(s.editingCats).length > 0 && (
+                  <Button size="sm" variant="default" className="gap-1.5" onClick={s.handleSaveCategories} disabled={s.savingCats}>
                     <Save className="h-4 w-4" />
-                    {savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
+                    {s.savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
                   </Button>
                 )}
               </div>
             )}
 
-
             {/* Orphaned categories notice */}
-            {isAdmin && orphanedCategories.length > 0 && catClassFilter !== "orphaned" && (
+            {s.isAdmin && s.orphanedCategories.length > 0 && s.catClassFilter !== "orphaned" && (
               <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm">
                   <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                   <span className="text-amber-800 dark:text-amber-300">
-                    يوجد {orphanedCategories.length} فئة غير مرتبطة بفصل (محفوظة من فصول محذوفة)
+                    يوجد {s.orphanedCategories.length} فئة غير مرتبطة بفصل (محفوظة من فصول محذوفة)
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Select onValueChange={handleReassignOrphanedCategories}>
+                  <Select onValueChange={s.handleReassignOrphanedCategories}>
                     <SelectTrigger className="w-[180px] h-8 text-xs">
                       <SelectValue placeholder="ربط بفصل..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all_classes">جميع الفصول</SelectItem>
-                      {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      {s.classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -1543,17 +551,17 @@ export default function SettingsPage() {
               emoji="📝"
               colorScheme="emerald"
               emptyText="لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع"
-              categories={classworkCategories}
-              allCategories={categories}
-              classes={classes}
-              editingCats={editingCats}
-              setEditingCats={setEditingCats}
-              isAdmin={isAdmin}
-              catClassFilter={catClassFilter}
+              categories={s.classworkCategories}
+              allCategories={s.categories}
+              classes={s.classes}
+              editingCats={s.editingCats}
+              setEditingCats={s.setEditingCats}
+              isAdmin={s.isAdmin}
+              catClassFilter={s.catClassFilter}
               targetGroupLabel="الاختبارات"
               targetGroupKey="exam"
-              onReorder={handleReorderCategory}
-              onDelete={handleDeleteCategory}
+              onReorder={s.handleReorderCategory}
+              onDelete={s.handleDeleteCategory}
             />
 
             <CategoryTable
@@ -1561,40 +569,40 @@ export default function SettingsPage() {
               emoji="📋"
               colorScheme="amber"
               emptyText="لا توجد فئات — أضف: اختبار عملي، اختبار الفترة"
-              categories={examCategories}
-              allCategories={categories}
-              classes={classes}
-              editingCats={editingCats}
-              setEditingCats={setEditingCats}
-              isAdmin={isAdmin}
-              catClassFilter={catClassFilter}
+              categories={s.examCategories}
+              allCategories={s.categories}
+              classes={s.classes}
+              editingCats={s.editingCats}
+              setEditingCats={s.setEditingCats}
+              isAdmin={s.isAdmin}
+              catClassFilter={s.catClassFilter}
               targetGroupLabel="المهام الأدائية"
               targetGroupKey="classwork"
-              onReorder={handleReorderCategory}
-              onDelete={handleDeleteCategory}
+              onReorder={s.handleReorderCategory}
+              onDelete={s.handleDeleteCategory}
             />
 
-            {catClassFilter === "all" && (
+            {s.catClassFilter === "all" && (
               <p className="text-xs text-muted-foreground text-center">
                 💡 أي تعديل سيُطبق على جميع الفصول تلقائياً — الفئات الناقصة ستُضاف للفصول المفقودة عند الحفظ
               </p>
             )}
 
             {/* Extra Slots Toggle */}
-            {isAdmin && (
+            {s.isAdmin && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
                   <div>
-                    <h4 className="text-sm font-bold">{dailyExtraSlotsEnabled ? "🔓" : "🔒"} زيادة رموز التقييم</h4>
+                    <h4 className="text-sm font-bold">{s.dailyExtraSlotsEnabled ? "🔓" : "🔒"} زيادة رموز التقييم</h4>
                     <p className="text-[11px] text-muted-foreground">السماح بإضافة رموز تقييم إضافية في الإدخال اليومي</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {dailyExtraSlotsEnabled && (
+                    {s.dailyExtraSlotsEnabled && (
                       <div className="flex items-center gap-1.5">
                         <span className="text-[11px] text-muted-foreground">الحد الأقصى:</span>
-                        <Select value={String(dailyMaxSlots)} onValueChange={async (val) => {
+                        <Select value={String(s.dailyMaxSlots)} onValueChange={async (val) => {
                           const num = Number(val);
-                          setDailyMaxSlots(num);
+                          s.setDailyMaxSlots(num);
                           await supabase.from("site_settings").upsert({ id: "daily_max_slots", value: val });
                           toast({ title: `تم تحديد الحد الأقصى إلى ${num} رموز` });
                         }}>
@@ -1611,50 +619,49 @@ export default function SettingsPage() {
                     )}
                     <button
                       onClick={async () => {
-                        const newVal = !dailyExtraSlotsEnabled;
-                        setDailyExtraSlotsEnabled(newVal);
+                        const newVal = !s.dailyExtraSlotsEnabled;
+                        s.setDailyExtraSlotsEnabled(newVal);
                         await supabase.from("site_settings").upsert({ id: "daily_extra_slots_enabled", value: String(newVal) });
                         toast({ title: newVal ? "تم الفتح" : "تم القفل", description: newVal ? "يمكن الآن إضافة رموز تقييم إضافية" : "تم قفل الرموز الإضافية — رمز واحد فقط" });
                       }}
                       className={cn(
                         "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                        dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
+                        s.dailyExtraSlotsEnabled ? "bg-success text-white" : "bg-muted text-muted-foreground"
                       )}
                     >
-                      {dailyExtraSlotsEnabled ? "مفتوح للكل" : "مقفل للكل"}
+                      {s.dailyExtraSlotsEnabled ? "مفتوح للكل" : "مقفل للكل"}
                     </button>
                   </div>
                 </div>
 
-                {classworkCategories.length > 0 && (
+                {s.classworkCategories.length > 0 && (
                   <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/30 bg-muted/5">
                     <p className="w-full text-[11px] text-muted-foreground mb-1">تخصيص عدد الرموز لكل فئة (اضغط للقفل/الفتح، واختر العدد):</p>
-                    {/* Deduplicate by name for all-classes view */}
                     {(() => {
                       const seen = new Set<string>();
-                      return classworkCategories.filter(cat => {
+                      return s.classworkCategories.filter(cat => {
                         if (seen.has(cat.name)) return false;
                         seen.add(cat.name);
                         return true;
                       });
                     })().map((cat) => {
                       const catKey = cat.name;
-                      const isDisabled = !dailyExtraSlotsEnabled || dailyExtraSlotsDisabledCats.includes(catKey);
-                      const catMax = dailyMaxSlotsPerCat[catKey] ?? dailyMaxSlots;
+                      const isDisabled = !s.dailyExtraSlotsEnabled || s.dailyExtraSlotsDisabledCats.includes(catKey);
+                      const catMax = s.dailyMaxSlotsPerCat[catKey] ?? s.dailyMaxSlots;
                       return (
                         <div key={catKey} className="flex items-center gap-1">
                           <button
                             onClick={async () => {
-                              if (!dailyExtraSlotsEnabled) {
+                              if (!s.dailyExtraSlotsEnabled) {
                                 toast({ title: "يجب فتح زيادة الرموز أولاً", variant: "destructive" });
                                 return;
                               }
-                              const newList = dailyExtraSlotsDisabledCats.includes(catKey)
-                                ? dailyExtraSlotsDisabledCats.filter(k => k !== catKey)
-                                : [...dailyExtraSlotsDisabledCats, catKey];
-                              setDailyExtraSlotsDisabledCats(newList);
+                              const newList = s.dailyExtraSlotsDisabledCats.includes(catKey)
+                                ? s.dailyExtraSlotsDisabledCats.filter(k => k !== catKey)
+                                : [...s.dailyExtraSlotsDisabledCats, catKey];
+                              s.setDailyExtraSlotsDisabledCats(newList);
                               await supabase.from("site_settings").upsert({ id: "daily_extra_slots_disabled_cats", value: JSON.stringify(newList) });
-                              toast({ title: dailyExtraSlotsDisabledCats.includes(catKey) ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
+                              toast({ title: s.dailyExtraSlotsDisabledCats.includes(catKey) ? `تم فتح الزيادة لـ "${cat.name}"` : `تم قفل الزيادة لـ "${cat.name}"` });
                             }}
                             className={cn(
                               "flex items-center gap-1 px-2.5 py-1.5 rounded-r-lg text-xs font-medium transition-all border border-l-0",
@@ -1669,8 +676,8 @@ export default function SettingsPage() {
                             value={String(isDisabled ? 1 : catMax)}
                             disabled={isDisabled}
                             onValueChange={async (val) => {
-                              const newMap = { ...dailyMaxSlotsPerCat, [catKey]: Number(val) };
-                              setDailyMaxSlotsPerCat(newMap);
+                              const newMap = { ...s.dailyMaxSlotsPerCat, [catKey]: Number(val) };
+                              s.setDailyMaxSlotsPerCat(newMap);
                               await supabase.from("site_settings").upsert({ id: "daily_max_slots_per_cat", value: JSON.stringify(newMap) });
                               toast({ title: `حد "${cat.name}" = ${val} رموز` });
                             }}>
@@ -1694,7 +701,7 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {activeCard === "print" && isAdmin && (
+      {s.activeCard === "print" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -1702,7 +709,7 @@ export default function SettingsPage() {
                 <Printer className="h-5 w-5 text-primary" />
                 ورقة الطباعة والتصدير
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -1713,7 +720,7 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {activeCard === "colors" && isAdmin && (
+      {s.activeCard === "colors" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -1721,90 +728,54 @@ export default function SettingsPage() {
                 <Palette className="h-5 w-5 text-primary" />
                 ألوان الاختبارات
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* MCQ Color */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">لون أسئلة الاختيار من متعدد</Label>
-                <div className="flex flex-wrap gap-2">
-                  {QUIZ_COLOR_OPTIONS.map(opt => (
-                    <button key={opt.value} onClick={() => setQuizColorMcq(opt.value)}
-                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                        quizColorMcq === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                      )}
-                      style={{ backgroundColor: opt.value }}
-                      title={opt.label} />
-                  ))}
+              {[
+                { label: "لون أسئلة الاختيار من متعدد", value: s.quizColorMcq, setter: s.setQuizColorMcq },
+                { label: "لون أسئلة الصح والخطأ", value: s.quizColorTf, setter: s.setQuizColorTf },
+                { label: "لون الإجابة المختارة", value: s.quizColorSelected, setter: s.setQuizColorSelected },
+              ].map((item) => (
+                <div key={item.label} className="space-y-2">
+                  <Label className="text-sm font-semibold">{item.label}</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {QUIZ_COLOR_OPTIONS.map(opt => (
+                      <button key={opt.value} onClick={() => item.setter(opt.value)}
+                        className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
+                          item.value === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
+                        )}
+                        style={{ backgroundColor: opt.value }}
+                        title={opt.label} />
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: item.value }} />
+                    <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === item.value)?.label || item.value}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorMcq }} />
-                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorMcq)?.label || quizColorMcq}</span>
-                </div>
-              </div>
-
-              {/* True/False Color */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">لون أسئلة الصح والخطأ</Label>
-                <div className="flex flex-wrap gap-2">
-                  {QUIZ_COLOR_OPTIONS.map(opt => (
-                    <button key={opt.value} onClick={() => setQuizColorTf(opt.value)}
-                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                        quizColorTf === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                      )}
-                      style={{ backgroundColor: opt.value }}
-                      title={opt.label} />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorTf }} />
-                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorTf)?.label || quizColorTf}</span>
-                </div>
-              </div>
-
-              {/* Selected Answer Color */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">لون الإجابة المختارة</Label>
-                <div className="flex flex-wrap gap-2">
-                  {QUIZ_COLOR_OPTIONS.map(opt => (
-                    <button key={opt.value} onClick={() => setQuizColorSelected(opt.value)}
-                      className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                        quizColorSelected === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                      )}
-                      style={{ backgroundColor: opt.value }}
-                      title={opt.label} />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: quizColorSelected }} />
-                  <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === quizColorSelected)?.label || quizColorSelected}</span>
-                </div>
-              </div>
+              ))}
             </div>
-
-            {/* Preview */}
             <div className="rounded-xl border p-4 space-y-2">
               <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
               <div className="flex gap-3">
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorMcq }}>اختياري</div>
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorTf }}>صح/خطأ</div>
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: quizColorSelected }}>الإجابة</div>
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorMcq }}>اختياري</div>
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorTf }}>صح/خطأ</div>
+                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorSelected }}>الإجابة</div>
               </div>
             </div>
-
-            <Button disabled={savingQuizColors} className="gap-1.5"
+            <Button disabled={s.savingQuizColors} className="gap-1.5"
               onClick={async () => {
-                setSavingQuizColors(true);
+                s.setSavingQuizColors(true);
                 const results = await Promise.all([
-                  supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: quizColorMcq }),
-                  supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: quizColorTf }),
-                  supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: quizColorSelected }),
+                  supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: s.quizColorMcq }),
+                  supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: s.quizColorTf }),
+                  supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: s.quizColorSelected }),
                 ]);
-                setSavingQuizColors(false);
+                s.setSavingQuizColors(false);
                 if (results.some(r => r.error)) {
                   toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" });
                 } else {
@@ -1812,12 +783,13 @@ export default function SettingsPage() {
                 }
               }}>
               <Save className="h-4 w-4" />
-              {savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
+              {s.savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
             </Button>
           </CardContent>
         </Card>
       )}
-      {activeCard === "visibility" && isAdmin && (
+
+      {s.activeCard === "visibility" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -1825,23 +797,20 @@ export default function SettingsPage() {
                 <Eye className="h-5 w-5 text-primary" />
                 التحكم بعرض بيانات الطالب
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-
-            {/* ─── Row 1: Visibility Toggles + Evaluation (side by side) ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Main Visibility Toggles */}
               <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
                 <h4 className="text-sm font-bold mb-2">👁️ الأقسام المعروضة</h4>
                 <div className="space-y-1.5">
                   {[
-                    { key: "grades" as const, label: "الدرجات", icon: GraduationCap, state: showGrades, setter: setShowGrades },
-                    { key: "attendance" as const, label: "الحضور والغياب", icon: Users, state: showAttendance, setter: setShowAttendance },
-                    { key: "behavior" as const, label: "السلوك", icon: Eye, state: showBehavior, setter: setShowBehavior },
+                    { key: "grades" as const, label: "الدرجات", icon: GraduationCap, state: s.showGrades, setter: s.setShowGrades },
+                    { key: "attendance" as const, label: "الحضور والغياب", icon: Users, state: s.showAttendance, setter: s.setShowAttendance },
+                    { key: "behavior" as const, label: "السلوك", icon: Eye, state: s.showBehavior, setter: s.setShowBehavior },
                   ].map((item) => (
                     <button
                       key={item.key}
@@ -1861,22 +830,20 @@ export default function SettingsPage() {
                   ))}
                 </div>
               </div>
-
               <EvaluationToggles
-                showDailyGrades={studentShowDailyGrades}
-                setShowDailyGrades={setStudentShowDailyGrades}
-                showClassworkIcons={studentShowClassworkIcons}
-                setShowClassworkIcons={setStudentShowClassworkIcons}
-                classworkIconsCount={studentClassworkIconsCount}
-                setClassworkIconsCount={setStudentClassworkIconsCount}
+                showDailyGrades={s.studentShowDailyGrades}
+                setShowDailyGrades={s.setStudentShowDailyGrades}
+                showClassworkIcons={s.studentShowClassworkIcons}
+                setShowClassworkIcons={s.setStudentShowClassworkIcons}
+                classworkIconsCount={s.studentClassworkIconsCount}
+                setClassworkIconsCount={s.setStudentClassworkIconsCount}
               />
             </div>
 
-            {/* ─── Row 2: Grade Categories per Period ─── */}
-            {showGrades && (() => {
-              const uniqueNames = Array.from(new Set(categories.map(c => c.name)));
+            {s.showGrades && (() => {
+              const uniqueNames = Array.from(new Set(s.categories.map(c => c.name)));
               if (uniqueNames.length === 0) return null;
-              const currentHidden = hiddenCategories[visibilityPeriod];
+              const currentHidden = s.hiddenCategories[s.visibilityPeriod];
               return (
                 <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
@@ -1887,7 +854,6 @@ export default function SettingsPage() {
                     <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-3 pb-3 space-y-3">
-                    {/* Period Selector + Apply Button */}
                     <div className="flex items-center gap-2">
                       <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5 flex-1">
                         {([
@@ -1896,17 +862,17 @@ export default function SettingsPage() {
                         ]).map(p => (
                           <button
                             key={p.key}
-                            onClick={() => setVisibilityPeriod(p.key)}
+                            onClick={() => s.setVisibilityPeriod(p.key)}
                             className={cn(
                               "flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-[11px] font-bold transition-all",
-                              visibilityPeriod === p.key
+                              s.visibilityPeriod === p.key
                                 ? "bg-primary text-primary-foreground"
                                 : "text-muted-foreground"
                             )}
                           >
                             {p.label}
-                            {hiddenCategories[p.key].length > 0 && (
-                              <span className="text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{hiddenCategories[p.key].length}</span>
+                            {s.hiddenCategories[p.key].length > 0 && (
+                              <span className="text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{s.hiddenCategories[p.key].length}</span>
                             )}
                           </button>
                         ))}
@@ -1916,9 +882,9 @@ export default function SettingsPage() {
                         size="sm"
                         className="gap-1 text-[10px] h-7 shrink-0"
                         onClick={() => {
-                          const source = hiddenCategories[visibilityPeriod];
-                          const targetPeriod = visibilityPeriod === "p1" ? "p2" : "p1";
-                          setHiddenCategories(prev => ({ ...prev, [targetPeriod]: [...source] }));
+                          const source = s.hiddenCategories[s.visibilityPeriod];
+                          const targetPeriod = s.visibilityPeriod === "p1" ? "p2" : "p1";
+                          s.setHiddenCategories(prev => ({ ...prev, [targetPeriod]: [...source] }));
                           toast({ title: "تم النسخ", description: `تم تطبيق على الفترتين` });
                         }}
                       >
@@ -1926,8 +892,6 @@ export default function SettingsPage() {
                         للفترتين
                       </Button>
                     </div>
-
-                    {/* Category toggles */}
                     <div className="flex flex-wrap gap-1.5 max-h-36 overflow-auto">
                       {uniqueNames.map(name => {
                         const isHidden = currentHidden.includes(name);
@@ -1935,11 +899,11 @@ export default function SettingsPage() {
                           <button
                             key={name}
                             onClick={() => {
-                              setHiddenCategories(prev => ({
+                              s.setHiddenCategories(prev => ({
                                 ...prev,
-                                [visibilityPeriod]: isHidden
-                                  ? prev[visibilityPeriod].filter(n => n !== name)
-                                  : [...prev[visibilityPeriod], name]
+                                [s.visibilityPeriod]: isHidden
+                                  ? prev[s.visibilityPeriod].filter(n => n !== name)
+                                  : [...prev[s.visibilityPeriod], name]
                               }));
                             }}
                             className={cn("px-2.5 py-1.5 rounded-md text-[11px] font-bold border transition-all",
@@ -1959,7 +923,6 @@ export default function SettingsPage() {
               );
             })()}
 
-            {/* Honor Roll Toggle */}
             <div className="flex items-center justify-between p-3 rounded-xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-950/10">
               <div className="flex items-center gap-2">
                 <Trophy className="h-4 w-4 text-amber-500" />
@@ -1969,109 +932,65 @@ export default function SettingsPage() {
                 </div>
               </div>
               <Button
-                variant={honorRollEnabled ? "default" : "outline"}
+                variant={s.honorRollEnabled ? "default" : "outline"}
                 size="sm"
-                className={cn("gap-1.5 min-w-[90px]", honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950")}
-                disabled={savingHonorRoll}
+                className={cn("gap-1.5 min-w-[90px]", s.honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950")}
+                disabled={s.savingHonorRoll}
                 onClick={async () => {
-                  setSavingHonorRoll(true);
-                  const newVal = !honorRollEnabled;
+                  s.setSavingHonorRoll(true);
+                  const newVal = !s.honorRollEnabled;
                   await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
-                  setHonorRollEnabled(newVal);
-                  setSavingHonorRoll(false);
+                  s.setHonorRollEnabled(newVal);
+                  s.setSavingHonorRoll(false);
                   toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب" : "تم إخفاء لوحة الشرف" });
                 }}
               >
-                {honorRollEnabled ? <><Eye className="h-3.5 w-3.5" /> مفعّلة</> : <><EyeOff className="h-3.5 w-3.5" /> معطّلة</>}
+                {s.honorRollEnabled ? <><Eye className="h-3.5 w-3.5" /> مفعّلة</> : <><EyeOff className="h-3.5 w-3.5" /> معطّلة</>}
               </Button>
             </div>
 
-            {/* Save + Reset */}
             <div className="flex items-center gap-2 flex-wrap">
               <Button
-                disabled={savingVisibility}
+                disabled={s.savingVisibility}
                 className="gap-1.5"
                 onClick={async () => {
-                  setSavingVisibility(true);
+                  s.setSavingVisibility(true);
                   const results = await Promise.all([
-                    supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(showGrades) }),
-                    supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(showAttendance) }),
-                    supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(showBehavior) }),
-                    supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(hiddenCategories) }),
-                    supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: String(studentShowDailyGrades) }),
-                    supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: String(studentShowClassworkIcons) }),
-                    supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: String(studentClassworkIconsCount) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_grades", value: String(s.showGrades) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_attendance", value: String(s.showAttendance) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_behavior", value: String(s.showBehavior) }),
+                    supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify(s.hiddenCategories) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: String(s.studentShowDailyGrades) }),
+                    supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: String(s.studentShowClassworkIcons) }),
+                    supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: String(s.studentClassworkIconsCount) }),
                   ]);
-                  setSavingVisibility(false);
+                  s.setSavingVisibility(false);
                   if (results.some(r => r.error)) {
                     toast({ title: "خطأ", description: "فشل حفظ إعدادات العرض", variant: "destructive" });
                   } else {
-                    toast({ title: "تم الحفظ", description: "تم تحديث إعدادات عرض بيانات الطالب" });
+                    toast({ title: "تم الحفظ", description: "تم تحديث إعدادات عرض الطالب" });
                   }
                 }}
               >
                 <Save className="h-4 w-4" />
-                {savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+                {s.savingVisibility ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                    إعادة ضبط
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent dir="rtl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>إعادة ضبط إعدادات العرض؟</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      سيتم إعادة جميع إعدادات عرض بيانات الطالب للقيم الافتراضية (إظهار الكل وإزالة جميع الاستثناءات).
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={async () => {
-                        setShowGrades(true);
-                        setShowAttendance(true);
-                        setShowBehavior(true);
-                        setHiddenCategories({ p1: [], p2: [] });
-                        setStudentShowDailyGrades(true);
-                        setStudentShowClassworkIcons(true);
-                        setStudentClassworkIconsCount(10);
-                        setSavingVisibility(true);
-                        const results = await Promise.all([
-                          supabase.from("site_settings").upsert({ id: "student_show_grades", value: "true" }),
-                          supabase.from("site_settings").upsert({ id: "student_show_attendance", value: "true" }),
-                          supabase.from("site_settings").upsert({ id: "student_show_behavior", value: "true" }),
-                          supabase.from("site_settings").upsert({ id: "student_hidden_categories", value: JSON.stringify({ p1: [], p2: [] }) }),
-                          supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: "true" }),
-                          supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: "true" }),
-                          supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: "10" }),
-                        ]);
-                        setSavingVisibility(false);
-                        if (results.some(r => r.error)) {
-                          toast({ title: "خطأ", description: "فشل إعادة الضبط", variant: "destructive" });
-                        } else {
-                          toast({ title: "تم الضبط", description: "تم إعادة جميع إعدادات العرض للقيم الافتراضية" });
-                        }
-                      }}
-                    >
-                      إعادة الضبط
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button variant="outline" className="gap-1.5 text-xs"
+                onClick={() => {
+                  s.setShowGrades(true); s.setShowAttendance(true); s.setShowBehavior(true);
+                  s.setHiddenCategories({ p1: [], p2: [] });
+                  s.setStudentShowDailyGrades(true); s.setStudentShowClassworkIcons(true); s.setStudentClassworkIconsCount(10);
+                  toast({ title: "تم الاستعادة", description: "تم استعادة الإعدادات الافتراضية — اضغط حفظ لتأكيدها" });
+                }}>
+                <RotateCcw className="h-3.5 w-3.5" />
+                استعادة الافتراضي
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "popup" && isAdmin && (
+      {s.activeCard === "popup" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2079,46 +998,45 @@ export default function SettingsPage() {
                 <Megaphone className="h-5 w-5 text-primary" />
                 رسالة منبثقة للطلاب
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-4 max-w-lg">
+          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>تفعيل الرسالة المنبثقة</Label>
+              <Label className="font-bold">تفعيل الرسالة المنبثقة</Label>
               <button
-                type="button"
-                onClick={() => setPopupEnabled(!popupEnabled)}
+                onClick={() => s.setPopupEnabled(!s.popupEnabled)}
                 className={cn(
-                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors",
-                  popupEnabled ? "bg-primary" : "bg-muted"
+                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
+                  s.popupEnabled ? "bg-primary" : "bg-muted"
                 )}
               >
                 <span className={cn(
-                  "inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm",
-                  popupEnabled ? "translate-x-1" : "translate-x-6"
+                  "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
+                  s.popupEnabled ? "translate-x-1" : "translate-x-6"
                 )} />
               </button>
             </div>
             <div className="space-y-2">
               <Label>عنوان الرسالة</Label>
-              <Input value={popupTitle} onChange={(e) => setPopupTitle(e.target.value)} placeholder="مثال: تنبيه مهم" />
+              <Input value={s.popupTitle} onChange={(e) => s.setPopupTitle(e.target.value)} placeholder="مثال: تنبيه مهم" />
             </div>
             <div className="space-y-2">
               <Label>نص الرسالة</Label>
-              <Textarea value={popupMessage} onChange={(e) => setPopupMessage(e.target.value)} placeholder="اكتب الرسالة التي تريد عرضها للطلاب..." rows={4} />
+              <Textarea value={s.popupMessage} onChange={(e) => s.setPopupMessage(e.target.value)} placeholder="اكتب الرسالة التي تريد عرضها للطلاب..." rows={4} />
             </div>
             <div className="space-y-2">
               <Label>تاريخ انتهاء الرسالة (اختياري)</Label>
-              <Input type="datetime-local" value={popupExpiry} onChange={(e) => setPopupExpiry(e.target.value)} dir="ltr" className="text-right" />
-              {popupExpiry && (
-                <p className="text-xs text-muted-foreground">ستختفي الرسالة تلقائياً بعد: {new Date(popupExpiry).toLocaleString("ar-SA")}</p>
+              <Input type="datetime-local" value={s.popupExpiry} onChange={(e) => s.setPopupExpiry(e.target.value)} dir="ltr" className="text-right" />
+              {s.popupExpiry && (
+                <p className="text-xs text-muted-foreground">ستختفي الرسالة تلقائياً بعد: {new Date(s.popupExpiry).toLocaleString("ar-SA")}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label>استهداف الفصول</Label>
-              <Select value={popupTargetType} onValueChange={(v: "all" | "specific") => { setPopupTargetType(v); if (v === "all") setPopupTargetClassIds([]); }}>
+              <Select value={s.popupTargetType} onValueChange={(v: "all" | "specific") => { s.setPopupTargetType(v); if (v === "all") s.setPopupTargetClassIds([]); }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">جميع الطلاب</SelectItem>
@@ -2126,15 +1044,15 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-            {popupTargetType === "specific" && (
+            {s.popupTargetType === "specific" && (
               <div className="space-y-2">
                 <Label>اختر الفصول</Label>
                 <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-border/40 bg-muted/20 max-h-40 overflow-y-auto">
-                  {classes.map((c) => {
-                    const isSelected = popupTargetClassIds.includes(c.id);
+                  {s.classes.map((c) => {
+                    const isSelected = s.popupTargetClassIds.includes(c.id);
                     return (
                       <button key={c.id} type="button"
-                        onClick={() => setPopupTargetClassIds((prev) => isSelected ? prev.filter((id) => id !== c.id) : [...prev, c.id])}
+                        onClick={() => s.setPopupTargetClassIds((prev) => isSelected ? prev.filter((id) => id !== c.id) : [...prev, c.id])}
                         className={cn("px-3 py-1.5 rounded-lg text-xs font-medium transition-all border",
                           isSelected ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-card text-muted-foreground border-border/40 hover:border-primary/40"
                         )}
@@ -2142,12 +1060,12 @@ export default function SettingsPage() {
                     );
                   })}
                 </div>
-                {popupTargetClassIds.length > 0 && <p className="text-xs text-muted-foreground">تم اختيار {popupTargetClassIds.length} فصل</p>}
+                {s.popupTargetClassIds.length > 0 && <p className="text-xs text-muted-foreground">تم اختيار {s.popupTargetClassIds.length} فصل</p>}
               </div>
             )}
             <div className="space-y-2">
               <Label>التوجيه عند الضغط (اختياري)</Label>
-              <Select value={popupAction} onValueChange={setPopupAction}>
+              <Select value={s.popupAction} onValueChange={s.setPopupAction}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">بدون توجيه</SelectItem>
@@ -2162,7 +1080,7 @@ export default function SettingsPage() {
             </div>
             <div className="space-y-2">
               <Label>تكرار الرسالة</Label>
-              <Select value={popupRepeat} onValueChange={setPopupRepeat}>
+              <Select value={s.popupRepeat} onValueChange={s.setPopupRepeat}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">بدون تكرار (مرة واحدة)</SelectItem>
@@ -2171,35 +1089,35 @@ export default function SettingsPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {popupRepeat === "daily" && "ستظهر الرسالة للطالب مرة واحدة كل يوم"}
-                {popupRepeat === "weekly" && "ستظهر الرسالة للطالب مرة واحدة كل أسبوع"}
-                {popupRepeat === "none" && "ستظهر الرسالة مرة واحدة فقط للطالب"}
+                {s.popupRepeat === "daily" && "ستظهر الرسالة للطالب مرة واحدة كل يوم"}
+                {s.popupRepeat === "weekly" && "ستظهر الرسالة للطالب مرة واحدة كل أسبوع"}
+                {s.popupRepeat === "none" && "ستظهر الرسالة مرة واحدة فقط للطالب"}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button disabled={savingPopup} className="gap-1.5"
+              <Button disabled={s.savingPopup} className="gap-1.5"
                 onClick={async () => {
-                  setSavingPopup(true);
+                  s.setSavingPopup(true);
                   const updates = [
-                    supabase.from("site_settings").upsert({ id: "student_popup_enabled", value: String(popupEnabled) }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_title", value: popupTitle }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_message", value: popupMessage }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: popupExpiry }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: popupTargetType }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(popupTargetClassIds) }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_action", value: popupAction }),
-                    supabase.from("site_settings").upsert({ id: "student_popup_repeat", value: popupRepeat }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_enabled", value: String(s.popupEnabled) }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_title", value: s.popupTitle }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_message", value: s.popupMessage }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_expiry", value: s.popupExpiry }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_target_type", value: s.popupTargetType }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_target_classes", value: JSON.stringify(s.popupTargetClassIds) }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_action", value: s.popupAction }),
+                    supabase.from("site_settings").upsert({ id: "student_popup_repeat", value: s.popupRepeat }),
                   ];
                   const results = await Promise.all(updates);
-                  if (popupTitle.trim() && popupMessage.trim() && user) {
+                  if (s.popupTitle.trim() && s.popupMessage.trim() && s.user) {
                     await supabase.from("popup_messages").insert({
-                      title: popupTitle, message: popupMessage, expiry: popupExpiry || null,
-                      target_type: popupTargetType, target_class_ids: popupTargetClassIds, created_by: user.id,
+                      title: s.popupTitle, message: s.popupMessage, expiry: s.popupExpiry || null,
+                      target_type: s.popupTargetType, target_class_ids: s.popupTargetClassIds, created_by: s.user.id,
                     } as any);
                     const { data: historyData } = await supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20);
-                    if (historyData) setPopupHistory(historyData as any);
+                    if (historyData) s.setPopupHistory(historyData as any);
                   }
-                  setSavingPopup(false);
+                  s.setSavingPopup(false);
                   if (results.some((r) => r.error)) {
                     toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
                   } else {
@@ -2207,23 +1125,23 @@ export default function SettingsPage() {
                   }
                 }}>
                 <Save className="h-4 w-4" />
-                {savingPopup ? "جارٍ الحفظ..." : "حفظ"}
+                {s.savingPopup ? "جارٍ الحفظ..." : "حفظ"}
               </Button>
               <Button variant="outline" className="gap-1.5"
-                onClick={() => { setPreviewTitle(popupTitle); setPreviewMessage(popupMessage); setPopupPreviewOpen(true); }}
-                disabled={!popupTitle.trim() && !popupMessage.trim()}>
+                onClick={() => { s.setPreviewTitle(s.popupTitle); s.setPreviewMessage(s.popupMessage); s.setPopupPreviewOpen(true); }}
+                disabled={!s.popupTitle.trim() && !s.popupMessage.trim()}>
                 <Eye className="h-4 w-4" />
                 معاينة
               </Button>
             </div>
-            {popupHistory.length > 0 && (
+            {s.popupHistory.length > 0 && (
               <div className="border-t pt-4 mt-4 space-y-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                   <History className="h-4 w-4 text-muted-foreground" />
                   سجل الرسائل السابقة
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {popupHistory.map((msg) => (
+                  {s.popupHistory.map((msg) => (
                     <div key={msg.id} className="flex items-start justify-between gap-3 p-3 rounded-xl border border-border/40 bg-muted/20">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{msg.title}</p>
@@ -2237,9 +1155,9 @@ export default function SettingsPage() {
                       <div className="flex flex-col gap-1 shrink-0">
                         <Button variant="ghost" size="sm" className="gap-1 text-xs h-7"
                           onClick={() => {
-                            setPopupTitle(msg.title); setPopupMessage(msg.message); setPopupExpiry(msg.expiry || "");
-                            setPopupTargetType(msg.target_type as "all" | "specific"); setPopupTargetClassIds(msg.target_class_ids || []);
-                            setPopupEnabled(true); toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
+                            s.setPopupTitle(msg.title); s.setPopupMessage(msg.message); s.setPopupExpiry(msg.expiry || "");
+                            s.setPopupTargetType(msg.target_type as "all" | "specific"); s.setPopupTargetClassIds(msg.target_class_ids || []);
+                            s.setPopupEnabled(true); toast({ title: "تم تحميل الرسالة", description: "اضغط حفظ لتفعيلها" });
                           }}>
                           <RotateCcw className="h-3 w-3" />
                           تفعيل
@@ -2260,7 +1178,7 @@ export default function SettingsPage() {
                               <AlertDialogCancel>إلغاء</AlertDialogCancel>
                               <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
                                 await supabase.from("popup_messages").delete().eq("id", msg.id);
-                                setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
+                                s.setPopupHistory((prev) => prev.filter((m) => m.id !== msg.id));
                                 toast({ title: "تم الحذف" });
                               }}>حذف</AlertDialogAction>
                             </AlertDialogFooter>
@@ -2276,7 +1194,7 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {activeCard === "calendar_year" && isAdmin && (
+      {s.activeCard === "calendar_year" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2284,20 +1202,15 @@ export default function SettingsPage() {
                 <CalendarDays className="h-5 w-5 text-primary" />
                 التقويم والعام الدراسي
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Calendar Type */}
             <div className="space-y-3">
-              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-                🗓️ نوع التقويم الافتراضي
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                يُستخدم في جميع صفحات التحضير والدرجات والتقارير.
-              </p>
+              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">🗓️ نوع التقويم الافتراضي</h3>
+              <p className="text-xs text-muted-foreground">يُستخدم في جميع صفحات التحضير والدرجات والتقارير.</p>
               <div className="grid grid-cols-2 gap-3 max-w-sm">
                 {[
                   { value: "gregorian" as const, label: "ميلادي", sub: "Gregorian", emoji: "🌍" },
@@ -2305,10 +1218,10 @@ export default function SettingsPage() {
                 ].map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => setGlobalCalendarType(opt.value)}
+                    onClick={() => s.setGlobalCalendarType(opt.value)}
                     className={cn(
                       "flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200",
-                      calendarTypeLocal === opt.value
+                      s.calendarTypeLocal === opt.value
                         ? "border-primary bg-primary/10 shadow-lg scale-[1.02]"
                         : "border-border/50 bg-card hover:border-primary/30 hover:bg-muted/50"
                     )}
@@ -2316,7 +1229,7 @@ export default function SettingsPage() {
                     <span className="text-2xl">{opt.emoji}</span>
                     <span className="text-sm font-bold text-foreground">{opt.label}</span>
                     <span className="text-[11px] text-muted-foreground">{opt.sub}</span>
-                    {calendarTypeLocal === opt.value && (
+                    {s.calendarTypeLocal === opt.value && (
                       <Badge variant="default" className="text-[10px] px-2 py-0">
                         <Check className="h-3 w-3 ml-1" />
                         مُفعّل
@@ -2326,102 +1239,66 @@ export default function SettingsPage() {
                 ))}
               </div>
             </div>
-
             <div className="h-px bg-border/50" />
-
-            {/* Academic Year */}
             <div className="space-y-3 max-w-md">
-              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-                🎓 العام الدراسي الافتراضي
-              </h3>
-              <p className="text-xs text-muted-foreground">
-                يُستخدم عند إنشاء فصول جديدة.
-              </p>
+              <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">🎓 العام الدراسي الافتراضي</h3>
+              <p className="text-xs text-muted-foreground">يُستخدم عند إنشاء فصول جديدة.</p>
               <div className="space-y-2">
                 <Label>العام الدراسي</Label>
-                <Input
-                  value={defaultAcademicYear}
-                  onChange={(e) => setDefaultAcademicYear(e.target.value)}
-                  placeholder="مثال: 1446-1447"
-                  dir="ltr"
-                  className="text-center text-lg font-bold"
-                />
+                <Input value={s.defaultAcademicYear} onChange={(e) => s.setDefaultAcademicYear(e.target.value)} placeholder="مثال: 1446-1447" dir="ltr" className="text-center text-lg font-bold" />
               </div>
               <div className="flex flex-wrap gap-2">
                 {["1445-1446", "1446-1447", "1447-1448", "1448-1449"].map((yr) => (
-                  <button
-                    key={yr}
-                    onClick={() => setDefaultAcademicYear(yr)}
-                    className={cn(
-                      "px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200",
-                      defaultAcademicYear === yr
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
-                    )}
-                  >
-                    {yr}
-                  </button>
+                  <button key={yr} onClick={() => s.setDefaultAcademicYear(yr)}
+                    className={cn("px-4 py-2 rounded-xl border-2 text-sm font-bold transition-all duration-200",
+                      s.defaultAcademicYear === yr ? "border-primary bg-primary/10 text-primary" : "border-border/50 bg-muted/30 text-muted-foreground hover:border-primary/30"
+                    )}>{yr}</button>
                 ))}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <Button
-                  disabled={savingAcademicYear || !defaultAcademicYear.trim()}
-                  className="gap-1.5"
+                <Button disabled={s.savingAcademicYear || !s.defaultAcademicYear.trim()} className="gap-1.5"
                   onClick={async () => {
-                    setSavingAcademicYear(true);
-                    const { error } = await supabase
-                      .from("site_settings")
-                      .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
-                    setSavingAcademicYear(false);
+                    s.setSavingAcademicYear(true);
+                    const { error } = await supabase.from("site_settings").upsert({ id: "default_academic_year", value: s.defaultAcademicYear }, { onConflict: "id" });
+                    s.setSavingAcademicYear(false);
                     if (error) {
                       toast({ title: "خطأ", description: "فشل حفظ العام الدراسي", variant: "destructive" });
                     } else {
-                      setNewYear(defaultAcademicYear);
-                      toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${defaultAcademicYear}` });
+                      s.setNewYear(s.defaultAcademicYear);
+                      toast({ title: "تم الحفظ", description: `العام الدراسي الافتراضي: ${s.defaultAcademicYear}` });
                     }
-                  }}
-                >
+                  }}>
                   <Save className="h-4 w-4" />
-                  {savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
+                  {s.savingAcademicYear ? "جارٍ الحفظ..." : "حفظ"}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" className="gap-1.5 border-primary/30 text-primary hover:bg-primary/10">
                       <RotateCcw className="h-4 w-4" />
-                      تحديث جميع الفصول ({classes.length})
+                      تحديث جميع الفصول ({s.classes.length})
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent dir="rtl">
                     <AlertDialogHeader>
                       <AlertDialogTitle>تحديث العام الدراسي لجميع الفصول؟</AlertDialogTitle>
                       <AlertDialogDescription>
-                        سيتم تغيير العام الدراسي لجميع الفصول الموجودة ({classes.length} فصل) إلى <strong className="text-foreground">{defaultAcademicYear}</strong>. هذا الإجراء لا يمكن التراجع عنه.
+                        سيتم تحديث العام الدراسي لجميع الفصول ({s.classes.length} فصل) إلى "{s.defaultAcademicYear}". هل أنت متأكد؟
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={async () => {
-                          setSavingAcademicYear(true);
-                          const { error } = await supabase
-                            .from("classes")
-                            .update({ academic_year: defaultAcademicYear })
-                            .neq("academic_year", "__never__");
-                          await supabase
-                            .from("site_settings")
-                            .upsert({ id: "default_academic_year", value: defaultAcademicYear }, { onConflict: "id" });
-                          setSavingAcademicYear(false);
-                          if (error) {
-                            toast({ title: "خطأ", description: error.message, variant: "destructive" });
-                          } else {
-                            setNewYear(defaultAcademicYear);
-                            setClasses(prev => prev.map(c => ({ ...c, academic_year: defaultAcademicYear })));
-                            toast({ title: "تم التحديث", description: `تم تغيير العام الدراسي لجميع الفصول إلى ${defaultAcademicYear}` });
-                          }
-                        }}
-                      >
-                        تحديث الكل
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={async () => {
+                        const updates = s.classes.map(cls =>
+                          supabase.from("classes").update({ academic_year: s.defaultAcademicYear }).eq("id", cls.id)
+                        );
+                        const results = await Promise.all(updates);
+                        if (results.some(r => r.error)) {
+                          toast({ title: "خطأ", description: "فشل تحديث بعض الفصول", variant: "destructive" });
+                        } else {
+                          toast({ title: "تم التحديث", description: `تم تحديث ${s.classes.length} فصل إلى ${s.defaultAcademicYear}` });
+                          s.fetchData();
+                        }
+                      }}>تحديث الكل</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -2431,15 +1308,26 @@ export default function SettingsPage() {
         </Card>
       )}
 
-
-
-
-      {activeCard === "academic_calendar" && isAdmin && (
-        <AcademicCalendarSettings onClose={() => setActiveCard(null)} />
+      {s.activeCard === "academic_calendar" && s.isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                التقويم الأكاديمي
+              </CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <AcademicCalendarSettings />
+          </CardContent>
+        </Card>
       )}
 
-      {/* Attendance Settings Panel */}
-      {activeCard === "attendance_settings" && isAdmin && (
+      {s.activeCard === "attendance_settings" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2447,99 +1335,50 @@ export default function SettingsPage() {
                 <ClipboardCheck className="h-5 w-5 text-primary" />
                 إعدادات التحضير
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Override Lock Toggle */}
-            <div className="rounded-xl border-2 border-border/50 p-4 space-y-3 bg-muted/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {attendanceOverrideLock ? (
-                    <LockOpen className="h-6 w-6 text-warning" />
-                  ) : (
-                    <Lock className="h-6 w-6 text-success" />
-                  )}
-                  <div>
-                    <h3 className="font-semibold">تجاوز القفل التلقائي</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {attendanceOverrideLock 
-                        ? "القفل معطّل — يمكن إضافة حصص إضافية بعد اكتمال الحد الأسبوعي"
-                        : "القفل مفعّل — سيتم قفل التحضير تلقائياً عند الوصول للحد الأسبوعي"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant={attendanceOverrideLock ? "destructive" : "outline"}
-                  size="sm"
-                  disabled={savingAttendanceSettings}
-                  onClick={async () => {
-                    setSavingAttendanceSettings(true);
-                    const newValue = !attendanceOverrideLock;
-                    const { data: existing } = await supabase
-                      .from("site_settings")
-                      .select("id")
-                      .eq("id", "attendance_override_lock")
-                      .maybeSingle();
-                    if (existing) {
-                      await supabase.from("site_settings").update({ value: String(newValue) }).eq("id", "attendance_override_lock");
-                    } else {
-                      await supabase.from("site_settings").insert({ id: "attendance_override_lock", value: String(newValue) });
-                    }
-                    setAttendanceOverrideLock(newValue);
-                    setSavingAttendanceSettings(false);
-                    toast({ title: "تم الحفظ", description: newValue ? "تم تعطيل القفل التلقائي" : "تم تفعيل القفل التلقائي" });
-                  }}
-                >
-                  {attendanceOverrideLock ? "إعادة تفعيل القفل" : "تعطيل القفل"}
-                </Button>
+          <CardContent className="space-y-5">
+            <div className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
+              <div>
+                <h3 className="font-semibold flex items-center gap-2">
+                  {s.attendanceOverrideLock ? <LockOpen className="h-4 w-4 text-amber-500" /> : <Lock className="h-4 w-4 text-success" />}
+                  قفل التحضير التلقائي
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">عند تفعيل القفل، لا يمكن تعديل التحضير بعد تسجيله — إلا بإلغاء القفل.</p>
               </div>
+              <Switch
+                checked={!s.attendanceOverrideLock}
+                onCheckedChange={async (checked) => {
+                  const newVal = !checked;
+                  s.setAttendanceOverrideLock(newVal);
+                  await supabase.from("site_settings").upsert({ id: "attendance_override_lock", value: String(newVal) });
+                  toast({ title: checked ? "القفل مفعّل" : "القفل معطّل", description: checked ? "التحضير المسجل لن يمكن تعديله" : "يمكن تعديل التحضير في أي وقت" });
+                }}
+              />
             </div>
 
-            {/* Class Periods Settings */}
             <div className="space-y-3">
               <h3 className="font-semibold flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 عدد الحصص الأسبوعية لكل فصل
               </h3>
               <p className="text-xs text-muted-foreground">حدد عدد الحصص المطلوبة أسبوعياً لكل فصل. عند الوصول للحد، سيتم قفل التحضير تلقائياً.</p>
-              
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                {classes.map((c) => {
-                  const schedule = classSchedules[c.id];
+                {s.classes.map((c) => {
+                  const schedule = s.classSchedules[c.id];
                   const periodsPerWeek = schedule?.periodsPerWeek ?? 5;
                   return (
-                    <div
-                      key={c.id}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors"
-                    >
+                    <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card hover:border-primary/30 transition-colors">
                       <span className="font-medium text-sm truncate flex-1">{c.name}</span>
                       <div className="flex items-center gap-2 mr-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-xs"
-                          onClick={() => {
-                            const newVal = Math.max(1, periodsPerWeek - 1);
-                            saveClassSchedule(c.id, newVal);
-                          }}
-                        >
-                          −
-                        </Button>
+                        <Button variant="outline" size="icon" className="h-7 w-7 text-xs"
+                          onClick={() => s.saveClassSchedule(c.id, Math.max(1, periodsPerWeek - 1))}>−</Button>
                         <span className="w-8 text-center font-bold text-primary">{periodsPerWeek}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-xs"
-                          onClick={() => {
-                            const newVal = Math.min(20, periodsPerWeek + 1);
-                            saveClassSchedule(c.id, newVal);
-                          }}
-                        >
-                          +
-                        </Button>
+                        <Button variant="outline" size="icon" className="h-7 w-7 text-xs"
+                          onClick={() => s.saveClassSchedule(c.id, Math.min(20, periodsPerWeek + 1))}>+</Button>
                       </div>
                     </div>
                   );
@@ -2548,7 +1387,6 @@ export default function SettingsPage() {
             </div>
           </CardContent>
 
-          {/* Absence Threshold - integrated */}
           <CardContent className="space-y-5 border-t border-border/30 pt-5">
             <h3 className="font-semibold flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-4 w-4" />
@@ -2557,14 +1395,14 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <Label>طريقة تحديد الحد</Label>
               <div className="flex gap-2">
-                <Button variant={absenceMode === "percentage" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("percentage")}>بالنسبة المئوية (%)</Button>
-                <Button variant={absenceMode === "sessions" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => setAbsenceMode("sessions")}>بعدد الحصص</Button>
+                <Button variant={s.absenceMode === "percentage" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => s.setAbsenceMode("percentage")}>بالنسبة المئوية (%)</Button>
+                <Button variant={s.absenceMode === "sessions" ? "default" : "outline"} size="sm" className="h-9 text-xs flex-1" onClick={() => s.setAbsenceMode("sessions")}>بعدد الحصص</Button>
               </div>
             </div>
             <div className="space-y-2">
               <Label>إجمالي حصص الفصل الدراسي</Label>
               <div className="flex items-center gap-3">
-                <Input type="number" min={10} max={500} value={totalTermSessions || ""} onChange={(e) => { const val = Math.min(500, Math.max(0, Number(e.target.value) || 0)); setTotalTermSessions(val); if (absenceMode === "percentage" && val > 0) setAbsenceAllowedSessions(Math.round((absenceThreshold / 100) * val)); if (absenceMode === "sessions" && val > 0 && absenceAllowedSessions > 0) setAbsenceThreshold(Math.round((absenceAllowedSessions / val) * 100)); }} className="w-28 text-center font-bold text-lg" dir="ltr" placeholder="مثال: 90" />
+                <Input type="number" min={10} max={500} value={s.totalTermSessions || ""} onChange={(e) => { const val = Math.min(500, Math.max(0, Number(e.target.value) || 0)); s.setTotalTermSessions(val); if (s.absenceMode === "percentage" && val > 0) s.setAbsenceAllowedSessions(Math.round((s.absenceThreshold / 100) * val)); if (s.absenceMode === "sessions" && val > 0 && s.absenceAllowedSessions > 0) s.setAbsenceThreshold(Math.round((s.absenceAllowedSessions / val) * 100)); }} className="w-28 text-center font-bold text-lg" dir="ltr" placeholder="مثال: 90" />
                 <span className="text-sm text-muted-foreground">حصة</span>
               </div>
             </div>
@@ -2572,35 +1410,32 @@ export default function SettingsPage() {
               <div className="space-y-2">
                 <Label>نسبة الغياب المسموح (%)</Label>
                 <div className="flex items-center gap-3">
-                  <Input type="number" min={5} max={50} value={absenceThreshold} onChange={(e) => { const val = Math.min(50, Math.max(5, Number(e.target.value) || 20)); setAbsenceThreshold(val); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((val / 100) * totalTermSessions)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "percentage" && "ring-2 ring-primary")} dir="ltr" />
+                  <Input type="number" min={5} max={50} value={s.absenceThreshold} onChange={(e) => { const val = Math.min(50, Math.max(5, Number(e.target.value) || 20)); s.setAbsenceThreshold(val); if (s.totalTermSessions > 0) s.setAbsenceAllowedSessions(Math.round((val / 100) * s.totalTermSessions)); }} className={cn("w-24 text-center font-bold text-lg", s.absenceMode === "percentage" && "ring-2 ring-primary")} dir="ltr" />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {[10, 15, 20, 25, 30].map((v) => (<Button key={v} variant={absenceThreshold === v ? "default" : "outline"} size="sm" className="h-8 text-xs" onClick={() => { setAbsenceThreshold(v); if (totalTermSessions > 0) setAbsenceAllowedSessions(Math.round((v / 100) * totalTermSessions)); }}>{v}%</Button>))}
+                  {[10, 15, 20, 25, 30].map((v) => (<Button key={v} variant={s.absenceThreshold === v ? "default" : "outline"} size="sm" className="h-8 text-xs" onClick={() => { s.setAbsenceThreshold(v); if (s.totalTermSessions > 0) s.setAbsenceAllowedSessions(Math.round((v / 100) * s.totalTermSessions)); }}>{v}%</Button>))}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label>عدد الحصص المسموح بها</Label>
                 <div className="flex items-center gap-3">
-                  <Input type="number" min={1} max={200} value={absenceAllowedSessions || ""} onChange={(e) => { const val = Math.min(200, Math.max(0, Number(e.target.value) || 0)); setAbsenceAllowedSessions(val); if (totalTermSessions > 0 && val > 0) setAbsenceThreshold(Math.round((val / totalTermSessions) * 100)); }} className={cn("w-24 text-center font-bold text-lg", absenceMode === "sessions" && "ring-2 ring-primary")} dir="ltr" placeholder="مثال: 5" />
+                  <Input type="number" min={1} max={200} value={s.absenceAllowedSessions || ""} onChange={(e) => { const val = Math.min(200, Math.max(0, Number(e.target.value) || 0)); s.setAbsenceAllowedSessions(val); if (s.totalTermSessions > 0 && val > 0) s.setAbsenceThreshold(Math.round((val / s.totalTermSessions) * 100)); }} className={cn("w-24 text-center font-bold text-lg", s.absenceMode === "sessions" && "ring-2 ring-primary")} dir="ltr" placeholder="مثال: 5" />
                   <span className="text-sm text-muted-foreground">حصة</span>
                 </div>
-                {totalTermSessions > 0 && absenceAllowedSessions > 0 && (<p className="text-xs text-info font-medium">= {Math.round((absenceAllowedSessions / totalTermSessions) * 100)}% من إجمالي {totalTermSessions} حصة</p>)}
+                {s.totalTermSessions > 0 && s.absenceAllowedSessions > 0 && (<p className="text-xs text-info font-medium">= {Math.round((s.absenceAllowedSessions / s.totalTermSessions) * 100)}% من إجمالي {s.totalTermSessions} حصة</p>)}
               </div>
             </div>
             <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1">
               <p className="text-xs font-bold text-destructive flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5" />إجراء تلقائي عند التجاوز</p>
-              <p className="text-xs text-muted-foreground">عند تجاوز الطالب عدد الحصص المسموح بها ({absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`})، يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong>.</p>
+              <p className="text-xs text-muted-foreground">عند تجاوز الطالب عدد الحصص المسموح بها ({s.absenceAllowedSessions > 0 ? `${s.absenceAllowedSessions} حصة` : `${s.absenceThreshold}%`})، يتم تحويل حالته تلقائياً إلى <strong className="text-destructive">"محروم من دخول الاختبار"</strong>.</p>
             </div>
-            <Button onClick={async () => { setSavingThreshold(true); await Promise.all([supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(absenceThreshold) }), supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(absenceAllowedSessions) }), supabase.from("site_settings").upsert({ id: "absence_mode", value: absenceMode }), supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(totalTermSessions) })]); setSavingThreshold(false); toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${absenceMode === "sessions" && absenceAllowedSessions > 0 ? `${absenceAllowedSessions} حصة` : `${absenceThreshold}%`}` }); }} disabled={savingThreshold} className="gap-1.5"><Save className="h-4 w-4" />{savingThreshold ? "جارٍ الحفظ..." : "حفظ حد الإنذار"}</Button>
+            <Button onClick={async () => { s.setSavingThreshold(true); await Promise.all([supabase.from("site_settings").upsert({ id: "absence_threshold", value: String(s.absenceThreshold) }), supabase.from("site_settings").upsert({ id: "absence_allowed_sessions", value: String(s.absenceAllowedSessions) }), supabase.from("site_settings").upsert({ id: "absence_mode", value: s.absenceMode }), supabase.from("site_settings").upsert({ id: "total_term_sessions", value: String(s.totalTermSessions) })]); s.setSavingThreshold(false); toast({ title: "تم الحفظ", description: `تم تعيين حد الإنذار: ${s.absenceMode === "sessions" && s.absenceAllowedSessions > 0 ? `${s.absenceAllowedSessions} حصة` : `${s.absenceThreshold}%`}` }); }} disabled={s.savingThreshold} className="gap-1.5"><Save className="h-4 w-4" />{s.savingThreshold ? "جارٍ الحفظ..." : "حفظ حد الإنذار"}</Button>
           </CardContent>
         </Card>
       )}
 
-
-
-      {/* Parent Portal Settings */}
-      {activeCard === "parent_portal" && isAdmin && (
+      {s.activeCard === "parent_portal" && s.isAdmin && (
         <Card className="border-2 border-pink-400/30 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2611,67 +1446,42 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-5">
-
-            {/* ─── Section 1: Welcome + Visibility (side by side) ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Welcome Message */}
               <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold flex items-center gap-1.5">💬 رسالة الترحيب</h4>
-                  <button
-                    onClick={() => setParentWelcomeEnabled(!parentWelcomeEnabled)}
-                    className={cn(
-                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
-                      parentWelcomeEnabled ? "bg-primary" : "bg-muted"
-                    )}
-                  >
-                    <span className={cn(
-                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
-                      parentWelcomeEnabled ? "translate-x-6" : "translate-x-1"
-                    )} />
+                  <button onClick={() => s.setParentWelcomeEnabled(!s.parentWelcomeEnabled)}
+                    className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200", s.parentWelcomeEnabled ? "bg-primary" : "bg-muted")}>
+                    <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200", s.parentWelcomeEnabled ? "translate-x-6" : "translate-x-1")} />
                   </button>
                 </div>
-                {parentWelcomeEnabled && (
+                {s.parentWelcomeEnabled && (
                   <>
-                    <Textarea
-                      value={parentWelcomeMessage}
-                      onChange={(e) => setParentWelcomeMessage(e.target.value)}
-                      placeholder="مرحباً بك ولي أمر الطالب / {name}..."
-                      className="min-h-[60px] text-xs"
-                      dir="rtl"
-                    />
+                    <Textarea value={s.parentWelcomeMessage} onChange={(e) => s.setParentWelcomeMessage(e.target.value)} placeholder="مرحباً بك ولي أمر الطالب / {name}..." className="min-h-[60px] text-xs" dir="rtl" />
                     <p className="text-[10px] text-muted-foreground">
                       استخدم <code className="bg-muted px-1 rounded text-primary font-mono">{"{name}"}</code> ليتم استبداله باسم الطالب
                     </p>
                   </>
                 )}
               </div>
-
-              {/* Visibility Toggles - Compact */}
               <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
                 <h4 className="text-sm font-bold mb-2">👁️ التحكم بالعرض</h4>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { key: "national_id", label: "الهوية الوطنية", icon: KeyRound, state: parentShowNationalId, setter: setParentShowNationalId },
-                    { key: "grades", label: "الدرجات", icon: GraduationCap, state: parentShowGrades, setter: setParentShowGrades },
-                    { key: "attendance", label: "الحضور والغياب", icon: ClipboardCheck, state: parentShowAttendance, setter: setParentShowAttendance },
-                    { key: "behavior", label: "السلوك", icon: Eye, state: parentShowBehavior, setter: setParentShowBehavior },
-                    { key: "honor_roll", label: "لوحة الشرف", icon: Trophy, state: parentShowHonorRoll, setter: setParentShowHonorRoll },
-                    { key: "absence_warning", label: "تنبيه الغياب", icon: AlertTriangle, state: parentShowAbsenceWarning, setter: setParentShowAbsenceWarning },
-                    { key: "contact_teacher", label: "التواصل", icon: MessageSquare, state: parentShowContactTeacher, setter: setParentShowContactTeacher },
-                    { key: "library", label: "المكتبة", icon: Eye, state: parentShowLibrary, setter: setParentShowLibrary },
-                    { key: "activities", label: "الأنشطة", icon: Eye, state: parentShowActivities, setter: setParentShowActivities },
+                    { key: "national_id", label: "الهوية الوطنية", icon: KeyRound, state: s.parentShowNationalId, setter: s.setParentShowNationalId },
+                    { key: "grades", label: "الدرجات", icon: GraduationCap, state: s.parentShowGrades, setter: s.setParentShowGrades },
+                    { key: "attendance", label: "الحضور والغياب", icon: ClipboardCheck, state: s.parentShowAttendance, setter: s.setParentShowAttendance },
+                    { key: "behavior", label: "السلوك", icon: Eye, state: s.parentShowBehavior, setter: s.setParentShowBehavior },
+                    { key: "honor_roll", label: "لوحة الشرف", icon: Trophy, state: s.parentShowHonorRoll, setter: s.setParentShowHonorRoll },
+                    { key: "absence_warning", label: "تنبيه الغياب", icon: AlertTriangle, state: s.parentShowAbsenceWarning, setter: s.setParentShowAbsenceWarning },
+                    { key: "contact_teacher", label: "التواصل", icon: MessageSquare, state: s.parentShowContactTeacher, setter: s.setParentShowContactTeacher },
+                    { key: "library", label: "المكتبة", icon: Eye, state: s.parentShowLibrary, setter: s.setParentShowLibrary },
+                    { key: "activities", label: "الأنشطة", icon: Eye, state: s.parentShowActivities, setter: s.setParentShowActivities },
                   ].map((item) => (
-                    <button
-                      key={item.key}
-                      onClick={() => item.setter(!item.state)}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all text-right",
-                        item.state
-                          ? "border-success/40 bg-success/10 text-success"
-                          : "border-border/40 bg-muted/30 text-muted-foreground"
-                      )}
-                    >
+                    <button key={item.key} onClick={() => item.setter(!item.state)}
+                      className={cn("flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-semibold border transition-all text-right",
+                        item.state ? "border-success/40 bg-success/10 text-success" : "border-border/40 bg-muted/30 text-muted-foreground"
+                      )}>
                       <item.icon className="h-3.5 w-3.5 shrink-0" />
                       <span className="truncate">{item.label}</span>
                       {item.state ? <Eye className="h-3 w-3 mr-auto shrink-0" /> : <EyeOff className="h-3 w-3 mr-auto shrink-0" />}
@@ -2681,10 +1491,8 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* ─── Section 2: Grade + Evaluation Settings (side by side collapsibles) ─── */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Grade Detail Settings */}
-              {parentShowGrades && (
+              {s.parentShowGrades && (
                 <Collapsible defaultOpen className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
                   <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
                     <h4 className="text-sm font-bold flex items-center gap-1.5">
@@ -2694,161 +1502,99 @@ export default function SettingsPage() {
                     <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-3 pb-3 space-y-3">
-                    {/* Default View */}
                     <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
                       <span className="text-xs font-bold">العرض الافتراضي</span>
                       <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5">
-                        <button
-                          onClick={() => setParentGradesDefaultView("cards")}
-                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", parentGradesDefaultView === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                        >بطاقات</button>
-                        <button
-                          onClick={() => setParentGradesDefaultView("table")}
-                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", parentGradesDefaultView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                        >جدول</button>
+                        <button onClick={() => s.setParentGradesDefaultView("cards")}
+                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", s.parentGradesDefaultView === "cards" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>بطاقات</button>
+                        <button onClick={() => s.setParentGradesDefaultView("table")}
+                          className={cn("px-2.5 py-1 rounded text-[11px] font-bold transition-all", s.parentGradesDefaultView === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>جدول</button>
                       </div>
                     </div>
-
-                    {/* Visible Periods */}
                     <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 bg-card">
                       <span className="text-xs font-bold">الفترة المعروضة</span>
                       <div className="flex gap-0.5 bg-muted/50 rounded-md p-0.5">
-                        {[
-                          { v: "both" as const, l: "كلاهما" },
-                          { v: "1" as const, l: "الأولى" },
-                          { v: "2" as const, l: "الثانية" },
-                        ].map(opt => (
-                          <button
-                            key={opt.v}
-                            onClick={() => setParentGradesVisiblePeriods(opt.v)}
-                            className={cn("px-2 py-1 rounded text-[11px] font-bold transition-all", parentGradesVisiblePeriods === opt.v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}
-                          >{opt.l}</button>
+                        {[{ v: "both" as const, l: "كلاهما" }, { v: "1" as const, l: "الأولى" }, { v: "2" as const, l: "الثانية" }].map(opt => (
+                          <button key={opt.v} onClick={() => s.setParentGradesVisiblePeriods(opt.v)}
+                            className={cn("px-2 py-1 rounded text-[11px] font-bold transition-all", s.parentGradesVisiblePeriods === opt.v ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>{opt.l}</button>
                         ))}
                       </div>
                     </div>
-
-                    {/* Show/Hide Columns */}
                     <div className="flex gap-2">
                       {[
-                        { key: "percentage", label: "النسبة المئوية", state: parentGradesShowPercentage, setter: setParentGradesShowPercentage },
-                        { key: "eval", label: "التقييم بالنجوم", state: parentGradesShowEval, setter: setParentGradesShowEval },
+                        { key: "percentage", label: "النسبة المئوية", state: s.parentGradesShowPercentage, setter: s.setParentGradesShowPercentage },
+                        { key: "eval", label: "التقييم بالنجوم", state: s.parentGradesShowEval, setter: s.setParentGradesShowEval },
                       ].map(col => (
-                        <button
-                          key={col.key}
-                          onClick={() => col.setter(!col.state)}
+                        <button key={col.key} onClick={() => col.setter(!col.state)}
                           className={cn("flex-1 flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[11px] font-bold border transition-all",
                             col.state ? "border-success/40 bg-success/10 text-success" : "border-border/40 bg-card text-muted-foreground"
-                          )}
-                        >
+                          )}>
                           {col.state ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                           {col.label}
                         </button>
                       ))}
                     </div>
-
-                    {/* Hidden Categories */}
-                    {categories.length > 0 && (
+                    {s.categories.length > 0 && (
                       <div className="space-y-2 pt-1 border-t border-border/30">
                         <div className="flex items-center justify-between">
                           <span className="text-[11px] font-bold text-muted-foreground">إخفاء فئات محددة</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
-                          <button
-                            onClick={() => setHiddenCatScope("global")}
+                          <button onClick={() => s.setHiddenCatScope("global")}
                             className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
-                              hiddenCatScope === "global"
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-muted/30 text-muted-foreground border-border/50"
-                            )}
-                          >
-                            الكل
-                            {parentGradesHiddenCategories.global.length > 0 && (
-                              <span className="mr-0.5 text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{parentGradesHiddenCategories.global.length}</span>
-                            )}
-                          </button>
-                          {classes.map((cls) => {
-                            const classHidden = parentGradesHiddenCategories.classes[cls.id] || [];
+                              s.hiddenCatScope === "global" ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/40"
+                            )}>عام</button>
+                          {s.classes.map(cls => (
+                            <button key={cls.id} onClick={() => s.setHiddenCatScope(cls.id)}
+                              className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
+                                s.hiddenCatScope === cls.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted/30 text-muted-foreground border-border/40"
+                              )}>{cls.name}</button>
+                          ))}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {Array.from(new Set(s.categories.map(c => c.name))).map(name => {
+                            const hiddenList = s.hiddenCatScope === "global"
+                              ? s.parentGradesHiddenCategories.global
+                              : (s.parentGradesHiddenCategories.classes[s.hiddenCatScope] || []);
+                            const isHidden = hiddenList.includes(name);
                             return (
-                              <button
-                                key={cls.id}
-                                onClick={() => setHiddenCatScope(cls.id)}
+                              <button key={name} onClick={() => {
+                                s.setParentGradesHiddenCategories(prev => {
+                                  if (s.hiddenCatScope === "global") {
+                                    return { ...prev, global: isHidden ? prev.global.filter(n => n !== name) : [...prev.global, name] };
+                                  } else {
+                                    const classHidden = prev.classes[s.hiddenCatScope] || [];
+                                    return { ...prev, classes: { ...prev.classes, [s.hiddenCatScope]: isHidden ? classHidden.filter(n => n !== name) : [...classHidden, name] } };
+                                  }
+                                });
+                              }}
                                 className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
-                                  hiddenCatScope === cls.id
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-muted/30 text-muted-foreground border-border/50"
-                                )}
-                              >
-                                {cls.name}
-                                {classHidden.length > 0 && (
-                                  <span className="mr-0.5 text-[9px] bg-destructive/20 text-destructive px-1 rounded-full">{classHidden.length}</span>
-                                )}
+                                  isHidden ? "bg-destructive/10 text-destructive border-destructive/30 line-through" : "bg-success/10 text-success border-success/30"
+                                )}>
+                                {isHidden ? <EyeOff className="inline h-2.5 w-2.5 ml-0.5" /> : <Eye className="inline h-2.5 w-2.5 ml-0.5" />}
+                                {name}
                               </button>
                             );
                           })}
                         </div>
-
-                        {hiddenCatScope !== "global" && (
+                        {s.hiddenCatScope !== "global" && (
                           <div className="flex gap-1.5">
-                            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
-                              const currentList = parentGradesHiddenCategories.classes[hiddenCatScope] || [];
-                              setParentGradesHiddenCategories(prev => ({ ...prev, global: [...currentList], classes: {} }));
-                              setHiddenCatScope("global");
-                              toast({ title: "تم التعميم", description: "تم تطبيق إعدادات هذا الفصل على جميع الفصول" });
-                            }}>
-                              <Check className="h-3 w-3" />
-                              تعميم
-                            </Button>
-                            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
-                              const source = hiddenCatScope === "global" ? parentGradesHiddenCategories.global : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
-                              const newClasses: Record<string, string[]> = {};
-                              classes.forEach(cls => { newClasses[cls.id] = [...source]; });
-                              setParentGradesHiddenCategories(prev => ({ ...prev, classes: newClasses }));
-                              toast({ title: "تم النسخ", description: "تم نسخ الإعدادات إلى جميع الفصول" });
-                            }}>
-                              نسخ للكل
-                            </Button>
+                            <Button variant="outline" size="sm" className="text-[10px] h-6 gap-1"
+                              onClick={() => {
+                                s.setParentGradesHiddenCategories(prev => {
+                                  const newClasses = { ...prev.classes };
+                                  s.classes.forEach(cls => { newClasses[cls.id] = [...(prev.classes[s.hiddenCatScope] || [])]; });
+                                  return { ...prev, classes: newClasses };
+                                });
+                                toast({ title: "تم النسخ للكل" });
+                              }}>النسخ للكل</Button>
+                            <Button variant="outline" size="sm" className="text-[10px] h-6 gap-1"
+                              onClick={() => {
+                                s.setParentGradesHiddenCategories(prev => ({ ...prev, global: [...(prev.classes[s.hiddenCatScope] || [])] }));
+                                toast({ title: "تم التعميم" });
+                              }}>تعميم على العام</Button>
                           </div>
                         )}
-
-                        {(() => {
-                          const scopeCats = hiddenCatScope === "global"
-                            ? categories
-                            : categories.filter((c: any) => c.class_id === hiddenCatScope || !c.class_id);
-                          const currentHiddenList = hiddenCatScope === "global"
-                            ? parentGradesHiddenCategories.global
-                            : (parentGradesHiddenCategories.classes[hiddenCatScope] || []);
-                          if (scopeCats.length === 0) return <p className="text-[10px] text-muted-foreground py-1">لا توجد فئات</p>;
-                          return (
-                            <div className="flex flex-wrap gap-1.5 max-h-32 overflow-auto">
-                              {scopeCats.map((cat: any) => {
-                                const isHidden = currentHiddenList.includes(cat.id);
-                                return (
-                                  <button
-                                    key={cat.id}
-                                    onClick={() => {
-                                      setParentGradesHiddenCategories(prev => {
-                                        if (hiddenCatScope === "global") {
-                                          return { ...prev, global: isHidden ? prev.global.filter(id => id !== cat.id) : [...prev.global, cat.id] };
-                                        } else {
-                                          const classList = prev.classes[hiddenCatScope] || [];
-                                          return { ...prev, classes: { ...prev.classes, [hiddenCatScope]: isHidden ? classList.filter(id => id !== cat.id) : [...classList, cat.id] } };
-                                        }
-                                      });
-                                    }}
-                                    className={cn("px-2 py-1 rounded-md text-[10px] font-bold border transition-all",
-                                      isHidden
-                                        ? "bg-destructive/10 text-destructive border-destructive/30 line-through"
-                                        : "bg-success/10 text-success border-success/30"
-                                    )}
-                                  >
-                                    {isHidden ? <EyeOff className="inline h-2.5 w-2.5 ml-0.5" /> : <Eye className="inline h-2.5 w-2.5 ml-0.5" />}
-                                    {cat.name}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()}
                       </div>
                     )}
                   </CollapsibleContent>
@@ -2856,109 +1602,91 @@ export default function SettingsPage() {
               )}
 
               <EvaluationToggles
-                showDailyGrades={parentShowDailyGrades}
-                setShowDailyGrades={setParentShowDailyGrades}
-                showClassworkIcons={parentShowClassworkIcons}
-                setShowClassworkIcons={setParentShowClassworkIcons}
-                classworkIconsCount={parentClassworkIconsCount}
-                setClassworkIconsCount={setParentClassworkIconsCount}
-                dailyDesc="الإدخال اليومي"
-                cumulativeDesc="ملخص تراكمي"
+                showDailyGrades={s.parentShowDailyGrades}
+                setShowDailyGrades={s.setParentShowDailyGrades}
+                showClassworkIcons={s.parentShowClassworkIcons}
+                setShowClassworkIcons={s.setParentShowClassworkIcons}
+                classworkIconsCount={s.parentClassworkIconsCount}
+                setClassworkIconsCount={s.setParentClassworkIconsCount}
+                label="إعدادات التقييم (ولي الأمر)"
               />
             </div>
 
-            {/* ─── Section 3: PDF Header ─── */}
             <Collapsible className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 hover:bg-muted/20 transition-colors">
                 <h4 className="text-sm font-bold flex items-center gap-1.5">
-                  <Printer className="h-4 w-4 text-blue-600" />
-                  ترويسة التصدير (PDF)
+                  <Printer className="h-4 w-4 text-primary" />
+                  ترويسة PDF ولي الأمر
                 </h4>
                 <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-3 pb-3 space-y-2">
-                <p className="text-[10px] text-muted-foreground mb-1">تظهر هذه الترويسة في أعلى تقرير ولي الأمر عند التصدير</p>
-                {[
-                  { key: "line1", label: "السطر الأول (مثال: وزارة التعليم)", placeholder: "وزارة التعليم" },
-                  { key: "line2", label: "السطر الثاني (مثال: إدارة التعليم)", placeholder: "إدارة التعليم بمنطقة ..." },
-                  { key: "line3", label: "السطر الثالث (مثال: اسم المدرسة)", placeholder: "مدرسة ..." },
-                ].map(field => (
-                  <div key={field.key}>
-                    <Label className="text-[11px] font-bold text-muted-foreground">{field.label}</Label>
-                    <Input
-                      value={(parentPdfHeader as any)[field.key] || ""}
-                      onChange={(e) => setParentPdfHeader(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      placeholder={field.placeholder}
-                      className="text-xs h-8 mt-0.5"
-                      dir="rtl"
-                    />
-                  </div>
-                ))}
-                <div className="flex items-center justify-between p-2 rounded-lg border border-border/40 bg-card">
-                  <span className="text-xs font-bold">إظهار الشعار</span>
+              <CollapsibleContent className="px-3 pb-3 space-y-3">
+                <div className="space-y-2">
+                  <Label className="text-xs">السطر الأول</Label>
+                  <Input value={s.parentPdfHeader.line1} onChange={(e) => s.setParentPdfHeader(prev => ({ ...prev, line1: e.target.value }))} placeholder="المملكة العربية السعودية" className="text-xs h-8" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">السطر الثاني</Label>
+                  <Input value={s.parentPdfHeader.line2} onChange={(e) => s.setParentPdfHeader(prev => ({ ...prev, line2: e.target.value }))} placeholder="وزارة التعليم" className="text-xs h-8" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">السطر الثالث</Label>
+                  <Input value={s.parentPdfHeader.line3} onChange={(e) => s.setParentPdfHeader(prev => ({ ...prev, line3: e.target.value }))} placeholder="اسم المدرسة" className="text-xs h-8" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">إظهار الشعار</Label>
                   <button
-                    onClick={() => setParentPdfHeader(prev => ({ ...prev, showLogo: !prev.showLogo }))}
-                    className={cn(
-                      "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
-                      parentPdfHeader.showLogo ? "bg-primary" : "bg-muted"
-                    )}
-                  >
-                    <span className={cn(
-                      "inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200",
-                      parentPdfHeader.showLogo ? "-translate-x-6" : "-translate-x-1"
-                    )} />
+                    onClick={() => s.setParentPdfHeader(prev => ({ ...prev, showLogo: !prev.showLogo }))}
+                    className={cn("relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200", s.parentPdfHeader.showLogo ? "bg-primary" : "bg-muted")}>
+                    <span className={cn("inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200", s.parentPdfHeader.showLogo ? "-translate-x-6" : "-translate-x-1")} />
                   </button>
                 </div>
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Save Button + Info */}
             <div className="flex items-center gap-3 pt-2">
-            <Button
-              disabled={savingParentWelcome}
-              className="gap-1.5"
-              onClick={async () => {
-                setSavingParentWelcome(true);
-                const results = await Promise.all([
-                  supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(parentWelcomeEnabled) }),
-                  supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: parentWelcomeMessage }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_national_id", value: String(parentShowNationalId) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_grades", value: String(parentShowGrades) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_attendance", value: String(parentShowAttendance) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_behavior", value: String(parentShowBehavior) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_honor_roll", value: String(parentShowHonorRoll) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_absence_warning", value: String(parentShowAbsenceWarning) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_contact_teacher", value: String(parentShowContactTeacher) }),
-                  supabase.from("site_settings").upsert({ id: "parent_grades_default_view", value: parentGradesDefaultView }),
-                  supabase.from("site_settings").upsert({ id: "parent_grades_show_percentage", value: String(parentGradesShowPercentage) }),
-                  supabase.from("site_settings").upsert({ id: "parent_grades_show_eval", value: String(parentGradesShowEval) }),
-                  supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: parentGradesVisiblePeriods }),
-                  supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(parentGradesHiddenCategories) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(parentShowDailyGrades) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_classwork_icons", value: String(parentShowClassworkIcons) }),
-                  supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(parentClassworkIconsCount) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_library", value: String(parentShowLibrary) }),
-                  supabase.from("site_settings").upsert({ id: "parent_show_activities", value: String(parentShowActivities) }),
-                  supabase.from("site_settings").upsert({ id: "parent_pdf_header", value: JSON.stringify(parentPdfHeader) }),
-                ]);
-                setSavingParentWelcome(false);
-                if (results.some(r => r.error)) {
-                  toast({ title: "خطأ", description: "فشل حفظ إعدادات بوابة ولي الأمر", variant: "destructive" });
-                } else {
-                  toast({ title: "تم الحفظ", description: "تم تحديث إعدادات بوابة ولي الأمر بنجاح" });
-                }
-              }}
-            >
-              <Save className="h-4 w-4" />
-              {savingParentWelcome ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
-            </Button>
-            <p className="text-[10px] text-muted-foreground">🔒 ولي الأمر يشاهد فقط (Read-Only)</p>
+              <Button disabled={s.savingParentWelcome} className="gap-1.5"
+                onClick={async () => {
+                  s.setSavingParentWelcome(true);
+                  const results = await Promise.all([
+                    supabase.from("site_settings").upsert({ id: "parent_welcome_enabled", value: String(s.parentWelcomeEnabled) }),
+                    supabase.from("site_settings").upsert({ id: "parent_welcome_message", value: s.parentWelcomeMessage }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_national_id", value: String(s.parentShowNationalId) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_grades", value: String(s.parentShowGrades) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_attendance", value: String(s.parentShowAttendance) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_behavior", value: String(s.parentShowBehavior) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_honor_roll", value: String(s.parentShowHonorRoll) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_absence_warning", value: String(s.parentShowAbsenceWarning) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_contact_teacher", value: String(s.parentShowContactTeacher) }),
+                    supabase.from("site_settings").upsert({ id: "parent_grades_default_view", value: s.parentGradesDefaultView }),
+                    supabase.from("site_settings").upsert({ id: "parent_grades_show_percentage", value: String(s.parentGradesShowPercentage) }),
+                    supabase.from("site_settings").upsert({ id: "parent_grades_show_eval", value: String(s.parentGradesShowEval) }),
+                    supabase.from("site_settings").upsert({ id: "parent_grades_visible_periods", value: s.parentGradesVisiblePeriods }),
+                    supabase.from("site_settings").upsert({ id: "parent_grades_hidden_categories", value: JSON.stringify(s.parentGradesHiddenCategories) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_daily_grades", value: String(s.parentShowDailyGrades) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_classwork_icons", value: String(s.parentShowClassworkIcons) }),
+                    supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(s.parentClassworkIconsCount) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_library", value: String(s.parentShowLibrary) }),
+                    supabase.from("site_settings").upsert({ id: "parent_show_activities", value: String(s.parentShowActivities) }),
+                    supabase.from("site_settings").upsert({ id: "parent_pdf_header", value: JSON.stringify(s.parentPdfHeader) }),
+                  ]);
+                  s.setSavingParentWelcome(false);
+                  if (results.some(r => r.error)) {
+                    toast({ title: "خطأ", description: "فشل حفظ إعدادات بوابة ولي الأمر", variant: "destructive" });
+                  } else {
+                    toast({ title: "تم الحفظ", description: "تم تحديث إعدادات بوابة ولي الأمر بنجاح" });
+                  }
+                }}>
+                <Save className="h-4 w-4" />
+                {s.savingParentWelcome ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+              </Button>
+              <p className="text-[10px] text-muted-foreground">🔒 ولي الأمر يشاهد فقط (Read-Only)</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "lesson_plans" && (
+      {s.activeCard === "lesson_plans" && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2966,18 +1694,18 @@ export default function SettingsPage() {
                 <CalendarDays className="h-5 w-5 text-primary" />
                 خطة الدروس الأسبوعية
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <LessonPlanSettings classes={classes.map((c) => ({ id: c.id, name: c.name }))} />
+            <LessonPlanSettings classes={s.classes.map((c) => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "timetable" && (
+      {s.activeCard === "timetable" && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -2985,21 +1713,20 @@ export default function SettingsPage() {
                 <Table2 className="h-5 w-5 text-primary" />
                 جدول الحصص الأسبوعي
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setActiveCard(null)} className="h-8 w-8">
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8">
                 <X className="h-4 w-4" />
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <TimetableEditor classes={classes.map(c => ({ id: c.id, name: c.name }))} />
+            <TimetableEditor classes={s.classes.map(c => ({ id: c.id, name: c.name }))} />
           </CardContent>
         </Card>
       )}
 
-      {activeCard === "behavior_suggestions" && isAdmin && (
-        <BehaviorSuggestionsSettings onClose={() => setActiveCard(null)} />
+      {s.activeCard === "behavior_suggestions" && s.isAdmin && (
+        <BehaviorSuggestionsSettings onClose={() => s.setActiveCard(null)} />
       )}
-
 
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
@@ -3007,7 +1734,6 @@ export default function SettingsPage() {
         <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
       </div>
       <div className="space-y-4">
-
         <CollapsibleSettingsCard
           icon={UserCircle}
           iconGradient="from-pink-500 to-rose-600"
@@ -3018,54 +1744,47 @@ export default function SettingsPage() {
           <div className="space-y-4 max-w-md">
             <div className="space-y-2">
               <Label>الاسم الكامل</Label>
-              <Input value={profileName} onChange={(e) => setProfileName(e.target.value)} placeholder="الاسم الكامل" />
+              <Input value={s.profileName} onChange={(e) => s.setProfileName(e.target.value)} placeholder="الاسم الكامل" />
             </div>
             <div className="space-y-2">
               <Label>رقم الجوال</Label>
-              <Input value={profilePhone} onChange={(e) => setProfilePhone(e.target.value)}
-                placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
+              <Input value={s.profilePhone} onChange={(e) => s.setProfilePhone(e.target.value)} placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
             </div>
             <div className="space-y-2">
               <Label>رقم الهوية الوطنية</Label>
-              <Input value={profileNationalId} onChange={(e) => setProfileNationalId(e.target.value)}
-                placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
+              <Input value={s.profileNationalId} onChange={(e) => s.setProfileNationalId(e.target.value)} placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
               <p className="text-xs text-muted-foreground">يُستخدم لتسجيل الدخول بدلاً من البريد الإلكتروني</p>
             </div>
-            <Button onClick={handleSaveProfile} disabled={savingProfile} className="gap-1.5">
+            <Button onClick={s.handleSaveProfile} disabled={s.savingProfile} className="gap-1.5">
               <Save className="h-4 w-4" />
-              {savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
+              {s.savingProfile ? "جارٍ الحفظ..." : "حفظ التغييرات"}
             </Button>
-
             <div className="border-t pt-4 mt-4 space-y-4">
               <h3 className="text-base font-semibold">تغيير كلمة المرور</h3>
               <div className="space-y-2">
                 <Label>كلمة المرور الحالية</Label>
-                <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
+                <Input type="password" value={s.currentPassword} onChange={(e) => s.setCurrentPassword(e.target.value)} placeholder="أدخل كلمة المرور الحالية" dir="ltr" />
               </div>
               <div className="space-y-2">
                 <Label>كلمة المرور الجديدة</Label>
-                <Input type="password" value={newOwnPassword} onChange={(e) => setNewOwnPassword(e.target.value)}
-                  placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
+                <Input type="password" value={s.newOwnPassword} onChange={(e) => s.setNewOwnPassword(e.target.value)} placeholder="أدخل كلمة المرور الجديدة" dir="ltr" />
               </div>
               <div className="space-y-2">
                 <Label>تأكيد كلمة المرور الجديدة</Label>
-                <Input type="password" value={confirmOwnPassword} onChange={(e) => setConfirmOwnPassword(e.target.value)}
-                  placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
+                <Input type="password" value={s.confirmOwnPassword} onChange={(e) => s.setConfirmOwnPassword(e.target.value)} placeholder="أعد إدخال كلمة المرور الجديدة" dir="ltr" />
               </div>
-              <Button onClick={handleChangeOwnPassword}
-                disabled={changingOwnPassword || !currentPassword.trim() || !newOwnPassword.trim() || !confirmOwnPassword.trim()}
+              <Button onClick={s.handleChangeOwnPassword}
+                disabled={s.changingOwnPassword || !s.currentPassword.trim() || !s.newOwnPassword.trim() || !s.confirmOwnPassword.trim()}
                 className="gap-1.5">
                 <KeyRound className="h-4 w-4" />
-                {changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
+                {s.changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
               </Button>
             </div>
           </div>
         </CollapsibleSettingsCard>
 
-        {isAdmin && (
+        {s.isAdmin && (
           <>
-            {/* ===== تقييد المدير ===== */}
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80 overflow-hidden">
               <CardContent className="p-5">
                 <div className="flex items-center justify-between">
@@ -3079,22 +1798,19 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <Switch
-                    checked={adminReadOnly}
-                    disabled={savingAdminReadOnly}
+                    checked={s.adminReadOnly}
+                    disabled={s.savingAdminReadOnly}
                     onCheckedChange={async (checked) => {
-                      setSavingAdminReadOnly(true);
-                      setAdminReadOnly(checked);
-                      // Save both admin_read_only and admin_primary_id (current user)
+                      s.setSavingAdminReadOnly(true);
+                      s.setAdminReadOnly(checked);
                       await Promise.all([
                         supabase.from("site_settings").upsert({ id: "admin_read_only", value: String(checked) }),
-                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user?.id || "" }),
+                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: s.user?.id || "" }),
                       ]);
-                      setSavingAdminReadOnly(false);
+                      s.setSavingAdminReadOnly(false);
                       toast({
                         title: checked ? "تم التفعيل" : "تم التعطيل",
-                        description: checked
-                          ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل"
-                          : "تم إلغاء تقييد المديرين",
+                        description: checked ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل" : "تم إلغاء تقييد المديرين",
                       });
                     }}
                   />
@@ -3102,7 +1818,7 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <TeacherManagementCard teachers={teachers} setTeachers={setTeachers} />
+            <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
 
             <CollapsibleSettingsCard
               icon={History}
@@ -3111,15 +1827,9 @@ export default function SettingsPage() {
               title="سجل الدخول"
               description="استعراض تاريخ دخول المعلمين والمديرين"
             >
-              <StaffLoginHistory
-                teachers={teachers}
-                currentUserId={user?.id || ""}
-                currentUserName={profileName || "المدير"}
-              />
+              <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
             </CollapsibleSettingsCard>
 
-
-            {/* ===== قوالب واتساب ===== */}
             <WhatsAppTemplatesSettings />
 
             <CollapsibleSettingsCard
@@ -3132,7 +1842,7 @@ export default function SettingsPage() {
               <div className="space-y-4 max-w-md">
                 <div className="space-y-2">
                   <Label>المزود</Label>
-                  <Select value={smsProvider} onValueChange={setSmsProvider}>
+                  <Select value={s.smsProvider} onValueChange={s.setSmsProvider}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="msegat">MSEGAT</SelectItem>
@@ -3141,43 +1851,33 @@ export default function SettingsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {smsProvider === "msegat" && (
+                {s.smsProvider === "msegat" && (
                   <div className="space-y-2">
                     <Label>اسم المستخدم</Label>
-                    <Input value={providerUsername} onChange={(e) => setProviderUsername(e.target.value)}
-                      placeholder="اسم مستخدم MSEGAT" dir="ltr" />
+                    <Input value={s.providerUsername} onChange={(e) => s.setProviderUsername(e.target.value)} placeholder="اسم مستخدم MSEGAT" dir="ltr" />
                   </div>
                 )}
-
                 <div className="space-y-2">
-                  <Label>
-                    {smsProvider === "msegat" ? "مفتاح API" : smsProvider === "unifonic" ? "App SID" : "Bearer Token"}
-                  </Label>
-                  <Input type="password" value={providerApiKey} onChange={(e) => setProviderApiKey(e.target.value)}
-                    placeholder={smsProvider === "unifonic" ? "App SID" : smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
+                  <Label>{s.smsProvider === "msegat" ? "مفتاح API" : s.smsProvider === "unifonic" ? "App SID" : "Bearer Token"}</Label>
+                  <Input type="password" value={s.providerApiKey} onChange={(e) => s.setProviderApiKey(e.target.value)}
+                    placeholder={s.smsProvider === "unifonic" ? "App SID" : s.smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
                 </div>
-
                 <div className="space-y-2">
                   <Label>اسم المرسل (Sender ID)</Label>
-                  <Input value={providerSender} onChange={(e) => setProviderSender(e.target.value)}
-                    placeholder="Sender Name" dir="ltr" />
-                  {smsProvider === "unifonic" && (
-                    <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>
-                  )}
+                  <Input value={s.providerSender} onChange={(e) => s.setProviderSender(e.target.value)} placeholder="Sender Name" dir="ltr" />
+                  {s.smsProvider === "unifonic" && <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>}
                 </div>
-
                 <div className="flex items-center gap-3">
-                  <Button onClick={handleSaveProvider} disabled={savingProvider} className="gap-1.5">
+                  <Button onClick={s.handleSaveProvider} disabled={s.savingProvider} className="gap-1.5">
                     <Save className="h-4 w-4" />
-                    {savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
+                    {s.savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
                   </Button>
-                  <Button variant="outline" disabled={testingSms || !providerApiKey || !providerSender} className="gap-1.5"
+                  <Button variant="outline" disabled={s.testingSms || !s.providerApiKey || !s.providerSender} className="gap-1.5"
                     onClick={async () => {
-                      setTestingSms(true);
+                      s.setTestingSms(true);
                       try {
                         const { data, error } = await supabase.functions.invoke("send-sms", {
-                          body: { phone: providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
+                          body: { phone: s.providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
                         });
                         if (error) {
                           toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
@@ -3189,10 +1889,10 @@ export default function SettingsPage() {
                       } catch (err: any) {
                         toast({ title: "خطأ", description: err.message, variant: "destructive" });
                       }
-                      setTestingSms(false);
+                      s.setTestingSms(false);
                     }}>
                     <MessageSquare className="h-4 w-4" />
-                    {testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
+                    {s.testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
                   </Button>
                 </div>
               </div>
@@ -3216,7 +1916,7 @@ export default function SettingsPage() {
             </CollapsibleSettingsCard>
 
             {/* Popup Preview Dialog */}
-            <Dialog open={popupPreviewOpen} onOpenChange={setPopupPreviewOpen}>
+            <Dialog open={s.popupPreviewOpen} onOpenChange={s.setPopupPreviewOpen}>
               <DialogContent dir="rtl" className="max-w-md rounded-3xl border-0 shadow-2xl p-0 overflow-hidden">
                 <div className="bg-gradient-to-l from-primary to-accent p-6 text-center">
                   <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-3">
@@ -3224,14 +1924,14 @@ export default function SettingsPage() {
                   </div>
                   <DialogHeader>
                     <DialogTitle className="text-xl font-bold text-white">
-                      {previewTitle || "رسالة من الإدارة"}
+                      {s.previewTitle || "رسالة من الإدارة"}
                     </DialogTitle>
                   </DialogHeader>
                 </div>
                 <div className="p-6 space-y-4">
-                  <p className="text-foreground leading-relaxed whitespace-pre-wrap text-center">{previewMessage}</p>
+                  <p className="text-foreground leading-relaxed whitespace-pre-wrap text-center">{s.previewMessage}</p>
                   <DialogFooter>
-                    <Button onClick={() => setPopupPreviewOpen(false)} className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90">
+                    <Button onClick={() => s.setPopupPreviewOpen(false)} className="w-full rounded-2xl h-11 text-base font-bold bg-gradient-to-l from-primary to-accent hover:opacity-90">
                       حسناً
                     </Button>
                   </DialogFooter>
@@ -3251,44 +1951,44 @@ export default function SettingsPage() {
                   <Label>شعار المدرسة</Label>
                   <div className="flex items-center gap-4">
                     <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-                      {schoolLogoUrl ? (
-                        <img src={schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                      {s.schoolLogoUrl ? (
+                        <img src={s.schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
                       ) : (
                         <Upload className="h-6 w-6 text-muted-foreground" />
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <input ref={logoInputRef} type="file" accept="image/*" className="hidden"
+                      <input ref={s.logoInputRef} type="file" accept="image/*" className="hidden"
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          setUploadingLogo(true);
+                          s.setUploadingLogo(true);
                           const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
                           const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
                           if (uploadError) {
                             toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" });
-                            setUploadingLogo(false);
+                            s.setUploadingLogo(false);
                             return;
                           }
                           const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
                           const logoUrl = urlData.publicUrl;
                           await supabase.from("site_settings").upsert({ id: "school_logo_url", value: logoUrl });
-                          setSchoolLogoUrl(logoUrl);
-                          setUploadingLogo(false);
+                          s.setSchoolLogoUrl(logoUrl);
+                          s.setUploadingLogo(false);
                           toast({ title: "تم رفع الشعار بنجاح" });
                           e.target.value = "";
                         }} />
-                      <Button type="button" variant="outline" size="sm" disabled={uploadingLogo}
-                        onClick={() => logoInputRef.current?.click()} className="gap-1.5">
+                      <Button type="button" variant="outline" size="sm" disabled={s.uploadingLogo}
+                        onClick={() => s.logoInputRef.current?.click()} className="gap-1.5">
                         <Upload className="h-4 w-4" />
-                        {uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
+                        {s.uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
                       </Button>
-                      {schoolLogoUrl && (
+                      {s.schoolLogoUrl && (
                         <Button type="button" variant="ghost" size="sm"
                           className="gap-1.5 text-destructive hover:text-destructive"
                           onClick={async () => {
                             await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" });
-                            setSchoolLogoUrl("");
+                            s.setSchoolLogoUrl("");
                             toast({ title: "تم إزالة الشعار", description: "سيتم استخدام الشعار الافتراضي" });
                           }}>
                           <Trash2 className="h-4 w-4" />
@@ -3300,30 +2000,27 @@ export default function SettingsPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>اسم المدرسة</Label>
-                  <Input value={loginSchoolName} onChange={(e) => setLoginSchoolName(e.target.value)}
-                    placeholder="مثال: ثانوية الفيصلية" />
+                  <Input value={s.loginSchoolName} onChange={(e) => s.setLoginSchoolName(e.target.value)} placeholder="مثال: ثانوية الفيصلية" />
                 </div>
                 <div className="space-y-2">
                   <Label>الوصف الفرعي</Label>
-                  <Input value={loginSubtitle} onChange={(e) => setLoginSubtitle(e.target.value)}
-                    placeholder="مثال: نظام إدارة المدرسة" />
+                  <Input value={s.loginSubtitle} onChange={(e) => s.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" />
                 </div>
                 <div className="space-y-2">
                   <Label>عنوان لوحة التحكم</Label>
-                  <Input value={dashboardTitle} onChange={(e) => setDashboardTitle(e.target.value)}
-                    placeholder="لوحة التحكم" />
+                  <Input value={s.dashboardTitle} onChange={(e) => s.setDashboardTitle(e.target.value)} placeholder="لوحة التحكم" />
                   <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
                 </div>
-                <Button disabled={savingLogin} className="gap-1.5"
+                <Button disabled={s.savingLogin} className="gap-1.5"
                   onClick={async () => {
-                    setSavingLogin(true);
+                    s.setSavingLogin(true);
                     const updates = [
-                      supabase.from("site_settings").upsert({ id: "school_name", value: loginSchoolName }),
-                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: loginSubtitle }),
-                      supabase.from("site_settings").upsert({ id: "dashboard_title", value: dashboardTitle }),
+                      supabase.from("site_settings").upsert({ id: "school_name", value: s.loginSchoolName }),
+                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: s.loginSubtitle }),
+                      supabase.from("site_settings").upsert({ id: "dashboard_title", value: s.dashboardTitle }),
                     ];
                     const results = await Promise.all(updates);
-                    setSavingLogin(false);
+                    s.setSavingLogin(false);
                     if (results.some((r) => r.error)) {
                       toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
                     } else {
@@ -3331,7 +2028,7 @@ export default function SettingsPage() {
                     }
                   }}>
                   <Save className="h-4 w-4" />
-                  {savingLogin ? "جارٍ الحفظ..." : "حفظ"}
+                  {s.savingLogin ? "جارٍ الحفظ..." : "حفظ"}
                 </Button>
               </div>
             </CollapsibleSettingsCard>
