@@ -265,6 +265,8 @@ export function useSettingsData() {
       if (s.id === "student_show_honor_roll") setStudentShowHonorRoll(s.value !== "false");
       if (s.id === "student_show_absence_warning") setStudentShowAbsenceWarning(s.value !== "false");
       if (s.id === "student_show_national_id") setStudentShowNationalId(s.value !== "false");
+      if (s.id === "student_welcome_enabled") setStudentWelcomeEnabled(s.value === "true");
+      if (s.id === "student_welcome_message" && s.value) setStudentWelcomeMessage(s.value);
       if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
       if (s.id === "student_popup_title") setPopupTitle(s.value || "");
       if (s.id === "student_popup_message") setPopupMessage(s.value || "");
