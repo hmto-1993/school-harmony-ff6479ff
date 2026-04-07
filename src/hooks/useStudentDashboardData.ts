@@ -236,6 +236,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     popupOpen, setPopupOpen, popupTitle, popupMessage, popupAction, dismissPopup,
     // Welcome
     welcomeMessage, welcomeEnabled,
+    studentWelcomeMessage, studentWelcomeEnabled,
     // School
     schoolName, schoolLogoUrl, parentPdfHeader,
     // Parent visibility
