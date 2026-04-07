@@ -73,8 +73,10 @@ export async function buildBehaviorPDFBlob(
       </div>
     `;
 
+    const pxPerMm = 3.7795;
+    const containerW = Math.round((pageWidth - configMarginSide * 2) * pxPerMm);
     const container = document.createElement("div");
-    container.style.cssText = "position:fixed;left:-9999px;top:0;width:760px;background:#fff;";
+    container.style.cssText = `position:fixed;left:-9999px;top:0;width:${containerW}px;background:#fff;`;
     container.innerHTML = headerHTML;
     document.body.appendChild(container);
 
