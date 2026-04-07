@@ -105,6 +105,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
+              transform: "translateX(-18px)",
               textAlign: (config.leftSection.align || "left") as any,
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,

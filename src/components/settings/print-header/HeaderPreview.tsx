@@ -83,7 +83,7 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             </div>
             {/* Left section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
+              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", transform: "translateX(-18px)", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
                 {config.leftSection.lines.map((line, i) => (
                   <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}

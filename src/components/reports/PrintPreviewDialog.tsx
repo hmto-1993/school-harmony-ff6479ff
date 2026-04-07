@@ -182,7 +182,7 @@ function ReportPrintHeaderInline({
                 src={img}
                 alt=""
                 style={{
-                  width: `${config.centerSection?.imagesWidths?.[i] ?? config.centerSection?.imagesSizes?.[i] || 60}px`,
+                  width: `${config.centerSection?.imagesWidths?.[i] ?? config.centerSection?.imagesSizes?.[i] ?? 60}px`,
                   height: `${config.centerSection?.imagesSizes?.[i] || 60}px`,
                   objectFit: "contain",
                 }}
@@ -197,6 +197,7 @@ function ReportPrintHeaderInline({
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
+              transform: "translateX(-18px)",
               textAlign: config.leftSection?.align || "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,

@@ -188,11 +188,12 @@ async function renderPrintHeaderFromConfig(
 
   let leftAnchorX = leftEdgeX;
   let leftJAlign: "right" | "center" | "left" = "left";
+  const leftOutwardOffset = 5;
   if (leftAlign === "center") {
-    leftAnchorX = leftEdgeX + leftMaxW / 2;
+    leftAnchorX = leftEdgeX + leftMaxW / 2 - leftOutwardOffset;
     leftJAlign = "center";
   } else if (leftAlign === "right") {
-    leftAnchorX = leftEdgeX + sectionWidth;
+    leftAnchorX = leftEdgeX + sectionWidth - leftOutwardOffset;
     leftJAlign = "right";
   }
 
