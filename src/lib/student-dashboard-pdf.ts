@@ -74,8 +74,11 @@ function drawMixedCenteredLine(
 
   // Arabic label on the right
   doc.text(arabicLabel, startX, y, { align: "right" });
-  // LTR value on the left of the label
-  doc.text(ltrValue, startX - labelWidth - gap, y, { align: "right" });
+  // Colon drawn separately so it doesn't get repositioned by bidi
+  const colonWidth = doc.getTextWidth(":");
+  doc.text(":", startX - labelWidth - gap, y, { align: "right" });
+  // LTR value on the left of the label + colon
+  doc.text(ltrValue, startX - labelWidth - gap - colonWidth - gap, y, { align: "right" });
 
   return y + lineAdvance(options.fontSize);
 }
