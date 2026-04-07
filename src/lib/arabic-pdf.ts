@@ -140,38 +140,65 @@ async function renderPrintHeaderFromConfig(
   let rightY = startY;
   let leftY = startY;
 
-  // --- Right section text (anchored to the outer right edge) ---
+  // Helper: compute X anchor based on alignment within a section zone
+  const getAlignX = (align: "right" | "center" | "left", zoneStart: number, zoneEnd: number, textWidths: number[]): { x: number; jAlign: "right" | "center" | "left" } => {
+    const maxTextW = Math.max(...textWidths, 0);
+    if (align === "center") {
+      // Center the block within the zone, then center each line within the block width
+      const zoneCenter = (zoneStart + zoneEnd) / 2;
+      return { x: zoneCenter, jAlign: "center" };
+    }
+    if (align === "left") return { x: zoneEnd, jAlign: "left" };
+    return { x: zoneStart, jAlign: "right" };
+  };
+
+  // --- Right section text ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
   const rightFontPt = rightFontPx * 0.75;
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightAnchorX = pageWidth - headerMargin;
+  const rightZoneStart = pageWidth - headerMargin; // outer right
+  const rightZoneEnd = pageWidth - headerMargin - sectionWidth; // inner right
+  const rightAlign = config.rightSection.align || "right";
+
+  // Pre-measure text widths for center alignment
+  const rightTextWidths = config.rightSection.lines
+    .filter((l: string) => l.trim())
+    .map((l: string) => doc.getTextWidth(l));
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
+      const { x: anchorX, jAlign } = getAlignX(rightAlign, rightZoneStart, rightZoneEnd, rightTextWidths);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, rightAnchorX, rightY, { align: "right" });
+        doc.text(wl, anchorX, rightY, { align: jAlign });
         rightY += rightSpacing;
       });
     }
   });
 
-  // --- Left section text (anchored to the outer left edge) ---
+  // --- Left section text ---
   const leftFontPx = config.leftSection.fontSize || 12;
   const leftFontPt = leftFontPx * 0.75;
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftAnchorX = headerMargin;
+  const leftZoneStart = headerMargin; // outer left
+  const leftZoneEnd = headerMargin + sectionWidth; // inner left
+  const leftAlign = config.leftSection.align || "left";
+
+  const leftTextWidths = config.leftSection.lines
+    .filter((l: string) => l.trim())
+    .map((l: string) => doc.getTextWidth(l));
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
+      const { x: anchorX, jAlign } = getAlignX(leftAlign, leftZoneStart, leftZoneEnd, leftTextWidths);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, leftAnchorX, leftY, { align: "left" });
+        doc.text(wl, anchorX, leftY, { align: jAlign });
         leftY += leftSpacing;
       });
     }

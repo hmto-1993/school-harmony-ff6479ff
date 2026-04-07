@@ -75,8 +75,16 @@ export async function fetchFooterConfig(reportType = "grades"): Promise<any | nu
 
 /* ──────────────────────────── HTML builders ──────────────────── */
 
+function getFlexJustify(align: string, isRight: boolean): string {
+  if (align === "center") return "center";
+  if (isRight) return align === "left" ? "flex-end" : "flex-start";
+  return align === "right" ? "flex-start" : "flex-end";
+}
+
 export function buildHeaderHTML(config: any): string {
   if (!config) return "";
+  const rightAlign = config.rightSection?.align || "right";
+  const leftAlign = config.leftSection?.align || "left";
   const rightLines = (config.rightSection?.lines || [])
     .map((line: string) => `<p style="margin:0;font-weight:600;">${line}</p>`)
     .join("");
@@ -94,14 +102,18 @@ export function buildHeaderHTML(config: any): string {
 
   return `
     <div style="margin-bottom:10px;padding-bottom:6px;border-bottom:${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? '#3b82f6'};display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-      <div style="max-width:40%;text-align:center;font-size:${config.rightSection?.fontSize || 12}px;line-height:1.8;color:${config.rightSection?.color || '#1e293b'};">
-        ${rightLines}
+      <div style="flex:1 1 0%;display:flex;justify-content:${getFlexJustify(rightAlign, true)};">
+        <div style="width:fit-content;text-align:${rightAlign};font-size:${config.rightSection?.fontSize || 12}px;line-height:1.8;color:${config.rightSection?.color || '#1e293b'};">
+          ${rightLines}
+        </div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
         ${images}
       </div>
-      <div style="max-width:40%;text-align:center;font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
-        ${leftLines}
+      <div style="flex:1 1 0%;display:flex;justify-content:${getFlexJustify(leftAlign, false)};">
+        <div style="width:fit-content;text-align:${leftAlign};font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
+          ${leftLines}
+        </div>
       </div>
     </div>
   `;
