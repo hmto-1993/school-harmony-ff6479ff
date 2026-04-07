@@ -187,14 +187,44 @@ export function useStudentPdfExport(
       }
 
       // Behavior
+      const svgThumbsUp = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/></svg>`;
+      const svgThumbsDown = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/></svg>`;
+      const svgMinusBehavior = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>`;
+
+      const behaviorTypeMap: Record<string, { label: string; icon: string; color: string; bg: string }> = {
+        positive: { label: "إيجابي", icon: svgThumbsUp, color: "#16a34a", bg: "#f0fdf4" },
+        negative: { label: "سلبي", icon: svgThumbsDown, color: "#e11d48", bg: "#fff1f2" },
+        neutral: { label: "محايد", icon: svgMinusBehavior, color: "#f59e0b", bg: "#fffbeb" },
+        "إيجابي": { label: "إيجابي", icon: svgThumbsUp, color: "#16a34a", bg: "#f0fdf4" },
+        "سلبي": { label: "سلبي", icon: svgThumbsDown, color: "#e11d48", bg: "#fff1f2" },
+        "محايد": { label: "محايد", icon: svgMinusBehavior, color: "#f59e0b", bg: "#fffbeb" },
+      };
+      const defaultBehavior = { label: "—", icon: svgMinusBehavior, color: "#999", bg: "#f9fafb" };
+      const cleanBehaviorNote = (note?: string) => {
+        if (!note) return "-";
+        return note.replace(/\[severity:\w+\]\s*/g, "").trim() || "-";
+      };
+
       if (effectiveVis.behavior && student.behaviors.length > 0) {
-        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">➖ السلوك</h3>`;
+        html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">🎯 التقييمات السلوكية</h3>`;
+        // Legend
+        html += `<div style="display:flex;gap:16px;justify-content:center;margin:0 0 10px;font-size:10px;">`;
+        html += `<span style="display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-weight:600;">${svgThumbsUp} إيجابي</span>`;
+        html += `<span style="display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#f59e0b;font-weight:600;">${svgMinusBehavior} محايد</span>`;
+        html += `<span style="display:flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;background:#fff1f2;border:1px solid #fecdd3;color:#e11d48;font-weight:600;">${svgThumbsDown} سلبي</span>`;
+        html += `</div>`;
         html += `<table style="${tableStyle}"><thead><tr>`;
-        html += `<th style="${thStyle}">التاريخ</th><th style="${thStyle}">النوع</th><th style="${thStyle}">الملاحظة</th>`;
+        html += `<th style="${thStyle}width:30px;">#</th><th style="${thStyle}">التاريخ</th><th style="${thStyle}text-align:center;width:60px;">السلوك</th><th style="${thStyle}">الملاحظة</th>`;
         html += `</tr></thead><tbody>`;
         student.behaviors.forEach((b: any, i: number) => {
           const bg = i % 2 === 0 ? "#fff" : "#fafbfc";
-          html += `<tr style="background:${bg}"><td style="${tdStyle}">${b.date}</td><td style="${tdStyle}">${b.type}</td><td style="${tdStyle}">${b.note || "-"}</td></tr>`;
+          const info = behaviorTypeMap[b.type] || defaultBehavior;
+          html += `<tr style="background:${bg}">`;
+          html += `<td style="${tdStyle}color:#999;font-weight:600;">${i + 1}</td>`;
+          html += `<td style="${tdStyle}font-weight:600;">${b.date}</td>`;
+          html += `<td style="${tdStyle}text-align:center;"><div style="display:inline-flex;padding:4px;border-radius:8px;background:${info.bg};">${info.icon}</div></td>`;
+          html += `<td style="${tdStyle}color:#666;">${cleanBehaviorNote(b.note)}</td>`;
+          html += `</tr>`;
         });
         html += `</tbody></table>`;
       }
