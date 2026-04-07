@@ -17,7 +17,11 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
   const [popupMessage, setPopupMessage] = useState("");
   const [popupAction, setPopupAction] = useState<string>("none");
 
-  // Welcome message
+  // Welcome message (student-specific)
+  const [studentWelcomeMessage, setStudentWelcomeMessage] = useState("مرحباً بك {name}.. نتمنى لك يوماً دراسياً مميزاً!");
+  const [studentWelcomeEnabled, setStudentWelcomeEnabled] = useState(false);
+
+  // Welcome message (parent)
   const [welcomeMessage, setWelcomeMessage] = useState("مرحباً بك ولي أمر الطالب / {name}.. أبناؤنا أمانة، ومتابعتكم سر نجاحهم.");
   const [welcomeEnabled, setWelcomeEnabled] = useState(true);
 
@@ -55,8 +59,22 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
       fetchFolders();
       fetchPopup();
       if (isParent) fetchWelcomeMessage();
+      if (!isParent) fetchStudentWelcome();
     }
   }, [student]);
+
+  const fetchStudentWelcome = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["student_welcome_message", "student_welcome_enabled", "school_name", "school_logo_url"]);
+    (data || []).forEach((s: any) => {
+      if (s.id === "student_welcome_message" && s.value) setStudentWelcomeMessage(s.value);
+      if (s.id === "student_welcome_enabled") setStudentWelcomeEnabled(s.value === "true");
+      if (s.id === "school_name" && s.value) setSchoolName(s.value);
+      if (s.id === "school_logo_url" && s.value) setSchoolLogoUrl(s.value);
+    });
+  };
 
   const fetchWelcomeMessage = async () => {
     const { data } = await supabase
@@ -218,6 +236,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     popupOpen, setPopupOpen, popupTitle, popupMessage, popupAction, dismissPopup,
     // Welcome
     welcomeMessage, welcomeEnabled,
+    studentWelcomeMessage, studentWelcomeEnabled,
     // School
     schoolName, schoolLogoUrl, parentPdfHeader,
     // Parent visibility

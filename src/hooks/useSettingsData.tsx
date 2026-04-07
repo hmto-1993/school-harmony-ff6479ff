@@ -90,6 +90,11 @@ export function useSettingsData() {
   const [studentShowAbsenceWarning, setStudentShowAbsenceWarning] = useState(true);
   const [studentShowNationalId, setStudentShowNationalId] = useState(true);
 
+  // Student welcome
+  const [studentWelcomeEnabled, setStudentWelcomeEnabled] = useState(false);
+  const [studentWelcomeMessage, setStudentWelcomeMessage] = useState("مرحباً بك {name}.. نتمنى لك يوماً دراسياً مميزاً!");
+  const [savingStudentWelcome, setSavingStudentWelcome] = useState(false);
+
   // Student popup
   const [popupEnabled, setPopupEnabled] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
@@ -195,7 +200,7 @@ export function useSettingsData() {
     const letterheadQuery = supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single();
     const smsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]) : Promise.resolve({ data: null });
     const loginQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]) : Promise.resolve({ data: null });
-    const settingsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_show_activities", "student_show_library", "student_show_honor_roll", "student_show_absence_warning", "student_show_national_id", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"]) : Promise.resolve({ data: null });
+    const settingsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_show_activities", "student_show_library", "student_show_honor_roll", "student_show_absence_warning", "student_show_national_id", "student_welcome_enabled", "student_welcome_message", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"]) : Promise.resolve({ data: null });
     const popupHistoryQuery = isAdmin ? supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: null });
     const overrideQuery = isAdmin ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle() : Promise.resolve({ data: null });
     const adminReadOnlyQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["admin_read_only"]) : Promise.resolve({ data: null });
@@ -260,6 +265,8 @@ export function useSettingsData() {
       if (s.id === "student_show_honor_roll") setStudentShowHonorRoll(s.value !== "false");
       if (s.id === "student_show_absence_warning") setStudentShowAbsenceWarning(s.value !== "false");
       if (s.id === "student_show_national_id") setStudentShowNationalId(s.value !== "false");
+      if (s.id === "student_welcome_enabled") setStudentWelcomeEnabled(s.value === "true");
+      if (s.id === "student_welcome_message" && s.value) setStudentWelcomeMessage(s.value);
       if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
       if (s.id === "student_popup_title") setPopupTitle(s.value || "");
       if (s.id === "student_popup_message") setPopupMessage(s.value || "");
@@ -349,6 +356,9 @@ export function useSettingsData() {
     studentShowActivities, setStudentShowActivities, studentShowLibrary, setStudentShowLibrary,
     studentShowHonorRoll, setStudentShowHonorRoll, studentShowAbsenceWarning, setStudentShowAbsenceWarning,
     studentShowNationalId, setStudentShowNationalId,
+    // Student welcome
+    studentWelcomeEnabled, setStudentWelcomeEnabled, studentWelcomeMessage, setStudentWelcomeMessage,
+    savingStudentWelcome, setSavingStudentWelcome,
     // Honor Roll
     honorRollEnabled, setHonorRollEnabled, savingHonorRoll, setSavingHonorRoll,
     // Popup

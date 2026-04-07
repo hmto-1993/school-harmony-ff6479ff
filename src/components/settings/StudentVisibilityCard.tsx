@@ -1,7 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, GraduationCap, Users, Trophy, X, Save, RotateCcw, Check, ChevronDown, Layers, BookOpen, AlertTriangle, Hash } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Users, Trophy, X, Save, RotateCcw, Check, ChevronDown, Layers, BookOpen, AlertTriangle, Hash, MessageSquareText } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -148,6 +150,29 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
           );
         })()}
 
+        {/* Student Welcome Message */}
+        <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-bold flex items-center gap-1.5">
+              <MessageSquareText className="h-4 w-4 text-primary" />
+              رسالة ترحيبية للطالب
+            </h4>
+            <Switch checked={s.studentWelcomeEnabled} onCheckedChange={s.setStudentWelcomeEnabled} />
+          </div>
+          {s.studentWelcomeEnabled && (
+            <div className="space-y-2">
+              <Textarea
+                value={s.studentWelcomeMessage}
+                onChange={(e) => s.setStudentWelcomeMessage(e.target.value)}
+                placeholder="مرحباً بك {name}.. نتمنى لك يوماً دراسياً مميزاً!"
+                className="text-sm min-h-[60px] resize-none"
+                dir="rtl"
+              />
+              <p className="text-[10px] text-muted-foreground">استخدم <code className="bg-muted px-1 rounded">{"{name}"}</code> لإدراج اسم الطالب تلقائياً</p>
+            </div>
+          )}
+        </div>
+
         <div className="flex items-center gap-2 flex-wrap">
           <Button disabled={s.savingVisibility} className="gap-1.5"
             onClick={async () => {
@@ -165,6 +190,8 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
                 supabase.from("site_settings").upsert({ id: "student_show_honor_roll", value: String(s.studentShowHonorRoll) }),
                 supabase.from("site_settings").upsert({ id: "student_show_absence_warning", value: String(s.studentShowAbsenceWarning) }),
                 supabase.from("site_settings").upsert({ id: "student_show_national_id", value: String(s.studentShowNationalId) }),
+                supabase.from("site_settings").upsert({ id: "student_welcome_enabled", value: String(s.studentWelcomeEnabled) }),
+                supabase.from("site_settings").upsert({ id: "student_welcome_message", value: s.studentWelcomeMessage }),
               ]);
               s.setSavingVisibility(false);
               if (results.some(r => r.error)) {
@@ -183,6 +210,7 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
               s.setStudentShowDailyGrades(true); s.setStudentShowClassworkIcons(true); s.setStudentClassworkIconsCount(10);
               s.setStudentShowActivities(true); s.setStudentShowLibrary(true);
               s.setStudentShowHonorRoll(true); s.setStudentShowAbsenceWarning(true); s.setStudentShowNationalId(true);
+              s.setStudentWelcomeEnabled(false); s.setStudentWelcomeMessage("مرحباً بك {name}.. نتمنى لك يوماً دراسياً مميزاً!");
               toast({ title: "تم الاستعادة", description: "تم استعادة الإعدادات الافتراضية — اضغط حفظ لتأكيدها" });
             }}>
             <RotateCcw className="h-3.5 w-3.5" />

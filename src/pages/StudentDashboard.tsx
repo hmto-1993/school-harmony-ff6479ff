@@ -110,7 +110,9 @@ export default function StudentDashboard() {
   const positiveCount = vis.behavior ? student.behaviors.filter((b: any) => b.type === "إيجابي").length : 0;
   const negativeCount = vis.behavior ? student.behaviors.filter((b: any) => b.type === "سلبي").length : 0;
 
-  const resolvedWelcome = dashData.welcomeMessage.replace(/\{name\}/g, student.full_name);
+  const resolvedWelcome = isParent
+    ? dashData.welcomeMessage.replace(/\{name\}/g, student.full_name)
+    : dashData.studentWelcomeMessage.replace(/\{name\}/g, student.full_name);
 
   const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
   const showEvalTab = isParent ? (dashData.parentVis.parentShowDailyGrades || dashData.parentVis.parentShowClassworkIcons) : (studentEval.showDaily || studentEval.showClasswork);
@@ -131,7 +133,7 @@ export default function StudentDashboard() {
 
       <main className="container mx-auto p-4 space-y-6">
         {/* Welcome */}
-        {isParent && dashData.welcomeEnabled && (
+        {((isParent && dashData.welcomeEnabled) || (!isParent && dashData.studentWelcomeEnabled)) && (
           <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/15 dark:via-accent/10 dark:to-primary/10">
             <CardContent className="p-5">
               <div className="flex items-start gap-4">
