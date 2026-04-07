@@ -418,7 +418,7 @@ export async function buildStudentDashboardPdf(input: StudentPdfInput) {
   const { student, isParent, parentVis } = input;
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   await registerArabicFont(doc);
-  doc.setR2L(true);
+  
 
   const tableStyles = getArabicTableStyles();
   const effectiveVis = getEffectiveVisibility(student, isParent, parentVis);
