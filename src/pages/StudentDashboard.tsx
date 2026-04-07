@@ -151,16 +151,16 @@ export default function StudentDashboard() {
           <CardContent className="p-5">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center"><User className="h-5 w-5 text-primary" /></div>
                 <div><p className="text-[11px] text-muted-foreground">اسم الطالب</p><p className="text-sm font-bold text-foreground">{student.full_name}</p></div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center"><BookMarked className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/30 flex items-center justify-center"><BookMarked className="h-5 w-5 text-emerald-500" /></div>
                 <div><p className="text-[11px] text-muted-foreground">الصف</p><p className="text-sm font-bold text-foreground">{student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "غير محدد"}</p></div>
               </div>
               {vis.nationalId && (
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center"><Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" /></div>
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-500/30 flex items-center justify-center"><Hash className="h-5 w-5 text-amber-500" /></div>
                   <div><p className="text-[11px] text-muted-foreground">الهوية الوطنية</p><p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p></div>
                 </div>
               )}
