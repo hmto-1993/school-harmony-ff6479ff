@@ -72,25 +72,26 @@ export default function StudentDashboard() {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
-  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true, activities: true, library: true, honorRoll: true, absenceWarning: true, nationalId: true };
+  const baseVis = (student.visibility || {}) as Record<string, boolean>;
+  const defaultVis = { grades: true, attendance: true, behavior: true, activities: true, library: true, honorRoll: true, absenceWarning: true, nationalId: true };
   const vis = isParent ? {
-    grades: baseVis.grades && dashData.parentVis.parentShowGrades,
-    attendance: baseVis.attendance && dashData.parentVis.parentShowAttendance,
-    behavior: baseVis.behavior && dashData.parentVis.parentShowBehavior,
+    grades: (baseVis.grades ?? true) && dashData.parentVis.parentShowGrades,
+    attendance: (baseVis.attendance ?? true) && dashData.parentVis.parentShowAttendance,
+    behavior: (baseVis.behavior ?? true) && dashData.parentVis.parentShowBehavior,
     activities: dashData.parentVis.parentShowActivities,
     library: dashData.parentVis.parentShowLibrary,
     honorRoll: dashData.parentVis.parentShowHonorRoll,
     absenceWarning: dashData.parentVis.parentShowAbsenceWarning,
     nationalId: dashData.parentVis.parentShowNationalId,
   } : {
-    grades: baseVis.grades,
-    attendance: baseVis.attendance,
-    behavior: baseVis.behavior,
-    activities: baseVis.activities !== false,
-    library: baseVis.library !== false,
-    honorRoll: baseVis.honorRoll !== false,
-    absenceWarning: baseVis.absenceWarning !== false,
-    nationalId: baseVis.nationalId !== false,
+    grades: baseVis.grades ?? defaultVis.grades,
+    attendance: baseVis.attendance ?? defaultVis.attendance,
+    behavior: baseVis.behavior ?? defaultVis.behavior,
+    activities: baseVis.activities ?? defaultVis.activities,
+    library: baseVis.library ?? defaultVis.library,
+    honorRoll: baseVis.honorRoll ?? defaultVis.honorRoll,
+    absenceWarning: baseVis.absenceWarning ?? defaultVis.absenceWarning,
+    nationalId: baseVis.nationalId ?? defaultVis.nationalId,
   };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum: number, g: any) => {
