@@ -269,7 +269,7 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
   doc.setTextColor(148, 163, 184);
   const labelPart = "تاريخ التقرير: ";
   const fullLine = labelPart + dateStr;
-  doc.text(fullLine, pageWidth / 2, cursorY, { align: "center" });
+  doc.text(fullLine, pw / 2, cursorY, { align: "center" });
   cursorY += lineAdvance(9);
 
   doc.setDrawColor(226, 232, 240);
