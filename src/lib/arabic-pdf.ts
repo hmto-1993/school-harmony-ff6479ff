@@ -185,7 +185,7 @@ async function renderPrintHeaderFromConfig(
   let leftJAlign: "right" | "center" | "left" = "left";
   if (leftAlign === "center") {
     const maxW = Math.max(...config.leftSection.lines.filter((l: string) => l.trim()).map((l: string) => doc.getTextWidth(l)), 0);
-    leftAnchorX = leftEdgeX + maxW / 2;
+    leftAnchorX = leftEdgeX + maxW / 2 + 2;
     leftJAlign = "center";
   } else if (leftAlign === "right") {
     leftAnchorX = leftEdgeX + sectionWidth;
