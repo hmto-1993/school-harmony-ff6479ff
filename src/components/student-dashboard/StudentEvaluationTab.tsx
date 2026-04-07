@@ -97,8 +97,8 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   const dailyContent = (() => {
     const dailyGrades = evalFilteredGrades.filter((g: any) => g.date && g.grade_categories?.category_group === "classwork");
     if (dailyGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات تقييم يومي</p>;
-    const uniqueDates: string[] = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
-    const dailyCatNames: string[] = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))] as string[];
+    const uniqueDates = Array.from(new Set<string>(dailyGrades.map((g: any) => g.date))).sort().slice(-7);
+    const dailyCatNames = Array.from(new Set<string>(dailyGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
     const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
     return (
       <>
@@ -145,7 +145,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   const classworkContent = (() => {
     const cwGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.category_group === "classwork");
     if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
-    const cwCatNames: string[] = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))] as string[];
+    const cwCatNames = Array.from(new Set<string>(cwGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
     return (
       <>
         <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
