@@ -292,8 +292,8 @@
   }
 
   /* Page setup */
-  @page { size: A4 portrait; margin: 0 !important; }
-  @page landscape-page { size: A4 landscape; margin: 0 !important; }
+  @page { size: A4 portrait; margin: 10mm 12mm 10mm 12mm !important; }
+  @page landscape-page { size: A4 landscape; margin: 10mm 12mm 10mm 12mm !important; }
 
   body, html {
     background: white !important;
