@@ -174,11 +174,11 @@ export default function StudentDashboard() {
 
         <StudentSummaryCards vis={vis} percentage={percentage} presentCount={presentCount} absentCount={absentCount} positiveCount={positiveCount} negativeCount={negativeCount} />
 
-        {(!isParent || dashData.parentVis.parentShowAbsenceWarning) && (
+        {vis.absenceWarning && (
           <StudentNotificationCards studentId={student.id} studentName={student.full_name} className={student.class?.name || ""} grades={vis.grades ? student.grades : []} attendance={vis.attendance ? student.attendance : []} />
         )}
 
-        {(!isParent || dashData.parentVis.parentShowHonorRoll) && <HonorRoll classId={student.class_id} />}
+        {vis.honorRoll && <HonorRoll classId={student.class_id} />}
         <StudentAnnouncements classId={student.class_id} />
 
         {/* Tabs */}
