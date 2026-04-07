@@ -84,6 +84,11 @@ export function useSettingsData() {
   const [studentShowDailyGrades, setStudentShowDailyGrades] = useState(true);
   const [studentShowClassworkIcons, setStudentShowClassworkIcons] = useState(true);
   const [studentClassworkIconsCount, setStudentClassworkIconsCount] = useState(10);
+  const [studentShowActivities, setStudentShowActivities] = useState(true);
+  const [studentShowLibrary, setStudentShowLibrary] = useState(true);
+  const [studentShowHonorRoll, setStudentShowHonorRoll] = useState(true);
+  const [studentShowAbsenceWarning, setStudentShowAbsenceWarning] = useState(true);
+  const [studentShowNationalId, setStudentShowNationalId] = useState(true);
 
   // Student popup
   const [popupEnabled, setPopupEnabled] = useState(false);
