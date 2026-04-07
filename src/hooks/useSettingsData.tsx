@@ -346,6 +346,9 @@ export function useSettingsData() {
     savingVisibility, setSavingVisibility, hiddenCategories, setHiddenCategories, visibilityPeriod, setVisibilityPeriod,
     studentShowDailyGrades, setStudentShowDailyGrades, studentShowClassworkIcons, setStudentShowClassworkIcons,
     studentClassworkIconsCount, setStudentClassworkIconsCount,
+    studentShowActivities, setStudentShowActivities, studentShowLibrary, setStudentShowLibrary,
+    studentShowHonorRoll, setStudentShowHonorRoll, studentShowAbsenceWarning, setStudentShowAbsenceWarning,
+    studentShowNationalId, setStudentShowNationalId,
     // Honor Roll
     honorRollEnabled, setHonorRollEnabled, savingHonorRoll, setSavingHonorRoll,
     // Popup
