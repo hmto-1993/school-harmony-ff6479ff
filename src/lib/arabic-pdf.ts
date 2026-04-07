@@ -140,13 +140,6 @@ async function renderPrintHeaderFromConfig(
   let rightY = startY;
   let leftY = startY;
 
-  // Helper: compute X anchor and jsPDF align based on config align within a fixed zone
-  const getAnchor = (align: "right" | "center" | "left", outerX: number, innerX: number): { x: number; jAlign: "right" | "center" | "left" } => {
-    if (align === "center") return { x: (outerX + innerX) / 2, jAlign: "center" };
-    if (align === "left") return { x: Math.min(outerX, innerX), jAlign: "left" };
-    return { x: Math.max(outerX, innerX), jAlign: "right" };
-  };
-
   // --- Right section text ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
@@ -155,7 +148,19 @@ async function renderPrintHeaderFromConfig(
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
   const rightAlign = config.rightSection.align || "right";
-  const { x: rightAnchorX, jAlign: rightJAlign } = getAnchor(rightAlign, pageWidth - headerMargin, pageWidth - headerMargin - sectionWidth);
+  const rightEdgeX = pageWidth - headerMargin;
+
+  // For center: measure longest line, center within that width anchored to the right edge
+  let rightAnchorX = rightEdgeX;
+  let rightJAlign: "right" | "center" | "left" = "right";
+  if (rightAlign === "center") {
+    const maxW = Math.max(...config.rightSection.lines.filter((l: string) => l.trim()).map((l: string) => doc.getTextWidth(l)), 0);
+    rightAnchorX = rightEdgeX - maxW / 2;
+    rightJAlign = "center";
+  } else if (rightAlign === "left") {
+    rightAnchorX = rightEdgeX - sectionWidth;
+    rightJAlign = "left";
+  }
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
@@ -174,7 +179,18 @@ async function renderPrintHeaderFromConfig(
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
   const leftAlign = config.leftSection.align || "left";
-  const { x: leftAnchorX, jAlign: leftJAlign } = getAnchor(leftAlign, headerMargin, headerMargin + sectionWidth);
+  const leftEdgeX = headerMargin;
+
+  let leftAnchorX = leftEdgeX;
+  let leftJAlign: "right" | "center" | "left" = "left";
+  if (leftAlign === "center") {
+    const maxW = Math.max(...config.leftSection.lines.filter((l: string) => l.trim()).map((l: string) => doc.getTextWidth(l)), 0);
+    leftAnchorX = leftEdgeX + maxW / 2;
+    leftJAlign = "center";
+  } else if (leftAlign === "right") {
+    leftAnchorX = leftEdgeX + sectionWidth;
+    leftJAlign = "right";
+  }
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
