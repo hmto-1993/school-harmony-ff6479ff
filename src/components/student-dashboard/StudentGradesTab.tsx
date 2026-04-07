@@ -15,6 +15,7 @@ interface Props {
 export default function StudentGradesTab({ student, isParent, parentVis, gradesView, setGradesView }: Props) {
   const studentClassId = student.class_id;
   const isCatHidden = (catId: string) => {
+    if (!isParent) return false;
     if (studentClassId && parentVis.parentGradesHiddenCategories.classes[studentClassId]?.length) {
       return parentVis.parentGradesHiddenCategories.classes[studentClassId].includes(catId);
     }
@@ -24,7 +25,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
   const filteredGrades = student.grades.filter((g: any) => {
     if (isCatHidden(g.category_id)) return false;
     if (g.grade_categories?.category_group === "classwork") return false;
-    if (parentVis.parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
+    if (isParent && parentVis.parentGradesVisiblePeriods !== "both" && g.period !== undefined) {
       if (parentVis.parentGradesVisiblePeriods === "1" && g.period !== 1) return false;
       if (parentVis.parentGradesVisiblePeriods === "2" && g.period !== 2) return false;
     }
@@ -132,8 +133,8 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
             <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">المعيار</th>
             <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
             <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">من</th>
-            {parentVis.parentGradesShowPercentage && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النسبة</th>}
-            {parentVis.parentGradesShowEval && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">التقييم</th>}
+            {(!isParent || parentVis.parentGradesShowPercentage) && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النسبة</th>}
+            {(!isParent || parentVis.parentGradesShowEval) && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">التقييم</th>}
           </tr>
         </thead>
         <tbody>
@@ -149,12 +150,12 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
                 <td className={cn("p-3 text-right font-semibold border-l border-border/10", isLast && "first:rounded-br-xl")}>{g.grade_categories?.name || "-"}</td>
                 <td className="p-3 text-center border-l border-border/10">{g.score ?? "-"}</td>
                 <td className="p-3 text-center border-l border-border/10">{g.grade_categories?.max_score || "-"}</td>
-                {parentVis.parentGradesShowPercentage && (
+                {(!isParent || parentVis.parentGradesShowPercentage) && (
                   <td className="p-3 text-center border-l border-border/10">
                     <span className={cn("text-xs font-bold", pct >= 90 ? "text-emerald-600 dark:text-emerald-400" : pct >= 75 ? "text-blue-600 dark:text-blue-400" : pct >= 60 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400")}>{pct}%</span>
                   </td>
                 )}
-                {parentVis.parentGradesShowEval && (
+                {(!isParent || parentVis.parentGradesShowEval) && (
                   <td className={cn("p-3 text-center text-lg", isLast && "last:rounded-bl-xl", pct >= 90 ? "text-amber-500" : pct >= 75 ? "text-blue-500" : pct >= 60 ? "text-amber-600" : "text-muted-foreground")}>{evalIcon}</td>
                 )}
               </tr>
