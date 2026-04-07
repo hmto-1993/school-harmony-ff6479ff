@@ -114,12 +114,17 @@ Deno.serve(async (req) => {
     const { data: visSettings } = await supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count"]);
+      .in("id", ["student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_show_activities", "student_show_library", "student_show_honor_roll", "student_show_absence_warning", "student_show_national_id"]);
 
     const visibility: Record<string, boolean> = {
       grades: true,
       attendance: true,
       behavior: true,
+      activities: true,
+      library: true,
+      honorRoll: true,
+      absenceWarning: true,
+      nationalId: true,
     };
     let hiddenCategories: { p1: string[]; p2: string[] } = { p1: [], p2: [] };
     const evalSettings = { showDaily: true, showClasswork: true, iconsCount: 10 };
@@ -127,6 +132,11 @@ Deno.serve(async (req) => {
       if (s.id === "student_show_grades") visibility.grades = s.value !== "false";
       if (s.id === "student_show_attendance") visibility.attendance = s.value !== "false";
       if (s.id === "student_show_behavior") visibility.behavior = s.value !== "false";
+      if (s.id === "student_show_activities") visibility.activities = s.value !== "false";
+      if (s.id === "student_show_library") visibility.library = s.value !== "false";
+      if (s.id === "student_show_honor_roll") visibility.honorRoll = s.value !== "false";
+      if (s.id === "student_show_absence_warning") visibility.absenceWarning = s.value !== "false";
+      if (s.id === "student_show_national_id") visibility.nationalId = s.value !== "false";
       if (s.id === "student_show_daily_grades") evalSettings.showDaily = s.value !== "false";
       if (s.id === "student_show_classwork_icons") evalSettings.showClasswork = s.value !== "false";
       if (s.id === "student_classwork_icons_count" && s.value) evalSettings.iconsCount = Number(s.value) || 10;

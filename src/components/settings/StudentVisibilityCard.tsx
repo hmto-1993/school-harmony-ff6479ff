@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, GraduationCap, Users, Trophy, X, Save, RotateCcw, Check, ChevronDown } from "lucide-react";
+import { Eye, EyeOff, GraduationCap, Users, Trophy, X, Save, RotateCcw, Check, ChevronDown, Layers, BookOpen, AlertTriangle, Hash } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -31,9 +30,11 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
             <h4 className="text-sm font-bold mb-2">👁️ الأقسام المعروضة</h4>
             <div className="space-y-1.5">
               {[
-                { key: "grades" as const, label: "الدرجات", icon: GraduationCap, state: s.showGrades, setter: s.setShowGrades },
-                { key: "attendance" as const, label: "الحضور والغياب", icon: Users, state: s.showAttendance, setter: s.setShowAttendance },
-                { key: "behavior" as const, label: "السلوك", icon: Eye, state: s.showBehavior, setter: s.setShowBehavior },
+                { key: "grades", label: "الدرجات", icon: GraduationCap, state: s.showGrades, setter: s.setShowGrades },
+                { key: "attendance", label: "الحضور والغياب", icon: Users, state: s.showAttendance, setter: s.setShowAttendance },
+                { key: "behavior", label: "السلوك", icon: Eye, state: s.showBehavior, setter: s.setShowBehavior },
+                { key: "activities", label: "الأنشطة", icon: Layers, state: s.studentShowActivities, setter: s.setStudentShowActivities },
+                { key: "library", label: "المكتبة التعليمية", icon: BookOpen, state: s.studentShowLibrary, setter: s.setStudentShowLibrary },
               ].map((item) => (
                 <button key={item.key} onClick={() => item.setter(!item.state)}
                   className={cn(
@@ -48,14 +49,37 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
               ))}
             </div>
           </div>
-          <EvaluationToggles
-            showDailyGrades={s.studentShowDailyGrades}
-            setShowDailyGrades={s.setStudentShowDailyGrades}
-            showClassworkIcons={s.studentShowClassworkIcons}
-            setShowClassworkIcons={s.setStudentShowClassworkIcons}
-            classworkIconsCount={s.studentClassworkIconsCount}
-            setClassworkIconsCount={s.setStudentClassworkIconsCount}
-          />
+          <div className="space-y-4">
+            <EvaluationToggles
+              showDailyGrades={s.studentShowDailyGrades}
+              setShowDailyGrades={s.setStudentShowDailyGrades}
+              showClassworkIcons={s.studentShowClassworkIcons}
+              setShowClassworkIcons={s.setStudentShowClassworkIcons}
+              classworkIconsCount={s.studentClassworkIconsCount}
+              setClassworkIconsCount={s.setStudentClassworkIconsCount}
+            />
+            <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
+              <h4 className="text-sm font-bold mb-2">🔧 عناصر إضافية</h4>
+              <div className="space-y-1.5">
+                {[
+                  { key: "nationalId", label: "رقم الهوية الوطنية", icon: Hash, state: s.studentShowNationalId, setter: s.setStudentShowNationalId },
+                  { key: "honorRoll", label: "لوحة الشرف", icon: Trophy, state: s.studentShowHonorRoll, setter: s.setStudentShowHonorRoll },
+                  { key: "absenceWarning", label: "إنذارات الغياب", icon: AlertTriangle, state: s.studentShowAbsenceWarning, setter: s.setStudentShowAbsenceWarning },
+                ].map((item) => (
+                  <button key={item.key} onClick={() => item.setter(!item.state)}
+                    className={cn(
+                      "flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-xs font-semibold border transition-all text-right",
+                      item.state ? "border-success/40 bg-success/10 text-success" : "border-border/40 bg-muted/30 text-muted-foreground"
+                    )}>
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{item.label}</span>
+                    {item.state ? <Eye className="h-3 w-3 shrink-0" /> : <EyeOff className="h-3 w-3 shrink-0" />}
+                    <span className="text-[10px]">{item.state ? "ظاهر" : "مخفي"}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         {s.showGrades && (() => {
@@ -124,31 +148,6 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
           );
         })()}
 
-        <div className="flex items-center justify-between p-3 rounded-xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/30 dark:bg-amber-950/10">
-          <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" />
-            <div>
-              <h4 className="text-sm font-bold">لوحة الشرف</h4>
-              <p className="text-[10px] text-muted-foreground">عرض الطلاب المتميزين (انتظام كامل + درجة كاملة)</p>
-            </div>
-          </div>
-          <Button
-            variant={s.honorRollEnabled ? "default" : "outline"}
-            size="sm"
-            className={cn("gap-1.5 min-w-[90px]", s.honorRollEnabled && "bg-amber-500 hover:bg-amber-600 text-amber-950")}
-            disabled={s.savingHonorRoll}
-            onClick={async () => {
-              s.setSavingHonorRoll(true);
-              const newVal = !s.honorRollEnabled;
-              await supabase.from("site_settings").upsert({ id: "honor_roll_enabled", value: String(newVal) });
-              s.setHonorRollEnabled(newVal);
-              s.setSavingHonorRoll(false);
-              toast({ title: newVal ? "تم التفعيل" : "تم التعطيل", description: newVal ? "لوحة الشرف مرئية للطلاب" : "تم إخفاء لوحة الشرف" });
-            }}>
-            {s.honorRollEnabled ? <><Eye className="h-3.5 w-3.5" /> مفعّلة</> : <><EyeOff className="h-3.5 w-3.5" /> معطّلة</>}
-          </Button>
-        </div>
-
         <div className="flex items-center gap-2 flex-wrap">
           <Button disabled={s.savingVisibility} className="gap-1.5"
             onClick={async () => {
@@ -161,6 +160,11 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
                 supabase.from("site_settings").upsert({ id: "student_show_daily_grades", value: String(s.studentShowDailyGrades) }),
                 supabase.from("site_settings").upsert({ id: "student_show_classwork_icons", value: String(s.studentShowClassworkIcons) }),
                 supabase.from("site_settings").upsert({ id: "student_classwork_icons_count", value: String(s.studentClassworkIconsCount) }),
+                supabase.from("site_settings").upsert({ id: "student_show_activities", value: String(s.studentShowActivities) }),
+                supabase.from("site_settings").upsert({ id: "student_show_library", value: String(s.studentShowLibrary) }),
+                supabase.from("site_settings").upsert({ id: "student_show_honor_roll", value: String(s.studentShowHonorRoll) }),
+                supabase.from("site_settings").upsert({ id: "student_show_absence_warning", value: String(s.studentShowAbsenceWarning) }),
+                supabase.from("site_settings").upsert({ id: "student_show_national_id", value: String(s.studentShowNationalId) }),
               ]);
               s.setSavingVisibility(false);
               if (results.some(r => r.error)) {
@@ -177,6 +181,8 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
               s.setShowGrades(true); s.setShowAttendance(true); s.setShowBehavior(true);
               s.setHiddenCategories({ p1: [], p2: [] });
               s.setStudentShowDailyGrades(true); s.setStudentShowClassworkIcons(true); s.setStudentClassworkIconsCount(10);
+              s.setStudentShowActivities(true); s.setStudentShowLibrary(true);
+              s.setStudentShowHonorRoll(true); s.setStudentShowAbsenceWarning(true); s.setStudentShowNationalId(true);
               toast({ title: "تم الاستعادة", description: "تم استعادة الإعدادات الافتراضية — اضغط حفظ لتأكيدها" });
             }}>
             <RotateCcw className="h-3.5 w-3.5" />

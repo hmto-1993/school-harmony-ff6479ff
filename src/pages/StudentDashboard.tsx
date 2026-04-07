@@ -72,12 +72,27 @@ export default function StudentDashboard() {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
-  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true };
+  const baseVis = (student.visibility || {}) as Record<string, boolean>;
+  const defaultVis = { grades: true, attendance: true, behavior: true, activities: true, library: true, honorRoll: true, absenceWarning: true, nationalId: true };
   const vis = isParent ? {
-    grades: baseVis.grades && dashData.parentVis.parentShowGrades,
-    attendance: baseVis.attendance && dashData.parentVis.parentShowAttendance,
-    behavior: baseVis.behavior && dashData.parentVis.parentShowBehavior,
-  } : baseVis;
+    grades: (baseVis.grades ?? true) && dashData.parentVis.parentShowGrades,
+    attendance: (baseVis.attendance ?? true) && dashData.parentVis.parentShowAttendance,
+    behavior: (baseVis.behavior ?? true) && dashData.parentVis.parentShowBehavior,
+    activities: dashData.parentVis.parentShowActivities,
+    library: dashData.parentVis.parentShowLibrary,
+    honorRoll: dashData.parentVis.parentShowHonorRoll,
+    absenceWarning: dashData.parentVis.parentShowAbsenceWarning,
+    nationalId: dashData.parentVis.parentShowNationalId,
+  } : {
+    grades: baseVis.grades ?? defaultVis.grades,
+    attendance: baseVis.attendance ?? defaultVis.attendance,
+    behavior: baseVis.behavior ?? defaultVis.behavior,
+    activities: baseVis.activities ?? defaultVis.activities,
+    library: baseVis.library ?? defaultVis.library,
+    honorRoll: baseVis.honorRoll ?? defaultVis.honorRoll,
+    absenceWarning: baseVis.absenceWarning ?? defaultVis.absenceWarning,
+    nationalId: baseVis.nationalId ?? defaultVis.nationalId,
+  };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum: number, g: any) => {
     const cat = g.grade_categories;
@@ -105,8 +120,8 @@ export default function StudentDashboard() {
     ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
     ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
     ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-    ...(!isParent || dashData.parentVis.parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
-    ...(!isParent || dashData.parentVis.parentShowLibrary ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
+    ...(vis.activities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
+    ...(vis.library ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
   ];
   const defaultTab = visibleTabs[0]?.value || "activities";
 
@@ -141,7 +156,7 @@ export default function StudentDashboard() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center"><BookMarked className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
                 <div><p className="text-[11px] text-muted-foreground">الصف</p><p className="text-sm font-bold text-foreground">{student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "غير محدد"}</p></div>
               </div>
-              {(!isParent || dashData.parentVis.parentShowNationalId) && (
+              {vis.nationalId && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center"><Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" /></div>
                   <div><p className="text-[11px] text-muted-foreground">الهوية الوطنية</p><p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p></div>
@@ -159,11 +174,11 @@ export default function StudentDashboard() {
 
         <StudentSummaryCards vis={vis} percentage={percentage} presentCount={presentCount} absentCount={absentCount} positiveCount={positiveCount} negativeCount={negativeCount} />
 
-        {(!isParent || dashData.parentVis.parentShowAbsenceWarning) && (
+        {vis.absenceWarning && (
           <StudentNotificationCards studentId={student.id} studentName={student.full_name} className={student.class?.name || ""} grades={vis.grades ? student.grades : []} attendance={vis.attendance ? student.attendance : []} />
         )}
 
-        {(!isParent || dashData.parentVis.parentShowHonorRoll) && <HonorRoll classId={student.class_id} />}
+        {vis.honorRoll && <HonorRoll classId={student.class_id} />}
         <StudentAnnouncements classId={student.class_id} />
 
         {/* Tabs */}
