@@ -1323,7 +1323,7 @@ export default function SettingsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <AcademicCalendarSettings />
+            <AcademicCalendarSettings onClose={() => s.setActiveCard(null)} />
           </CardContent>
         </Card>
       )}
