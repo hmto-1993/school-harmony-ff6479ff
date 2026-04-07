@@ -261,7 +261,18 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
     });
   }
 
-  cursorY = drawWrappedCenteredText(doc, `تاريخ التقرير: ${new Date().toLocaleDateString("ar-SA")}`, cursorY, {
+  const reportDate = new Intl.DateTimeFormat("en-GB", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+
+  cursorY = drawWrappedCenteredText(doc, "تاريخ التقرير", cursorY, {
+    fontSize: 9,
+    color: [148, 163, 184],
+  });
+
+  cursorY = drawWrappedCenteredText(doc, reportDate, cursorY, {
     fontSize: 9,
     color: [148, 163, 184],
   });
