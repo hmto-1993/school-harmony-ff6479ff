@@ -65,21 +65,15 @@ export default function ReportPrintHeader({ reportType }: Props) {
         <div
           style={{
             flex: "1 1 0%",
-            display: "flex",
-            justifyContent: config.rightSection.align === "center" ? "center" : config.rightSection.align === "left" ? "flex-end" : "flex-start",
-          }}
-        >
-          <div style={{
-            textAlign: config.rightSection.align || "right",
+            textAlign: (config.rightSection.align || "right") as any,
             fontSize: `${config.rightSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.rightSection.color || "#1e293b",
-            width: "fit-content",
-          }}>
-            {config.rightSection.lines.map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-            ))}
-          </div>
+          }}
+        >
+          {config.rightSection.lines.map((line, i) => (
+            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+          ))}
         </div>
 
         {/* Center images */}
@@ -104,21 +98,15 @@ export default function ReportPrintHeader({ reportType }: Props) {
         <div
           style={{
             flex: "1 1 0%",
-            display: "flex",
-            justifyContent: config.leftSection.align === "center" ? "center" : config.leftSection.align === "right" ? "flex-start" : "flex-end",
-          }}
-        >
-          <div style={{
-            textAlign: config.leftSection.align || "left",
+            textAlign: (config.leftSection.align || "left") as any,
             fontSize: `${config.leftSection.fontSize}px`,
             lineHeight: 1.8,
             color: config.leftSection.color || "#1e293b",
-            width: "fit-content",
-          }}>
-            {config.leftSection.lines.map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-            ))}
-          </div>
+          }}
+        >
+          {config.leftSection.lines.map((line, i) => (
+            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+          ))}
         </div>
       </div>
     </div>
