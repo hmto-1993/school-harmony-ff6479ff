@@ -130,21 +130,53 @@ async function renderPrintHeaderFromConfig(
   config: PrintHeaderConfig
 ): Promise<number> {
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 10;
   const headerMargin = config.margins?.side ?? 8;
   const usableWidth = pageWidth - headerMargin * 2;
-  const sectionWidth = usableWidth * 0.32;
-  const centerWidth = usableWidth * 0.36;
 
   const startY = config.margins?.top ?? 10;
   let rightY = startY;
   let leftY = startY;
+
+  const pxToMm = 0.264583;
+  const sectionGap = 12 * pxToMm;
+  const centerImageGap = 8 * pxToMm;
+  const paddingBottom = 6 * pxToMm;
+
+  const centerImages = (config.centerSection.images || []).reduce<Array<{
+    src: string;
+    widthMm: number;
+    heightMm: number;
+  }>>((acc, src, index) => {
+    if (!src) return acc;
+    const heightPx = config.centerSection.imagesSizes[index] || 60;
+    const widthPx = config.centerSection.imagesWidths?.[index] ?? heightPx;
+    acc.push({
+      src,
+      widthMm: widthPx * pxToMm,
+      heightMm: heightPx * pxToMm,
+    });
+    return acc;
+  }, []);
+
+  const centerTrackWidth = centerImages.reduce((sum, image) => sum + image.widthMm, 0)
+    + Math.max(centerImages.length - 1, 0) * centerImageGap;
+  const sectionWidth = Math.max((usableWidth - centerTrackWidth - sectionGap * 2) / 2, 18);
 
   const wrapSectionLines = (lines: string[]) =>
     lines.map((line) => (line.trim() ? (doc.splitTextToSize(line, sectionWidth) as string[]) : []));
 
   const getMaxWrappedWidth = (wrappedLines: string[][]) =>
     wrappedLines.flat().reduce((max, segment) => Math.max(max, doc.getTextWidth(segment)), 0);
+
+  const getAlignedAnchor = (
+    blockStartX: number,
+    blockWidth: number,
+    align: "right" | "center" | "left"
+  ): { anchorX: number; textAlign: "right" | "center" | "left" } => {
+    if (align === "center") return { anchorX: blockStartX + blockWidth / 2, textAlign: "center" };
+    if (align === "right") return { anchorX: blockStartX + blockWidth, textAlign: "right" };
+    return { anchorX: blockStartX, textAlign: "left" };
+  };
 
   // --- Right section text ---
   doc.setFont("Amiri", "bold");
@@ -153,20 +185,11 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightAlign = config.rightSection.align || "right";
-  const rightEdgeX = pageWidth - headerMargin;
+  const rightAlign = (config.rightSection.align || "right") as "right" | "center" | "left";
   const rightWrappedLines = wrapSectionLines(config.rightSection.lines);
   const rightMaxW = getMaxWrappedWidth(rightWrappedLines);
-
-  let rightAnchorX = rightEdgeX;
-  let rightJAlign: "right" | "center" | "left" = "right";
-  if (rightAlign === "center") {
-    rightAnchorX = rightEdgeX - rightMaxW / 2;
-    rightJAlign = "center";
-  } else if (rightAlign === "left") {
-    rightAnchorX = rightEdgeX - sectionWidth;
-    rightJAlign = "left";
-  }
+  const rightBlockStartX = pageWidth - headerMargin - rightMaxW;
+  const { anchorX: rightAnchorX, textAlign: rightJAlign } = getAlignedAnchor(rightBlockStartX, rightMaxW, rightAlign);
 
   rightWrappedLines.forEach((wrapped) => {
     wrapped.forEach((segment) => {
@@ -181,21 +204,10 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftAlign = config.leftSection.align || "left";
-  const leftEdgeX = headerMargin;
+  const leftAlign = (config.leftSection.align || "left") as "right" | "center" | "left";
   const leftWrappedLines = wrapSectionLines(config.leftSection.lines);
   const leftMaxW = getMaxWrappedWidth(leftWrappedLines);
-
-  let leftAnchorX = leftEdgeX;
-  let leftJAlign: "right" | "center" | "left" = "left";
-  const leftOutwardOffset = 0;
-  if (leftAlign === "center") {
-    leftAnchorX = leftEdgeX + leftMaxW / 2 - leftOutwardOffset;
-    leftJAlign = "center";
-  } else if (leftAlign === "right") {
-    leftAnchorX = leftEdgeX + sectionWidth - leftOutwardOffset;
-    leftJAlign = "right";
-  }
+  const { anchorX: leftAnchorX, textAlign: leftJAlign } = getAlignedAnchor(headerMargin, leftMaxW, leftAlign);
 
   leftWrappedLines.forEach((wrapped) => {
     wrapped.forEach((segment) => {
@@ -205,51 +217,31 @@ async function renderPrintHeaderFromConfig(
   });
 
   const textMaxY = Math.max(rightY, leftY);
-  const textHeight = textMaxY - startY;
+  const maxImageHeight = centerImages.reduce((max, image) => Math.max(max, image.heightMm), 0);
+  const contentBottomY = Math.max(textMaxY, startY + maxImageHeight);
 
-  // --- Center images (constrained to center column) ---
-  const images = config.centerSection.images.filter(Boolean);
-  if (images.length > 0) {
-    const centerX = pageWidth / 2;
-    const pxToMm = 0.2646;
-    const gap = 8 * pxToMm; // 8px gap matching HTML engines
+  // --- Center images (mirror the shared flex layout) ---
+  if (centerImages.length > 0) {
+    let imgX = pageWidth / 2 - centerTrackWidth / 2;
 
-    // Limit image sizes to fit within center column
-    const maxImgSize = Math.min(centerWidth * 0.8, 18);
-    const imgHeights = images.map((_, i) => {
-      const origIdx = config.centerSection.images.indexOf(images[i]);
-      const sizePx = config.centerSection.imagesSizes[origIdx] || 60;
-      return Math.min(sizePx * pxToMm, maxImgSize);
-    });
-    const imgWidths = images.map((_, i) => {
-      const origIdx = config.centerSection.images.indexOf(images[i]);
-      const widthPx = config.centerSection.imagesWidths?.[origIdx] ?? config.centerSection.imagesSizes[origIdx] ?? 60;
-      return Math.min(widthPx * pxToMm, maxImgSize * 1.5);
-    });
+    for (const image of centerImages) {
+      const imgY = startY;
 
-    const totalImgWidth = imgWidths.reduce((sum, s) => sum + s, 0) + gap * (images.length - 1);
-    let imgX = centerX - totalImgWidth / 2;
-
-    for (let i = 0; i < images.length; i++) {
-      const wMm = imgWidths[i];
-      const hMm = imgHeights[i];
-      const imgY = startY + (textHeight - hMm) / 2;
-
-      const base64 = await imageUrlToBase64(images[i]);
+      const base64 = await imageUrlToBase64(image.src);
       if (base64) {
         try {
-          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), wMm, hMm);
+          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), image.widthMm, image.heightMm);
         } catch {
           // Skip if image fails
         }
       }
-      imgX += wMm + gap;
+      imgX += image.widthMm + centerImageGap;
     }
   }
 
   // --- Blue bottom border ---
-  const borderY = textMaxY + 1.6;
-  const borderWidthMm = ((config as any).margins?.borderWidth ?? 3) * 0.264583; // px to mm
+  const borderY = contentBottomY + paddingBottom;
+  const borderWidthMm = ((config as any).margins?.borderWidth ?? 3) * pxToMm;
   const borderColorHex: string = (config as any).margins?.borderColor ?? "#3b82f6";
   const bR = parseInt(borderColorHex.slice(1, 3), 16);
   const bG = parseInt(borderColorHex.slice(3, 5), 16);
