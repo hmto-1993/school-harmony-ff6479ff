@@ -119,8 +119,8 @@ export function useStudentPdfExport(
 
         const dailyGrades = cwGrades.filter((g: any) => g.date);
         if (dailyGrades.length > 0) {
-          const uniqueDates = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
-          const dailyCatNames = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          const uniqueDates: string[] = [...new Set(dailyGrades.map((g: any) => g.date as string))].sort().slice(-7);
+          const dailyCatNames: string[] = [...new Set(dailyGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))] as string[];
           const dayLabels: Record<number, string> = { 0: "الأحد", 1: "الإثنين", 2: "الثلاثاء", 3: "الأربعاء", 4: "الخميس", 5: "الجمعة", 6: "السبت" };
           html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">📅 تفاعل اليوم</h3>`;
           html += `<table style="${tableStyle}"><thead><tr>`;
@@ -143,7 +143,7 @@ export function useStudentPdfExport(
         }
 
         if (cwGrades.length > 0) {
-          const cwCatNames = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))];
+          const cwCatNames: string[] = [...new Set(cwGrades.map((g: any) => g.grade_categories?.name as string).filter(Boolean))] as string[];
           html += `<h3 style="font-size:14px;margin:0 0 8px;color:#1e3a5f;">📊 التفاعل الكلي</h3>`;
           html += `<table style="${tableStyle}"><thead><tr>`;
           html += `<th style="${thStyle}">فئة التقييم</th><th style="${thStyle}text-align:center;">التقييم</th>`;
