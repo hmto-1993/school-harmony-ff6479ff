@@ -109,7 +109,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
                       </td>
                       <td className="p-3 text-right font-semibold border-l border-border/10">{b.date}</td>
                       <td className="p-3 text-center border-l border-border/10">
-                        <div className={cn("p-1.5 rounded-lg inline-flex mx-auto", info.badgeClasses.split(" ").filter(c => c.startsWith("bg-")).join(" "))}>
+                        <div className={cn("p-1.5 rounded-lg inline-flex mx-auto", info.bgClasses)}>
                           <Icon className={cn("h-5 w-5", info.colorClasses)} />
                         </div>
                       </td>
