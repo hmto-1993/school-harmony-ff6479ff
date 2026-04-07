@@ -156,18 +156,22 @@ function ReportPrintHeaderInline({
           gap: "16px",
         }}
       >
-        <div
-          style={{
-            flex: "1 1 0%",
-            textAlign: "right",
-            fontSize: `${config.rightSection?.fontSize || 12}px`,
-            lineHeight: 1.8,
-            color: config.rightSection?.color || "#1e293b",
-          }}
-        >
-          {(config.rightSection?.lines || []).map((line: string, i: number) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+        <div style={{ flex: "1 1 0%" }}>
+          <div
+            style={{
+              width: "fit-content",
+              maxWidth: "100%",
+              marginLeft: "auto",
+              textAlign: config.rightSection?.align || "right",
+              fontSize: `${config.rightSection?.fontSize || 12}px`,
+              lineHeight: 1.8,
+              color: config.rightSection?.color || "#1e293b",
+            }}
+          >
+            {(config.rightSection?.lines || []).map((line: string, i: number) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, margin: "0 auto" }}>
@@ -178,7 +182,7 @@ function ReportPrintHeaderInline({
                 src={img}
                 alt=""
                 style={{
-                  width: `${config.centerSection?.imagesSizes?.[i] || 60}px`,
+                  width: `${config.centerSection?.imagesWidths?.[i] ?? config.centerSection?.imagesSizes?.[i] ?? 60}px`,
                   height: `${config.centerSection?.imagesSizes?.[i] || 60}px`,
                   objectFit: "contain",
                 }}
@@ -187,18 +191,23 @@ function ReportPrintHeaderInline({
           )}
         </div>
 
-        <div
-          style={{
-            flex: "1 1 0%",
-            textAlign: "left",
-            fontSize: `${config.leftSection?.fontSize || 12}px`,
-            lineHeight: 1.8,
-            color: config.leftSection?.color || "#1e293b",
-          }}
-        >
-          {(config.leftSection?.lines || []).map((line: string, i: number) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+        <div style={{ flex: "1 1 0%" }}>
+          <div
+            style={{
+              width: "fit-content",
+              maxWidth: "100%",
+              marginRight: "auto",
+              transform: "translateX(-18px)",
+              textAlign: config.leftSection?.align || "left",
+              fontSize: `${config.leftSection?.fontSize || 12}px`,
+              lineHeight: 1.8,
+              color: config.leftSection?.color || "#1e293b",
+            }}
+          >
+            {(config.leftSection?.lines || []).map((line: string, i: number) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
       </div>
     </div>

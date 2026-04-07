@@ -140,6 +140,12 @@ async function renderPrintHeaderFromConfig(
   let rightY = startY;
   let leftY = startY;
 
+  const wrapSectionLines = (lines: string[]) =>
+    lines.map((line) => (line.trim() ? (doc.splitTextToSize(line, sectionWidth) as string[]) : []));
+
+  const getMaxWrappedWidth = (wrappedLines: string[][]) =>
+    wrappedLines.flat().reduce((max, segment) => Math.max(max, doc.getTextWidth(segment)), 0);
+
   // --- Right section text ---
   doc.setFont("Amiri", "bold");
   const rightFontPx = config.rightSection.fontSize || 12;
@@ -149,27 +155,24 @@ async function renderPrintHeaderFromConfig(
   const rightSpacing = rightLineMm * 1.8;
   const rightAlign = config.rightSection.align || "right";
   const rightEdgeX = pageWidth - headerMargin;
+  const rightWrappedLines = wrapSectionLines(config.rightSection.lines);
+  const rightMaxW = getMaxWrappedWidth(rightWrappedLines);
 
-  // For center: measure longest line, center within that width anchored to the right edge
   let rightAnchorX = rightEdgeX;
   let rightJAlign: "right" | "center" | "left" = "right";
   if (rightAlign === "center") {
-    const maxW = Math.max(...config.rightSection.lines.filter((l: string) => l.trim()).map((l: string) => doc.getTextWidth(l)), 0);
-    rightAnchorX = rightEdgeX - maxW / 2;
+    rightAnchorX = rightEdgeX - rightMaxW / 2;
     rightJAlign = "center";
   } else if (rightAlign === "left") {
     rightAnchorX = rightEdgeX - sectionWidth;
     rightJAlign = "left";
   }
 
-  config.rightSection.lines.forEach((line) => {
-    if (line.trim()) {
-      const wrapped = doc.splitTextToSize(line, sectionWidth);
-      wrapped.forEach((wl: string) => {
-        doc.text(wl, rightAnchorX, rightY, { align: rightJAlign });
-        rightY += rightSpacing;
-      });
-    }
+  rightWrappedLines.forEach((wrapped) => {
+    wrapped.forEach((segment) => {
+      doc.text(segment, rightAnchorX, rightY, { align: rightJAlign });
+      rightY += rightSpacing;
+    });
   });
 
   // --- Left section text ---
@@ -180,26 +183,25 @@ async function renderPrintHeaderFromConfig(
   const leftSpacing = leftLineMm * 1.8;
   const leftAlign = config.leftSection.align || "left";
   const leftEdgeX = headerMargin;
+  const leftWrappedLines = wrapSectionLines(config.leftSection.lines);
+  const leftMaxW = getMaxWrappedWidth(leftWrappedLines);
 
   let leftAnchorX = leftEdgeX;
   let leftJAlign: "right" | "center" | "left" = "left";
+  const leftOutwardOffset = 5;
   if (leftAlign === "center") {
-    const maxW = Math.max(...config.leftSection.lines.filter((l: string) => l.trim()).map((l: string) => doc.getTextWidth(l)), 0);
-    leftAnchorX = leftEdgeX + maxW / 2 + 8;
+    leftAnchorX = leftEdgeX + leftMaxW / 2 - leftOutwardOffset;
     leftJAlign = "center";
   } else if (leftAlign === "right") {
-    leftAnchorX = leftEdgeX + sectionWidth;
+    leftAnchorX = leftEdgeX + sectionWidth - leftOutwardOffset;
     leftJAlign = "right";
   }
 
-  config.leftSection.lines.forEach((line) => {
-    if (line.trim()) {
-      const wrapped = doc.splitTextToSize(line, sectionWidth);
-      wrapped.forEach((wl: string) => {
-        doc.text(wl, leftAnchorX, leftY, { align: leftJAlign });
-        leftY += leftSpacing;
-      });
-    }
+  leftWrappedLines.forEach((wrapped) => {
+    wrapped.forEach((segment) => {
+      doc.text(segment, leftAnchorX, leftY, { align: leftJAlign });
+      leftY += leftSpacing;
+    });
   });
 
   const textMaxY = Math.max(rightY, leftY);

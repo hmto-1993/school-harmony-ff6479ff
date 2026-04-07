@@ -62,18 +62,22 @@ export default function ReportPrintHeader({ reportType }: Props) {
         }}
       >
         {/* Right text */}
-        <div
-          style={{
-            flex: "1 1 0%",
-            textAlign: (config.rightSection.align || "right") as any,
-            fontSize: `${config.rightSection.fontSize}px`,
-            lineHeight: 1.8,
-            color: config.rightSection.color || "#1e293b",
-          }}
-        >
-          {config.rightSection.lines.map((line, i) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+        <div style={{ flex: "1 1 0%" }}>
+          <div
+            style={{
+              width: "fit-content",
+              maxWidth: "100%",
+              marginLeft: "auto",
+              textAlign: (config.rightSection.align || "right") as any,
+              fontSize: `${config.rightSection.fontSize}px`,
+              lineHeight: 1.8,
+              color: config.rightSection.color || "#1e293b",
+            }}
+          >
+            {config.rightSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
 
         {/* Center images */}
@@ -95,18 +99,23 @@ export default function ReportPrintHeader({ reportType }: Props) {
         </div>
 
         {/* Left text */}
-        <div
-          style={{
-            flex: "1 1 0%",
-            textAlign: (config.leftSection.align || "left") as any,
-            fontSize: `${config.leftSection.fontSize}px`,
-            lineHeight: 1.8,
-            color: config.leftSection.color || "#1e293b",
-          }}
-        >
-          {config.leftSection.lines.map((line, i) => (
-            <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
-          ))}
+        <div style={{ flex: "1 1 0%" }}>
+          <div
+            style={{
+              width: "fit-content",
+              maxWidth: "100%",
+              marginRight: "auto",
+              transform: "translateX(-18px)",
+              textAlign: (config.leftSection.align || "left") as any,
+              fontSize: `${config.leftSection.fontSize}px`,
+              lineHeight: 1.8,
+              color: config.leftSection.color || "#1e293b",
+            }}
+          >
+            {config.leftSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            ))}
+          </div>
         </div>
       </div>
     </div>
