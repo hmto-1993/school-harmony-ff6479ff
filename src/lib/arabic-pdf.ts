@@ -140,16 +140,11 @@ async function renderPrintHeaderFromConfig(
   let rightY = startY;
   let leftY = startY;
 
-  // Helper: compute X anchor based on alignment within a section zone
-  const getAlignX = (align: "right" | "center" | "left", zoneStart: number, zoneEnd: number, textWidths: number[]): { x: number; jAlign: "right" | "center" | "left" } => {
-    const maxTextW = Math.max(...textWidths, 0);
-    if (align === "center") {
-      // Center the block within the zone, then center each line within the block width
-      const zoneCenter = (zoneStart + zoneEnd) / 2;
-      return { x: zoneCenter, jAlign: "center" };
-    }
-    if (align === "left") return { x: zoneEnd, jAlign: "left" };
-    return { x: zoneStart, jAlign: "right" };
+  // Helper: compute X anchor and jsPDF align based on config align within a fixed zone
+  const getAnchor = (align: "right" | "center" | "left", outerX: number, innerX: number): { x: number; jAlign: "right" | "center" | "left" } => {
+    if (align === "center") return { x: (outerX + innerX) / 2, jAlign: "center" };
+    if (align === "left") return { x: Math.min(outerX, innerX), jAlign: "left" };
+    return { x: Math.max(outerX, innerX), jAlign: "right" };
   };
 
   // --- Right section text ---
@@ -159,21 +154,14 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(rightFontPt);
   const rightLineMm = rightFontPt * 0.3528;
   const rightSpacing = rightLineMm * 1.8;
-  const rightZoneStart = pageWidth - headerMargin; // outer right
-  const rightZoneEnd = pageWidth - headerMargin - sectionWidth; // inner right
   const rightAlign = config.rightSection.align || "right";
-
-  // Pre-measure text widths for center alignment
-  const rightTextWidths = config.rightSection.lines
-    .filter((l: string) => l.trim())
-    .map((l: string) => doc.getTextWidth(l));
+  const { x: rightAnchorX, jAlign: rightJAlign } = getAnchor(rightAlign, pageWidth - headerMargin, pageWidth - headerMargin - sectionWidth);
 
   config.rightSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
-      const { x: anchorX, jAlign } = getAlignX(rightAlign, rightZoneStart, rightZoneEnd, rightTextWidths);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, anchorX, rightY, { align: jAlign });
+        doc.text(wl, rightAnchorX, rightY, { align: rightJAlign });
         rightY += rightSpacing;
       });
     }
@@ -185,20 +173,14 @@ async function renderPrintHeaderFromConfig(
   doc.setFontSize(leftFontPt);
   const leftLineMm = leftFontPt * 0.3528;
   const leftSpacing = leftLineMm * 1.8;
-  const leftZoneStart = headerMargin; // outer left
-  const leftZoneEnd = headerMargin + sectionWidth; // inner left
   const leftAlign = config.leftSection.align || "left";
-
-  const leftTextWidths = config.leftSection.lines
-    .filter((l: string) => l.trim())
-    .map((l: string) => doc.getTextWidth(l));
+  const { x: leftAnchorX, jAlign: leftJAlign } = getAnchor(leftAlign, headerMargin, headerMargin + sectionWidth);
 
   config.leftSection.lines.forEach((line) => {
     if (line.trim()) {
       const wrapped = doc.splitTextToSize(line, sectionWidth);
-      const { x: anchorX, jAlign } = getAlignX(leftAlign, leftZoneStart, leftZoneEnd, leftTextWidths);
       wrapped.forEach((wl: string) => {
-        doc.text(wl, anchorX, leftY, { align: jAlign });
+        doc.text(wl, leftAnchorX, leftY, { align: leftJAlign });
         leftY += leftSpacing;
       });
     }
