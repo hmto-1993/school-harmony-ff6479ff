@@ -381,9 +381,10 @@ export default function SettingsPage() {
 
       {s.scheduleDialogClass && (
         <ClassScheduleDialog
+          open={!!s.scheduleDialogClass}
+          onOpenChange={(open) => { if (!open) s.setScheduleDialogClass(null); }}
           classId={s.scheduleDialogClass.id}
           className={s.scheduleDialogClass.name}
-          onClose={() => s.setScheduleDialogClass(null)}
         />
       )}
 
@@ -1608,7 +1609,6 @@ export default function SettingsPage() {
                 setShowClassworkIcons={s.setParentShowClassworkIcons}
                 classworkIconsCount={s.parentClassworkIconsCount}
                 setClassworkIconsCount={s.setParentClassworkIconsCount}
-                label="إعدادات التقييم (ولي الأمر)"
               />
             </div>
 
