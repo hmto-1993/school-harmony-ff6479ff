@@ -64,8 +64,8 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
   });
 
   const groupLabels: Record<string, { label: string; color: string; icon: string }> = {
-    classwork: { label: "المهام والمشاركة", color: "text-emerald-600 dark:text-emerald-400", icon: "📋" },
-    exam: { label: "الاختبارات", color: "text-amber-600 dark:text-amber-400", icon: "📝" },
+    classwork: { label: "المهام والمشاركة", color: "text-emerald-500", icon: "📋" },
+    exam: { label: "الاختبارات", color: "text-amber-500", icon: "📝" },
     أخرى: { label: "أخرى", color: "text-primary", icon: "📊" },
   };
 
@@ -85,7 +85,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
           </div>
         </div>
         <div className="text-left shrink-0 w-20">
-          <span className={cn("text-lg font-bold", pct >= 90 ? "text-emerald-600 dark:text-emerald-400" : pct >= 75 ? "text-blue-600 dark:text-blue-400" : pct >= 60 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400")}>{score}</span>
+          <span className={cn("text-lg font-bold", pct >= 90 ? "text-emerald-500" : pct >= 75 ? "text-blue-500" : pct >= 60 ? "text-amber-500" : "text-rose-500")}>{score}</span>
           <span className="text-xs text-muted-foreground">/{totalMaxForCat}</span>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function StudentGradesTab({ student, isParent, parentVis, gradesV
                 <td className="p-3 text-center border-l border-border/10">{g.grade_categories?.max_score || "-"}</td>
                 {(!isParent || parentVis.parentGradesShowPercentage) && (
                   <td className="p-3 text-center border-l border-border/10">
-                    <span className={cn("text-xs font-bold", pct >= 90 ? "text-emerald-600 dark:text-emerald-400" : pct >= 75 ? "text-blue-600 dark:text-blue-400" : pct >= 60 ? "text-amber-600 dark:text-amber-400" : "text-rose-600 dark:text-rose-400")}>{pct}%</span>
+                    <span className={cn("text-xs font-bold", pct >= 90 ? "text-emerald-500" : pct >= 75 ? "text-blue-500" : pct >= 60 ? "text-amber-500" : "text-rose-500")}>{pct}%</span>
                   </td>
                 )}
                 {(!isParent || parentVis.parentGradesShowEval) && (

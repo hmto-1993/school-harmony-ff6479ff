@@ -37,7 +37,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
                       <td className="p-3 text-center border-l border-border/10">
                         <span className={cn(
                           "inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border",
-                          b.type === "إيجابي" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                          b.type === "إيجابي" ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20" : "bg-rose-500/15 text-rose-500 border-rose-500/20"
                         )}>{b.type}</span>
                       </td>
                       <td className={cn("p-3 text-right text-muted-foreground", isLast && "last:rounded-bl-xl")}>{b.note || "-"}</td>

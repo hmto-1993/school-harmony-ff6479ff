@@ -78,9 +78,9 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   const LevelIcon = ({ level, isStar }: { level: string; isStar?: boolean }) => {
     if (isStar) return <Star className="h-5 w-5 text-amber-500 fill-amber-500 inline-block" />;
     if (level === "star") return <Star className="h-5 w-5 text-amber-500 fill-amber-500 mx-auto" />;
-    if (level === "excellent") return <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 mx-auto" />;
-    if (level === "average") return <MinusCircle className="h-5 w-5 text-amber-500 dark:text-amber-400 mx-auto" />;
-    if (level === "zero") return <XCircle className="h-5 w-5 text-rose-500 dark:text-rose-400 mx-auto" />;
+    if (level === "excellent") return <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" />;
+    if (level === "average") return <MinusCircle className="h-5 w-5 text-amber-500 mx-auto" />;
+    if (level === "zero") return <XCircle className="h-5 w-5 text-rose-500 mx-auto" />;
     return <span className="text-muted-foreground/30 text-sm">○</span>;
   };
 
@@ -107,9 +107,9 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
           <table className="w-full text-xs border-separate border-spacing-0">
             <thead>
               <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
-                <th className="text-right p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl">اليوم</th>
+                <th className="text-right p-2 font-semibold text-emerald-600 border-b-2 border-emerald-500/20 first:rounded-tr-xl">اليوم</th>
                 {dailyCatNames.map((catName) => (
-                  <th key={catName} className="text-center p-2 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 whitespace-nowrap text-[10px]">{catName}</th>
+                  <th key={catName} className="text-center p-2 font-semibold text-emerald-600 border-b-2 border-emerald-500/20 whitespace-nowrap text-[10px]">{catName}</th>
                 ))}
               </tr>
             </thead>
@@ -153,8 +153,8 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead>
               <tr className="bg-gradient-to-l from-emerald-500/10 via-accent/5 to-emerald-500/5">
-                <th className="text-right p-3 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 first:rounded-tr-xl text-xs">فئة التقييم</th>
-                <th className="text-center p-3 font-semibold text-emerald-700 dark:text-emerald-400 border-b-2 border-emerald-500/20 last:rounded-tl-xl text-xs">التقييم</th>
+                <th className="text-right p-3 font-semibold text-emerald-600 border-b-2 border-emerald-500/20 first:rounded-tr-xl text-xs">فئة التقييم</th>
+                <th className="text-center p-3 font-semibold text-emerald-600 border-b-2 border-emerald-500/20 last:rounded-tl-xl text-xs">التقييم</th>
               </tr>
             </thead>
             <tbody>
