@@ -105,7 +105,7 @@ export function buildHeaderHTML(config: any): string {
         ${images}
       </div>
       <div style="flex:1 1 0%;">
-        <div style="width:fit-content;max-width:100%;margin-right:auto;transform:translateX(-18px);text-align:${leftAlign};font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
+        <div style="width:fit-content;max-width:100%;margin-right:auto;text-align:${leftAlign};font-size:${config.leftSection?.fontSize || 12}px;line-height:1.8;color:${config.leftSection?.color || '#1e293b'};">
           ${leftLines}
         </div>
       </div>
