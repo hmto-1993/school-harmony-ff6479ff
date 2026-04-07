@@ -3,20 +3,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Settings as SettingsIcon, Plus, Trash2, Save, GraduationCap, Users,
-  Eye, EyeOff, UserCircle, KeyRound, Printer, Upload, Download,
-  FileSpreadsheet, Pencil, Check, X, MessageSquare, Megaphone,
-  ChevronDown, ArrowUp, ArrowDown, Palette, History, RotateCcw,
-  CalendarDays, ClipboardCheck, Lock, LockOpen, Trophy, Crown,
-  AlertTriangle, Heart, ClipboardList, Table2,
+  Settings as SettingsIcon, Save, GraduationCap, Users,
+  Eye, UserCircle, KeyRound, Printer,
+  Pencil, Megaphone, X,
+  Palette, History,
+  CalendarDays, ClipboardCheck, Lock,
+  AlertTriangle, Heart, Table2, Trash2,
 } from "lucide-react";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
@@ -28,10 +24,8 @@ import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
-import { QUIZ_COLOR_OPTIONS } from "@/hooks/use-quiz-colors";
 import { useSettingsData } from "@/hooks/useSettingsData";
 
-// Extracted card components
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
 import { StudentVisibilityCard } from "@/components/settings/StudentVisibilityCard";
@@ -39,6 +33,9 @@ import { PopupSettingsCard } from "@/components/settings/PopupSettingsCard";
 import { CalendarYearCard } from "@/components/settings/CalendarYearCard";
 import { AttendanceSettingsCard } from "@/components/settings/AttendanceSettingsCard";
 import { ParentPortalCard } from "@/components/settings/ParentPortalCard";
+import { QuizColorsCard } from "@/components/settings/QuizColorsCard";
+import { LoginSettingsCard } from "@/components/settings/LoginSettingsCard";
+import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 
 export default function SettingsPage() {
   const s = useSettingsData();
@@ -139,7 +136,7 @@ export default function SettingsPage() {
       <AttendanceSettingsCard s={s} />
       <ParentPortalCard s={s} />
 
-      {/* ===== Inline Small Cards ===== */}
+      {/* ===== Inline Cards ===== */}
       {s.activeCard === "print" && s.isAdmin && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
@@ -153,61 +150,13 @@ export default function SettingsPage() {
       )}
 
       {s.activeCard === "colors" && s.isAdmin && (
-        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg"><Palette className="h-5 w-5 text-primary" />ألوان الاختبارات</CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8"><X className="h-4 w-4" /></Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { label: "لون أسئلة الاختيار من متعدد", value: s.quizColorMcq, setter: s.setQuizColorMcq },
-                { label: "لون أسئلة الصح والخطأ", value: s.quizColorTf, setter: s.setQuizColorTf },
-                { label: "لون الإجابة المختارة", value: s.quizColorSelected, setter: s.setQuizColorSelected },
-              ].map((item) => (
-                <div key={item.label} className="space-y-2">
-                  <Label className="text-sm font-semibold">{item.label}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {QUIZ_COLOR_OPTIONS.map(opt => (
-                      <button key={opt.value} onClick={() => item.setter(opt.value)}
-                        className={cn("w-9 h-9 rounded-xl border-2 transition-all hover:scale-110",
-                          item.value === opt.value ? "border-foreground scale-110 shadow-lg" : "border-transparent"
-                        )} style={{ backgroundColor: opt.value }} title={opt.label} />
-                    ))}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="w-6 h-6 rounded-lg border" style={{ backgroundColor: item.value }} />
-                    <span className="text-xs text-muted-foreground">المحدد: {QUIZ_COLOR_OPTIONS.find(o => o.value === item.value)?.label || item.value}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-xl border p-4 space-y-2">
-              <p className="text-xs text-muted-foreground font-semibold mb-2">معاينة:</p>
-              <div className="flex gap-3">
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorMcq }}>اختياري</div>
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorTf }}>صح/خطأ</div>
-                <div className="flex-1 rounded-lg p-3 text-center text-xs font-bold text-white" style={{ backgroundColor: s.quizColorSelected }}>الإجابة</div>
-              </div>
-            </div>
-            <Button disabled={s.savingQuizColors} className="gap-1.5"
-              onClick={async () => {
-                s.setSavingQuizColors(true);
-                const results = await Promise.all([
-                  supabase.from("site_settings").upsert({ id: "quiz_color_mcq", value: s.quizColorMcq }),
-                  supabase.from("site_settings").upsert({ id: "quiz_color_tf", value: s.quizColorTf }),
-                  supabase.from("site_settings").upsert({ id: "quiz_color_selected", value: s.quizColorSelected }),
-                ]);
-                s.setSavingQuizColors(false);
-                if (results.some(r => r.error)) { toast({ title: "خطأ", description: "فشل حفظ ألوان الاختبارات", variant: "destructive" }); }
-                else { toast({ title: "تم الحفظ", description: "تم تحديث ألوان الاختبارات بنجاح" }); }
-              }}>
-              <Save className="h-4 w-4" />{s.savingQuizColors ? "جارٍ الحفظ..." : "حفظ الألوان"}
-            </Button>
-          </CardContent>
-        </Card>
+        <QuizColorsCard
+          quizColorMcq={s.quizColorMcq} setQuizColorMcq={s.setQuizColorMcq}
+          quizColorTf={s.quizColorTf} setQuizColorTf={s.setQuizColorTf}
+          quizColorSelected={s.quizColorSelected} setQuizColorSelected={s.setQuizColorSelected}
+          savingQuizColors={s.savingQuizColors} setSavingQuizColors={s.setSavingQuizColors}
+          onClose={() => s.setActiveCard(null)}
+        />
       )}
 
       {s.activeCard === "academic_calendar" && s.isAdmin && (
@@ -331,55 +280,14 @@ export default function SettingsPage() {
 
             <WhatsAppTemplatesSettings />
 
-            <CollapsibleSettingsCard icon={MessageSquare} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="إعدادات مزود خدمة SMS" description="ربط مزود الرسائل النصية">
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>المزود</Label>
-                  <Select value={s.smsProvider} onValueChange={s.setSmsProvider}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="msegat">MSEGAT</SelectItem>
-                      <SelectItem value="unifonic">Unifonic</SelectItem>
-                      <SelectItem value="taqnyat">Taqnyat (تقنيات)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {s.smsProvider === "msegat" && (
-                  <div className="space-y-2">
-                    <Label>اسم المستخدم</Label>
-                    <Input value={s.providerUsername} onChange={(e) => s.setProviderUsername(e.target.value)} placeholder="اسم مستخدم MSEGAT" dir="ltr" />
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <Label>{s.smsProvider === "msegat" ? "مفتاح API" : s.smsProvider === "unifonic" ? "App SID" : "Bearer Token"}</Label>
-                  <Input type="password" value={s.providerApiKey} onChange={(e) => s.setProviderApiKey(e.target.value)}
-                    placeholder={s.smsProvider === "unifonic" ? "App SID" : s.smsProvider === "taqnyat" ? "Bearer Token" : "API Key"} dir="ltr" />
-                </div>
-                <div className="space-y-2">
-                  <Label>اسم المرسل (Sender ID)</Label>
-                  <Input value={s.providerSender} onChange={(e) => s.setProviderSender(e.target.value)} placeholder="Sender Name" dir="ltr" />
-                  {s.smsProvider === "unifonic" && <p className="text-xs text-muted-foreground">اختياري - سيُستخدم الافتراضي إن ترك فارغاً</p>}
-                </div>
-                <div className="flex items-center gap-3">
-                  <Button onClick={s.handleSaveProvider} disabled={s.savingProvider} className="gap-1.5">
-                    <Save className="h-4 w-4" />{s.savingProvider ? "جارٍ الحفظ..." : "حفظ الإعدادات"}
-                  </Button>
-                  <Button variant="outline" disabled={s.testingSms || !s.providerApiKey || !s.providerSender} className="gap-1.5"
-                    onClick={async () => {
-                      s.setTestingSms(true);
-                      try {
-                        const { data, error } = await supabase.functions.invoke("send-sms", { body: { phone: s.providerSender, message: "رسالة اختبارية من النظام - Test SMS" } });
-                        if (error) { toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" }); }
-                        else if (data?.success) { toast({ title: "نجح الاختبار ✅", description: "تم إرسال الرسالة الاختبارية بنجاح" }); }
-                        else { toast({ title: "فشل الاختبار", description: data?.error || "لم يتم الإرسال", variant: "destructive" }); }
-                      } catch (err: any) { toast({ title: "خطأ", description: err.message, variant: "destructive" }); }
-                      s.setTestingSms(false);
-                    }}>
-                    <MessageSquare className="h-4 w-4" />{s.testingSms ? "جارٍ الاختبار..." : "اختبار الاتصال"}
-                  </Button>
-                </div>
-              </div>
-            </CollapsibleSettingsCard>
+            <SmsSettingsCard
+              smsProvider={s.smsProvider} setSmsProvider={s.setSmsProvider}
+              providerUsername={s.providerUsername} setProviderUsername={s.setProviderUsername}
+              providerApiKey={s.providerApiKey} setProviderApiKey={s.setProviderApiKey}
+              providerSender={s.providerSender} setProviderSender={s.setProviderSender}
+              savingProvider={s.savingProvider} handleSaveProvider={s.handleSaveProvider}
+              testingSms={s.testingSms} setTestingSms={s.setTestingSms}
+            />
 
             <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
               <div className="space-y-4">
@@ -391,62 +299,15 @@ export default function SettingsPage() {
               </div>
             </CollapsibleSettingsCard>
 
-            <CollapsibleSettingsCard icon={SettingsIcon} iconGradient="from-indigo-500 to-violet-600" iconShadow="shadow-lg shadow-indigo-500/20" title="إعدادات صفحة تسجيل الدخول" description="تخصيص شعار واسم المدرسة">
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-2">
-                  <Label>شعار المدرسة</Label>
-                  <div className="flex items-center gap-4">
-                    <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
-                      {s.schoolLogoUrl ? (<img src={s.schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />) : (<Upload className="h-6 w-6 text-muted-foreground" />)}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <input ref={s.logoInputRef} type="file" accept="image/*" className="hidden"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0]; if (!file) return;
-                          s.setUploadingLogo(true);
-                          const filePath = `school-logo-${Date.now()}.${file.name.split('.').pop()}`;
-                          const { error: uploadError } = await supabase.storage.from("school-assets").upload(filePath, file, { upsert: true });
-                          if (uploadError) { toast({ title: "خطأ في رفع الشعار", description: uploadError.message, variant: "destructive" }); s.setUploadingLogo(false); return; }
-                          const { data: urlData } = supabase.storage.from("school-assets").getPublicUrl(filePath);
-                          await supabase.from("site_settings").upsert({ id: "school_logo_url", value: urlData.publicUrl });
-                          s.setSchoolLogoUrl(urlData.publicUrl); s.setUploadingLogo(false);
-                          toast({ title: "تم رفع الشعار بنجاح" }); e.target.value = "";
-                        }} />
-                      <Button type="button" variant="outline" size="sm" disabled={s.uploadingLogo} onClick={() => s.logoInputRef.current?.click()} className="gap-1.5">
-                        <Upload className="h-4 w-4" />{s.uploadingLogo ? "جارٍ الرفع..." : "تغيير الشعار"}
-                      </Button>
-                      {s.schoolLogoUrl && (
-                        <Button type="button" variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive"
-                          onClick={async () => { await supabase.from("site_settings").upsert({ id: "school_logo_url", value: "" }); s.setSchoolLogoUrl(""); toast({ title: "تم إزالة الشعار" }); }}>
-                          <Trash2 className="h-4 w-4" />إزالة
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={s.loginSchoolName} onChange={(e) => s.setLoginSchoolName(e.target.value)} placeholder="مثال: ثانوية الفيصلية" /></div>
-                <div className="space-y-2"><Label>الوصف الفرعي</Label><Input value={s.loginSubtitle} onChange={(e) => s.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" /></div>
-                <div className="space-y-2">
-                  <Label>عنوان لوحة التحكم</Label>
-                  <Input value={s.dashboardTitle} onChange={(e) => s.setDashboardTitle(e.target.value)} placeholder="لوحة التحكم" />
-                  <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
-                </div>
-                <Button disabled={s.savingLogin} className="gap-1.5"
-                  onClick={async () => {
-                    s.setSavingLogin(true);
-                    const results = await Promise.all([
-                      supabase.from("site_settings").upsert({ id: "school_name", value: s.loginSchoolName }),
-                      supabase.from("site_settings").upsert({ id: "school_subtitle", value: s.loginSubtitle }),
-                      supabase.from("site_settings").upsert({ id: "dashboard_title", value: s.dashboardTitle }),
-                    ]);
-                    s.setSavingLogin(false);
-                    if (results.some((r) => r.error)) { toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" }); }
-                    else { toast({ title: "تم الحفظ", description: "تم تحديث إعدادات صفحة الدخول" }); }
-                  }}>
-                  <Save className="h-4 w-4" />{s.savingLogin ? "جارٍ الحفظ..." : "حفظ"}
-                </Button>
-              </div>
-            </CollapsibleSettingsCard>
+            <LoginSettingsCard
+              schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
+              uploadingLogo={s.uploadingLogo} setUploadingLogo={s.setUploadingLogo}
+              logoInputRef={s.logoInputRef}
+              loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
+              loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
+              dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
+              savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
+            />
           </>
         )}
       </div>
