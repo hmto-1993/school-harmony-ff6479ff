@@ -119,8 +119,8 @@ export default function StudentDashboard() {
     ...(vis.grades ? [{ value: "grades", label: "الدرجات", icon: GraduationCap }] : []),
     ...(vis.attendance ? [{ value: "attendance", label: "الحضور", icon: ClipboardCheck }] : []),
     ...(vis.behavior ? [{ value: "behavior", label: "السلوك", icon: ShieldCheck }] : []),
-    ...(!isParent || dashData.parentVis.parentShowActivities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
-    ...(!isParent || dashData.parentVis.parentShowLibrary ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
+    ...(vis.activities ? [{ value: "activities", label: "الأنشطة", icon: Layers }] : []),
+    ...(vis.library ? [{ value: "library", label: "المكتبة", icon: BookOpen }] : []),
   ];
   const defaultTab = visibleTabs[0]?.value || "activities";
 
@@ -155,7 +155,7 @@ export default function StudentDashboard() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center"><BookMarked className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /></div>
                 <div><p className="text-[11px] text-muted-foreground">الصف</p><p className="text-sm font-bold text-foreground">{student.class ? `${student.class.name} - ${student.class.grade} (${student.class.section})` : "غير محدد"}</p></div>
               </div>
-              {(!isParent || dashData.parentVis.parentShowNationalId) && (
+              {vis.nationalId && (
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center"><Hash className="h-5 w-5 text-amber-600 dark:text-amber-400" /></div>
                   <div><p className="text-[11px] text-muted-foreground">الهوية الوطنية</p><p className="text-sm font-bold text-foreground">{student.national_id || "غير محدد"}</p></div>
