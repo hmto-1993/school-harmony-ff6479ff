@@ -49,6 +49,37 @@ function lineAdvance(fontSize: number) {
   return Math.max(4.2, fontSize * 0.38);
 }
 
+/**
+ * Draw a centered line with Arabic label on the right and LTR value on the left.
+ * This avoids jsPDF's broken bidi rendering for mixed text.
+ */
+function drawMixedCenteredLine(
+  doc: jsPDF,
+  arabicLabel: string,
+  ltrValue: string,
+  y: number,
+  options: { fontSize: number; fontStyle?: "normal" | "bold"; color?: [number, number, number] },
+) {
+  const pw = doc.internal.pageSize.getWidth();
+  doc.setFont("Amiri", options.fontStyle || "normal");
+  doc.setFontSize(options.fontSize);
+  const clr = options.color || [30, 30, 30];
+  doc.setTextColor(...clr);
+
+  const labelWidth = doc.getTextWidth(arabicLabel);
+  const valueWidth = doc.getTextWidth(ltrValue);
+  const gap = 1.5;
+  const totalWidth = labelWidth + gap + valueWidth;
+  const startX = pw / 2 + totalWidth / 2;
+
+  // Arabic label on the right
+  doc.text(arabicLabel, startX, y, { align: "right" });
+  // LTR value on the left of the label
+  doc.text(ltrValue, startX - labelWidth - gap, y, { align: "right" });
+
+  return y + lineAdvance(options.fontSize);
+}
+
 function ensurePageSpace(doc: jsPDF, cursorY: number, neededHeight = 24) {
   const pageHeight = doc.internal.pageSize.getHeight();
   if (cursorY + neededHeight > pageHeight - PAGE_BOTTOM) {
