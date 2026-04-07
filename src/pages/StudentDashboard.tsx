@@ -72,12 +72,26 @@ export default function StudentDashboard() {
 
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
-  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true };
+  const baseVis = student.visibility || { grades: true, attendance: true, behavior: true, activities: true, library: true, honorRoll: true, absenceWarning: true, nationalId: true };
   const vis = isParent ? {
     grades: baseVis.grades && dashData.parentVis.parentShowGrades,
     attendance: baseVis.attendance && dashData.parentVis.parentShowAttendance,
     behavior: baseVis.behavior && dashData.parentVis.parentShowBehavior,
-  } : baseVis;
+    activities: dashData.parentVis.parentShowActivities,
+    library: dashData.parentVis.parentShowLibrary,
+    honorRoll: dashData.parentVis.parentShowHonorRoll,
+    absenceWarning: dashData.parentVis.parentShowAbsenceWarning,
+    nationalId: dashData.parentVis.parentShowNationalId,
+  } : {
+    grades: baseVis.grades,
+    attendance: baseVis.attendance,
+    behavior: baseVis.behavior,
+    activities: baseVis.activities !== false,
+    library: baseVis.library !== false,
+    honorRoll: baseVis.honorRoll !== false,
+    absenceWarning: baseVis.absenceWarning !== false,
+    nationalId: baseVis.nationalId !== false,
+  };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum: number, g: any) => {
     const cat = g.grade_categories;
