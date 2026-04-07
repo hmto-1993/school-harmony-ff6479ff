@@ -60,10 +60,13 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
             marginBottom: `${(config.margins?.borderBottomMargin ?? 8) * 2}px`,
           }}>
-            <div style={{ textAlign: "right", fontSize: `${config.rightSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", flex: "1 1 0%" }}>
-              {config.rightSection.lines.map((line, i) => (
-                <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
-              ))}
+            {/* Right section */}
+            <div style={{ flex: "1 1 0%", display: "flex", justifyContent: config.rightSection.align === "center" ? "center" : config.rightSection.align === "left" ? "flex-end" : "flex-start" }}>
+              <div style={{ textAlign: config.rightSection.align, fontSize: `${config.rightSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b", width: "fit-content" }}>
+                {config.rightSection.lines.map((line, i) => (
+                  <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
+                ))}
+              </div>
             </div>
             <div className="flex items-center gap-2 shrink-0" style={{ margin: "0 auto" }}>
               {config.centerSection.images.map((img, i) => (
@@ -78,10 +81,13 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
                 </div>
               ))}
             </div>
-            <div style={{ textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", flex: "1 1 0%" }}>
-              {config.leftSection.lines.map((line, i) => (
-                <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
-              ))}
+            {/* Left section */}
+            <div style={{ flex: "1 1 0%", display: "flex", justifyContent: config.leftSection.align === "center" ? "center" : config.leftSection.align === "right" ? "flex-start" : "flex-end" }}>
+              <div style={{ textAlign: config.leftSection.align, fontSize: `${config.leftSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b", width: "fit-content" }}>
+                {config.leftSection.lines.map((line, i) => (
+                  <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
+                ))}
+              </div>
             </div>
           </div>
           {/* Placeholder content */}
