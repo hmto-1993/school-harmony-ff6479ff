@@ -263,7 +263,7 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
 
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const pw = doc.internal.pageSize.getWidth();
   doc.setFont("Amiri", "normal");
   doc.setFontSize(9);
   doc.setTextColor(148, 163, 184);
