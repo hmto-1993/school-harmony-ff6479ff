@@ -148,12 +148,12 @@ function ReportPrintHeaderInline({
       <div
         style={{
           borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
-          paddingBottom: "12px",
+          paddingBottom: "6px",
           marginBottom: `${config.margins?.borderBottomMargin ?? 8}mm`,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
-          gap: "16px",
+          gap: "12px",
         }}
       >
         <div style={{ flex: "1 1 0%" }}>
@@ -174,7 +174,7 @@ function ReportPrintHeaderInline({
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0, margin: "0 auto" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, margin: "0 auto" }}>
           {(config.centerSection?.images || []).map((img: string, i: number) =>
             img ? (
               <img
@@ -197,7 +197,6 @@ function ReportPrintHeaderInline({
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
-              transform: "translateX(-18px)",
               textAlign: config.leftSection?.align || "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
