@@ -66,18 +66,19 @@ function drawMixedCenteredLine(
   const clr = options.color || [30, 30, 30];
   doc.setTextColor(...clr);
 
+  const colonStr = ":";
   const labelWidth = doc.getTextWidth(arabicLabel);
   const valueWidth = doc.getTextWidth(ltrValue);
+  const colonWidth = doc.getTextWidth(colonStr);
   const gap = 1.5;
-  const totalWidth = labelWidth + gap + valueWidth;
+  const totalWidth = labelWidth + gap + colonWidth + gap + valueWidth;
   const startX = pw / 2 + totalWidth / 2;
 
   // Arabic label on the right
   doc.text(arabicLabel, startX, y, { align: "right" });
-  // Colon drawn separately so it doesn't get repositioned by bidi
-  const colonWidth = doc.getTextWidth(":");
-  doc.text(":", startX - labelWidth - gap, y, { align: "right" });
-  // LTR value on the left of the label + colon
+  // Colon drawn separately to avoid bidi repositioning
+  doc.text(colonStr, startX - labelWidth - gap, y, { align: "right" });
+  // LTR value on the left
   doc.text(ltrValue, startX - labelWidth - gap - colonWidth - gap, y, { align: "right" });
 
   return y + lineAdvance(options.fontSize);
