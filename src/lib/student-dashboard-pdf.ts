@@ -272,7 +272,7 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
     cursorY += 1;
   }
 
-  cursorY = drawMixedCenteredLine(doc, "تقرير الطالب: ", student.full_name || "", cursorY, {
+  cursorY = drawMixedCenteredLine(doc, "تقرير الطالب", student.full_name || "", cursorY, {
     fontSize: 15,
     fontStyle: "bold",
     color: [51, 51, 51],
@@ -288,7 +288,7 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
   }
 
   if (parentVis.parentShowNationalId && student.national_id) {
-    cursorY = drawMixedCenteredLine(doc, "الهوية الوطنية: ", student.national_id, cursorY, {
+    cursorY = drawMixedCenteredLine(doc, "الهوية الوطنية", student.national_id, cursorY, {
       fontSize: 10,
       color: [100, 116, 139],
     });
@@ -296,7 +296,7 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
 
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-  cursorY = drawMixedCenteredLine(doc, "تاريخ التقرير: ", dateStr, cursorY, {
+  cursorY = drawMixedCenteredLine(doc, "تاريخ التقرير", dateStr, cursorY, {
     fontSize: 9,
     color: [148, 163, 184],
   });
