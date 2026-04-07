@@ -68,14 +68,18 @@ function drawMixedCenteredLine(
 
   const labelWidth = doc.getTextWidth(arabicLabel);
   const valueWidth = doc.getTextWidth(ltrValue);
-  const gap = 1.5;
+  const gap = 1;
   const totalWidth = labelWidth + gap + valueWidth;
-  const startX = pw / 2 + totalWidth / 2;
 
-  // Arabic label on the right
-  doc.text(arabicLabel, startX, y, { align: "right" });
-  // LTR value on the left of the label
-  doc.text(ltrValue, startX - labelWidth - gap, y, { align: "right" });
+  // Right edge of the whole centered block
+  const rightEdge = pw / 2 + totalWidth / 2;
+  // Left edge of the whole centered block
+  const leftEdge = pw / 2 - totalWidth / 2;
+
+  // Arabic label anchored at the right edge (align "right" = text ends at x)
+  doc.text(arabicLabel, rightEdge, y, { align: "right" });
+  // LTR value anchored at the left edge (align "left" = text starts at x)
+  doc.text(ltrValue, leftEdge, y, { align: "left" });
 
   return y + lineAdvance(options.fontSize);
 }
