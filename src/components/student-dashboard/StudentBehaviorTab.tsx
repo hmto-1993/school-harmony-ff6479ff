@@ -21,7 +21,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
           <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
-                <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
+                <tr className="bg-gradient-to-l from-primary/15 via-accent/5 to-primary/10">
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">التاريخ</th>
                   <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">النوع</th>
                   <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl">الملاحظة</th>
@@ -37,7 +37,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
                       <td className="p-3 text-center border-l border-border/10">
                         <span className={cn(
                           "inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border",
-                          b.type === "إيجابي" ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" : "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20"
+                          b.type === "إيجابي" ? "bg-emerald-500/15 text-emerald-500 border-emerald-500/20" : "bg-rose-500/15 text-rose-500 border-rose-500/20"
                         )}>{b.type}</span>
                       </td>
                       <td className={cn("p-3 text-right text-muted-foreground", isLast && "last:rounded-bl-xl")}>{b.note || "-"}</td>

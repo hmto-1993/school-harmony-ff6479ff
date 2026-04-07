@@ -134,7 +134,7 @@ export default function StudentDashboard() {
       <main className="container mx-auto p-4 space-y-6">
         {/* Welcome */}
         {((isParent && dashData.welcomeEnabled) || (!isParent && dashData.studentWelcomeEnabled)) && (
-          <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/15 dark:via-accent/10 dark:to-primary/10">
+          <Card className="border-0 shadow-xl overflow-hidden bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5">
             <CardContent className="p-5">
               <div className="flex items-start gap-4">
                 <div className="shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/25">
