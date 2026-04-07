@@ -280,8 +280,9 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
 
   const cls = student.class;
   if (cls) {
-    const classLine = `${cls.grade} (${cls.section})`;
-    cursorY = drawMixedCenteredLine(doc, `${cls.name} - `, classLine, cursorY, {
+    // Format: "الأول الثانوي (1) - 1" rendered as pure Arabic centered
+    const classLine = `${cls.name} - ${cls.grade} (${cls.section})`;
+    cursorY = drawWrappedCenteredText(doc, classLine, cursorY, {
       fontSize: 10,
       color: [100, 116, 139],
     });
@@ -295,8 +296,13 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
   }
 
   const now = new Date();
-  const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-  cursorY = drawMixedCenteredLine(doc, "تاريخ التقرير: ", dateStr, cursorY, {
+  const dateStr = new Intl.DateTimeFormat("ar-SA", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    calendar: "gregory",
+  }).format(now);
+  cursorY = drawWrappedCenteredText(doc, `تاريخ التقرير: ${dateStr}`, cursorY, {
     fontSize: 9,
     color: [148, 163, 184],
   });
