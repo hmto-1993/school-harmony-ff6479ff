@@ -255,6 +255,11 @@ export function useSettingsData() {
       if (s.id === "student_show_daily_grades") setStudentShowDailyGrades(s.value !== "false");
       if (s.id === "student_show_classwork_icons") setStudentShowClassworkIcons(s.value !== "false");
       if (s.id === "student_classwork_icons_count" && s.value) setStudentClassworkIconsCount(Number(s.value) || 10);
+      if (s.id === "student_show_activities") setStudentShowActivities(s.value !== "false");
+      if (s.id === "student_show_library") setStudentShowLibrary(s.value !== "false");
+      if (s.id === "student_show_honor_roll") setStudentShowHonorRoll(s.value !== "false");
+      if (s.id === "student_show_absence_warning") setStudentShowAbsenceWarning(s.value !== "false");
+      if (s.id === "student_show_national_id") setStudentShowNationalId(s.value !== "false");
       if (s.id === "student_popup_enabled") setPopupEnabled(s.value === "true");
       if (s.id === "student_popup_title") setPopupTitle(s.value || "");
       if (s.id === "student_popup_message") setPopupMessage(s.value || "");
