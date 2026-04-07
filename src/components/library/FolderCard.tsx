@@ -43,7 +43,7 @@ export function FolderCard({ folder, files, isViewOnly, onOpenDetail, onToggleVi
       )}
 
       <div className="p-4 pb-2 flex items-center gap-3 cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => onOpenDetail(folder)}>
-        <div className="w-12 h-12 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 dark:group-hover:bg-primary/30 transition-colors">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center shrink-0 group-hover:from-primary/30 group-hover:to-primary/40 transition-colors">
           <IconComp className="h-6 w-6 text-primary" />
         </div>
         <div className="flex-1 min-w-0">
