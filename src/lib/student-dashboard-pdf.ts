@@ -68,18 +68,14 @@ function drawMixedCenteredLine(
 
   const labelWidth = doc.getTextWidth(arabicLabel);
   const valueWidth = doc.getTextWidth(ltrValue);
-  const gap = 1;
+  const gap = 1.5;
   const totalWidth = labelWidth + gap + valueWidth;
+  const startX = pw / 2 + totalWidth / 2;
 
-  // Right edge of the whole centered block
-  const rightEdge = pw / 2 + totalWidth / 2;
-  // Left edge of the whole centered block
-  const leftEdge = pw / 2 - totalWidth / 2;
-
-  // Arabic label anchored at the right edge (align "right" = text ends at x)
-  doc.text(arabicLabel, rightEdge, y, { align: "right" });
-  // LTR value anchored at the left edge (align "left" = text starts at x)
-  doc.text(ltrValue, leftEdge, y, { align: "left" });
+  // Arabic label on the right
+  doc.text(arabicLabel, startX, y, { align: "right" });
+  // LTR value on the left of the label
+  doc.text(ltrValue, startX - labelWidth - gap, y, { align: "right" });
 
   return y + lineAdvance(options.fontSize);
 }
@@ -280,9 +276,8 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
 
   const cls = student.class;
   if (cls) {
-    // Format: "الأول الثانوي (1) - 1" rendered as pure Arabic centered
-    const classLine = `${cls.name} - ${cls.grade} (${cls.section})`;
-    cursorY = drawWrappedCenteredText(doc, classLine, cursorY, {
+    const classLine = `${cls.grade} (${cls.section})`;
+    cursorY = drawMixedCenteredLine(doc, `${cls.name} - `, classLine, cursorY, {
       fontSize: 10,
       color: [100, 116, 139],
     });
@@ -296,13 +291,8 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
   }
 
   const now = new Date();
-  const dateStr = new Intl.DateTimeFormat("ar-SA", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    calendar: "gregory",
-  }).format(now);
-  cursorY = drawWrappedCenteredText(doc, `تاريخ التقرير: ${dateStr}`, cursorY, {
+  const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
+  cursorY = drawMixedCenteredLine(doc, "تاريخ التقرير: ", dateStr, cursorY, {
     fontSize: 9,
     color: [148, 163, 184],
   });
