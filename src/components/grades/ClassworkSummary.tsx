@@ -123,14 +123,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     });
   }, []);
 
-  useEffect(() => { loadAllData(); }, [selectedPeriod]);
+  useEffect(() => { if (selectedClass) loadAllData(); }, [selectedPeriod, selectedClass]);
 
   const loadAllData = async () => {
+    if (!selectedClass) return;
     setLoading(true);
     const [{ data: classesData }, { data: studentsData }, { data: catsData }] = await Promise.all([
       supabase.from("classes").select("id, name").order("name"),
-      supabase.from("students").select("id, full_name, class_id").order("full_name"),
-      supabase.from("grade_categories").select("*").order("sort_order"),
+      supabase.from("students").select("id, full_name, class_id").eq("class_id", selectedClass).order("full_name"),
+      supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order"),
     ]);
 
     const cls = classesData || [];

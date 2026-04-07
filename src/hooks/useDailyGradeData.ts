@@ -127,7 +127,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   // Load data
   const loadData = useCallback(async () => {
     if (!selectedClass) return;
-    const { data: cats } = await supabase.from("grade_categories").select("*").eq("class_id", selectedClass).order("sort_order");
+    const { data: cats } = await supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order");
     const { data: students } = await supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period")
