@@ -32,8 +32,7 @@ export async function buildBehaviorPDFBlob(
   dateFrom: string,
   dateTo: string,
 ): Promise<{ blob: Blob; fileName: string }> {
-  const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
-  const html2canvas = (await import("html2canvas")).default;
+  const { registerArabicFont, getArabicTableStyles, finalizePDFAsBlob, renderPrintHeader } = await import("@/lib/arabic-pdf");
   const autoTableImport = await import("jspdf-autotable");
   const autoTable = autoTableImport.default;
   const jsPDFModule = await import("jspdf");
@@ -43,11 +42,12 @@ export async function buildBehaviorPDFBlob(
   await registerArabicFont(doc);
   const tableStyles = getArabicTableStyles();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let margin = 10;
 
   let startY = 5;
   let watermark: any = undefined;
+  let margin = 12;
 
+  // Fetch config only for watermark & margin info
   const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
     supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
     supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
@@ -60,41 +60,10 @@ export async function buildBehaviorPDFBlob(
   }
 
   if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
+  margin = headerConfig?.margins?.side ?? 12;
 
-  const configMarginTop = headerConfig?.margins?.top ?? 10;
-  const configMarginSide = headerConfig?.margins?.side ?? 12;
-  startY = configMarginTop;
-  margin = configMarginSide;
-
-  if (headerConfig) {
-    const headerHTML = `
-      <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px ${configMarginSide}px 0;background:#fff;">
-        ${buildHeaderHTML(headerConfig)}
-      </div>
-    `;
-
-    const pxPerMm = 3.7795;
-    const containerW = Math.round((pageWidth - configMarginSide * 2) * pxPerMm);
-    const container = document.createElement("div");
-    container.style.cssText = `position:fixed;left:-9999px;top:0;width:${containerW}px;background:#fff;`;
-    container.innerHTML = headerHTML;
-    document.body.appendChild(container);
-
-    const imgs = container.querySelectorAll("img");
-    await Promise.all(Array.from(imgs).map(img => img.complete ? Promise.resolve() : new Promise(r => { img.onload = r; img.onerror = r; })));
-
-    try {
-      const canvas = await html2canvas(container, { backgroundColor: "#ffffff", scale: 3, useCORS: true, allowTaint: true });
-      const dataUrl = canvas.toDataURL("image/png");
-      const aspect = canvas.width / canvas.height;
-      const usableW = pageWidth - margin * 2;
-      const imgH = usableW / aspect;
-      doc.addImage(dataUrl, "PNG", margin, startY, usableW, imgH);
-      startY = startY + imgH + 4;
-    } catch { startY = 15; }
-
-    document.body.removeChild(container);
-  }
+  // Use the unified PDF header renderer (same as attendance/grades exports)
+  startY = await renderPrintHeader(doc, "behavior");
 
   doc.setFontSize(14);
   const filterTitle = typeFilter === "all" ? "تقرير السلوك" : `تقرير السلوك - ${TYPE_LABELS[typeFilter]}`;
