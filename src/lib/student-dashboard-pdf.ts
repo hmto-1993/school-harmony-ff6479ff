@@ -268,25 +268,23 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
     cursorY += 1;
   }
 
-  cursorY = drawWrappedCenteredText(doc, `تقرير الطالب: ${student.full_name || ""}`, cursorY, {
+  cursorY = drawMixedCenteredLine(doc, "تقرير الطالب: ", student.full_name || "", cursorY, {
     fontSize: 15,
     fontStyle: "bold",
     color: [51, 51, 51],
   });
 
-  const classInfo = student.class
-    ? `${student.class.name} - ${student.class.grade} (${student.class.section})`
-    : "";
-
-  if (classInfo) {
-    cursorY = drawWrappedCenteredText(doc, classInfo, cursorY, {
+  const cls = student.class;
+  if (cls) {
+    const classLine = `${cls.grade} (${cls.section})`;
+    cursorY = drawMixedCenteredLine(doc, `${cls.name} - `, classLine, cursorY, {
       fontSize: 10,
       color: [100, 116, 139],
     });
   }
 
   if (parentVis.parentShowNationalId && student.national_id) {
-    cursorY = drawWrappedCenteredText(doc, `الهوية الوطنية: ${student.national_id}`, cursorY, {
+    cursorY = drawMixedCenteredLine(doc, "الهوية الوطنية: ", student.national_id, cursorY, {
       fontSize: 10,
       color: [100, 116, 139],
     });
@@ -294,14 +292,10 @@ async function drawPdfHeader(doc: jsPDF, input: StudentPdfInput) {
 
   const now = new Date();
   const dateStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-  const pw = doc.internal.pageSize.getWidth();
-  doc.setFont("Amiri", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(148, 163, 184);
-  const labelPart = "تاريخ التقرير: ";
-  const fullLine = labelPart + dateStr;
-  doc.text(fullLine, pw / 2, cursorY, { align: "center" });
-  cursorY += lineAdvance(9);
+  cursorY = drawMixedCenteredLine(doc, "تاريخ التقرير: ", dateStr, cursorY, {
+    fontSize: 9,
+    color: [148, 163, 184],
+  });
 
   doc.setDrawColor(226, 232, 240);
   doc.setLineWidth(0.35);
