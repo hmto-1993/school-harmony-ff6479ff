@@ -62,8 +62,8 @@ export async function buildBehaviorPDFBlob(
 
   if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
 
-  const configMarginTop = headerConfig?.margins?.top ?? 5;
-  const configMarginSide = headerConfig?.margins?.side ?? 8;
+  const configMarginTop = headerConfig?.margins?.top ?? 10;
+  const configMarginSide = headerConfig?.margins?.side ?? 12;
   startY = configMarginTop;
 
   if (headerConfig) {
