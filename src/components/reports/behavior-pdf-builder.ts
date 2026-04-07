@@ -44,7 +44,7 @@ export async function buildBehaviorPDFBlob(
   await registerArabicFont(doc);
   const tableStyles = getArabicTableStyles();
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 10;
+  let margin = 10;
 
   let startY = 5;
   let watermark: any = undefined;
@@ -65,6 +65,7 @@ export async function buildBehaviorPDFBlob(
   const configMarginTop = headerConfig?.margins?.top ?? 10;
   const configMarginSide = headerConfig?.margins?.side ?? 12;
   startY = configMarginTop;
+  margin = configMarginSide;
 
   if (headerConfig) {
     const headerHTML = `
@@ -73,8 +74,10 @@ export async function buildBehaviorPDFBlob(
       </div>
     `;
 
+    const pxPerMm = 3.7795;
+    const containerW = Math.round((pageWidth - configMarginSide * 2) * pxPerMm);
     const container = document.createElement("div");
-    container.style.cssText = "position:fixed;left:-9999px;top:0;width:760px;background:#fff;";
+    container.style.cssText = `position:fixed;left:-9999px;top:0;width:${containerW}px;background:#fff;`;
     container.innerHTML = headerHTML;
     document.body.appendChild(container);
 
