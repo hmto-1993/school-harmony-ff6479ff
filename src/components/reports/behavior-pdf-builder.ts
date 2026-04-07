@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { buildHeaderHTML } from "@/lib/grades-print-helpers";
 
 interface BehaviorRow {
   student_name: string;
@@ -66,22 +67,9 @@ export async function buildBehaviorPDFBlob(
   startY = configMarginTop;
 
   if (headerConfig) {
-    const rightLines = (headerConfig.rightSection?.lines || []).map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
-    const leftLines = (headerConfig.leftSection?.lines || []).map((l: string) => `<p style="margin:0;font-weight:600;">${l}</p>`).join("");
-    const images = (headerConfig.centerSection?.images || []).map((img: string, i: number) => {
-      if (!img) return "";
-      const height = headerConfig.centerSection?.imagesSizes?.[i] || 60;
-      const width = headerConfig.centerSection?.imagesWidths?.[i] ?? height;
-      return `<img src="${img}" alt="" crossorigin="anonymous" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
-    }).join("");
-
     const headerHTML = `
       <div style="direction:rtl;font-family:'IBM Plex Sans Arabic',sans-serif;padding:4px ${configMarginSide}px 0;background:#fff;">
-        <div style="padding-bottom:8px;border-bottom:${headerConfig.margins?.borderWidth ?? 3}px solid ${headerConfig.margins?.borderColor ?? '#3b82f6'};display:flex;justify-content:space-between;align-items:flex-start;gap:16px;">
-          <div style="max-width:46%;text-align:center;font-size:${headerConfig.rightSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.rightSection?.color || '#1e293b'};">${rightLines}</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">${images}</div>
-          <div style="max-width:46%;text-align:center;font-size:${headerConfig.leftSection?.fontSize || 12}px;line-height:1.8;color:${headerConfig.leftSection?.color || '#1e293b'};">${leftLines}</div>
-        </div>
+        ${buildHeaderHTML(headerConfig)}
       </div>
     `;
 
