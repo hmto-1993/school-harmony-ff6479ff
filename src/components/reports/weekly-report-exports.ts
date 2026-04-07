@@ -200,7 +200,7 @@ export async function exportWeeklyPDF(params: ExportParams) {
           doc.setFillColor(hColor[0], hColor[1], hColor[2]);
           doc.circle(cx, cy, 1.5, "F");
         }
-      },
+      }
     },
   });
 
