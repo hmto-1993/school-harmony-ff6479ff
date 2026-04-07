@@ -54,21 +54,22 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             </div>
           )}
           {/* Header sections */}
+          {/* Header sections — same layout as print/export, scaled 0.7x for preview */}
           <div style={{
-            display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px",
-            position: "relative", zIndex: 2, paddingBottom: "6px",
+            display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: `${12 * 0.7}px`,
+            position: "relative", zIndex: 2, paddingBottom: `${6 * 0.7}px`,
             borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
             marginBottom: `${(config.margins?.borderBottomMargin ?? 8) * 2}px`,
           }}>
             {/* Right section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginLeft: "auto", textAlign: config.rightSection.align || "right", fontSize: `${config.rightSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
+              <div style={{ width: "fit-content", maxWidth: "100%", marginLeft: "auto", textAlign: config.rightSection.align || "right", fontSize: `${config.rightSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
                 {config.rightSection.lines.map((line, i) => (
                   <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0" style={{ margin: "0 auto" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: `${8 * 0.7}px`, flexShrink: 0, margin: "0 auto" }}>
               {config.centerSection.images.map((img, i) => (
                 <div key={i}>
                   {img ? (
@@ -83,7 +84,7 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             </div>
             {/* Left section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.8}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
+              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
                 {config.leftSection.lines.map((line, i) => (
                   <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}
