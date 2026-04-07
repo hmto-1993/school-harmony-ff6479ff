@@ -106,17 +106,38 @@ async function fetchPrintHeaderConfig(
   return null;
 }
 
-/** Convert an image URL to base64 data URL for embedding in PDF */
-async function imageUrlToBase64(url: string): Promise<string | null> {
+/** Convert an image URL to base64 data URL plus its intrinsic size for PDF embedding */
+async function imageUrlToBase64(
+  url: string
+): Promise<{ dataUrl: string; width: number; height: number } | null> {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise((resolve) => {
+
+    const dataUrl = await new Promise<string | null>((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(blob);
     });
+
+    if (!dataUrl) return null;
+
+    const dimensions = await new Promise<{ width: number; height: number } | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({
+        width: img.naturalWidth || img.width || 1,
+        height: img.naturalHeight || img.height || 1,
+      });
+      img.onerror = () => resolve(null);
+      img.src = dataUrl;
+    });
+
+    return {
+      dataUrl,
+      width: dimensions?.width || 1,
+      height: dimensions?.height || 1,
+    };
   } catch {
     return null;
   }
@@ -220,21 +241,38 @@ async function renderPrintHeaderFromConfig(
   const maxImageHeight = centerImages.reduce((max, image) => Math.max(max, image.heightMm), 0);
   const contentBottomY = Math.max(textMaxY, startY + maxImageHeight);
 
-  // --- Center images (mirror the shared flex layout) ---
+  // --- Center images (mirror the shared flex layout + preview contain sizing) ---
   if (centerImages.length > 0) {
     let imgX = pageWidth / 2 - centerTrackWidth / 2;
 
     for (const image of centerImages) {
-      const imgY = startY;
+      const slotY = Math.max(startY, 4);
+      const loadedImage = await imageUrlToBase64(image.src);
 
-      const base64 = await imageUrlToBase64(image.src);
-      if (base64) {
+      if (loadedImage) {
         try {
-          doc.addImage(base64, "PNG", imgX, Math.max(imgY, 4), image.widthMm, image.heightMm);
+          const imageAspect = loadedImage.width / loadedImage.height;
+          const slotAspect = image.widthMm / image.heightMm;
+
+          let drawWidth = image.widthMm;
+          let drawHeight = image.heightMm;
+
+          if (imageAspect > slotAspect) {
+            drawHeight = drawWidth / imageAspect;
+          } else {
+            drawWidth = drawHeight * imageAspect;
+          }
+
+          const drawX = imgX + (image.widthMm - drawWidth) / 2;
+          const drawY = slotY + (image.heightMm - drawHeight) / 2;
+          const imageFormat = loadedImage.dataUrl.startsWith("data:image/jpeg") ? "JPEG" : "PNG";
+
+          doc.addImage(loadedImage.dataUrl, imageFormat, drawX, drawY, drawWidth, drawHeight);
         } catch {
           // Skip if image fails
         }
       }
+
       imgX += image.widthMm + centerImageGap;
     }
   }
