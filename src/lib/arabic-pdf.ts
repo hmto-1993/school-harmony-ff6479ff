@@ -212,7 +212,7 @@ async function renderPrintHeaderFromConfig(
   if (images.length > 0) {
     const centerX = pageWidth / 2;
     const pxToMm = 0.2646;
-    const gap = 10 * pxToMm;
+    const gap = 8 * pxToMm; // 8px gap matching HTML engines
 
     // Limit image sizes to fit within center column
     const maxImgSize = Math.min(centerWidth * 0.8, 18);
