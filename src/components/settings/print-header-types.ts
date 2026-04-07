@@ -87,10 +87,11 @@ export const defaultFooterSignatures: FooterSignaturesConfig = {
 };
 
 export const defaultMargins: MarginsConfig = {
-  top: 5,
-  side: 8,
+  top: 10,
+  side: 12,
   borderWidth: 3,
   borderColor: "#3b82f6",
+  borderBottomMargin: 8,
 };
 
 export const defaultAdvanced: AdvancedConfig = {

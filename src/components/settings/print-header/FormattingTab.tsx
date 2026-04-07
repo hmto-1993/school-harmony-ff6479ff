@@ -37,19 +37,19 @@ export default function FormattingTab({ config, setConfig }: FormattingTabProps)
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">الهامش العلوي (mm)</Label>
               <div className="flex items-center gap-3">
-                <Slider min={0} max={30} step={1} value={[config.margins?.top ?? 5]}
+                <Slider min={0} max={30} step={1} value={[config.margins?.top ?? 10]}
                   onValueChange={([v]) => setConfig((prev) => ({ ...prev, margins: { ...(prev.margins || defaultMargins), top: v } }))}
                   className="flex-1" />
-                <span className="text-xs font-mono w-10 text-center">{config.margins?.top ?? 5}mm</span>
+                <span className="text-xs font-mono w-10 text-center">{config.margins?.top ?? 10}mm</span>
               </div>
             </div>
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">الهامش الجانبي (mm)</Label>
               <div className="flex items-center gap-3">
-                <Slider min={2} max={40} step={1} value={[config.margins?.side ?? 8]}
+                <Slider min={2} max={40} step={1} value={[config.margins?.side ?? 12]}
                   onValueChange={([v]) => setConfig((prev) => ({ ...prev, margins: { ...(prev.margins || defaultMargins), side: v } }))}
                   className="flex-1" />
-                <span className="text-xs font-mono w-10 text-center">{config.margins?.side ?? 8}mm</span>
+                <span className="text-xs font-mono w-10 text-center">{config.margins?.side ?? 12}mm</span>
               </div>
             </div>
             <div className="space-y-2">

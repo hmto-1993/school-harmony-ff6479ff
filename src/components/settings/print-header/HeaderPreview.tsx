@@ -33,9 +33,9 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             maxWidth: "480px",
             minHeight: "300px",
             aspectRatio: "210 / 297",
-            paddingTop: `${(config.margins?.top ?? 5) * 2}px`,
-            paddingLeft: `${(config.margins?.side ?? 8) * 2}px`,
-            paddingRight: `${(config.margins?.side ?? 8) * 2}px`,
+            paddingTop: `${(config.margins?.top ?? 10) * 2}px`,
+            paddingLeft: `${(config.margins?.side ?? 12) * 2}px`,
+            paddingRight: `${(config.margins?.side ?? 12) * 2}px`,
             paddingBottom: "16px",
           }}
         >
@@ -99,7 +99,7 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
           </div>
           {/* Footer signatures */}
           {config.footerSignatures?.enabled && config.footerSignatures.signatures.length > 0 && (
-            <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "auto", paddingTop: "12px", borderTop: "1px dashed #cbd5e1", position: "absolute", bottom: "16px", left: `${(config.margins?.side ?? 8) * 2}px`, right: `${(config.margins?.side ?? 8) * 2}px`, zIndex: 2 }}>
+            <div style={{ display: "flex", justifyContent: "space-evenly", alignItems: "flex-start", marginTop: "auto", paddingTop: "12px", borderTop: "1px dashed #cbd5e1", position: "absolute", bottom: "16px", left: `${(config.margins?.side ?? 12) * 2}px`, right: `${(config.margins?.side ?? 12) * 2}px`, zIndex: 2 }}>
               {config.footerSignatures.signatures.map((sig, i) => (
                 <div key={i} style={{ textAlign: "center", minWidth: "80px" }}>
                   <p style={{ margin: 0, fontSize: "9px", fontWeight: 600, color: "#1e293b" }}>{sig.label}</p>
