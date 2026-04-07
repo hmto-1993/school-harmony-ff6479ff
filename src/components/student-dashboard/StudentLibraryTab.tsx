@@ -47,7 +47,7 @@ export default function StudentLibraryTab({
               </button>
               <div className="flex items-center gap-3 mb-4">
                 {(() => { const IC = getIconComponent(selectedFolder.icon); return (
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center"><IC className="h-6 w-6 text-primary" /></div>
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center"><IC className="h-6 w-6 text-primary" /></div>
                 ); })()}
                 <div>
                   <h3 className="font-bold text-foreground">{selectedFolder.title}</h3>
@@ -72,7 +72,7 @@ export default function StudentLibraryTab({
                         </div>
                         <div className="flex items-center gap-1">
                           <PreviewButton fileName={file.file_name} fileUrl={file.file_url} onPreview={() => setPreviewFile({ url: file.file_url, name: file.file_name })} />
-                          <a href={file.file_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="p-2 rounded-xl bg-primary/10 dark:bg-primary/20 hover:bg-primary/20 dark:hover:bg-primary/30 text-primary transition-colors">
+                          <a href={file.file_url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} className="p-2 rounded-xl bg-primary/20 hover:bg-primary/30 text-primary transition-colors">
                             <Download className="h-4 w-4" />
                           </a>
                         </div>
@@ -101,7 +101,7 @@ export default function StudentLibraryTab({
                       return (
                         <Card key={folder.id} className="group cursor-pointer border-amber-500/20 hover:border-amber-500/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden bg-gradient-to-br from-amber-500/5 to-transparent dark:from-amber-500/10" onClick={() => openFolder(folder)}>
                           <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform"><IC className="h-6 w-6 text-amber-500" /></div>
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-500/30 flex items-center justify-center group-hover:scale-110 transition-transform"><IC className="h-6 w-6 text-amber-500" /></div>
                             <h4 className="font-semibold text-foreground text-sm leading-tight">{folder.title}</h4>
                             <span className="text-[11px] text-muted-foreground">{folder.file_count} ملف</span>
                           </CardContent>
@@ -123,7 +123,7 @@ export default function StudentLibraryTab({
                       return (
                         <Card key={folder.id} className="group cursor-pointer border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/5 to-transparent dark:from-primary/10" onClick={() => openFolder(folder)}>
                           <CardContent className="p-4 flex flex-col items-center gap-2 text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform"><IC className="h-6 w-6 text-primary" /></div>
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform"><IC className="h-6 w-6 text-primary" /></div>
                             <h4 className="font-semibold text-foreground text-sm leading-tight">{folder.title}</h4>
                             <span className="text-[11px] text-muted-foreground">{folder.file_count} ملف</span>
                           </CardContent>
