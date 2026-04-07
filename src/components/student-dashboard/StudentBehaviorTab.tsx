@@ -6,50 +6,43 @@ interface Props {
   behaviors: { date: string; type: string; note?: string }[];
 }
 
-const typeMap: Record<string, { label: string; icon: typeof ThumbsUp; colorClasses: string; badgeClasses: string }> = {
+const typeMap: Record<string, { label: string; icon: typeof ThumbsUp; colorClasses: string; bgClasses: string }> = {
   positive: {
-    label: "إيجابي",
-    icon: ThumbsUp,
+    label: "إيجابي", icon: ThumbsUp,
     colorClasses: "text-emerald-600 dark:text-emerald-400",
-    badgeClasses: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20",
+    bgClasses: "bg-emerald-50 dark:bg-emerald-500/15",
   },
   negative: {
-    label: "سلبي",
-    icon: ThumbsDown,
+    label: "سلبي", icon: ThumbsDown,
     colorClasses: "text-rose-500 dark:text-rose-400",
-    badgeClasses: "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/20",
+    bgClasses: "bg-rose-50 dark:bg-rose-500/15",
   },
   neutral: {
-    label: "محايد",
-    icon: Minus,
+    label: "محايد", icon: Minus,
     colorClasses: "text-amber-500 dark:text-amber-400",
-    badgeClasses: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/20",
+    bgClasses: "bg-amber-50 dark:bg-amber-500/15",
   },
   "إيجابي": {
-    label: "إيجابي",
-    icon: ThumbsUp,
+    label: "إيجابي", icon: ThumbsUp,
     colorClasses: "text-emerald-600 dark:text-emerald-400",
-    badgeClasses: "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20",
+    bgClasses: "bg-emerald-50 dark:bg-emerald-500/15",
   },
   "سلبي": {
-    label: "سلبي",
-    icon: ThumbsDown,
+    label: "سلبي", icon: ThumbsDown,
     colorClasses: "text-rose-500 dark:text-rose-400",
-    badgeClasses: "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/20",
+    bgClasses: "bg-rose-50 dark:bg-rose-500/15",
   },
   "محايد": {
-    label: "محايد",
-    icon: Minus,
+    label: "محايد", icon: Minus,
     colorClasses: "text-amber-500 dark:text-amber-400",
-    badgeClasses: "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/20",
+    bgClasses: "bg-amber-50 dark:bg-amber-500/15",
   },
 };
 
 const fallback = {
-  label: "—",
-  icon: Minus,
+  label: "—", icon: Minus,
   colorClasses: "text-muted-foreground opacity-30",
-  badgeClasses: "bg-muted/30 text-muted-foreground border-border/30",
+  bgClasses: "bg-muted/30",
 };
 
 function cleanNote(note?: string) {
@@ -116,7 +109,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
                       </td>
                       <td className="p-3 text-right font-semibold border-l border-border/10">{b.date}</td>
                       <td className="p-3 text-center border-l border-border/10">
-                        <div className={cn("p-1.5 rounded-lg inline-flex mx-auto", info.badgeClasses.split(" ").filter(c => c.startsWith("bg-")).join(" "))}>
+                        <div className={cn("p-1.5 rounded-lg inline-flex mx-auto", info.bgClasses)}>
                           <Icon className={cn("h-5 w-5", info.colorClasses)} />
                         </div>
                       </td>
