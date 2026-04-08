@@ -132,13 +132,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     const { data: cats } = await supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order");
     const { data: students } = await supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period")
+    const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period, note")
       .in("student_id", (students || []).map((s) => s.id)).eq("period", selectedPeriod).eq("date", dateStr);
 
-    const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
+    const gradesMap = new Map<string, Map<string, { score: number | null; id: string; note: string }>>();
     grades?.forEach((g) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id });
+      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id, note: (g as any).note || "" });
     });
 
     setCategories((cats as GradeCategory[]) || []);
@@ -148,11 +148,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       const gradeIds: Record<string, string> = {};
       const slots: Record<string, GradeLevel[]> = {};
       const starred: Record<string, boolean> = {};
+      const notes: Record<string, string> = {};
       (cats || []).forEach((c: any) => {
         const g = studentGradesMap.get(c.id);
         const score = g?.score ?? null;
         gradeValues[c.id] = score;
         if (g?.id) gradeIds[c.id] = g.id;
+        notes[c.id] = g?.note || "";
         const max = Number(c.max_score);
         const isPartCat = isParticipation(c.name);
         const slotCount = getMaxSlots(c.id);
@@ -160,7 +162,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
         slots[c.id] = restored.slots;
         starred[c.id] = restored.starred;
       });
-      return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred };
+      return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred, notes };
     }));
   }, [selectedClass, selectedDate, selectedPeriod, getMaxSlots]);
 
