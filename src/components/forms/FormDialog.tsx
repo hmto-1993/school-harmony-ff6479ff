@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -52,6 +53,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [adminPhone, setAdminPhone] = useState("");
   const [sharing, setSharing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [customBodyText, setCustomBodyText] = useState<string | null>(null);
+  const [isEditingBody, setIsEditingBody] = useState(false);
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,6 +106,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setFilterClassId("all");
     setShowStudentList(true);
     setSignatureDataUrl(null);
+    setCustomBodyText(null);
+    setIsEditingBody(false);
   }, [form.id]);
 
   // Auto-fill when student changes
