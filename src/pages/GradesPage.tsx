@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
@@ -53,8 +53,8 @@ export default function GradesPage() {
 
   const classes = classData?.classes || [];
   const classCounts = classData?.classCounts || {};
-  const [selectedClass, setSelectedClass] = useState("");
-  const [activeType, setActiveType] = useState<string>("daily");
+  const [selectedClass, setSelectedClass] = usePersistedState("grades_selected_class", "");
+  const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(() => {
     const saved = localStorage.getItem("grades_selected_period");
     return saved ? Number(saved) : 1;
