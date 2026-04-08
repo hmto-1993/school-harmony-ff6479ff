@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -33,21 +33,36 @@ interface StudentOption {
   section: string;
 }
 
+interface ClassOption {
+  id: string;
+  name: string;
+  grade: string;
+  section: string;
+}
+
 export default function FormDialog({ form, open, onOpenChange }: Props) {
   const { user } = useAuth();
   const [students, setStudents] = useState<StudentOption[]>([]);
+  const [classes, setClasses] = useState<ClassOption[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
   const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
   const [adminPhone, setAdminPhone] = useState("");
 
+  // Search & filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterClassId, setFilterClassId] = useState("all");
+  const [showStudentList, setShowStudentList] = useState(true);
+
   // Load students + admin phone
   useEffect(() => {
     if (!open || !user) return;
     (async () => {
-      const { data: classes } = await supabase.from("classes").select("id, name, grade, section");
-      const classMap = new Map((classes || []).map((c) => [c.id, c]));
+      const { data: classesData } = await supabase.from("classes").select("id, name, grade, section");
+      const classList = classesData || [];
+      setClasses(classList);
+      const classMap = new Map(classList.map((c) => [c.id, c]));
 
       const { data: studs } = await supabase
         .from("students")
@@ -65,7 +80,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
       });
       setStudents(mapped);
 
-      // Load admin phone from site_settings
       if (form.adminAlertEnabled) {
         const { data: settings } = await supabase
           .from("site_settings")
@@ -82,6 +96,9 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSelectedStudentId("");
     setFieldValues({});
     setSelectedWitnesses([]);
+    setSearchQuery("");
+    setFilterClassId("all");
+    setShowStudentList(true);
   }, [form.id]);
 
   // Auto-fill when student changes
@@ -111,6 +128,34 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
       .join("، ");
     setFieldValues((prev) => ({ ...prev, witnesses_names: witnessNames }));
   }, [selectedWitnesses, students, form.witnessPickerEnabled]);
+
+  // Filtered students for the smart picker
+  const filteredStudents = useMemo(() => {
+    let result = students;
+    if (filterClassId !== "all") {
+      result = result.filter((s) => s.class_id === filterClassId);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.full_name.toLowerCase().includes(q) ||
+          (s.national_id && s.national_id.includes(q))
+      );
+    }
+    return result;
+  }, [students, filterClassId, searchQuery]);
+
+  const selectedStudent = useMemo(
+    () => students.find((s) => s.id === selectedStudentId),
+    [students, selectedStudentId]
+  );
+
+  const handleSelectStudent = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    setShowStudentList(false);
+    setSearchQuery("");
+  };
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }));
@@ -162,7 +207,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
 
     let phone = adminPhone.replace(/\D/g, "");
     if (!phone) {
-      // Fallback: open without number
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
       return;
     }
@@ -172,7 +216,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
-  // Available witnesses (exclude the selected student)
   const witnessOptions = useMemo(
     () => students.filter((s) => s.id !== selectedStudentId),
     [students, selectedStudentId]
@@ -220,7 +263,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     );
   };
 
-  // Body preview
   const bodyPreview = form.bodyTemplate
     ? form.bodyTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || `{${key}}`)
     : null;
@@ -246,24 +288,88 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
 
         <ScrollArea className="flex-1 -mx-6 px-6">
           <div className="space-y-4 py-2">
-            {/* Student selector */}
-            <div className="space-y-1">
+            {/* Smart Student Picker */}
+            <div className="space-y-2">
               <Label className="text-xs font-semibold">اختيار الطالب</Label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر الطالب..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {students.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.full_name} — {s.className}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+              {selectedStudent && !showStudentList ? (
+                <div className="flex items-center gap-2 rounded-lg border bg-muted/50 p-2.5">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{selectedStudent.full_name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {selectedStudent.className} — {selectedStudent.national_id || "بدون هوية"}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0 shrink-0"
+                    onClick={() => { setShowStudentList(true); setSearchQuery(""); }}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* Class filter + Search */}
+                  <div className="flex gap-2">
+                    <Select value={filterClassId} onValueChange={setFilterClassId}>
+                      <SelectTrigger className="w-[130px] shrink-0 text-xs h-9">
+                        <SelectValue placeholder="كل الفصول" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">كل الفصول</SelectItem>
+                        {classes.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="relative flex-1">
+                      <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                      <Input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="ابحث بالاسم أو الهوية..."
+                        className="pr-8 h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Student list */}
+                  <div className="border rounded-lg max-h-48 overflow-y-auto">
+                    {filteredStudents.length === 0 ? (
+                      <p className="text-center text-xs text-muted-foreground py-6">
+                        {searchQuery ? "لا توجد نتائج" : "لا يوجد طلاب"}
+                      </p>
+                    ) : (
+                      filteredStudents.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => handleSelectStudent(s.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-right hover:bg-accent/50 active:bg-accent transition-colors border-b border-border/50 last:border-b-0"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{s.full_name}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {s.national_id || "—"}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] shrink-0 font-normal">
+                            {s.className || "بدون فصل"}
+                          </Badge>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    {filteredStudents.length} طالب
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Witness picker for incident_report */}
+            {/* Witness picker */}
             {form.witnessPickerEnabled && selectedStudentId && (
               <div className="space-y-2">
                 <Label className="text-xs font-semibold flex items-center gap-1">
@@ -300,7 +406,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               </div>
             )}
 
-            {/* Form fields (non-auto, non-hidden) */}
+            {/* Form fields */}
             {form.fields.filter((f) => f.type !== "auto" && !f.hidden).map(renderField)}
 
             {/* Body preview */}
@@ -315,7 +421,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               </div>
             )}
 
-            {/* Auto-filled fields display */}
+            {/* Auto-filled fields */}
             {selectedStudentId && (
               <div className="grid grid-cols-2 gap-2">
                 {form.fields.filter((f) => f.type === "auto").map((f) => (
@@ -334,7 +440,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
         <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
 
-          {/* Admin urgent alert WhatsApp */}
           {form.adminAlertEnabled && (
             <Button
               variant="destructive"
@@ -348,7 +453,6 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
             </Button>
           )}
 
-          {/* Parent WhatsApp */}
           {form.whatsappEnabled && (
             <Button
               variant="outline"
