@@ -1,11 +1,66 @@
 import jsPDF from "jspdf";
 import { registerArabicFont } from "@/lib/arabic-pdf";
+import { supabase } from "@/integrations/supabase/client";
 import type { FormTemplate } from "./form-templates";
 
 interface StudentInfo {
   id: string;
   full_name: string;
   national_id: string | null;
+}
+
+interface FormIdentityConfig {
+  headerRightLines: string[];
+  headerLeftLines: string[];
+  headerFontSize: number;
+  ministryLogoUrl: string;
+  schoolLogoUrl: string;
+  signatureImageUrl: string;
+  useLiveSignature: boolean;
+  footerText: string;
+}
+
+const DEFAULT_IDENTITY: FormIdentityConfig = {
+  headerRightLines: ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "ثانوية الفيصلية"],
+  headerLeftLines: ["ألفا فيزياء", "Alpha Physics"],
+  headerFontSize: 9,
+  ministryLogoUrl: "",
+  schoolLogoUrl: "",
+  signatureImageUrl: "",
+  useLiveSignature: true,
+  footerText: "",
+};
+
+/** Load form identity settings from DB */
+async function loadFormIdentity(): Promise<FormIdentityConfig> {
+  try {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .like("id", "form_identity_%");
+    if (!data || data.length === 0) return { ...DEFAULT_IDENTITY };
+    const map = new Map(data.map((r) => [r.id, r.value]));
+    return {
+      headerRightLines: map.has("form_identity_right_lines")
+        ? JSON.parse(map.get("form_identity_right_lines")!)
+        : DEFAULT_IDENTITY.headerRightLines,
+      headerLeftLines: map.has("form_identity_left_lines")
+        ? JSON.parse(map.get("form_identity_left_lines")!)
+        : DEFAULT_IDENTITY.headerLeftLines,
+      headerFontSize: map.has("form_identity_font_size")
+        ? Number(map.get("form_identity_font_size"))
+        : DEFAULT_IDENTITY.headerFontSize,
+      ministryLogoUrl: map.get("form_identity_ministry_logo") || "",
+      schoolLogoUrl: map.get("form_identity_school_logo") || "",
+      signatureImageUrl: map.get("form_identity_signature_img") || "",
+      useLiveSignature: map.has("form_identity_live_sig")
+        ? map.get("form_identity_live_sig") === "true"
+        : true,
+      footerText: map.get("form_identity_footer") || "",
+    };
+  } catch {
+    return { ...DEFAULT_IDENTITY };
+  }
 }
 
 /** Generate a unique reference number for QR / documentation */
@@ -27,18 +82,15 @@ function fillTemplate(template: string, values: Record<string, string>): string 
 function drawQrPattern(doc: jsPDF, x: number, y: number, size: number, refNumber: string) {
   const cellSize = size / 9;
   doc.setFillColor(30, 41, 59);
-
   const drawCorner = (cx: number, cy: number) => {
     doc.rect(cx, cy, cellSize * 3, cellSize * 3, "S");
     doc.rect(cx + cellSize * 0.5, cy + cellSize * 0.5, cellSize * 2, cellSize * 2, "F");
   };
-
   doc.setDrawColor(30, 41, 59);
   doc.setLineWidth(0.4);
   drawCorner(x, y);
   drawCorner(x + cellSize * 6, y);
   drawCorner(x, y + cellSize * 6);
-
   const hash = refNumber.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
   for (let r = 3; r < 6; r++) {
     for (let c = 3; c < 6; c++) {
@@ -47,16 +99,16 @@ function drawQrPattern(doc: jsPDF, x: number, y: number, size: number, refNumber
       }
     }
   }
-
   doc.setFontSize(7);
   doc.setTextColor(100, 100, 100);
   doc.text(refNumber, x + size / 2, y + size + 4, { align: "center" });
 }
 
-/** Load school logo as base64 data URL */
-async function loadLogoBase64(): Promise<string | null> {
+/** Load an image URL as base64 data URL */
+async function loadImageBase64(url: string): Promise<string | null> {
+  if (!url) return null;
   try {
-    const response = await fetch("/assets/school-logo.jpg");
+    const response = await fetch(url, { mode: "cors" });
     if (!response.ok) return null;
     const blob = await response.blob();
     return new Promise((resolve) => {
