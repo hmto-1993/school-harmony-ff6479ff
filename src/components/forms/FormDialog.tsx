@@ -200,7 +200,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setExporting(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      await exportFormPdf(form, fieldValues, student, { signatureDataUrl });
+      await exportFormPdf(form, fieldValues, student, { signatureDataUrl, customBodyText });
       await archiveForm();
       toast.success("تم تصدير النموذج بنجاح");
     } catch (err) {
@@ -255,7 +255,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSharing(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl });
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl, customBodyText });
       if (!blob) throw new Error("Failed to generate PDF");
       await archiveForm();
 
