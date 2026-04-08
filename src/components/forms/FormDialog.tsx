@@ -216,8 +216,43 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
 
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
+  const handleSharePdf = async () => {
+    if (!selectedStudentId) {
+      toast.error("يرجى اختيار الطالب أولاً");
+      return;
+    }
+    setSharing(true);
+    try {
+      const student = students.find((s) => s.id === selectedStudentId)!;
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true });
+      if (!blob) throw new Error("Failed to generate PDF");
 
-  const witnessOptions = useMemo(
+      const file = new File([blob], fileName, { type: "application/pdf" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        toast.success("تمت المشاركة بنجاح");
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        toast.success("تم تنزيل الملف — يمكنك مشاركته يدوياً عبر واتساب");
+      }
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.error(err);
+        toast.error("فشل مشاركة الملف");
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
+
     () => students.filter((s) => s.id !== selectedStudentId),
     [students, selectedStudentId]
   );
