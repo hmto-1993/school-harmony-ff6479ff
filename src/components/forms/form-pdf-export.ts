@@ -167,7 +167,8 @@ export async function exportFormPdf(
   form: FormTemplate,
   fieldValues: Record<string, string>,
   student: StudentInfo,
-) {
+  options?: { returnBlob?: boolean },
+): Promise<{ blob: Blob | null; fileName: string }> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
