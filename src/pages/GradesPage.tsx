@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
@@ -33,47 +34,31 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-  const [classesLoading, setClassesLoading] = useState(true);
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [classCounts, setClassCounts] = useState<Record<string, number>>({});
+  const { data: classData, isLoading: classesLoading } = useQuery({
+    queryKey: ["grades-classes-students"],
+    queryFn: async () => {
+      const [{ data: cls }, { data: students }] = await Promise.all([
+        supabase.from("classes").select("id, name").order("name"),
+        supabase.from("students").select("id, class_id"),
+      ]);
+      const counts: Record<string, number> = {};
+      (students || []).forEach((s) => {
+        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
+      });
+      return { classes: cls || [], classCounts: counts };
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const classes = classData?.classes || [];
+  const classCounts = classData?.classCounts || {};
   const [selectedClass, setSelectedClass] = useState("");
   const [activeType, setActiveType] = useState<string>("daily");
   const [selectedPeriod, setSelectedPeriod] = useState<number>(() => {
     const saved = localStorage.getItem("grades_selected_period");
     return saved ? Number(saved) : 1;
   });
-
-  const handlePeriodChange = (period: number) => {
-    setSelectedPeriod(period);
-    localStorage.setItem("grades_selected_period", String(period));
-  };
-
-  const canEdit = perms.can_manage_grades && !perms.read_only_mode;
-  // If can't view grades at all, show restricted message
-  const canView = perms.can_view_grades || perms.read_only_mode;
-
-  // Filter entry types based on edit permissions
-  const availableTypes = canEdit
-    ? ENTRY_TYPES
-    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "daily" || t.id === "classwork");
-
-  useEffect(() => {
-    const load = async () => {
-      setClassesLoading(true);
-      const [{ data: cls }, { data: students }] = await Promise.all([
-        supabase.from("classes").select("id, name").order("name"),
-        supabase.from("students").select("id, class_id"),
-      ]);
-      setClasses(cls || []);
-      const counts: Record<string, number> = {};
-      (students || []).forEach((s) => {
-        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
-      });
-      setClassCounts(counts);
-      setClassesLoading(false);
-    };
-    load();
-  }, []);
 
   const showPeriodSelector = activeType === "daily" || activeType === "classwork" || activeType === "summary" || activeType === "import";
 
