@@ -5,6 +5,14 @@ export interface FormTemplate {
   icon: string;
   description: string;
   fields: FormField[];
+  /** Pre-filled official body text with placeholders like {student_name}, {class_name} */
+  bodyTemplate?: string;
+  /** Custom signature labels (overrides default) */
+  signatureLabels?: string[];
+  /** Enable WhatsApp send button */
+  whatsappEnabled?: boolean;
+  /** WhatsApp message template */
+  whatsappTemplate?: string;
 }
 
 export interface FormField {
@@ -14,6 +22,8 @@ export interface FormField {
   autoKey?: "student_name" | "class_name" | "national_id" | "date" | "grade" | "section";
   required?: boolean;
   placeholder?: string;
+  /** If true, the field is hidden from UI (used only in PDF body template) */
+  hidden?: boolean;
 }
 
 const commonAutoFields: FormField[] = [
@@ -32,11 +42,14 @@ export const categoryLabels: Record<string, { label: string; color: string }> = 
 export const formTemplates: FormTemplate[] = [
   {
     id: "commitment",
-    title: "نموذج الالتزام",
+    title: "نموذج الالتزام المدرسي",
     category: "general",
     icon: "📝",
-    description: "نموذج التزام عام للطالب",
-    fields: [...commonAutoFields, { id: "commitment_text", label: "نص الالتزام", type: "textarea", placeholder: "أتعهد بـ..." }],
+    description: "إقرار الالتزام بقواعد السلوك والمواظبة",
+    bodyTemplate:
+      "نموذج إقرار الالتزام بقواعد السلوك والمواظبة لعام 1447هـ\n\nيقر الطالب/ {student_name} المقيد في فصل/ {class_name} وولي أمره بالاطلاع على لائحة السلوك والمواظبة والالتزام بما جاء فيها لضمان بيئة تعليمية محفزة.\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "معلم المادة", "المرشد الطلابي"],
+    fields: [...commonAutoFields],
   },
   {
     id: "behavior_grades",
@@ -91,8 +104,11 @@ export const formTemplates: FormTemplate[] = [
     title: "تعهد سلوكي",
     category: "behavior",
     icon: "✍️",
-    description: "تعهد سلوكي من الطالب",
-    fields: [...commonAutoFields, { id: "pledge_text", label: "نص التعهد", type: "textarea" }],
+    description: "تعهد سلوكي رسمي من الطالب بالالتزام بقواعد السلوك",
+    bodyTemplate:
+      "أنا الطالب/ {student_name} المقيد في فصل/ {class_name} أتعهد بالالتزام بقواعد السلوك والمواظبة داخل فصل الفيزياء وفي المدرسة، وفي حال تكرار المخالفة يحق للمدرسة اتخاذ الإجراءات النظامية بحقي.\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر"],
+    fields: [...commonAutoFields],
   },
   {
     id: "parent_notice",
@@ -104,11 +120,21 @@ export const formTemplates: FormTemplate[] = [
   },
   {
     id: "invitation_letter",
-    title: "خطاب دعوة",
+    title: "خطاب دعوة ولي أمر",
     category: "general",
     icon: "✉️",
-    description: "خطاب دعوة رسمي",
-    fields: [...commonAutoFields, { id: "invited_to", label: "المدعو إلى", type: "text" }, { id: "purpose", label: "الغرض من الدعوة", type: "textarea" }],
+    description: "خطاب دعوة رسمي لولي الأمر لمراجعة المدرسة",
+    bodyTemplate:
+      "المكرم ولي أمر الطالب/ {student_name}\n\nالسلام عليكم ورحمة الله وبركاته..\n\nنأمل منكم مراجعة المدرسة (قسم التوجيه الطلابي) في يوم/ {visit_day} الموافق/ {visit_date} لمناقشة أمر يخص الطالب.\n\nفصل الطالب: {class_name}\nالسجل المدني: {national_id}\n\nشاكرين لكم حسن تعاونكم.",
+    signatureLabels: ["معلم المادة", "المرشد الطلابي", "قائد المدرسة"],
+    whatsappEnabled: true,
+    whatsappTemplate:
+      "المكرم ولي أمر الطالب/ {student_name}\n\nالسلام عليكم ورحمة الله وبركاته\n\nنأمل منكم مراجعة المدرسة (قسم التوجيه الطلابي) في يوم/ {visit_day} الموافق/ {visit_date} لمناقشة أمر يخص الطالب.\n\nثانوية الفيصلية - ألفا فيزياء",
+    fields: [
+      ...commonAutoFields,
+      { id: "visit_day", label: "يوم الزيارة", type: "text", placeholder: "مثال: الأحد" },
+      { id: "visit_date", label: "تاريخ الزيارة", type: "date" },
+    ],
   },
   {
     id: "incident_report",
@@ -163,7 +189,10 @@ export const formTemplates: FormTemplate[] = [
     title: "تعهد بالمواظبة",
     category: "general",
     icon: "📆",
-    description: "تعهد بالمواظبة والانتظام",
-    fields: [...commonAutoFields, { id: "pledge_attendance", label: "نص التعهد", type: "textarea", placeholder: "أتعهد بالمواظبة على الحضور..." }],
+    description: "تعهد بالمواظبة والانتظام في حصة الفيزياء",
+    bodyTemplate:
+      "أتعهد أنا الطالب/ {student_name} بالمواظبة على الحضور وعدم التأخر عن حصة الفيزياء، وأدرك أن الغياب والتأخر يؤثر سلباً على مستواي التحصيلي.\n\nالفصل: {class_name}\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "معلم المادة"],
+    fields: [...commonAutoFields],
   },
 ];

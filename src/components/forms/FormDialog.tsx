@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -26,6 +26,7 @@ interface StudentOption {
   full_name: string;
   national_id: string | null;
   class_id: string | null;
+  parent_phone: string | null;
   className: string;
   grade: string;
   section: string;
@@ -47,7 +48,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
 
       const { data: studs } = await supabase
         .from("students")
-        .select("id, full_name, national_id, class_id")
+        .select("id, full_name, national_id, class_id, parent_phone")
         .order("full_name");
 
       const mapped: StudentOption[] = (studs || []).map((s) => {
@@ -62,6 +63,12 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
       setStudents(mapped);
     })();
   }, [open, user]);
+
+  // Reset state when form changes
+  useEffect(() => {
+    setSelectedStudentId("");
+    setFieldValues({});
+  }, [form.id]);
 
   // Auto-fill when student changes
   useEffect(() => {
@@ -103,7 +110,30 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     }
   };
 
+  const handleWhatsApp = () => {
+    if (!form.whatsappTemplate || !selectedStudentId) {
+      toast.error("يرجى اختيار الطالب أولاً");
+      return;
+    }
+
+    const student = students.find((s) => s.id === selectedStudentId);
+    if (!student) return;
+
+    // Fill template with values
+    let message = form.whatsappTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || "............");
+
+    // Build WhatsApp URL
+    let phone = student.parent_phone || "";
+    phone = phone.replace(/\D/g, "");
+    if (phone.startsWith("05")) phone = "966" + phone.slice(1);
+    if (!phone.startsWith("966")) phone = "966" + phone;
+
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(url, "_blank");
+  };
+
   const renderField = (field: FormField) => {
+    if (field.hidden) return null;
     const value = fieldValues[field.id] || "";
     const isAuto = field.type === "auto";
 
@@ -136,6 +166,11 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     );
   };
 
+  // Show body preview if template exists
+  const bodyPreview = form.bodyTemplate
+    ? form.bodyTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || `{${key}}`)
+    : null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
@@ -166,13 +201,50 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               </Select>
             </div>
 
-            {/* Form fields */}
-            {form.fields.map(renderField)}
+            {/* Form fields (non-hidden) */}
+            {form.fields.filter(f => f.type !== "auto").map(renderField)}
+
+            {/* Body preview */}
+            {bodyPreview && selectedStudentId && (
+              <div className="space-y-1">
+                <Label className="text-xs font-semibold text-muted-foreground">معاينة النموذج</Label>
+                <div className="rounded-lg border bg-muted/50 p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                  {bodyPreview}
+                </div>
+              </div>
+            )}
+
+            {/* Auto-filled fields display */}
+            {selectedStudentId && (
+              <div className="grid grid-cols-2 gap-2">
+                {form.fields.filter(f => f.type === "auto").map(f => (
+                  <div key={f.id} className="space-y-0.5">
+                    <Label className="text-[10px] text-muted-foreground">{f.label}</Label>
+                    <div className="text-xs font-medium bg-muted rounded px-2 py-1.5 truncate">
+                      {fieldValues[f.id] || "—"}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </ScrollArea>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+
+          {form.whatsappEnabled && (
+            <Button
+              variant="outline"
+              className="text-success border-success/30 hover:bg-success/10"
+              onClick={handleWhatsApp}
+              disabled={!selectedStudentId}
+            >
+              <MessageCircle className="h-4 w-4 ml-2" />
+              إرسال عبر واتساب
+            </Button>
+          )}
+
           <Button onClick={handleExport} disabled={exporting || !selectedStudentId}>
             {exporting ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
             تصدير PDF
