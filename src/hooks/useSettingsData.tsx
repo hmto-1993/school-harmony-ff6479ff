@@ -90,6 +90,7 @@ export function useSettingsData() {
   const [studentShowHonorRoll, setStudentShowHonorRoll] = useState(true);
   const [studentShowAbsenceWarning, setStudentShowAbsenceWarning] = useState(true);
   const [studentShowNationalId, setStudentShowNationalId] = useState(true);
+  const [studentShowDeductions, setStudentShowDeductions] = useState(true);
 
   // Student welcome
   const [studentWelcomeEnabled, setStudentWelcomeEnabled] = useState(false);
@@ -145,6 +146,7 @@ export function useSettingsData() {
   const [parentShowDailyGrades, setParentShowDailyGrades] = useState(false);
   const [parentShowClassworkIcons, setParentShowClassworkIcons] = useState(false);
   const [parentClassworkIconsCount, setParentClassworkIconsCount] = useState(10);
+  const [parentShowDeductions, setParentShowDeductions] = useState(true);
   const [parentPdfHeader, setParentPdfHeader] = useState({ line1: "", line2: "", line3: "", showLogo: true });
 
   const [absenceThreshold, setAbsenceThreshold] = useState(20);
