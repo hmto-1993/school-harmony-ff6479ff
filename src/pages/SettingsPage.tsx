@@ -15,6 +15,7 @@ import {
   AlertTriangle, Heart, Table2, Trash2,
 } from "lucide-react";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import FormIdentitySettings from "@/components/settings/FormIdentitySettings";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
