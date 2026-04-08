@@ -232,8 +232,15 @@ export async function exportFormPdf(
   await registerArabicFont(doc);
   doc.setFont("Amiri");
 
-  // Try to load logo
-  const logoData = await loadLogoBase64();
+  // Load form identity settings
+  const identity = await loadFormIdentity();
+
+  // Try to load logos
+  const [ministryLogo, schoolLogo, savedSigImg] = await Promise.all([
+    loadImageBase64(identity.ministryLogoUrl),
+    loadImageBase64(identity.schoolLogoUrl),
+    loadImageBase64(identity.signatureImageUrl),
+  ]);
 
   // ========== CONFIDENTIAL WATERMARK ==========
   if (form.confidentialWatermark) {
@@ -243,7 +250,6 @@ export async function exportFormPdf(
   let y = 12;
 
   // ========== HEADER ==========
-  // Top decorative border
   const headerColor = form.confidentialWatermark ? [153, 27, 27] : [0, 102, 153];
   doc.setDrawColor(headerColor[0], headerColor[1], headerColor[2]);
   doc.setLineWidth(1.2);
@@ -252,32 +258,37 @@ export async function exportFormPdf(
   doc.line(marginX, y + 2, pageW - marginX, y + 2);
   y += 7;
 
-  // Right side: Ministry info
-  doc.setFontSize(9);
+  // Right side: Ministry info + logo
+  const fontSize = identity.headerFontSize;
+  doc.setFontSize(fontSize);
   doc.setFont("Amiri", "normal");
   doc.setTextColor(30, 41, 59);
-  const rightLines = ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "ثانوية الفيصلية"];
-  rightLines.forEach((line, i) => {
-    doc.text(line, pageW - marginX, y + i * 5, { align: "right" });
-  });
 
-  // Left side: Alpha Physics branding
-  const leftLines = ["ألفا فيزياء", "Alpha Physics"];
-  leftLines.forEach((line, i) => {
-    doc.text(line, marginX, y + i * 5, { align: "left" });
-  });
-
-  // Center: Logo
-  if (logoData) {
+  const rightStartX = pageW - marginX;
+  let rightLogoOffset = 0;
+  if (ministryLogo) {
     try {
-      const logoSize = 16;
-      doc.addImage(logoData, "JPEG", pageW / 2 - logoSize / 2, y - 2, logoSize, logoSize);
-    } catch {
-      // ignore logo errors
-    }
+      doc.addImage(ministryLogo, "PNG", rightStartX - 12, y - 2, 12, 12);
+      rightLogoOffset = 14;
+    } catch { /* ignore */ }
   }
+  identity.headerRightLines.forEach((line, i) => {
+    doc.text(line, rightStartX - rightLogoOffset, y + i * (fontSize * 0.55), { align: "right" });
+  });
 
-  y += 24;
+  // Left side: school branding + logo
+  let leftLogoOffset = 0;
+  if (schoolLogo) {
+    try {
+      doc.addImage(schoolLogo, "PNG", marginX, y - 2, 12, 12);
+      leftLogoOffset = 14;
+    } catch { /* ignore */ }
+  }
+  identity.headerLeftLines.forEach((line, i) => {
+    doc.text(line, marginX + leftLogoOffset, y + i * (fontSize * 0.55), { align: "left" });
+  });
+
+  y += Math.max(identity.headerRightLines.length, identity.headerLeftLines.length) * (fontSize * 0.55) + 8;
 
   // Confidential badge
   if (form.confidentialWatermark) {
@@ -444,15 +455,16 @@ export async function exportFormPdf(
     y += 32;
   }
 
-  // ========== ELECTRONIC SIGNATURE ==========
-  if (options?.signatureDataUrl) {
+  // ========== ELECTRONIC SIGNATURE (live canvas OR saved image) ==========
+  const sigData = options?.signatureDataUrl || (identity.signatureImageUrl ? savedSigImg : null);
+  if (sigData) {
     if (y > pageH - 70) { doc.addPage(); y = 20; }
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.text("التوقيع الإلكتروني:", pageW - marginX, y, { align: "right" });
     y += 2;
     try {
-      doc.addImage(options.signatureDataUrl, "PNG", pageW / 2 - 25, y, 50, 20);
+      doc.addImage(sigData, "PNG", pageW / 2 - 25, y, 50, 20);
     } catch { /* ignore */ }
     y += 24;
   }
@@ -487,7 +499,15 @@ export async function exportFormPdf(
   doc.setFontSize(7);
   doc.setTextColor(130, 130, 130);
   doc.text(`رقم المرجع: ${refNumber}`, marginX + 24, qrY + 6);
-  doc.text("ثانوية الفيصلية - ألفا فيزياء", marginX + 24, qrY + 10);
+  const footerBrand = `${identity.headerRightLines[identity.headerRightLines.length - 1] || ""} - ${identity.headerLeftLines[0] || ""}`;
+  doc.text(footerBrand, marginX + 24, qrY + 10);
+
+  // Custom footer text
+  if (identity.footerText) {
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text(identity.footerText, pageW / 2, pageH - 13, { align: "center", maxWidth: contentW });
+  }
 
   // Bottom decorative border
   doc.setDrawColor(headerColor[0], headerColor[1], headerColor[2]);
