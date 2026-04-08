@@ -568,7 +568,7 @@ export default function FormDialog({ form, open, onOpenChange, preSelectedStuden
                 onClick={handleBulkMerged}
                 disabled={bulkExporting}
               >
-                {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileMerge className="h-3.5 w-3.5" />}
+                {bulkExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Files className="h-3.5 w-3.5" />}
                 تقرير مدمج ({multiStudents.length})
               </Button>
             </>
