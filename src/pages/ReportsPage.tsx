@@ -20,6 +20,7 @@ import { useReportsData } from "@/hooks/useReportsData";
 
 export default function ReportsPage() {
   const r = useReportsData();
+  const [activeTab, setActiveTab] = usePersistedState("reports_active_tab", "attendance");
 
   if (r.permsLoaded && !r.teacherPerms.can_view_reports && !r.teacherPerms.read_only_mode) {
     return (
