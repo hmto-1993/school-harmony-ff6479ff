@@ -31,6 +31,7 @@ const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const InstallPage = lazy(() => import("@/pages/InstallPage"));
 const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
+const FormsPage = lazy(() => import("@/pages/FormsPage"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,7 @@ const App = () => {
                       <Route path="/library" element={<ResourceLibraryPage />} />
                       <Route path="/activities" element={<ActivitiesPage />} />
                       <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
+                      <Route path="/forms" element={<FormsPage />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>

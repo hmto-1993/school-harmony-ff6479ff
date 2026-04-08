@@ -17,6 +17,7 @@ import {
   Moon,
   UserCheck,
   Layers,
+  FileText,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -36,6 +37,7 @@ const adminLinks = [
   { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/activities", label: "الأنشطة", icon: Layers },
   { to: "/student-logins", label: "سجل الزيارات", icon: UserCheck },
+  { to: "/forms", label: "النماذج الرسمية", icon: FileText },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
@@ -48,6 +50,7 @@ const teacherLinks = [
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
   { to: "/activities", label: "الأنشطة", icon: Layers },
+  { to: "/forms", label: "النماذج الرسمية", icon: FileText },
   { to: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
