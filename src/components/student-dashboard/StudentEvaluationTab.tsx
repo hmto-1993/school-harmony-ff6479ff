@@ -123,9 +123,10 @@ function LevelIcon({ level, size = 20 }: { level: EvaluationLevel | null; size?:
 }
 
 export default function StudentEvaluationTab({ student, isParent, parentVis, evalSubView, setEvalSubView }: Props) {
-  const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+  const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10, showDeductions: true };
   const showDaily = isParent ? parentVis.parentShowDailyGrades : studentEval.showDaily;
   const showClasswork = isParent ? parentVis.parentShowClassworkIcons : studentEval.showClasswork;
+  const showDeductions = isParent ? parentVis.parentShowDeductions : (studentEval.showDeductions ?? true);
   const effectiveIconsCount = isParent ? parentVis.parentClassworkIconsCount : studentEval.iconsCount;
 
   const studentClassId = student.class_id;
@@ -253,7 +254,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
         </div>
 
         {/* Deductions section */}
-        {deductionGrades.length > 0 && (
+        {showDeductions && deductionGrades.length > 0 && (
           <div className="mt-3 overflow-auto rounded-xl border border-destructive/20 shadow-sm">
             <table className="w-full text-xs border-separate border-spacing-0">
               <thead>
@@ -328,7 +329,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
         </div>
 
         {/* Deductions section in classwork view */}
-        {deductionGrades.length > 0 && (
+        {showDeductions && deductionGrades.length > 0 && (
           <div className="mt-3 overflow-auto rounded-xl border border-destructive/20 shadow-sm">
             <table className="w-full text-xs border-separate border-spacing-0">
               <thead>
