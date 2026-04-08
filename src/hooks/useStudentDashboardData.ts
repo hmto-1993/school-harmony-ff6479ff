@@ -88,7 +88,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
         "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval",
         "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades",
         "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library",
-        "parent_show_activities", "parent_pdf_header",
+        "parent_show_activities", "parent_pdf_header", "parent_show_deductions",
       ]);
     const updates: Partial<ParentVisibility> = {};
     (data || []).forEach((s: any) => {
