@@ -468,6 +468,11 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
             {/* Form fields */}
             {form.fields.filter((f) => f.type !== "auto" && !f.hidden).map(renderField)}
 
+            {/* Signature Canvas */}
+            {selectedStudentId && (
+              <SignatureCanvas onSignatureChange={setSignatureDataUrl} />
+            )}
+
             {/* Body preview */}
             {bodyPreview && selectedStudentId && (
               <div className="space-y-1">
