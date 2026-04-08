@@ -35,7 +35,13 @@ export function useSettingsData() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCard, setActiveCard] = useState<string | null>(null);
+  const [activeCard, setActiveCardState] = useState<string | null>(() => {
+    try { return sessionStorage.getItem("settings_active_card") || null; } catch { return null; }
+  });
+  const setActiveCard = (val: string | null) => {
+    setActiveCardState(val);
+    try { if (val) sessionStorage.setItem("settings_active_card", val); else sessionStorage.removeItem("settings_active_card"); } catch {}
+  };
   const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
 
   // Letterhead
