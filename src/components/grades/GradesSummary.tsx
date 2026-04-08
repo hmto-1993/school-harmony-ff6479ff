@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { calcSubtotal, getSummaryPrintOptions } from "./grades-table-builders";
 
 interface ClassInfo { id: string; name: string; }
-interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; }
+interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; is_deduction?: boolean; }
 
 interface SummaryRow {
   student_id: string;
@@ -62,7 +62,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
     const cls = classesData || [];
     const students = studentsData || [];
-    const cats = (catsData || []) as CategoryInfo[];
+    const cats = ((catsData || []) as CategoryInfo[]).filter(c => !c.is_deduction);
     const studentIds = students.map((s) => s.id);
 
     let allGrades: any[] = [];
