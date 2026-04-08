@@ -392,6 +392,19 @@ export async function exportFormPdf(
     y += 32;
   }
 
+  // ========== ELECTRONIC SIGNATURE ==========
+  if (options?.signatureDataUrl) {
+    if (y > pageH - 70) { doc.addPage(); y = 20; }
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text("التوقيع الإلكتروني:", pageW - marginX, y, { align: "right" });
+    y += 2;
+    try {
+      doc.addImage(options.signatureDataUrl, "PNG", pageW / 2 - 25, y, 50, 20);
+    } catch { /* ignore */ }
+    y += 24;
+  }
+
   // ========== FOOTER: Signatures ==========
   y = Math.max(y + 8, pageH - 52);
 
