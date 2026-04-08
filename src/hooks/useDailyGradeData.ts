@@ -247,6 +247,12 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     ));
   };
 
+  const setDeductionNote = (studentId: string, categoryId: string, note: string) => {
+    setStudentGrades((prev) => prev.map((sg) =>
+      sg.student_id === studentId ? { ...sg, notes: { ...sg.notes, [categoryId]: note } } : sg
+    ));
+  };
+
   // Computed
   const dailyCategories = categories.filter(c => isAllowedInDaily(c));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
