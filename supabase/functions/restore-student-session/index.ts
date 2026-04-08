@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     if (visibility.grades) {
       const { data: gradesData } = await supabase
         .from("grades")
-        .select("score, period, category_id, date, grade_categories(name, max_score, weight, category_group)")
+        .select("score, period, category_id, date, note, grade_categories(name, max_score, weight, category_group, is_deduction)")
         .eq("student_id", student.id);
       grades = (gradesData || []).filter((g: any) => {
         const catName = g.grade_categories?.name;
