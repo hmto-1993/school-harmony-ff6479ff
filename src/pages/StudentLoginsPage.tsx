@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -313,7 +314,7 @@ export default function StudentLoginsPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="classes" dir="rtl">
+      <Tabs defaultValue={(() => { try { return sessionStorage.getItem("student_logins_tab") || "classes"; } catch { return "classes"; } })()} onValueChange={(v) => { try { sessionStorage.setItem("student_logins_tab", v); } catch {} }} dir="rtl">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="classes">إحصائيات الفصول</TabsTrigger>
           <TabsTrigger value="students">إحصائيات الطلاب</TabsTrigger>
