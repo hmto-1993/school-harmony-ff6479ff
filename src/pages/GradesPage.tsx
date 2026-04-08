@@ -56,10 +56,7 @@ export default function GradesPage() {
   const classCounts = classData?.classCounts || {};
   const [selectedClass, setSelectedClass] = usePersistedState("grades_selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
-  const [selectedPeriod, setSelectedPeriod] = useState<number>(() => {
-    const saved = localStorage.getItem("grades_selected_period");
-    return saved ? Number(saved) : 1;
-  });
+  const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
 
   const handlePeriodChange = (period: number) => {
     setSelectedPeriod(period);
