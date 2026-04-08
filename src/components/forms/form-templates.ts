@@ -32,12 +32,14 @@ export interface FormTemplate {
 export interface FormField {
   id: string;
   label: string;
-  type: "text" | "textarea" | "date" | "auto";
+  type: "text" | "textarea" | "date" | "auto" | "combobox";
   autoKey?: "student_name" | "class_name" | "national_id" | "date" | "grade" | "section";
   required?: boolean;
   placeholder?: string;
   /** If true, the field is hidden from UI (used only in PDF body template) */
   hidden?: boolean;
+  /** Suggestion list for combobox fields */
+  suggestions?: string[];
 }
 
 const commonAutoFields: FormField[] = [
