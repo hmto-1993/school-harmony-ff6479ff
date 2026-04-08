@@ -221,8 +221,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                     {visibleCategories.map((cat) => (
-                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[100px]">
-                        <div>{cat.name}</div>
+                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
+                        <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
                     {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
