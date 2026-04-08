@@ -60,21 +60,36 @@ export default function FormsGrid({ onSelect }: Props) {
           return (
             <Card
               key={form.id}
-              className="cursor-pointer group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-2 border-transparent hover:border-primary/30"
+              className={cn(
+                "cursor-pointer group hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 border-2",
+                form.confidentialWatermark
+                  ? "border-destructive/20 hover:border-destructive/40 bg-destructive/[0.02]"
+                  : "border-transparent hover:border-primary/30"
+              )}
               onClick={() => onSelect(form)}
             >
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-start justify-between">
                   <span className="text-3xl">{form.icon}</span>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] font-semibold"
-                    style={{ borderColor: catInfo.color, color: catInfo.color }}
-                  >
-                    {catInfo.label}
-                  </Badge>
+                  <div className="flex gap-1">
+                    {form.confidentialWatermark && (
+                      <Badge variant="destructive" className="text-[9px] px-1.5">سري</Badge>
+                    )}
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] font-semibold"
+                      style={{ borderColor: catInfo.color, color: catInfo.color }}
+                    >
+                      {catInfo.label}
+                    </Badge>
+                  </div>
                 </div>
-                <h3 className="font-bold text-sm text-foreground group-hover:text-primary transition-colors leading-tight">
+                <h3 className={cn(
+                  "font-bold text-sm transition-colors leading-tight",
+                  form.confidentialWatermark
+                    ? "text-destructive group-hover:text-destructive/80"
+                    : "text-foreground group-hover:text-primary"
+                )}>
                   {form.title}
                 </h3>
                 <p className="text-xs text-muted-foreground line-clamp-2">{form.description}</p>
