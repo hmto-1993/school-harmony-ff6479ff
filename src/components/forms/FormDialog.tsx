@@ -14,6 +14,7 @@ import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
+import ComboboxField from "./ComboboxField";
 import { exportFormPdf } from "./form-pdf-export";
 import SignatureCanvas from "./SignatureCanvas";
 import { toast } from "sonner";
@@ -310,6 +311,19 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     if (field.hidden) return null;
     const value = fieldValues[field.id] || "";
     const isAuto = field.type === "auto";
+
+    if (field.type === "combobox" && field.suggestions) {
+      return (
+        <ComboboxField
+          key={field.id}
+          label={field.label}
+          value={value}
+          onChange={(v) => handleFieldChange(field.id, v)}
+          suggestions={field.suggestions}
+          placeholder={field.placeholder}
+        />
+      );
+    }
 
     if (field.type === "textarea") {
       return (

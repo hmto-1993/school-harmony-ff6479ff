@@ -32,12 +32,14 @@ export interface FormTemplate {
 export interface FormField {
   id: string;
   label: string;
-  type: "text" | "textarea" | "date" | "auto";
+  type: "text" | "textarea" | "date" | "auto" | "combobox";
   autoKey?: "student_name" | "class_name" | "national_id" | "date" | "grade" | "section";
   required?: boolean;
   placeholder?: string;
   /** If true, the field is hidden from UI (used only in PDF body template) */
   hidden?: boolean;
+  /** Suggestion list for combobox fields */
+  suggestions?: string[];
 }
 
 const commonAutoFields: FormField[] = [
@@ -104,7 +106,12 @@ export const formTemplates: FormTemplate[] = [
     bodyTemplate:
       "رصد المعلم لمشكلة سلوكية\n\nتم ملاحظة قيام الطالب/ {student_name} المقيد في فصل/ {class_name} بسلوك مخالف خلال حصة الفيزياء.\n\nوصف المشكلة:\n{issue_desc}\n\nتم التنبيه شفهياً في المرة الأولى، وهذا النموذج لتوثيق الحالة في حال التكرار.\n\nالإجراء المتخذ:\n{action_taken}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "المرشد الطلابي"],
-    fields: [...commonAutoFields, { id: "issue_desc", label: "وصف المشكلة", type: "textarea", placeholder: "وصف السلوك الملاحظ بالتفصيل..." }, { id: "action_taken", label: "الإجراء المتخذ", type: "textarea", placeholder: "الإجراء الذي تم اتخاذه..." }, { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." }],
+    fields: [
+      ...commonAutoFields,
+      { id: "issue_desc", label: "وصف المشكلة", type: "combobox", placeholder: "اختر أو اكتب وصف المشكلة...", suggestions: ["النوم أثناء الحصة", "إثارة الفوضى", "عدم إحضار الأدوات", "استخدام الجوال", "التلفظ بألفاظ غير لائقة", "الكتابة على الطاولات", "التأخر عن الحصة"] },
+      { id: "action_taken", label: "الإجراء المتخذ", type: "combobox", placeholder: "اختر أو اكتب الإجراء المتخذ...", suggestions: ["تنبيه شفهي", "تدوين في سجل المتابعة", "أخذ تعهد خطي", "إحالة للموجه الطلابي", "إشعار ولي الأمر", "حسم درجات"] },
+      { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." },
+    ],
   },
   {
     id: "problems_log",
@@ -115,7 +122,12 @@ export const formTemplates: FormTemplate[] = [
     bodyTemplate:
       "تقرير رصد المشكلات السلوكية\n\nيتضمن هذا النموذج كافة الملاحظات السلوكية التي تعيق سير العملية التعليمية للطالب/ {student_name} المقيد في فصل/ {class_name}، مع تحديد نوع المخالفة (درجة أولى، ثانية، ثالثة) حسب لائحة السلوك والمواظبة.\n\nالمشكلة:\n{problem}\n\nالحل المقترح:\n{solution}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "المرشد الطلابي"],
-    fields: [...commonAutoFields, { id: "problem", label: "المشكلة ونوع المخالفة", type: "textarea", placeholder: "وصف المشكلة وتحديد درجة المخالفة..." }, { id: "solution", label: "الحل المقترح", type: "textarea", placeholder: "الحل المقترح للمشكلة..." }, { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." }],
+    fields: [
+      ...commonAutoFields,
+      { id: "problem", label: "المشكلة ونوع المخالفة", type: "combobox", placeholder: "اختر أو اكتب وصف المشكلة...", suggestions: ["النوم أثناء الحصة", "إثارة الفوضى", "عدم إحضار الأدوات", "استخدام الجوال", "التلفظ بألفاظ غير لائقة", "الكتابة على الطاولات", "التأخر عن الحصة"] },
+      { id: "solution", label: "الحل المقترح", type: "combobox", placeholder: "اختر أو اكتب الحل المقترح...", suggestions: ["تنبيه شفهي", "تدوين في سجل المتابعة", "أخذ تعهد خطي", "إحالة للموجه الطلابي", "إشعار ولي الأمر", "حسم درجات"] },
+      { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." },
+    ],
   },
   {
     id: "grade_compensation",
