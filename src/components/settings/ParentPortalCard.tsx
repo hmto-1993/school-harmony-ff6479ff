@@ -32,7 +32,7 @@ export function ParentPortalCard({ s }: { s: SettingsData }) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-pink-500" />
-            التحكم ببوابة ولي الأمر
+            بوابة ولي الأمر
           </CardTitle>
         </div>
       </CardHeader>
