@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff } from "lucide-react";
@@ -261,6 +262,40 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           const maxScore = Number(cat.max_score);
                           const slotsArr = sg.slots[cat.id] || [null];
                           const isStarred = sg.starred[cat.id] || false;
+                          const isDeduction = cat.is_deduction;
+
+                          if (isDeduction) {
+                            const deductionScore = sg.grades[cat.id];
+                            const deductionNote = sg.notes?.[cat.id] || "";
+                            return (
+                              <td key={cat.id} className="p-2 text-center border-l border-border/30">
+                                <div className="flex flex-col items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={maxScore}
+                                    value={deductionScore ?? ""}
+                                    onChange={(e) => {
+                                      const val = e.target.value === "" ? null : Math.min(Math.max(0, Number(e.target.value)), maxScore);
+                                      setStudentGrades((prev: any) => prev.map((s: any) =>
+                                        s.student_id === sg.student_id ? { ...s, grades: { ...s.grades, [cat.id]: val } } : s
+                                      ));
+                                    }}
+                                    className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
+                                    placeholder="0"
+                                  />
+                                  <Input
+                                    type="text"
+                                    value={deductionNote}
+                                    onChange={(e) => setDeductionNote(sg.student_id, cat.id, e.target.value)}
+                                    className="w-24 h-6 text-[10px] text-center border-muted-foreground/20"
+                                    placeholder="السبب..."
+                                  />
+                                </div>
+                              </td>
+                            );
+                          }
+
                           return (
                             <td key={cat.id} className="p-3 text-center border-l border-border/30">
                               <div className="flex items-center justify-center gap-1">
