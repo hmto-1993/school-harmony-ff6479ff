@@ -538,6 +538,7 @@ export type Database = {
           class_id: string | null
           created_at: string
           id: string
+          is_deduction: boolean
           max_score: number
           name: string
           sort_order: number
@@ -548,6 +549,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string
           id?: string
+          is_deduction?: boolean
           max_score?: number
           name: string
           sort_order?: number
@@ -558,6 +560,7 @@ export type Database = {
           class_id?: string | null
           created_at?: string
           id?: string
+          is_deduction?: boolean
           max_score?: number
           name?: string
           sort_order?: number
@@ -579,6 +582,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          note: string | null
           period: number
           recorded_by: string
           score: number | null
@@ -590,6 +594,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          note?: string | null
           period?: number
           recorded_by: string
           score?: number | null
@@ -601,6 +606,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          note?: string | null
           period?: number
           recorded_by?: string
           score?: number | null

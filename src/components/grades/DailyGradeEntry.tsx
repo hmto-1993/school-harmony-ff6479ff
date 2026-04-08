@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff } from "lucide-react";
@@ -42,7 +43,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     filteredStudentGrades, absentCount, hiddenStatuses,
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
-    cycleSlot, addSlot, toggleStar, clearGrade,
+    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
     calcTotal, handleSave,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
 
@@ -220,8 +221,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                     {visibleCategories.map((cat) => (
-                      <th key={cat.id} className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[100px]">
-                        <div>{cat.name}</div>
+                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
+                        <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
                     {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
@@ -261,6 +262,35 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           const maxScore = Number(cat.max_score);
                           const slotsArr = sg.slots[cat.id] || [null];
                           const isStarred = sg.starred[cat.id] || false;
+                          const isDeduction = cat.is_deduction;
+
+                          if (isDeduction) {
+                            const deductionScore = sg.grades[cat.id];
+                            const deductionNote = sg.notes?.[cat.id] || "";
+                            return (
+                              <td key={cat.id} className="p-2 text-center border-l border-border/30">
+                                <div className="flex flex-col items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    min={0}
+                                    max={maxScore}
+                                    value={deductionScore ?? ""}
+                                    onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
+                                    className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
+                                    placeholder="0"
+                                  />
+                                  <Input
+                                    type="text"
+                                    value={deductionNote}
+                                    onChange={(e) => setDeductionNote(sg.student_id, cat.id, e.target.value)}
+                                    className="w-24 h-6 text-[10px] text-center border-muted-foreground/20"
+                                    placeholder="السبب..."
+                                  />
+                                </div>
+                              </td>
+                            );
+                          }
+
                           return (
                             <td key={cat.id} className="p-3 text-center border-l border-border/30">
                               <div className="flex items-center justify-center gap-1">

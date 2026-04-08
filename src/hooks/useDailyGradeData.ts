@@ -11,6 +11,7 @@ export interface GradeCategory {
   weight: number;
   max_score: number;
   category_group: string;
+  is_deduction?: boolean;
 }
 
 export type GradeLevel = "excellent" | "average" | "zero" | null;
@@ -22,6 +23,7 @@ export interface StudentGrade {
   grade_ids: Record<string, string>;
   slots: Record<string, GradeLevel[]>;
   starred: Record<string, boolean>;
+  notes: Record<string, string>;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
@@ -130,13 +132,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     const { data: cats } = await supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order");
     const { data: students } = await supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period")
+    const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period, note")
       .in("student_id", (students || []).map((s) => s.id)).eq("period", selectedPeriod).eq("date", dateStr);
 
-    const gradesMap = new Map<string, Map<string, { score: number | null; id: string }>>();
+    const gradesMap = new Map<string, Map<string, { score: number | null; id: string; note: string }>>();
     grades?.forEach((g) => {
       if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id });
+      gradesMap.get(g.student_id)!.set(g.category_id, { score: g.score != null ? Number(g.score) : null, id: g.id, note: (g as any).note || "" });
     });
 
     setCategories((cats as GradeCategory[]) || []);
@@ -146,11 +148,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       const gradeIds: Record<string, string> = {};
       const slots: Record<string, GradeLevel[]> = {};
       const starred: Record<string, boolean> = {};
+      const notes: Record<string, string> = {};
       (cats || []).forEach((c: any) => {
         const g = studentGradesMap.get(c.id);
         const score = g?.score ?? null;
         gradeValues[c.id] = score;
         if (g?.id) gradeIds[c.id] = g.id;
+        notes[c.id] = g?.note || "";
         const max = Number(c.max_score);
         const isPartCat = isParticipation(c.name);
         const slotCount = getMaxSlots(c.id);
@@ -158,7 +162,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
         slots[c.id] = restored.slots;
         starred[c.id] = restored.starred;
       });
-      return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred };
+      return { student_id: s.id, full_name: s.full_name, grades: gradeValues, grade_ids: gradeIds, slots, starred, notes };
     }));
   }, [selectedClass, selectedDate, selectedPeriod, getMaxSlots]);
 
@@ -243,6 +247,12 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     ));
   };
 
+  const setDeductionNote = (studentId: string, categoryId: string, note: string) => {
+    setStudentGrades((prev) => prev.map((sg) =>
+      sg.student_id === studentId ? { ...sg, notes: { ...sg.notes, [categoryId]: note } } : sg
+    ));
+  };
+
   // Computed
   const dailyCategories = categories.filter(c => isAllowedInDaily(c));
   const visibleCategories = selectedCategory && selectedCategory !== "all"
@@ -269,11 +279,16 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   const calcTotal = (grades: Record<string, number | null>) => {
     let total = 0, maxTotal = 0;
     categories.forEach((cat) => {
+      if (cat.is_deduction) {
+        const score = grades[cat.id];
+        if (score !== null && score !== undefined) total -= score;
+        return;
+      }
       const score = grades[cat.id];
       maxTotal += Number(cat.max_score);
       if (score !== null && score !== undefined) total += score;
     });
-    return maxTotal > 0 ? `${total} / ${maxTotal}` : "—";
+    return maxTotal > 0 ? `${Math.max(0, total)} / ${maxTotal}` : "—";
   };
 
   // Save
@@ -290,12 +305,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       for (const sg of studentGrades) {
         for (const cat of catsToSave) {
           const score = sg.grades[cat.id];
+          const note = sg.notes?.[cat.id] || "";
           const existingId = sg.grade_ids[cat.id];
           if (score !== null && score !== undefined) {
             if (existingId) {
-              updateOps.push(supabase.from("grades").update({ score }).eq("id", existingId).then(res => { if (res.error) throw new Error(res.error.message); }));
+              updateOps.push(supabase.from("grades").update({ score, note }).eq("id", existingId).then(res => { if (res.error) throw new Error(res.error.message); }));
             } else {
-              inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
+              inserts.push({ student_id: sg.student_id, category_id: cat.id, score, note, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
             }
           }
         }
@@ -344,7 +360,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     filteredStudentGrades, absentCount, hiddenStatuses,
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
-    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade,
+    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
     calcTotal, handleSave,
   };
 }

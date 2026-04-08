@@ -206,8 +206,10 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
     </div>
   );
 
+  const deductionGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.is_deduction === true);
+
   const dailyContent = (() => {
-    const dailyGrades = evalFilteredGrades.filter((g: any) => g.date && g.grade_categories?.category_group === "classwork");
+    const dailyGrades = evalFilteredGrades.filter((g: any) => g.date && g.grade_categories?.category_group === "classwork" && !g.grade_categories?.is_deduction);
     if (dailyGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات تقييم يومي</p>;
     const uniqueDates = Array.from(new Set<string>(dailyGrades.map((g: any) => g.date))).sort().slice(-7);
     const dailyCatNames = Array.from(new Set<string>(dailyGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
@@ -249,13 +251,45 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
             </tbody>
           </table>
         </div>
+
+        {/* Deductions section */}
+        {deductionGrades.length > 0 && (
+          <div className="mt-3 overflow-auto rounded-xl border border-destructive/20 shadow-sm">
+            <table className="w-full text-xs border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-destructive/5">
+                  <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 first:rounded-tr-xl">التاريخ</th>
+                  <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الخصم</th>
+                  <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الدرجة</th>
+                  <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 last:rounded-tl-xl">السبب</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deductionGrades.sort((a: any, b: any) => (b.date || "").localeCompare(a.date || "")).slice(0, 10).map((g: any, i: number) => {
+                  const d = g.date ? new Date(g.date) : null;
+                  return (
+                    <tr key={g.id || i} className={i % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20"}>
+                      <td className="p-2 text-right text-[10px] border-l border-border/10">
+                        {d ? `${d.getDate()}/${d.getMonth() + 1}` : "—"}
+                      </td>
+                      <td className="p-2 text-center text-[10px] font-medium border-l border-border/10">{g.grade_categories?.name}</td>
+                      <td className="p-2 text-center text-destructive font-bold border-l border-border/10">-{g.score}</td>
+                      <td className="p-2 text-right text-[10px] text-muted-foreground">{g.note || "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
         <Legend />
       </>
     );
   })();
 
   const classworkContent = (() => {
-    const cwGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.category_group === "classwork");
+    const cwGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.category_group === "classwork" && !g.grade_categories?.is_deduction);
     if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
     const cwCatNames = Array.from(new Set<string>(cwGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
 
