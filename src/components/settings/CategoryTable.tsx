@@ -122,6 +122,11 @@ export default function CategoryTable({
                         className="h-8 w-40"
                       />
                     ) : <span>{cat.name}</span>}
+                    {cat.is_deduction && (
+                      <Badge variant="outline" className="text-[10px] border-destructive/40 text-destructive whitespace-nowrap">
+                        خصم
+                      </Badge>
+                    )}
                     {catClassFilter === "all" && (() => {
                       const classesWithCat = allCategories.filter(c => c.name === cat.name && c.class_id !== null);
                       const missingCount = classes.length - classesWithCat.length;
