@@ -324,6 +324,92 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_form_sections: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string
+          icon: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by: string
+          icon?: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string
+          icon?: string
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      custom_form_templates: {
+        Row: {
+          body_template: string
+          created_at: string
+          created_by: string
+          description: string
+          fields: Json
+          icon: string
+          id: string
+          include_auto_fields: boolean
+          section_id: string
+          signature_enabled: boolean
+          signature_labels: Json
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          body_template?: string
+          created_at?: string
+          created_by: string
+          description?: string
+          fields?: Json
+          icon?: string
+          id?: string
+          include_auto_fields?: boolean
+          section_id: string
+          signature_enabled?: boolean
+          signature_labels?: Json
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          body_template?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          fields?: Json
+          icon?: string
+          id?: string
+          include_auto_fields?: boolean
+          section_id?: string
+          signature_enabled?: boolean
+          signature_labels?: Json
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_form_templates_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "custom_form_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       excuse_submissions: {
         Row: {
           created_at: string
