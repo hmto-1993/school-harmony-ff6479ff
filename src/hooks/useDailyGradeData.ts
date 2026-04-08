@@ -279,11 +279,16 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   const calcTotal = (grades: Record<string, number | null>) => {
     let total = 0, maxTotal = 0;
     categories.forEach((cat) => {
+      if (cat.is_deduction) {
+        const score = grades[cat.id];
+        if (score !== null && score !== undefined) total -= score;
+        return;
+      }
       const score = grades[cat.id];
       maxTotal += Number(cat.max_score);
       if (score !== null && score !== undefined) total += score;
     });
-    return maxTotal > 0 ? `${total} / ${maxTotal}` : "—";
+    return maxTotal > 0 ? `${Math.max(0, total)} / ${maxTotal}` : "—";
   };
 
   // Save
