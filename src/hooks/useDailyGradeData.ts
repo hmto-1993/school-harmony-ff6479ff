@@ -11,6 +11,7 @@ export interface GradeCategory {
   weight: number;
   max_score: number;
   category_group: string;
+  is_deduction?: boolean;
 }
 
 export type GradeLevel = "excellent" | "average" | "zero" | null;
@@ -22,6 +23,7 @@ export interface StudentGrade {
   grade_ids: Record<string, string>;
   slots: Record<string, GradeLevel[]>;
   starred: Record<string, boolean>;
+  notes: Record<string, string>;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────
