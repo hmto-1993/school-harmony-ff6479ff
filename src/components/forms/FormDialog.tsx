@@ -487,15 +487,60 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               <SignatureCanvas onSignatureChange={setSignatureDataUrl} />
             )}
 
-            {/* Body preview */}
-            {bodyPreview && selectedStudentId && (
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground">معاينة النموذج</Label>
-                <div className={`rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground ${
-                  isConfidential ? "bg-destructive/5 border-destructive/20" : "bg-muted/50"
-                }`}>
-                  {bodyPreview}
+            {/* Editable Body Text */}
+            {defaultBodyText && selectedStudentId && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                    نص النموذج
+                    {isBodyEdited && (
+                      <Badge variant="outline" className="text-[9px] h-4 px-1 border-primary/30 text-primary">معدّل</Badge>
+                    )}
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    {isBodyEdited && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                              onClick={() => { setCustomBodyText(null); setIsEditingBody(false); }}
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">استعادة النص الأصلي</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </div>
+                {isEditingBody ? (
+                  <Textarea
+                    value={finalBodyText || ""}
+                    onChange={(e) => setCustomBodyText(e.target.value)}
+                    className={`min-h-[140px] text-sm leading-relaxed ${
+                      isConfidential ? "border-destructive/20" : ""
+                    }`}
+                    dir="rtl"
+                  />
+                ) : (
+                  <div
+                    onClick={() => {
+                      if (!customBodyText) setCustomBodyText(defaultBodyText);
+                      setIsEditingBody(true);
+                    }}
+                    className={`rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/30 ${
+                      isConfidential ? "bg-destructive/5 border-destructive/20" : "bg-muted/50"
+                    }`}
+                    title="انقر للتعديل"
+                  >
+                    {finalBodyText}
+                    <p className="text-[10px] text-muted-foreground mt-2 opacity-60">📝 انقر لتعديل النص</p>
+                  </div>
+                )}
               </div>
             )}
 
