@@ -140,6 +140,8 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
                      </div>
                      <Switch checked={s.newCatIsDeduction} onCheckedChange={s.setNewCatIsDeduction} />
                    </div>
+                 </div>
+                 <DialogFooter>
                   <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
                   <Button onClick={s.handleAddCategory}><Plus className="h-4 w-4 ml-1.5" />إضافة</Button>
                 </DialogFooter>
