@@ -167,7 +167,8 @@ export async function exportFormPdf(
   form: FormTemplate,
   fieldValues: Record<string, string>,
   student: StudentInfo,
-) {
+  options?: { returnBlob?: boolean },
+): Promise<{ blob: Blob | null; fileName: string }> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -430,7 +431,14 @@ export async function exportFormPdf(
   doc.setLineWidth(1.2);
   doc.line(marginX, pageH - 8, pageW - marginX, pageH - 8);
 
-  // Save
+  // Return blob + filename, or save directly
   const fileName = `${form.title} - ${fieldValues.student_name || "نموذج"}.pdf`;
+
+  if (options?.returnBlob) {
+    const blob = doc.output("blob");
+    return { blob, fileName };
+  }
+
   doc.save(fileName);
+  return { blob: null, fileName };
 }

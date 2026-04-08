@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X } from "lucide-react";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -49,6 +49,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [exporting, setExporting] = useState(false);
   const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
   const [adminPhone, setAdminPhone] = useState("");
+  const [sharing, setSharing] = useState(false);
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -214,6 +215,41 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     if (!phone.startsWith("966")) phone = "966" + phone;
 
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+  const handleSharePdf = async () => {
+    if (!selectedStudentId) {
+      toast.error("يرجى اختيار الطالب أولاً");
+      return;
+    }
+    setSharing(true);
+    try {
+      const student = students.find((s) => s.id === selectedStudentId)!;
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true });
+      if (!blob) throw new Error("Failed to generate PDF");
+
+      const file = new File([blob], fileName, { type: "application/pdf" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        toast.success("تمت المشاركة بنجاح");
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        toast.success("تم تنزيل الملف — يمكنك مشاركته يدوياً عبر واتساب");
+      }
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        console.error(err);
+        toast.error("فشل مشاركة الملف");
+      }
+    } finally {
+      setSharing(false);
+    }
   };
 
   const witnessOptions = useMemo(
@@ -464,6 +500,16 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               إرسال عبر واتساب
             </Button>
           )}
+          {/* Share PDF via WhatsApp / System Share */}
+          <Button
+            variant="outline"
+            className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700 dark:hover:bg-emerald-950 gap-1"
+            onClick={handleSharePdf}
+            disabled={sharing || !selectedStudentId}
+          >
+            {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+            إرسال PDF عبر واتساب
+          </Button>
 
           <Button onClick={handleExport} disabled={exporting || !selectedStudentId}>
             {exporting ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
