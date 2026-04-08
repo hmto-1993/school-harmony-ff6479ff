@@ -42,7 +42,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     filteredStudentGrades, absentCount, hiddenStatuses,
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
-    cycleSlot, addSlot, toggleStar, clearGrade,
+    cycleSlot, addSlot, toggleStar, clearGrade, setDeductionNote,
     calcTotal, handleSave,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
 
