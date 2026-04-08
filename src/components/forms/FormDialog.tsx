@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -52,6 +53,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [adminPhone, setAdminPhone] = useState("");
   const [sharing, setSharing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [customBodyText, setCustomBodyText] = useState<string | null>(null);
+  const [isEditingBody, setIsEditingBody] = useState(false);
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -103,6 +106,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setFilterClassId("all");
     setShowStudentList(true);
     setSignatureDataUrl(null);
+    setCustomBodyText(null);
+    setIsEditingBody(false);
   }, [form.id]);
 
   // Auto-fill when student changes
@@ -169,13 +174,17 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const archiveForm = async () => {
     if (!user || !selectedStudentId) return;
     try {
+      const archiveValues = {
+        ...fieldValues,
+        ...(customBodyText !== null ? { _custom_body_text: customBodyText } : {}),
+      };
       await supabase.from("form_issued_logs").insert({
         form_id: form.id,
         form_title: form.title,
         student_id: selectedStudentId,
         student_name: fieldValues.student_name || "",
         class_name: fieldValues.class_name || "",
-        field_values: fieldValues as any,
+        field_values: archiveValues as any,
         issued_by: user.id,
       });
     } catch (err) {
@@ -191,7 +200,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setExporting(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      await exportFormPdf(form, fieldValues, student, { signatureDataUrl });
+      await exportFormPdf(form, fieldValues, student, { signatureDataUrl, customBodyText });
       await archiveForm();
       toast.success("تم تصدير النموذج بنجاح");
     } catch (err) {
@@ -246,7 +255,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSharing(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl });
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl, customBodyText });
       if (!blob) throw new Error("Failed to generate PDF");
       await archiveForm();
 
@@ -322,9 +331,14 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     );
   };
 
-  const bodyPreview = form.bodyTemplate
+  // Compute the default body text with placeholders filled
+  const defaultBodyText = form.bodyTemplate
     ? form.bodyTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || `{${key}}`)
     : null;
+
+  // The actual body text used for PDF: custom if edited, otherwise default
+  const finalBodyText = customBodyText !== null ? customBodyText : defaultBodyText;
+  const isBodyEdited = customBodyText !== null;
 
   const isConfidential = form.confidentialWatermark;
 
@@ -473,15 +487,60 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               <SignatureCanvas onSignatureChange={setSignatureDataUrl} />
             )}
 
-            {/* Body preview */}
-            {bodyPreview && selectedStudentId && (
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold text-muted-foreground">معاينة النموذج</Label>
-                <div className={`rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground ${
-                  isConfidential ? "bg-destructive/5 border-destructive/20" : "bg-muted/50"
-                }`}>
-                  {bodyPreview}
+            {/* Editable Body Text */}
+            {defaultBodyText && selectedStudentId && (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                    نص النموذج
+                    {isBodyEdited && (
+                      <Badge variant="outline" className="text-[9px] h-4 px-1 border-primary/30 text-primary">معدّل</Badge>
+                    )}
+                  </Label>
+                  <div className="flex items-center gap-1">
+                    {isBodyEdited && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-primary"
+                              onClick={() => { setCustomBodyText(null); setIsEditingBody(false); }}
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">استعادة النص الأصلي</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </div>
+                {isEditingBody ? (
+                  <Textarea
+                    value={finalBodyText || ""}
+                    onChange={(e) => setCustomBodyText(e.target.value)}
+                    className={`min-h-[140px] text-sm leading-relaxed ${
+                      isConfidential ? "border-destructive/20" : ""
+                    }`}
+                    dir="rtl"
+                  />
+                ) : (
+                  <div
+                    onClick={() => {
+                      if (!customBodyText) setCustomBodyText(defaultBodyText);
+                      setIsEditingBody(true);
+                    }}
+                    className={`rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground cursor-pointer transition-colors hover:border-primary/40 hover:bg-accent/30 ${
+                      isConfidential ? "bg-destructive/5 border-destructive/20" : "bg-muted/50"
+                    }`}
+                    title="انقر للتعديل"
+                  >
+                    {finalBodyText}
+                    <p className="text-[10px] text-muted-foreground mt-2 opacity-60">📝 انقر لتعديل النص</p>
+                  </div>
+                )}
               </div>
             )}
 

@@ -167,7 +167,7 @@ export async function exportFormPdf(
   form: FormTemplate,
   fieldValues: Record<string, string>,
   student: StudentInfo,
-  options?: { returnBlob?: boolean; signatureDataUrl?: string | null },
+  options?: { returnBlob?: boolean; signatureDataUrl?: string | null; customBodyText?: string | null },
 ): Promise<{ blob: Blob | null; fileName: string }> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -320,7 +320,7 @@ export async function exportFormPdf(
     }
   } else if (form.bodyTemplate) {
     // ========== BODY TEMPLATE ==========
-    const filledBody = fillTemplate(form.bodyTemplate, fieldValues);
+    const filledBody = options?.customBodyText || fillTemplate(form.bodyTemplate, fieldValues);
 
     doc.setFontSize(13);
     doc.setTextColor(30, 41, 59);
