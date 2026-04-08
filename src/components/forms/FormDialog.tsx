@@ -246,8 +246,9 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSharing(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true });
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl });
       if (!blob) throw new Error("Failed to generate PDF");
+      await archiveForm();
 
       const file = new File([blob], fileName, { type: "application/pdf" });
 
