@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2 } from "lucide-react";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
 import { exportFormPdf } from "./form-pdf-export";
+import SignatureCanvas from "./SignatureCanvas";
 import { toast } from "sonner";
 
 interface Props {
