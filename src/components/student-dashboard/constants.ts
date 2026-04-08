@@ -63,6 +63,7 @@ export interface ParentVisibility {
   parentClassworkIconsCount: number;
   parentShowLibrary: boolean;
   parentShowActivities: boolean;
+  parentShowDeductions: boolean;
 }
 
 export interface PdfHeader {

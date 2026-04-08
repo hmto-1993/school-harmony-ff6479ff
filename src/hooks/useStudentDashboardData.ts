@@ -48,6 +48,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     parentClassworkIconsCount: 10,
     parentShowLibrary: true,
     parentShowActivities: true,
+    parentShowDeductions: true,
   });
 
   // View states
@@ -87,7 +88,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
         "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval",
         "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades",
         "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library",
-        "parent_show_activities", "parent_pdf_header",
+        "parent_show_activities", "parent_pdf_header", "parent_show_deductions",
       ]);
     const updates: Partial<ParentVisibility> = {};
     (data || []).forEach((s: any) => {
@@ -123,6 +124,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
       if (s.id === "parent_classwork_icons_count" && s.value) updates.parentClassworkIconsCount = Number(s.value) || 10;
       if (s.id === "parent_show_library") updates.parentShowLibrary = s.value !== "false";
       if (s.id === "parent_show_activities") updates.parentShowActivities = s.value !== "false";
+      if (s.id === "parent_show_deductions") updates.parentShowDeductions = s.value !== "false";
       if (s.id === "parent_pdf_header" && s.value) {
         try { setParentPdfHeader(JSON.parse(s.value)); } catch {}
       }

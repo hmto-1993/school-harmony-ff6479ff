@@ -59,6 +59,8 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
               setShowClassworkIcons={s.setStudentShowClassworkIcons}
               classworkIconsCount={s.studentClassworkIconsCount}
               setClassworkIconsCount={s.setStudentClassworkIconsCount}
+              showDeductions={s.studentShowDeductions}
+              setShowDeductions={s.setStudentShowDeductions}
             />
             <div className="rounded-xl border border-border/50 bg-muted/10 p-4 space-y-2">
               <h4 className="text-sm font-bold mb-2">🔧 عناصر إضافية</h4>
@@ -190,6 +192,7 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
                 supabase.from("site_settings").upsert({ id: "student_show_honor_roll", value: String(s.studentShowHonorRoll) }),
                 supabase.from("site_settings").upsert({ id: "student_show_absence_warning", value: String(s.studentShowAbsenceWarning) }),
                 supabase.from("site_settings").upsert({ id: "student_show_national_id", value: String(s.studentShowNationalId) }),
+                supabase.from("site_settings").upsert({ id: "student_show_deductions", value: String(s.studentShowDeductions) }),
                 supabase.from("site_settings").upsert({ id: "student_welcome_enabled", value: String(s.studentWelcomeEnabled) }),
                 supabase.from("site_settings").upsert({ id: "student_welcome_message", value: s.studentWelcomeMessage }),
               ]);
@@ -210,6 +213,7 @@ export function StudentVisibilityCard({ s }: { s: SettingsData }) {
               s.setStudentShowDailyGrades(true); s.setStudentShowClassworkIcons(true); s.setStudentClassworkIconsCount(10);
               s.setStudentShowActivities(true); s.setStudentShowLibrary(true);
               s.setStudentShowHonorRoll(true); s.setStudentShowAbsenceWarning(true); s.setStudentShowNationalId(true);
+              s.setStudentShowDeductions(true);
               s.setStudentWelcomeEnabled(false); s.setStudentWelcomeMessage("مرحباً بك {name}.. نتمنى لك يوماً دراسياً مميزاً!");
               toast({ title: "تم الاستعادة", description: "تم استعادة الإعدادات الافتراضية — اضغط حفظ لتأكيدها" });
             }}>

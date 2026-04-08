@@ -10,6 +10,8 @@ interface EvaluationTogglesProps {
   setShowClassworkIcons: (v: boolean) => void;
   classworkIconsCount: number;
   setClassworkIconsCount: (v: number) => void;
+  showDeductions?: boolean;
+  setShowDeductions?: (v: boolean) => void;
   dailyLabel?: string;
   dailyDesc?: string;
   cumulativeLabel?: string;
@@ -24,6 +26,8 @@ export default function EvaluationToggles({
   setShowClassworkIcons,
   classworkIconsCount,
   setClassworkIconsCount,
+  showDeductions,
+  setShowDeductions,
   dailyLabel = "📅 تفاعل اليوم",
   dailyDesc = "التقييم اليومي بالأيقونات",
   cumulativeLabel = "📊 التفاعل الكلي",
@@ -33,6 +37,7 @@ export default function EvaluationToggles({
   const items = [
     { label: dailyLabel, desc: dailyDesc, state: showDailyGrades, setter: setShowDailyGrades },
     { label: cumulativeLabel, desc: cumulativeDesc, state: showClassworkIcons, setter: setShowClassworkIcons },
+    ...(setShowDeductions ? [{ label: "⚠️ الخصومات", desc: "عرض جدول الخصومات للطالب/ولي الأمر", state: showDeductions ?? true, setter: setShowDeductions }] : []),
   ];
 
   return (
