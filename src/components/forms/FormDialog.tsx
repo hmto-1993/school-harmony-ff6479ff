@@ -53,6 +53,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [adminPhone, setAdminPhone] = useState("");
   const [sharing, setSharing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
+  const [useLiveSignature, setUseLiveSignature] = useState(true);
   const [customBodyText, setCustomBodyText] = useState<string | null>(null);
   const [isEditingBody, setIsEditingBody] = useState(false);
 
@@ -65,6 +66,14 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   useEffect(() => {
     if (!open || !user) return;
     (async () => {
+      // Load live signature setting
+      const { data: sigSetting } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("id", "form_identity_live_sig")
+        .maybeSingle();
+      if (sigSetting) setUseLiveSignature(sigSetting.value === "true");
+
       const { data: classesData } = await supabase.from("classes").select("id, name, grade, section");
       const classList = classesData || [];
       setClasses(classList);
@@ -482,8 +491,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
             {/* Form fields */}
             {form.fields.filter((f) => f.type !== "auto" && !f.hidden).map(renderField)}
 
-            {/* Signature Canvas */}
-            {selectedStudentId && (
+            {/* Signature Canvas - only if live signature enabled */}
+            {selectedStudentId && useLiveSignature && (
               <SignatureCanvas onSignatureChange={setSignatureDataUrl} />
             )}
 
