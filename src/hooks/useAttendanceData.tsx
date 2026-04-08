@@ -96,21 +96,23 @@ export function useAttendanceData() {
     const classIds = classes.map(c => c.id);
     if (classIds.length === 0) { setWeeklyProgressLoaded(true); return; }
 
-    const { data: schedules } = await supabase
-      .from("class_schedules")
-      .select("class_id, periods_per_week")
-      .in("class_id", classIds);
+    // Parallel: schedules + attendance for the week
+    const [{ data: schedules }, { data: attRecords }] = await Promise.all([
+      supabase
+        .from("class_schedules")
+        .select("class_id, periods_per_week")
+        .in("class_id", classIds),
+      supabase
+        .from("attendance_records")
+        .select("class_id, date")
+        .in("class_id", classIds)
+        .gte("date", weekBounds.start)
+        .lte("date", weekBounds.end)
+        .limit(5000),
+    ]);
 
     const limitsMap: Record<string, number> = {};
     (schedules || []).forEach(s => { limitsMap[s.class_id] = s.periods_per_week; });
-
-    const { data: attRecords } = await supabase
-      .from("attendance_records")
-      .select("class_id, date")
-      .in("class_id", classIds)
-      .gte("date", weekBounds.start)
-      .lte("date", weekBounds.end)
-      .limit(5000);
 
     const sessionMap: Record<string, Set<string>> = {};
     (attRecords || []).forEach(r => {
@@ -172,10 +174,15 @@ export function useAttendanceData() {
 
   const loadAbsenceAlerts = useCallback(async () => {
     if (!selectedClass) return;
-    const { data: settings } = await supabase
-      .from("site_settings")
-      .select("id, value")
-      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]);
+
+    // Parallel: settings + students
+    const [{ data: settings }, { data: students }] = await Promise.all([
+      supabase
+        .from("site_settings")
+        .select("id, value")
+        .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions"]),
+      supabase.from("students").select("id").eq("class_id", selectedClass),
+    ]);
 
     let threshold = 20, allowedSessions = 0, mode = "percentage";
     (settings || []).forEach((s: any) => {
@@ -184,17 +191,22 @@ export function useAttendanceData() {
       if (s.id === "absence_mode") mode = s.value || "percentage";
     });
 
-    const { data: students } = await supabase.from("students").select("id").eq("class_id", selectedClass);
     if (!students || students.length === 0) return;
 
     const studentIds = students.map(s => s.id);
-    let allAtt: any[] = [];
+
+    // Scope to current term (~120 days) and fetch in parallel batches
+    const termStart = format(new Date(Date.now() - 120 * 86400000), "yyyy-MM-dd");
     const batchSize = 500;
+    const batches: Promise<any>[] = [];
     for (let i = 0; i < studentIds.length; i += batchSize) {
       const batch = studentIds.slice(i, i + batchSize);
-      const { data } = await supabase.from("attendance_records").select("student_id, status").in("student_id", batch).limit(5000);
-      allAtt = allAtt.concat(data || []);
+      batches.push(
+        Promise.resolve(supabase.from("attendance_records").select("student_id, status").in("student_id", batch).gte("date", termStart))
+          .then(({ data }) => data || [])
+      );
     }
+    const allAtt = (await Promise.all(batches)).flat();
 
     const alerts: Record<string, AbsenceAlert> = {};
     const studentAbsences: Record<string, { absent: number; total: number }> = {};
