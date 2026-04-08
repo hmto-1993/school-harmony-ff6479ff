@@ -430,7 +430,14 @@ export async function exportFormPdf(
   doc.setLineWidth(1.2);
   doc.line(marginX, pageH - 8, pageW - marginX, pageH - 8);
 
-  // Save
+  // Return blob + filename, or save directly
   const fileName = `${form.title} - ${fieldValues.student_name || "نموذج"}.pdf`;
+
+  if (options?.returnBlob) {
+    const blob = doc.output("blob");
+    return { blob, fileName };
+  }
+
   doc.save(fileName);
+  return { blob: null, fileName };
 }
