@@ -142,6 +142,7 @@ export function useSettingsCategories(classes: ClassRow[], categories: GradeCate
   const [newCatWeight, setNewCatWeight] = useState(10);
   const [newCatMaxScore, setNewCatMaxScore] = useState(100);
   const [newCatGroup, setNewCatGroup] = useState("classwork");
+  const [newCatIsDeduction, setNewCatIsDeduction] = useState(false);
 
   const initEditingCats = (cats: GradeCategory[]) => {
     const edits: Record<string, { weight: number; max_score: number }> = {};
@@ -203,7 +204,7 @@ export function useSettingsCategories(classes: ClassRow[], categories: GradeCate
       const inserts = classes.map(cls => {
         const classCats = categories.filter(c => c.class_id === cls.id);
         const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
-        return supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: cls.id, sort_order: maxOrder + 1, category_group: newCatGroup });
+        return supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: cls.id, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
       });
       const results = await Promise.all(inserts);
       if (results.some(r => r.error)) toast({ title: "خطأ", description: "فشل في الإضافة لبعض الفصول", variant: "destructive" });
@@ -211,11 +212,11 @@ export function useSettingsCategories(classes: ClassRow[], categories: GradeCate
     } else {
       const classCats = categories.filter(c => c.class_id === newCatClassId);
       const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
-      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: newCatClassId, sort_order: maxOrder + 1, category_group: newCatGroup });
+      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: newCatClassId, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
       if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}"` });
     }
-    setNewCatName(""); setNewCatWeight(10); setNewCatMaxScore(100); setNewCatGroup("classwork"); fetchData();
+    setNewCatName(""); setNewCatWeight(10); setNewCatMaxScore(100); setNewCatGroup("classwork"); setNewCatIsDeduction(false); fetchData();
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -297,6 +298,7 @@ export function useSettingsCategories(classes: ClassRow[], categories: GradeCate
     editingCats, setEditingCats, savingCats, catClassFilter, setCatClassFilter,
     newCatClassId, setNewCatClassId, newCatName, setNewCatName, newCatWeight, setNewCatWeight,
     newCatMaxScore, setNewCatMaxScore, newCatGroup, setNewCatGroup,
+    newCatIsDeduction, setNewCatIsDeduction,
     orphanedCategories, filteredCategories, classworkCategories, examCategories,
     handleSaveCategories, handleAddCategory, handleDeleteCategory, handleReassignOrphanedCategories, handleReorderCategory,
     initEditingCats,
