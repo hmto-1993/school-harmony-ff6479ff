@@ -279,13 +279,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
                                     placeholder="0"
                                   />
-                                  <Input
-                                    type="text"
-                                    value={deductionNote}
-                                    onChange={(e) => setDeductionNote(sg.student_id, cat.id, e.target.value)}
-                                    className="w-24 h-6 text-[10px] text-center border-muted-foreground/20"
-                                    placeholder="السبب..."
-                                  />
+                                  <Select value={deductionNote || undefined} onValueChange={(val) => setDeductionNote(sg.student_id, cat.id, val)}>
+                                    <SelectTrigger className="w-28 h-6 text-[10px] border-muted-foreground/20 px-1">
+                                      <SelectValue placeholder="السبب..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {DEDUCTION_REASONS.map(r => (
+                                        <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               </td>
                             );
