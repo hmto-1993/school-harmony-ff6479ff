@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle } from "lucide-react";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
@@ -38,8 +39,10 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
+  const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
+  const [adminPhone, setAdminPhone] = useState("");
 
-  // Load students
+  // Load students + admin phone
   useEffect(() => {
     if (!open || !user) return;
     (async () => {
@@ -61,13 +64,24 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
         };
       });
       setStudents(mapped);
+
+      // Load admin phone from site_settings
+      if (form.adminAlertEnabled) {
+        const { data: settings } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("id", "admin_phone")
+          .maybeSingle();
+        if (settings?.value) setAdminPhone(settings.value);
+      }
     })();
-  }, [open, user]);
+  }, [open, user, form.adminAlertEnabled]);
 
   // Reset state when form changes
   useEffect(() => {
     setSelectedStudentId("");
     setFieldValues({});
+    setSelectedWitnesses([]);
   }, [form.id]);
 
   // Auto-fill when student changes
@@ -87,6 +101,16 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
       date: dateStr,
     }));
   }, [selectedStudentId, students]);
+
+  // Sync witnesses to field values
+  useEffect(() => {
+    if (!form.witnessPickerEnabled) return;
+    const witnessNames = selectedWitnesses
+      .map((id) => students.find((s) => s.id === id)?.full_name)
+      .filter(Boolean)
+      .join("، ");
+    setFieldValues((prev) => ({ ...prev, witnesses_names: witnessNames }));
+  }, [selectedWitnesses, students, form.witnessPickerEnabled]);
 
   const handleFieldChange = (fieldId: string, value: string) => {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }));
@@ -115,21 +139,51 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
       toast.error("يرجى اختيار الطالب أولاً");
       return;
     }
-
     const student = students.find((s) => s.id === selectedStudentId);
     if (!student) return;
 
-    // Fill template with values
-    let message = form.whatsappTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || "............");
+    const message = form.whatsappTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || "............");
 
-    // Build WhatsApp URL
     let phone = student.parent_phone || "";
     phone = phone.replace(/\D/g, "");
     if (phone.startsWith("05")) phone = "966" + phone.slice(1);
     if (!phone.startsWith("966")) phone = "966" + phone;
 
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  const handleAdminAlert = () => {
+    if (!form.adminAlertTemplate || !selectedStudentId) {
+      toast.error("يرجى اختيار الطالب أولاً");
+      return;
+    }
+
+    const message = form.adminAlertTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || "............");
+
+    let phone = adminPhone.replace(/\D/g, "");
+    if (!phone) {
+      // Fallback: open without number
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
+      return;
+    }
+    if (phone.startsWith("05")) phone = "966" + phone.slice(1);
+    if (!phone.startsWith("966")) phone = "966" + phone;
+
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  // Available witnesses (exclude the selected student)
+  const witnessOptions = useMemo(
+    () => students.filter((s) => s.id !== selectedStudentId),
+    [students, selectedStudentId]
+  );
+
+  const toggleWitness = (studentId: string) => {
+    setSelectedWitnesses((prev) =>
+      prev.includes(studentId)
+        ? prev.filter((id) => id !== studentId)
+        : [...prev, studentId]
+    );
   };
 
   const renderField = (field: FormField) => {
@@ -166,18 +220,26 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     );
   };
 
-  // Show body preview if template exists
+  // Body preview
   const bodyPreview = form.bodyTemplate
     ? form.bodyTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || `{${key}}`)
     : null;
 
+  const isConfidential = form.confidentialWatermark;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
+      <DialogContent className={`max-w-lg max-h-[90vh] flex flex-col ${isConfidential ? "border-destructive/30" : ""}`}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-2xl">{form.icon}</span>
             {form.title}
+            {isConfidential && (
+              <Badge variant="destructive" className="text-[10px] mr-auto">
+                <ShieldAlert className="h-3 w-3 ml-1" />
+                سري
+              </Badge>
+            )}
           </DialogTitle>
           <DialogDescription>{form.description}</DialogDescription>
         </DialogHeader>
@@ -201,14 +263,53 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               </Select>
             </div>
 
-            {/* Form fields (non-hidden) */}
-            {form.fields.filter(f => f.type !== "auto").map(renderField)}
+            {/* Witness picker for incident_report */}
+            {form.witnessPickerEnabled && selectedStudentId && (
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold flex items-center gap-1">
+                  👥 اختيار الشهود
+                  {selectedWitnesses.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">{selectedWitnesses.length}</Badge>
+                  )}
+                </Label>
+                <div className="border rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
+                  {witnessOptions.slice(0, 50).map((s) => {
+                    const isSelected = selectedWitnesses.includes(s.id);
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleWitness(s.id)}
+                        className={`w-full text-right text-xs px-2 py-1.5 rounded transition-colors ${
+                          isSelected
+                            ? "bg-primary/10 text-primary font-semibold border border-primary/20"
+                            : "hover:bg-muted text-foreground"
+                        }`}
+                      >
+                        {s.full_name} — {s.className}
+                        {isSelected && " ✓"}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedWitnesses.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    الشهود المختارون: {selectedWitnesses.map((id) => students.find((s) => s.id === id)?.full_name).join("، ")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Form fields (non-auto, non-hidden) */}
+            {form.fields.filter((f) => f.type !== "auto" && !f.hidden).map(renderField)}
 
             {/* Body preview */}
             {bodyPreview && selectedStudentId && (
               <div className="space-y-1">
                 <Label className="text-xs font-semibold text-muted-foreground">معاينة النموذج</Label>
-                <div className="rounded-lg border bg-muted/50 p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+                <div className={`rounded-lg border p-3 text-sm leading-relaxed whitespace-pre-wrap text-foreground ${
+                  isConfidential ? "bg-destructive/5 border-destructive/20" : "bg-muted/50"
+                }`}>
                   {bodyPreview}
                 </div>
               </div>
@@ -217,7 +318,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
             {/* Auto-filled fields display */}
             {selectedStudentId && (
               <div className="grid grid-cols-2 gap-2">
-                {form.fields.filter(f => f.type === "auto").map(f => (
+                {form.fields.filter((f) => f.type === "auto").map((f) => (
                   <div key={f.id} className="space-y-0.5">
                     <Label className="text-[10px] text-muted-foreground">{f.label}</Label>
                     <div className="text-xs font-medium bg-muted rounded px-2 py-1.5 truncate">
@@ -233,6 +334,21 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
         <DialogFooter className="gap-2 flex-wrap">
           <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
 
+          {/* Admin urgent alert WhatsApp */}
+          {form.adminAlertEnabled && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleAdminAlert}
+              disabled={!selectedStudentId}
+              className="gap-1"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              بلاغ عاجل
+            </Button>
+          )}
+
+          {/* Parent WhatsApp */}
           {form.whatsappEnabled && (
             <Button
               variant="outline"

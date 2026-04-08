@@ -13,6 +13,20 @@ export interface FormTemplate {
   whatsappEnabled?: boolean;
   /** WhatsApp message template */
   whatsappTemplate?: string;
+  /** Admin urgent WhatsApp alert */
+  adminAlertEnabled?: boolean;
+  /** Admin alert WhatsApp message template */
+  adminAlertTemplate?: string;
+  /** Render as official protocol table layout in PDF */
+  protocolLayout?: boolean;
+  /** Protocol table sections */
+  protocolSections?: { title: string; fieldId: string }[];
+  /** Enable multi-student witness picker */
+  witnessPickerEnabled?: boolean;
+  /** Never visible in parent portal */
+  parentHidden?: boolean;
+  /** Add confidential watermark to PDF */
+  confidentialWatermark?: boolean;
 }
 
 export interface FormField {
@@ -38,6 +52,14 @@ export const categoryLabels: Record<string, { label: string; color: string }> = 
   behavior: { label: "سلوكي", color: "hsl(var(--warning))" },
   confidential: { label: "سري", color: "hsl(var(--destructive))" },
 };
+
+/** IDs of forms that must never appear in parent portal */
+export const PARENT_HIDDEN_FORM_IDS = [
+  "confidential_referral",
+  "incident_report",
+  "violence_report",
+  "high_risk_report",
+];
 
 export const formTemplates: FormTemplate[] = [
   {
@@ -91,13 +113,27 @@ export const formTemplates: FormTemplate[] = [
     description: "نموذج فرص تعويض الدرجات",
     fields: [...commonAutoFields, { id: "subject", label: "المادة", type: "text" }, { id: "reason", label: "سبب التعويض", type: "textarea" }],
   },
+  // ====== CONFIDENTIAL FORM #7 ======
   {
     id: "confidential_referral",
     title: "إحالة سري",
     category: "confidential",
     icon: "🔒",
-    description: "إحالة سرية للطالب مع QR Code",
-    fields: [...commonAutoFields, { id: "referral_reason", label: "سبب الإحالة", type: "textarea" }, { id: "recommendations", label: "التوصيات", type: "textarea" }],
+    description: "إحالة سرية موجهة للموجه الطلابي أو المدير — لا تظهر للطالب أو ولي الأمر",
+    parentHidden: true,
+    confidentialWatermark: true,
+    bodyTemplate:
+      "إحالة سرية\n\nيتم إحالة الطالب/ {student_name} المقيد في فصل/ {class_name} إلى قسم التوجيه الطلابي / الإدارة للنظر في الحالة التالية:\n\nسبب الإحالة:\n{referral_reason}\n\nالملاحظات والتفاصيل:\n{referral_details}\n\nالتوصيات:\n{recommendations}\n\nملاحظة: هذا النموذج سري ولا يُطلع عليه الطالب أو ولي أمره.\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["معلم المادة", "الموجه الطلابي", "قائد المدرسة"],
+    adminAlertEnabled: true,
+    adminAlertTemplate:
+      "⚠️ تنبيه إداري: تم رصد إحالة سرية للطالب/ {student_name} تتطلب تدخلاً عاجلاً.\nالتفاصيل متوفرة في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+    fields: [
+      ...commonAutoFields,
+      { id: "referral_reason", label: "سبب الإحالة", type: "textarea", placeholder: "اذكر سبب الإحالة بالتفصيل..." },
+      { id: "referral_details", label: "الملاحظات والتفاصيل", type: "textarea", placeholder: "تفاصيل إضافية عن الحالة..." },
+      { id: "recommendations", label: "التوصيات", type: "textarea", placeholder: "التوصيات المقترحة..." },
+    ],
   },
   {
     id: "behavior_pledge",
@@ -136,13 +172,35 @@ export const formTemplates: FormTemplate[] = [
       { id: "visit_date", label: "تاريخ الزيارة", type: "date" },
     ],
   },
+  // ====== CONFIDENTIAL FORM #11 ======
   {
     id: "incident_report",
     title: "محضر ضبط واقعة",
     category: "confidential",
     icon: "🚨",
-    description: "محضر ضبط واقعة رسمي",
-    fields: [...commonAutoFields, { id: "incident_desc", label: "وصف الواقعة", type: "textarea" }, { id: "witnesses", label: "الشهود", type: "text" }, { id: "action", label: "الإجراء المتخذ", type: "textarea" }],
+    description: "محضر رسمي لضبط واقعة مع تحديد الشهود والأطراف",
+    parentHidden: true,
+    confidentialWatermark: true,
+    protocolLayout: true,
+    witnessPickerEnabled: true,
+    protocolSections: [
+      { title: "بيانات الواقعة", fieldId: "incident_data" },
+      { title: "أقوال الأطراف", fieldId: "party_statements" },
+      { title: "التوصيات والإجراءات", fieldId: "recommendations" },
+    ],
+    signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
+    adminAlertEnabled: true,
+    adminAlertTemplate:
+      "⚠️ تنبيه إداري: تم رصد واقعة تتطلب تدخلاً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المرفق/المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+    fields: [
+      ...commonAutoFields,
+      { id: "incident_time", label: "وقت الواقعة", type: "text", placeholder: "مثال: 10:30 صباحاً" },
+      { id: "incident_location", label: "مكان الواقعة", type: "text", placeholder: "مثال: الفصل / الساحة" },
+      { id: "incident_desc", label: "وصف الواقعة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الواقعة كاملة..." },
+      { id: "involved_parties", label: "الأطراف المشاركة", type: "textarea", placeholder: "أسماء جميع الأطراف المعنية..." },
+      { id: "party_statements", label: "أقوال الأطراف", type: "textarea", placeholder: "أقوال كل طرف على حدة..." },
+      { id: "recommendations", label: "التوصيات والإجراءات المتخذة", type: "textarea", placeholder: "الإجراءات الفورية والتوصيات..." },
+    ],
   },
   {
     id: "committee_meeting",
@@ -152,21 +210,61 @@ export const formTemplates: FormTemplate[] = [
     description: "محضر اجتماع لجنة رسمي",
     fields: [...commonAutoFields, { id: "attendees", label: "الحاضرون", type: "textarea" }, { id: "agenda", label: "جدول الأعمال", type: "textarea" }, { id: "decisions", label: "القرارات", type: "textarea" }],
   },
+  // ====== CONFIDENTIAL FORM #13 ======
   {
     id: "violence_report",
-    title: "بلاغ عنف",
+    title: "بلاغ حالة عنف",
     category: "confidential",
     icon: "🛡️",
-    description: "بلاغ حالة عنف",
-    fields: [...commonAutoFields, { id: "violence_desc", label: "وصف الحالة", type: "textarea" }, { id: "immediate_action", label: "الإجراء الفوري", type: "textarea" }],
+    description: "بلاغ رسمي عن حالة عنف مع بيانات الحالة والإجراء العاجل",
+    parentHidden: true,
+    confidentialWatermark: true,
+    protocolLayout: true,
+    protocolSections: [
+      { title: "بيانات الحالة", fieldId: "case_data" },
+      { title: "وصف الحالة والتفاصيل", fieldId: "violence_desc" },
+      { title: "الإجراءات العاجلة", fieldId: "immediate_action" },
+    ],
+    signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
+    adminAlertEnabled: true,
+    adminAlertTemplate:
+      "🚨 تنبيه عاجل: تم رصد حالة عنف تتطلب تدخلاً فورياً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+    fields: [
+      ...commonAutoFields,
+      { id: "violence_type", label: "نوع العنف", type: "text", placeholder: "مثال: جسدي / لفظي / إلكتروني" },
+      { id: "violence_date_time", label: "تاريخ ووقت الحالة", type: "text", placeholder: "مثال: 1447/3/15 - 9:00 ص" },
+      { id: "violence_location", label: "مكان الحالة", type: "text", placeholder: "مثال: ساحة المدرسة" },
+      { id: "violence_desc", label: "وصف الحالة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الحالة كاملة..." },
+      { id: "victim_info", label: "بيانات المتضرر", type: "textarea", placeholder: "اسم المتضرر وبياناته..." },
+      { id: "immediate_action", label: "الإجراء العاجل المتخذ", type: "textarea", placeholder: "الإجراءات الفورية التي تم اتخاذها..." },
+    ],
   },
+  // ====== CONFIDENTIAL FORM #14 ======
   {
     id: "high_risk_report",
     title: "بلاغ عالية الخطورة",
     category: "confidential",
     icon: "🔴",
-    description: "بلاغ حالة عالية الخطورة",
-    fields: [...commonAutoFields, { id: "risk_desc", label: "وصف الخطورة", type: "textarea" }, { id: "risk_action", label: "الإجراءات المتخذة", type: "textarea" }],
+    description: "بلاغ حالة عالية الخطورة — سري للغاية",
+    parentHidden: true,
+    confidentialWatermark: true,
+    protocolLayout: true,
+    protocolSections: [
+      { title: "بيانات الحالة", fieldId: "risk_case_data" },
+      { title: "وصف الخطورة", fieldId: "risk_desc" },
+      { title: "الإجراءات المتخذة", fieldId: "risk_action" },
+    ],
+    signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
+    adminAlertEnabled: true,
+    adminAlertTemplate:
+      "🔴 تنبيه عالي الخطورة: تم رصد حالة تتطلب تدخلاً إدارياً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+    fields: [
+      ...commonAutoFields,
+      { id: "risk_type", label: "نوع الخطورة", type: "text", placeholder: "مثال: تهديد / إيذاء نفسي / مخدرات" },
+      { id: "risk_desc", label: "وصف الخطورة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الحالة..." },
+      { id: "risk_evidence", label: "الأدلة والقرائن", type: "textarea", placeholder: "أي أدلة أو قرائن متاحة..." },
+      { id: "risk_action", label: "الإجراءات المتخذة", type: "textarea", placeholder: "الإجراءات الفورية..." },
+    ],
   },
   {
     id: "excused_absence",
