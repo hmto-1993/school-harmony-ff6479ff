@@ -51,24 +51,34 @@ export function useFormsPageData() {
     })();
   }, [user]);
 
-  // Load stats
+  // Load stats — all queries run in parallel
   useEffect(() => {
     if (!user) return;
     (async () => {
+      // Pre-compute student IDs for class filter
       let studentIds: string[] | null = null;
       if (selectedClassId !== "all") {
-        const { data: studs } = await supabase.from("students").select("id").eq("class_id", selectedClassId);
-        studentIds = (studs || []).map(s => s.id);
+        const filteredStudents = allStudents.filter(s => s.class_id === selectedClassId);
+        studentIds = filteredStudents.map(s => s.id);
       }
 
+      // Build all queries upfront
       let logsQuery = supabase.from("form_issued_logs").select("id", { count: "exact" });
       if (studentIds && studentIds.length > 0) logsQuery = logsQuery.in("student_id", studentIds);
       else if (studentIds) logsQuery = logsQuery.eq("student_id", "00000000-0000-0000-0000-000000000000");
-      const { count: formCount } = await logsQuery;
 
       let behaviorQuery = supabase.from("behavior_records").select("type, student_id");
       if (selectedClassId !== "all") behaviorQuery = behaviorQuery.eq("class_id", selectedClassId);
-      const { data: behaviors } = await behaviorQuery;
+
+      let gradesQuery = supabase.from("grades").select("student_id, score, grade_categories!inner(max_score)").not("score", "is", null);
+      if (studentIds && studentIds.length > 0) gradesQuery = gradesQuery.in("student_id", studentIds);
+
+      // Run all 3 in parallel
+      const [{ count: formCount }, { data: behaviors }, { data: grades }] = await Promise.all([
+        logsQuery,
+        behaviorQuery,
+        gradesQuery,
+      ]);
 
       const sleepTypes = ["نوم", "sleep", "نائم"];
       const sleepCases = (behaviors || []).filter(b => sleepTypes.some(t => b.type?.toLowerCase().includes(t))).length;
@@ -77,9 +87,6 @@ export function useFormsPageData() {
       const total = (behaviors || []).length;
       const disciplineRate = total > 0 ? Math.round(((total - negative) / total) * 100) : 100;
 
-      let gradesQuery = supabase.from("grades").select("student_id, score, grade_categories!inner(max_score)").not("score", "is", null);
-      if (studentIds && studentIds.length > 0) gradesQuery = gradesQuery.in("student_id", studentIds);
-      const { data: grades } = await gradesQuery;
       const studentAvgs: Record<string, { sum: number; count: number }> = {};
       (grades || []).forEach((g: any) => {
         const pct = (g.score / (g.grade_categories?.max_score || 100)) * 100;
@@ -91,7 +98,7 @@ export function useFormsPageData() {
 
       setStats({ totalForms: formCount || 0, excellentStudents: excellent, sleepCases, disciplineRate });
     })();
-  }, [user, selectedClassId]);
+  }, [user, selectedClassId, allStudents]);
 
   const filteredStudents = useMemo(() => {
     let result = allStudents;
