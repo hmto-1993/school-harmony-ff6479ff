@@ -102,6 +102,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSearchQuery("");
     setFilterClassId("all");
     setShowStudentList(true);
+    setSignatureDataUrl(null);
   }, [form.id]);
 
   // Auto-fill when student changes
