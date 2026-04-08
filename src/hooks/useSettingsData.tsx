@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -35,13 +36,7 @@ export function useSettingsData() {
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCard, setActiveCardState] = useState<string | null>(() => {
-    try { return sessionStorage.getItem("settings_active_card") || null; } catch { return null; }
-  });
-  const setActiveCard = (val: string | null) => {
-    setActiveCardState(val);
-    try { if (val) sessionStorage.setItem("settings_active_card", val); else sessionStorage.removeItem("settings_active_card"); } catch {}
-  };
+  const [activeCard, setActiveCard] = usePersistedState<string | null>("settings_active_card", null);
   const [teachers, setTeachers] = useState<{ user_id: string; email: string; full_name: string; national_id?: string }[]>([]);
 
   // Letterhead

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ export default function NotificationsPage() {
   const { perms } = useTeacherPermissions();
   const isReadOnly = perms.read_only_mode;
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [activeTab, setActiveTab] = usePersistedState("notifications_active_tab", "announcements");
 
   useEffect(() => { fetchNotifications(); }, []);
 
@@ -48,7 +50,7 @@ export default function NotificationsPage() {
         <p className="text-muted-foreground">إشعارات النظام وإرسال رسائل SMS لأولياء الأمور</p>
       </div>
 
-      <Tabs defaultValue="announcements" dir="rtl">
+      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
         <TabsList className="w-full justify-start flex-wrap">
           <TabsTrigger value="announcements" className="gap-1.5">
             <Megaphone className="h-4 w-4" />

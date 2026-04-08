@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import {
   ClipboardCheck, GraduationCap, Heart, Trophy, FileText, Users2, Lock,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import { useReportsData } from "@/hooks/useReportsData";
 
 export default function ReportsPage() {
   const r = useReportsData();
+  const [activeTab, setActiveTab] = usePersistedState("reports_active_tab", "attendance");
 
   if (r.permsLoaded && !r.teacherPerms.can_view_reports && !r.teacherPerms.read_only_mode) {
     return (
@@ -83,7 +86,7 @@ export default function ReportsPage() {
       />
 
       {/* Report Tabs */}
-      <Tabs defaultValue="attendance" dir="rtl">
+      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
         <TabsList className="report-tabs-list w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
           <TabsTrigger value="attendance" className="report-tab report-tab--attendance gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
             <ClipboardCheck className="h-4 w-4" />

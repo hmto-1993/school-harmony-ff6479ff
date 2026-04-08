@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,7 +43,7 @@ export function useAttendanceData() {
 
   const [classesLoading, setClassesLoading] = useState(true);
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedClass, setSelectedClass] = usePersistedState("attendance_selected_class", "");
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
   const [saving, setSaving] = useState(false);
