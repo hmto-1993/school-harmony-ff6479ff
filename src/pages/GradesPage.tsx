@@ -60,6 +60,18 @@ export default function GradesPage() {
     return saved ? Number(saved) : 1;
   });
 
+  const handlePeriodChange = (period: number) => {
+    setSelectedPeriod(period);
+    localStorage.setItem("grades_selected_period", String(period));
+  };
+
+  const canEdit = perms.can_manage_grades && !perms.read_only_mode;
+  const canView = perms.can_view_grades || perms.read_only_mode;
+
+  const availableTypes = canEdit
+    ? ENTRY_TYPES
+    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "daily" || t.id === "classwork");
+
   const showPeriodSelector = activeType === "daily" || activeType === "classwork" || activeType === "summary" || activeType === "import";
 
   // Set default active type to summary if can't edit
