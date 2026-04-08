@@ -14,6 +14,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useDailyGradeData, GradeLevel } from "@/hooks/useDailyGradeData";
 
+const DEDUCTION_REASONS = [
+  "النوم", "الحديث", "أصوات مزعجة", "عدم احترام", "استخدام الجوال",
+  "عدم إحضار الكتاب", "عدم حل الواجب", "الأكل في الحصة", "التأخر عن الحصة",
+  "العبث بالممتلكات", "الإزعاج", "أخرى",
+];
+
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
   ({ level, size = "h-6 w-6", ...props }, ref) => {
