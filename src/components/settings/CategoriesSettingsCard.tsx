@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { GraduationCap, Plus, Save, X, FileSpreadsheet, AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,12 +129,17 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
                     <Label>اسم الفئة</Label>
                     <Input value={s.newCatName} onChange={(e) => s.setNewCatName(e.target.value)} placeholder="مثال: المشاركة" />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>الدرجة القصوى</Label>
-                    <Input type="number" value={s.newCatMaxScore} onChange={(e) => s.setNewCatMaxScore(parseFloat(e.target.value) || 0)} />
-                  </div>
-                </div>
-                <DialogFooter>
+                   <div className="space-y-1.5">
+                     <Label>الدرجة القصوى</Label>
+                     <Input type="number" value={s.newCatMaxScore} onChange={(e) => s.setNewCatMaxScore(parseFloat(e.target.value) || 0)} />
+                   </div>
+                   <div className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                     <div>
+                       <Label className="text-sm font-bold">فئة خصم درجات</Label>
+                       <p className="text-[11px] text-muted-foreground">تُخصم من الطالب عند المخالفة (مثل: النوم في الحصة)</p>
+                     </div>
+                     <Switch checked={s.newCatIsDeduction} onCheckedChange={s.setNewCatIsDeduction} />
+                   </div>
                   <DialogClose asChild><Button variant="outline">إلغاء</Button></DialogClose>
                   <Button onClick={s.handleAddCategory}><Plus className="h-4 w-4 ml-1.5" />إضافة</Button>
                 </DialogFooter>
