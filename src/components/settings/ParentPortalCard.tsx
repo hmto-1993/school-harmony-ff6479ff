@@ -182,6 +182,8 @@ export function ParentPortalCard({ s }: { s: SettingsData }) {
           setShowClassworkIcons={s.setParentShowClassworkIcons}
           classworkIconsCount={s.parentClassworkIconsCount}
           setClassworkIconsCount={s.setParentClassworkIconsCount}
+          showDeductions={s.parentShowDeductions}
+          setShowDeductions={s.setParentShowDeductions}
         />
 
         <Collapsible className="rounded-xl border border-border/50 bg-muted/10 overflow-hidden">
@@ -239,6 +241,7 @@ export function ParentPortalCard({ s }: { s: SettingsData }) {
                 supabase.from("site_settings").upsert({ id: "parent_classwork_icons_count", value: String(s.parentClassworkIconsCount) }),
                 supabase.from("site_settings").upsert({ id: "parent_show_library", value: String(s.parentShowLibrary) }),
                 supabase.from("site_settings").upsert({ id: "parent_show_activities", value: String(s.parentShowActivities) }),
+                supabase.from("site_settings").upsert({ id: "parent_show_deductions", value: String(s.parentShowDeductions) }),
                 supabase.from("site_settings").upsert({ id: "parent_pdf_header", value: JSON.stringify(s.parentPdfHeader) }),
               ]);
               s.setSavingParentWelcome(false);
