@@ -49,6 +49,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [exporting, setExporting] = useState(false);
   const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
   const [adminPhone, setAdminPhone] = useState("");
+  const [sharing, setSharing] = useState(false);
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
