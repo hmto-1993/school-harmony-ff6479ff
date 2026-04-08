@@ -32,7 +32,7 @@ export function ParentPortalCard({ s }: { s: SettingsData }) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5 text-pink-500" />
-            بوابة ولي الأمر
+            التحكم ببوابة ولي الأمر
           </CardTitle>
         </div>
       </CardHeader>
@@ -246,9 +246,9 @@ export function ParentPortalCard({ s }: { s: SettingsData }) {
               ]);
               s.setSavingParentWelcome(false);
               if (results.some(r => r.error)) {
-                toast({ title: "خطأ", description: "فشل حفظ إعدادات بوابة ولي الأمر", variant: "destructive" });
+                toast({ title: "خطأ", description: "فشل حفظ إعدادات التحكم ببوابة ولي الأمر", variant: "destructive" });
               } else {
-                toast({ title: "تم الحفظ", description: "تم تحديث إعدادات بوابة ولي الأمر بنجاح" });
+                toast({ title: "تم الحفظ", description: "تم تحديث إعدادات التحكم ببوابة ولي الأمر بنجاح" });
               }
             }}>
             <Save className="h-4 w-4" />
