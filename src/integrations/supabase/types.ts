@@ -467,6 +467,27 @@ export type Database = {
           },
         ]
       }
+      form_favorites: {
+        Row: {
+          created_at: string
+          form_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          form_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          form_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       form_issued_logs: {
         Row: {
           class_name: string
