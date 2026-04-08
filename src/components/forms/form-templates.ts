@@ -219,11 +219,23 @@ export const formTemplates: FormTemplate[] = [
   },
   {
     id: "committee_meeting",
-    title: "محضر اجتماع اللجنة",
-    category: "general",
+    title: "محضر اجتماع لجنة التوجيه الطلابي",
+    category: "confidential",
     icon: "🏛️",
-    description: "محضر اجتماع لجنة رسمي",
-    fields: [...commonAutoFields, { id: "attendees", label: "الحاضرون", type: "textarea" }, { id: "agenda", label: "جدول الأعمال", type: "textarea" }, { id: "decisions", label: "القرارات", type: "textarea" }],
+    description: "محضر اجتماع لجنة التوجيه الطلابي لدراسة حالة طالب — سري",
+    parentHidden: false,
+    confidentialWatermark: true,
+    bodyTemplate:
+      "محضر اجتماع لجنة التوجيه الطلابي\n\n⚠️ سري للغاية\n\nإنه في يوم/ {meeting_day} الموافق/ {date} عقدت لجنة التوجيه الطلابي اجتماعاً لدراسة حالة الطالب/ {student_name} المقيد في فصل/ {class_name} والمسجلة في منصة ألفا فيزياء.\n\nوبعد الاطلاع على سجل السلوك والبيانات، توصي اللجنة بالآتي:\n\nالحاضرون:\n{attendees}\n\nجدول الأعمال:\n{agenda}\n\nتوصيات وقرارات اللجنة:\n{decisions}\n\nالسجل المدني: {national_id}",
+    signatureLabels: ["معلم المادة", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
+    fields: [
+      ...commonAutoFields,
+      { id: "meeting_day", label: "يوم الاجتماع", type: "text", placeholder: "مثال: الأحد" },
+      { id: "attendees", label: "الحاضرون", type: "textarea", placeholder: "أسماء أعضاء اللجنة الحاضرين..." },
+      { id: "agenda", label: "جدول الأعمال", type: "textarea", placeholder: "بنود الاجتماع..." },
+      { id: "decisions", label: "توصيات وقرارات اللجنة", type: "textarea", placeholder: "اكتب توصيات اللجنة هنا..." },
+      { id: "teacher_notes", label: "ملاحظات إضافية", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة..." },
+    ],
   },
   // ====== CONFIDENTIAL FORM #13 ======
   {
@@ -231,7 +243,7 @@ export const formTemplates: FormTemplate[] = [
     title: "بلاغ حالة عنف",
     category: "confidential",
     icon: "🛡️",
-    description: "بلاغ رسمي عن حالة عنف مع بيانات الحالة والإجراء العاجل",
+    description: "نموذج بلاغ حماية — سري للغاية",
     parentHidden: true,
     confidentialWatermark: true,
     protocolLayout: true,
@@ -240,13 +252,15 @@ export const formTemplates: FormTemplate[] = [
       { title: "وصف الحالة والتفاصيل", fieldId: "violence_desc" },
       { title: "الإجراءات العاجلة", fieldId: "immediate_action" },
     ],
-    signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
+    bodyTemplate:
+      "نموذج بلاغ حماية\n\n⚠️ سري للغاية\n\nتم رصد مؤشرات (عنف جسدي / نفسي / إهمال) على الطالب/ {student_name} المقيد في فصل/ {class_name}.\n\nووفقاً لنظام حماية الطفل، جرى الرفع لمركز البلاغات بوزارة الموارد البشرية والتنمية الاجتماعية (أو وحدة الحماية المدرسية) لاتخاذ اللازم.\n\nنوع العنف: {violence_type}\nتاريخ ووقت الحالة: {violence_date_time}\nمكان الحالة: {violence_location}\n\nوصف الحالة بالتفصيل:\n{violence_desc}\n\nبيانات المتضرر:\n{victim_info}\n\nالإجراء العاجل المتخذ:\n{immediate_action}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["المعلم المبلّغ", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
       "🚨 تنبيه عاجل: تم رصد حالة عنف تتطلب تدخلاً فورياً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
     fields: [
       ...commonAutoFields,
-      { id: "violence_type", label: "نوع العنف", type: "text", placeholder: "مثال: جسدي / لفظي / إلكتروني" },
+      { id: "violence_type", label: "نوع العنف", type: "text", placeholder: "مثال: جسدي / لفظي / نفسي / إهمال" },
       { id: "violence_date_time", label: "تاريخ ووقت الحالة", type: "text", placeholder: "مثال: 1447/3/15 - 9:00 ص" },
       { id: "violence_location", label: "مكان الحالة", type: "text", placeholder: "مثال: ساحة المدرسة" },
       { id: "violence_desc", label: "وصف الحالة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الحالة كاملة..." },
@@ -269,7 +283,9 @@ export const formTemplates: FormTemplate[] = [
       { title: "وصف الخطورة", fieldId: "risk_desc" },
       { title: "الإجراءات المتخذة", fieldId: "risk_action" },
     ],
-    signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
+    bodyTemplate:
+      "بلاغ عاجل — حالة عالية الخطورة\n\n🔴 سري للغاية\n\nحالة عالية الخطورة تتطلب تدخلاً فورياً من إدارة المدرسة وجهات الاختصاص.\n\nالطالب/ {student_name} المقيد في فصل/ {class_name}.\n\nتم توثيق الحالة عبر منصة ألفا فيزياء لضمان سرعة الاستجابة وحماية سلامة الطالب والبيئة المدرسية.\n\nنوع الخطورة: {risk_type}\n\nوصف الخطورة بالتفصيل:\n{risk_desc}\n\nالأدلة والقرائن:\n{risk_evidence}\n\nالإجراءات المتخذة:\n{risk_action}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["المعلم المبلّغ", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
       "🔴 تنبيه عالي الخطورة: تم رصد حالة تتطلب تدخلاً إدارياً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
@@ -283,19 +299,35 @@ export const formTemplates: FormTemplate[] = [
   },
   {
     id: "excused_absence",
-    title: "غياب بعذر",
+    title: "إجراءات الغياب بعذر",
     category: "general",
     icon: "📗",
-    description: "نموذج غياب بعذر مقبول",
-    fields: [...commonAutoFields, { id: "absence_date", label: "تاريخ الغياب", type: "date" }, { id: "excuse_reason", label: "سبب الغياب", type: "textarea" }],
+    description: "إثبات حالة غياب بعذر مقبول مع تمكين التعويض",
+    bodyTemplate:
+      "إثبات حالة غياب بعذر\n\nبناءً على المستند المقدم من الطالب/ {student_name} المقيد في فصل/ {class_name} (عذر طبي / عذر اجتماعي)، تقرر قبول العذر واعتبار غيابه عن حصة الفيزياء ليوم/ {absence_date} غياباً مبرراً، مع تمكينه من تعويض ما فاته من مهام.\n\nسبب الغياب:\n{excuse_reason}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["معلم المادة", "وكيل المدرسة", "المرشد الطلابي"],
+    fields: [
+      ...commonAutoFields,
+      { id: "absence_date", label: "تاريخ الغياب", type: "date" },
+      { id: "excuse_reason", label: "سبب الغياب ونوع العذر", type: "textarea", placeholder: "عذر طبي / عذر اجتماعي - التفاصيل..." },
+      { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." },
+    ],
   },
   {
     id: "unexcused_absence",
-    title: "غياب بدون عذر",
+    title: "إجراءات الغياب بدون عذر",
     category: "general",
     icon: "📕",
-    description: "نموذج غياب بدون عذر",
-    fields: [...commonAutoFields, { id: "absence_date_un", label: "تاريخ الغياب", type: "date" }, { id: "parent_contacted", label: "هل تم التواصل مع ولي الأمر؟", type: "text" }],
+    description: "إشعار غياب بدون عذر مع التأثير على درجات المواظبة",
+    bodyTemplate:
+      "إشعار غياب بدون عذر\n\nنود إحاطتكم بتغيب الطالب/ {student_name} المقيد في فصل/ {class_name} عن حصة الفيزياء ليوم/ {absence_date_un} دون تقديم مبرر نظامي.\n\nنأمل التعاون لضمان عدم تكرار الغياب لما له من أثر مباشر على درجات المواظبة والتحصيل الدراسي.\n\nهل تم التواصل مع ولي الأمر: {parent_contacted}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+    signatureLabels: ["معلم المادة", "وكيل المدرسة", "المرشد الطلابي"],
+    fields: [
+      ...commonAutoFields,
+      { id: "absence_date_un", label: "تاريخ الغياب", type: "date" },
+      { id: "parent_contacted", label: "هل تم التواصل مع ولي الأمر؟", type: "text", placeholder: "نعم / لا - التفاصيل..." },
+      { id: "teacher_notes", label: "ملاحظات المعلم", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة بالحالة..." },
+    ],
   },
   {
     id: "attendance_pledge",
