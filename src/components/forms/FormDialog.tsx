@@ -500,6 +500,16 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
               إرسال عبر واتساب
             </Button>
           )}
+          {/* Share PDF via WhatsApp / System Share */}
+          <Button
+            variant="outline"
+            className="text-emerald-600 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:border-emerald-700 dark:hover:bg-emerald-950 gap-1"
+            onClick={handleSharePdf}
+            disabled={sharing || !selectedStudentId}
+          >
+            {sharing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+            إرسال PDF عبر واتساب
+          </Button>
 
           <Button onClick={handleExport} disabled={exporting || !selectedStudentId}>
             {exporting ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Download className="h-4 w-4 ml-2" />}
