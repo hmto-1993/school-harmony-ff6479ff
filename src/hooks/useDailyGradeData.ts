@@ -300,12 +300,13 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       for (const sg of studentGrades) {
         for (const cat of catsToSave) {
           const score = sg.grades[cat.id];
+          const note = sg.notes?.[cat.id] || "";
           const existingId = sg.grade_ids[cat.id];
           if (score !== null && score !== undefined) {
             if (existingId) {
-              updateOps.push(supabase.from("grades").update({ score }).eq("id", existingId).then(res => { if (res.error) throw new Error(res.error.message); }));
+              updateOps.push(supabase.from("grades").update({ score, note }).eq("id", existingId).then(res => { if (res.error) throw new Error(res.error.message); }));
             } else {
-              inserts.push({ student_id: sg.student_id, category_id: cat.id, score, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
+              inserts.push({ student_id: sg.student_id, category_id: cat.id, score, note, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
             }
           }
         }
