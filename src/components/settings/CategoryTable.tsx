@@ -31,6 +31,7 @@ export interface GradeCategory {
   class_id: string | null;
   class_name?: string;
   category_group: string;
+  is_deduction?: boolean;
 }
 
 interface CategoryTableProps {
