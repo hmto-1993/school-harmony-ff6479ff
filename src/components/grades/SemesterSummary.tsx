@@ -53,7 +53,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
 
     const cls = classesData || [];
     const students = studentsData || [];
-    const cats = (catsData || []) as CategoryInfo[];
+    const cats = ((catsData || []) as CategoryInfo[]).filter((c: any) => !c.is_deduction);
     const studentIds = students.map(s => s.id);
 
     let allGrades: any[] = [];
