@@ -174,13 +174,17 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const archiveForm = async () => {
     if (!user || !selectedStudentId) return;
     try {
+      const archiveValues = {
+        ...fieldValues,
+        ...(customBodyText !== null ? { _custom_body_text: customBodyText } : {}),
+      };
       await supabase.from("form_issued_logs").insert({
         form_id: form.id,
         form_title: form.title,
         student_id: selectedStudentId,
         student_name: fieldValues.student_name || "",
         class_name: fieldValues.class_name || "",
-        field_values: fieldValues as any,
+        field_values: archiveValues as any,
         issued_by: user.id,
       });
     } catch (err) {
@@ -327,9 +331,14 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     );
   };
 
-  const bodyPreview = form.bodyTemplate
+  // Compute the default body text with placeholders filled
+  const defaultBodyText = form.bodyTemplate
     ? form.bodyTemplate.replace(/\{(\w+)\}/g, (_, key) => fieldValues[key] || `{${key}}`)
     : null;
+
+  // The actual body text used for PDF: custom if edited, otherwise default
+  const finalBodyText = customBodyText !== null ? customBodyText : defaultBodyText;
+  const isBodyEdited = customBodyText !== null;
 
   const isConfidential = form.confidentialWatermark;
 
