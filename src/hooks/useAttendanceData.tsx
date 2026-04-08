@@ -202,7 +202,7 @@ export function useAttendanceData() {
     for (let i = 0; i < studentIds.length; i += batchSize) {
       const batch = studentIds.slice(i, i + batchSize);
       batches.push(
-        supabase.from("attendance_records").select("student_id, status").in("student_id", batch).gte("date", termStart)
+        Promise.resolve(supabase.from("attendance_records").select("student_id, status").in("student_id", batch).gte("date", termStart))
           .then(({ data }) => data || [])
       );
     }
