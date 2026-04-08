@@ -15,6 +15,7 @@ import {
   AlertTriangle, Heart, Table2, Trash2,
 } from "lucide-react";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
+import FormIdentitySettings from "@/components/settings/FormIdentitySettings";
 import AcademicCalendarSettings from "@/components/dashboard/AcademicCalendarSettings";
 import LessonPlanSettings from "@/components/settings/LessonPlanSettings";
 import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSettings";
@@ -88,6 +89,7 @@ export default function SettingsPage() {
           { key: "lesson_plans", icon: CalendarDays, label: "خطة الدروس", desc: "تخطيط الحصص الأسبوعية", gradient: "from-indigo-500 to-blue-600", shadow: "shadow-indigo-500/20", adminOnly: false },
           { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
           { key: "behavior_suggestions", icon: Heart, label: "وصف السلوك", desc: "مقترحات وصف السلوك", gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/20", adminOnly: true },
+          { key: "form_identity", icon: Pencil, label: "هوية النماذج", desc: "ترويسة وتوقيع النماذج", gradient: "from-purple-500 to-violet-600", shadow: "shadow-purple-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || s.isAdmin).map((card) => (
           <button
             key={card.key}
@@ -197,6 +199,18 @@ export default function SettingsPage() {
 
       {s.activeCard === "behavior_suggestions" && s.isAdmin && (
         <BehaviorSuggestionsSettings onClose={() => s.setActiveCard(null)} />
+      )}
+
+      {s.activeCard === "form_identity" && s.isAdmin && (
+        <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-lg"><Pencil className="h-5 w-5 text-primary" />إعدادات الهوية والنماذج</CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => s.setActiveCard(null)} className="h-8 w-8"><X className="h-4 w-4" /></Button>
+            </div>
+          </CardHeader>
+          <CardContent><FormIdentitySettings onClose={() => s.setActiveCard(null)} /></CardContent>
+        </Card>
       )}
 
       {/* ===== إعدادات إضافية ===== */}
