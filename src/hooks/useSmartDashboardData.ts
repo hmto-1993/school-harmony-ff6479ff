@@ -109,7 +109,9 @@ export function useSmartDashboardData() {
       .lte("date", last7Days[6]);
     if (teacherClassIds) behaviorQuery = behaviorQuery.in("class_id", teacherClassIds);
 
-    let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date").limit(5000);
+    // Scope full attendance to current academic term (last ~120 days) for at-risk calculation
+    const termStart = format(subDays(new Date(), 120), "yyyy-MM-dd");
+    let fullAttQuery = supabase.from("attendance_records").select("student_id, status, date").gte("date", termStart);
     if (teacherClassIds) fullAttQuery = fullAttQuery.in("class_id", teacherClassIds);
 
     const [absRes, allAttRes, classesRes, lessonRes, settingsRes, gradesRes, behaviorRes, fullAttRes] = await Promise.all([
