@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,14 +56,10 @@ export default function GradesPage() {
   const classCounts = classData?.classCounts || {};
   const [selectedClass, setSelectedClass] = usePersistedState("grades_selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
-  const [selectedPeriod, setSelectedPeriod] = useState<number>(() => {
-    const saved = localStorage.getItem("grades_selected_period");
-    return saved ? Number(saved) : 1;
-  });
+  const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
 
   const handlePeriodChange = (period: number) => {
     setSelectedPeriod(period);
-    localStorage.setItem("grades_selected_period", String(period));
   };
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;

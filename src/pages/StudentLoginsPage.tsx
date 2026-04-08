@@ -30,6 +30,7 @@ interface ClassInfo {
 }
 
 export default function StudentLoginsPage() {
+  const [loginsTab, setLoginsTab] = usePersistedState("student_logins_tab", "classes");
   const [logins, setLogins] = useState<LoginRecord[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<string>("all");
@@ -314,7 +315,7 @@ export default function StudentLoginsPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue={(() => { try { return sessionStorage.getItem("student_logins_tab") || "classes"; } catch { return "classes"; } })()} onValueChange={(v) => { try { sessionStorage.setItem("student_logins_tab", v); } catch {} }} dir="rtl">
+      <Tabs value={loginsTab} onValueChange={setLoginsTab} dir="rtl">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="classes">إحصائيات الفصول</TabsTrigger>
           <TabsTrigger value="students">إحصائيات الطلاب</TabsTrigger>
