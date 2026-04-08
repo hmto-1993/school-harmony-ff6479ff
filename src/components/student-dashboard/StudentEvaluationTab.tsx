@@ -289,7 +289,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
   })();
 
   const classworkContent = (() => {
-    const cwGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.category_group === "classwork");
+    const cwGrades = evalFilteredGrades.filter((g: any) => g.grade_categories?.category_group === "classwork" && !g.grade_categories?.is_deduction);
     if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
     const cwCatNames = Array.from(new Set<string>(cwGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
 
