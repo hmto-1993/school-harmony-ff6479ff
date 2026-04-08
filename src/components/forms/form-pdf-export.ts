@@ -167,7 +167,7 @@ export async function exportFormPdf(
   form: FormTemplate,
   fieldValues: Record<string, string>,
   student: StudentInfo,
-  options?: { returnBlob?: boolean },
+  options?: { returnBlob?: boolean; signatureDataUrl?: string | null },
 ): Promise<{ blob: Blob | null; fileName: string }> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
@@ -390,6 +390,19 @@ export async function exportFormPdf(
     y += 4;
     drawQrPattern(doc, pageW / 2 - 12, y, 24, refNumber);
     y += 32;
+  }
+
+  // ========== ELECTRONIC SIGNATURE ==========
+  if (options?.signatureDataUrl) {
+    if (y > pageH - 70) { doc.addPage(); y = 20; }
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text("التوقيع الإلكتروني:", pageW - marginX, y, { align: "right" });
+    y += 2;
+    try {
+      doc.addImage(options.signatureDataUrl, "PNG", pageW / 2 - 25, y, 50, 20);
+    } catch { /* ignore */ }
+    y += 24;
   }
 
   // ========== FOOTER: Signatures ==========

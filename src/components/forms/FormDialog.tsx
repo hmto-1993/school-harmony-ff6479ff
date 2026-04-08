@@ -9,11 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2 } from "lucide-react";
+import { Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { FormTemplate, FormField } from "./form-templates";
 import { exportFormPdf } from "./form-pdf-export";
+import SignatureCanvas from "./SignatureCanvas";
 import { toast } from "sonner";
 
 interface Props {
@@ -50,6 +51,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
   const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
   const [adminPhone, setAdminPhone] = useState("");
   const [sharing, setSharing] = useState(false);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
 
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -100,6 +102,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSearchQuery("");
     setFilterClassId("all");
     setShowStudentList(true);
+    setSignatureDataUrl(null);
   }, [form.id]);
 
   // Auto-fill when student changes
@@ -162,6 +165,24 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setFieldValues((prev) => ({ ...prev, [fieldId]: value }));
   };
 
+  // Archive the form to DB
+  const archiveForm = async () => {
+    if (!user || !selectedStudentId) return;
+    try {
+      await supabase.from("form_issued_logs").insert({
+        form_id: form.id,
+        form_title: form.title,
+        student_id: selectedStudentId,
+        student_name: fieldValues.student_name || "",
+        class_name: fieldValues.class_name || "",
+        field_values: fieldValues as any,
+        issued_by: user.id,
+      });
+    } catch (err) {
+      console.error("Archive error:", err);
+    }
+  };
+
   const handleExport = async () => {
     if (!selectedStudentId) {
       toast.error("يرجى اختيار الطالب أولاً");
@@ -170,7 +191,8 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setExporting(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      await exportFormPdf(form, fieldValues, student);
+      await exportFormPdf(form, fieldValues, student, { signatureDataUrl });
+      await archiveForm();
       toast.success("تم تصدير النموذج بنجاح");
     } catch (err) {
       console.error(err);
@@ -224,8 +246,9 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     setSharing(true);
     try {
       const student = students.find((s) => s.id === selectedStudentId)!;
-      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true });
+      const { blob, fileName } = await exportFormPdf(form, fieldValues, student, { returnBlob: true, signatureDataUrl });
       if (!blob) throw new Error("Failed to generate PDF");
+      await archiveForm();
 
       const file = new File([blob], fileName, { type: "application/pdf" });
 
@@ -444,6 +467,11 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
 
             {/* Form fields */}
             {form.fields.filter((f) => f.type !== "auto" && !f.hidden).map(renderField)}
+
+            {/* Signature Canvas */}
+            {selectedStudentId && (
+              <SignatureCanvas onSignatureChange={setSignatureDataUrl} />
+            )}
 
             {/* Body preview */}
             {bodyPreview && selectedStudentId && (

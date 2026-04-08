@@ -381,6 +381,50 @@ export type Database = {
           },
         ]
       }
+      form_issued_logs: {
+        Row: {
+          class_name: string
+          field_values: Json
+          form_id: string
+          form_title: string
+          id: string
+          issued_at: string
+          issued_by: string
+          student_id: string
+          student_name: string
+        }
+        Insert: {
+          class_name?: string
+          field_values?: Json
+          form_id: string
+          form_title: string
+          id?: string
+          issued_at?: string
+          issued_by: string
+          student_id: string
+          student_name: string
+        }
+        Update: {
+          class_name?: string
+          field_values?: Json
+          form_id?: string
+          form_title?: string
+          id?: string
+          issued_at?: string
+          issued_by?: string
+          student_id?: string
+          student_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_issued_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grade_categories: {
         Row: {
           category_group: string
