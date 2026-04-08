@@ -43,7 +43,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     filteredStudentGrades, absentCount, hiddenStatuses,
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
-    cycleSlot, addSlot, toggleStar, clearGrade, setDeductionNote,
+    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
     calcTotal, handleSave,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
 
@@ -275,12 +275,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     min={0}
                                     max={maxScore}
                                     value={deductionScore ?? ""}
-                                    onChange={(e) => {
-                                      const val = e.target.value === "" ? null : Math.min(Math.max(0, Number(e.target.value)), maxScore);
-                                      setStudentGrades((prev: any) => prev.map((s: any) =>
-                                        s.student_id === sg.student_id ? { ...s, grades: { ...s.grades, [cat.id]: val } } : s
-                                      ));
-                                    }}
+                                    onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
                                     className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
                                     placeholder="0"
                                   />
