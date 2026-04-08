@@ -60,7 +60,6 @@ export default function GradesPage() {
 
   const handlePeriodChange = (period: number) => {
     setSelectedPeriod(period);
-    localStorage.setItem("grades_selected_period", String(period));
   };
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
