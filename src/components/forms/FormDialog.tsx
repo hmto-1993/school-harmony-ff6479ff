@@ -12,7 +12,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import {
   Download, Loader2, MessageCircle, AlertTriangle, ShieldAlert, Search, X, Share2,
-  RotateCcw, FileStack, FileMerge, Users,
+  RotateCcw, FileStack, Files, Users,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
