@@ -252,7 +252,7 @@ export default function FormDialog({ form, open, onOpenChange }: Props) {
     }
   };
 
-
+  const witnessOptions = useMemo(
     () => students.filter((s) => s.id !== selectedStudentId),
     [students, selectedStudentId]
   );
