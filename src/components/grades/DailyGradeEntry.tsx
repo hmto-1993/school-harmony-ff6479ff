@@ -72,6 +72,9 @@ interface DailyGradeEntryProps {
 export default function DailyGradeEntry({ selectedClass, onClassChange, selectedPeriod = 1 }: DailyGradeEntryProps) {
   const { toast } = useToast();
   const [gradeTab, setGradeTab] = React.useState<"assessment" | "violations">("assessment");
+  const [referralStudentId, setReferralStudentId] = React.useState<string | null>(null);
+  const [referralFormOpen, setReferralFormOpen] = React.useState(false);
+  const [referralPreFill, setReferralPreFill] = React.useState<Record<string, string>>({});
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -90,6 +93,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const hasViolations = dailyCategories.some(c => c.is_deduction);
   const activeCats = gradeTab === "assessment" ? assessmentCats : violationCats;
   const showTotal = gradeTab === "assessment" && !isSingleCategory && assessmentCats.length > 1;
+
+  // Violation history for referral automation
+  const deductionCatIds = React.useMemo(() => categories.filter(c => c.is_deduction).map(c => c.id), [categories]);
+  const { history: violationHistory } = useViolationHistory(selectedClass, deductionCatIds, gradeTab === "violations" && hasViolations);
+
+  const referralForm = React.useMemo(() => formTemplates.find(f => f.id === "confidential_referral"), []);
+
+  const handleOpenReferral = React.useCallback((studentId: string, studentName: string) => {
+    const summary = violationHistory[studentId];
+    const { reasonText } = buildReferralReason(summary, studentName);
+    setReferralStudentId(studentId);
+    setReferralPreFill({ referral_reason: reasonText });
+    setReferralFormOpen(true);
+  }, [violationHistory]);
 
   // ── Print / Export helpers ─────────────────────────────────────
   const buildDailyTableHTML = () => {
