@@ -210,10 +210,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
-                <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-400" aria-hidden="true">
-                  <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
-                  <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" fill="none" />
-                  <path d="M12 7.5l1.5 3.1 3.4.5-2.5 2.4.6 3.4L12 15.2l-3 1.7.6-3.4-2.5-2.4 3.4-.5L12 7.5z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round" />
+                <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" aria-hidden="true">
+                  <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.27l-5.8 3.18 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.2" strokeLinejoin="round" />
                 </svg><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
@@ -348,10 +346,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 <span className="w-px h-5 bg-border mx-0.5" />
                                 <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
                                   className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                  <svg viewBox="0 0 24 24" className={cn("h-5 w-5 shrink-0", isStarred ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground")} aria-hidden="true">
-                                    <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
-                                    <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" fill="none" />
-                                    <path d="M12 7.5l1.5 3.1 3.4.5-2.5 2.4.6 3.4L12 15.2l-3 1.7.6-3.4-2.5-2.4 3.4-.5L12 7.5z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round" />
+                                  <svg viewBox="0 0 24 24" className={cn("h-5 w-5 shrink-0", isStarred ? "" : "text-muted-foreground")} aria-hidden="true">
+                                    <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.27l-5.8 3.18 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z"
+                                      fill={isStarred ? "#FBBF24" : "currentColor"}
+                                      stroke={isStarred ? "#D97706" : "currentColor"}
+                                      strokeWidth="1.2" strokeLinejoin="round"
+                                      opacity={isStarred ? 1 : 0.4}
+                                    />
                                   </svg>
                                 </button>
                                 <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">

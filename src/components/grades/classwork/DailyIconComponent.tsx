@@ -4,10 +4,8 @@ import type { DailyIcon } from "./classwork-types";
 export const DailyIconComponent = ({ icon, size = "h-4 w-4" }: { icon: DailyIcon; size?: string }) => {
   if (icon.isFullScore) {
     return (
-      <svg viewBox="0 0 24 24" className={cn(size, "shrink-0 text-amber-500")} aria-hidden="true">
-        <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
-        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" fill="none" />
-        <path d="M12 7.5l1.5 3.1 3.4.5-2.5 2.4.6 3.4L12 15.2l-3 1.7.6-3.4-2.5-2.4 3.4-.5L12 7.5z" fill="currentColor" stroke="currentColor" strokeWidth="0.5" strokeLinejoin="round" />
+      <svg viewBox="0 0 24 24" className={cn(size, "shrink-0")} aria-hidden="true">
+        <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.27l-5.8 3.18 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.2" strokeLinejoin="round" />
       </svg>
     );
   }
