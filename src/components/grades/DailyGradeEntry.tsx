@@ -79,8 +79,8 @@ function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "ze
 }
 
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
-  ({ level, size = "h-6 w-6", ...props }, ref) => {
-    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : 24;
+  ({ level, size = "h-7 w-7", ...props }, ref) => {
+    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : size.includes("6") ? 24 : 28;
     const type = level === "excellent" ? "excellent" : level === "average" ? "average" : level === "zero" ? "zero" : "empty";
     return <div ref={ref} {...props} className={cn("inline-flex items-center justify-center", size)}><GradeSvgIcon type={type} size={sizeNum} /></div>;
   }
