@@ -32,8 +32,8 @@ function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "ze
   }
   if (type === "star-empty") {
     return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.45)" }}>
-        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeDasharray="3 3" />
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.5)" }}>
+        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeDasharray="3 3" />
       </svg>
     );
   }
