@@ -276,16 +276,26 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
             {/* Tabs */}
             {hasViolations && (
-              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} dir="rtl" className="mb-4 no-print">
-                <TabsList className="w-auto justify-start">
-                  <TabsTrigger value="assessment" className="gap-1.5">
-                    <CircleCheck className="h-4 w-4" />التقييم
-                  </TabsTrigger>
-                  <TabsTrigger value="violations" className="gap-1.5">
-                    <AlertTriangle className="h-4 w-4" />المخالفات
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="mb-4 no-print">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} dir="rtl" className="flex-1">
+                    <TabsList className="w-auto justify-start">
+                      <TabsTrigger value="assessment" className="gap-1.5">
+                        <CircleCheck className="h-4 w-4" />التقييم
+                      </TabsTrigger>
+                      <TabsTrigger value="violations" className="gap-1.5">
+                        <AlertTriangle className="h-4 w-4" />المخالفات
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {gradeTab === "violations" && (
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setReasonsDialogOpen(true)}>
+                      <Settings className="h-3.5 w-3.5" />
+                      إدارة الأسباب
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Table */}
