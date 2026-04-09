@@ -21,10 +21,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preSelectedStudentIds?: string[];
+  initialFieldValues?: Record<string, string>;
 }
 
-export default function FormDialog({ form, open, onOpenChange, preSelectedStudentIds }: Props) {
-  const state = useFormDialog({ form, open, onOpenChange, preSelectedStudentIds });
+export default function FormDialog({ form, open, onOpenChange, preSelectedStudentIds, initialFieldValues }: Props) {
+  const state = useFormDialog({ form, open, onOpenChange, preSelectedStudentIds, initialFieldValues });
   const isConfidential = form.confidentialWatermark;
 
   return (
