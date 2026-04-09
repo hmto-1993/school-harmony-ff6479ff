@@ -71,6 +71,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [referralStudentId, setReferralStudentId] = React.useState<string | null>(null);
   const [referralFormOpen, setReferralFormOpen] = React.useState(false);
   const [referralPreFill, setReferralPreFill] = React.useState<Record<string, string>>({});
+  const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
+  const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
