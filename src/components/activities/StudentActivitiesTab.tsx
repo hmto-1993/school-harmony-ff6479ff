@@ -180,15 +180,21 @@ export default function StudentActivitiesTab({ studentId, classId }: StudentActi
       .eq("is_visible", true)
       .order("created_at", { ascending: false });
 
-    const { data: subs } = await supabase
-      .from("quiz_submissions")
-      .select("activity_id")
-      .eq("student_id", studentId)
-      .in("activity_id", ids);
-
-    const completed = new Set<string>();
-    subs?.forEach(s => completed.add(s.activity_id));
-    setCompletedQuizzes(completed);
+    // Check completed quizzes via authenticated edge function
+    const sessionToken = sessionStorage.getItem("student_session_token");
+    const sessionIssuedAt = Number(sessionStorage.getItem("student_session_issued_at"));
+    if (sessionToken && sessionIssuedAt) {
+      try {
+        const { data: checkData } = await supabase.functions.invoke("check-quiz-submissions", {
+          body: { student_id: studentId, activity_ids: ids, session_token: sessionToken, session_issued_at: sessionIssuedAt },
+        });
+        const completed = new Set<string>();
+        (checkData?.completed_ids || []).forEach((id: string) => completed.add(id));
+        setCompletedQuizzes(completed);
+      } catch {
+        // Silently fail - student can still attempt quizzes, server will reject duplicates
+      }
+    }
 
     setActivities((acts || []).map((a: any) => ({
       ...a,
