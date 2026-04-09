@@ -34,13 +34,14 @@ export default function DiamondStarBadge({ size = "sm", className, showTooltip =
       )}
       title={showTooltip ? "⭐ طالب متميز - لوحة الشرف" : undefined}
     >
-      {/* Diamond shape with star - no glow */}
+      {/* Glow effect */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/40 to-yellow-500/40 blur-sm animate-pulse" />
       
       {/* Diamond shape with star */}
       <div className={cn(
         "relative flex items-center justify-center",
         "bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500",
-        "rounded-sm rotate-45",
+        "rounded-sm rotate-45 shadow-md shadow-amber-400/30",
         size === "sm" ? "w-3.5 h-3.5" : size === "md" ? "w-4 h-4" : "w-5 h-5"
       )}>
         <Star 

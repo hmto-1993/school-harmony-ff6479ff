@@ -87,7 +87,7 @@ export default function FullTimetableWidget() {
         ) : slots.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-4">لم يتم تصميم الجدول بعد</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg" dir="rtl">
+          <div className="overflow-x-auto rounded-lg">
             <table className="w-full text-[11px]">
               <thead>
                 <tr className="bg-muted/40">

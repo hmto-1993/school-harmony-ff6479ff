@@ -258,9 +258,9 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
           <div className="mt-3 overflow-auto rounded-xl border border-destructive/20 shadow-sm">
             <table className="w-full text-xs border-separate border-spacing-0">
               <thead>
-                 <tr className="bg-destructive/5">
-                   <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 first:rounded-tr-xl">التاريخ</th>
-                   <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">المخالفة</th>
+                <tr className="bg-destructive/5">
+                  <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 first:rounded-tr-xl">التاريخ</th>
+                  <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الخصم</th>
                   <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الدرجة</th>
                   <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 last:rounded-tl-xl">السبب</th>
                 </tr>
@@ -333,9 +333,9 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
           <div className="mt-3 overflow-auto rounded-xl border border-destructive/20 shadow-sm">
             <table className="w-full text-xs border-separate border-spacing-0">
               <thead>
-                 <tr className="bg-destructive/5">
-                   <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 first:rounded-tr-xl">التاريخ</th>
-                   <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">المخالفة</th>
+                <tr className="bg-destructive/5">
+                  <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 first:rounded-tr-xl">التاريخ</th>
+                  <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الخصم</th>
                   <th className="text-center p-2 font-semibold text-destructive border-b-2 border-destructive/20">الدرجة</th>
                   <th className="text-right p-2 font-semibold text-destructive border-b-2 border-destructive/20 last:rounded-tl-xl">السبب</th>
                 </tr>

@@ -21,68 +21,13 @@ const DEDUCTION_REASONS = [
   "العبث بالممتلكات", "الإزعاج", "أخرى",
 ];
 
-// ── SVG Grade Icons (bypass global .lucide color override) ─────────
-function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "zero" | "star" | "star-empty" | "empty"; size?: number }) {
-  if (type === "star") {
-    return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#d97706" }}>
-        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-      </svg>
-    );
-  }
-  if (type === "star-empty") {
-    return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.5)" }}>
-        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" strokeDasharray="3 3" />
-      </svg>
-    );
-  }
-  if (type === "excellent") {
-    return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#059669" }} fill="none" overflow="hidden">
-        <defs><clipPath id="cc-e"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
-        <g clipPath="url(#cc-e)">
-          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-        </g>
-      </svg>
-    );
-  }
-  if (type === "average") {
-    return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#ea580c" }} fill="none" overflow="hidden">
-        <defs><clipPath id="cc-a"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
-        <g clipPath="url(#cc-a)">
-          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-        </g>
-      </svg>
-    );
-  }
-  if (type === "zero") {
-    return (
-      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#e11d48" }} fill="none" overflow="hidden">
-        <defs><clipPath id="cc-z"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
-        <g clipPath="url(#cc-z)">
-          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-        </g>
-      </svg>
-    );
-  }
-  return (
-    <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.35)" }} fill="none">
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" />
-    </svg>
-  );
-}
-
+// ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
-  ({ level, size = "h-7 w-7", ...props }, ref) => {
-    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : size.includes("6") ? 24 : 28;
-    const type = level === "excellent" ? "excellent" : level === "average" ? "average" : level === "zero" ? "zero" : "empty";
-    return <div ref={ref} {...props} className={cn("inline-flex items-center justify-center", size)}><GradeSvgIcon type={type} size={sizeNum} /></div>;
+  ({ level, size = "h-6 w-6", ...props }, ref) => {
+    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
+    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} /></div>;
+    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} /></div>;
+    return <div ref={ref} {...props} className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />;
   }
 );
 LevelIcon.displayName = "LevelIcon";
@@ -232,16 +177,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {/* Legend */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                <GradeSvgIcon type="excellent" size={20} /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
+                <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-                <GradeSvgIcon type="average" size={20} /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
+                <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400" /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
-                <GradeSvgIcon type="zero" size={20} /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
+                <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
-                <GradeSvgIcon type="star" size={20} /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
                 <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
@@ -278,23 +223,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {/* Tabs for regular vs deduction */}
             {(() => {
               const regularCats = visibleCategories.filter(c => !c.is_deduction);
-              // Deduction cats always show ALL deduction categories, ignoring the category dropdown filter
-              const deductionCats = dailyCategories.filter(c => c.is_deduction);
+              const deductionCats = visibleCategories.filter(c => c.is_deduction);
               const hasDeductions = deductionCats.length > 0;
 
               const renderTable = (cats: typeof visibleCategories, isDeductionTab: boolean) => (
-                <div ref={!isDeductionTab ? tableRef : undefined} className="overflow-x-auto rounded-xl border border-border shadow-sm" dir="rtl">
+                <div ref={!isDeductionTab ? tableRef : undefined} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
                   <table className="w-full text-sm border-separate border-spacing-0">
                     <thead>
                       <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/30 first:rounded-tr-xl">#</th>
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/30 min-w-[120px] max-w-[160px]">الطالب</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                         {cats.map((cat) => (
-                          <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/30 min-w-[100px]", isDeductionTab ? "text-destructive bg-destructive/5" : "text-primary")}>
+                          <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", isDeductionTab ? "text-destructive bg-destructive/5" : "text-primary")}>
                             <div>{cat.name}{isDeductionTab && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                           </th>
                         ))}
-                        {!isDeductionTab && !isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/30 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                        {!isDeductionTab && !isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -309,10 +253,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           <tr key={sg.student_id} className={cn(
                             "group transition-all duration-200 cursor-default",
                             isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
-                            !isLast && "border-b border-border/50"
+                            !isLast && "border-b border-border/20"
                           )}>
-                            <td className="p-3 text-muted-foreground font-medium border-l border-border/60 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                            <td className="p-3 font-semibold border-l border-border/60 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                            <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                            <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
                               <span className="flex items-center gap-1.5">
                                 {sg.full_name}
                                 {isLate && (
@@ -336,7 +280,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 const deductionScore = sg.grades[cat.id];
                                 const deductionNote = sg.notes?.[cat.id] || "";
                                 return (
-                                  <td key={cat.id} className="p-2 text-center border-l border-border/60">
+                                  <td key={cat.id} className="p-2 text-center border-l border-border/30">
                                     <div className="flex flex-col items-center gap-1">
                                       <Input
                                         type="number"
@@ -363,11 +307,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               }
 
                               return (
-                                <td key={cat.id} className="p-3 text-center border-l border-border/60">
+                                <td key={cat.id} className="p-3 text-center border-l border-border/30">
                                   <div className="flex items-center justify-center gap-1">
                                     {slotsArr.map((slotLevel, si) => (
                                       <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
                                         className={cn("p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
+                                          slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
+                                          slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
+                                          slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
                                           !slotLevel && "grade-empty",
                                         )} title="اضغط للتبديل" data-grade-level={slotLevel || "empty"}>
                                         <LevelIcon level={slotLevel} />
@@ -380,8 +327,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     )}
                                     <span className="w-px h-5 bg-border mx-0.5" />
                                     <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                      <GradeSvgIcon type={isStarred ? "star" : "star-empty"} size={24} />
+                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
+                                      <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
                                     </button>
                                     <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
                                       <Undo2 className="h-4 w-4 text-muted-foreground" />
@@ -390,7 +337,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 </td>
                               );
                             })}
-                            {!isDeductionTab && !isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/60">{calcTotal(sg.grades)}</td>}
+                            {!isDeductionTab && !isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
                           </tr>
                         );
                       })}
@@ -401,9 +348,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
               return hasDeductions ? (
                 <Tabs defaultValue="grades" className="w-full">
-                  <TabsList className="mb-3 w-full sm:w-auto flex justify-end" dir="rtl">
-                    <TabsTrigger value="deductions">⚠️ المخالفات</TabsTrigger>
+                  <TabsList className="mb-3 w-full sm:w-auto">
                     <TabsTrigger value="grades">📊 التقييم</TabsTrigger>
+                    <TabsTrigger value="deductions">⚠️ الخصومات</TabsTrigger>
                   </TabsList>
                   <TabsContent value="grades">{renderTable(regularCats, false)}</TabsContent>
                   <TabsContent value="deductions">{renderTable(deductionCats, true)}</TabsContent>
