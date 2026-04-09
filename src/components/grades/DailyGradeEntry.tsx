@@ -453,17 +453,11 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {/* Referral Form Dialog */}
             {referralForm && (
               <FormDialog
-                form={{
-                  ...referralForm,
-                  fields: referralForm.fields.map(f =>
-                    f.id === "referral_reason"
-                      ? { ...f, placeholder: referralPreFill.referral_reason || f.placeholder }
-                      : f
-                  ),
-                }}
+                form={referralForm}
                 open={referralFormOpen}
                 onOpenChange={(v) => { setReferralFormOpen(v); if (!v) setReferralStudentId(null); }}
                 preSelectedStudentIds={referralStudentId ? [referralStudentId] : undefined}
+                initialFieldValues={referralPreFill}
               />
             )}
           </>
