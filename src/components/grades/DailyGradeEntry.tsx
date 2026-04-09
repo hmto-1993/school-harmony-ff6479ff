@@ -269,14 +269,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             )}
 
             {/* Table */}
-            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
-              <table className="w-full text-sm border-separate border-spacing-0">
+            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-border/50 border-primary/20 first:rounded-tr-xl">#</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-border/50 border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                     {activeCats.map((cat) => (
-                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
+                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-border/50 border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
@@ -293,12 +293,11 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     const statusLabel: Record<string, string> = { absent: "غائب", early_leave: "منصرف مبكراً", sick_leave: "إجازة مرضية" };
                     return (
                       <tr key={sg.student_id} className={cn(
-                        "group transition-all duration-200 cursor-default",
-                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
-                        !isLast && "border-b border-border/20"
+                        "group transition-all duration-200 cursor-default border-b border-border/30",
+                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/8 dark:hover:bg-primary/12", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
                       )}>
-                        <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                        <td className="p-3 text-muted-foreground font-medium border-l border-border/40 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                        <td className="p-3 font-semibold border-l border-border/40 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
                           <span className="flex items-center gap-1.5">
                             {sg.full_name}
                             {isLate && (
@@ -323,7 +322,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             const deductionScore = sg.grades[cat.id];
                             const deductionNote = sg.notes?.[cat.id] || "";
                             return (
-                              <td key={cat.id} className="p-2 text-center border-l border-border/30">
+                              <td key={cat.id} className="p-2 text-center border-l border-border/40">
                                 <div className="flex flex-col items-center gap-1">
                                   <Input
                                     type="number"
@@ -350,7 +349,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           }
 
                           return (
-                            <td key={cat.id} className="p-3 text-center border-l border-border/30">
+                            <td key={cat.id} className="p-3 text-center border-l border-border/40">
                               <div className="flex items-center justify-center gap-1">
                                 {slotsArr.map((slotLevel, si) => (
                                   <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
@@ -384,7 +383,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             </td>
                           );
                         })}
-                        {showTotal && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+                        {showTotal && <td className="p-3 text-center font-bold border-l border-border/40">{calcTotal(sg.grades)}</td>}
                       </tr>
                     );
                   })}
