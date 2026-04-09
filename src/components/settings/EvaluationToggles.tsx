@@ -37,7 +37,7 @@ export default function EvaluationToggles({
   const items = [
     { label: dailyLabel, desc: dailyDesc, state: showDailyGrades, setter: setShowDailyGrades },
     { label: cumulativeLabel, desc: cumulativeDesc, state: showClassworkIcons, setter: setShowClassworkIcons },
-    ...(setShowDeductions ? [{ label: "⚠️ الخصومات", desc: "عرض جدول الخصومات للطالب/ولي الأمر", state: showDeductions ?? true, setter: setShowDeductions }] : []),
+    ...(setShowDeductions ? [{ label: "⚠️ المخالفات", desc: "عرض جدول المخالفات للطالب/ولي الأمر", state: showDeductions ?? true, setter: setShowDeductions }] : []),
   ];
 
   return (
