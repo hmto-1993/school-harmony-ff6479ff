@@ -42,6 +42,14 @@ function EvaluationIcon({ level, size = 20, className }: { level: EvaluationLeve
           stroke="currentColor"
           strokeWidth="1.4"
           strokeLinejoin="round"
+          opacity="0.15"
+        />
+        <path
+          d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z"
+          fill="currentColor"
+          stroke="currentColor"
+          strokeWidth="1.4"
+          strokeLinejoin="round"
         />
       </svg>
     );
@@ -58,6 +66,7 @@ function EvaluationIcon({ level, size = 20, className }: { level: EvaluationLeve
         fill="none"
         aria-hidden="true"
       >
+        <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
         <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
         <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
@@ -75,6 +84,7 @@ function EvaluationIcon({ level, size = 20, className }: { level: EvaluationLeve
         fill="none"
         aria-hidden="true"
       >
+        <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
         <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
         <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
       </svg>
@@ -92,6 +102,7 @@ function EvaluationIcon({ level, size = 20, className }: { level: EvaluationLeve
         fill="none"
         aria-hidden="true"
       >
+        <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
         <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
         <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
         <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
