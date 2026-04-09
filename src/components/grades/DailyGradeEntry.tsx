@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { isToday, format } from "date-fns";
@@ -65,6 +66,7 @@ interface DailyGradeEntryProps {
 
 export default function DailyGradeEntry({ selectedClass, onClassChange, selectedPeriod = 1 }: DailyGradeEntryProps) {
   const { toast } = useToast();
+  const [gradeTab, setGradeTab] = React.useState<"assessment" | "violations">("assessment");
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -77,6 +79,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
     calcTotal, handleSave,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
+
+  const assessmentCats = visibleCategories.filter(c => !c.is_deduction);
+  const violationCats = visibleCategories.filter(c => c.is_deduction);
+  const hasViolations = dailyCategories.some(c => c.is_deduction);
+  const activeCats = gradeTab === "assessment" ? assessmentCats : violationCats;
+  const showTotal = gradeTab === "assessment" && !isSingleCategory && assessmentCats.length > 1;
 
   // ── Print / Export helpers ─────────────────────────────────────
   const buildDailyTableHTML = () => {
@@ -199,7 +207,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         ) : (
           <>
             {/* Legend */}
-            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print">
+            <div className={cn("grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print", gradeTab === "violations" && hasViolations && "hidden")}>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
                 <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
               </div>
@@ -246,6 +254,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               </div>
             )}
 
+            {/* Tabs */}
+            {hasViolations && (
+              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} className="mb-4 no-print">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="assessment" className="gap-1.5">
+                    <CircleCheck className="h-4 w-4" />التقييم
+                  </TabsTrigger>
+                  <TabsTrigger value="violations" className="gap-1.5">
+                    <AlertTriangle className="h-4 w-4" />المخالفات
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+
             {/* Table */}
             <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
@@ -253,12 +275,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
-                    {visibleCategories.map((cat) => (
+                    {activeCats.map((cat) => (
                       <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
-                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -291,7 +313,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             )}
                           </span>
                         </td>
-                        {visibleCategories.map((cat) => {
+                        {activeCats.map((cat) => {
                           const maxScore = Number(cat.max_score);
                           const slotsArr = sg.slots[cat.id] || [null];
                           const isStarred = sg.starred[cat.id] || false;
@@ -362,7 +384,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             </td>
                           );
                         })}
-                        {!isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+                        {showTotal && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
                       </tr>
                     );
                   })}
