@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
@@ -15,16 +15,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useDailyGradeData, GradeLevel } from "@/hooks/useDailyGradeData";
 import { useViolationHistory, buildReferralReason } from "@/hooks/useViolationHistory";
+import { useViolationReasons } from "@/hooks/useViolationReasons";
+import ViolationReasonsDialog from "./ViolationReasonsDialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
-
-const DEDUCTION_REASONS = [
-  "النوم", "الحديث", "أصوات مزعجة", "عدم احترام", "استخدام الجوال",
-  "عدم إحضار الكتاب", "عدم حل الواجب", "الأكل في الحصة", "التأخر عن الحصة",
-  "العبث بالممتلكات", "الإزعاج", "أخرى",
-];
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
@@ -75,6 +71,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [referralStudentId, setReferralStudentId] = React.useState<string | null>(null);
   const [referralFormOpen, setReferralFormOpen] = React.useState(false);
   const [referralPreFill, setReferralPreFill] = React.useState<Record<string, string>>({});
+  const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
+  const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -278,16 +276,26 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
             {/* Tabs */}
             {hasViolations && (
-              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} dir="rtl" className="mb-4 no-print">
-                <TabsList className="w-auto justify-start">
-                  <TabsTrigger value="assessment" className="gap-1.5">
-                    <CircleCheck className="h-4 w-4" />التقييم
-                  </TabsTrigger>
-                  <TabsTrigger value="violations" className="gap-1.5">
-                    <AlertTriangle className="h-4 w-4" />المخالفات
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <div className="mb-4 no-print">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} dir="rtl" className="flex-1">
+                    <TabsList className="w-auto justify-start">
+                      <TabsTrigger value="assessment" className="gap-1.5">
+                        <CircleCheck className="h-4 w-4" />التقييم
+                      </TabsTrigger>
+                      <TabsTrigger value="violations" className="gap-1.5">
+                        <AlertTriangle className="h-4 w-4" />المخالفات
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  {gradeTab === "violations" && (
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => setReasonsDialogOpen(true)}>
+                      <Settings className="h-3.5 w-3.5" />
+                      إدارة الأسباب
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Table */}
@@ -374,28 +382,65 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           if (isDeduction) {
                             const deductionScore = sg.grades[cat.id];
                             const deductionNote = sg.notes?.[cat.id] || "";
+                            const currentScore = deductionScore ?? 0;
                             return (
                               <td key={cat.id} className="p-2 text-center border-l border-border/40">
-                                <div className="flex flex-col items-center gap-1">
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={maxScore}
-                                    value={deductionScore ?? ""}
-                                    onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                    className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
-                                    placeholder="0"
-                                  />
-                                  <Select value={deductionNote || undefined} onValueChange={(val) => setDeductionNote(sg.student_id, cat.id, val)}>
-                                    <SelectTrigger className="w-28 h-6 text-[10px] border-muted-foreground/20 px-1">
-                                      <SelectValue placeholder="السبب..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {DEDUCTION_REASONS.map(r => (
-                                        <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  {/* Quick Chips */}
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {violationReasons.map((reason) => {
+                                      const isActive = deductionNote === reason.label;
+                                      return (
+                                        <button
+                                          key={reason.label}
+                                          type="button"
+                                          onClick={() => {
+                                            if (isActive) {
+                                              setDeductionNote(sg.student_id, cat.id, "");
+                                              setNumericGrade(sg.student_id, cat.id, "0", maxScore);
+                                            } else {
+                                              setDeductionNote(sg.student_id, cat.id, reason.label);
+                                              setNumericGrade(sg.student_id, cat.id, String(reason.defaultScore), maxScore);
+                                            }
+                                          }}
+                                          className={cn(
+                                            "px-2 py-1 rounded-md text-[10px] font-bold border transition-all min-w-[40px] min-h-[28px] touch-manipulation",
+                                            isActive
+                                              ? "bg-destructive/15 text-destructive border-destructive/40 shadow-sm"
+                                              : "bg-muted/60 text-muted-foreground border-border/50 hover:bg-muted hover:border-border"
+                                          )}
+                                        >
+                                          {reason.label}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  {/* Score with +/- */}
+                                  <div className="flex items-center gap-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setNumericGrade(sg.student_id, cat.id, String(Math.max(0, currentScore - 1)), maxScore)}
+                                      className="h-6 w-6 rounded border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                                    >
+                                      <Minus className="h-3 w-3" />
+                                    </button>
+                                    <Input
+                                      type="number"
+                                      min={0}
+                                      max={maxScore}
+                                      value={currentScore || ""}
+                                      onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
+                                      className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
+                                      placeholder="0"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setNumericGrade(sg.student_id, cat.id, String(Math.min(maxScore, currentScore + 1)), maxScore)}
+                                      className="h-6 w-6 rounded border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                             );
@@ -460,6 +505,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 initialFieldValues={referralPreFill}
               />
             )}
+
+            {/* Violation Reasons Settings Dialog */}
+            <ViolationReasonsDialog
+              open={reasonsDialogOpen}
+              onOpenChange={setReasonsDialogOpen}
+              reasons={violationReasons}
+              defaultReasons={DEFAULT_REASONS}
+              onSave={saveReasons}
+            />
           </>
         )}
       </CardContent>
