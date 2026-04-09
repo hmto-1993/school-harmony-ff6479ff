@@ -326,11 +326,18 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     const violationSummary = gradeTab === "violations" ? violationHistory[sg.student_id] : undefined;
                     const referralInfo = gradeTab === "violations" ? buildReferralReason(violationSummary, sg.full_name) : { hasReferral: false, repeatedTypes: [], reasonText: "" };
 
+                    // Check if student has any active violation today
+                    const hasActiveViolation = gradeTab === "violations" && violationCats.some(cat => {
+                      const score = sg.grades[cat.id];
+                      return score != null && score > 0;
+                    });
+
                     return (
                       <tr key={sg.student_id} className={cn(
                         "group transition-all duration-200 cursor-default border-b border-border/30",
                         isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/8 dark:hover:bg-primary/12", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
                         referralInfo.hasReferral && "bg-destructive/5 dark:bg-destructive/10",
+                        hasActiveViolation && !referralInfo.hasReferral && "bg-amber-50/60 dark:bg-amber-500/8 border-amber-200/40 dark:border-amber-500/15",
                       )}>
                         <td className="p-3 text-muted-foreground font-medium border-l border-border/40 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
                         <td className="p-3 font-semibold border-l border-border/40 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
