@@ -79,8 +79,8 @@ function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "ze
 }
 
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
-  ({ level, size = "h-6 w-6", ...props }, ref) => {
-    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : 24;
+  ({ level, size = "h-7 w-7", ...props }, ref) => {
+    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : size.includes("6") ? 24 : 28;
     const type = level === "excellent" ? "excellent" : level === "average" ? "average" : level === "zero" ? "zero" : "empty";
     return <div ref={ref} {...props} className={cn("inline-flex items-center justify-center", size)}><GradeSvgIcon type={type} size={sizeNum} /></div>;
   }
@@ -381,7 +381,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     <span className="w-px h-5 bg-border mx-0.5" />
                                     <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
                                       className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                      <GradeSvgIcon type={isStarred ? "star" : "star-empty"} size={20} />
+                                      <GradeSvgIcon type={isStarred ? "star" : "star-empty"} size={24} />
                                     </button>
                                     <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
                                       <Undo2 className="h-4 w-4 text-muted-foreground" />
