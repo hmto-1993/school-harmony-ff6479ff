@@ -313,7 +313,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             )}
                           </span>
                         </td>
-                        {visibleCategories.map((cat) => {
+                        {activeCats.map((cat) => {
                           const maxScore = Number(cat.max_score);
                           const slotsArr = sg.slots[cat.id] || [null];
                           const isStarred = sg.starred[cat.id] || false;
