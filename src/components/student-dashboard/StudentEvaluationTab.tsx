@@ -17,7 +17,7 @@ const SLOTS = 3;
 
 const iconToneStyles: Record<EvaluationLevel | "empty", CSSProperties> = {
   excellent: { color: "hsl(var(--success))" },
-  average: { color: "hsl(var(--warning))" },
+  average: { color: "hsl(25, 95%, 53%)" },
   zero: { color: "hsl(var(--destructive))" },
   star: { color: "hsl(var(--warning))" },
   empty: { color: "hsl(var(--muted-foreground) / 0.35)" },
