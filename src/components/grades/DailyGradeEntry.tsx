@@ -24,9 +24,9 @@ const DEDUCTION_REASONS = [
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
   ({ level, size = "h-6 w-6", ...props }, ref) => {
-    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-400")} /></div>;
-    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-400")} /></div>;
-    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-400")} /></div>;
+    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
+    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} /></div>;
+    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} /></div>;
     return <div ref={ref} {...props} className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />;
   }
 );
@@ -176,20 +176,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           <>
             {/* Legend */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                <CircleCheck className="h-5 w-5 text-emerald-400" /><span className="text-emerald-300 font-medium">ممتاز</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+                <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <CircleMinus className="h-5 w-5 text-amber-400" /><span className="text-amber-300 font-medium">متوسط</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+                <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400" /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500/10 border border-rose-500/20">
-                <CircleX className="h-5 w-5 text-rose-400" /><span className="text-rose-300 font-medium">صفر</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
+                <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" /><span className="text-yellow-300 font-medium">متميز</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-500/10 border border-slate-500/20">
-                <Undo2 className="h-4 w-4 text-slate-400" /><span className="text-slate-300 font-medium">تراجع</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
+                <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
               </div>
             </div>
 
@@ -261,7 +261,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               <span className="flex items-center gap-1.5">
                                 {sg.full_name}
                                 {isLate && (
-                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                                     <Clock className="h-3 w-3" />متأخر
                                   </span>
                                 )}
@@ -328,8 +328,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     )}
                                     <span className="w-px h-5 bg-border mx-0.5" />
                                     <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                      <Star className={cn("h-5 w-5", isStarred ? "text-yellow-400 fill-yellow-400" : "text-muted-foreground")} />
+                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
+                                      <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
                                     </button>
                                     <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
                                       <Undo2 className="h-4 w-4 text-muted-foreground" />
