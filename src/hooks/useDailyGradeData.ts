@@ -52,8 +52,8 @@ export const restoreSlotsFromScore = ({
   isParticipationCategory: boolean;
 }): { slots: GradeLevel[]; starred: boolean } => {
   if (score === null) return { slots: [null], starred: false };
-  if (score >= maxScore && isParticipationCategory) return { slots: [], starred: true };
-  if (score >= maxScore) return { slots: ["excellent"], starred: false };
+  // Full score → starred for ALL categories (not just participation)
+  if (score >= maxScore) return { slots: [], starred: true };
   if (score === 0) return { slots: ["zero"], starred: false };
 
   const perSlot = Math.round(maxScore / slotCount);
@@ -196,7 +196,9 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   }, [selectedClass, selectedDate, loadAttendance]);
 
   // Slot manipulation
-  const calcSlotsScore = (slotsArr: GradeLevel[], maxScore: number, slotCount: number): number => {
+  const calcSlotsScore = (slotsArr: GradeLevel[], maxScore: number, slotCount: number): number | null => {
+    // If ALL slots are null (empty), return null so no grade is saved
+    if (slotsArr.every(lvl => lvl === null)) return null;
     const perSlot = Math.round(maxScore / slotCount);
     return slotsArr.reduce((sum, lvl) => sum + levelScore(lvl, perSlot), 0);
   };
@@ -207,8 +209,11 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       if (sg.student_id !== studentId) return sg;
       const currentSlots = [...(sg.slots[categoryId] || [null])];
       currentSlots[slotIndex] = nextLevel(currentSlots[slotIndex]);
-      const score = sg.starred[categoryId] ? maxScore : calcSlotsScore(currentSlots, maxScore, maxSlots);
-      return { ...sg, slots: { ...sg.slots, [categoryId]: currentSlots }, grades: { ...sg.grades, [categoryId]: score } };
+      // If cycling back to null cleared everything, also clear star
+      const allEmpty = currentSlots.every(lvl => lvl === null);
+      const starred = allEmpty ? false : sg.starred[categoryId];
+      const score = starred ? maxScore : calcSlotsScore(currentSlots, maxScore, maxSlots);
+      return { ...sg, slots: { ...sg.slots, [categoryId]: currentSlots }, starred: { ...sg.starred, [categoryId]: starred }, grades: { ...sg.grades, [categoryId]: score } };
     }));
   };
 
@@ -227,7 +232,9 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       if (sg.student_id !== studentId) return sg;
       const newStarred = !sg.starred[categoryId];
       const slotCount = getMaxSlots(categoryId);
-      const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
+      // When unstarring: if all slots are null/empty, score should be null (no grade)
+      const currentSlots = sg.slots[categoryId] || [null];
+      const score = newStarred ? maxScore : (currentSlots.every(lvl => lvl === null) ? null : calcSlotsScore(currentSlots, maxScore, slotCount));
       return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
     }));
   };

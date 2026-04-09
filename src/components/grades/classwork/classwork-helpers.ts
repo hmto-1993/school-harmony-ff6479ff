@@ -23,8 +23,8 @@ export function restoreSlotsFromScore({
   isParticipationCategory: boolean;
 }): { slots: GradeLevel[]; starred: boolean } {
   if (score === null) return { slots: [], starred: false };
-  if (score >= maxScore && isParticipationCategory) return { slots: [], starred: true };
-  if (score >= maxScore) return { slots: ["excellent"], starred: false };
+  // Full score → starred for ALL categories (not just participation)
+  if (score >= maxScore) return { slots: [], starred: true };
   if (score === 0) return { slots: ["zero"], starred: false };
 
   const perSlot = Math.round(maxScore / slotCount);
