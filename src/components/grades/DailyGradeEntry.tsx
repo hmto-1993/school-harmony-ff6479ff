@@ -23,9 +23,34 @@ const DEDUCTION_REASONS = [
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
   ({ level, size = "h-6 w-6", ...props }, ref) => {
-    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
-    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} /></div>;
-    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} /></div>;
+    if (level === "excellent") return (
+      <div ref={ref} {...props}>
+        <svg viewBox="0 0 24 24" fill="none" className={cn(size, "shrink-0 text-emerald-600 dark:text-emerald-400")} aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    );
+    if (level === "average") return (
+      <div ref={ref} {...props}>
+        <svg viewBox="0 0 24 24" fill="none" className={cn(size, "shrink-0 text-amber-500 dark:text-amber-400")} aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
+    if (level === "zero") return (
+      <div ref={ref} {...props}>
+        <svg viewBox="0 0 24 24" fill="none" className={cn(size, "shrink-0 text-rose-500 dark:text-rose-400")} aria-hidden="true">
+          <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" />
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      </div>
+    );
     return <div ref={ref} {...props} className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />;
   }
 );
