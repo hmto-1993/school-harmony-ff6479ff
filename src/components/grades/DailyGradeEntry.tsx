@@ -21,13 +21,52 @@ const DEDUCTION_REASONS = [
   "العبث بالممتلكات", "الإزعاج", "أخرى",
 ];
 
-// ── LevelIcon ──────────────────────────────────────────────────────
+// ── SVG Grade Icons (bypass global .lucide color override) ─────────
+function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "zero" | "star" | "empty"; size?: number }) {
+  if (type === "star") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#d97706" }}>
+        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (type === "excellent") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#059669" }} fill="none">
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+        <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (type === "average") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#ea580c" }} fill="none">
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+        <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  if (type === "zero") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#e11d48" }} fill="none">
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+        <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.35)" }} fill="none">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" />
+    </svg>
+  );
+}
+
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
   ({ level, size = "h-6 w-6", ...props }, ref) => {
-    if (level === "excellent") return <div ref={ref} {...props}><CircleCheck className={cn(size, "text-emerald-600 dark:text-emerald-400")} /></div>;
-    if (level === "average") return <div ref={ref} {...props}><CircleMinus className={cn(size, "text-amber-500 dark:text-amber-400")} /></div>;
-    if (level === "zero") return <div ref={ref} {...props}><CircleX className={cn(size, "text-rose-500 dark:text-rose-400")} /></div>;
-    return <div ref={ref} {...props} className={cn(size, "rounded-full border-2 border-dashed border-muted-foreground/30")} />;
+    const sizeNum = size.includes("3") ? 14 : size.includes("4") ? 16 : size.includes("5") ? 20 : 24;
+    const type = level === "excellent" ? "excellent" : level === "average" ? "average" : level === "zero" ? "zero" : "empty";
+    return <div ref={ref} {...props} className={cn("inline-flex items-center justify-center", size)}><GradeSvgIcon type={type} size={sizeNum} /></div>;
   }
 );
 LevelIcon.displayName = "LevelIcon";
@@ -177,16 +216,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {/* Legend */}
             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print">
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-                <CircleCheck className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
+                <GradeSvgIcon type="excellent" size={20} /><span className="text-emerald-700 dark:text-emerald-300 font-medium">ممتاز</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-                <CircleMinus className="h-5 w-5 text-amber-500 dark:text-amber-400" /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
+                <GradeSvgIcon type="average" size={20} /><span className="text-amber-700 dark:text-amber-300 font-medium">متوسط</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20">
-                <CircleX className="h-5 w-5 text-rose-500 dark:text-rose-400" /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
+                <GradeSvgIcon type="zero" size={20} /><span className="text-rose-700 dark:text-rose-300 font-medium">صفر</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20">
-                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
+                <GradeSvgIcon type="star" size={20} /><span className="text-yellow-700 dark:text-yellow-300 font-medium">متميز</span>
               </div>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-50 dark:bg-slate-500/10 border border-slate-200 dark:border-slate-500/20">
                 <Undo2 className="h-4 w-4 text-slate-500 dark:text-slate-400" /><span className="text-slate-600 dark:text-slate-300 font-medium">تراجع</span>
