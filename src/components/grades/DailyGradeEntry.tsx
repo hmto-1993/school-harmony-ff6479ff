@@ -280,7 +280,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
-                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                   </tr>
                 </thead>
                 <tbody>
