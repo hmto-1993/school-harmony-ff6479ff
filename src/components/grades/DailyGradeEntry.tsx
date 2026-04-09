@@ -384,7 +384,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             </td>
                           );
                         })}
-                        {!isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+                        {showTotal && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
                       </tr>
                     );
                   })}
