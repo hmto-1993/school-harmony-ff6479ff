@@ -223,7 +223,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {/* Tabs for regular vs deduction */}
             {(() => {
               const regularCats = visibleCategories.filter(c => !c.is_deduction);
-              const deductionCats = visibleCategories.filter(c => c.is_deduction);
+              // Deduction cats always show ALL deduction categories, ignoring the category dropdown filter
+              const deductionCats = dailyCategories.filter(c => c.is_deduction);
               const hasDeductions = deductionCats.length > 0;
 
               const renderTable = (cats: typeof visibleCategories, isDeductionTab: boolean) => (
