@@ -382,28 +382,65 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           if (isDeduction) {
                             const deductionScore = sg.grades[cat.id];
                             const deductionNote = sg.notes?.[cat.id] || "";
+                            const currentScore = deductionScore ?? 0;
                             return (
                               <td key={cat.id} className="p-2 text-center border-l border-border/40">
-                                <div className="flex flex-col items-center gap-1">
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={maxScore}
-                                    value={deductionScore ?? ""}
-                                    onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                    className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
-                                    placeholder="0"
-                                  />
-                                  <Select value={deductionNote || undefined} onValueChange={(val) => setDeductionNote(sg.student_id, cat.id, val)}>
-                                    <SelectTrigger className="w-28 h-6 text-[10px] border-muted-foreground/20 px-1">
-                                      <SelectValue placeholder="السبب..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {DEDUCTION_REASONS.map(r => (
-                                        <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                <div className="flex flex-col items-center gap-1.5">
+                                  {/* Quick Chips */}
+                                  <div className="flex flex-wrap gap-1 justify-center">
+                                    {violationReasons.map((reason) => {
+                                      const isActive = deductionNote === reason.label;
+                                      return (
+                                        <button
+                                          key={reason.label}
+                                          type="button"
+                                          onClick={() => {
+                                            if (isActive) {
+                                              setDeductionNote(sg.student_id, cat.id, "");
+                                              setNumericGrade(sg.student_id, cat.id, "0", maxScore);
+                                            } else {
+                                              setDeductionNote(sg.student_id, cat.id, reason.label);
+                                              setNumericGrade(sg.student_id, cat.id, String(reason.defaultScore), maxScore);
+                                            }
+                                          }}
+                                          className={cn(
+                                            "px-2 py-1 rounded-md text-[10px] font-bold border transition-all min-w-[40px] min-h-[28px] touch-manipulation",
+                                            isActive
+                                              ? "bg-destructive/15 text-destructive border-destructive/40 shadow-sm"
+                                              : "bg-muted/60 text-muted-foreground border-border/50 hover:bg-muted hover:border-border"
+                                          )}
+                                        >
+                                          {reason.label}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  {/* Score with +/- */}
+                                  <div className="flex items-center gap-0.5">
+                                    <button
+                                      type="button"
+                                      onClick={() => setNumericGrade(sg.student_id, cat.id, String(Math.max(0, currentScore - 1)), maxScore)}
+                                      className="h-6 w-6 rounded border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                                    >
+                                      <Minus className="h-3 w-3" />
+                                    </button>
+                                    <Input
+                                      type="number"
+                                      min={0}
+                                      max={maxScore}
+                                      value={currentScore || ""}
+                                      onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
+                                      className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
+                                      placeholder="0"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => setNumericGrade(sg.student_id, cat.id, String(Math.min(maxScore, currentScore + 1)), maxScore)}
+                                      className="h-6 w-6 rounded border border-border/50 flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors touch-manipulation"
+                                    >
+                                      <Plus className="h-3 w-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               </td>
                             );
