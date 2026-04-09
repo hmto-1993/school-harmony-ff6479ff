@@ -96,7 +96,7 @@ export default function StudentTable(props: Props) {
           />
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+        <div className="overflow-x-auto rounded-xl border border-border/40 shadow-sm" dir="rtl">
           <table className="w-full text-sm border-separate border-spacing-0">
             <thead>
               <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
