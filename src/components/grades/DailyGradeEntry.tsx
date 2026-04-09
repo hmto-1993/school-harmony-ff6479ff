@@ -306,9 +306,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 {slotsArr.map((slotLevel, si) => (
                                   <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
                                     className={cn("p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
-                                      slotLevel === "excellent" && "bg-emerald-500/10",
-                                      slotLevel === "average" && "bg-amber-500/10",
-                                      slotLevel === "zero" && "bg-rose-500/10",
                                       !slotLevel && "grade-empty",
                                     )} title="اضغط للتبديل" data-grade-level={slotLevel || "empty"}>
                                     <LevelIcon level={slotLevel} />
@@ -321,7 +318,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 )}
                                 <span className="w-px h-5 bg-border mx-0.5" />
                                 <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                  className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-amber-500/10 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
+                                  className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
                                   <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
                                 </button>
                                 <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
