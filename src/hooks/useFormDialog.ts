@@ -91,7 +91,7 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
   // Reset state when form changes
   useEffect(() => {
     setSelectedStudentId(preSelectedStudentIds?.length === 1 ? preSelectedStudentIds[0] : "");
-    setFieldValues({});
+    setFieldValues(initialFieldValues || {});
     setSelectedWitnesses([]);
     setSearchQuery("");
     setFilterClassId("all");
