@@ -99,7 +99,7 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
     setSignatureDataUrl(null);
     setCustomBodyText(null);
     setIsEditingBody(false);
-  }, [form.id, preSelectedStudentIds]);
+  }, [form.id, preSelectedStudentIds, initialFieldValues]);
 
   // Auto-fill when student changes
   useEffect(() => {

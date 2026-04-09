@@ -435,7 +435,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                       type="number"
                                       min={0}
                                       max={maxScore}
-                                      value={currentScore || ""}
+                                      value={currentScore === 0 ? "0" : (currentScore || "")}
                                       onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
                                       className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
                                       placeholder="0"
