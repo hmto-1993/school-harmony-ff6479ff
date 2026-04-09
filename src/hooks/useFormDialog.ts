@@ -31,9 +31,10 @@ interface UseFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preSelectedStudentIds?: string[];
+  initialFieldValues?: Record<string, string>;
 }
 
-export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds }: UseFormDialogProps) {
+export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds, initialFieldValues }: UseFormDialogProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -90,7 +91,7 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds 
   // Reset state when form changes
   useEffect(() => {
     setSelectedStudentId(preSelectedStudentIds?.length === 1 ? preSelectedStudentIds[0] : "");
-    setFieldValues({});
+    setFieldValues(initialFieldValues || {});
     setSelectedWitnesses([]);
     setSearchQuery("");
     setFilterClassId("all");
