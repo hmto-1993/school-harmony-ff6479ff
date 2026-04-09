@@ -293,11 +293,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     const statusLabel: Record<string, string> = { absent: "غائب", early_leave: "منصرف مبكراً", sick_leave: "إجازة مرضية" };
                     return (
                       <tr key={sg.student_id} className={cn(
-                        "group transition-all duration-200 cursor-default",
-                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
-                        !isLast && "border-b border-border/20"
+                        "group transition-all duration-200 cursor-default border-b border-border/30",
+                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/8 dark:hover:bg-primary/12", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
                       )}>
-                        <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                        <td className="p-3 text-muted-foreground font-medium border-l border-border/40 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
                         <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
                           <span className="flex items-center gap-1.5">
                             {sg.full_name}
