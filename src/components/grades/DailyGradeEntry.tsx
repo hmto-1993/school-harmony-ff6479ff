@@ -19,7 +19,6 @@ import { useViolationReasons } from "@/hooks/useViolationReasons";
 import ViolationReasonsDialog from "./ViolationReasonsDialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formTemplates } from "@/components/forms/form-templates";
-import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
