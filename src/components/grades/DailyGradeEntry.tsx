@@ -335,12 +335,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     return (
                       <tr key={sg.student_id} className={cn(
                         "group transition-all duration-200 cursor-default border-b border-border/30",
-                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/8 dark:hover:bg-primary/12", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
+                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-accent/60 dark:hover:bg-accent/30", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
                         referralInfo.hasReferral && "bg-destructive/5 dark:bg-destructive/10",
                         hasActiveViolation && !referralInfo.hasReferral && "bg-amber-50/60 dark:bg-amber-500/8 border-amber-200/40 dark:border-amber-500/15",
                       )}>
                         <td className="p-3 text-muted-foreground font-medium border-l border-border/40 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/40 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                        <td className="p-3 font-semibold border-l border-border/40 whitespace-nowrap text-sm transition-all duration-200 group-hover:text-primary group-hover:bg-accent/40 dark:group-hover:bg-accent/20">
                           <span className="flex items-center gap-1.5">
                             {sg.full_name}
                             {isLate && (
