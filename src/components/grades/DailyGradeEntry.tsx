@@ -22,11 +22,18 @@ const DEDUCTION_REASONS = [
 ];
 
 // ── SVG Grade Icons (bypass global .lucide color override) ─────────
-function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "zero" | "star" | "empty"; size?: number }) {
+function GradeSvgIcon({ type, size = 24 }: { type: "excellent" | "average" | "zero" | "star" | "star-empty" | "empty"; size?: number }) {
   if (type === "star") {
     return (
       <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "#d97706" }}>
         <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="currentColor" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+  if (type === "star-empty") {
+    return (
+      <svg viewBox="0 0 24 24" width={size} height={size} className="shrink-0" style={{ color: "hsl(var(--muted-foreground) / 0.35)" }}>
+        <path d="M12 3.75l2.55 5.17 5.7.83-4.13 4.03.98 5.68L12 16.78 6.9 19.46l.98-5.68-4.13-4.03 5.7-.83L12 3.75z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" strokeDasharray="3 3" />
       </svg>
     );
   }
@@ -374,7 +381,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     <span className="w-px h-5 bg-border mx-0.5" />
                                     <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
                                       className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                      <GradeSvgIcon type="star" size={20} />
+                                      <GradeSvgIcon type={isStarred ? "star" : "star-empty"} size={20} />
                                     </button>
                                     <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
                                       <Undo2 className="h-4 w-4 text-muted-foreground" />
