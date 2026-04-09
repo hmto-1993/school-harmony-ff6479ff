@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,6 +13,7 @@ import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useDailyGradeData, GradeLevel } from "@/hooks/useDailyGradeData";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const DEDUCTION_REASONS = [
   "النوم", "الحديث", "أصوات مزعجة", "عدم احترام", "استخدام الجوال",
