@@ -254,6 +254,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               </div>
             )}
 
+            {/* Tabs */}
+            {hasViolations && (
+              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} className="mb-4 no-print">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="assessment" className="gap-1.5">
+                    <CircleCheck className="h-4 w-4" />التقييم
+                  </TabsTrigger>
+                  <TabsTrigger value="violations" className="gap-1.5">
+                    <AlertTriangle className="h-4 w-4" />المخالفات
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
+
             {/* Table */}
             <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
               <table className="w-full text-sm border-separate border-spacing-0">
@@ -261,7 +275,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
-                    {visibleCategories.map((cat) => (
+                    {activeCats.map((cat) => (
                       <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
