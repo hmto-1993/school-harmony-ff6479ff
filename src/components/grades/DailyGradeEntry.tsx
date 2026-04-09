@@ -283,18 +283,18 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               const hasDeductions = deductionCats.length > 0;
 
               const renderTable = (cats: typeof visibleCategories, isDeductionTab: boolean) => (
-                <div ref={!isDeductionTab ? tableRef : undefined} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm" dir="rtl">
+                <div ref={!isDeductionTab ? tableRef : undefined} className="overflow-x-auto rounded-xl border border-border shadow-sm" dir="rtl">
                   <table className="w-full text-sm border-separate border-spacing-0">
                     <thead>
                       <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/30 first:rounded-tr-xl">#</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/30 min-w-[120px] max-w-[160px]">الطالب</th>
                         {cats.map((cat) => (
-                          <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", isDeductionTab ? "text-destructive bg-destructive/5" : "text-primary")}>
+                          <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/30 min-w-[100px]", isDeductionTab ? "text-destructive bg-destructive/5" : "text-primary")}>
                             <div>{cat.name}{isDeductionTab && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                           </th>
                         ))}
-                        {!isDeductionTab && !isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                        {!isDeductionTab && !isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/30 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -309,10 +309,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           <tr key={sg.student_id} className={cn(
                             "group transition-all duration-200 cursor-default",
                             isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
-                            !isLast && "border-b border-border/20"
+                            !isLast && "border-b border-border/50"
                           )}>
-                            <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                            <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                            <td className="p-3 text-muted-foreground font-medium border-l border-border/60 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                            <td className="p-3 font-semibold border-l border-border/60 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
                               <span className="flex items-center gap-1.5">
                                 {sg.full_name}
                                 {isLate && (
@@ -336,7 +336,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 const deductionScore = sg.grades[cat.id];
                                 const deductionNote = sg.notes?.[cat.id] || "";
                                 return (
-                                  <td key={cat.id} className="p-2 text-center border-l border-border/30">
+                                  <td key={cat.id} className="p-2 text-center border-l border-border/60">
                                     <div className="flex flex-col items-center gap-1">
                                       <Input
                                         type="number"
@@ -363,7 +363,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               }
 
                               return (
-                                <td key={cat.id} className="p-3 text-center border-l border-border/30">
+                                <td key={cat.id} className="p-3 text-center border-l border-border/60">
                                   <div className="flex items-center justify-center gap-1">
                                     {slotsArr.map((slotLevel, si) => (
                                       <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
@@ -390,7 +390,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 </td>
                               );
                             })}
-                            {!isDeductionTab && !isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+                            {!isDeductionTab && !isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/60">{calcTotal(sg.grades)}</td>}
                           </tr>
                         );
                       })}
