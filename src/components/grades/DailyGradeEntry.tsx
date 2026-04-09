@@ -269,14 +269,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             )}
 
             {/* Table */}
-            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
-              <table className="w-full text-sm border-separate border-spacing-0">
+            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-border/50 border-primary/20 first:rounded-tr-xl">#</th>
+                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-border/50 border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
                     {activeCats.map((cat) => (
-                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
+                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-border/50 border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
