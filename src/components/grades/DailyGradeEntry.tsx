@@ -505,6 +505,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 initialFieldValues={referralPreFill}
               />
             )}
+
+            {/* Violation Reasons Settings Dialog */}
+            <ViolationReasonsDialog
+              open={reasonsDialogOpen}
+              onOpenChange={setReasonsDialogOpen}
+              reasons={violationReasons}
+              defaultReasons={DEFAULT_REASONS}
+              onSave={saveReasons}
+            />
           </>
         )}
       </CardContent>
