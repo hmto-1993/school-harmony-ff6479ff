@@ -349,7 +349,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
               return hasDeductions ? (
                 <Tabs defaultValue="grades" className="w-full">
-                  <TabsList className="mb-3 w-full sm:w-auto">
+                  <TabsList className="mb-3 w-full sm:w-auto justify-end">
                     <TabsTrigger value="grades">📊 التقييم</TabsTrigger>
                     <TabsTrigger value="deductions">⚠️ المخالفات</TabsTrigger>
                   </TabsList>
