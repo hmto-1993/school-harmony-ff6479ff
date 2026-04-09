@@ -232,7 +232,9 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       if (sg.student_id !== studentId) return sg;
       const newStarred = !sg.starred[categoryId];
       const slotCount = getMaxSlots(categoryId);
-      const score = newStarred ? maxScore : calcSlotsScore(sg.slots[categoryId] || [null], maxScore, slotCount);
+      // When unstarring: if all slots are null/empty, score should be null (no grade)
+      const currentSlots = sg.slots[categoryId] || [null];
+      const score = newStarred ? maxScore : (currentSlots.every(lvl => lvl === null) ? null : calcSlotsScore(currentSlots, maxScore, slotCount));
       return { ...sg, starred: { ...sg.starred, [categoryId]: newStarred }, grades: { ...sg.grades, [categoryId]: score } };
     }));
   };
