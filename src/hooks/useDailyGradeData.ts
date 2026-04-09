@@ -304,6 +304,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
 
       const updateOps: PromiseLike<void>[] = [];
       const inserts: any[] = [];
+      const deleteIds: string[] = [];
 
       for (const sg of studentGrades) {
         for (const cat of catsToSave) {
@@ -316,11 +317,28 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
             } else {
               inserts.push({ student_id: sg.student_id, category_id: cat.id, score, note, recorded_by: user.id, period: selectedPeriod, date: format(selectedDate, "yyyy-MM-dd") });
             }
+          } else if (existingId) {
+            // Score cleared → delete existing record
+            deleteIds.push(existingId);
           }
         }
       }
 
       await Promise.all(updateOps);
+
+      // Delete cleared grades
+      if (deleteIds.length > 0) {
+        const { error } = await supabase.from("grades").delete().in("id", deleteIds);
+        if (error) throw new Error(error.message);
+        // Remove deleted grade_ids from state
+        setStudentGrades(prev => prev.map(sg => {
+          const newIds = { ...sg.grade_ids };
+          deleteIds.forEach(did => {
+            Object.keys(newIds).forEach(catId => { if (newIds[catId] === did) delete newIds[catId]; });
+          });
+          return { ...sg, grade_ids: newIds };
+        }));
+      }
 
       let insertedData: any[] = [];
       if (inserts.length > 0) {
@@ -344,8 +362,10 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
         if (count > 0) savedCounts.push({ name: sg.full_name.split(" ").slice(0, 2).join(" "), count });
       }
       const totalGrades = savedCounts.reduce((s, r) => s + r.count, 0);
+      const deletedCount = deleteIds.length;
       const summaryLines = savedCounts.map(r => `${r.name}: ${r.count} درجة`).join("\n");
-      toast({ title: `✅ تم حفظ ${totalGrades} درجة لـ ${savedCounts.length} طالب`, description: summaryLines });
+      const deleteNote = deletedCount > 0 ? `\n🗑️ تم حذف ${deletedCount} درجة ممسوحة` : "";
+      toast({ title: `✅ تم حفظ ${totalGrades} درجة لـ ${savedCounts.length} طالب`, description: summaryLines + deleteNote });
     } catch (err: any) {
       console.error("Grade save error:", err);
       toast({ title: "فشل حفظ الدرجات", description: err?.message || "حدث خطأ غير متوقع أثناء الحفظ. حاول مرة أخرى.", variant: "destructive" });
