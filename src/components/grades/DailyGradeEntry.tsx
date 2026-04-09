@@ -361,9 +361,6 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     {slotsArr.map((slotLevel, si) => (
                                       <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
                                         className={cn("p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
-                                          slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
-                                          slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
-                                          slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
                                           !slotLevel && "grade-empty",
                                         )} title="اضغط للتبديل" data-grade-level={slotLevel || "empty"}>
                                         <LevelIcon level={slotLevel} />
@@ -376,7 +373,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                     )}
                                     <span className="w-px h-5 bg-border mx-0.5" />
                                     <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
+                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
                                       <GradeSvgIcon type="star" size={20} />
                                     </button>
                                     <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
