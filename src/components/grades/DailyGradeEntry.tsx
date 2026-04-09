@@ -66,6 +66,7 @@ interface DailyGradeEntryProps {
 
 export default function DailyGradeEntry({ selectedClass, onClassChange, selectedPeriod = 1 }: DailyGradeEntryProps) {
   const { toast } = useToast();
+  const [gradeTab, setGradeTab] = React.useState<"assessment" | "violations">("assessment");
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -78,6 +79,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
     calcTotal, handleSave,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
+
+  const assessmentCats = visibleCategories.filter(c => !c.is_deduction);
+  const violationCats = visibleCategories.filter(c => c.is_deduction);
+  const hasViolations = dailyCategories.some(c => c.is_deduction);
+  const activeCats = gradeTab === "assessment" ? assessmentCats : violationCats;
+  const showTotal = gradeTab === "assessment" && !isSingleCategory && assessmentCats.length > 1;
 
   // ── Print / Export helpers ─────────────────────────────────────
   const buildDailyTableHTML = () => {
