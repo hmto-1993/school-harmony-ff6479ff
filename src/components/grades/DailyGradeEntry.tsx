@@ -220,125 +220,143 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               </div>
             )}
 
-            {/* Table */}
-            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
-              <table className="w-full text-sm border-separate border-spacing-0">
-                <thead>
-                  <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
-                    <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
-                    {visibleCategories.map((cat) => (
-                      <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", cat.is_deduction ? "text-destructive bg-destructive/5" : "text-primary")}>
-                        <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
-                      </th>
-                    ))}
-                    {!isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStudentGrades.map((sg, i) => {
-                    const isEven = i % 2 === 0;
-                    const isLast = i === filteredStudentGrades.length - 1;
-                    const studentStatus = hasAttendanceRecords ? attendanceMap[sg.student_id] : undefined;
-                    const isHidden = studentStatus && hiddenStatuses.includes(studentStatus);
-                    const isLate = studentStatus === "late";
-                    const statusLabel: Record<string, string> = { absent: "غائب", early_leave: "منصرف مبكراً", sick_leave: "إجازة مرضية" };
-                    return (
-                      <tr key={sg.student_id} className={cn(
-                        "group transition-all duration-200 cursor-default",
-                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
-                        !isLast && "border-b border-border/20"
-                      )}>
-                        <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
-                        <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
-                          <span className="flex items-center gap-1.5">
-                            {sg.full_name}
-                            {isLate && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                                <Clock className="h-3 w-3" />متأخر
-                              </span>
-                            )}
-                            {isHidden && studentStatus && (
-                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
-                                {statusLabel[studentStatus] || studentStatus}
-                              </span>
-                            )}
-                          </span>
-                        </td>
-                        {visibleCategories.map((cat) => {
-                          const maxScore = Number(cat.max_score);
-                          const slotsArr = sg.slots[cat.id] || [null];
-                          const isStarred = sg.starred[cat.id] || false;
-                          const isDeduction = cat.is_deduction;
+            {/* Tabs for regular vs deduction */}
+            {(() => {
+              const regularCats = visibleCategories.filter(c => !c.is_deduction);
+              const deductionCats = visibleCategories.filter(c => c.is_deduction);
+              const hasDeductions = deductionCats.length > 0;
 
-                          if (isDeduction) {
-                            const deductionScore = sg.grades[cat.id];
-                            const deductionNote = sg.notes?.[cat.id] || "";
-                            return (
-                              <td key={cat.id} className="p-2 text-center border-l border-border/30">
-                                <div className="flex flex-col items-center gap-1">
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    max={maxScore}
-                                    value={deductionScore ?? ""}
-                                    onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                    className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
-                                    placeholder="0"
-                                  />
-                                  <Select value={deductionNote || undefined} onValueChange={(val) => setDeductionNote(sg.student_id, cat.id, val)}>
-                                    <SelectTrigger className="w-28 h-6 text-[10px] border-muted-foreground/20 px-1">
-                                      <SelectValue placeholder="السبب..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {DEDUCTION_REASONS.map(r => (
-                                        <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </td>
-                            );
-                          }
-
-                          return (
-                            <td key={cat.id} className="p-3 text-center border-l border-border/30">
-                              <div className="flex items-center justify-center gap-1">
-                                {slotsArr.map((slotLevel, si) => (
-                                  <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
-                                    className={cn("p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
-                                      slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
-                                      slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
-                                      slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
-                                      !slotLevel && "grade-empty",
-                                    )} title="اضغط للتبديل" data-grade-level={slotLevel || "empty"}>
-                                    <LevelIcon level={slotLevel} />
-                                  </button>
-                                ))}
-                                {extraSlotsEnabled && !isCatDisabled(cat.id) && slotsArr.length < getMaxSlots(cat.id) && (
-                                  <button type="button" onClick={() => addSlot(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-80" title="إضافة تقييم">
-                                    <Plus className="h-5 w-5 text-muted-foreground" />
-                                  </button>
-                                )}
-                                <span className="w-px h-5 bg-border mx-0.5" />
-                                <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
-                                  className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
-                                  <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
-                                </button>
-                                <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
-                                  <Undo2 className="h-4 w-4 text-muted-foreground" />
-                                </button>
-                              </div>
-                            </td>
-                          );
-                        })}
-                        {!isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+              const renderTable = (cats: typeof visibleCategories, isDeductionTab: boolean) => (
+                <div ref={!isDeductionTab ? tableRef : undefined} className="overflow-x-auto rounded-xl border border-border/40 shadow-sm">
+                  <table className="w-full text-sm border-separate border-spacing-0">
+                    <thead>
+                      <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 first:rounded-tr-xl">#</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l border-primary/20 min-w-[120px] max-w-[160px]">الطالب</th>
+                        {cats.map((cat) => (
+                          <th key={cat.id} className={cn("text-center p-3 font-semibold text-xs border-b-2 border-l border-primary/20 min-w-[100px]", isDeductionTab ? "text-destructive bg-destructive/5" : "text-primary")}>
+                            <div>{cat.name}{isDeductionTab && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
+                          </th>
+                        ))}
+                        {!isDeductionTab && !isSingleCategory && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody>
+                      {filteredStudentGrades.map((sg, i) => {
+                        const isEven = i % 2 === 0;
+                        const isLast = i === filteredStudentGrades.length - 1;
+                        const studentStatus = hasAttendanceRecords ? attendanceMap[sg.student_id] : undefined;
+                        const isHidden = studentStatus && hiddenStatuses.includes(studentStatus);
+                        const isLate = studentStatus === "late";
+                        const statusLabel: Record<string, string> = { absent: "غائب", early_leave: "منصرف مبكراً", sick_leave: "إجازة مرضية" };
+                        return (
+                          <tr key={sg.student_id} className={cn(
+                            "group transition-all duration-200 cursor-default",
+                            isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/10 dark:hover:bg-primary/15", isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20"),
+                            !isLast && "border-b border-border/20"
+                          )}>
+                            <td className="p-3 text-muted-foreground font-medium border-l border-border/30 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                            <td className="p-3 font-semibold border-l border-border/30 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
+                              <span className="flex items-center gap-1.5">
+                                {sg.full_name}
+                                {isLate && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
+                                    <Clock className="h-3 w-3" />متأخر
+                                  </span>
+                                )}
+                                {isHidden && studentStatus && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
+                                    {statusLabel[studentStatus] || studentStatus}
+                                  </span>
+                                )}
+                              </span>
+                            </td>
+                            {cats.map((cat) => {
+                              const maxScore = Number(cat.max_score);
+                              const slotsArr = sg.slots[cat.id] || [null];
+                              const isStarred = sg.starred[cat.id] || false;
+
+                              if (isDeductionTab) {
+                                const deductionScore = sg.grades[cat.id];
+                                const deductionNote = sg.notes?.[cat.id] || "";
+                                return (
+                                  <td key={cat.id} className="p-2 text-center border-l border-border/30">
+                                    <div className="flex flex-col items-center gap-1">
+                                      <Input
+                                        type="number"
+                                        min={0}
+                                        max={maxScore}
+                                        value={deductionScore ?? ""}
+                                        onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
+                                        className="w-16 h-7 text-center text-xs border-destructive/40 focus:border-destructive"
+                                        placeholder="0"
+                                      />
+                                      <Select value={deductionNote || undefined} onValueChange={(val) => setDeductionNote(sg.student_id, cat.id, val)}>
+                                        <SelectTrigger className="w-28 h-6 text-[10px] border-muted-foreground/20 px-1">
+                                          <SelectValue placeholder="السبب..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {DEDUCTION_REASONS.map(r => (
+                                            <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  </td>
+                                );
+                              }
+
+                              return (
+                                <td key={cat.id} className="p-3 text-center border-l border-border/30">
+                                  <div className="flex items-center justify-center gap-1">
+                                    {slotsArr.map((slotLevel, si) => (
+                                      <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
+                                        className={cn("p-1 rounded-lg transition-all hover:scale-110 cursor-pointer",
+                                          slotLevel === "excellent" && "bg-emerald-50 dark:bg-emerald-500/15",
+                                          slotLevel === "average" && "bg-amber-50 dark:bg-amber-500/15",
+                                          slotLevel === "zero" && "bg-rose-50 dark:bg-rose-500/15",
+                                          !slotLevel && "grade-empty",
+                                        )} title="اضغط للتبديل" data-grade-level={slotLevel || "empty"}>
+                                        <LevelIcon level={slotLevel} />
+                                      </button>
+                                    ))}
+                                    {extraSlotsEnabled && !isCatDisabled(cat.id) && slotsArr.length < getMaxSlots(cat.id) && (
+                                      <button type="button" onClick={() => addSlot(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-80" title="إضافة تقييم">
+                                        <Plus className="h-5 w-5 text-muted-foreground" />
+                                      </button>
+                                    )}
+                                    <span className="w-px h-5 bg-border mx-0.5" />
+                                    <button type="button" onClick={() => toggleStar(sg.student_id, cat.id, maxScore)}
+                                      className={cn("p-1 rounded-lg transition-all hover:scale-110", isStarred ? "bg-yellow-50 dark:bg-yellow-500/15 opacity-100" : "opacity-40 hover:opacity-70 star-empty")} title="متميز" data-starred={isStarred ? "true" : "false"}>
+                                      <Star className={cn("h-5 w-5", isStarred ? "text-yellow-500 fill-yellow-500 dark:text-yellow-400 dark:fill-yellow-400" : "text-muted-foreground")} />
+                                    </button>
+                                    <button type="button" onClick={() => clearGrade(sg.student_id, cat.id)} className="p-0.5 rounded-md transition-all hover:scale-110 opacity-40 hover:opacity-100" title="تراجع">
+                                      <Undo2 className="h-4 w-4 text-muted-foreground" />
+                                    </button>
+                                  </div>
+                                </td>
+                              );
+                            })}
+                            {!isDeductionTab && !isSingleCategory && <td className="p-3 text-center font-bold border-l border-border/30">{calcTotal(sg.grades)}</td>}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+
+              return hasDeductions ? (
+                <Tabs defaultValue="grades" className="w-full">
+                  <TabsList className="mb-3 w-full sm:w-auto">
+                    <TabsTrigger value="grades">📊 التقييم</TabsTrigger>
+                    <TabsTrigger value="deductions">⚠️ الخصومات</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="grades">{renderTable(regularCats, false)}</TabsContent>
+                  <TabsContent value="deductions">{renderTable(deductionCats, true)}</TabsContent>
+                </Tabs>
+              ) : renderTable(regularCats, false);
+            })()}
             <div id="grades-save" className="flex justify-end mt-4">
               <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
                 <Save className="h-4 w-4 ml-2" />
