@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Star, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
@@ -18,7 +18,6 @@ import { useViolationHistory, buildReferralReason } from "@/hooks/useViolationHi
 import { useViolationReasons } from "@/hooks/useViolationReasons";
 import ViolationReasonsDialog from "./ViolationReasonsDialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
 
@@ -435,7 +434,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                       type="number"
                                       min={0}
                                       max={maxScore}
-                                      value={currentScore || ""}
+                                      value={currentScore === 0 ? "0" : (currentScore || "")}
                                       onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
                                       className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
                                       placeholder="0"

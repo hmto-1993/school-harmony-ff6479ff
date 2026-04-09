@@ -81,7 +81,8 @@ export function useViolationHistory(
     })();
 
     return () => { cancelled = true; };
-  }, [classId, deductionCategoryIds.join(","), enabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [classId, JSON.stringify(deductionCategoryIds), enabled]);
 
   return { history, loading };
 }
