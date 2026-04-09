@@ -20,27 +20,36 @@ export const DailyIconComponent = ({ icon, size = "h-5 w-5" }: { icon: DailyIcon
 
   if (icon.level === "excellent") {
     return (
-      <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#059669" }} fill="none">
-        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-        <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#059669" }} fill="none" overflow="hidden">
+        <defs><clipPath id="dc-e"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
+        <g clipPath="url(#dc-e)">
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
       </svg>
     );
   }
 
   if (icon.level === "average") {
     return (
-      <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#ea580c" }} fill="none">
-        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-        <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#ea580c" }} fill="none" overflow="hidden">
+        <defs><clipPath id="dc-a"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
+        <g clipPath="url(#dc-a)">
+          <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </g>
       </svg>
     );
   }
 
   return (
-    <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#e11d48" }} fill="none">
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
-      <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-      <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" width={sizeNum} height={sizeNum} className={cn("shrink-0", size)} style={{ color: "#e11d48" }} fill="none" overflow="hidden">
+      <defs><clipPath id="dc-z"><circle cx="12" cy="12" r="9.6" /></clipPath></defs>
+      <g clipPath="url(#dc-z)">
+        <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+        <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      </g>
     </svg>
   );
 };
