@@ -161,7 +161,7 @@ export default function TimetableEditor({ classes }: TimetableEditorProps) {
       ) : (
         <>
           {/* Timetable Grid */}
-          <div className="overflow-x-auto rounded-xl border border-border/50">
+          <div className="overflow-x-auto rounded-xl border border-border/50" dir="rtl">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/50">
