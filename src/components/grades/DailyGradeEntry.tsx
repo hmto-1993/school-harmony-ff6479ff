@@ -256,8 +256,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
             {/* Tabs */}
             {hasViolations && (
-              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} className="mb-4 no-print">
-                <TabsList className="w-full sm:w-auto">
+              <Tabs value={gradeTab} onValueChange={(v) => setGradeTab(v as "assessment" | "violations")} dir="rtl" className="mb-4 no-print">
+                <TabsList className="w-auto justify-start">
                   <TabsTrigger value="assessment" className="gap-1.5">
                     <CircleCheck className="h-4 w-4" />التقييم
                   </TabsTrigger>
