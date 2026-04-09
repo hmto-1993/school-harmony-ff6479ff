@@ -313,10 +313,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     const isHidden = studentStatus && hiddenStatuses.includes(studentStatus);
                     const isLate = studentStatus === "late";
                     const statusLabel: Record<string, string> = { absent: "غائب", early_leave: "منصرف مبكراً", sick_leave: "إجازة مرضية" };
+
+                    // Violation referral logic
+                    const violationSummary = gradeTab === "violations" ? violationHistory[sg.student_id] : undefined;
+                    const referralInfo = gradeTab === "violations" ? buildReferralReason(violationSummary, sg.full_name) : { hasReferral: false, repeatedTypes: [], reasonText: "" };
+
                     return (
                       <tr key={sg.student_id} className={cn(
                         "group transition-all duration-200 cursor-default border-b border-border/30",
                         isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-primary/8 dark:hover:bg-primary/12", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
+                        referralInfo.hasReferral && "bg-destructive/5 dark:bg-destructive/10",
                       )}>
                         <td className="p-3 text-muted-foreground font-medium border-l border-border/40 transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
                         <td className="p-3 font-semibold border-l border-border/40 whitespace-nowrap text-sm transition-all duration-200 group-hover:bg-primary/5 group-hover:text-primary">
@@ -331,6 +337,31 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive dark:bg-destructive/20 border border-destructive/20">
                                 {statusLabel[studentStatus] || studentStatus}
                               </span>
+                            )}
+                            {/* Referral alert badge for 3+ violations */}
+                            {referralInfo.hasReferral && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenReferral(sg.student_id, sg.full_name)}
+                                      className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-destructive/15 text-destructive border border-destructive/30 animate-pulse hover:animate-none hover:bg-destructive/25 transition-colors"
+                                    >
+                                      <FileWarning className="h-3 w-3" />
+                                      إحالة
+                                    </button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs text-right" dir="rtl">
+                                    <p className="text-xs font-bold mb-1">تكرار مخالفات - يتطلب إحالة إدارية</p>
+                                    {referralInfo.repeatedTypes.map(rt => (
+                                      <p key={rt.type} className="text-[11px]">
+                                        {rt.type}: {rt.count} مرات
+                                      </p>
+                                    ))}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
                             )}
                           </span>
                         </td>
@@ -418,6 +449,23 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
               </Button>
             </div>
+
+            {/* Referral Form Dialog */}
+            {referralForm && (
+              <FormDialog
+                form={{
+                  ...referralForm,
+                  fields: referralForm.fields.map(f =>
+                    f.id === "referral_reason"
+                      ? { ...f, placeholder: referralPreFill.referral_reason || f.placeholder }
+                      : f
+                  ),
+                }}
+                open={referralFormOpen}
+                onOpenChange={(v) => { setReferralFormOpen(v); if (!v) setReferralStudentId(null); }}
+                preSelectedStudentIds={referralStudentId ? [referralStudentId] : undefined}
+              />
+            )}
           </>
         )}
       </CardContent>
