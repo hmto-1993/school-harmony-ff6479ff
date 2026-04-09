@@ -84,7 +84,7 @@ export default function ClassworkTable({
                           {icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
                               {icons.map((icon, idx) => (
-                                <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
+                                <DailyIconComponent key={idx} icon={icon} size="h-4 w-4" />
                               ))}
                             </div>
                           )}
