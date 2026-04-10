@@ -244,7 +244,7 @@ export default function BehaviorEntry({ selectedClass, onClassChange }: Behavior
                       const isEven = i % 2 === 0;
                       const isLast = i === students.length - 1;
                       return (
-                        <tr key={s.student_id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20", "hover:bg-primary/10 transition-colors")}>
+                        <tr key={s.student_id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20", "hover:bg-sky-100/60 dark:hover:bg-sky-900/30 transition-colors")}>
                           <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{s.full_name}</td>
                           <td className="p-3 text-center border-l border-border/10">

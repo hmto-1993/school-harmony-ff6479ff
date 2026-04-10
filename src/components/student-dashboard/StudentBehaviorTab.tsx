@@ -101,7 +101,7 @@ export default function StudentBehaviorTab({ behaviors }: Props) {
                       className={cn(
                         isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                         !isLast && "border-b border-border/20",
-                        "hover:bg-primary/10 transition-colors"
+                        "hover:bg-sky-100/60 dark:hover:bg-sky-900/30 transition-colors"
                       )}
                     >
                       <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>
