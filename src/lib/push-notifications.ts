@@ -22,7 +22,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return permission === 'granted';
 }
 
-export async function subscribeToPush(studentId?: string, classId?: string): Promise<boolean> {
+export async function subscribeToPush(studentId?: string, classId?: string, hmacToken?: string): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
     
@@ -37,14 +37,16 @@ export async function subscribeToPush(studentId?: string, classId?: string): Pro
 
     const subJson = subscription.toJSON();
     
-    await (supabase as any).from("push_subscriptions").upsert({
-      endpoint: subJson.endpoint,
-      p256dh: subJson.keys?.p256dh || '',
-      auth: subJson.keys?.auth || '',
-      student_id: studentId || null,
-      class_id: classId || null,
-      user_type: studentId ? 'student' : 'teacher',
-    }, { onConflict: 'endpoint' });
+    await supabase.functions.invoke('subscribe-push', {
+      body: {
+        endpoint: subJson.endpoint,
+        p256dh: subJson.keys?.p256dh || '',
+        auth: subJson.keys?.auth || '',
+        student_id: studentId || null,
+        class_id: classId || null,
+        hmac_token: hmacToken || null,
+      },
+    });
     
     return true;
   } catch (err) {
