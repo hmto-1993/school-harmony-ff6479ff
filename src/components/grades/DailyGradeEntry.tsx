@@ -453,7 +453,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           }
 
                           return (
-                            <td key={cat.id} className="p-3 text-center border-l border-border/40">
+                            <td key={cat.id} className="p-3 text-center border-l-2 border-border">
                               <div className="flex items-center justify-center gap-1">
                                 {slotsArr.map((slotLevel, si) => (
                                   <button key={si} type="button" onClick={() => cycleSlot(sg.student_id, cat.id, si, maxScore)}
@@ -487,7 +487,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             </td>
                           );
                         })}
-                        {showTotal && <td className="p-3 text-center font-bold border-l border-border/40">{calcTotal(sg.grades)}</td>}
+                        {showTotal && <td className="p-3 text-center font-bold border-l-2 border-border">{calcTotal(sg.grades)}</td>}
                       </tr>
                     );
                   })}
