@@ -121,7 +121,7 @@ export default function StudentTable(props: Props) {
                 const isEven = i % 2 === 0;
                 const isLast = i === filtered.length - 1;
                 return (
-                  <tr key={s.id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20", "hover:bg-accent/60 dark:hover:bg-accent/40 transition-colors cursor-pointer")}>
+                  <tr key={s.id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20", "hover:bg-sky-100/60 dark:hover:bg-sky-900/30 transition-colors cursor-pointer")}>
                     {role === "admin" && (
                       <td className="p-3 w-10"><Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelect(s.id)} /></td>
                     )}
