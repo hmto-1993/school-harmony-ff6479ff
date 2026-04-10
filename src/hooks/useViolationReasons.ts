@@ -8,10 +8,24 @@ export interface ViolationReason {
 }
 
 const DEFAULT_REASONS: ViolationReason[] = [
-  { label: "تأخير", defaultScore: 1 },
-  { label: "نوم", defaultScore: 1 },
-  { label: "حديث", defaultScore: 1 },
-  { label: "أكل", defaultScore: 1 },
+  { label: "تأخر عن دخول الحصة", defaultScore: 1 },
+  { label: "نوم أثناء الشرح", defaultScore: 2 },
+  { label: "حديث جانبي مع الزملاء", defaultScore: 1 },
+  { label: "أكل أو شرب أثناء الحصة", defaultScore: 1 },
+  { label: "استخدام الجوال", defaultScore: 2 },
+  { label: "عدم إحضار الكتاب أو الدفتر", defaultScore: 1 },
+  { label: "عدم حل الواجب", defaultScore: 1 },
+  { label: "إصدار أصوات مزعجة", defaultScore: 2 },
+  { label: "مقاطعة المعلم", defaultScore: 1 },
+  { label: "إثارة الفوضى", defaultScore: 2 },
+  { label: "عدم المشاركة في الأنشطة", defaultScore: 1 },
+  { label: "الانشغال عن الدرس", defaultScore: 1 },
+  { label: "الخروج بدون إذن", defaultScore: 2 },
+  { label: "عدم الالتزام بالمقعد", defaultScore: 1 },
+  { label: "العبث بممتلكات الفصل", defaultScore: 2 },
+  { label: "عدم إحضار الأدوات المطلوبة", defaultScore: 1 },
+  { label: "التنمر على زميل", defaultScore: 3 },
+  { label: "استخدام ألفاظ غير لائقة", defaultScore: 3 },
 ];
 
 const SETTING_ID = "violation_reasons";
