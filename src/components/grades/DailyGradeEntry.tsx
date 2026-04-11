@@ -194,7 +194,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       orientation: "portrait" as const,
       title: `${className} — المخالفات`,
       subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
-      reportType: "grades" as const,
+      reportType: "violations" as const,
       tableHTML: buildViolationsTableHTML(),
       fileName: `المخالفات_${format(selectedDate, "yyyy-MM-dd")}`,
     };
