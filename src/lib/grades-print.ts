@@ -150,7 +150,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
 /* ──────────────────────────── PDF Export ─────────────────────── */
 
-export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?: string }): Promise<void> {
+export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?: string; returnBlob?: boolean }): Promise<Blob | void> {
   const { orientation = "landscape", title, subtitle, reportType = "grades", tableHTML, fileName } = options;
 
   const [headerConfig, footerConfig] = await Promise.all([
@@ -268,6 +268,9 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
   }
 
   const safeName = fileName || `${title.replace(/[^\u0600-\u06FFa-zA-Z0-9_\- ]/g, "_")}`;
+  if (options.returnBlob) {
+    return doc.output("blob");
+  }
   doc.save(`${safeName}.pdf`);
 }
 
