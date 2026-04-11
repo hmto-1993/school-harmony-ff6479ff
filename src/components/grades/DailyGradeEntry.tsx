@@ -201,6 +201,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const handleExportViolationsPDF = async () => {
+    if (studentsWithViolations.length === 0) {
+      toast({ title: "لا توجد مخالفات", description: "لا يوجد طلاب عليهم مخالفات للتصدير" });
+      return;
+    }
     try {
       await exportGradesTableAsPDF(getViolationsPDFOptions());
       toast({ title: "تم التصدير", description: "تم تصدير ملف المخالفات PDF بنجاح" });
@@ -208,6 +212,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const handleShareViolationsWhatsApp = async () => {
+    if (studentsWithViolations.length === 0) {
+      toast({ title: "لا توجد مخالفات", description: "لا يوجد طلاب عليهم مخالفات للمشاركة" });
+      return;
+    }
     try {
       const opts = getViolationsPDFOptions();
       const blob = await exportGradesTableAsPDF({ ...opts, returnBlob: true }) as Blob;
