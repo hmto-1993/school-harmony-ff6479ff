@@ -219,7 +219,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   </SelectContent>
                 </Select>
               )}
-              {selectedClass && categories.length > 0 && (
+              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
                 <GradesExportDialog
                   title="الإدخال اليومي"
                   fileName="الإدخال_اليومي"
@@ -242,11 +242,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   })()}
                 />
               )}
-              {selectedClass && categories.length > 0 && (
+              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
                 <div className="flex items-center gap-0.5">
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={handleExportPDF}><FileText className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={handlePrintTable}><Printer className="h-4 w-4" /></Button>
                 </div>
+              )}
+              {selectedClass && categories.length > 0 && gradeTab === "violations" && (
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" title="تصدير المخالفات PDF" onClick={handleExportViolationsPDF}>
+                  <FileText className="h-4 w-4" />تصدير PDF
+                </Button>
               )}
             </div>
           </div>
