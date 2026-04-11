@@ -3,11 +3,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import {
-  ClipboardCheck, GraduationCap, Heart, Trophy, FileText, Users2, Lock,
+  ClipboardCheck, GraduationCap, Heart, Trophy, FileText, Users2, Lock, AlertTriangle,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
 import BehaviorReport from "@/components/reports/BehaviorReport";
+import ViolationsReportTab from "@/components/reports/ViolationsReportTab";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
 import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
 import ReportFilters from "@/components/reports/ReportFilters";
@@ -104,6 +105,10 @@ export default function ReportsPage() {
             <Trophy className="h-4 w-4" />
             التحليل الشهري
           </TabsTrigger>
+          <TabsTrigger value="violations" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-400">
+            <AlertTriangle className="h-4 w-4" />
+            المخالفات
+          </TabsTrigger>
           <TabsTrigger value="comprehensive" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400">
             <FileText className="h-4 w-4" />
             تقارير شاملة
@@ -149,6 +154,10 @@ export default function ReportsPage() {
 
         <TabsContent value="analytics" className="space-y-4">
           <MonthlyAnalytics selectedClass={r.selectedClass} classes={r.classes} />
+        </TabsContent>
+
+        <TabsContent value="violations" className="space-y-4">
+          <ViolationsReportTab selectedClass={r.selectedClass} dateFrom={r.dateFrom} dateTo={r.dateTo} selectedStudent={r.selectedStudent} />
         </TabsContent>
 
         <TabsContent value="comprehensive" className="space-y-4">
