@@ -141,6 +141,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
   await waitForFontsAndImages(printDocument);
   autoScaleTable(printDocument);
+  const pageHpx = orientation === "landscape" ? 210 * 3.78 : 297 * 3.78;
+  positionFooterAtMidPage(printDocument, pageHpx);
 
   // Print and cleanup
   await new Promise<void>((resolve) => {
