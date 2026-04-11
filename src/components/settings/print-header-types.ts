@@ -141,6 +141,7 @@ export const reportTypes: ReportTypeOption[] = [
   { id: "comprehensive", label: "التقرير الشامل", icon: "📑" },
   { id: "quiz_stats", label: "إحصائيات الاختبارات", icon: "✏️" },
   { id: "monthly", label: "التقرير الشهري", icon: "🗓️" },
+  { id: "violations", label: "المخالفات السلوكية", icon: "⚠️" },
 ];
 
 export const presetColors = ["#1e293b", "#000000", "#1d4ed8", "#047857", "#7c3aed", "#b91c1c", "#92400e", "#64748b"];
