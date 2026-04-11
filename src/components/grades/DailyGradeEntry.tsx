@@ -154,14 +154,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     };
   };
 
-  const buildViolationsTableHTML = () => {
-    const studentsWithViolations = filteredStudentGrades.filter(sg =>
-      violationCats.some(cat => {
-        const score = sg.grades[cat.id];
-        return score != null && score > 0;
-      })
-    );
+  const studentsWithViolations = React.useMemo(() => filteredStudentGrades.filter(sg =>
+    violationCats.some(cat => {
+      const score = sg.grades[cat.id];
+      return score != null && score > 0;
+    })
+  ), [filteredStudentGrades, violationCats]);
 
+  const buildViolationsTableHTML = () => {
     const headerCells = [
       '<th style="width:30px;">#</th>',
       '<th style="text-align:right;">الطالب</th>',
