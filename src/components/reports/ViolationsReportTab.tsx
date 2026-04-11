@@ -3,11 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { FileText, MessageCircle, AlertTriangle, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { format, startOfWeek, endOfWeek, subWeeks } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 
 interface ViolationsReportTabProps {
@@ -15,6 +14,7 @@ interface ViolationsReportTabProps {
   dateFrom: string;
   dateTo: string;
   selectedStudent: string;
+  reportType: "daily" | "periodic";
 }
 
 interface ViolationRecord {
@@ -26,10 +26,11 @@ interface ViolationRecord {
   note: string | null;
 }
 
-export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, selectedStudent }: ViolationsReportTabProps) {
+export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, selectedStudent, reportType }: ViolationsReportTabProps) {
   const [data, setData] = useState<ViolationRecord[]>([]);
   const [loading, setLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
+
+  const isWeekly = reportType === "periodic";
 
   const fetchViolations = async () => {
     if (!selectedClass) return;
@@ -51,22 +52,7 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
     const catIds = cats.map(c => c.id);
     const catMap = Object.fromEntries(cats.map(c => [c.id, c.name]));
 
-    // 2. Get grades for those categories within date range
-    let query = supabase
-      .from("grades")
-      .select("student_id, date, category_id, score, note, students(full_name)")
-      .in("category_id", catIds)
-      .gte("date", dateFrom)
-      .lte("date", dateTo)
-      .not("score", "is", null)
-      .gt("score", 0)
-      .order("date", { ascending: false });
-
-    if (selectedStudent !== "all") {
-      query = query.eq("student_id", selectedStudent);
-    }
-
-    // Filter by class via students table
+    // 2. Get students in class
     const { data: studentsInClass } = await supabase
       .from("students")
       .select("id")
@@ -79,7 +65,24 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
       return;
     }
 
-    query = query.in("student_id", studentIdsInClass);
+    // 3. Build query - for weekly/periodic: fetch ALL violations (no date filter)
+    let query = supabase
+      .from("grades")
+      .select("student_id, date, category_id, score, note, students(full_name)")
+      .in("category_id", catIds)
+      .in("student_id", studentIdsInClass)
+      .not("score", "is", null)
+      .gt("score", 0)
+      .order("date", { ascending: false });
+
+    // Only apply date filter for daily mode
+    if (!isWeekly) {
+      query = query.gte("date", dateFrom).lte("date", dateTo);
+    }
+
+    if (selectedStudent !== "all") {
+      query = query.eq("student_id", selectedStudent);
+    }
 
     const { data: grades, error } = await query;
     if (error) {
@@ -99,8 +102,21 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
   };
 
   useEffect(() => {
-    if (selectedClass && dateFrom && dateTo) fetchViolations();
-  }, [selectedClass, dateFrom, dateTo, selectedStudent]);
+    if (selectedClass) fetchViolations();
+  }, [selectedClass, dateFrom, dateTo, selectedStudent, reportType]);
+
+  // Student summary (used for weekly summary view)
+  const studentSummary = useMemo(() => {
+    const map: Record<string, { name: string; count: number; totalScore: number; categories: Record<string, number>; lastDate: string }> = {};
+    data.forEach(r => {
+      if (!map[r.student_id]) map[r.student_id] = { name: r.student_name, count: 0, totalScore: 0, categories: {}, lastDate: r.date };
+      map[r.student_id].count++;
+      map[r.student_id].totalScore += r.score;
+      map[r.student_id].categories[r.category_name] = (map[r.student_id].categories[r.category_name] || 0) + 1;
+      if (r.date > map[r.student_id].lastDate) map[r.student_id].lastDate = r.date;
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count);
+  }, [data]);
 
   // Group by date for daily view
   const dailyGroups = useMemo(() => {
@@ -112,38 +128,19 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
   }, [data]);
 
-  // Group by week for weekly view
-  const weeklyGroups = useMemo(() => {
-    const groups: Record<string, ViolationRecord[]> = {};
-    data.forEach(r => {
-      const d = new Date(r.date);
-      const weekStart = format(startOfWeek(d, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      const weekEnd = format(endOfWeek(d, { weekStartsOn: 0 }), "yyyy-MM-dd");
-      const key = `${weekStart}_${weekEnd}`;
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(r);
-    });
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [data]);
-
-  // Student summary for the selected view
-  const studentSummary = useMemo(() => {
-    const map: Record<string, { name: string; count: number; categories: Record<string, number> }> = {};
-    data.forEach(r => {
-      if (!map[r.student_id]) map[r.student_id] = { name: r.student_name, count: 0, categories: {} };
-      map[r.student_id].count++;
-      map[r.student_id].categories[r.category_name] = (map[r.student_id].categories[r.category_name] || 0) + 1;
-    });
-    return Object.values(map).sort((a, b) => b.count - a.count);
-  }, [data]);
-
-  const activeGroups = viewMode === "daily" ? dailyGroups : weeklyGroups;
-
   const buildTableHTML = (records: ViolationRecord[]) => {
     const rows = records.map((r, i) =>
       `<tr><td>${i + 1}</td><td>${r.student_name}</td><td>${r.date}</td><td>${r.category_name}</td><td>${r.note || "—"}</td></tr>`
     ).join("");
     return `<table><thead><tr><th style="width:30px">#</th><th style="text-align:right">الطالب</th><th>التاريخ</th><th>نوع المخالفة</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>`;
+  };
+
+  const buildSummaryTableHTML = () => {
+    const rows = studentSummary.map((s, i) => {
+      const catsStr = Object.entries(s.categories).map(([cat, count]) => `${cat} (${count})`).join("، ");
+      return `<tr><td>${i + 1}</td><td>${s.name}</td><td>${s.count}</td><td>${catsStr}</td><td>${s.lastDate}</td></tr>`;
+    }).join("");
+    return `<table><thead><tr><th style="width:30px">#</th><th style="text-align:right">الطالب</th><th>عدد المخالفات</th><th>أنواع المخالفات</th><th>آخر مخالفة</th></tr></thead><tbody>${rows}</tbody></table>`;
   };
 
   const handleExportPDF = async () => {
@@ -153,14 +150,16 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
     }
     try {
       const { exportGradesTableAsPDF } = await import("@/lib/grades-print");
-      const label = viewMode === "daily" ? "يومي" : "أسبوعي";
+      const label = isWeekly ? "ملخص شامل" : "يومي";
+      const tableHTML = isWeekly ? buildSummaryTableHTML() : buildTableHTML(data);
+      const subtitle = isWeekly ? "جميع المخالفات السابقة" : `من ${dateFrom} إلى ${dateTo}`;
       await exportGradesTableAsPDF({
         orientation: "portrait",
         title: `تقرير المخالفات — ${label}`,
-        subtitle: `من ${dateFrom} إلى ${dateTo}`,
+        subtitle,
         reportType: "violations",
-        tableHTML: buildTableHTML(data),
-        fileName: `violations_report_${dateFrom}_${dateTo}`,
+        tableHTML,
+        fileName: `violations_report_${isWeekly ? "summary" : dateFrom + "_" + dateTo}`,
       });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
     } catch {
@@ -175,27 +174,24 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
     }
     try {
       const { exportGradesTableAsPDF } = await import("@/lib/grades-print");
-      const label = viewMode === "daily" ? "يومي" : "أسبوعي";
+      const label = isWeekly ? "ملخص شامل" : "يومي";
+      const tableHTML = isWeekly ? buildSummaryTableHTML() : buildTableHTML(data);
+      const subtitle = isWeekly ? "جميع المخالفات السابقة" : `من ${dateFrom} إلى ${dateTo}`;
       const blob = await exportGradesTableAsPDF({
         orientation: "portrait",
         title: `تقرير المخالفات — ${label}`,
-        subtitle: `من ${dateFrom} إلى ${dateTo}`,
+        subtitle,
         reportType: "violations",
-        tableHTML: buildTableHTML(data),
-        fileName: `violations_report_${dateFrom}_${dateTo}`,
+        tableHTML,
+        fileName: `violations_report`,
         returnBlob: true,
       }) as Blob;
       const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
-      const result = await sharePDFViaWhatsApp(blob, `violations_report.pdf`, `📋 تقرير المخالفات — من ${dateFrom} إلى ${dateTo}`);
+      const result = await sharePDFViaWhatsApp(blob, `تقرير_المخالفات.pdf`, `📋 تقرير المخالفات — ${label}`);
       toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
     } catch {
       toast({ title: "خطأ", description: "فشل المشاركة", variant: "destructive" });
     }
-  };
-
-  const formatWeekLabel = (key: string) => {
-    const [start, end] = key.split("_");
-    return `${start} — ${end}`;
   };
 
   return (
@@ -203,18 +199,6 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
       {/* Export buttons */}
       <div className="flex items-center gap-2 flex-wrap print:hidden">
         {loading && <span className="text-sm text-muted-foreground">جارٍ التحميل...</span>}
-        <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly")} dir="rtl">
-          <TabsList className="h-9">
-            <TabsTrigger value="daily" className="gap-1 px-3 text-xs">
-              <CalendarDays className="h-3.5 w-3.5" />
-              يومي
-            </TabsTrigger>
-            <TabsTrigger value="weekly" className="gap-1 px-3 text-xs">
-              <CalendarDays className="h-3.5 w-3.5" />
-              أسبوعي
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
         {data.length > 0 && (
           <>
             <Button variant="outline" size="sm" className="gap-1.5" onClick={handleExportPDF}>
@@ -242,7 +226,7 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
         <Card className="border-dashed">
           <CardContent className="py-10 text-center text-muted-foreground">
             <AlertTriangle className="h-8 w-8 mx-auto mb-2 opacity-40" />
-            <p>لا توجد مخالفات في الفترة المحددة</p>
+            <p>لا توجد مخالفات {isWeekly ? "مسجلة" : "في الفترة المحددة"}</p>
           </CardContent>
         </Card>
       )}
@@ -267,8 +251,10 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-foreground">{activeGroups.length}</p>
-                <p className="text-xs text-muted-foreground">{viewMode === "daily" ? "عدد الأيام" : "عدد الأسابيع"}</p>
+                <p className="text-2xl font-bold text-foreground">
+                  {isWeekly ? new Set(data.map(d => d.date)).size : dailyGroups.length}
+                </p>
+                <p className="text-xs text-muted-foreground">{isWeekly ? "عدد الأيام المسجلة" : "عدد الأيام"}</p>
               </CardContent>
             </Card>
             <Card>
@@ -281,69 +267,42 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
             </Card>
           </div>
 
-          {/* Top violators */}
-          {studentSummary.length > 0 && (
+          {/* Weekly: Summary table */}
+          {isWeekly && (
             <Card className="shadow-card">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">أكثر الطلاب مخالفة</CardTitle>
+                <CardTitle className="text-base">ملخص المخالفات الشامل</CardTitle>
               </CardHeader>
               <CardContent className="p-3">
-                <div className="space-y-2 max-h-[250px] overflow-auto">
-                  {studentSummary.slice(0, 10).map((s, i) => (
-                    <div key={i} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-2.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-muted-foreground w-5 text-center">{i + 1}</span>
-                        <span className="text-sm font-medium">{s.name}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="flex flex-wrap gap-1">
-                          {Object.entries(s.categories).map(([cat, count]) => (
-                            <Badge key={cat} variant="secondary" className="text-[10px] px-1.5 py-0">
-                              {cat} ({count})
-                            </Badge>
-                          ))}
-                        </div>
-                        <Badge variant="destructive" className="text-xs">{s.count}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Grouped tables */}
-          {activeGroups.map(([groupKey, records]) => (
-            <Card key={groupKey} className="shadow-card">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  {viewMode === "daily" ? groupKey : formatWeekLabel(groupKey)}
-                  <Badge variant="outline" className="text-[10px]">{records.length} مخالفة</Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="overflow-auto max-h-[300px]">
+                <div className="overflow-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-right w-8">#</TableHead>
                         <TableHead className="text-right">الطالب</TableHead>
-                        {viewMode === "weekly" && <TableHead className="text-right">التاريخ</TableHead>}
-                        <TableHead className="text-right">نوع المخالفة</TableHead>
-                        <TableHead className="text-right">ملاحظات</TableHead>
+                        <TableHead className="text-right">عدد المخالفات</TableHead>
+                        <TableHead className="text-right">أنواع المخالفات</TableHead>
+                        <TableHead className="text-right">آخر مخالفة</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {records.map((r, i) => (
+                      {studentSummary.map((s, i) => (
                         <TableRow key={i}>
                           <TableCell>{i + 1}</TableCell>
-                          <TableCell className="font-medium">{r.student_name}</TableCell>
-                          {viewMode === "weekly" && <TableCell>{r.date}</TableCell>}
+                          <TableCell className="font-medium">{s.name}</TableCell>
                           <TableCell>
-                            <Badge variant="destructive" className="text-[11px]">{r.category_name}</Badge>
+                            <Badge variant="destructive" className="text-xs">{s.count}</Badge>
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">{r.note || "—"}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(s.categories).map(([cat, count]) => (
+                                <Badge key={cat} variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  {cat} ({count})
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{s.lastDate}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -351,7 +310,81 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {/* Daily: Grouped by date */}
+          {!isWeekly && (
+            <>
+              {/* Top violators */}
+              {studentSummary.length > 0 && (
+                <Card className="shadow-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">أكثر الطلاب مخالفة</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-3">
+                    <div className="space-y-2 max-h-[250px] overflow-auto">
+                      {studentSummary.slice(0, 10).map((s, i) => (
+                        <div key={i} className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/20 p-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-muted-foreground w-5 text-center">{i + 1}</span>
+                            <span className="text-sm font-medium">{s.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap gap-1">
+                              {Object.entries(s.categories).map(([cat, count]) => (
+                                <Badge key={cat} variant="secondary" className="text-[10px] px-1.5 py-0">
+                                  {cat} ({count})
+                                </Badge>
+                              ))}
+                            </div>
+                            <Badge variant="destructive" className="text-xs">{s.count}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {dailyGroups.map(([groupKey, records]) => (
+                <Card key={groupKey} className="shadow-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      {groupKey}
+                      <Badge variant="outline" className="text-[10px]">{records.length} مخالفة</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="overflow-auto max-h-[300px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="text-right w-8">#</TableHead>
+                            <TableHead className="text-right">الطالب</TableHead>
+                            <TableHead className="text-right">نوع المخالفة</TableHead>
+                            <TableHead className="text-right">ملاحظات</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {records.map((r, i) => (
+                            <TableRow key={i}>
+                              <TableCell>{i + 1}</TableCell>
+                              <TableCell className="font-medium">{r.student_name}</TableCell>
+                              <TableCell>
+                                <Badge variant="destructive" className="text-[11px]">{r.category_name}</Badge>
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm">{r.note || "—"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>
