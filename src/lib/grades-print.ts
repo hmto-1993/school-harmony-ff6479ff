@@ -219,6 +219,8 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
 
   await waitForFontsAndImages(iDoc);
   autoScaleTable(iDoc);
+  const pdfPageHpx = Math.round(pageHmm * pxPerMm);
+  positionFooterAtMidPage(iDoc, pdfPageHpx);
 
   // Resize iframe to content height
   const body = iDoc.body;
