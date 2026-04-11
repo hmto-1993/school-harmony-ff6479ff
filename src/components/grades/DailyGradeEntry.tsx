@@ -3,9 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import GradesExportDialog, { ExportTableGroup } from "./GradesExportDialog";
 import { cn } from "@/lib/utils";
 import { isToday, format } from "date-fns";
@@ -186,20 +187,34 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
   };
 
-  const handleExportViolationsPDF = async () => {
+  const getViolationsPDFOptions = () => {
     const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
     const dateStr = format(selectedDate, "yyyy/MM/dd");
+    return {
+      orientation: "portrait" as const,
+      title: `${className} — المخالفات`,
+      subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
+      reportType: "grades" as const,
+      tableHTML: buildViolationsTableHTML(),
+      fileName: `المخالفات_${format(selectedDate, "yyyy-MM-dd")}`,
+    };
+  };
+
+  const handleExportViolationsPDF = async () => {
     try {
-      await exportGradesTableAsPDF({
-        orientation: "portrait",
-        title: `${className} — المخالفات`,
-        subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
-        reportType: "grades",
-        tableHTML: buildViolationsTableHTML(),
-        fileName: `المخالفات_${format(selectedDate, "yyyy-MM-dd")}`,
-      });
+      await exportGradesTableAsPDF(getViolationsPDFOptions());
       toast({ title: "تم التصدير", description: "تم تصدير ملف المخالفات PDF بنجاح" });
     } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
+  };
+
+  const handleShareViolationsWhatsApp = async () => {
+    try {
+      const opts = getViolationsPDFOptions();
+      const blob = await exportGradesTableAsPDF({ ...opts, returnBlob: true }) as Blob;
+      const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+      const result = await sharePDFViaWhatsApp(blob, `${opts.fileName}.pdf`, `📋 ${opts.title}`);
+      toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
+    } catch { toast({ title: "خطأ", description: "فشل المشاركة", variant: "destructive" }); }
   };
 
   // ── Render ─────────────────────────────────────────────────────
@@ -249,9 +264,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </div>
               )}
               {selectedClass && categories.length > 0 && gradeTab === "violations" && (
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" title="تصدير المخالفات PDF" onClick={handleExportViolationsPDF}>
-                  <FileText className="h-4 w-4" />تصدير PDF
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
+                      <FileText className="h-4 w-4" />تصدير
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportViolationsPDF} className="gap-2 cursor-pointer">
+                      <FileText className="h-4 w-4" />تصدير PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShareViolationsWhatsApp} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
+                      <MessageCircle className="h-4 w-4" />إرسال عبر واتساب
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
