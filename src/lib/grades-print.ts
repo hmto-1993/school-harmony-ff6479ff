@@ -36,12 +36,15 @@ function buildFullHTML(
 </head>
 <body>
   <div class="print-root">
-    ${headerHTML}
-    <div class="title-section">
-      <h2>${title}</h2>
-      ${subtitle ? `<p>${subtitle}</p>` : ""}
+    <div class="content-area">
+      ${headerHTML}
+      <div class="title-section">
+        <h2>${title}</h2>
+        ${subtitle ? `<p>${subtitle}</p>` : ""}
+      </div>
+      ${tableHTML}
     </div>
-    ${tableHTML}
+    <div class="footer-spacer"></div>
     ${footerHTML}
   </div>
 </body>
