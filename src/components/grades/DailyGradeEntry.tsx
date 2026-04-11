@@ -154,14 +154,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     };
   };
 
-  const buildViolationsTableHTML = () => {
-    const studentsWithViolations = filteredStudentGrades.filter(sg =>
-      violationCats.some(cat => {
-        const score = sg.grades[cat.id];
-        return score != null && score > 0;
-      })
-    );
+  const studentsWithViolations = React.useMemo(() => filteredStudentGrades.filter(sg =>
+    violationCats.some(cat => {
+      const score = sg.grades[cat.id];
+      return score != null && score > 0;
+    })
+  ), [filteredStudentGrades, violationCats]);
 
+  const buildViolationsTableHTML = () => {
     const headerCells = [
       '<th style="width:30px;">#</th>',
       '<th style="text-align:right;">الطالب</th>',
@@ -201,6 +201,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const handleExportViolationsPDF = async () => {
+    if (studentsWithViolations.length === 0) {
+      toast({ title: "لا توجد مخالفات", description: "لا يوجد طلاب عليهم مخالفات للتصدير" });
+      return;
+    }
     try {
       await exportGradesTableAsPDF(getViolationsPDFOptions());
       toast({ title: "تم التصدير", description: "تم تصدير ملف المخالفات PDF بنجاح" });
@@ -208,6 +212,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const handleShareViolationsWhatsApp = async () => {
+    if (studentsWithViolations.length === 0) {
+      toast({ title: "لا توجد مخالفات", description: "لا يوجد طلاب عليهم مخالفات للمشاركة" });
+      return;
+    }
     try {
       const opts = getViolationsPDFOptions();
       const blob = await exportGradesTableAsPDF({ ...opts, returnBlob: true }) as Blob;
