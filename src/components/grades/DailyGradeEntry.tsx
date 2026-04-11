@@ -153,11 +153,52 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     };
   };
 
+  const buildViolationsTableHTML = () => {
+    const studentsWithViolations = filteredStudentGrades.filter(sg =>
+      violationCats.some(cat => {
+        const score = sg.grades[cat.id];
+        return score != null && score > 0;
+      })
+    );
+
+    const headerCells = [
+      '<th style="width:30px;">#</th>',
+      '<th style="text-align:right;">الطالب</th>',
+      '<th>نوع المخالفة</th>',
+    ].join('');
+
+    const bodyRows = studentsWithViolations.map((sg, i) => {
+      const violations = violationCats
+        .filter(cat => sg.grades[cat.id] != null && sg.grades[cat.id]! > 0)
+        .map(cat => sg.notes?.[cat.id] || cat.name)
+        .join('، ');
+      return `<tr><td>${i + 1}</td><td>${sg.full_name}</td><td>${violations}</td></tr>`;
+    }).join('');
+
+    return `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`;
+  };
+
   const handlePrintTable = async () => { await printGradesTable(getDailyPrintOptions()); };
   const handleExportPDF = async () => {
     try {
       await exportGradesTableAsPDF({ ...getDailyPrintOptions(), fileName: `الإدخال_اليومي_${format(selectedDate, "yyyy-MM-dd")}` });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
+    } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
+  };
+
+  const handleExportViolationsPDF = async () => {
+    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+    const dateStr = format(selectedDate, "yyyy/MM/dd");
+    try {
+      await exportGradesTableAsPDF({
+        orientation: "portrait",
+        title: `${className} — المخالفات`,
+        subtitle: `${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`,
+        reportType: "grades",
+        tableHTML: buildViolationsTableHTML(),
+        fileName: `المخالفات_${format(selectedDate, "yyyy-MM-dd")}`,
+      });
+      toast({ title: "تم التصدير", description: "تم تصدير ملف المخالفات PDF بنجاح" });
     } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
   };
 
@@ -178,7 +219,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   </SelectContent>
                 </Select>
               )}
-              {selectedClass && categories.length > 0 && (
+              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
                 <GradesExportDialog
                   title="الإدخال اليومي"
                   fileName="الإدخال_اليومي"
@@ -201,11 +242,16 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   })()}
                 />
               )}
-              {selectedClass && categories.length > 0 && (
+              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
                 <div className="flex items-center gap-0.5">
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={handleExportPDF}><FileText className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={handlePrintTable}><Printer className="h-4 w-4" /></Button>
                 </div>
+              )}
+              {selectedClass && categories.length > 0 && gradeTab === "violations" && (
+                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" title="تصدير المخالفات PDF" onClick={handleExportViolationsPDF}>
+                  <FileText className="h-4 w-4" />تصدير PDF
+                </Button>
               )}
             </div>
           </div>
