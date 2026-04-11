@@ -113,6 +113,9 @@ export function safePrint(
 
   document.body.appendChild(container);
 
+  // Push footer signatures to at least 50% of page height
+  positionPrintFooterAtMidPage(container, orientation);
+
   const cleanup = () => {
     container.remove();
     document.body.classList.remove("print-landscape");
