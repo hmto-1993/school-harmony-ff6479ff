@@ -163,10 +163,23 @@ export function buildIframeCSS(orientation: string, contentWidth: string, pageWi
       margin: 0 auto;
       padding: 3mm 5mm;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: ${pageHeight === "auto" ? "auto" : pageHeight};
+    }
+    .content-area { flex: 0 0 auto; }
+    .footer-spacer { flex: 1 1 auto; min-height: 0; }
+    /* Push footer to at least 50% of page height */
+    .print-root > .footer-spacer ~ div:last-child,
+    .print-root > div:last-child {
+      flex-shrink: 0;
+    }
+    .content-area + .footer-spacer {
+      min-height: calc(${pageHeight === "auto" ? "400px" : pageHeight} * 0.5 - var(--content-h, 0px));
     }
     @media print {
       html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
-      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
+      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; min-height: ${pageHeight}; }
     }
 
     table {
