@@ -86,6 +86,20 @@ function autoScaleTable(doc: Document) {
   } catch { /* skip */ }
 }
 
+/** Push footer-spacer so signatures start at ≥50% of page height */
+function positionFooterAtMidPage(doc: Document, pageHeightPx: number) {
+  try {
+    const spacer = doc.querySelector(".footer-spacer") as HTMLElement;
+    const contentArea = doc.querySelector(".content-area") as HTMLElement;
+    if (!spacer || !contentArea) return;
+    const contentBottom = contentArea.offsetTop + contentArea.offsetHeight;
+    const midPage = pageHeightPx * 0.5;
+    if (contentBottom < midPage) {
+      spacer.style.height = `${midPage - contentBottom}px`;
+    }
+  } catch { /* skip */ }
+}
+
 /* ──────────────────────────── Main print function ────────────── */
 
 export async function printGradesTable(options: PrintOptions): Promise<void> {
