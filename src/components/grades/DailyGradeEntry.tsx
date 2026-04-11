@@ -170,7 +170,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
     const bodyRows = studentsWithViolations.map((sg, i) => {
       const violations = violationCats
-        .filter(cat => sg.grades[cat.id] != null && sg.grades[cat.id]! > 0)
+        .filter(cat => sg.grades[cat.id] != null && sg.grades[cat.id]! !== 0)
         .map(cat => sg.notes?.[cat.id] || cat.name)
         .join('، ');
       return `<tr><td>${i + 1}</td><td>${sg.full_name}</td><td>${violations}</td></tr>`;
@@ -409,7 +409,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     // Check if student has any active violation today
                     const hasActiveViolation = gradeTab === "violations" && violationCats.some(cat => {
                       const score = sg.grades[cat.id];
-                      return score != null && score > 0;
+                      return score != null && score !== 0;
                     });
 
                     return (
