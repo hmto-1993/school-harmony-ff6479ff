@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
-  reportType: "attendance" | "grades" | "behavior";
+  reportType: "attendance" | "grades" | "behavior" | "violations";
 }
 
 /**
