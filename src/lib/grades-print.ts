@@ -36,12 +36,15 @@ function buildFullHTML(
 </head>
 <body>
   <div class="print-root">
-    ${headerHTML}
-    <div class="title-section">
-      <h2>${title}</h2>
-      ${subtitle ? `<p>${subtitle}</p>` : ""}
+    <div class="content-area">
+      ${headerHTML}
+      <div class="title-section">
+        <h2>${title}</h2>
+        ${subtitle ? `<p>${subtitle}</p>` : ""}
+      </div>
+      ${tableHTML}
     </div>
-    ${tableHTML}
+    <div class="footer-spacer"></div>
     ${footerHTML}
   </div>
 </body>
@@ -79,6 +82,20 @@ function autoScaleTable(doc: Document) {
         const tW2 = table.scrollWidth;
         if (tW2 > cW) table.style.fontSize = `${10 * s * Math.max(0.5, cW / tW2)}px`;
       }
+    }
+  } catch { /* skip */ }
+}
+
+/** Push footer-spacer so signatures start at ≥50% of page height */
+function positionFooterAtMidPage(doc: Document, pageHeightPx: number) {
+  try {
+    const spacer = doc.querySelector(".footer-spacer") as HTMLElement;
+    const contentArea = doc.querySelector(".content-area") as HTMLElement;
+    if (!spacer || !contentArea) return;
+    const contentBottom = contentArea.offsetTop + contentArea.offsetHeight;
+    const midPage = pageHeightPx * 0.5;
+    if (contentBottom < midPage) {
+      spacer.style.height = `${midPage - contentBottom}px`;
     }
   } catch { /* skip */ }
 }
@@ -124,6 +141,8 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
 
   await waitForFontsAndImages(printDocument);
   autoScaleTable(printDocument);
+  const pageHpx = orientation === "landscape" ? 210 * 3.78 : 297 * 3.78;
+  positionFooterAtMidPage(printDocument, pageHpx);
 
   // Print and cleanup
   await new Promise<void>((resolve) => {
@@ -200,6 +219,8 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
 
   await waitForFontsAndImages(iDoc);
   autoScaleTable(iDoc);
+  const pdfPageHpx = Math.round(pageHmm * pxPerMm);
+  positionFooterAtMidPage(iDoc, pdfPageHpx);
 
   // Resize iframe to content height
   const body = iDoc.body;

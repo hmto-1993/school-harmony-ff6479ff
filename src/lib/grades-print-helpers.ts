@@ -164,6 +164,8 @@ export function buildIframeCSS(orientation: string, contentWidth: string, pageWi
       padding: 3mm 5mm;
       overflow: hidden;
     }
+    .content-area { }
+    .footer-spacer { }
     @media print {
       html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
       .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
