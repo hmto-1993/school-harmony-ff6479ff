@@ -157,7 +157,7 @@ export default function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="violations" className="space-y-4">
-          <ViolationsReportTab selectedClass={r.selectedClass} dateFrom={r.dateFrom} dateTo={r.dateTo} selectedStudent={r.selectedStudent} />
+          <ViolationsReportTab selectedClass={r.selectedClass} dateFrom={r.dateFrom} dateTo={r.dateTo} selectedStudent={r.selectedStudent} reportType={r.reportType} />
         </TabsContent>
 
         <TabsContent value="comprehensive" className="space-y-4">
