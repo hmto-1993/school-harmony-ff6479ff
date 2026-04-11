@@ -263,9 +263,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                 </div>
               )}
               {selectedClass && categories.length > 0 && gradeTab === "violations" && (
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs" title="تصدير المخالفات PDF" onClick={handleExportViolationsPDF}>
-                  <FileText className="h-4 w-4" />تصدير PDF
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
+                      <FileText className="h-4 w-4" />تصدير
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportViolationsPDF} className="gap-2 cursor-pointer">
+                      <FileText className="h-4 w-4" />تصدير PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleShareViolationsWhatsApp} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
+                      <MessageCircle className="h-4 w-4" />إرسال عبر واتساب
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
             </div>
           </div>
