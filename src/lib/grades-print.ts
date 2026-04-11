@@ -13,7 +13,7 @@ interface PrintOptions {
   orientation?: "portrait" | "landscape";
   title: string;
   subtitle?: string;
-  reportType?: "attendance" | "grades" | "behavior";
+  reportType?: "attendance" | "grades" | "behavior" | "violations";
   tableHTML: string;
 }
 
