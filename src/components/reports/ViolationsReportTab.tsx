@@ -249,7 +249,7 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
 
       {data.length > 0 && (
         <div className="print-area space-y-4">
-          <ReportPrintHeader reportType="violations" />
+          <ReportPrintHeader reportType="behavior" />
 
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
