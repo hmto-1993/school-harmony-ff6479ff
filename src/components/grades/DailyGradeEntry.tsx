@@ -157,7 +157,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const studentsWithViolations = React.useMemo(() => filteredStudentGrades.filter(sg =>
     violationCats.some(cat => {
       const score = sg.grades[cat.id];
-      return score != null && score > 0;
+      return score != null && score !== 0;
     })
   ), [filteredStudentGrades, violationCats]);
 
