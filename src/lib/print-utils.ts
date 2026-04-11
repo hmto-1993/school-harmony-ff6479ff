@@ -10,6 +10,25 @@ type PrintOrientation = "portrait" | "landscape";
 let activePrintCleanup: PrintCleanup | null = null;
 const DEFAULT_PRINT_SELECTOR = ".print-area, #absence-print-area";
 
+/** Push .print-only footer to at least 50% of the printed page height */
+function positionPrintFooterAtMidPage(container: HTMLElement, orientation: PrintOrientation) {
+  const footer = container.querySelector(".print-only") as HTMLElement;
+  if (!footer) return;
+
+  // A4 dimensions in px (at 96dpi: 1mm ≈ 3.78px)
+  const pageHeightPx = orientation === "landscape" ? 210 * 3.78 : 297 * 3.78;
+  const midPoint = pageHeightPx * 0.5;
+
+  // Measure content height above footer
+  const footerTop = footer.offsetTop;
+
+  if (footerTop < midPoint) {
+    const spacer = document.createElement("div");
+    spacer.style.height = `${Math.ceil(midPoint - footerTop)}px`;
+    footer.parentElement?.insertBefore(spacer, footer);
+  }
+}
+
 async function waitForDocumentAssets(doc: Document): Promise<void> {
   if ("fonts" in doc) {
     try {
