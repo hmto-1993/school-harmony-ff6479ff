@@ -54,7 +54,7 @@ export function useViolationHistory(
         .in("student_id", studentIds)
         .in("category_id", deductionCategoryIds)
         .not("score", "is", null)
-        .gt("score", 0)
+        .neq("score", 0)
         .order("date", { ascending: true });
 
       if (cancelled) return;
