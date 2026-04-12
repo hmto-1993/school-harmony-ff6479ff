@@ -227,7 +227,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+    <Card className="border-0 shadow-lg bg-card">
       <CardHeader className="pb-3 no-print">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -379,9 +379,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             )}
 
             {/* Table */}
-            <div ref={tableRef} className="overflow-x-auto rounded-xl border border-border/60 shadow-sm">
+            <div ref={tableRef} className="overflow-auto overscroll-contain max-h-[70vh] rounded-xl border border-border/60 shadow-sm bg-card">
               <table className="w-full text-sm border-collapse">
-                <thead>
+                <thead className="sticky top-0 z-10 bg-card">
                   <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l-2 border-border border-primary/20 first:rounded-tr-xl">#</th>
                     <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-l-2 border-border border-primary/20 min-w-[110px]">الطالب</th>
