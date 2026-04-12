@@ -1,12 +1,10 @@
 import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
-import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { AnimatePresence } from "framer-motion";
 import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
@@ -48,11 +46,7 @@ export default function DashboardLayout() {
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden min-h-[calc(100vh-60px)]">
-          <AnimatePresence mode="wait">
-            <PageTransition>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </main>
       <BackToTop />
