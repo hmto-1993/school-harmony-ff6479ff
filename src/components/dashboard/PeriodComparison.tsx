@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TrendingUp, TrendingDown, Minus, CalendarDays } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths, eachDayOfInterval } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PeriodStats {
   present: number;
@@ -131,47 +131,42 @@ function ComparisonGrid({ current, previous }: { current: PeriodStats; previous:
   );
 }
 
+async function fetchComparisonData() {
+  const { data: students } = await supabase.from("students").select("id");
+  const count = students?.length || 0;
+
+  const now = new Date();
+  const thisWeekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+  const thisWeekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
+  const lastWeekStart = format(startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
+  const lastWeekEnd = format(endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
+
+  const thisMonthStart = format(startOfMonth(now), "yyyy-MM-dd");
+  const thisMonthEnd = format(endOfMonth(now), "yyyy-MM-dd");
+  const lastMonthStart = format(startOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
+  const lastMonthEnd = format(endOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
+
+  const [wc, wp, mc, mp] = await Promise.all([
+    fetchPeriodData(thisWeekStart, thisWeekEnd, count),
+    fetchPeriodData(lastWeekStart, lastWeekEnd, count),
+    fetchPeriodData(thisMonthStart, thisMonthEnd, count),
+    fetchPeriodData(lastMonthStart, lastMonthEnd, count),
+  ]);
+
+  return { weekCurrent: wc, weekPrevious: wp, monthCurrent: mc, monthPrevious: mp };
+}
+
 export default function PeriodComparison() {
-  const [totalStudents, setTotalStudents] = useState(0);
-  const [weekCurrent, setWeekCurrent] = useState<PeriodStats | null>(null);
-  const [weekPrevious, setWeekPrevious] = useState<PeriodStats | null>(null);
-  const [monthCurrent, setMonthCurrent] = useState<PeriodStats | null>(null);
-  const [monthPrevious, setMonthPrevious] = useState<PeriodStats | null>(null);
+  const { data, isLoading } = useQuery({
+    queryKey: ["period-comparison", format(new Date(), "yyyy-MM-dd")],
+    queryFn: fetchComparisonData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  if (isLoading || !data) return null;
 
-  const fetchData = async () => {
-    const { data: students } = await supabase.from("students").select("id");
-    const count = students?.length || 0;
-    setTotalStudents(count);
-
-    const now = new Date();
-    const thisWeekStart = format(startOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const thisWeekEnd = format(endOfWeek(now, { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const lastWeekStart = format(startOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
-    const lastWeekEnd = format(endOfWeek(subWeeks(now, 1), { weekStartsOn: 0 }), "yyyy-MM-dd");
-
-    const thisMonthStart = format(startOfMonth(now), "yyyy-MM-dd");
-    const thisMonthEnd = format(endOfMonth(now), "yyyy-MM-dd");
-    const lastMonthStart = format(startOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
-    const lastMonthEnd = format(endOfMonth(subMonths(now, 1)), "yyyy-MM-dd");
-
-    const [wc, wp, mc, mp] = await Promise.all([
-      fetchPeriodData(thisWeekStart, thisWeekEnd, count),
-      fetchPeriodData(lastWeekStart, lastWeekEnd, count),
-      fetchPeriodData(thisMonthStart, thisMonthEnd, count),
-      fetchPeriodData(lastMonthStart, lastMonthEnd, count),
-    ]);
-
-    setWeekCurrent(wc);
-    setWeekPrevious(wp);
-    setMonthCurrent(mc);
-    setMonthPrevious(mp);
-  };
-
-  if (!weekCurrent || !monthCurrent) return null;
+  const { weekCurrent, weekPrevious, monthCurrent, monthPrevious } = data;
 
   return (
     <Card className="shadow-card animate-fade-in" style={{ animationDelay: "700ms", animationFillMode: "both" }}>
@@ -191,11 +186,11 @@ export default function PeriodComparison() {
           </TabsList>
           <TabsContent value="weekly">
             <p className="text-xs text-muted-foreground mb-3">هذا الأسبوع مقابل الأسبوع الماضي</p>
-            <ComparisonGrid current={weekCurrent} previous={weekPrevious!} />
+            <ComparisonGrid current={weekCurrent} previous={weekPrevious} />
           </TabsContent>
           <TabsContent value="monthly">
             <p className="text-xs text-muted-foreground mb-3">هذا الشهر مقابل الشهر الماضي</p>
-            <ComparisonGrid current={monthCurrent} previous={monthPrevious!} />
+            <ComparisonGrid current={monthCurrent} previous={monthPrevious} />
           </TabsContent>
         </Tabs>
       </CardContent>
