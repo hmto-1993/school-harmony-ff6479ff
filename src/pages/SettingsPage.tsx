@@ -98,7 +98,7 @@ export default function SettingsPage() {
               "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 transition-all duration-300 text-center group",
               s.activeCard === card.key
                 ? "border-primary bg-primary/5 shadow-xl scale-[1.02]"
-                : "border-border/50 bg-card/80 backdrop-blur-sm shadow-md hover:shadow-lg hover:border-primary/30 hover:scale-[1.01]"
+                : "border-border/50 bg-card shadow-md hover:shadow-lg hover:border-primary/30 hover:scale-[1.01]"
             )}
           >
             <div
@@ -260,7 +260,7 @@ export default function SettingsPage() {
 
         {s.isAdmin && (
           <>
-            <Card className="border border-border/50 bg-card/80 backdrop-blur-sm shadow-md">
+            <Card className="border border-border/50 bg-card shadow-md">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

@@ -1,12 +1,10 @@
 import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
-import PageTransition from "@/components/PageTransition";
 import schoolLogo from "@/assets/school-logo.jpg";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { AnimatePresence } from "framer-motion";
 import BackToTop from "@/components/BackToTop";
 
 export default function DashboardLayout() {
@@ -40,7 +38,7 @@ export default function DashboardLayout() {
         {isMobile && (
           <button
             onClick={() => setMobileOpen(true)}
-            className="sticky top-0 z-30 w-full flex items-center gap-2.5 px-4 py-3 bg-gradient-to-l from-primary/10 via-primary/5 to-transparent dark:from-primary/20 dark:via-primary/10 dark:to-transparent border-b border-primary/15 text-foreground backdrop-blur-sm"
+            className="sticky top-0 z-30 w-full flex items-center gap-2.5 px-4 py-3 bg-background/95 dark:bg-background/95 border-b border-primary/15 text-foreground"
           >
             <Menu className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-primary">القائمة</span>
@@ -48,11 +46,7 @@ export default function DashboardLayout() {
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden min-h-[calc(100vh-60px)]">
-          <AnimatePresence mode="wait">
-            <PageTransition>
-              <Outlet />
-            </PageTransition>
-          </AnimatePresence>
+          <Outlet />
         </div>
       </main>
       <BackToTop />

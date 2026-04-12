@@ -127,13 +127,13 @@ export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${loginBg})`, filter: "blur(6px) brightness(0.55)" }}
+        className="absolute inset-0 bg-cover bg-center brightness-[0.4]"
+        style={{ backgroundImage: `url(${loginBg})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
-        <Card className="glass border-border/30 shadow-2xl dark:bg-card/85 dark:border-border/20 dark:shadow-black/40">
+        <Card className="bg-card/95 border-border/30 shadow-2xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
             <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
               <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />

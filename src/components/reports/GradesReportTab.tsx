@@ -63,7 +63,7 @@ export default function GradesReportTab({
           <PrintWatermark reportType="grades" />
           <GradesChart data={gradeData} categoryNames={categoryNames} />
 
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+          <Card className="border-0 shadow-lg bg-card">
             <CardContent className="pt-4">
               <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
                 <Table>

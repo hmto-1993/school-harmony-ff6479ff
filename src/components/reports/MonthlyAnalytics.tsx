@@ -79,7 +79,7 @@ export default function MonthlyAnalytics({ selectedClass, classes }: Props) {
   return (
     <div className="space-y-5">
       {/* Month & Class Filters */}
-      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+      <Card className="border-0 shadow-lg bg-card">
         <CardContent className="pt-5 pb-4">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="space-y-1.5 min-w-[140px]">
