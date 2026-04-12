@@ -129,11 +129,16 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   // Load data
   const loadData = useCallback(async () => {
     if (!selectedClass) return;
-    const { data: cats } = await supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order");
-    const { data: students } = await supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name");
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const { data: grades } = await supabase.from("grades").select("id, student_id, category_id, score, period, note")
-      .in("student_id", (students || []).map((s) => s.id)).eq("period", selectedPeriod).eq("date", dateStr);
+    const [{ data: cats }, { data: students }] = await Promise.all([
+      supabase.from("grade_categories").select("*").or(`class_id.eq.${selectedClass},class_id.is.null`).order("sort_order"),
+      supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name"),
+    ]);
+    const studentIds = (students || []).map((s) => s.id);
+    const { data: grades } = studentIds.length > 0
+      ? await supabase.from("grades").select("id, student_id, category_id, score, period, note")
+          .in("student_id", studentIds).eq("period", selectedPeriod).eq("date", dateStr)
+      : { data: [] };
 
     const gradesMap = new Map<string, Map<string, { score: number | null; id: string; note: string }>>();
     grades?.forEach((g) => {

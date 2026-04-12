@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { AlertTriangle, Shield, ShieldAlert, ShieldCheck, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format, subDays } from "date-fns";
 
 interface StudentAbsenceData {
   id: string;
@@ -17,136 +18,104 @@ interface StudentAbsenceData {
   status: "safe" | "warning" | "danger";
 }
 
-export default function SafeZoneCounter() {
-  const [loading, setLoading] = useState(true);
-  const [threshold, setThreshold] = useState(20);
-  const [absenceMode, setAbsenceMode] = useState<"percentage" | "sessions">("percentage");
-  const [allowedSessions, setAllowedSessions] = useState(0);
-  const [studentsAtRisk, setStudentsAtRisk] = useState<StudentAbsenceData[]>([]);
-  const [safeCount, setSafeCount] = useState(0);
-  const [warningCount, setWarningCount] = useState(0);
-  const [dangerCount, setDangerCount] = useState(0);
+async function fetchSafeZoneData() {
+  const termStart = format(subDays(new Date(), 120), "yyyy-MM-dd");
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const [{ data: settingsData }, { data: students }, { data: attendance }] = await Promise.all([
+    supabase.from("site_settings").select("id, value").in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]),
+    supabase.from("students").select("id, full_name, class_id, classes(name)").order("full_name"),
+    supabase.from("attendance_records").select("student_id, status").gte("date", termStart),
+  ]);
 
-  const fetchData = async () => {
-    setLoading(true);
+  let absenceThreshold = 20;
+  let absModeVal = "percentage";
+  let allowedSessionsVal = 0;
+  (settingsData || []).forEach((s: any) => {
+    if (s.id === "absence_threshold") absenceThreshold = Number(s.value) || 20;
+    if (s.id === "absence_allowed_sessions") allowedSessionsVal = Number(s.value) || 0;
+    if (s.id === "absence_mode") absModeVal = s.value || "percentage";
+  });
 
-    // Get all absence settings
-    const { data: settingsData } = await supabase
-      .from("site_settings")
-      .select("id, value")
-      .in("id", ["absence_threshold", "absence_allowed_sessions", "absence_mode"]);
+  if (!students || students.length === 0) {
+    return { threshold: absenceThreshold, safeCount: 0, warningCount: 0, dangerCount: 0, studentsAtRisk: [] as StudentAbsenceData[] };
+  }
 
-    let absenceThreshold = 20;
-    let absModeVal = "percentage";
-    let allowedSessionsVal = 0;
-    (settingsData || []).forEach((s: any) => {
-      if (s.id === "absence_threshold") absenceThreshold = Number(s.value) || 20;
-      if (s.id === "absence_allowed_sessions") allowedSessionsVal = Number(s.value) || 0;
-      if (s.id === "absence_mode") absModeVal = s.value || "percentage";
-    });
-    setThreshold(absenceThreshold);
-    setAbsenceMode(absModeVal as "percentage" | "sessions");
-    setAllowedSessions(allowedSessionsVal);
+  const studentAttendance = new Map<string, { total: number; absent: number }>();
+  attendance?.forEach((record) => {
+    const current = studentAttendance.get(record.student_id) || { total: 0, absent: 0 };
+    current.total++;
+    if (record.status === "absent") current.absent++;
+    studentAttendance.set(record.student_id, current);
+  });
 
-    // Get all students with classes
-    const { data: students } = await supabase
-      .from("students")
-      .select("id, full_name, class_id, classes(name)")
-      .order("full_name");
+  let safe = 0, warning = 0, danger = 0;
+  const studentStats: StudentAbsenceData[] = [];
 
-    if (!students || students.length === 0) {
-      setLoading(false);
-      return;
+  for (const student of students) {
+    const stats = studentAttendance.get(student.id) || { total: 0, absent: 0 };
+    const absenceRate = stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0;
+
+    let exceeded = false;
+    let isWarningZone = false;
+    if (absModeVal === "sessions" && allowedSessionsVal > 0) {
+      exceeded = stats.absent > allowedSessionsVal;
+      isWarningZone = !exceeded && stats.absent >= Math.round(allowedSessionsVal * 0.7);
+    } else {
+      exceeded = absenceRate >= absenceThreshold;
+      isWarningZone = !exceeded && absenceRate >= absenceThreshold * 0.7;
     }
 
-    // Get all attendance records
-    const { data: attendance } = await supabase
-      .from("attendance_records")
-      .select("student_id, status");
+    let status: "safe" | "warning" | "danger" = "safe";
+    if (exceeded) { status = "danger"; danger++; }
+    else if (isWarningZone) { status = "warning"; warning++; }
+    else { safe++; }
 
-    // Calculate absence rates
-    const studentStats: StudentAbsenceData[] = [];
-    const studentAttendance = new Map<string, { total: number; absent: number }>();
-
-    attendance?.forEach((record) => {
-      const current = studentAttendance.get(record.student_id) || { total: 0, absent: 0 };
-      current.total++;
-      if (record.status === "absent") current.absent++;
-      studentAttendance.set(record.student_id, current);
-    });
-
-    let safe = 0, warning = 0, danger = 0;
-
-    for (const student of students) {
-      const stats = studentAttendance.get(student.id) || { total: 0, absent: 0 };
-      const absenceRate = stats.total > 0 ? Math.round((stats.absent / stats.total) * 100) : 0;
-      
-      let status: "safe" | "warning" | "danger" = "safe";
-      
-      let exceeded = false;
-      let isWarningZone = false;
-      if (absModeVal === "sessions" && allowedSessionsVal > 0) {
-        exceeded = stats.absent > allowedSessionsVal;
-        isWarningZone = !exceeded && stats.absent >= Math.round(allowedSessionsVal * 0.7);
-      } else {
-        exceeded = absenceRate >= absenceThreshold;
-        isWarningZone = !exceeded && absenceRate >= absenceThreshold * 0.7;
-      }
-      
-      if (exceeded) {
-        status = "danger";
-        danger++;
-      } else if (isWarningZone) {
-        status = "warning";
-        warning++;
-      } else {
-        safe++;
-      }
-
-      if (status !== "safe") {
-        studentStats.push({
-          id: student.id,
-          full_name: student.full_name,
-          class_name: (student.classes as any)?.name || "",
-          absenceCount: stats.absent,
-          totalDays: stats.total,
-          absenceRate,
-          status,
-        });
-      }
+    if (status !== "safe") {
+      studentStats.push({
+        id: student.id,
+        full_name: student.full_name,
+        class_name: (student.classes as any)?.name || "",
+        absenceCount: stats.absent,
+        totalDays: stats.total,
+        absenceRate,
+        status,
+      });
     }
+  }
 
-    // Sort by danger first, then warning, then by rate
-    studentStats.sort((a, b) => {
-      if (a.status === "danger" && b.status !== "danger") return -1;
-      if (a.status !== "danger" && b.status === "danger") return 1;
-      return b.absenceRate - a.absenceRate;
-    });
+  studentStats.sort((a, b) => {
+    if (a.status === "danger" && b.status !== "danger") return -1;
+    if (a.status !== "danger" && b.status === "danger") return 1;
+    return b.absenceRate - a.absenceRate;
+  });
 
-    setSafeCount(safe);
-    setWarningCount(warning);
-    setDangerCount(danger);
-    setStudentsAtRisk(studentStats.slice(0, 6)); // Show top 6 at-risk students
-    setLoading(false);
+  return {
+    threshold: absenceThreshold,
+    safeCount: safe,
+    warningCount: warning,
+    dangerCount: danger,
+    studentsAtRisk: studentStats.slice(0, 6),
   };
+}
 
-  if (loading) {
+export default function SafeZoneCounter() {
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["safe-zone-counter"],
+    queryFn: fetchSafeZoneData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  if (loading || !data) {
     return (
       <Card className="animate-pulse">
-        <CardHeader className="pb-2">
-          <div className="h-5 bg-muted rounded w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="h-24 bg-muted rounded" />
-        </CardContent>
+        <CardHeader className="pb-2"><div className="h-5 bg-muted rounded w-32" /></CardHeader>
+        <CardContent><div className="h-24 bg-muted rounded" /></CardContent>
       </Card>
     );
   }
 
+  const { threshold, safeCount, warningCount, dangerCount, studentsAtRisk } = data;
   const total = safeCount + warningCount + dangerCount;
 
   return (
@@ -169,47 +138,32 @@ export default function SafeZoneCounter() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-2">
-            <div className={cn(
-              "rounded-xl p-3 text-center",
-              "bg-success/10 border border-success/20"
-            )}>
+            <div className={cn("rounded-xl p-3 text-center", "bg-success/10 border border-success/20")}>
               <ShieldCheck className="h-5 w-5 mx-auto text-success mb-1" />
               <p className="text-lg font-bold text-success">{safeCount}</p>
               <p className="text-[10px] text-muted-foreground">آمن</p>
             </div>
-            <div className={cn(
-              "rounded-xl p-3 text-center",
-              "bg-warning/10 border border-warning/20"
-            )}>
+            <div className={cn("rounded-xl p-3 text-center", "bg-warning/10 border border-warning/20")}>
               <AlertTriangle className="h-5 w-5 mx-auto text-warning mb-1" />
               <p className="text-lg font-bold text-warning">{warningCount}</p>
               <p className="text-[10px] text-muted-foreground">تحذير</p>
             </div>
-            <div className={cn(
-              "rounded-xl p-3 text-center",
-              "bg-destructive/10 border border-destructive/20"
-            )}>
+            <div className={cn("rounded-xl p-3 text-center", "bg-destructive/10 border border-destructive/20")}>
               <ShieldAlert className="h-5 w-5 mx-auto text-destructive mb-1" />
               <p className="text-lg font-bold text-destructive">{dangerCount}</p>
               <p className="text-[10px] text-muted-foreground">خطر</p>
             </div>
           </div>
 
-          {/* Progress bar showing overall */}
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>نسبة الطلاب الآمنين</span>
               <span>{total > 0 ? Math.round((safeCount / total) * 100) : 0}%</span>
             </div>
-            <Progress 
-              value={total > 0 ? (safeCount / total) * 100 : 0} 
-              className="h-2" 
-            />
+            <Progress value={total > 0 ? (safeCount / total) * 100 : 0} className="h-2" />
           </div>
 
-          {/* At-risk students */}
           {studentsAtRisk.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
@@ -226,8 +180,8 @@ export default function SafeZoneCounter() {
                       transition={{ delay: index * 0.05 }}
                       className={cn(
                         "flex items-center justify-between rounded-lg px-3 py-2 text-xs",
-                        student.status === "danger" 
-                          ? "bg-destructive/10 border border-destructive/20" 
+                        student.status === "danger"
+                          ? "bg-destructive/10 border border-destructive/20"
                           : "bg-warning/10 border border-warning/20"
                       )}
                     >
@@ -242,7 +196,7 @@ export default function SafeZoneCounter() {
                           {student.class_name}
                         </Badge>
                       </div>
-                      <Badge 
+                      <Badge
                         variant={student.status === "danger" ? "destructive" : "secondary"}
                         className="text-[10px] shrink-0"
                       >
