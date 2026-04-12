@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TodaySlot {
   period_number: number;
@@ -15,43 +15,48 @@ interface ClassOption { id: string; name: string; }
 
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
 
+async function fetchTodaySchedule(userId: string, isAdmin: boolean, todayDay: number) {
+  const fetchClasses = isAdmin
+    ? supabase.from("classes").select("id, name").order("name")
+    : supabase.from("teacher_classes").select("class_id, classes(id, name)").eq("teacher_id", userId);
+
+  const { data } = await fetchClasses;
+  const cls = isAdmin
+    ? (data || []) as ClassOption[]
+    : (data || []).map((tc: any) => tc.classes).filter(Boolean) as ClassOption[];
+
+  if (cls.length === 0) return { classNameMap: {} as Record<string, string>, slots: [] as TodaySlot[] };
+
+  const nameMap = Object.fromEntries(cls.map(c => [c.id, c.name]));
+
+  const { data: slotsData } = await supabase
+    .from("timetable_slots")
+    .select("period_number, subject_name, class_id")
+    .in("class_id", cls.map(c => c.id))
+    .eq("day_of_week", todayDay)
+    .order("period_number");
+
+  return {
+    classNameMap: nameMap,
+    slots: ((slotsData || []) as TodaySlot[]).filter((s) => s.subject_name?.trim()),
+  };
+}
+
 export default function TodayScheduleWidget() {
   const { user, role } = useAuth();
-  const [slots, setSlots] = useState<TodaySlot[]>([]);
-  const [classNameMap, setClassNameMap] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
   const todayDay = new Date().getDay();
   const isWeekend = todayDay === 5 || todayDay === 6;
 
-  useEffect(() => {
-    if (!user) return;
-    const isAdmin = role === "admin";
-    const fetchClasses = isAdmin
-      ? supabase.from("classes").select("id, name").order("name")
-      : supabase.from("teacher_classes").select("class_id, classes(id, name)").eq("teacher_id", user.id);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["today-schedule", user?.id, role, todayDay],
+    queryFn: () => fetchTodaySchedule(user!.id, role === "admin", todayDay),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    enabled: !!user,
+  });
 
-    fetchClasses.then(({ data }) => {
-      const cls = isAdmin
-        ? (data || []) as ClassOption[]
-        : (data || []).map((tc: any) => tc.classes).filter(Boolean) as ClassOption[];
-
-      const nameMap = Object.fromEntries(cls.map(c => [c.id, c.name]));
-      setClassNameMap(nameMap);
-
-      if (cls.length === 0) { setLoading(false); return; }
-
-      supabase
-        .from("timetable_slots")
-        .select("period_number, subject_name, class_id")
-        .in("class_id", cls.map(c => c.id))
-        .eq("day_of_week", todayDay)
-        .order("period_number")
-        .then(({ data: slotsData }) => {
-          setSlots((slotsData || []).filter((s: any) => s.subject_name?.trim()) as TodaySlot[]);
-          setLoading(false);
-        });
-    });
-  }, [user, role, todayDay]);
+  const classNameMap = data?.classNameMap || {};
+  const slots = data?.slots || [];
 
   // Group by period
   const periodMap = new Map<number, string[]>();

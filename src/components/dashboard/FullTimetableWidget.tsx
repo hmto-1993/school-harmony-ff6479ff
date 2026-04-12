@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Slot {
   day_of_week: number;
@@ -22,48 +22,48 @@ const DAYS = [
   { value: 4, label: "الخميس", short: "خميس" },
 ];
 
+async function fetchTimetable(userId: string, isAdmin: boolean) {
+  const fetchClasses = isAdmin
+    ? supabase.from("classes").select("id, name").order("name")
+    : supabase.from("teacher_classes").select("class_id, classes(id, name)").eq("teacher_id", userId);
+
+  const { data } = await fetchClasses;
+  const cls = isAdmin
+    ? (data || []) as ClassOption[]
+    : (data || []).map((tc: any) => tc.classes).filter(Boolean) as ClassOption[];
+
+  if (cls.length === 0) return { classes: cls, slots: [] };
+
+  const { data: slotsData } = await supabase
+    .from("timetable_slots")
+    .select("day_of_week, period_number, subject_name, class_id")
+    .in("class_id", cls.map(c => c.id))
+    .order("period_number");
+
+  return { classes: cls, slots: (slotsData || []) as Slot[] };
+}
+
 export default function FullTimetableWidget() {
   const { user, role } = useAuth();
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [loading, setLoading] = useState(true);
   const todayDay = new Date().getDay();
 
-  useEffect(() => {
-    if (!user) return;
-    const isAdmin = role === "admin";
-    const fetchClasses = isAdmin
-      ? supabase.from("classes").select("id, name").order("name")
-      : supabase.from("teacher_classes").select("class_id, classes(id, name)").eq("teacher_id", user.id);
+  const { data, isLoading: loading } = useQuery({
+    queryKey: ["full-timetable", user?.id, role],
+    queryFn: () => fetchTimetable(user!.id, role === "admin"),
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    enabled: !!user,
+  });
 
-    fetchClasses.then(({ data }) => {
-      const cls = isAdmin
-        ? (data || []) as ClassOption[]
-        : (data || []).map((tc: any) => tc.classes).filter(Boolean) as ClassOption[];
-      setClasses(cls);
-      if (cls.length === 0) { setLoading(false); return; }
+  const classes = data?.classes || [];
+  const slots = data?.slots || [];
 
-      const classIds = cls.map(c => c.id);
-      supabase
-        .from("timetable_slots")
-        .select("day_of_week, period_number, subject_name, class_id")
-        .in("class_id", classIds)
-        .order("period_number")
-        .then(({ data: slotsData }) => {
-          setSlots((slotsData || []) as Slot[]);
-          setLoading(false);
-        });
-    });
-  }, [user, role]);
-
-  // Build grid: grid[`${day}-${period}`] = class name
   const classNameMap = Object.fromEntries(classes.map(c => [c.id, c.name]));
   const getCell = (day: number, period: number) => {
     const slot = slots.find(s => s.day_of_week === day && s.period_number === period);
     return slot ? (classNameMap[slot.class_id] || slot.subject_name) : "";
   };
 
-  // Determine max period from data
   const maxPeriod = slots.length > 0 ? Math.min(Math.max(...slots.map(s => s.period_number)), 7) : 6;
 
   return (
@@ -93,9 +93,7 @@ export default function FullTimetableWidget() {
                 <tr className="bg-muted/40">
                   <th className="py-1.5 px-2 text-center font-bold text-muted-foreground border-b border-border/20 w-14">اليوم</th>
                   {Array.from({ length: maxPeriod }, (_, i) => i + 1).map(p => (
-                    <th key={p} className="py-1.5 px-1 text-center font-bold text-muted-foreground border-b border-border/20">
-                      {p}
-                    </th>
+                    <th key={p} className="py-1.5 px-1 text-center font-bold text-muted-foreground border-b border-border/20">{p}</th>
                   ))}
                 </tr>
               </thead>
