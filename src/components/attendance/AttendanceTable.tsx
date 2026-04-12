@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Clock } from "lucide-react";
@@ -49,10 +50,15 @@ interface Props {
 }
 
 export default function AttendanceTable({ records, allRecords, absenceAlerts, updateStatus, updateNotes }: Props) {
+  const rowIndexMap = useMemo(
+    () => Object.fromEntries(allRecords.map((record, index) => [record.student_id, index + 1])),
+    [allRecords]
+  );
+
   return (
-    <div className="overflow-hidden rounded-xl border border-border/40 shadow-sm">
+    <div className="overflow-auto overscroll-contain max-h-[70vh] rounded-xl border border-border/40 shadow-sm bg-card">
       <table className="w-full text-sm border-separate border-spacing-0">
-        <thead>
+        <thead className="sticky top-0 z-10 bg-card">
           <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
             <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl w-12">#</th>
             <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب</th>
@@ -62,7 +68,7 @@ export default function AttendanceTable({ records, allRecords, absenceAlerts, up
         </thead>
         <tbody>
           {records.map((record, i) => {
-            const idx = allRecords.indexOf(record);
+            const idx = rowIndexMap[record.student_id] ?? i + 1;
             const isEven = i % 2 === 0;
             const isLast = i === records.length - 1;
             return (
@@ -74,7 +80,7 @@ export default function AttendanceTable({ records, allRecords, absenceAlerts, up
                   !isLast && "border-b border-border/20"
                 )}
               >
-                <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10 transition-colors duration-200 group-hover:text-primary", isLast && "first:rounded-br-xl")}>{idx + 1}</td>
+                <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10 transition-colors duration-200 group-hover:text-primary", isLast && "first:rounded-br-xl")}>{idx}</td>
                 <td className="p-3 font-semibold border-l border-border/10 transition-all duration-200 group-hover:bg-sky-100/40 dark:group-hover:bg-sky-900/20 group-hover:text-primary">
                   <div className="flex items-center gap-2">
                     <span>{record.full_name}</span>

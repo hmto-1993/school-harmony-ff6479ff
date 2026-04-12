@@ -1,7 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Users, BookOpen, UserCheck, UserX, Clock, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
 
 interface Props {
   totalStudents: number;
@@ -11,31 +10,6 @@ interface Props {
   todayLate: number;
   attendanceRate: number;
   loading: boolean;
-}
-
-function useCountUp(target: number, duration = 800) {
-  const [value, setValue] = useState(0);
-  const prev = useRef(0);
-
-  useEffect(() => {
-    if (target === 0) { setValue(0); prev.current = 0; return; }
-    const start = prev.current;
-    const diff = target - start;
-    const startTime = performance.now();
-
-    function tick(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo
-      const ease = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      setValue(Math.round(start + diff * ease));
-      if (progress < 1) requestAnimationFrame(tick);
-      else prev.current = target;
-    }
-    requestAnimationFrame(tick);
-  }, [target, duration]);
-
-  return value;
 }
 
 const stats = [
@@ -57,26 +31,18 @@ export default function DashboardStatCards(props: Props) {
     attendanceRate: props.attendanceRate,
   };
 
-  const animatedValues = {
-    totalStudents: useCountUp(props.totalStudents),
-    totalClasses: useCountUp(props.totalClasses),
-    todayPresent: useCountUp(props.todayPresent),
-    todayAbsent: useCountUp(props.todayAbsent),
-    todayLate: useCountUp(props.todayLate),
-    attendanceRate: useCountUp(props.attendanceRate),
-  };
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      {stats.map((stat, index) => (
+      {stats.map((stat) => {
+        const value = values[stat.key as keyof typeof values];
+
+        return (
         <Card
           key={stat.key}
           className={cn(
-            "relative overflow-hidden border-0 ring-1 shadow-card hover:shadow-card-hover transition-all duration-500 group cursor-default",
-            stat.ring,
-            "animate-fade-in"
+            "relative overflow-hidden border-0 ring-1 shadow-card hover:shadow-card-hover transition-all duration-200 group cursor-default",
+            stat.ring
           )}
-          style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
         >
           {/* Gradient background */}
           <div className={cn("absolute inset-0 bg-gradient-to-bl opacity-60", stat.gradient)} />
@@ -94,7 +60,7 @@ export default function DashboardStatCards(props: Props) {
                 <div className="h-8 w-12 mx-auto rounded-lg bg-muted animate-pulse" />
               ) : (
                 <p className="text-3xl font-black tabular-nums tracking-tight text-foreground">
-                  {animatedValues[stat.key as keyof typeof animatedValues]}
+                  {value}
                   {"suffix" in stat && <span className="text-lg font-bold text-muted-foreground mr-0.5">%</span>}
                 </p>
               )}
@@ -102,7 +68,7 @@ export default function DashboardStatCards(props: Props) {
             </div>
           </div>
         </Card>
-      ))}
+      )})}
     </div>
   );
 }

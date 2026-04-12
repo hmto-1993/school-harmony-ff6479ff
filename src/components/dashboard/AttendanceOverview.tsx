@@ -59,7 +59,7 @@ export default function AttendanceOverview({ todayPresent, todayAbsent, todayLat
   ].filter((d) => d.value > 0);
 
   return (
-    <Card className="shadow-card border-border/50 animate-fade-in h-full" style={{ animationDelay: "500ms", animationFillMode: "both" }}>
+    <Card className="shadow-card border-border/50 h-full">
       <CardHeader className="pb-1 px-4 pt-4">
         <CardTitle className="text-sm flex items-center gap-2">
           <div className="p-1 rounded-lg bg-primary/10">

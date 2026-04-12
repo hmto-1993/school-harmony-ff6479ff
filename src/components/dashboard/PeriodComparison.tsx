@@ -164,12 +164,23 @@ export default function PeriodComparison() {
     gcTime: 10 * 60 * 1000,
   });
 
-  if (isLoading || !data) return null;
+  if (isLoading || !data) {
+    return (
+      <Card className="shadow-card h-full">
+        <CardHeader className="pb-2">
+          <div className="h-5 w-32 rounded bg-muted animate-pulse" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-32 rounded-xl bg-muted/50 animate-pulse" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   const { weekCurrent, weekPrevious, monthCurrent, monthPrevious } = data;
 
   return (
-    <Card className="shadow-card animate-fade-in" style={{ animationDelay: "700ms", animationFillMode: "both" }}>
+    <Card className="shadow-card h-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-accent/10">

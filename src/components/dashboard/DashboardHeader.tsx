@@ -86,7 +86,7 @@ export default function DashboardHeader({ onPrint, locked, onToggleLock, onReset
       <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-white/15 backdrop-blur-sm">
+            <div className="p-2.5 rounded-xl bg-white/10 shadow-sm">
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
@@ -168,7 +168,7 @@ export default function DashboardHeader({ onPrint, locked, onToggleLock, onReset
                 <span className="text-xs font-medium">طباعة التقرير</span>
               </Button>
             )}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 shadow-sm">
               <Sparkles className="h-3.5 w-3.5 text-white/70" />
               <span className="text-sm font-medium">{dayName}</span>
             </div>

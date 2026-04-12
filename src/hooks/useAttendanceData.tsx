@@ -276,8 +276,12 @@ export function useAttendanceData() {
     if (!selectedClass) return;
     loadStudents();
     loadDayNote();
+  }, [selectedClass, date, loadStudents, loadDayNote]);
+
+  useEffect(() => {
+    if (!selectedClass) return;
     loadAbsenceAlerts();
-  }, [selectedClass, date, loadStudents, loadDayNote, loadAbsenceAlerts]);
+  }, [selectedClass, loadAbsenceAlerts]);
 
   const updateStatus = useCallback((studentId: string, status: AttendanceStatus) => {
     setRecords((prev) => prev.map((r) => (r.student_id === studentId ? { ...r, status } : r)));

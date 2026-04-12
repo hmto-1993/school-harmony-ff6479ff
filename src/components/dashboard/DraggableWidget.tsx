@@ -36,7 +36,7 @@ export default function DraggableWidget({
       )}
     >
       {/* Drag handle */}
-      <div className="absolute top-2 left-2 z-10 p-1.5 rounded-lg bg-muted/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+      <div className="absolute top-2 left-2 z-10 p-1.5 rounded-lg border border-border/40 bg-card shadow-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
         <GripVertical className="h-4 w-4 text-muted-foreground" />
       </div>
       {children}

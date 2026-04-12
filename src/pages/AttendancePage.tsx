@@ -104,7 +104,7 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function AttendancePage() {
         onFilterChange={(f) => setStatusFilter(f as AttendanceStatus | "all")}
       />
 
-      <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+      <Card className="border-0 shadow-lg bg-card">
         <CardContent className="pt-6">
           {studentsLoading ? (
             <div className="space-y-3 py-4">
@@ -219,7 +219,7 @@ export default function AttendancePage() {
                 />
                 <div className="relative flex-1 min-w-[160px] max-w-[280px]">
                   <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  <Input placeholder="بحث عن طالب..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 text-xs pr-8 backdrop-blur-sm" />
+                  <Input placeholder="بحث عن طالب..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="h-9 text-xs pr-8" />
                 </div>
                 <ScrollToSaveButton targetId="attendance-save" />
               </div>
