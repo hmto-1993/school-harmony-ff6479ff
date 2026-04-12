@@ -351,7 +351,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
       {grouped.length === 0 ? (
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : grouped.map(group => (
-        <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <Card key={group.id} className="border-0 shadow-lg bg-card">
           <CardHeader className="pb-3 no-print">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
