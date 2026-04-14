@@ -76,18 +76,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
   const [radarOpen, setRadarOpen] = React.useState(false);
   const [radarMuted, setRadarMuted] = React.useState(false);
-  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const });
+  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false });
   const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
 
   // Load radar settings
   React.useEffect(() => {
-    supabase.from("site_settings").select("id, value").in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect"]).then(({ data }) => {
-      const s: any = { speed: "medium", sessionMemory: true, visualEffect: "radar" };
+    supabase.from("site_settings").select("id, value").in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode"]).then(({ data }) => {
+      const s: any = { speed: "medium", sessionMemory: true, visualEffect: "radar", quizEnabled: false, surpriseMode: false };
       (data || []).forEach((r: any) => {
         if (r.id === "radar_speed") s.speed = r.value;
         if (r.id === "radar_session_memory") s.sessionMemory = r.value !== "false";
         if (r.id === "radar_visual_effect") s.visualEffect = r.value;
+        if (r.id === "radar_quiz_enabled") s.quizEnabled = r.value === "true";
+        if (r.id === "radar_surprise_mode") s.surpriseMode = r.value === "true";
       });
       setRadarSettings(s);
     });
@@ -360,6 +362,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       setNumericGrade(studentId, partCat.id, String(scoreMap[level]), maxScore);
                       const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر" };
                       toast({ title: "تم رصد المشاركة", description: `تقييم: ${labelMap[level]}` });
+                    }
+                  }}
+                  onQuizCorrect={(studentId, score) => {
+                    const numCat = assessmentCats[0];
+                    if (numCat) {
+                      const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
+                      setNumericGrade(studentId, numCat.id, String((currentScore || 0) + score), Number(numCat.max_score));
+                      toast({ title: "تم ترحيل الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
