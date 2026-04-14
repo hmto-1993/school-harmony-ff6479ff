@@ -91,6 +91,7 @@ export default function SettingsPage() {
           { key: "timetable", icon: Table2, label: "جدول الحصص", desc: "تصميم الجدول الأسبوعي", gradient: "from-sky-500 to-cyan-600", shadow: "shadow-sky-500/20", adminOnly: false },
           { key: "behavior_suggestions", icon: Heart, label: "وصف السلوك", desc: "مقترحات وصف السلوك", gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/20", adminOnly: true },
           { key: "form_identity", icon: Pencil, label: "هوية النماذج", desc: "ترويسة وتوقيع النماذج", gradient: "from-purple-500 to-violet-600", shadow: "shadow-purple-500/20", adminOnly: true },
+          { key: "radar_settings", icon: Radar, label: "الرادار الذكي", desc: "سرعة الرادار وذاكرة الحصة", gradient: "from-cyan-500 to-teal-600", shadow: "shadow-cyan-500/20", adminOnly: true },
         ].filter(c => !c.adminOnly || s.isAdmin).map((card) => (
           <button
             key={card.key}
