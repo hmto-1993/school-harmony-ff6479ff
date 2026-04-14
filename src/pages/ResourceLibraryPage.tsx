@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,35 +21,10 @@ export default function ResourceLibraryPage() {
   const { perms } = useTeacherPermissions();
   const isViewOnly = perms.read_only_mode;
   const lib = useResourceLibrary();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const requestedTab = searchParams.get("tab");
-  const requestedTool = searchParams.get("tool");
-  const [mainTab, setMainTab] = useState<"library" | "questionbank">(() => {
-    return requestedTab === "questionbank" || requestedTool === "questionbank" ? "questionbank" : "library";
-  });
-
-  useEffect(() => {
-    const nextTab = requestedTab === "questionbank" || requestedTool === "questionbank" ? "questionbank" : "library";
-    if (nextTab !== mainTab) {
-      setMainTab(nextTab);
-    }
-  }, [requestedTab, requestedTool, mainTab]);
+  const [mainTab, setMainTab] = useState<"library" | "questionbank">("library");
 
   const handleMainTabChange = (value: string) => {
-    const nextTab = value as "library" | "questionbank";
-    setMainTab(nextTab);
-
-    const nextParams = new URLSearchParams(searchParams);
-    if (nextTab === "questionbank") {
-      nextParams.set("tab", "questionbank");
-    } else {
-      nextParams.delete("tab");
-      if (nextParams.get("tool") === "questionbank") {
-        nextParams.delete("tool");
-      }
-    }
-
-    setSearchParams(nextParams, { replace: true });
+    setMainTab(value as "library" | "questionbank");
   };
 
   return (

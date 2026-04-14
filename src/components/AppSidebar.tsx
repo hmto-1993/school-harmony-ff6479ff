@@ -6,13 +6,11 @@ import {
   Users,
   ClipboardCheck,
   GraduationCap,
-  Radar,
   BarChart3,
   Bell,
   Settings,
   LogOut,
   BookOpen,
-  Brain,
   ChevronLeft,
   ChevronRight,
   Sun,
@@ -34,11 +32,9 @@ const adminLinks = [
   { to: "/students", label: "الطلاب", icon: Users },
   { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
-  { to: "/grades?tool=radar", label: "الرادار", icon: Radar },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
-  { to: "/library?tab=questionbank", label: "بنك الأسئلة", icon: Brain },
   { to: "/activities", label: "الأنشطة", icon: Layers },
   { to: "/student-logins", label: "سجل الزيارات", icon: UserCheck },
   { to: "/forms", label: "النماذج الرسمية", icon: FileText },
@@ -50,11 +46,9 @@ const teacherLinks = [
   { to: "/students", label: "الطلاب", icon: Users },
   { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
   { to: "/grades", label: "الدرجات", icon: GraduationCap },
-  { to: "/grades?tool=radar", label: "الرادار", icon: Radar },
   { to: "/reports", label: "التقارير", icon: BarChart3 },
   { to: "/notifications", label: "الإشعارات", icon: Bell },
   { to: "/library", label: "المكتبة", icon: BookOpen },
-  { to: "/library?tab=questionbank", label: "بنك الأسئلة", icon: Brain },
   { to: "/activities", label: "الأنشطة", icon: Layers },
   { to: "/forms", label: "النماذج الرسمية", icon: FileText },
   { to: "/settings", label: "الإعدادات", icon: Settings },
@@ -109,7 +103,6 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
     ? baseLinks.filter(l => l.to !== "/settings")
     : baseLinks;
   const isCollapsed = !isMobile && collapsed;
-  const currentLocation = `${location.pathname}${location.search}`;
 
   return (
     <aside
@@ -139,9 +132,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
       {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
         {links.map((link) => {
-          const isActive = link.to.includes("?")
-            ? currentLocation === link.to
-            : location.pathname === link.to;
+          const isActive = location.pathname === link.to;
           const showBadge = link.to === "/notifications" && unreadParentMessages > 0;
           return (
             <Link
