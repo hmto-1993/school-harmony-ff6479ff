@@ -326,7 +326,9 @@ export default function SmartRadar({
   };
 
   const allExcluded = settings.sessionMemory && excluded.size >= students.length;
-  const hasQuizQuestions = settings.quizEnabled && questionsRef.current.some((q) => q.enabled);
+  const hasLocalQuiz = settings.quizEnabled && questionsRef.current.some((q) => q.enabled);
+  const hasBankQuiz = settings.quizEnabled && settings.questionSource === "bank" && bankQuestionsRef.current.length > 0;
+  const hasQuizQuestions = hasLocalQuiz || hasBankQuiz;
 
   // Timer color
   const timerDuration = localDuration;
