@@ -501,7 +501,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
-                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-l-2 border-border border-primary/20 min-w-[80px]">المجموع</th>}
+                    {gradeTab === "assessment" && <th className="text-center p-3 font-semibold text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[90px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">الدرجات المكتسبة</th>}
                   </tr>
                 </thead>
                 <tbody>
