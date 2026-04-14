@@ -172,11 +172,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     });
 
     const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
+    const earnedTotalsMap = new Map<string, number>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
       const cat = cats.find(c => c.id === g.category_id);
       if (!cat) return;
+
+      // Accumulate earned total
+      earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + score);
+
       if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
       const studentMap = dailyIconsMap.get(g.student_id)!;
       if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
@@ -214,6 +219,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
         manualScores, manualScoreIds, dailyIcons,
+        earnedTotal: earnedTotalsMap.get(s.id) || 0,
       };
     });
 
