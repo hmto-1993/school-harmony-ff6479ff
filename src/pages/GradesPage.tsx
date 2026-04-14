@@ -63,7 +63,7 @@ export default function GradesPage() {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
-  const [selectedClass, setSelectedClass] = usePersistedState("grades_selected_class", "");
+  const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
 
