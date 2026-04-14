@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +22,41 @@ export default function ResourceLibraryPage() {
   const { perms } = useTeacherPermissions();
   const isViewOnly = perms.read_only_mode;
   const lib = useResourceLibrary();
-  const [mainTab, setMainTab] = useState<"library" | "questionbank">("library");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const requestedTool = searchParams.get("tool");
+  const [mainTab, setMainTab] = useState<"library" | "questionbank">(() => {
+    return requestedTab === "questionbank" || requestedTool === "questionbank" ? "questionbank" : "library";
+  });
+
+  useEffect(() => {
+    const nextTab = requestedTab === "questionbank" || requestedTool === "questionbank" ? "questionbank" : "library";
+    if (nextTab !== mainTab) {
+      setMainTab(nextTab);
+    }
+  }, [requestedTab, requestedTool, mainTab]);
+
+  const handleMainTabChange = (value: string) => {
+    const nextTab = value as "library" | "questionbank";
+    setMainTab(nextTab);
+
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextTab === "questionbank") {
+      nextParams.set("tab", "questionbank");
+    } else {
+      nextParams.delete("tab");
+      if (nextParams.get("tool") === "questionbank") {
+        nextParams.delete("tool");
+      }
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  };
 
   return (
     <div className="space-y-6 animate-fade-in" dir="rtl">
       {/* Main Tabs */}
-      <Tabs value={mainTab} onValueChange={v => setMainTab(v as any)} dir="rtl">
+      <Tabs value={mainTab} onValueChange={handleMainTabChange} dir="rtl">
         <TabsList className="w-auto justify-start mb-4">
           <TabsTrigger value="library" className="gap-1.5"><FolderOpen className="h-4 w-4" />مكتبة المصادر</TabsTrigger>
           <TabsTrigger value="questionbank" className="gap-1.5"><Brain className="h-4 w-4" />بنك الأسئلة</TabsTrigger>
