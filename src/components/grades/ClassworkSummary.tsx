@@ -50,6 +50,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               <th style="width:auto;">الدرجة<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
             `).join("")}
             <th style="width:auto;">الإجمالي</th>
+            <th style="width:auto;background:#ecfdf5;color:#059669;">الدرجات المكتسبة</th>
           </tr>
         </thead>
         <tbody>
@@ -70,6 +71,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   `;
                 }).join("")}
                 <td class="subtotal-cell">${subtotal.score} / ${subtotal.max}</td>
+                <td style="background:#ecfdf5;color:#059669;font-weight:bold;">${student.earnedTotal}</td>
               </tr>
             `;
           }).join("")}

@@ -55,7 +55,8 @@ export default function ClassworkTable({
                   </th>
                 </React.Fragment>
               ))}
-              <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px] last:rounded-tl-xl">الإجمالي</th>
+              <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 min-w-[80px]">الإجمالي</th>
+              <th className="text-center p-3 font-semibold text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[90px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">الدرجات المكتسبة</th>
             </tr>
           </thead>
           <tbody>
@@ -116,8 +117,11 @@ export default function ClassworkTable({
                     );
                   })}
 
-                  <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>
+                  <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "")}>
                     {sub.score} / {sub.max}
+                  </td>
+                  <td className={cn("p-2 text-center font-bold border-l border-border/10 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400", isLast && "last:rounded-bl-xl")}>
+                    {sg.earnedTotal}
                   </td>
                 </tr>
               );
