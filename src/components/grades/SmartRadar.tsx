@@ -73,12 +73,59 @@ export default function SmartRadar({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
 
+  // Bank question source state
+  const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
+  const [bankLessons, setBankLessons] = useState<{ id: string; title: string }[]>([]);
+  const [selectedBankChapter, setSelectedBankChapter] = useState<string>("");
+  const [selectedBankLesson, setSelectedBankLesson] = useState<string>("");
+  const bankQuestionsRef = useRef<RadarQuestion[]>([]);
+
   useEffect(() => { setLocalDuration(settings.quizDuration); }, [settings.quizDuration]);
 
-  // Load questions
+  // Load local questions
   useEffect(() => {
     questionsRef.current = loadQuestions();
   }, []);
+
+  // Load bank chapters
+  useEffect(() => {
+    if (settings.questionSource === "bank" && settings.quizEnabled) {
+      supabase.from("question_bank_chapters").select("id, title").order("sort_order").then(({ data }) => {
+        setBankChapters((data as any[]) || []);
+      });
+    }
+  }, [settings.questionSource, settings.quizEnabled]);
+
+  // Load bank lessons when chapter selected
+  useEffect(() => {
+    if (selectedBankChapter) {
+      supabase.from("question_bank_lessons").select("id, title").eq("chapter_id", selectedBankChapter).order("sort_order").then(({ data }) => {
+        setBankLessons((data as any[]) || []);
+      });
+    } else {
+      setBankLessons([]);
+      setSelectedBankLesson("");
+    }
+  }, [selectedBankChapter]);
+
+  // Load bank questions when lesson selected
+  useEffect(() => {
+    if (selectedBankLesson) {
+      supabase.from("question_bank_questions").select("*").eq("lesson_id", selectedBankLesson).eq("enabled", true).then(({ data }) => {
+        bankQuestionsRef.current = ((data as any[]) || []).map((q: any) => ({
+          id: q.id,
+          type: q.question_type as "mcq" | "truefalse",
+          text: q.question_text,
+          options: q.options as string[],
+          correctIndex: q.correct_index,
+          score: q.score,
+          enabled: true,
+        }));
+      });
+    } else {
+      bankQuestionsRef.current = [];
+    }
+  }, [selectedBankLesson]);
 
   const available = students.filter(
     (s) => !settings.sessionMemory || !excluded.has(s.student_id)
