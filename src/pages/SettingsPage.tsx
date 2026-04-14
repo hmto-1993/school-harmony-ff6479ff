@@ -12,7 +12,7 @@ import {
   Pencil, Megaphone, X,
   Palette, History,
   CalendarDays, ClipboardCheck, Lock,
-  AlertTriangle, Heart, Table2, Trash2,
+  AlertTriangle, Heart, Table2, Trash2, Radar,
 } from "lucide-react";
 import PrintHeaderEditor from "@/components/settings/PrintHeaderEditor";
 import FormIdentitySettings from "@/components/settings/FormIdentitySettings";
@@ -25,6 +25,7 @@ import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
+import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
