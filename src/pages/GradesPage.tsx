@@ -1,8 +1,9 @@
 import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
+import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Radar } from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import ClassworkSummary from "@/components/grades/ClassworkSummary";
@@ -13,7 +14,6 @@ import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintWatermark from "@/components/shared/PrintWatermark";
 import PrintFooterSignatures from "@/components/shared/PrintFooterSignatures";
-
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
@@ -35,6 +35,9 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
+  const [searchParams] = useSearchParams();
+  const radarMode = searchParams.get("tool") === "radar";
+
   const { data: classesRaw, isLoading: classesLoading } = useQuery({
     queryKey: ["classes-list"],
     queryFn: async () => {
@@ -63,6 +66,7 @@ export default function GradesPage() {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+
   const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
@@ -80,12 +84,17 @@ export default function GradesPage() {
 
   const showPeriodSelector = activeType === "daily" || activeType === "classwork" || activeType === "summary" || activeType === "import";
 
-  // Set default active type to summary if can't edit
   useEffect(() => {
     if (permsLoaded && !canEdit && (activeType === "behavior" || activeType === "import")) {
       setActiveType("daily");
     }
-  }, [permsLoaded, canEdit]);
+  }, [permsLoaded, canEdit, activeType, setActiveType]);
+
+  useEffect(() => {
+    if (radarMode && activeType !== "daily") {
+      setActiveType("daily");
+    }
+  }, [radarMode, activeType, setActiveType]);
 
   if (permsLoaded && !canView) {
     return (
@@ -101,7 +110,6 @@ export default function GradesPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3 no-print">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
@@ -117,7 +125,6 @@ export default function GradesPage() {
         </div>
       </div>
 
-      {/* Class Cards — Cosmic Cyan palette */}
       <div className="no-print">
         <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
           <Users className="h-4 w-4" />
@@ -135,45 +142,44 @@ export default function GradesPage() {
           ) : classes.length === 0 ? (
             <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
           ) : (
-          classes.map((cls, i) => {
-            const isActive = selectedClass === cls.id;
-            const count = classCounts[cls.id] || 0;
-            return (
-              <button
-                key={cls.id}
-                onClick={() => setSelectedClass(cls.id)}
-                className={cn(
-                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden animate-fade-in group",
-                  isActive
-                    ? "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/25"
-                    : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10"
-                )}
-                style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
-              >
-                <div className={cn(
-                  "mx-auto w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-sm",
-                  isActive ? "bg-gradient-to-br from-primary to-primary/70 shadow-md shadow-primary/30" : "bg-muted"
-                )}>
-                  <Users className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
-                </div>
-                <span className={cn("text-sm font-bold block", isActive ? "text-primary" : "text-foreground")}>
-                  {cls.name}
-                </span>
-                {classCounts[cls.id] !== undefined ? (
-                <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
-                  {count} طالب
-                </span>
-                ) : (
-                <span className="mt-1 block h-3 w-12 mx-auto rounded bg-muted/50 animate-pulse" />
-                )}
-                
-              </button>
-            );
-          }))}
+            classes.map((cls, i) => {
+              const isActive = selectedClass === cls.id;
+              const count = classCounts[cls.id] || 0;
+              return (
+                <button
+                  key={cls.id}
+                  onClick={() => setSelectedClass(cls.id)}
+                  className={cn(
+                    "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden animate-fade-in group",
+                    isActive
+                      ? "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/25"
+                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10"
+                  )}
+                  style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
+                >
+                  <div className={cn(
+                    "mx-auto w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-sm",
+                    isActive ? "bg-gradient-to-br from-primary to-primary/70 shadow-md shadow-primary/30" : "bg-muted"
+                  )}>
+                    <Users className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
+                  </div>
+                  <span className={cn("text-sm font-bold block", isActive ? "text-primary" : "text-foreground")}>
+                    {cls.name}
+                  </span>
+                  {classCounts[cls.id] !== undefined ? (
+                    <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
+                      {count} طالب
+                    </span>
+                  ) : (
+                    <span className="mt-1 block h-3 w-12 mx-auto rounded bg-muted/50 animate-pulse" />
+                  )}
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
 
-      {/* Entry Type Cards — green active, colorful icons */}
       {selectedClass && (
         <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
@@ -209,7 +215,6 @@ export default function GradesPage() {
         </div>
       )}
 
-      {/* Period Cards — unified amber tint, active = primary */}
       {selectedClass && showPeriodSelector && (
         <div className="animate-fade-in no-print">
           <h3 className="text-sm font-semibold text-muted-foreground mb-3">الفترة</h3>
@@ -235,7 +240,6 @@ export default function GradesPage() {
                   <span className={cn("text-sm font-bold", isActive ? "text-success" : "text-foreground")}>
                     {period.label}
                   </span>
-                  
                 </button>
               );
             })}
@@ -243,7 +247,20 @@ export default function GradesPage() {
         </div>
       )}
 
-      {/* Content or Empty State */}
+      {selectedClass && radarMode && (
+        <div className="no-print rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Radar className="h-5 w-5" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-foreground">تم تفعيل الوصول السريع للرادار</h3>
+              <p className="text-sm text-muted-foreground">أبقيناك داخل رصد اليوم تلقائيًا، وستجد زر <span className="font-semibold text-foreground">الرادار</span> أعلى بطاقة الرصد.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {selectedClass ? (
         <div className="animate-fade-in print-area">
           <ReportPrintHeader reportType="grades" />
@@ -271,9 +288,9 @@ export default function GradesPage() {
         </div>
       ) : (
         <EmptyState
-          icon={ClipboardList}
-          title="اختر فصلاً للبدء"
-          description="حدد الفصل الدراسي من الأعلى لعرض وإدخال درجات الطلاب"
+          icon={radarMode ? Radar : ClipboardList}
+          title={radarMode ? "اختر فصلاً لفتح الرادار" : "اختر فصلاً للبدء"}
+          description={radarMode ? "أضفنا مدخلاً مباشرًا للرادار في القائمة. حدّد الفصل ثم استخدم زر الرادار داخل رصد اليوم." : "حدد الفصل الدراسي من الأعلى لعرض وإدخال درجات الطلاب"}
         />
       )}
     </div>
