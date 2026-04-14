@@ -543,24 +543,64 @@ export default function SmartRadar({
         </div>
       </div>
 
-      {/* Quick duration control (before spin) */}
+      {/* Quick controls (before spin) */}
       {!spinning && !showActions && !selectedStudent && settings.quizEnabled && (
-        <div className="relative mb-3 p-2.5 rounded-xl border border-white/10 bg-white/5">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Timer className="h-3.5 w-3.5 text-primary/70" />
-              <span className="text-[11px] font-bold text-white/60">مدة السؤال</span>
+        <div className="relative mb-3 space-y-2.5">
+          {/* Bank chapter/lesson selector */}
+          {settings.questionSource === "bank" && (
+            <div className="p-2.5 rounded-xl border border-white/10 bg-white/5 space-y-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <BookOpen className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-[11px] font-bold text-white/60">مصدر الأسئلة: بنك الأسئلة</span>
+              </div>
+              <Select value={selectedBankChapter} onValueChange={v => { setSelectedBankChapter(v); setSelectedBankLesson(""); }}>
+                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/15 text-white/80">
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bankChapters.map(ch => (
+                    <SelectItem key={ch.id} value={ch.id}>{ch.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedBankChapter && (
+                <Select value={selectedBankLesson} onValueChange={setSelectedBankLesson}>
+                  <SelectTrigger className="h-8 text-xs bg-white/5 border-white/15 text-white/80">
+                    <SelectValue placeholder="اختر الدرس" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bankLessons.map(ls => (
+                      <SelectItem key={ls.id} value={ls.id}>{ls.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {selectedBankLesson && (
+                <p className="text-[10px] text-emerald-400/70 font-medium">
+                  {bankQuestionsRef.current.length} سؤال متاح
+                </p>
+              )}
             </div>
-            <span className="text-sm font-black text-primary tabular-nums">{localDuration} ثانية</span>
+          )}
+
+          {/* Duration slider */}
+          <div className="p-2.5 rounded-xl border border-white/10 bg-white/5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Timer className="h-3.5 w-3.5 text-primary/70" />
+                <span className="text-[11px] font-bold text-white/60">مدة السؤال</span>
+              </div>
+              <span className="text-sm font-black text-primary tabular-nums">{localDuration} ثانية</span>
+            </div>
+            <Slider
+              min={5}
+              max={60}
+              step={5}
+              value={[localDuration]}
+              onValueChange={([v]) => setLocalDuration(v)}
+              className="w-full"
+            />
           </div>
-          <Slider
-            min={5}
-            max={60}
-            step={5}
-            value={[localDuration]}
-            onValueChange={([v]) => setLocalDuration(v)}
-            className="w-full"
-          />
         </div>
       )}
 
