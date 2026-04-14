@@ -20,7 +20,8 @@ export interface RadarSettings {
   visualEffect: "radar" | "slots" | "spotlight";
   quizEnabled: boolean;
   surpriseMode: boolean;
-  quizDuration: number; // seconds 5-60
+  quizDuration: number;
+  questionSource: "local" | "bank"; // local = quick questions, bank = from library
 }
 
 interface SmartRadarProps {
