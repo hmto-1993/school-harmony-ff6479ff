@@ -946,6 +946,112 @@ export type Database = {
           },
         ]
       }
+      question_bank_chapters: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      question_bank_lessons: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          created_by: string
+          id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_lessons_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_bank_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          created_by: string
+          enabled: boolean
+          id: string
+          lesson_id: string
+          options: Json
+          question_text: string
+          question_type: string
+          score: number
+        }
+        Insert: {
+          correct_index?: number
+          created_at?: string
+          created_by: string
+          enabled?: boolean
+          id?: string
+          lesson_id: string
+          options?: Json
+          question_text: string
+          question_type?: string
+          score?: number
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          created_by?: string
+          enabled?: boolean
+          id?: string
+          lesson_id?: string
+          options?: Json
+          question_text?: string
+          question_type?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bank_questions_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank_lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quiz_questions: {
         Row: {
           activity_id: string

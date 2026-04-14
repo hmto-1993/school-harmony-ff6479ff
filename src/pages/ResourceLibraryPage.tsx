@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FolderPlus, Loader2, FolderOpen, ArrowRight, Tag } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FolderPlus, Loader2, FolderOpen, ArrowRight, Tag, Brain } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useResourceLibrary } from "@/hooks/useResourceLibrary";
@@ -13,14 +15,26 @@ import { CategorySelect } from "@/components/library/CategorySelect";
 import { ClassesGrid } from "@/components/library/ClassesGrid";
 import { FolderCard } from "@/components/library/FolderCard";
 import { FolderDetailDialog } from "@/components/library/FolderDetailDialog";
+import QuestionBankTab from "@/components/library/QuestionBankTab";
 
 export default function ResourceLibraryPage() {
   const { perms } = useTeacherPermissions();
   const isViewOnly = perms.read_only_mode;
   const lib = useResourceLibrary();
+  const [mainTab, setMainTab] = useState<"library" | "questionbank">("library");
 
   return (
     <div className="space-y-6 animate-fade-in" dir="rtl">
+      {/* Main Tabs */}
+      <Tabs value={mainTab} onValueChange={v => setMainTab(v as any)} dir="rtl">
+        <TabsList className="w-auto justify-start mb-4">
+          <TabsTrigger value="library" className="gap-1.5"><FolderOpen className="h-4 w-4" />مكتبة المصادر</TabsTrigger>
+          <TabsTrigger value="questionbank" className="gap-1.5"><Brain className="h-4 w-4" />بنك الأسئلة</TabsTrigger>
+        </TabsList>
+        <TabsContent value="questionbank">
+          <QuestionBankTab />
+        </TabsContent>
+        <TabsContent value="library">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -145,6 +159,8 @@ export default function ResourceLibraryPage() {
         previewFile={lib.previewFile}
         setPreviewFile={lib.setPreviewFile}
       />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Check, XCircle, Pause, Play, Timer } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Check, XCircle, Pause, Play, Timer, BookOpen } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ──────────────────────────────────────────────────────────
 interface Student {
@@ -18,7 +20,8 @@ export interface RadarSettings {
   visualEffect: "radar" | "slots" | "spotlight";
   quizEnabled: boolean;
   surpriseMode: boolean;
-  quizDuration: number; // seconds 5-60
+  quizDuration: number;
+  questionSource: "local" | "bank"; // local = quick questions, bank = from library
 }
 
 interface SmartRadarProps {
@@ -70,12 +73,59 @@ export default function SmartRadar({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
 
+  // Bank question source state
+  const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
+  const [bankLessons, setBankLessons] = useState<{ id: string; title: string }[]>([]);
+  const [selectedBankChapter, setSelectedBankChapter] = useState<string>("");
+  const [selectedBankLesson, setSelectedBankLesson] = useState<string>("");
+  const bankQuestionsRef = useRef<RadarQuestion[]>([]);
+
   useEffect(() => { setLocalDuration(settings.quizDuration); }, [settings.quizDuration]);
 
-  // Load questions
+  // Load local questions
   useEffect(() => {
     questionsRef.current = loadQuestions();
   }, []);
+
+  // Load bank chapters
+  useEffect(() => {
+    if (settings.questionSource === "bank" && settings.quizEnabled) {
+      supabase.from("question_bank_chapters").select("id, title").order("sort_order").then(({ data }) => {
+        setBankChapters((data as any[]) || []);
+      });
+    }
+  }, [settings.questionSource, settings.quizEnabled]);
+
+  // Load bank lessons when chapter selected
+  useEffect(() => {
+    if (selectedBankChapter) {
+      supabase.from("question_bank_lessons").select("id, title").eq("chapter_id", selectedBankChapter).order("sort_order").then(({ data }) => {
+        setBankLessons((data as any[]) || []);
+      });
+    } else {
+      setBankLessons([]);
+      setSelectedBankLesson("");
+    }
+  }, [selectedBankChapter]);
+
+  // Load bank questions when lesson selected
+  useEffect(() => {
+    if (selectedBankLesson) {
+      supabase.from("question_bank_questions").select("*").eq("lesson_id", selectedBankLesson).eq("enabled", true).then(({ data }) => {
+        bankQuestionsRef.current = ((data as any[]) || []).map((q: any) => ({
+          id: q.id,
+          type: q.question_type as "mcq" | "truefalse",
+          text: q.question_text,
+          options: q.options as string[],
+          correctIndex: q.correct_index,
+          score: q.score,
+          enabled: true,
+        }));
+      });
+    } else {
+      bankQuestionsRef.current = [];
+    }
+  }, [selectedBankLesson]);
 
   const available = students.filter(
     (s) => !settings.sessionMemory || !excluded.has(s.student_id)
@@ -133,8 +183,17 @@ export default function SmartRadar({
     setTimeLeft(0);
   };
 
+  const getQuizQuestion = useCallback((): RadarQuestion | null => {
+    if (settings.questionSource === "bank") {
+      const enabled = bankQuestionsRef.current.filter(q => q.enabled);
+      if (enabled.length === 0) return null;
+      return enabled[Math.floor(Math.random() * enabled.length)];
+    }
+    return getRandomQuestion(questionsRef.current);
+  }, [settings.questionSource]);
+
   const openQuizForStudent = useCallback((student: Student) => {
-    const q = getRandomQuestion(questionsRef.current);
+    const q = getQuizQuestion();
     if (q) {
       setQuizQuestion(q);
       setQuizResult(null);
@@ -142,7 +201,7 @@ export default function SmartRadar({
       setShowActions(false);
       startTimer(localDuration);
     }
-  }, [localDuration, startTimer]);
+  }, [localDuration, startTimer, getQuizQuestion]);
 
   const handleSpin = useCallback(() => {
     if (spinning || available.length === 0) return;
@@ -195,7 +254,7 @@ export default function SmartRadar({
 
         // Surprise mode: auto-open quiz
         if (settings.surpriseMode && settings.quizEnabled) {
-          const q = getRandomQuestion(questionsRef.current);
+          const q = getQuizQuestion();
           if (q) {
             setQuizQuestion(q);
             setQuizResult(null);
@@ -267,7 +326,9 @@ export default function SmartRadar({
   };
 
   const allExcluded = settings.sessionMemory && excluded.size >= students.length;
-  const hasQuizQuestions = settings.quizEnabled && questionsRef.current.some((q) => q.enabled);
+  const hasLocalQuiz = settings.quizEnabled && questionsRef.current.some((q) => q.enabled);
+  const hasBankQuiz = settings.quizEnabled && settings.questionSource === "bank" && bankQuestionsRef.current.length > 0;
+  const hasQuizQuestions = hasLocalQuiz || hasBankQuiz;
 
   // Timer color
   const timerDuration = localDuration;
@@ -482,24 +543,64 @@ export default function SmartRadar({
         </div>
       </div>
 
-      {/* Quick duration control (before spin) */}
+      {/* Quick controls (before spin) */}
       {!spinning && !showActions && !selectedStudent && settings.quizEnabled && (
-        <div className="relative mb-3 p-2.5 rounded-xl border border-white/10 bg-white/5">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Timer className="h-3.5 w-3.5 text-primary/70" />
-              <span className="text-[11px] font-bold text-white/60">مدة السؤال</span>
+        <div className="relative mb-3 space-y-2.5">
+          {/* Bank chapter/lesson selector */}
+          {settings.questionSource === "bank" && (
+            <div className="p-2.5 rounded-xl border border-white/10 bg-white/5 space-y-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                <BookOpen className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-[11px] font-bold text-white/60">مصدر الأسئلة: بنك الأسئلة</span>
+              </div>
+              <Select value={selectedBankChapter} onValueChange={v => { setSelectedBankChapter(v); setSelectedBankLesson(""); }}>
+                <SelectTrigger className="h-8 text-xs bg-white/5 border-white/15 text-white/80">
+                  <SelectValue placeholder="اختر الفصل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bankChapters.map(ch => (
+                    <SelectItem key={ch.id} value={ch.id}>{ch.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedBankChapter && (
+                <Select value={selectedBankLesson} onValueChange={setSelectedBankLesson}>
+                  <SelectTrigger className="h-8 text-xs bg-white/5 border-white/15 text-white/80">
+                    <SelectValue placeholder="اختر الدرس" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bankLessons.map(ls => (
+                      <SelectItem key={ls.id} value={ls.id}>{ls.title}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              {selectedBankLesson && (
+                <p className="text-[10px] text-emerald-400/70 font-medium">
+                  {bankQuestionsRef.current.length} سؤال متاح
+                </p>
+              )}
             </div>
-            <span className="text-sm font-black text-primary tabular-nums">{localDuration} ثانية</span>
+          )}
+
+          {/* Duration slider */}
+          <div className="p-2.5 rounded-xl border border-white/10 bg-white/5">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-1.5">
+                <Timer className="h-3.5 w-3.5 text-primary/70" />
+                <span className="text-[11px] font-bold text-white/60">مدة السؤال</span>
+              </div>
+              <span className="text-sm font-black text-primary tabular-nums">{localDuration} ثانية</span>
+            </div>
+            <Slider
+              min={5}
+              max={60}
+              step={5}
+              value={[localDuration]}
+              onValueChange={([v]) => setLocalDuration(v)}
+              className="w-full"
+            />
           </div>
-          <Slider
-            min={5}
-            max={60}
-            step={5}
-            value={[localDuration]}
-            onValueChange={([v]) => setLocalDuration(v)}
-            className="w-full"
-          />
         </div>
       )}
 
