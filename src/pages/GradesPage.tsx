@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,6 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-  const [searchParams] = useSearchParams();
   const { data: classesRaw, isLoading: classesLoading } = useQuery({
     queryKey: ["classes-list"],
     queryFn: async () => {
@@ -68,8 +66,6 @@ export default function GradesPage() {
   const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
-  const requestedTool = searchParams.get("tool");
-  const requestedClassId = searchParams.get("class");
 
   const handlePeriodChange = (period: number) => {
     setSelectedPeriod(period);
@@ -90,23 +86,6 @@ export default function GradesPage() {
       setActiveType("daily");
     }
   }, [permsLoaded, canEdit, activeType, setActiveType]);
-
-  useEffect(() => {
-    if (requestedTool !== "radar") return;
-
-    if (activeType !== "daily") {
-      setActiveType("daily");
-    }
-
-    if (requestedClassId && classes.some((cls) => cls.id === requestedClassId) && selectedClass !== requestedClassId) {
-      setSelectedClass(requestedClassId);
-      return;
-    }
-
-    if (!selectedClass && classes.length > 0) {
-      setSelectedClass(classes[0].id);
-    }
-  }, [requestedTool, requestedClassId, activeType, selectedClass, classes, setActiveType, setSelectedClass]);
 
   if (permsLoaded && !canView) {
     return (
