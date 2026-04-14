@@ -35,25 +35,34 @@ const PERIODS = [
 
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
-  const { data: classData, isLoading: classesLoading } = useQuery({
-    queryKey: ["grades-classes-students"],
+  const { data: classesRaw, isLoading: classesLoading } = useQuery({
+    queryKey: ["classes-list"],
     queryFn: async () => {
-      const [{ data: cls }, { data: students }] = await Promise.all([
+      const [{ data: cls }, { data: lockData }] = await Promise.all([
         supabase.from("classes").select("id, name").order("name"),
-        supabase.from("students").select("id, class_id"),
+        supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
       ]);
-      const counts: Record<string, number> = {};
-      (students || []).forEach((s) => {
-        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
-      });
-      return { classes: cls || [], classCounts: counts };
+      return { classes: cls || [], overrideLock: lockData?.value === "true" };
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  const classes = classData?.classes || [];
-  const classCounts = classData?.classCounts || {};
+  const classes = classesRaw?.classes || [];
+
+  const { data: classCounts = {} } = useQuery({
+    queryKey: ["class-student-counts"],
+    queryFn: async () => {
+      const { data: students } = await supabase.from("students").select("id, class_id");
+      const counts: Record<string, number> = {};
+      (students || []).forEach((s) => {
+        if (s.class_id) counts[s.class_id] = (counts[s.class_id] || 0) + 1;
+      });
+      return counts;
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
   const [selectedClass, setSelectedClass] = usePersistedState("grades_selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
