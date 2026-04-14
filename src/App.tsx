@@ -10,6 +10,8 @@ import { AcademicWeekProvider } from "@/hooks/useAcademicWeek";
 import { HonorRollProvider } from "@/contexts/HonorRollContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
+import NotificationOptIn from "@/components/NotificationOptIn";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
 
@@ -27,6 +29,7 @@ const ResourceLibraryPage = lazy(() => import("@/pages/ResourceLibraryPage"));
 const StudentLoginsPage = lazy(() => import("@/pages/StudentLoginsPage"));
 const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+const InstallPage = lazy(() => import("@/pages/InstallPage"));
 const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 const FormsPage = lazy(() => import("@/pages/FormsPage"));
 
@@ -51,10 +54,12 @@ const App = () => {
           <BrowserRouter>
             <AuthProvider>
               <HonorRollProvider>
+                <NotificationOptIn />
+                <PWAInstallPrompt />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/login" element={<LoginPage />} />
-                    <Route path="/install" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/install" element={<InstallPage />} />
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/shared/:token" element={<SharedViewPage />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
