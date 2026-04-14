@@ -5,28 +5,39 @@ import "./index.css";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
+const isInIframe = (() => {
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+})();
+
+const isPreviewHost =
+  window.location.hostname.includes("id-preview--") ||
+  window.location.hostname.includes("lovableproject.com");
+
 if ("serviceWorker" in navigator) {
-  registerSW({
-    immediate: true,
-    onRegisteredSW(_swUrl, registration) {
-      if (!registration) return;
+  if (isPreviewHost || isInIframe) {
+    void navigator.serviceWorker.getRegistrations().then((registrations) => {
+      void Promise.all(registrations.map((registration) => registration.unregister()));
+    });
 
-      void registration.update();
-
-      const updateInterval = window.setInterval(() => {
+    if ("caches" in window) {
+      void window.caches.keys().then((keys) => {
+        void Promise.all(keys.map((key) => window.caches.delete(key)));
+      });
+    }
+  } else {
+    registerSW({
+      immediate: true,
+      onRegisteredSW(_swUrl, registration) {
+        if (!registration) return;
         void registration.update();
-      }, 60_000);
-
-      window.addEventListener(
-        "beforeunload",
-        () => {
-          window.clearInterval(updateInterval);
-        },
-        { once: true }
-      );
-    },
-    onRegisterError(error) {
-      console.error("PWA registration failed", error);
-    },
-  });
+      },
+      onRegisterError(error) {
+        console.error("PWA registration failed", error);
+      },
+    });
+  }
 }
