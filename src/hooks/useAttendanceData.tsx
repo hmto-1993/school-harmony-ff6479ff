@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import { useQuery } from "@tanstack/react-query";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "early_leave" | "sick_leave";
 
