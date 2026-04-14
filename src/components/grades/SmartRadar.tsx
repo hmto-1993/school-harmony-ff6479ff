@@ -22,7 +22,7 @@ interface SmartRadarProps {
   muted: boolean;
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
-  onSelectForParticipation: (studentId: string) => void;
+  onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onClose: () => void;
 }
 
@@ -43,6 +43,7 @@ export default function SmartRadar({
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [showParticipationPicker, setShowParticipationPicker] = useState(false);
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -121,7 +122,12 @@ export default function SmartRadar({
   };
 
   const handleParticipationAction = () => {
-    if (selectedStudent) onSelectForParticipation(selectedStudent.student_id);
+    setShowParticipationPicker(true);
+  };
+
+  const handlePickLevel = (level: "excellent" | "average" | "zero" | "star") => {
+    if (selectedStudent) onSelectForParticipation(selectedStudent.student_id, level);
+    setShowParticipationPicker(false);
     setShowActions(false);
     setSelectedStudent(null);
   };
@@ -234,24 +240,66 @@ export default function SmartRadar({
 
       {/* Action buttons */}
       {showActions && selectedStudent ? (
-        <div className="grid grid-cols-2 gap-2 animate-fade-in">
-          <button
-            type="button"
-            onClick={handleGradeAction}
-            className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-primary/40 bg-primary/10 hover:bg-primary/20 transition-all text-sm font-bold text-primary"
-          >
-            <Award className="h-4 w-4" />
-            سؤال بدرجة
-          </button>
-          <button
-            type="button"
-            onClick={handleParticipationAction}
-            className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 transition-all text-sm font-bold text-amber-400"
-          >
-            <Star className="h-4 w-4" />
-            مشاركة صفية
-          </button>
-        </div>
+        showParticipationPicker ? (
+          <div className="space-y-2 animate-fade-in">
+            <p className="text-xs text-white/60 text-center font-medium">اختر رمز المشاركة</p>
+            <div className="grid grid-cols-4 gap-2">
+              <button type="button" onClick={() => handlePickLevel("excellent")}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 transition-all">
+                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-emerald-400">
+                  <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" /><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+                  <path d="M8.6 12.2l2.2 2.2 4.8-4.8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span className="text-[10px] font-bold text-emerald-400">ممتاز</span>
+              </button>
+              <button type="button" onClick={() => handlePickLevel("average")}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-orange-500/40 bg-orange-500/10 hover:bg-orange-500/20 transition-all">
+                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-orange-400">
+                  <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" /><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+                  <path d="M8 12h8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                </svg>
+                <span className="text-[10px] font-bold text-orange-400">متوسط</span>
+              </button>
+              <button type="button" onClick={() => handlePickLevel("zero")}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 transition-all">
+                <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7 text-rose-400">
+                  <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity="0.12" /><circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.2" />
+                  <path d="M9 9l6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /><path d="M15 9l-6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                </svg>
+                <span className="text-[10px] font-bold text-rose-400">صفر</span>
+              </button>
+              <button type="button" onClick={() => handlePickLevel("star")}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl border-2 border-yellow-500/40 bg-yellow-500/10 hover:bg-yellow-500/20 transition-all">
+                <svg viewBox="0 0 24 24" className="h-7 w-7">
+                  <path d="M12 2.5l2.9 5.9 6.5.95-4.7 4.6 1.1 6.5L12 17.27l-5.8 3.18 1.1-6.5-4.7-4.6 6.5-.95L12 2.5z" fill="#FBBF24" stroke="#D97706" strokeWidth="1.2" strokeLinejoin="round" />
+                </svg>
+                <span className="text-[10px] font-bold text-yellow-400">متميز</span>
+              </button>
+            </div>
+            <button type="button" onClick={() => setShowParticipationPicker(false)} className="w-full text-xs text-white/40 hover:text-white/60 py-1 transition-colors">
+              رجوع
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2 animate-fade-in">
+            <button
+              type="button"
+              onClick={handleGradeAction}
+              className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-primary/40 bg-primary/10 hover:bg-primary/20 transition-all text-sm font-bold text-primary"
+            >
+              <Award className="h-4 w-4" />
+              سؤال بدرجة
+            </button>
+            <button
+              type="button"
+              onClick={handleParticipationAction}
+              className="flex items-center justify-center gap-2 p-3 rounded-xl border-2 border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 transition-all text-sm font-bold text-amber-400"
+            >
+              <Star className="h-4 w-4" />
+              مشاركة صفية
+            </button>
+          </div>
+        )
       ) : (
         <Button
           onClick={handleSpin}

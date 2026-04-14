@@ -345,14 +345,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   onSelectForGrade={(studentId) => {
                     setEarnedGradeInput({ studentId, open: true });
                   }}
-                  onSelectForParticipation={(studentId) => {
-                    // Find participation category and toggle star
+                  onSelectForParticipation={(studentId, level) => {
                     const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
-                    if (partCat) {
-                      toggleStar(studentId, partCat.id, Number(partCat.max_score));
-                      toast({ title: "تم رصد المشاركة", description: `تم تسجيل مشاركة صفية للطالب` });
-                    } else {
+                    if (!partCat) {
                       toast({ title: "لا توجد فئة مشاركة", description: "يرجى اضافة فئة تحمل اسم المشاركة في اعدادات الفئات", variant: "destructive" });
+                      return;
+                    }
+                    const maxScore = Number(partCat.max_score);
+                    if (level === "star") {
+                      toggleStar(studentId, partCat.id, maxScore);
+                      toast({ title: "تم رصد المشاركة", description: "تقييم: متميز" });
+                    } else {
+                      const scoreMap = { excellent: maxScore, average: Math.round(maxScore / 2), zero: 0 };
+                      setNumericGrade(studentId, partCat.id, String(scoreMap[level]), maxScore);
+                      const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر" };
+                      toast({ title: "تم رصد المشاركة", description: `تقييم: ${labelMap[level]}` });
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
