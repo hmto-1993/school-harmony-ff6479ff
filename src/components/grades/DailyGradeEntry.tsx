@@ -76,20 +76,21 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
   const [radarOpen, setRadarOpen] = React.useState(false);
   const [radarMuted, setRadarMuted] = React.useState(false);
-  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false });
+  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false, quizDuration: 20 });
   const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
 
   // Load radar settings
   React.useEffect(() => {
-    supabase.from("site_settings").select("id, value").in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode"]).then(({ data }) => {
-      const s: any = { speed: "medium", sessionMemory: true, visualEffect: "radar", quizEnabled: false, surpriseMode: false };
+    supabase.from("site_settings").select("id, value").in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode", "radar_quiz_duration"]).then(({ data }) => {
+      const s: any = { speed: "medium", sessionMemory: true, visualEffect: "radar", quizEnabled: false, surpriseMode: false, quizDuration: 20 };
       (data || []).forEach((r: any) => {
         if (r.id === "radar_speed") s.speed = r.value;
         if (r.id === "radar_session_memory") s.sessionMemory = r.value !== "false";
         if (r.id === "radar_visual_effect") s.visualEffect = r.value;
         if (r.id === "radar_quiz_enabled") s.quizEnabled = r.value === "true";
         if (r.id === "radar_surprise_mode") s.surpriseMode = r.value === "true";
+        if (r.id === "radar_quiz_duration") s.quizDuration = Number(r.value) || 20;
       });
       setRadarSettings(s);
     });

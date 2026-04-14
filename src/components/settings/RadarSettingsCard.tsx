@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Radar, Save, X, Plus, Trash2, HelpCircle } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Radar, Save, X, Plus, Trash2, HelpCircle, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
   const [visualEffect, setVisualEffect] = useState<"radar" | "slots" | "spotlight">("radar");
   const [quizEnabled, setQuizEnabled] = useState(false);
   const [surpriseMode, setSurpriseMode] = useState(false);
+  const [quizDuration, setQuizDuration] = useState(20);
   const [saving, setSaving] = useState(false);
 
   // Quiz questions
@@ -31,7 +33,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
     supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode"])
+      .in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode", "radar_quiz_duration"])
       .then(({ data }) => {
         (data || []).forEach((s: any) => {
           if (s.id === "radar_speed") setSpeed(s.value as any);
@@ -39,6 +41,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
           if (s.id === "radar_visual_effect") setVisualEffect(s.value as any);
           if (s.id === "radar_quiz_enabled") setQuizEnabled(s.value === "true");
           if (s.id === "radar_surprise_mode") setSurpriseMode(s.value === "true");
+          if (s.id === "radar_quiz_duration") setQuizDuration(Number(s.value) || 20);
         });
       });
     setQuestions(loadQuestions());
@@ -52,6 +55,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
       { id: "radar_visual_effect", value: visualEffect },
       { id: "radar_quiz_enabled", value: String(quizEnabled) },
       { id: "radar_surprise_mode", value: String(surpriseMode) },
+      { id: "radar_quiz_duration", value: String(quizDuration) },
     ]);
     saveQuestions(questions);
     setSaving(false);
@@ -157,7 +161,28 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
             </div>
           )}
 
-          {/* Quiz Editor */}
+          {/* Quiz Duration */}
+          {quizEnabled && (
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Timer className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-bold">مدة السؤال بالثواني</Label>
+                </div>
+                <span className="text-sm font-black text-primary tabular-nums">{quizDuration} ثانية</span>
+              </div>
+              <Slider
+                min={5}
+                max={60}
+                step={5}
+                value={[quizDuration]}
+                onValueChange={([v]) => setQuizDuration(v)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">يمكن تغييرها سريعا من داخل قسم تفاعل اليوم قبل تشغيل الرادار</p>
+            </div>
+          )}
+
           {quizEnabled && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">

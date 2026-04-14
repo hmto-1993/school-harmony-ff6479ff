@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Check, XCircle } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Check, XCircle, Pause, Play, Timer } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
+import { Slider } from "@/components/ui/slider";
 
 // ── Types ──────────────────────────────────────────────────────────
 interface Student {
@@ -17,6 +18,7 @@ export interface RadarSettings {
   visualEffect: "radar" | "slots" | "spotlight";
   quizEnabled: boolean;
   surpriseMode: boolean;
+  quizDuration: number; // seconds 5-60
 }
 
 interface SmartRadarProps {
@@ -50,14 +52,25 @@ export default function SmartRadar({
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
 
+  // Quick duration override (before spinning)
+  const [localDuration, setLocalDuration] = useState(settings.quizDuration);
+
   // Quiz state
   const [quizQuestion, setQuizQuestion] = useState<RadarQuestion | null>(null);
   const [quizResult, setQuizResult] = useState<"correct" | "wrong" | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
 
+  // Timer state
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [timerPaused, setTimerPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tickAudioRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
+
+  useEffect(() => { setLocalDuration(settings.quizDuration); }, [settings.quizDuration]);
 
   // Load questions
   useEffect(() => {
@@ -68,6 +81,47 @@ export default function SmartRadar({
     (s) => !settings.sessionMemory || !excluded.has(s.student_id)
   );
 
+  // ── Timer logic ──────────────────────────────────────────────────
+  const clearTimers = useCallback(() => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    if (tickAudioRef.current) { clearInterval(tickAudioRef.current); tickAudioRef.current = null; }
+  }, []);
+
+  const startTimer = useCallback((duration: number) => {
+    clearTimers();
+    setTimeLeft(duration);
+    setTimerPaused(false);
+  }, [clearTimers]);
+
+  // Countdown effect
+  useEffect(() => {
+    if (timeLeft <= 0 || timerPaused || quizResult) {
+      clearTimers();
+      // Auto-submit timeout (wrong answer)
+      if (timeLeft <= 0 && quizQuestion && !quizResult && selectedAnswer === null) {
+        setQuizResult("wrong");
+        if (!muted) playWrongSound();
+      }
+      return;
+    }
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearTimers();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    // Tick sound every second when < 10s
+    if (timeLeft <= 10 && !muted) {
+      tickAudioRef.current = setInterval(() => {
+        playTickSound(1200);
+      }, 1000);
+    }
+    return () => clearTimers();
+  }, [timeLeft, timerPaused, quizResult, muted, quizQuestion, selectedAnswer, clearTimers]);
+
   const handleReset = () => {
     setExcluded(new Set());
     setSelectedStudent(null);
@@ -75,6 +129,8 @@ export default function SmartRadar({
     setQuizQuestion(null);
     setQuizResult(null);
     setSelectedAnswer(null);
+    clearTimers();
+    setTimeLeft(0);
   };
 
   const openQuizForStudent = useCallback((student: Student) => {
@@ -84,8 +140,9 @@ export default function SmartRadar({
       setQuizResult(null);
       setSelectedAnswer(null);
       setShowActions(false);
+      startTimer(localDuration);
     }
-  }, []);
+  }, [localDuration, startTimer]);
 
   const handleSpin = useCallback(() => {
     if (spinning || available.length === 0) return;
@@ -95,6 +152,8 @@ export default function SmartRadar({
     setQuizResult(null);
     setSelectedAnswer(null);
     setShowParticipationPicker(false);
+    clearTimers();
+    setTimeLeft(0);
     setSpinning(true);
 
     if (!muted) {
@@ -141,6 +200,7 @@ export default function SmartRadar({
             setQuizQuestion(q);
             setQuizResult(null);
             setSelectedAnswer(null);
+            startTimer(localDuration);
             return;
           }
         }
@@ -148,14 +208,15 @@ export default function SmartRadar({
         setShowActions(true);
       }
     }, interval);
-  }, [spinning, available, students, settings, muted]);
+  }, [spinning, available, students, settings, muted, localDuration, startTimer, clearTimers]);
 
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       stopHumRef.current?.();
+      clearTimers();
     };
-  }, []);
+  }, [clearTimers]);
 
   const handleGradeAction = () => {
     if (selectedStudent) onSelectForGrade(selectedStudent.student_id);
@@ -183,6 +244,7 @@ export default function SmartRadar({
     setSelectedAnswer(answerIdx);
     const isCorrect = answerIdx === quizQuestion.correctIndex;
     setQuizResult(isCorrect ? "correct" : "wrong");
+    clearTimers();
 
     if (!muted) {
       if (isCorrect) playCorrectSound();
@@ -200,10 +262,19 @@ export default function SmartRadar({
     setSelectedAnswer(null);
     setSelectedStudent(null);
     setShowActions(false);
+    clearTimers();
+    setTimeLeft(0);
   };
 
   const allExcluded = settings.sessionMemory && excluded.size >= students.length;
   const hasQuizQuestions = settings.quizEnabled && questionsRef.current.some((q) => q.enabled);
+
+  // Timer color
+  const timerDuration = localDuration;
+  const timerPercent = timerDuration > 0 ? (timeLeft / timerDuration) * 100 : 0;
+  const timerColor = timeLeft <= 5 ? "bg-rose-500" : timeLeft <= 15 ? "bg-amber-500" : "bg-emerald-500";
+  const timerTextColor = timeLeft <= 5 ? "text-rose-400" : timeLeft <= 15 ? "text-amber-400" : "text-emerald-400";
+  const timerBorderColor = timeLeft <= 5 ? "border-rose-500/50" : timeLeft <= 15 ? "border-amber-500/50" : "border-emerald-500/50";
 
   // ── Quiz Modal ──────────────────────────────────────────────────
   if (quizQuestion && selectedStudent) {
@@ -236,6 +307,45 @@ export default function SmartRadar({
             </button>
           </div>
         </div>
+
+        {/* Timer display */}
+        {!quizResult && (
+          <div className="relative mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <div className="flex items-center gap-2">
+                <span className={cn("text-3xl font-black tabular-nums tracking-tight", timerTextColor)}>
+                  {timeLeft}
+                </span>
+                <span className="text-[10px] text-white/40 font-medium">ثانية</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTimerPaused(p => !p)}
+                className={cn(
+                  "h-9 w-9 rounded-xl border-2 flex items-center justify-center transition-all",
+                  timerPaused
+                    ? "border-emerald-500/50 bg-emerald-500/15 hover:bg-emerald-500/25"
+                    : "border-amber-500/50 bg-amber-500/15 hover:bg-amber-500/25"
+                )}
+                title={timerPaused ? "استئناف" : "تجميد"}
+              >
+                {timerPaused ? <Play className="h-4 w-4 text-emerald-400" /> : <Pause className="h-4 w-4 text-amber-400" />}
+              </button>
+            </div>
+            {/* Progress bar */}
+            <div className={cn("h-2.5 w-full rounded-full bg-white/10 border overflow-hidden", timerBorderColor)}>
+              <div
+                className={cn("h-full rounded-full transition-all duration-1000 ease-linear", timerColor)}
+                style={{ width: `${timerPercent}%` }}
+              />
+            </div>
+            {timerPaused && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-xl">
+                <span className="text-sm font-bold text-amber-400 animate-pulse">مؤقت مجمد</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Score badge */}
         <div className="relative mb-3 flex items-center justify-between">
@@ -312,7 +422,9 @@ export default function SmartRadar({
           )}>
             {quizResult === "correct"
               ? `اجابة صحيحة - تم اضافة ${quizQuestion.score} درجة`
-              : `اجابة خاطئة - الاجابة الصحيحة: ${quizQuestion.options[quizQuestion.correctIndex]}`
+              : timeLeft <= 0 && selectedAnswer === null
+                ? `انتهى الوقت - الاجابة الصحيحة: ${quizQuestion.options[quizQuestion.correctIndex]}`
+                : `اجابة خاطئة - الاجابة الصحيحة: ${quizQuestion.options[quizQuestion.correctIndex]}`
             }
           </div>
         )}
@@ -369,6 +481,27 @@ export default function SmartRadar({
           </button>
         </div>
       </div>
+
+      {/* Quick duration control (before spin) */}
+      {!spinning && !showActions && !selectedStudent && settings.quizEnabled && (
+        <div className="relative mb-3 p-2.5 rounded-xl border border-white/10 bg-white/5">
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              <Timer className="h-3.5 w-3.5 text-primary/70" />
+              <span className="text-[11px] font-bold text-white/60">مدة السؤال</span>
+            </div>
+            <span className="text-sm font-black text-primary tabular-nums">{localDuration} ثانية</span>
+          </div>
+          <Slider
+            min={5}
+            max={60}
+            step={5}
+            value={[localDuration]}
+            onValueChange={([v]) => setLocalDuration(v)}
+            className="w-full"
+          />
+        </div>
+      )}
 
       {/* Scanner display */}
       <div className="relative rounded-xl border border-primary/20 bg-black/40 p-4 mb-4 min-h-[120px] flex flex-col items-center justify-center">
