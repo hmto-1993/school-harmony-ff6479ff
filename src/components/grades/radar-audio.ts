@@ -25,8 +25,6 @@ export function playTickSound(pitch = 800) {
 export function playSelectSound() {
   const ctx = getCtx();
   const now = ctx.currentTime;
-
-  // Main tone
   const osc1 = ctx.createOscillator();
   const gain1 = ctx.createGain();
   osc1.type = "sine";
@@ -38,7 +36,6 @@ export function playSelectSound() {
   osc1.start(now);
   osc1.stop(now + 0.5);
 
-  // Harmonic
   const osc2 = ctx.createOscillator();
   const gain2 = ctx.createGain();
   osc2.type = "triangle";
@@ -49,6 +46,40 @@ export function playSelectSound() {
   osc2.connect(gain2).connect(ctx.destination);
   osc2.start(now + 0.1);
   osc2.stop(now + 0.5);
+}
+
+/** Correct answer — cheerful ascending chime */
+export function playCorrectSound() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [523, 659, 784].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    const t = now + i * 0.1;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.25);
+  });
+}
+
+/** Wrong answer — descending buzz */
+export function playWrongSound() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(300, now);
+  osc.frequency.exponentialRampToValueAtTime(150, now + 0.3);
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.35);
 }
 
 /** Ambient scanning hum — continuous, returns stop function */
