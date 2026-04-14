@@ -74,6 +74,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [referralFormOpen, setReferralFormOpen] = React.useState(false);
   const [referralPreFill, setReferralPreFill] = React.useState<Record<string, string>>({});
   const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
+  const [radarOpen, setRadarOpen] = React.useState(false);
+  const [radarMuted, setRadarMuted] = React.useState(false);
+  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const });
+  const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
