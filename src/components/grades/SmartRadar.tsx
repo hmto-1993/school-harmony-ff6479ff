@@ -43,6 +43,7 @@ export default function SmartRadar({
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
+  const [showParticipationPicker, setShowParticipationPicker] = useState(false);
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -121,7 +122,12 @@ export default function SmartRadar({
   };
 
   const handleParticipationAction = () => {
-    if (selectedStudent) onSelectForParticipation(selectedStudent.student_id);
+    setShowParticipationPicker(true);
+  };
+
+  const handlePickLevel = (level: "excellent" | "average" | "zero" | "star") => {
+    if (selectedStudent) onSelectForParticipation(selectedStudent.student_id, level);
+    setShowParticipationPicker(false);
     setShowActions(false);
     setSelectedStudent(null);
   };
