@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -21,6 +21,8 @@ import ViolationReasonsDialog from "./ViolationReasonsDialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
+import SmartRadar from "./SmartRadar";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
@@ -72,7 +74,24 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [referralFormOpen, setReferralFormOpen] = React.useState(false);
   const [referralPreFill, setReferralPreFill] = React.useState<Record<string, string>>({});
   const [reasonsDialogOpen, setReasonsDialogOpen] = React.useState(false);
+  const [radarOpen, setRadarOpen] = React.useState(false);
+  const [radarMuted, setRadarMuted] = React.useState(false);
+  const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const });
+  const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
+
+  // Load radar settings
+  React.useEffect(() => {
+    supabase.from("site_settings").select("id, value").in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect"]).then(({ data }) => {
+      const s: any = { speed: "medium", sessionMemory: true, visualEffect: "radar" };
+      (data || []).forEach((r: any) => {
+        if (r.id === "radar_speed") s.speed = r.value;
+        if (r.id === "radar_session_memory") s.sessionMemory = r.value !== "false";
+        if (r.id === "radar_visual_effect") s.visualEffect = r.value;
+      });
+      setRadarSettings(s);
+    });
+  }, []);
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -292,6 +311,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
+            <Button
+              variant={radarOpen ? "default" : "outline"}
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setRadarOpen(!radarOpen)}
+            >
+              <Radar className="h-4 w-4" />
+              الرادار
+            </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}><ChevronRight className="h-4 w-4" /></Button>
             <HijriDatePicker date={selectedDate} onDateChange={setSelectedDate} />
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}><ChevronLeft className="h-4 w-4" /></Button>
@@ -306,6 +334,89 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
+            {/* Smart Radar */}
+            {radarOpen && gradeTab === "assessment" && (
+              <div className="mb-4 no-print">
+                <SmartRadar
+                  students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name }))}
+                  settings={radarSettings}
+                  muted={radarMuted}
+                  onToggleMute={() => setRadarMuted(p => !p)}
+                  onSelectForGrade={(studentId) => {
+                    setEarnedGradeInput({ studentId, open: true });
+                  }}
+                  onSelectForParticipation={(studentId) => {
+                    // Find participation category and toggle star
+                    const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
+                    if (partCat) {
+                      toggleStar(studentId, partCat.id, Number(partCat.max_score));
+                      toast({ title: "تم رصد المشاركة", description: `تم تسجيل مشاركة صفية للطالب` });
+                    } else {
+                      toast({ title: "لا توجد فئة مشاركة", description: "يرجى اضافة فئة تحمل اسم المشاركة في اعدادات الفئات", variant: "destructive" });
+                    }
+                  }}
+                  onClose={() => setRadarOpen(false)}
+                />
+              </div>
+            )}
+
+            {/* Earned Grade Input Dialog */}
+            {earnedGradeInput.open && (
+              <div className="mb-4 no-print animate-fade-in">
+                <div className="rounded-xl border-2 border-primary/30 bg-card p-4 shadow-lg" dir="rtl">
+                  <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-black">?</span>
+                    ادخل درجة السؤال للطالب: {filteredStudentGrades.find(s => s.student_id === earnedGradeInput.studentId)?.full_name}
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={10}
+                      placeholder="الدرجة"
+                      className="w-24 h-9"
+                      id="earned-grade-input"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = (e.target as HTMLInputElement).value;
+                          if (val) {
+                            // Find first numeric assessment category or participation category
+                            const numCat = assessmentCats[0];
+                            if (numCat) {
+                              setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
+                              toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                            }
+                            setEarnedGradeInput({ studentId: "", open: false });
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const input = document.getElementById("earned-grade-input") as HTMLInputElement;
+                        const val = input?.value;
+                        if (val) {
+                          const numCat = assessmentCats[0];
+                          if (numCat) {
+                            setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
+                            toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                          }
+                        }
+                        setEarnedGradeInput({ studentId: "", open: false });
+                      }}
+                    >
+                      تاكيد
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEarnedGradeInput({ studentId: "", open: false })}>
+                      الغاء
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Legend */}
             <div className={cn("grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print", gradeTab === "violations" && hasViolations && "hidden")}>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
@@ -390,7 +501,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         <div>{cat.name}{cat.is_deduction && <span className="block text-[9px] font-normal opacity-70">خصم</span>}</div>
                       </th>
                     ))}
-                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[80px]">المجموع</th>}
+                    {showTotal && <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-l-2 border-border border-primary/20 min-w-[80px]">المجموع</th>}
+                    {gradeTab === "assessment" && <th className="text-center p-3 font-semibold text-xs border-b-2 border-primary/20 last:rounded-tl-xl min-w-[90px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">الدرجات المكتسبة</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -569,6 +681,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           );
                         })}
                         {showTotal && <td className="p-3 text-center font-bold border-l-2 border-border">{calcTotal(sg.grades)}</td>}
+                        {gradeTab === "assessment" && (
+                          <td className="p-2 text-center border-l-2 border-border bg-emerald-500/5">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={sg.grades[assessmentCats[0]?.id] != null && typeof sg.grades[assessmentCats[0]?.id] === "number" ? "" : ""}
+                              placeholder="--"
+                              className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
+                              onChange={(e) => {
+                                const numCat = assessmentCats[0];
+                                if (numCat) setNumericGrade(sg.student_id, numCat.id, e.target.value, Number(numCat.max_score));
+                              }}
+                            />
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
