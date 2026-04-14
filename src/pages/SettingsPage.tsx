@@ -215,6 +215,10 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {s.activeCard === "radar_settings" && s.isAdmin && (
+        <RadarSettingsCard onClose={() => s.setActiveCard(null)} />
+      )}
+
       {/* ===== إعدادات إضافية ===== */}
       <div className="flex items-center gap-3 mb-2 mt-6">
         <div className="h-px flex-1 bg-gradient-to-l from-muted-foreground/30 to-transparent" />
