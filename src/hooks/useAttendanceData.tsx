@@ -42,8 +42,20 @@ export function useAttendanceData() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { calendarData, getWeekForDate } = useAcademicWeek();
 
-  const [classesLoading, setClassesLoading] = useState(true);
-  const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
+  const { data: classesData, isLoading: classesLoading } = useQuery({
+    queryKey: ["classes-list"],
+    queryFn: async () => {
+      const [{ data: cls }, { data: lockData }] = await Promise.all([
+        supabase.from("classes").select("id, name").order("name"),
+        supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
+      ]);
+      return { classes: cls || [], overrideLock: lockData?.value === "true" };
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+  const classes = classesData?.classes || [];
+  const [overrideLock, setOverrideLock] = useState(false);
   const [selectedClass, setSelectedClass] = usePersistedState("attendance_selected_class", "");
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
