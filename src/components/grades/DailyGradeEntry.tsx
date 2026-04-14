@@ -311,6 +311,15 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
+            <Button
+              variant={radarOpen ? "default" : "outline"}
+              size="sm"
+              className="h-8 gap-1.5 text-xs"
+              onClick={() => setRadarOpen(!radarOpen)}
+            >
+              <Radar className="h-4 w-4" />
+              الرادار
+            </Button>
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}><ChevronRight className="h-4 w-4" /></Button>
             <HijriDatePicker date={selectedDate} onDateChange={setSelectedDate} />
             <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}><ChevronLeft className="h-4 w-4" /></Button>
