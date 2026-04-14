@@ -23,6 +23,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
   const [quizEnabled, setQuizEnabled] = useState(false);
   const [surpriseMode, setSurpriseMode] = useState(false);
   const [quizDuration, setQuizDuration] = useState(20);
+  const [questionSource, setQuestionSource] = useState<"local" | "bank">("local");
   const [saving, setSaving] = useState(false);
 
   // Quiz questions
@@ -33,7 +34,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
     supabase
       .from("site_settings")
       .select("id, value")
-      .in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode", "radar_quiz_duration"])
+      .in("id", ["radar_speed", "radar_session_memory", "radar_visual_effect", "radar_quiz_enabled", "radar_surprise_mode", "radar_quiz_duration", "radar_question_source"])
       .then(({ data }) => {
         (data || []).forEach((s: any) => {
           if (s.id === "radar_speed") setSpeed(s.value as any);
@@ -42,6 +43,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
           if (s.id === "radar_quiz_enabled") setQuizEnabled(s.value === "true");
           if (s.id === "radar_surprise_mode") setSurpriseMode(s.value === "true");
           if (s.id === "radar_quiz_duration") setQuizDuration(Number(s.value) || 20);
+          if (s.id === "radar_question_source") setQuestionSource(s.value === "bank" ? "bank" : "local");
         });
       });
     setQuestions(loadQuestions());
@@ -56,6 +58,7 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
       { id: "radar_quiz_enabled", value: String(quizEnabled) },
       { id: "radar_surprise_mode", value: String(surpriseMode) },
       { id: "radar_quiz_duration", value: String(quizDuration) },
+      { id: "radar_question_source", value: questionSource },
     ]);
     saveQuestions(questions);
     setSaving(false);
