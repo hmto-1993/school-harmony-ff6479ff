@@ -364,6 +364,14 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       toast({ title: "تم رصد المشاركة", description: `تقييم: ${labelMap[level]}` });
                     }
                   }}
+                  onQuizCorrect={(studentId, score) => {
+                    const numCat = assessmentCats[0];
+                    if (numCat) {
+                      const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
+                      setNumericGrade(studentId, numCat.id, String((currentScore || 0) + score), Number(numCat.max_score));
+                      toast({ title: "تم ترحيل الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
+                    }
+                  }}
                   onClose={() => setRadarOpen(false)}
                 />
               </div>
