@@ -183,8 +183,17 @@ export default function SmartRadar({
     setTimeLeft(0);
   };
 
+  const getQuizQuestion = useCallback((): RadarQuestion | null => {
+    if (settings.questionSource === "bank") {
+      const enabled = bankQuestionsRef.current.filter(q => q.enabled);
+      if (enabled.length === 0) return null;
+      return enabled[Math.floor(Math.random() * enabled.length)];
+    }
+    return getRandomQuestion(questionsRef.current);
+  }, [settings.questionSource]);
+
   const openQuizForStudent = useCallback((student: Student) => {
-    const q = getRandomQuestion(questionsRef.current);
+    const q = getQuizQuestion();
     if (q) {
       setQuizQuestion(q);
       setQuizResult(null);
@@ -192,7 +201,7 @@ export default function SmartRadar({
       setShowActions(false);
       startTimer(localDuration);
     }
-  }, [localDuration, startTimer]);
+  }, [localDuration, startTimer, getQuizQuestion]);
 
   const handleSpin = useCallback(() => {
     if (spinning || available.length === 0) return;
@@ -245,7 +254,7 @@ export default function SmartRadar({
 
         // Surprise mode: auto-open quiz
         if (settings.surpriseMode && settings.quizEnabled) {
-          const q = getRandomQuestion(questionsRef.current);
+          const q = getQuizQuestion();
           if (q) {
             setQuizQuestion(q);
             setQuizResult(null);
