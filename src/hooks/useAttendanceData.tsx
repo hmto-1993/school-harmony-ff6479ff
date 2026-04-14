@@ -56,7 +56,7 @@ export function useAttendanceData() {
   });
   const classes = classesData?.classes || [];
   const overrideLock = classesData?.overrideLock ?? false;
-  const [selectedClass, setSelectedClass] = usePersistedState("attendance_selected_class", "");
+  const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
   const [saving, setSaving] = useState(false);
