@@ -334,6 +334,89 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
+            {/* Smart Radar */}
+            {radarOpen && gradeTab === "assessment" && (
+              <div className="mb-4 no-print">
+                <SmartRadar
+                  students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name }))}
+                  settings={radarSettings}
+                  muted={radarMuted}
+                  onToggleMute={() => setRadarMuted(p => !p)}
+                  onSelectForGrade={(studentId) => {
+                    setEarnedGradeInput({ studentId, open: true });
+                  }}
+                  onSelectForParticipation={(studentId) => {
+                    // Find participation category and toggle star
+                    const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
+                    if (partCat) {
+                      toggleStar(studentId, partCat.id, Number(partCat.max_score));
+                      toast({ title: "تم رصد المشاركة", description: `تم تسجيل مشاركة صفية للطالب` });
+                    } else {
+                      toast({ title: "لا توجد فئة مشاركة", description: "يرجى اضافة فئة تحمل اسم المشاركة في اعدادات الفئات", variant: "destructive" });
+                    }
+                  }}
+                  onClose={() => setRadarOpen(false)}
+                />
+              </div>
+            )}
+
+            {/* Earned Grade Input Dialog */}
+            {earnedGradeInput.open && (
+              <div className="mb-4 no-print animate-fade-in">
+                <div className="rounded-xl border-2 border-primary/30 bg-card p-4 shadow-lg" dir="rtl">
+                  <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
+                    <span className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-black">?</span>
+                    ادخل درجة السؤال للطالب: {filteredStudentGrades.find(s => s.student_id === earnedGradeInput.studentId)?.full_name}
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={10}
+                      placeholder="الدرجة"
+                      className="w-24 h-9"
+                      id="earned-grade-input"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = (e.target as HTMLInputElement).value;
+                          if (val) {
+                            // Find first numeric assessment category or participation category
+                            const numCat = assessmentCats[0];
+                            if (numCat) {
+                              setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
+                              toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                            }
+                            setEarnedGradeInput({ studentId: "", open: false });
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const input = document.getElementById("earned-grade-input") as HTMLInputElement;
+                        const val = input?.value;
+                        if (val) {
+                          const numCat = assessmentCats[0];
+                          if (numCat) {
+                            setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
+                            toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                          }
+                        }
+                        setEarnedGradeInput({ studentId: "", open: false });
+                      }}
+                    >
+                      تاكيد
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEarnedGradeInput({ studentId: "", open: false })}>
+                      الغاء
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Legend */}
             <div className={cn("grid grid-cols-3 sm:grid-cols-5 gap-2 mb-4 text-sm no-print", gradeTab === "violations" && hasViolations && "hidden")}>
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
