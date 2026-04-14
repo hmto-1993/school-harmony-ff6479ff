@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -21,6 +21,8 @@ import ViolationReasonsDialog from "./ViolationReasonsDialog";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
+import SmartRadar from "./SmartRadar";
+import { supabase } from "@/integrations/supabase/client";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
