@@ -18,6 +18,9 @@ import {
   UserCheck,
   Layers,
   FileText,
+  Brain,
+  Radar,
+  type LucideIcon,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -27,31 +30,42 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/hooks/use-theme";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
-const adminLinks = [
-  { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/students", label: "الطلاب", icon: Users },
-  { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
-  { to: "/grades", label: "الدرجات", icon: GraduationCap },
-  { to: "/reports", label: "التقارير", icon: BarChart3 },
-  { to: "/notifications", label: "الإشعارات", icon: Bell },
-  { to: "/library", label: "المكتبة", icon: BookOpen },
-  { to: "/activities", label: "الأنشطة", icon: Layers },
-  { to: "/student-logins", label: "سجل الزيارات", icon: UserCheck },
-  { to: "/forms", label: "النماذج الرسمية", icon: FileText },
-  { to: "/settings", label: "الإعدادات", icon: Settings },
+type SidebarLink = {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  search?: string;
+};
+
+const adminLinks: SidebarLink[] = [
+  { path: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+  { path: "/students", label: "الطلاب", icon: Users },
+  { path: "/attendance", label: "التحضير", icon: ClipboardCheck },
+  { path: "/grades", label: "الدرجات", icon: GraduationCap },
+  { path: "/grades", search: "tool=radar", label: "الرادار", icon: Radar },
+  { path: "/reports", label: "التقارير", icon: BarChart3 },
+  { path: "/notifications", label: "الإشعارات", icon: Bell },
+  { path: "/library", label: "المكتبة", icon: BookOpen },
+  { path: "/library", search: "tab=questionbank", label: "بنك الأسئلة", icon: Brain },
+  { path: "/activities", label: "الأنشطة", icon: Layers },
+  { path: "/student-logins", label: "سجل الزيارات", icon: UserCheck },
+  { path: "/forms", label: "النماذج الرسمية", icon: FileText },
+  { path: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
-const teacherLinks = [
-  { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-  { to: "/students", label: "الطلاب", icon: Users },
-  { to: "/attendance", label: "التحضير", icon: ClipboardCheck },
-  { to: "/grades", label: "الدرجات", icon: GraduationCap },
-  { to: "/reports", label: "التقارير", icon: BarChart3 },
-  { to: "/notifications", label: "الإشعارات", icon: Bell },
-  { to: "/library", label: "المكتبة", icon: BookOpen },
-  { to: "/activities", label: "الأنشطة", icon: Layers },
-  { to: "/forms", label: "النماذج الرسمية", icon: FileText },
-  { to: "/settings", label: "الإعدادات", icon: Settings },
+const teacherLinks: SidebarLink[] = [
+  { path: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
+  { path: "/students", label: "الطلاب", icon: Users },
+  { path: "/attendance", label: "التحضير", icon: ClipboardCheck },
+  { path: "/grades", label: "الدرجات", icon: GraduationCap },
+  { path: "/grades", search: "tool=radar", label: "الرادار", icon: Radar },
+  { path: "/reports", label: "التقارير", icon: BarChart3 },
+  { path: "/notifications", label: "الإشعارات", icon: Bell },
+  { path: "/library", label: "المكتبة", icon: BookOpen },
+  { path: "/library", search: "tab=questionbank", label: "بنك الأسئلة", icon: Brain },
+  { path: "/activities", label: "الأنشطة", icon: Layers },
+  { path: "/forms", label: "النماذج الرسمية", icon: FileText },
+  { path: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
 interface AppSidebarProps {
@@ -78,7 +92,6 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
     });
   }, []);
 
-  // Fetch unread parent messages count
   const refreshParentMessages = () => {
     if (!user) return;
     supabase
@@ -93,16 +106,27 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   useEffect(() => {
     if (!user) return;
     refreshParentMessages();
-    const interval = setInterval(refreshParentMessages, 120000); // every 2 minutes
+    const interval = setInterval(refreshParentMessages, 120000);
     return () => clearInterval(interval);
   }, [user]);
 
   const baseLinks = role === "admin" ? adminLinks : teacherLinks;
-  // Hide settings for read-only teachers
   const links = perms.read_only_mode && role !== "admin"
-    ? baseLinks.filter(l => l.to !== "/settings")
+    ? baseLinks.filter((link) => link.path !== "/settings")
     : baseLinks;
   const isCollapsed = !isMobile && collapsed;
+
+  const buildLinkHref = (link: SidebarLink) => (link.search ? `${link.path}?${link.search}` : link.path);
+  const isLinkActive = (link: SidebarLink) => {
+    if (location.pathname !== link.path) return false;
+    if (link.search) return location.search === `?${link.search}`;
+
+    const variantSearches = links
+      .filter((item) => item.path === link.path && item.search)
+      .map((item) => `?${item.search}`);
+
+    return !variantSearches.includes(location.search);
+  };
 
   return (
     <aside
@@ -112,7 +136,6 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         isMobile && "sticky top-0"
       )}
     >
-      {/* Logo */}
       <div className={cn(
         "flex items-center gap-3 p-4 border-b border-sidebar-border/50",
         isCollapsed && "justify-center"
@@ -129,18 +152,19 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1">
         {links.map((link) => {
-          const isActive = location.pathname === link.to;
-          const showBadge = link.to === "/notifications" && unreadParentMessages > 0;
+          const href = buildLinkHref(link);
+          const isActive = isLinkActive(link);
+          const showBadge = link.path === "/notifications" && unreadParentMessages > 0;
+
           return (
             <Link
-              key={link.to}
-              to={link.to}
+              key={href}
+              to={href}
               onClick={() => {
                 onNavigate?.();
-                if (link.to === "/notifications") refreshParentMessages();
+                if (link.path === "/notifications") refreshParentMessages();
               }}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 relative",
@@ -165,9 +189,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="p-3 border-t border-sidebar-border/50 space-y-1">
-        {/* Theme toggle */}
         <button
           onClick={toggleTheme}
           className={cn(
