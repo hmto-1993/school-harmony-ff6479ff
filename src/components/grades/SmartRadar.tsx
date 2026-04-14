@@ -22,7 +22,7 @@ interface SmartRadarProps {
   muted: boolean;
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
-  onSelectForParticipation: (studentId: string) => void;
+  onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onClose: () => void;
 }
 
