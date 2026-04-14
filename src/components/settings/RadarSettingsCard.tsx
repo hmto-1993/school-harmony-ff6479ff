@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Radar, Save, X, Plus, Trash2, HelpCircle } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { Radar, Save, X, Plus, Trash2, HelpCircle, Timer } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -160,7 +161,28 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
             </div>
           )}
 
-          {/* Quiz Editor */}
+          {/* Quiz Duration */}
+          {quizEnabled && (
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Timer className="h-4 w-4 text-primary" />
+                  <Label className="text-sm font-bold">مدة السؤال بالثواني</Label>
+                </div>
+                <span className="text-sm font-black text-primary tabular-nums">{quizDuration} ثانية</span>
+              </div>
+              <Slider
+                min={5}
+                max={60}
+                step={5}
+                value={[quizDuration]}
+                onValueChange={([v]) => setQuizDuration(v)}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">يمكن تغييرها سريعا من داخل قسم تفاعل اليوم قبل تشغيل الرادار</p>
+            </div>
+          )}
+
           {quizEnabled && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
