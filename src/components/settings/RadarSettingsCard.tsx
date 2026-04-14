@@ -186,7 +186,24 @@ export default function RadarSettingsCard({ onClose }: RadarSettingsCardProps) {
             </div>
           )}
 
+          {/* Question Source */}
           {quizEnabled && (
+            <div className="space-y-2 mb-4">
+              <Label className="text-sm font-bold">مصدر الأسئلة</Label>
+              <Select value={questionSource} onValueChange={(v) => setQuestionSource(v as "local" | "bank")}>
+                <SelectTrigger className="w-full sm:w-56"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="local">الأسئلة السريعة (محلي)</SelectItem>
+                  <SelectItem value="bank">بنك الأسئلة (المكتبة)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {questionSource === "bank" ? "سيتم سحب الأسئلة من بنك الأسئلة في المكتبة حسب الفصل والدرس المختار" : "سيتم استخدام الأسئلة المضافة أدناه"}
+              </p>
+            </div>
+          )}
+
+          {quizEnabled && questionSource === "local" && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Button
