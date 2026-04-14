@@ -176,6 +176,33 @@ export default function DashboardPage() {
     </DraggableWidget>
   );
 
+  if (loading) {
+    return (
+      <div className="space-y-5">
+        <DashboardHeader
+          onPrint={handlePrint}
+          locked={locked}
+          onToggleLock={toggleLock}
+          onResetOrder={resetOrder}
+        />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/40 bg-card p-4 flex flex-col items-center gap-3">
+              <div className="h-11 w-11 rounded-2xl bg-muted animate-pulse" />
+              <div className="h-7 w-14 rounded-lg bg-muted animate-pulse" />
+              <div className="h-3 w-16 rounded bg-muted/60 animate-pulse" />
+            </div>
+          ))}
+        </div>
+        <div className="space-y-5">
+          {[180, 120, 200].map((h, i) => (
+            <div key={i} className="rounded-2xl bg-card border border-border/40 animate-pulse" style={{ height: h }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5">
       <DashboardHeader
@@ -192,7 +219,7 @@ export default function DashboardPage() {
         todayAbsent={todayAbsent}
         todayLate={todayLate}
         attendanceRate={attendanceRate}
-        loading={loading}
+        loading={false}
       />
 
       {order.map((id) => renderWidget(id))}
