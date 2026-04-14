@@ -1,4 +1,5 @@
 import React from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,6 +70,7 @@ interface DailyGradeEntryProps {
 
 export default function DailyGradeEntry({ selectedClass, onClassChange, selectedPeriod = 1 }: DailyGradeEntryProps) {
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [gradeTab, setGradeTab] = React.useState<"assessment" | "violations">("assessment");
   const [referralStudentId, setReferralStudentId] = React.useState<string | null>(null);
   const [referralFormOpen, setReferralFormOpen] = React.useState(false);
@@ -79,6 +81,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false, quizDuration: 20, questionSource: "local" as "local" | "bank" });
   const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
+  const requestedTool = searchParams.get("tool");
 
   // Load radar settings
   React.useEffect(() => {
@@ -96,6 +99,12 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       setRadarSettings(s);
     });
   }, []);
+
+  React.useEffect(() => {
+    if (requestedTool !== "radar") return;
+    setGradeTab("assessment");
+    setRadarOpen(true);
+  }, [requestedTool, selectedClass]);
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
