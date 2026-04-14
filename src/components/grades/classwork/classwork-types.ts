@@ -16,6 +16,7 @@ export interface SummaryRow {
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
   dailyIcons: Record<string, DailyIcon[]>;
+  earnedTotal: number;
 }
 
 export interface ClassworkSummaryProps {
