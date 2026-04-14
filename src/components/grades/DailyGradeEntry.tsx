@@ -681,6 +681,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                           );
                         })}
                         {showTotal && <td className="p-3 text-center font-bold border-l-2 border-border">{calcTotal(sg.grades)}</td>}
+                        {gradeTab === "assessment" && (
+                          <td className="p-2 text-center border-l-2 border-border bg-emerald-500/5">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={sg.grades[assessmentCats[0]?.id] != null && typeof sg.grades[assessmentCats[0]?.id] === "number" ? "" : ""}
+                              placeholder="--"
+                              className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
+                              onChange={(e) => {
+                                const numCat = assessmentCats[0];
+                                if (numCat) setNumericGrade(sg.student_id, numCat.id, e.target.value, Number(numCat.max_score));
+                              }}
+                            />
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
