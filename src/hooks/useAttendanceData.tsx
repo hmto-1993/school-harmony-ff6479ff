@@ -55,7 +55,7 @@ export function useAttendanceData() {
     gcTime: 10 * 60 * 1000,
   });
   const classes = classesData?.classes || [];
-  const [overrideLock, setOverrideLock] = useState(false);
+  const overrideLock = classesData?.overrideLock ?? false;
   const [selectedClass, setSelectedClass] = usePersistedState("attendance_selected_class", "");
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [records, setRecords] = useState<StudentAttendance[]>([]);
@@ -72,7 +72,7 @@ export function useAttendanceData() {
   const [movingDate, setMovingDate] = useState(false);
   const [weeklyProgress, setWeeklyProgress] = useState<WeeklyProgress>({});
   const [weeklyProgressLoaded, setWeeklyProgressLoaded] = useState(false);
-  const [overrideLock, setOverrideLock] = useState(false);
+  
   const [absenceAlerts, setAbsenceAlerts] = useState<Record<string, AbsenceAlert>>({});
 
   const date = format(selectedDate, "yyyy-MM-dd");
@@ -268,17 +268,6 @@ export function useAttendanceData() {
     setStudentsLoading(false);
   }, [selectedClass, date]);
 
-  useEffect(() => {
-    setClassesLoading(true);
-    Promise.all([
-      supabase.from("classes").select("id, name").order("name"),
-      supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
-    ]).then(([{ data: cls }, { data: lockData }]) => {
-      setClasses(cls || []);
-      setOverrideLock(lockData?.value === "true");
-      setClassesLoading(false);
-    });
-  }, []);
 
   useEffect(() => {
     if (classes.length === 0) return;
