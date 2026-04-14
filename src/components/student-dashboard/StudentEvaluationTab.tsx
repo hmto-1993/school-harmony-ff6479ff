@@ -290,6 +290,9 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
     if (cwGrades.length === 0) return <p className="text-center text-muted-foreground py-8">لا توجد بيانات</p>;
     const cwCatNames = Array.from(new Set<string>(cwGrades.map((g: any) => g.grade_categories?.name).filter(Boolean)));
 
+    // Calculate earned total (sum of all classwork scores)
+    const earnedTotal = cwGrades.reduce((sum: number, g: any) => sum + (g.score !== null && g.score !== undefined ? Number(g.score) : 0), 0);
+
     return (
       <>
         <div className="overflow-auto rounded-xl border border-border/30 shadow-sm">
@@ -320,6 +323,16 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
                   </tr>
                 );
               })}
+              {/* Earned grades total row */}
+              <tr className="bg-emerald-500/10 dark:bg-emerald-500/15 border-t-2 border-emerald-500/30">
+                <td className="p-3 text-right font-bold border-l border-emerald-500/20 whitespace-nowrap text-xs text-emerald-700 dark:text-emerald-300">
+                  🏆 الدرجات المكتسبة
+                </td>
+                <td className="p-3 text-center border-l border-emerald-500/20">
+                  <span className="text-lg font-black text-emerald-600 dark:text-emerald-400">{earnedTotal}</span>
+                  <span className="text-[10px] text-emerald-600/60 dark:text-emerald-400/60 mr-1">درجة</span>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>

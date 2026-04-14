@@ -60,29 +60,42 @@ export function GradesTab({ classes, categories, isPrint }: { classes: ClassSumm
                           {cat.name}
                         </th>
                       ))}
+                      <th className="text-center px-2 py-2 font-bold text-xs" style={{ color: 'var(--sv-green)', borderRight: '2px solid var(--sv-green)' }}>
+                        المكتسبة
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {cls.students.map((s) => (
-                      <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)' }}>
-                        <td className="px-3 py-2 font-medium whitespace-nowrap" style={{ color: 'var(--sv-text-secondary)' }}>{s.full_name}</td>
-                        {sortedCats.map((cat: any) => {
-                          const entry = gradesByStudent[s.id]?.[cat.id];
-                          const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
-                          return (
-                            <td key={cat.id} className="text-center px-2 py-2">
-                              {avg !== null ? (
-                                <span className="text-xs font-semibold" style={{ color: avg >= cat.max_score * 0.8 ? 'var(--sv-green)' : avg >= cat.max_score * 0.5 ? 'var(--sv-amber)' : 'var(--sv-red)' }}>
-                                  {avg}
-                                </span>
-                              ) : (
-                                <span style={{ color: 'var(--sv-text-ghost)' }}>—</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))}
+                    {cls.students.map((s) => {
+                      // Calculate earned total: sum of ALL classwork grades for this student
+                      const earnedTotal = cls.grades
+                        .filter((g: any) => g.student_id === s.id && g.score !== null && g.score !== undefined)
+                        .reduce((sum: number, g: any) => sum + Number(g.score), 0);
+
+                      return (
+                        <tr key={s.id} className="transition-colors" style={{ borderBottom: '1px solid var(--sv-divider-subtle)' }}>
+                          <td className="px-3 py-2 font-medium whitespace-nowrap" style={{ color: 'var(--sv-text-secondary)' }}>{s.full_name}</td>
+                          {sortedCats.map((cat: any) => {
+                            const entry = gradesByStudent[s.id]?.[cat.id];
+                            const avg = entry && entry.count > 0 ? Math.round(entry.sum / entry.count) : null;
+                            return (
+                              <td key={cat.id} className="text-center px-2 py-2">
+                                {avg !== null ? (
+                                  <span className="text-xs font-semibold" style={{ color: avg >= cat.max_score * 0.8 ? 'var(--sv-green)' : avg >= cat.max_score * 0.5 ? 'var(--sv-amber)' : 'var(--sv-red)' }}>
+                                    {avg}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--sv-text-ghost)' }}>—</span>
+                                )}
+                              </td>
+                            );
+                          })}
+                          <td className="text-center px-2 py-2 font-bold" style={{ color: 'var(--sv-green)', borderRight: '2px solid var(--sv-green)' }}>
+                            {earnedTotal > 0 ? earnedTotal : '—'}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
