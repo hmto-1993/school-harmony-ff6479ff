@@ -359,6 +359,35 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     }
   };
 
+  // Quick-save a single student+category grade to DB immediately
+  const quickSaveGrade = useCallback(async (studentId: string, categoryId: string, score: number, note?: string) => {
+    if (!user) return;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    try {
+      const sg = studentGrades.find(s => s.student_id === studentId);
+      const existingId = sg?.grade_ids[categoryId];
+      if (existingId) {
+        const { error } = await supabase.from("grades").update({ score, note: note || "" }).eq("id", existingId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from("grades").upsert(
+          { student_id: studentId, category_id: categoryId, score, note: note || "", recorded_by: user.id, period: selectedPeriod, date: dateStr },
+          { onConflict: "student_id,category_id,date,period" }
+        ).select("id, student_id, category_id");
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setStudentGrades(prev => prev.map(s => {
+            if (s.student_id !== studentId) return s;
+            return { ...s, grade_ids: { ...s.grade_ids, [categoryId]: data[0].id } };
+          }));
+        }
+      }
+    } catch (err: any) {
+      console.error("Quick save error:", err);
+      throw err;
+    }
+  }, [user, selectedDate, selectedPeriod, studentGrades]);
+
   return {
     classes, categories, studentGrades, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -369,6 +398,6 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
     cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
-    calcTotal, handleSave,
+    calcTotal, handleSave, quickSaveGrade,
   };
 }
