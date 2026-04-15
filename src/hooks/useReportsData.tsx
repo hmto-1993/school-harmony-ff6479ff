@@ -182,13 +182,6 @@ export function useReportsData() {
     if (!selectedClass) return;
     setLoadingAttendance(true);
 
-    // Build a map of student_id -> class_name for "all" mode
-    const classNameMap: Record<string, string> = {};
-    if (selectedClass === "all") {
-      classes.forEach(c => {
-        students.filter(s => true).forEach(() => {}); // we'll populate from results
-      });
-    }
 
     let query = supabase
       .from("attendance_records")
