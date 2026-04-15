@@ -1,3 +1,4 @@
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -86,8 +87,19 @@ export default function FormDialog({ form, open, onOpenChange, preSelectedStuden
                   👥 اختيار الشهود
                   {state.selectedWitnesses.length > 0 && <Badge variant="secondary" className="text-[10px]">{state.selectedWitnesses.length}</Badge>}
                 </Label>
+                <Select value={state.witnessFilterClassId} onValueChange={state.setWitnessFilterClassId}>
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="كل الفصول" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">كل الفصول</SelectItem>
+                    {state.classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
                 <div className="border rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
-                  {state.witnessOptions.slice(0, 50).map(s => {
+                  {state.witnessOptions.length === 0 ? (
+                    <p className="text-center text-xs text-muted-foreground py-3">لا يوجد طلاب</p>
+                  ) : state.witnessOptions.slice(0, 50).map(s => {
                     const isSelected = state.selectedWitnesses.includes(s.id);
                     return (
                       <button key={s.id} type="button" onClick={() => state.toggleWitness(s.id)} className={`w-full text-right text-xs px-2 py-1.5 rounded transition-colors ${isSelected ? "bg-primary/10 text-primary font-semibold border border-primary/20" : "hover:bg-muted text-foreground"}`}>

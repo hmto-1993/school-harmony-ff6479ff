@@ -42,6 +42,7 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
   const [selectedWitnesses, setSelectedWitnesses] = useState<string[]>([]);
+  const [witnessFilterClassId, setWitnessFilterClassId] = useState("all");
   const [adminPhone, setAdminPhone] = useState("");
   const [sharing, setSharing] = useState(false);
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
@@ -313,7 +314,11 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
     } finally { setSharing(false); }
   };
 
-  const witnessOptions = useMemo(() => students.filter(s => s.id !== selectedStudentId), [students, selectedStudentId]);
+  const witnessOptions = useMemo(() => {
+    const base = students.filter(s => s.id !== selectedStudentId);
+    if (witnessFilterClassId === "all") return base;
+    return base.filter(s => s.class_id === witnessFilterClassId);
+  }, [students, selectedStudentId, witnessFilterClassId]);
 
   const toggleWitness = (studentId: string) => {
     setSelectedWitnesses(prev => prev.includes(studentId) ? prev.filter(id => id !== studentId) : [...prev, studentId]);
@@ -334,9 +339,9 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
     sharing, signatureDataUrl, useLiveSignature, customBodyText, isEditingBody,
     searchQuery, filterClassId, showStudentList, bulkExporting, isMultiMode,
     filteredStudents, selectedStudent, witnessOptions, defaultBodyText, finalBodyText,
-    isBodyEdited, multiStudents,
+    isBodyEdited, multiStudents, witnessFilterClassId,
     setSignatureDataUrl, setCustomBodyText, setIsEditingBody, setSearchQuery,
-    setFilterClassId, setShowStudentList,
+    setFilterClassId, setShowStudentList, setWitnessFilterClassId,
     handleSelectStudent, handleFieldChange, handleExport, handleBulkSeparate,
     handleBulkMerged, handleWhatsApp, handleAdminAlert, handleSharePdf, toggleWitness,
   };
