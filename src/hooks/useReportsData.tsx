@@ -343,7 +343,7 @@ export function useReportsData() {
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
-  const className = classes.find((c) => c.id === selectedClass)?.name || "";
+  const className = selectedClass === "all" ? "جميع الفصول" : (classes.find((c) => c.id === selectedClass)?.name || "");
 
   return {
     // Auth & permissions
