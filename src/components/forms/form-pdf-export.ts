@@ -32,13 +32,13 @@ const DEFAULT_IDENTITY: FormIdentityConfig = {
 };
 
 /** Load form identity settings from DB */
-async function loadFormIdentity(): Promise<FormIdentityConfig> {
+async function loadFormIdentity(): Promise<FormIdentityConfig & { confidentialWatermarkOpacity: number }> {
   try {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
       .like("id", "form_identity_%");
-    if (!data || data.length === 0) return { ...DEFAULT_IDENTITY };
+    if (!data || data.length === 0) return { ...DEFAULT_IDENTITY, confidentialWatermarkOpacity: 0.08 };
     const map = new Map(data.map((r) => [r.id, r.value]));
     return {
       headerRightLines: map.has("form_identity_right_lines")
@@ -57,9 +57,12 @@ async function loadFormIdentity(): Promise<FormIdentityConfig> {
         ? map.get("form_identity_live_sig") === "true"
         : true,
       footerText: map.get("form_identity_footer") || "",
+      confidentialWatermarkOpacity: map.has("form_identity_conf_opacity")
+        ? Number(map.get("form_identity_conf_opacity"))
+        : 0.08,
     };
   } catch {
-    return { ...DEFAULT_IDENTITY };
+    return { ...DEFAULT_IDENTITY, confidentialWatermarkOpacity: 0.08 };
   }
 }
 
