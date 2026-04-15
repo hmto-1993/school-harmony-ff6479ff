@@ -106,7 +106,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
     cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
-    calcTotal, handleSave,
+    calcTotal, handleSave, quickSaveGrade,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
 
   const assessmentCats = visibleCategories.filter(c => !c.is_deduction);
@@ -356,29 +356,42 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   onSelectForGrade={(studentId) => {
                     setEarnedGradeInput({ studentId, open: true });
                   }}
-                  onSelectForParticipation={(studentId, level) => {
+                  onSelectForParticipation={async (studentId, level) => {
                     const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
                     if (!partCat) {
                       toast({ title: "لا توجد فئة مشاركة", description: "يرجى اضافة فئة تحمل اسم المشاركة في اعدادات الفئات", variant: "destructive" });
                       return;
                     }
                     const maxScore = Number(partCat.max_score);
+                    let finalScore: number;
                     if (level === "star") {
                       toggleStar(studentId, partCat.id, maxScore);
-                      toast({ title: "تم رصد المشاركة", description: "تقييم: متميز" });
+                      finalScore = maxScore;
                     } else {
                       const scoreMap = { excellent: maxScore, average: Math.round(maxScore / 2), zero: 0 };
-                      setNumericGrade(studentId, partCat.id, String(scoreMap[level]), maxScore);
-                      const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر" };
-                      toast({ title: "تم رصد المشاركة", description: `تقييم: ${labelMap[level]}` });
+                      finalScore = scoreMap[level];
+                      setNumericGrade(studentId, partCat.id, String(finalScore), maxScore);
+                    }
+                    try {
+                      await quickSaveGrade(studentId, partCat.id, finalScore);
+                      const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر", star: "متميز" };
+                      toast({ title: "✅ تم حفظ المشاركة", description: `تقييم: ${labelMap[level]}` });
+                    } catch {
+                      toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
                     }
                   }}
-                  onQuizCorrect={(studentId, score) => {
+                  onQuizCorrect={async (studentId, score) => {
                     const numCat = assessmentCats[0];
                     if (numCat) {
                       const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
-                      setNumericGrade(studentId, numCat.id, String((currentScore || 0) + score), Number(numCat.max_score));
-                      toast({ title: "تم ترحيل الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
+                      const newScore = Math.min((currentScore || 0) + score, Number(numCat.max_score));
+                      setNumericGrade(studentId, numCat.id, String(newScore), Number(numCat.max_score));
+                      try {
+                        await quickSaveGrade(studentId, numCat.id, newScore);
+                        toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
+                      } catch {
+                        toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                      }
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
