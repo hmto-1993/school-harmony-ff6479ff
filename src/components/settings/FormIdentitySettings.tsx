@@ -24,6 +24,7 @@ interface FormIdentityConfig {
   signatureImageUrl: string;
   useLiveSignature: boolean;
   footerText: string;
+  confidentialWatermarkOpacity: number;
 }
 
 const DEFAULT_CONFIG: FormIdentityConfig = {
@@ -35,6 +36,7 @@ const DEFAULT_CONFIG: FormIdentityConfig = {
   signatureImageUrl: "",
   useLiveSignature: true,
   footerText: "",
+  confidentialWatermarkOpacity: 0.08,
 };
 
 interface Props {
@@ -78,6 +80,9 @@ export default function FormIdentitySettings({ onClose }: Props) {
             ? map.get("form_identity_live_sig") === "true"
             : true,
           footerText: map.get("form_identity_footer") || "",
+          confidentialWatermarkOpacity: map.has("form_identity_conf_opacity")
+            ? Number(map.get("form_identity_conf_opacity"))
+            : DEFAULT_CONFIG.confidentialWatermarkOpacity,
         });
       }
       setLoading(false);
@@ -136,6 +141,7 @@ export default function FormIdentitySettings({ onClose }: Props) {
         { id: "form_identity_signature_img", value: config.signatureImageUrl },
         { id: "form_identity_live_sig", value: String(config.useLiveSignature) },
         { id: "form_identity_footer", value: config.footerText },
+        { id: "form_identity_conf_opacity", value: String(config.confidentialWatermarkOpacity) },
       ];
       for (const entry of entries) {
         await supabase.from("site_settings").upsert(entry);
