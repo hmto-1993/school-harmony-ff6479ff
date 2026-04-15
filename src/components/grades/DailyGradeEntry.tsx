@@ -368,9 +368,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       toggleStar(studentId, partCat.id, maxScore);
                       finalScore = maxScore;
                     } else {
-                      const scoreMap = { excellent: maxScore, average: Math.round(maxScore / 2), zero: 0 };
-                      finalScore = scoreMap[level];
-                      setNumericGrade(studentId, partCat.id, String(finalScore), maxScore);
+                      const gradeLevel = level as "excellent" | "average" | "zero";
+                      const score = setGradeWithSlot(studentId, partCat.id, gradeLevel, maxScore);
+                      finalScore = score ?? 0;
                     }
                     try {
                       await quickSaveGrade(studentId, partCat.id, finalScore);
