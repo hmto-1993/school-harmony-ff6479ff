@@ -131,8 +131,10 @@ export default function SmartRadar({
     }
   }, [selectedBankLesson]);
 
+  const participatedSet = new Set(participatedStudentIds);
   const available = students.filter(
-    (s) => !settings.sessionMemory || !excluded.has(s.student_id)
+    (s) => (!settings.sessionMemory || !excluded.has(s.student_id)) &&
+           (!excludeParticipated || !participatedSet.has(s.student_id))
   );
 
   // ── Timer logic ──────────────────────────────────────────────────
