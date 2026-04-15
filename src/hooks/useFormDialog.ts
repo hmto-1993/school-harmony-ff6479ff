@@ -317,7 +317,7 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
   const witnessOptions = useMemo(() => {
     const base = students.filter(s => s.id !== selectedStudentId);
     if (witnessFilterClassId === "all") return base;
-    return base.filter(s => s.classId === witnessFilterClassId);
+    return base.filter(s => s.class_id === witnessFilterClassId);
   }, [students, selectedStudentId, witnessFilterClassId]);
 
   const toggleWitness = (studentId: string) => {
