@@ -16,6 +16,7 @@ export interface AttendanceRow {
   date: string;
   status: string;
   notes: string | null;
+  class_name?: string;
 }
 
 export interface GradeRow {
