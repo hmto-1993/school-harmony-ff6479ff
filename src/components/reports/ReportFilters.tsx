@@ -19,7 +19,7 @@ interface ReportFiltersProps {
   classes: { id: string; name: string }[];
   selectedClass: string;
   setSelectedClass: (v: string) => void;
-  students: { id: string; full_name: string }[];
+  students: { id: string; full_name: string; class_id?: string | null }[];
   selectedStudent: string;
   setSelectedStudent: (v: string) => void;
   reportType: "daily" | "periodic";
@@ -84,11 +84,14 @@ export default function ReportFilters({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">جميع الطلاب</SelectItem>
-                {students.map((s) => (
-                  <SelectItem key={s.id} value={s.id}>
-                    {s.full_name}
-                  </SelectItem>
-                ))}
+                {students.map((s) => {
+                  const cls = s.class_id ? classes.find(c => c.id === s.class_id) : null;
+                  return (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.full_name}{cls ? ` (${cls.name})` : ""}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

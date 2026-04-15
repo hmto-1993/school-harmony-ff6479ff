@@ -38,7 +38,7 @@ export function useReportsData() {
   const dateTo = format(dateToDate, "yyyy-MM-dd");
 
   const [selectedStudent, setSelectedStudent] = useState<string>("all");
-  const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null }[]>([]);
+  const [students, setStudents] = useState<{ id: string; full_name: string; parent_phone: string | null; class_id: string | null }[]>([]);
 
   const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
@@ -153,7 +153,7 @@ export function useReportsData() {
         if (classIds.length === 0) { setStudents([]); return; }
         const { data } = await supabase
           .from("students")
-          .select("id, full_name, parent_phone")
+          .select("id, full_name, parent_phone, class_id")
           .in("class_id", classIds)
           .order("full_name");
         setStudents(data || []);
@@ -162,7 +162,7 @@ export function useReportsData() {
       }
       const { data } = await supabase
         .from("students")
-        .select("id, full_name, parent_phone")
+        .select("id, full_name, parent_phone, class_id")
         .eq("class_id", selectedClass)
         .order("full_name");
       setStudents(data || []);
