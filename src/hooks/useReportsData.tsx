@@ -209,13 +209,12 @@ export function useReportsData() {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
       const rows: AttendanceRow[] = (data || []).map((r: any) => ({
-        student_name: selectedClass === "all"
-          ? `${r.students?.full_name || "—"} (${(r.classes as any)?.name || ""})`
-          : r.students?.full_name || "—",
+        student_name: r.students?.full_name || "—",
         student_id: r.student_id,
         date: r.date,
         status: r.status,
         notes: r.notes,
+        class_name: (r.classes as any)?.name || "",
       }));
       setAttendanceData(rows);
     }
