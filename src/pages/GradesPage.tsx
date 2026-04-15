@@ -143,12 +143,11 @@ export default function GradesPage() {
                 key={cls.id}
                 onClick={() => setSelectedClass(cls.id)}
                 className={cn(
-                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden animate-fade-in group",
+                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden group",
                   isActive
                     ? "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/25"
                     : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10"
                 )}
-                style={{ animationDelay: `${i * 40}ms`, animationFillMode: "both" }}
               >
                 <div className={cn(
                   "mx-auto w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-sm",
