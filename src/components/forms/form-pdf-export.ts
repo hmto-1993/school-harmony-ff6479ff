@@ -247,7 +247,7 @@ export async function exportFormPdf(
 
   // ========== CONFIDENTIAL WATERMARK ==========
   if (form.confidentialWatermark) {
-    drawConfidentialWatermark(doc);
+    drawConfidentialWatermark(doc, identity.confidentialWatermarkOpacity);
   }
 
   let y = 12;
