@@ -259,6 +259,22 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     ));
   };
 
+  const setGradeWithSlot = (studentId: string, categoryId: string, level: GradeLevel, maxScore: number) => {
+    const slotCount = getMaxSlots(categoryId);
+    const perSlot = Math.round(maxScore / slotCount);
+    const score = level ? levelScore(level, perSlot) : null;
+    setStudentGrades((prev) => prev.map((sg) => {
+      if (sg.student_id !== studentId) return sg;
+      return {
+        ...sg,
+        grades: { ...sg.grades, [categoryId]: score },
+        slots: { ...sg.slots, [categoryId]: [level] },
+        starred: { ...sg.starred, [categoryId]: false },
+      };
+    }));
+    return score;
+  };
+
   const setDeductionNote = (studentId: string, categoryId: string, note: string) => {
     setStudentGrades((prev) => prev.map((sg) =>
       sg.student_id === studentId ? { ...sg, notes: { ...sg.notes, [categoryId]: note } } : sg
