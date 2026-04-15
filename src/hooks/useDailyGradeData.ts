@@ -413,7 +413,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
     filteredStudentGrades, absentCount, hiddenStatuses,
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
-    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
+    cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setGradeWithSlot, setDeductionNote,
     calcTotal, handleSave, quickSaveGrade,
   };
 }
