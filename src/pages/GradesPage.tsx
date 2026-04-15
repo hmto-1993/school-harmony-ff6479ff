@@ -243,7 +243,7 @@ export default function GradesPage() {
       )}
 
       {/* Content or Empty State */}
-      {selectedClass ? (
+      {selectedClass && !classesLoading ? (
         <div className="animate-fade-in print-area">
           <ReportPrintHeader reportType="grades" />
           <PrintWatermark reportType="grades" />
