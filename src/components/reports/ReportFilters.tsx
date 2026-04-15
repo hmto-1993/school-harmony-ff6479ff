@@ -65,6 +65,9 @@ export default function ReportFilters({
                 <SelectValue placeholder="اختر الفصل" />
               </SelectTrigger>
               <SelectContent>
+                {classes.length > 1 && (
+                  <SelectItem value="all">جميع الفصول</SelectItem>
+                )}
                 {classes.map((cls) => (
                   <SelectItem key={cls.id} value={cls.id}>
                     {cls.name}
