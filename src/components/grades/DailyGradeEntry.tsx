@@ -416,15 +416,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
-                      onKeyDown={(e) => {
+                      onKeyDown={async (e) => {
                         if (e.key === "Enter") {
                           const val = (e.target as HTMLInputElement).value;
                           if (val) {
-                            // Find first numeric assessment category or participation category
                             const numCat = assessmentCats[0];
                             if (numCat) {
-                              setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
-                              toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                              const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
+                              setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
+                              try {
+                                await quickSaveGrade(earnedGradeInput.studentId, numCat.id, finalScore);
+                                toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${val} درجة` });
+                              } catch {
+                                toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                              }
                             }
                             setEarnedGradeInput({ studentId: "", open: false });
                           }
@@ -433,20 +438,28 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     />
                     <Button
                       size="sm"
-                      onClick={() => {
+                      className="gap-1.5"
+                      onClick={async () => {
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
                         const val = input?.value;
                         if (val) {
                           const numCat = assessmentCats[0];
                           if (numCat) {
-                            setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
-                            toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                            const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
+                            setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
+                            try {
+                              await quickSaveGrade(earnedGradeInput.studentId, numCat.id, finalScore);
+                              toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${val} درجة` });
+                            } catch {
+                              toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                            }
                           }
                         }
                         setEarnedGradeInput({ studentId: "", open: false });
                       }}
                     >
-                      تاكيد
+                      <Save className="h-3.5 w-3.5" />
+                      حفظ
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setEarnedGradeInput({ studentId: "", open: false })}>
                       الغاء
