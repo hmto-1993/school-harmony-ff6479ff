@@ -32,13 +32,13 @@ const DEFAULT_IDENTITY: FormIdentityConfig = {
 };
 
 /** Load form identity settings from DB */
-async function loadFormIdentity(): Promise<FormIdentityConfig> {
+async function loadFormIdentity(): Promise<FormIdentityConfig & { confidentialWatermarkOpacity: number }> {
   try {
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
       .like("id", "form_identity_%");
-    if (!data || data.length === 0) return { ...DEFAULT_IDENTITY };
+    if (!data || data.length === 0) return { ...DEFAULT_IDENTITY, confidentialWatermarkOpacity: 0.08 };
     const map = new Map(data.map((r) => [r.id, r.value]));
     return {
       headerRightLines: map.has("form_identity_right_lines")
@@ -57,9 +57,12 @@ async function loadFormIdentity(): Promise<FormIdentityConfig> {
         ? map.get("form_identity_live_sig") === "true"
         : true,
       footerText: map.get("form_identity_footer") || "",
+      confidentialWatermarkOpacity: map.has("form_identity_conf_opacity")
+        ? Number(map.get("form_identity_conf_opacity"))
+        : 0.08,
     };
   } catch {
-    return { ...DEFAULT_IDENTITY };
+    return { ...DEFAULT_IDENTITY, confidentialWatermarkOpacity: 0.08 };
   }
 }
 
@@ -122,15 +125,16 @@ async function loadImageBase64(url: string): Promise<string | null> {
 }
 
 /** Draw confidential watermark across the page */
-function drawConfidentialWatermark(doc: jsPDF) {
+function drawConfidentialWatermark(doc: jsPDF, opacity: number = 0.08) {
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
 
   doc.saveGraphicsState();
-  // Simulate transparency by blending red with white
-  const r = Math.round(220 * 0.92 + 255 * 0.08);
-  const g = Math.round(38 * 0.92 + 255 * 0.08);
-  const b = Math.round(38 * 0.92 + 255 * 0.08);
+  // Simulate transparency by blending red with white based on opacity
+  const blend = Math.min(Math.max(opacity, 0.02), 0.5);
+  const r = Math.round(220 * blend + 255 * (1 - blend));
+  const g = Math.round(38 * blend + 255 * (1 - blend));
+  const b = Math.round(38 * blend + 255 * (1 - blend));
 
   doc.setTextColor(r, g, b);
   doc.setFontSize(52);
@@ -139,7 +143,6 @@ function drawConfidentialWatermark(doc: jsPDF) {
   // Tiled watermark
   for (let row = 40; row < pageH; row += 70) {
     for (let col = 20; col < pageW; col += 90) {
-      // Manual rotation simulation with positioned text
       doc.text("سري للغاية", col, row, { align: "center", angle: -30 });
     }
   }
@@ -244,7 +247,7 @@ export async function exportFormPdf(
 
   // ========== CONFIDENTIAL WATERMARK ==========
   if (form.confidentialWatermark) {
-    drawConfidentialWatermark(doc);
+    drawConfidentialWatermark(doc, identity.confidentialWatermarkOpacity);
   }
 
   let y = 12;

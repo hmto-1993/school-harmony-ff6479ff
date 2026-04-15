@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Upload, Save, RotateCcw, Image, PenTool, Type, FileText,
-  X, Loader2, Eye, Trash2,
+  X, Loader2, Eye, Trash2, ShieldAlert,
 } from "lucide-react";
 
 interface FormIdentityConfig {
@@ -24,6 +25,7 @@ interface FormIdentityConfig {
   signatureImageUrl: string;
   useLiveSignature: boolean;
   footerText: string;
+  confidentialWatermarkOpacity: number;
 }
 
 const DEFAULT_CONFIG: FormIdentityConfig = {
@@ -35,6 +37,7 @@ const DEFAULT_CONFIG: FormIdentityConfig = {
   signatureImageUrl: "",
   useLiveSignature: true,
   footerText: "",
+  confidentialWatermarkOpacity: 0.08,
 };
 
 interface Props {
@@ -78,6 +81,9 @@ export default function FormIdentitySettings({ onClose }: Props) {
             ? map.get("form_identity_live_sig") === "true"
             : true,
           footerText: map.get("form_identity_footer") || "",
+          confidentialWatermarkOpacity: map.has("form_identity_conf_opacity")
+            ? Number(map.get("form_identity_conf_opacity"))
+            : DEFAULT_CONFIG.confidentialWatermarkOpacity,
         });
       }
       setLoading(false);
@@ -136,6 +142,7 @@ export default function FormIdentitySettings({ onClose }: Props) {
         { id: "form_identity_signature_img", value: config.signatureImageUrl },
         { id: "form_identity_live_sig", value: String(config.useLiveSignature) },
         { id: "form_identity_footer", value: config.footerText },
+        { id: "form_identity_conf_opacity", value: String(config.confidentialWatermarkOpacity) },
       ];
       for (const entry of entries) {
         await supabase.from("site_settings").upsert(entry);
@@ -400,6 +407,47 @@ export default function FormIdentitySettings({ onClose }: Props) {
           placeholder="نص ثابت يظهر أسفل كل صفحة PDF (مثل: ملاحظات هامة، رابط المنصة...)"
           className="text-xs min-h-[60px]"
         />
+      </div>
+
+      <Separator />
+
+      {/* ===== 4. Confidential Watermark Opacity ===== */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-destructive" />
+          العلامة المائية السرية
+        </h3>
+        <p className="text-[11px] text-muted-foreground">التحكم في وضوح نص "سري للغاية" الذي يظهر على النماذج السرية</p>
+        <div className="flex items-center gap-3 max-w-sm">
+          <Label className="text-xs shrink-0 whitespace-nowrap">الوضوح:</Label>
+          <Slider
+            min={0.02}
+            max={0.25}
+            step={0.01}
+            value={[config.confidentialWatermarkOpacity]}
+            onValueChange={([v]) => setConfig((p) => ({ ...p, confidentialWatermarkOpacity: v }))}
+            className="flex-1"
+          />
+          <span className="text-xs font-mono w-10 text-center">{Math.round(config.confidentialWatermarkOpacity * 100)}%</span>
+        </div>
+        {/* Mini preview */}
+        <div className="relative border rounded-lg bg-white dark:bg-slate-950 p-4 h-20 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span
+              className="text-2xl font-bold"
+              style={{
+                color: `rgba(220, 38, 38, ${config.confidentialWatermarkOpacity})`,
+                transform: "rotate(-30deg)",
+              }}
+            >
+              سري للغاية
+            </span>
+          </div>
+          <div className="relative z-10 space-y-1">
+            <div className="h-1.5 rounded-full bg-muted w-3/4" />
+            <div className="h-1.5 rounded-full bg-muted w-1/2" />
+          </div>
+        </div>
       </div>
 
       <Separator />
