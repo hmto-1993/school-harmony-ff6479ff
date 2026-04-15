@@ -57,6 +57,7 @@ export default function SmartRadar({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
+  const [excludeParticipated, setExcludeParticipated] = useState(true);
 
   // Quick duration override (before spinning)
   const [localDuration, setLocalDuration] = useState(settings.quizDuration);
