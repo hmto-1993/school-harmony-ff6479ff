@@ -106,7 +106,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     goToPrevDay, goToNextDay, goToToday,
     getMaxSlots, isCatDisabled,
     cycleSlot, addSlot, toggleStar, clearGrade, setNumericGrade, setDeductionNote,
-    calcTotal, handleSave,
+    calcTotal, handleSave, quickSaveGrade,
   } = useDailyGradeData({ selectedClass, selectedPeriod });
 
   const assessmentCats = visibleCategories.filter(c => !c.is_deduction);
@@ -356,29 +356,42 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   onSelectForGrade={(studentId) => {
                     setEarnedGradeInput({ studentId, open: true });
                   }}
-                  onSelectForParticipation={(studentId, level) => {
+                  onSelectForParticipation={async (studentId, level) => {
                     const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
                     if (!partCat) {
                       toast({ title: "لا توجد فئة مشاركة", description: "يرجى اضافة فئة تحمل اسم المشاركة في اعدادات الفئات", variant: "destructive" });
                       return;
                     }
                     const maxScore = Number(partCat.max_score);
+                    let finalScore: number;
                     if (level === "star") {
                       toggleStar(studentId, partCat.id, maxScore);
-                      toast({ title: "تم رصد المشاركة", description: "تقييم: متميز" });
+                      finalScore = maxScore;
                     } else {
                       const scoreMap = { excellent: maxScore, average: Math.round(maxScore / 2), zero: 0 };
-                      setNumericGrade(studentId, partCat.id, String(scoreMap[level]), maxScore);
-                      const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر" };
-                      toast({ title: "تم رصد المشاركة", description: `تقييم: ${labelMap[level]}` });
+                      finalScore = scoreMap[level];
+                      setNumericGrade(studentId, partCat.id, String(finalScore), maxScore);
+                    }
+                    try {
+                      await quickSaveGrade(studentId, partCat.id, finalScore);
+                      const labelMap = { excellent: "ممتاز", average: "متوسط", zero: "صفر", star: "متميز" };
+                      toast({ title: "✅ تم حفظ المشاركة", description: `تقييم: ${labelMap[level]}` });
+                    } catch {
+                      toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
                     }
                   }}
-                  onQuizCorrect={(studentId, score) => {
+                  onQuizCorrect={async (studentId, score) => {
                     const numCat = assessmentCats[0];
                     if (numCat) {
                       const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
-                      setNumericGrade(studentId, numCat.id, String((currentScore || 0) + score), Number(numCat.max_score));
-                      toast({ title: "تم ترحيل الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
+                      const newScore = Math.min((currentScore || 0) + score, Number(numCat.max_score));
+                      setNumericGrade(studentId, numCat.id, String(newScore), Number(numCat.max_score));
+                      try {
+                        await quickSaveGrade(studentId, numCat.id, newScore);
+                        toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${score} درجة الى الدرجات المكتسبة` });
+                      } catch {
+                        toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                      }
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
@@ -403,15 +416,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
-                      onKeyDown={(e) => {
+                      onKeyDown={async (e) => {
                         if (e.key === "Enter") {
                           const val = (e.target as HTMLInputElement).value;
                           if (val) {
-                            // Find first numeric assessment category or participation category
                             const numCat = assessmentCats[0];
                             if (numCat) {
-                              setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
-                              toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                              const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
+                              setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
+                              try {
+                                await quickSaveGrade(earnedGradeInput.studentId, numCat.id, finalScore);
+                                toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${val} درجة` });
+                              } catch {
+                                toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                              }
                             }
                             setEarnedGradeInput({ studentId: "", open: false });
                           }
@@ -420,20 +438,28 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     />
                     <Button
                       size="sm"
-                      onClick={() => {
+                      className="gap-1.5"
+                      onClick={async () => {
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
                         const val = input?.value;
                         if (val) {
                           const numCat = assessmentCats[0];
                           if (numCat) {
-                            setNumericGrade(earnedGradeInput.studentId, numCat.id, val, Number(numCat.max_score));
-                            toast({ title: "تم رصد الدرجة", description: `تم اضافة ${val} درجة` });
+                            const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
+                            setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
+                            try {
+                              await quickSaveGrade(earnedGradeInput.studentId, numCat.id, finalScore);
+                              toast({ title: "✅ تم حفظ الدرجة", description: `تم اضافة ${val} درجة` });
+                            } catch {
+                              toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
+                            }
                           }
                         }
                         setEarnedGradeInput({ studentId: "", open: false });
                       }}
                     >
-                      تاكيد
+                      <Save className="h-3.5 w-3.5" />
+                      حفظ
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setEarnedGradeInput({ studentId: "", open: false })}>
                       الغاء
