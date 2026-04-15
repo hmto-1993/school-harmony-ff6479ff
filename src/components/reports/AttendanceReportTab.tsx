@@ -1,10 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { BarChart3, ClipboardCheck, Calendar, Users, UserCircle, Eye } from "lucide-react";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
@@ -19,6 +22,14 @@ const STATUS_LABELS: Record<string, string> = {
   late: "متأخر",
   early_leave: "خروج مبكر",
   sick_leave: "إجازة مرضية",
+};
+
+const STATUS_ORDER: Record<string, number> = {
+  present: 0,
+  late: 1,
+  early_leave: 2,
+  sick_leave: 3,
+  absent: 4,
 };
 
 interface AttendanceReportTabProps {
@@ -38,6 +49,8 @@ interface AttendanceReportTabProps {
   className: string;
 }
 
+type StatusFilter = "all" | "present" | "absent" | "late";
+
 export default function AttendanceReportTab({
   attendanceData,
   loadingAttendance,
@@ -54,6 +67,9 @@ export default function AttendanceReportTab({
   dateTo,
   className,
 }: AttendanceReportTabProps) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const isAllClasses = selectedClass === "all";
+
   const attendanceSummary = useMemo(() => {
     const total = attendanceData.length;
     const present = attendanceData.filter((r) => r.status === "present").length;
@@ -62,15 +78,133 @@ export default function AttendanceReportTab({
     return { total, present, absent, late };
   }, [attendanceData]);
 
+  // Group data by class when "all" is selected
+  const groupedByClass = useMemo(() => {
+    if (!isAllClasses) return null;
+    const map = new Map<string, AttendanceRow[]>();
+    attendanceData.forEach((row) => {
+      const cn = row.class_name || "غير محدد";
+      if (!map.has(cn)) map.set(cn, []);
+      map.get(cn)!.push(row);
+    });
+    // Sort students within each class: present first, then absent
+    map.forEach((rows, key) => {
+      rows.sort((a, b) => (STATUS_ORDER[a.status] ?? 5) - (STATUS_ORDER[b.status] ?? 5));
+    });
+    return map;
+  }, [isAllClasses, attendanceData]);
+
+  const filterRows = (rows: AttendanceRow[]) => {
+    if (statusFilter === "all") return rows;
+    return rows.filter((r) => r.status === statusFilter);
+  };
+
+  const renderTable = (rows: AttendanceRow[], showClassName = false) => {
+    const filtered = filterRows(rows);
+    if (filtered.length === 0) {
+      return (
+        <p className="text-center text-muted-foreground text-sm py-4">لا توجد سجلات</p>
+      );
+    }
+    return (
+      <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
+              <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
+              {showClassName && <TableHead className="text-right font-semibold">الفصل</TableHead>}
+              <TableHead className="text-right font-semibold">التاريخ</TableHead>
+              <TableHead className="text-right font-semibold">الحالة</TableHead>
+              <TableHead className="text-right font-semibold">ملاحظات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((row, i) => (
+              <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
+                <TableCell className="font-medium">{row.student_name}</TableCell>
+                {showClassName && <TableCell className="text-muted-foreground text-sm">{row.class_name}</TableCell>}
+                <TableCell className="text-muted-foreground">{row.date}</TableCell>
+                <TableCell>
+                  <Badge
+                    className={
+                      row.status === "present"
+                        ? "bg-success/15 text-success hover:bg-success/20 border-0"
+                        : row.status === "absent"
+                        ? "bg-destructive/15 text-destructive hover:bg-destructive/20 border-0"
+                        : "bg-warning/15 hover:bg-warning/20 border-0"
+                    }
+                    style={row.status !== "present" && row.status !== "absent" ? { color: "hsl(var(--warning))" } : undefined}
+                  >
+                    {STATUS_LABELS[row.status] || row.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-muted-foreground text-sm">
+                  {row.notes || "—"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
+
+  const renderClassSection = (className: string, rows: AttendanceRow[]) => {
+    const filtered = filterRows(rows);
+    const classPresent = rows.filter(r => r.status === "present").length;
+    const classAbsent = rows.filter(r => r.status === "absent").length;
+    const classLate = rows.filter(r => r.status === "late").length;
+
+    return (
+      <Card key={className} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+        <CardContent className="pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-1 rounded-full bg-primary" />
+              <h3 className="font-bold text-base text-foreground">{className}</h3>
+              <span className="text-xs text-muted-foreground">({rows.length} سجل)</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs">
+              <Badge variant="outline" className="bg-success/10 text-success border-success/20 gap-1">
+                <ClipboardCheck className="h-3 w-3" />{classPresent}
+              </Badge>
+              <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1">
+                <Users className="h-3 w-3" />{classAbsent}
+              </Badge>
+              {classLate > 0 && (
+                <Badge variant="outline" className="border-warning/20 gap-1" style={{ background: "hsl(var(--warning) / 0.1)", color: "hsl(var(--warning))" }}>
+                  <Calendar className="h-3 w-3" />{classLate}
+                </Badge>
+              )}
+            </div>
+          </div>
+          {renderTable(rows, false)}
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 print:hidden">
+      <div className="flex items-center gap-2 flex-wrap print:hidden">
         <Button onClick={fetchAttendance} disabled={loadingAttendance || !selectedClass}>
           <BarChart3 className="h-4 w-4 ml-1.5" />
           {loadingAttendance ? "جارٍ التحميل..." : "عرض التقرير"}
         </Button>
         {attendanceData.length > 0 && (
           <>
+            {/* Status filter */}
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as StatusFilter)}>
+              <SelectTrigger className="w-32 h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">الكل</SelectItem>
+                <SelectItem value="present">الحاضرون</SelectItem>
+                <SelectItem value="absent">الغائبون</SelectItem>
+                <SelectItem value="late">المتأخرون</SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm" onClick={onPreview} className="gap-1.5">
               <Eye className="h-4 w-4" />
               معاينة
@@ -130,49 +264,22 @@ export default function AttendanceReportTab({
 
           <AttendanceChart data={attendanceData} />
 
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CardContent className="pt-4">
-              <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gradient-to-l from-primary/5 to-accent/5 dark:from-primary/10 dark:to-accent/10">
-                      <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
-                      <TableHead className="text-right font-semibold">التاريخ</TableHead>
-                      <TableHead className="text-right font-semibold">الحالة</TableHead>
-                      <TableHead className="text-right font-semibold">ملاحظات</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {attendanceData.map((row, i) => (
-                      <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
-                        <TableCell className="font-medium">{row.student_name}</TableCell>
-                        <TableCell className="text-muted-foreground">{row.date}</TableCell>
-                        <TableCell>
-                          <Badge
-                            className={
-                              row.status === "present"
-                                ? "bg-success/15 text-success hover:bg-success/20 border-0"
-                                : row.status === "absent"
-                                ? "bg-destructive/15 text-destructive hover:bg-destructive/20 border-0"
-                                : "bg-warning/15 hover:bg-warning/20 border-0"
-                            }
-                            style={row.status !== "present" && row.status !== "absent" ? { color: "hsl(var(--warning))" } : undefined}
-                          >
-                            {STATUS_LABELS[row.status] || row.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {row.notes || "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Grouped by class view */}
+          {isAllClasses && groupedByClass ? (
+            <div className="space-y-4">
+              {Array.from(groupedByClass.entries()).map(([cn, rows]) =>
+                renderClassSection(cn, rows)
+              )}
+            </div>
+          ) : (
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardContent className="pt-4">
+                {renderTable(attendanceData)}
+              </CardContent>
+            </Card>
+          )}
 
-          {reportType === "periodic" && (
+          {reportType === "periodic" && !isAllClasses && (
             <AttendanceWeeklyReport
               attendanceData={attendanceData}
               students={students}
