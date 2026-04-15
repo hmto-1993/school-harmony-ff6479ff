@@ -181,13 +181,30 @@ export function useReportsData() {
   const fetchAttendance = async () => {
     if (!selectedClass) return;
     setLoadingAttendance(true);
+
+    // Build a map of student_id -> class_name for "all" mode
+    const classNameMap: Record<string, string> = {};
+    if (selectedClass === "all") {
+      classes.forEach(c => {
+        students.filter(s => true).forEach(() => {}); // we'll populate from results
+      });
+    }
+
     let query = supabase
       .from("attendance_records")
-      .select("status, notes, date, student_id, students(full_name)")
-      .eq("class_id", selectedClass)
+      .select("status, notes, date, student_id, class_id, students(full_name, class_id), classes:class_id(name)")
       .gte("date", dateFrom)
       .lte("date", dateTo)
       .order("date", { ascending: false });
+
+    if (selectedClass === "all") {
+      const classIds = classes.map(c => c.id);
+      if (classIds.length > 0) {
+        query = query.in("class_id", classIds);
+      }
+    } else {
+      query = query.eq("class_id", selectedClass);
+    }
 
     if (selectedStudent !== "all") {
       query = query.eq("student_id", selectedStudent);
@@ -199,7 +216,9 @@ export function useReportsData() {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
       const rows: AttendanceRow[] = (data || []).map((r: any) => ({
-        student_name: r.students?.full_name || "—",
+        student_name: selectedClass === "all"
+          ? `${r.students?.full_name || "—"} (${(r.classes as any)?.name || ""})`
+          : r.students?.full_name || "—",
         student_id: r.student_id,
         date: r.date,
         status: r.status,
