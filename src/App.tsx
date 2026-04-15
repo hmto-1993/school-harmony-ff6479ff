@@ -15,16 +15,23 @@ import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
 
-// Lazy-loaded pages
-const LoginPage = lazy(() => import("@/pages/LoginPage"));
-const DashboardPage = lazy(() => import("@/pages/DashboardPage"));
-const StudentsPage = lazy(() => import("@/pages/StudentsPage"));
-const AttendancePage = lazy(() => import("@/pages/AttendancePage"));
-const GradesPage = lazy(() => import("@/pages/GradesPage"));
+// Eagerly start fetching critical pages so they're ready before auth resolves
+const loginImport = import("@/pages/LoginPage");
+const dashboardImport = import("@/pages/DashboardPage");
+const gradesImport = import("@/pages/GradesPage");
+const attendanceImport = import("@/pages/AttendancePage");
+const studentsImport = import("@/pages/StudentsPage");
+const studentDashboardImport = import("@/pages/StudentDashboard");
+
+const LoginPage = lazy(() => loginImport);
+const DashboardPage = lazy(() => dashboardImport);
+const GradesPage = lazy(() => gradesImport);
+const AttendancePage = lazy(() => attendanceImport);
+const StudentsPage = lazy(() => studentsImport);
+const StudentDashboard = lazy(() => studentDashboardImport);
 const ReportsPage = lazy(() => import("@/pages/ReportsPage"));
 const NotificationsPage = lazy(() => import("@/pages/NotificationsPage"));
 const SettingsPage = lazy(() => import("@/pages/SettingsPage"));
-const StudentDashboard = lazy(() => import("@/pages/StudentDashboard"));
 const ResourceLibraryPage = lazy(() => import("@/pages/ResourceLibraryPage"));
 const StudentLoginsPage = lazy(() => import("@/pages/StudentLoginsPage"));
 const ActivitiesPage = lazy(() => import("@/pages/ActivitiesPage"));
