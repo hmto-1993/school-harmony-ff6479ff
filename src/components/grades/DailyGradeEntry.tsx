@@ -345,6 +345,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                   students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name }))}
                   settings={radarSettings}
                   muted={radarMuted}
+                  participatedStudentIds={(() => {
+                    const partCat = assessmentCats.find(c => c.name.includes("المشاركة"));
+                    if (!partCat) return [];
+                    return filteredStudentGrades
+                      .filter(sg => sg.grades[partCat.id] != null)
+                      .map(sg => sg.student_id);
+                  })()}
                   onToggleMute={() => setRadarMuted(p => !p)}
                   onSelectForGrade={(studentId) => {
                     setEarnedGradeInput({ studentId, open: true });

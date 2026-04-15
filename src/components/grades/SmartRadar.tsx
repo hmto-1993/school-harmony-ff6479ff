@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
@@ -29,6 +29,7 @@ interface SmartRadarProps {
   students: Student[];
   settings: RadarSettings;
   muted: boolean;
+  participatedStudentIds?: string[];
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
@@ -43,6 +44,7 @@ export default function SmartRadar({
   students,
   settings,
   muted,
+  participatedStudentIds = [],
   onToggleMute,
   onSelectForGrade,
   onSelectForParticipation,
@@ -55,6 +57,7 @@ export default function SmartRadar({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
+  const [excludeParticipated, setExcludeParticipated] = useState(true);
 
   // Quick duration override (before spinning)
   const [localDuration, setLocalDuration] = useState(settings.quizDuration);
@@ -128,8 +131,10 @@ export default function SmartRadar({
     }
   }, [selectedBankLesson]);
 
+  const participatedSet = new Set(participatedStudentIds);
   const available = students.filter(
-    (s) => !settings.sessionMemory || !excluded.has(s.student_id)
+    (s) => (!settings.sessionMemory || !excluded.has(s.student_id)) &&
+           (!excludeParticipated || !participatedSet.has(s.student_id))
   );
 
   // ── Timer logic ──────────────────────────────────────────────────
@@ -401,6 +406,33 @@ export default function SmartRadar({
           </button>
         </div>
       </div>
+
+      {/* Exclude participated toggle */}
+      {participatedStudentIds.length > 0 && (
+        <div className="relative flex items-center justify-between mb-3 px-1">
+          <div className="flex items-center gap-1.5">
+            <UserMinus className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-[11px] font-bold text-white/60">استبعاد من شارك ({participatedStudentIds.length})</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setExcludeParticipated(p => !p)}
+            className={cn(
+              "h-6 w-11 rounded-full border transition-colors relative",
+              excludeParticipated
+                ? "bg-primary/30 border-primary/50"
+                : "bg-white/10 border-white/20"
+            )}
+          >
+            <span className={cn(
+              "absolute top-0.5 h-4.5 w-4.5 rounded-full transition-all",
+              excludeParticipated
+                ? "bg-primary right-0.5"
+                : "bg-white/50 left-0.5"
+            )} />
+          </button>
+        </div>
+      )}
 
       {/* Quick controls (before spin) */}
       {!spinning && !showActions && !selectedStudent && settings.quizEnabled && (
