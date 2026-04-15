@@ -115,7 +115,7 @@ export function useReportsData() {
   // Fetch periods per week
   useEffect(() => {
     const fetchSchedule = async () => {
-      if (!selectedClass) return;
+      if (!selectedClass || selectedClass === "all") { setPeriodsPerWeek(5); return; }
       const { data } = await supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClass).single();
       setPeriodsPerWeek(data?.periods_per_week || 5);
     };
@@ -147,6 +147,19 @@ export function useReportsData() {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!selectedClass) { setStudents([]); return; }
+      if (selectedClass === "all") {
+        // Fetch students from all teacher's classes
+        const classIds = classes.map(c => c.id);
+        if (classIds.length === 0) { setStudents([]); return; }
+        const { data } = await supabase
+          .from("students")
+          .select("id, full_name, parent_phone")
+          .in("class_id", classIds)
+          .order("full_name");
+        setStudents(data || []);
+        setSelectedStudent("all");
+        return;
+      }
       const { data } = await supabase
         .from("students")
         .select("id, full_name, parent_phone")
@@ -156,7 +169,7 @@ export function useReportsData() {
       setSelectedStudent("all");
     };
     fetchStudents();
-  }, [selectedClass]);
+  }, [selectedClass, classes]);
 
   // Auto-fetch attendance
   useEffect(() => {
@@ -168,13 +181,23 @@ export function useReportsData() {
   const fetchAttendance = async () => {
     if (!selectedClass) return;
     setLoadingAttendance(true);
+
+
     let query = supabase
       .from("attendance_records")
-      .select("status, notes, date, student_id, students(full_name)")
-      .eq("class_id", selectedClass)
+      .select("status, notes, date, student_id, class_id, students(full_name, class_id), classes:class_id(name)")
       .gte("date", dateFrom)
       .lte("date", dateTo)
       .order("date", { ascending: false });
+
+    if (selectedClass === "all") {
+      const classIds = classes.map(c => c.id);
+      if (classIds.length > 0) {
+        query = query.in("class_id", classIds);
+      }
+    } else {
+      query = query.eq("class_id", selectedClass);
+    }
 
     if (selectedStudent !== "all") {
       query = query.eq("student_id", selectedStudent);
@@ -186,7 +209,9 @@ export function useReportsData() {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
       const rows: AttendanceRow[] = (data || []).map((r: any) => ({
-        student_name: r.students?.full_name || "—",
+        student_name: selectedClass === "all"
+          ? `${r.students?.full_name || "—"} (${(r.classes as any)?.name || ""})`
+          : r.students?.full_name || "—",
         student_id: r.student_id,
         date: r.date,
         status: r.status,
@@ -318,7 +343,7 @@ export function useReportsData() {
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
-  const className = classes.find((c) => c.id === selectedClass)?.name || "";
+  const className = selectedClass === "all" ? "جميع الفصول" : (classes.find((c) => c.id === selectedClass)?.name || "");
 
   return {
     // Auth & permissions
