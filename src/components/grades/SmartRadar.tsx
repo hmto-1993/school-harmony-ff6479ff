@@ -29,6 +29,7 @@ interface SmartRadarProps {
   students: Student[];
   settings: RadarSettings;
   muted: boolean;
+  participatedStudentIds?: string[];
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
@@ -43,6 +44,7 @@ export default function SmartRadar({
   students,
   settings,
   muted,
+  participatedStudentIds = [],
   onToggleMute,
   onSelectForGrade,
   onSelectForParticipation,
