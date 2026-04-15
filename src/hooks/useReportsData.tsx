@@ -115,7 +115,7 @@ export function useReportsData() {
   // Fetch periods per week
   useEffect(() => {
     const fetchSchedule = async () => {
-      if (!selectedClass) return;
+      if (!selectedClass || selectedClass === "all") { setPeriodsPerWeek(5); return; }
       const { data } = await supabase.from("class_schedules").select("periods_per_week").eq("class_id", selectedClass).single();
       setPeriodsPerWeek(data?.periods_per_week || 5);
     };
@@ -147,6 +147,19 @@ export function useReportsData() {
   useEffect(() => {
     const fetchStudents = async () => {
       if (!selectedClass) { setStudents([]); return; }
+      if (selectedClass === "all") {
+        // Fetch students from all teacher's classes
+        const classIds = classes.map(c => c.id);
+        if (classIds.length === 0) { setStudents([]); return; }
+        const { data } = await supabase
+          .from("students")
+          .select("id, full_name, parent_phone")
+          .in("class_id", classIds)
+          .order("full_name");
+        setStudents(data || []);
+        setSelectedStudent("all");
+        return;
+      }
       const { data } = await supabase
         .from("students")
         .select("id, full_name, parent_phone")
@@ -156,7 +169,7 @@ export function useReportsData() {
       setSelectedStudent("all");
     };
     fetchStudents();
-  }, [selectedClass]);
+  }, [selectedClass, classes]);
 
   // Auto-fetch attendance
   useEffect(() => {
