@@ -45,10 +45,23 @@ export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
 
-  if (s.loading) {
+  if (s.loading || !adminPerms.loaded) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Check if this admin can access settings at all
+  if (s.isAdmin && !adminPerms.isPrimaryAdmin && !adminPerms.can_access_settings) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+          <Lock className="h-8 w-8 text-destructive" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground">الوصول مقيّد</h2>
+        <p className="text-sm text-muted-foreground">ليس لديك صلاحية الوصول لصفحة الإعدادات</p>
       </div>
     );
   }
