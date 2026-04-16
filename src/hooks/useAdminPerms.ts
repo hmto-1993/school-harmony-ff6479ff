@@ -49,8 +49,15 @@ export function useAdminPerms(): MyAdminPerms {
         }
       });
 
-      // If no primary ID set, or user IS the primary admin
-      if (!primaryId || user.id === primaryId) {
+      // If no primary ID set, auto-register current user as primary admin
+      if (!primaryId) {
+        await supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user.id });
+        setPerms({ ...allTrue, loaded: true });
+        return;
+      }
+
+      // User IS the primary admin
+      if (user.id === primaryId) {
         setPerms({ ...allTrue, loaded: true });
         return;
       }

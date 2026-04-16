@@ -242,6 +242,12 @@ export default function SettingsPage() {
       <div className="space-y-4">
         <CollapsibleSettingsCard icon={UserCircle} iconGradient="from-pink-500 to-rose-600" iconShadow="shadow-lg shadow-pink-500/20" title="الملف الشخصي" description="تعديل بياناتك الشخصية وكلمة المرور">
           <div className="space-y-4 max-w-md">
+            {adminPerms.isPrimaryAdmin && s.isAdmin && (
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm font-bold">
+                <Lock className="h-4 w-4 shrink-0" />
+                المالك الرئيسي للنظام
+              </div>
+            )}
             <div className="space-y-2">
               <Label>الاسم الكامل</Label>
               <Input value={s.profileName} onChange={(e) => s.setProfileName(e.target.value)} placeholder="الاسم الكامل" />
