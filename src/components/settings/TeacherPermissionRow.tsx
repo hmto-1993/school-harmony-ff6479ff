@@ -37,7 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 interface TeacherPermissionRowProps {
-  teacher: { user_id: string; email: string; full_name: string; national_id?: string };
+  teacher: { user_id: string; email: string; full_name: string; national_id?: string; role?: string };
   onDeleted?: () => void;
   onUpdated?: (userId: string, newName: string, newNationalId: string) => void;
 }
