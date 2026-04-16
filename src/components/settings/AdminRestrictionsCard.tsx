@@ -77,7 +77,6 @@ export default function AdminRestrictionsCard() {
   const otherAdmins = admins;
 
   if (loading) return null;
-  if (otherAdmins.length === 0) return null;
 
   const toggles = [
     { key: "can_access_settings" as const, label: "الإعدادات", icon: Settings, desc: "الوصول لصفحة الإعدادات" },
