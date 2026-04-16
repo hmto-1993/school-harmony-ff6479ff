@@ -312,6 +312,11 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
           </Dialog>
         </div>
       </TableCell>
+      <TableCell className="text-center">
+        <Badge variant={currentRole === "admin" ? "default" : "secondary"} className="text-[10px]">
+          {currentRole === "admin" ? "مسؤول" : "معلم"}
+        </Badge>
+      </TableCell>
       <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.national_id || "—"}</TableCell>
       {permKeys.map((key) => (
         <TableCell key={key} className="text-center">
