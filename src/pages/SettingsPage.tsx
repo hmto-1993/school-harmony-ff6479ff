@@ -53,18 +53,8 @@ export default function SettingsPage() {
     );
   }
 
-  // Check if this admin can access settings at all
-  if (s.isAdmin && !adminPerms.isPrimaryAdmin && !adminPerms.can_access_settings) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
-          <Lock className="h-8 w-8 text-destructive" />
-        </div>
-        <h2 className="text-lg font-bold text-foreground">الوصول مقيّد</h2>
-        <p className="text-sm text-muted-foreground">ليس لديك صلاحية الوصول لصفحة الإعدادات</p>
-      </div>
-    );
-  }
+  // If restricted admin, just show limited settings without blocking message
+  const isRestrictedAdmin = s.isAdmin && !adminPerms.isPrimaryAdmin && !adminPerms.can_access_settings;
 
   return (
     <div className="space-y-6 animate-fade-in">
