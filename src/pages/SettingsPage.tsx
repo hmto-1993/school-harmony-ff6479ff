@@ -157,7 +157,7 @@ export default function SettingsPage() {
       <ParentPortalCard s={s} />
 
       {/* ===== Inline Cards ===== */}
-      {s.activeCard === "print" && s.isAdmin && (
+      {s.activeCard === "print" && s.isAdmin && (adminPerms.isPrimaryAdmin || adminPerms.can_edit_print_header) && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
