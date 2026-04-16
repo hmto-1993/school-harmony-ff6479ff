@@ -29,6 +29,7 @@ interface Teacher {
   email: string;
   full_name: string;
   national_id?: string;
+  role?: string;
 }
 
 interface TeacherManagementCardProps {
@@ -127,12 +128,12 @@ export default function TeacherManagementCard({ teachers, setTeachers }: Teacher
                 <Users className="h-5 w-5" />
               </div>
               <div className="text-right">
-                <h3 className="text-base font-bold text-foreground">إدارة المعلمين</h3>
+                <h3 className="text-base font-bold text-foreground">إدارة المعلمين والمسؤولين</h3>
                 <p className="text-xs text-muted-foreground">إنشاء حسابات وإدارة كلمات المرور والصلاحيات</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">{teachers.length} معلم</Badge>
+              <Badge variant="secondary" className="text-xs">{teachers.length} حساب</Badge>
               <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
             </div>
           </div>
@@ -150,7 +151,8 @@ export default function TeacherManagementCard({ teachers, setTeachers }: Teacher
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="text-right">المعلم</TableHead>
+                        <TableHead className="text-right">الاسم</TableHead>
+                        <TableHead className="text-right">الدور</TableHead>
                         <TableHead className="text-right">رقم الهوية</TableHead>
                         <TableHead className="text-center text-xs font-bold text-primary">عرض فقط</TableHead>
                         <TableHead className="text-center text-xs">الطباعة</TableHead>

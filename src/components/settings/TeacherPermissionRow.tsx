@@ -37,7 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 interface TeacherPermissionRowProps {
-  teacher: { user_id: string; email: string; full_name: string; national_id?: string };
+  teacher: { user_id: string; email: string; full_name: string; national_id?: string; role?: string };
   onDeleted?: () => void;
   onUpdated?: (userId: string, newName: string, newNationalId: string) => void;
 }
@@ -84,9 +84,9 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState(teacher.full_name);
   const [editNationalId, setEditNationalId] = useState(teacher.national_id || "");
-  const [editRole, setEditRole] = useState<"admin" | "teacher">("teacher");
+  const [editRole, setEditRole] = useState<"admin" | "teacher">((teacher.role as "admin" | "teacher") || "teacher");
   const [savingEdit, setSavingEdit] = useState(false);
-  const [currentRole, setCurrentRole] = useState<"admin" | "teacher">("teacher");
+  const [currentRole, setCurrentRole] = useState<"admin" | "teacher">((teacher.role as "admin" | "teacher") || "teacher");
 
   useEffect(() => {
     supabase
@@ -311,6 +311,11 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
             </DialogContent>
           </Dialog>
         </div>
+      </TableCell>
+      <TableCell className="text-center">
+        <Badge variant={currentRole === "admin" ? "default" : "secondary"} className="text-[10px]">
+          {currentRole === "admin" ? "مسؤول" : "معلم"}
+        </Badge>
       </TableCell>
       <TableCell className="text-xs text-muted-foreground" dir="ltr">{teacher.national_id || "—"}</TableCell>
       {permKeys.map((key) => (

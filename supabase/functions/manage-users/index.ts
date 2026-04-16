@@ -188,31 +188,37 @@ Deno.serve(async (req) => {
     if (action === "list_teachers") {
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
-        .select("user_id")
-        .eq("role", "teacher");
+        .select("user_id, role")
+        .in("role", ["teacher", "admin"]);
 
       if (!roles || roles.length === 0) {
         return ok({ teachers: [] });
       }
 
-      const teacherIds = roles.map((r: any) => r.user_id);
+      const staffIds = roles.map((r: any) => r.user_id);
+      const roleMap: Record<string, string> = {};
+      roles.forEach((r: any) => { roleMap[r.user_id] = r.role; });
+
       const { data: profiles } = await supabaseAdmin
         .from("profiles")
         .select("user_id, full_name, national_id")
-        .in("user_id", teacherIds);
+        .in("user_id", staffIds);
 
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-      const teacherUsers = users.filter((u: any) => teacherIds.includes(u.id));
+      const staffUsers = users.filter((u: any) => staffIds.includes(u.id));
 
-      const teachers = teacherUsers.map((u: any) => {
-        const profile = profiles?.find((p: any) => p.user_id === u.id);
-        return {
-          user_id: u.id,
-          email: u.email,
-          full_name: profile?.full_name || u.email,
-          national_id: profile?.national_id || "",
-        };
-      });
+      const teachers = staffUsers
+        .filter((u: any) => u.id !== callerId)
+        .map((u: any) => {
+          const profile = profiles?.find((p: any) => p.user_id === u.id);
+          return {
+            user_id: u.id,
+            email: u.email,
+            full_name: profile?.full_name || u.email,
+            national_id: profile?.national_id || "",
+            role: roleMap[u.id] || "teacher",
+          };
+        });
 
       return ok({ teachers });
     }
