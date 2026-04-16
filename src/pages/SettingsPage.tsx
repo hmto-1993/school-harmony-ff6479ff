@@ -219,7 +219,7 @@ export default function SettingsPage() {
         <BehaviorSuggestionsSettings onClose={() => s.setActiveCard(null)} />
       )}
 
-      {s.activeCard === "form_identity" && s.isAdmin && (
+      {s.activeCard === "form_identity" && s.isAdmin && (adminPerms.isPrimaryAdmin || adminPerms.can_edit_form_identity) && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
