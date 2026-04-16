@@ -84,9 +84,9 @@ export default function TeacherPermissionRow({ teacher, onDeleted, onUpdated }: 
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState(teacher.full_name);
   const [editNationalId, setEditNationalId] = useState(teacher.national_id || "");
-  const [editRole, setEditRole] = useState<"admin" | "teacher">("teacher");
+  const [editRole, setEditRole] = useState<"admin" | "teacher">((teacher.role as "admin" | "teacher") || "teacher");
   const [savingEdit, setSavingEdit] = useState(false);
-  const [currentRole, setCurrentRole] = useState<"admin" | "teacher">("teacher");
+  const [currentRole, setCurrentRole] = useState<"admin" | "teacher">((teacher.role as "admin" | "teacher") || "teacher");
 
   useEffect(() => {
     supabase
