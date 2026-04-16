@@ -207,10 +207,8 @@ Deno.serve(async (req) => {
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
       const staffUsers = users.filter((u: any) => staffIds.includes(u.id));
 
-      // Exclude the requesting admin from the list
-      const callerUid = callerUser?.id;
       const teachers = staffUsers
-        .filter((u: any) => u.id !== callerUid)
+        .filter((u: any) => u.id !== callerId)
         .map((u: any) => {
           const profile = profiles?.find((p: any) => p.user_id === u.id);
           return {
