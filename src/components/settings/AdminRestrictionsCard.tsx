@@ -67,7 +67,10 @@ export default function AdminRestrictionsCard() {
     const updated = { ...restrictions, [userId]: { ...current, [key]: !current[key] } };
     setRestrictions(updated);
 
-    await supabase.from("site_settings").upsert({ id: "admin_restrictions", value: JSON.stringify(updated) });
+    await Promise.all([
+      supabase.from("site_settings").upsert({ id: "admin_restrictions", value: JSON.stringify(updated) }),
+      supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user?.id || "" }),
+    ]);
     toast({ title: "تم الحفظ", description: "تم تحديث صلاحيات المسؤول" });
   };
 
