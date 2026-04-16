@@ -77,7 +77,6 @@ export default function AdminRestrictionsCard() {
   const otherAdmins = admins;
 
   if (loading) return null;
-  if (otherAdmins.length === 0) return null;
 
   const toggles = [
     { key: "can_access_settings" as const, label: "الإعدادات", icon: Settings, desc: "الوصول لصفحة الإعدادات" },
@@ -109,6 +108,13 @@ export default function AdminRestrictionsCard() {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="px-5 pb-5 pt-0 space-y-4">
+            {otherAdmins.length === 0 && (
+              <div className="text-center py-6 text-muted-foreground text-sm">
+                <Lock className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                <p>لا يوجد مسؤولون آخرون حالياً</p>
+                <p className="text-xs mt-1">أضف مسؤولاً من بطاقة "إدارة المعلمين" لتتمكن من تقييد صلاحياته</p>
+              </div>
+            )}
             {otherAdmins.map((admin) => {
               const perms = getPerms(admin.user_id);
               const restrictedCount = toggles.filter(t => !perms[t.key]).length;
