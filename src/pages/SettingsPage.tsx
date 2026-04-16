@@ -43,6 +43,7 @@ import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 
 export default function SettingsPage() {
   const s = useSettingsData();
+  const adminPerms = useAdminPerms();
 
   if (s.loading) {
     return (
