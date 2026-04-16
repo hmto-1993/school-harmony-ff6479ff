@@ -217,6 +217,38 @@ Deno.serve(async (req) => {
       return ok({ teachers });
     }
 
+    if (action === "list_admins") {
+      const { data: roles } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id")
+        .eq("role", "admin");
+
+      if (!roles || roles.length === 0) {
+        return ok({ admins: [] });
+      }
+
+      const adminIds = roles.map((r: any) => r.user_id);
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, full_name, national_id")
+        .in("user_id", adminIds);
+
+      const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+      const adminUsers = users.filter((u: any) => adminIds.includes(u.id));
+
+      const admins = adminUsers.map((u: any) => {
+        const profile = profiles?.find((p: any) => p.user_id === u.id);
+        return {
+          user_id: u.id,
+          email: u.email,
+          full_name: profile?.full_name || u.email,
+          national_id: profile?.national_id || "",
+        };
+      });
+
+      return ok({ admins });
+    }
+
     return ok({ error: "إجراء غير معروف" });
   } catch (error) {
     return ok({ error: error.message || "حدث خطأ غير متوقع" });

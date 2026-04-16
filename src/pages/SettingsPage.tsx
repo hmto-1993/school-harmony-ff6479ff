@@ -22,11 +22,13 @@ import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSe
 import TimetableEditor from "@/components/settings/TimetableEditor";
 import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
 import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
+import AdminRestrictionsCard from "@/components/settings/AdminRestrictionsCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
+import { useAdminPerms } from "@/hooks/useAdminPerms";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
@@ -41,11 +43,25 @@ import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 
 export default function SettingsPage() {
   const s = useSettingsData();
+  const adminPerms = useAdminPerms();
 
-  if (s.loading) {
+  if (s.loading || !adminPerms.loaded) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Check if this admin can access settings at all
+  if (s.isAdmin && !adminPerms.isPrimaryAdmin && !adminPerms.can_access_settings) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+          <Lock className="h-8 w-8 text-destructive" />
+        </div>
+        <h2 className="text-lg font-bold text-foreground">الوصول مقيّد</h2>
+        <p className="text-sm text-muted-foreground">ليس لديك صلاحية الوصول لصفحة الإعدادات</p>
       </div>
     );
   }
@@ -92,7 +108,15 @@ export default function SettingsPage() {
           { key: "behavior_suggestions", icon: Heart, label: "وصف السلوك", desc: "مقترحات وصف السلوك", gradient: "from-green-500 to-emerald-600", shadow: "shadow-green-500/20", adminOnly: true },
           { key: "form_identity", icon: Pencil, label: "هوية النماذج", desc: "ترويسة وتوقيع النماذج", gradient: "from-purple-500 to-violet-600", shadow: "shadow-purple-500/20", adminOnly: true },
           { key: "radar_settings", icon: Radar, label: "الرادار الذكي", desc: "سرعة الرادار وذاكرة الحصة", gradient: "from-cyan-500 to-teal-600", shadow: "shadow-cyan-500/20", adminOnly: true },
-        ].filter(c => !c.adminOnly || s.isAdmin).map((card) => (
+        ].filter(c => {
+          if (c.adminOnly && !s.isAdmin) return false;
+          // Hide restricted cards for non-primary admins
+          if (!adminPerms.isPrimaryAdmin && s.isAdmin) {
+            if (c.key === "print" && !adminPerms.can_edit_print_header) return false;
+            if (c.key === "form_identity" && !adminPerms.can_edit_form_identity) return false;
+          }
+          return true;
+        }).map((card) => (
           <button
             key={card.key}
             onClick={() => s.setActiveCard(s.activeCard === card.key ? null : card.key)}
@@ -141,7 +165,7 @@ export default function SettingsPage() {
       <ParentPortalCard s={s} />
 
       {/* ===== Inline Cards ===== */}
-      {s.activeCard === "print" && s.isAdmin && (
+      {s.activeCard === "print" && s.isAdmin && (adminPerms.isPrimaryAdmin || adminPerms.can_edit_print_header) && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -203,7 +227,7 @@ export default function SettingsPage() {
         <BehaviorSuggestionsSettings onClose={() => s.setActiveCard(null)} />
       )}
 
-      {s.activeCard === "form_identity" && s.isAdmin && (
+      {s.activeCard === "form_identity" && s.isAdmin && (adminPerms.isPrimaryAdmin || adminPerms.can_edit_form_identity) && (
         <Card className="border-2 border-primary/20 shadow-xl bg-card animate-fade-in overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -266,33 +290,13 @@ export default function SettingsPage() {
 
         {s.isAdmin && (
           <>
-            <Card className="border border-border/50 bg-card shadow-md">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-xl shadow-lg text-white bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/20">
-                      <Lock className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">وضع القراءة فقط للمديرين</h3>
-                      <p className="text-xs text-muted-foreground">{s.adminReadOnly ? "مفعّل — المديرون الآخرون للاطلاع فقط" : "معطّل — الكل يمكنه التعديل"}</p>
-                    </div>
-                  </div>
-                  <Switch checked={s.adminReadOnly} disabled={s.savingAdminReadOnly}
-                    onCheckedChange={async (checked) => {
-                      s.setSavingAdminReadOnly(true); s.setAdminReadOnly(checked);
-                      await Promise.all([
-                        supabase.from("site_settings").upsert({ id: "admin_read_only", value: String(checked) }),
-                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: s.user?.id || "" }),
-                      ]);
-                      s.setSavingAdminReadOnly(false);
-                      toast({ title: checked ? "تم التفعيل" : "تم التعطيل", description: checked ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل" : "تم إلغاء تقييد المديرين" });
-                    }} />
-                </div>
-              </CardContent>
-            </Card>
+            {adminPerms.isPrimaryAdmin && (
+              <AdminRestrictionsCard />
+            )}
 
-            <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && (
+              <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
+            )}
 
             <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
               <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
@@ -309,15 +313,17 @@ export default function SettingsPage() {
               testingSms={s.testingSms} setTestingSms={s.setTestingSms}
             />
 
-            <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
-              <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
+              <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
+                <div className="space-y-4">
+                  <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
+                  </div>
+                  <DataPurgeSection />
                 </div>
-                <DataPurgeSection />
-              </div>
-            </CollapsibleSettingsCard>
+              </CollapsibleSettingsCard>
+            )}
 
             <LoginSettingsCard
               schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
