@@ -282,33 +282,13 @@ export default function SettingsPage() {
 
         {s.isAdmin && (
           <>
-            <Card className="border border-border/50 bg-card shadow-md">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center h-10 w-10 rounded-xl shadow-lg text-white bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/20">
-                      <Lock className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">وضع القراءة فقط للمديرين</h3>
-                      <p className="text-xs text-muted-foreground">{s.adminReadOnly ? "مفعّل — المديرون الآخرون للاطلاع فقط" : "معطّل — الكل يمكنه التعديل"}</p>
-                    </div>
-                  </div>
-                  <Switch checked={s.adminReadOnly} disabled={s.savingAdminReadOnly}
-                    onCheckedChange={async (checked) => {
-                      s.setSavingAdminReadOnly(true); s.setAdminReadOnly(checked);
-                      await Promise.all([
-                        supabase.from("site_settings").upsert({ id: "admin_read_only", value: String(checked) }),
-                        supabase.from("site_settings").upsert({ id: "admin_primary_id", value: s.user?.id || "" }),
-                      ]);
-                      s.setSavingAdminReadOnly(false);
-                      toast({ title: checked ? "تم التفعيل" : "تم التعطيل", description: checked ? "المديرون الآخرون يمكنهم الاطلاع فقط بدون تعديل" : "تم إلغاء تقييد المديرين" });
-                    }} />
-                </div>
-              </CardContent>
-            </Card>
+            {adminPerms.isPrimaryAdmin && (
+              <AdminRestrictionsCard />
+            )}
 
-            <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && (
+              <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
+            )}
 
             <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
               <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
@@ -325,15 +305,17 @@ export default function SettingsPage() {
               testingSms={s.testingSms} setTestingSms={s.setTestingSms}
             />
 
-            <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
-              <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 shrink-0" />
-                  <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
+              <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
+                <div className="space-y-4">
+                  <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-sm text-destructive flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <span>تحذير: هذه العمليات لا يمكن التراجع عنها. تأكد قبل المتابعة.</span>
+                  </div>
+                  <DataPurgeSection />
                 </div>
-                <DataPurgeSection />
-              </div>
-            </CollapsibleSettingsCard>
+              </CollapsibleSettingsCard>
+            )}
 
             <LoginSettingsCard
               schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
