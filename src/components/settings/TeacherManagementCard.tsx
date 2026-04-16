@@ -29,6 +29,7 @@ interface Teacher {
   email: string;
   full_name: string;
   national_id?: string;
+  role?: string;
 }
 
 interface TeacherManagementCardProps {
