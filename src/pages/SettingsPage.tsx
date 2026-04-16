@@ -22,11 +22,13 @@ import WhatsAppTemplatesSettings from "@/components/settings/WhatsAppTemplatesSe
 import TimetableEditor from "@/components/settings/TimetableEditor";
 import BehaviorSuggestionsSettings from "@/components/settings/BehaviorSuggestionsSettings";
 import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
+import AdminRestrictionsCard from "@/components/settings/AdminRestrictionsCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
+import { useAdminPerms } from "@/hooks/useAdminPerms";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
