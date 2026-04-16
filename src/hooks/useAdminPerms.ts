@@ -49,23 +49,8 @@ export function useAdminPerms(): MyAdminPerms {
         }
       });
 
-      // If no primary ID set, or stored primary admin no longer exists as admin, claim ownership
+      // Only set primary ID if none exists at all (first-time setup)
       if (!primaryId) {
-        await supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user.id });
-        setPerms({ ...allTrue, loaded: true });
-        return;
-      }
-
-      // Verify stored primary admin still exists as admin
-      const { data: primaryRole } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", primaryId)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (!primaryRole) {
-        // Stored primary admin no longer exists — claim ownership
         await supabase.from("site_settings").upsert({ id: "admin_primary_id", value: user.id });
         setPerms({ ...allTrue, loaded: true });
         return;
