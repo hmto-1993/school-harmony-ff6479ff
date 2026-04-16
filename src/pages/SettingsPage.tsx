@@ -100,7 +100,9 @@ export default function SettingsPage() {
           { key: "radar_settings", icon: Radar, label: "الرادار الذكي", desc: "سرعة الرادار وذاكرة الحصة", gradient: "from-cyan-500 to-teal-600", shadow: "shadow-cyan-500/20", adminOnly: true },
         ].filter(c => {
           if (c.adminOnly && !s.isAdmin) return false;
-          // Hide restricted cards for non-primary admins
+          // Hide all admin-only cards for non-primary admins without settings access
+          if (c.adminOnly && s.isAdmin && !adminPerms.isPrimaryAdmin && !adminPerms.can_access_settings) return false;
+          // Hide specific cards based on granular permissions
           if (!adminPerms.isPrimaryAdmin && s.isAdmin) {
             if (c.key === "print" && !adminPerms.can_edit_print_header) return false;
             if (c.key === "form_identity" && !adminPerms.can_edit_form_identity) return false;
