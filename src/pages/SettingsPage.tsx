@@ -288,20 +288,34 @@ export default function SettingsPage() {
               <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
             )}
 
-            <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
-              <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
-            </CollapsibleSettingsCard>
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && (
+              <>
+                <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
+                  <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
+                </CollapsibleSettingsCard>
 
-            <WhatsAppTemplatesSettings />
+                <WhatsAppTemplatesSettings />
 
-            <SmsSettingsCard
-              smsProvider={s.smsProvider} setSmsProvider={s.setSmsProvider}
-              providerUsername={s.providerUsername} setProviderUsername={s.setProviderUsername}
-              providerApiKey={s.providerApiKey} setProviderApiKey={s.setProviderApiKey}
-              providerSender={s.providerSender} setProviderSender={s.setProviderSender}
-              savingProvider={s.savingProvider} handleSaveProvider={s.handleSaveProvider}
-              testingSms={s.testingSms} setTestingSms={s.setTestingSms}
-            />
+                <SmsSettingsCard
+                  smsProvider={s.smsProvider} setSmsProvider={s.setSmsProvider}
+                  providerUsername={s.providerUsername} setProviderUsername={s.setProviderUsername}
+                  providerApiKey={s.providerApiKey} setProviderApiKey={s.setProviderApiKey}
+                  providerSender={s.providerSender} setProviderSender={s.setProviderSender}
+                  savingProvider={s.savingProvider} handleSaveProvider={s.handleSaveProvider}
+                  testingSms={s.testingSms} setTestingSms={s.setTestingSms}
+                />
+
+                <LoginSettingsCard
+                  schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
+                  uploadingLogo={s.uploadingLogo} setUploadingLogo={s.setUploadingLogo}
+                  logoInputRef={s.logoInputRef}
+                  loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
+                  loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
+                  dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
+                  savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
+                />
+              </>
+            )}
 
             {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
               <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
@@ -314,16 +328,6 @@ export default function SettingsPage() {
                 </div>
               </CollapsibleSettingsCard>
             )}
-
-            <LoginSettingsCard
-              schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
-              uploadingLogo={s.uploadingLogo} setUploadingLogo={s.setUploadingLogo}
-              logoInputRef={s.logoInputRef}
-              loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
-              loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
-              dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
-              savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
-            />
           </>
         )}
       </div>
