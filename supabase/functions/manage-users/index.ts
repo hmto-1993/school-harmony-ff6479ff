@@ -153,6 +153,14 @@ Deno.serve(async (req) => {
         return ok({ error: "البريد الإلكتروني مطلوب" });
       }
 
+      // Prevent deleting the primary owner
+      const { data: primarySetting } = await supabaseAdmin
+        .from("site_settings")
+        .select("value")
+        .eq("id", "admin_primary_id")
+        .maybeSingle();
+      const primaryOwnerId = primarySetting?.value || "";
+
       const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
       if (listError) throw listError;
 
@@ -163,6 +171,10 @@ Deno.serve(async (req) => {
 
       if (targetUser.id === callerId) {
         return ok({ error: "لا يمكنك حذف حسابك الخاص" });
+      }
+
+      if (targetUser.id === primaryOwnerId && callerId !== primaryOwnerId) {
+        return ok({ error: "لا يمكن حذف حساب المالك الرئيسي" });
       }
 
       await supabaseAdmin.from("attendance_records").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
@@ -186,6 +198,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_teachers") {
+      // Get the primary owner ID to hide from the list
+      const { data: primarySetting } = await supabaseAdmin
+        .from("site_settings")
+        .select("value")
+        .eq("id", "admin_primary_id")
+        .maybeSingle();
+      const primaryOwnerId = primarySetting?.value || "";
+
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("user_id, role")
@@ -207,8 +227,9 @@ Deno.serve(async (req) => {
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
       const staffUsers = users.filter((u: any) => staffIds.includes(u.id));
 
+      // Hide both the caller and the primary owner from the list
       const teachers = staffUsers
-        .filter((u: any) => u.id !== callerId)
+        .filter((u: any) => u.id !== callerId && u.id !== primaryOwnerId)
         .map((u: any) => {
           const profile = profiles?.find((p: any) => p.user_id === u.id);
           return {
@@ -224,6 +245,14 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_admins") {
+      // Get the primary owner ID to hide from the list
+      const { data: primarySetting } = await supabaseAdmin
+        .from("site_settings")
+        .select("value")
+        .eq("id", "admin_primary_id")
+        .maybeSingle();
+      const primaryOwnerId = primarySetting?.value || "";
+
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("user_id")
@@ -240,7 +269,7 @@ Deno.serve(async (req) => {
         .in("user_id", adminIds);
 
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-      const adminUsers = users.filter((u: any) => adminIds.includes(u.id));
+      const adminUsers = users.filter((u: any) => adminIds.includes(u.id) && u.id !== primaryOwnerId);
 
       const admins = adminUsers.map((u: any) => {
         const profile = profiles?.find((p: any) => p.user_id === u.id);
