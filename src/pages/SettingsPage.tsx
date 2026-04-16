@@ -327,7 +327,7 @@ export default function SettingsPage() {
                   <DataPurgeSection />
                 </div>
               </CollapsibleSettingsCard>
-            )
+            )}
           </>
         )}
       </div>
