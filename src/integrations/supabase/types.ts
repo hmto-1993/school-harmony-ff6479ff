@@ -856,6 +856,36 @@ export type Database = {
         }
         Relationships: []
       }
+      invalid_records: {
+        Row: {
+          detected_at: string
+          detected_by: string | null
+          id: string
+          payload: Json
+          reason: string
+          source_id: string | null
+          source_table: string
+        }
+        Insert: {
+          detected_at?: string
+          detected_by?: string | null
+          id?: string
+          payload?: Json
+          reason: string
+          source_id?: string | null
+          source_table: string
+        }
+        Update: {
+          detected_at?: string
+          detected_by?: string | null
+          id?: string
+          payload?: Json
+          reason?: string
+          source_id?: string | null
+          source_table?: string
+        }
+        Relationships: []
+      }
       lesson_plans: {
         Row: {
           class_id: string
@@ -1507,6 +1537,48 @@ export type Database = {
           created_at?: string
           details?: Json
           id?: string
+        }
+        Relationships: []
+      }
+      reports_backup: {
+        Row: {
+          can_export: boolean
+          can_print: boolean
+          class_ids: string[]
+          created_at: string
+          expires_at: string
+          id: string
+          label: string
+          last_viewed_at: string | null
+          teacher_id: string
+          token: string
+          view_count: number
+        }
+        Insert: {
+          can_export?: boolean
+          can_print?: boolean
+          class_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          last_viewed_at?: string | null
+          teacher_id: string
+          token?: string
+          view_count?: number
+        }
+        Update: {
+          can_export?: boolean
+          can_print?: boolean
+          class_ids?: string[]
+          created_at?: string
+          expires_at?: string
+          id?: string
+          label?: string
+          last_viewed_at?: string | null
+          teacher_id?: string
+          token?: string
+          view_count?: number
         }
         Relationships: []
       }
@@ -2254,6 +2326,7 @@ export type Database = {
       }
       recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
+      run_full_system_audit: { Args: never; Returns: Json }
       run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
         Args: { _class_id: string; _user_id: string }
