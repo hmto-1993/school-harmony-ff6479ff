@@ -954,7 +954,9 @@ export type Database = {
           full_name: string
           id: string
           national_id: string | null
+          organization_id: string | null
           phone: string | null
+          role: Database["public"]["Enums"]["org_role"] | null
           updated_at: string
           user_id: string
         }
@@ -963,7 +965,9 @@ export type Database = {
           full_name: string
           id?: string
           national_id?: string | null
+          organization_id?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["org_role"] | null
           updated_at?: string
           user_id: string
         }
@@ -972,11 +976,21 @@ export type Database = {
           full_name?: string
           id?: string
           national_id?: string | null
+          organization_id?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["org_role"] | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -1848,6 +1862,18 @@ export type Database = {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
+      get_user_org: { Args: { _user_id: string }; Returns: string }
+      get_user_org_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["org_role"]
+      }
+      has_org_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["org_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1881,6 +1907,7 @@ export type Database = {
         | "late"
         | "early_leave"
         | "sick_leave"
+      org_role: "owner" | "admin" | "teacher" | "student" | "parent"
       organization_type: "school" | "individual"
     }
     CompositeTypes: {
@@ -2017,6 +2044,7 @@ export const Constants = {
         "early_leave",
         "sick_leave",
       ],
+      org_role: ["owner", "admin", "teacher", "student", "parent"],
       organization_type: ["school", "individual"],
     },
   },
