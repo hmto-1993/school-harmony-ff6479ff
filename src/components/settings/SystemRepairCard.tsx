@@ -121,6 +121,27 @@ export default function SystemRepairCard() {
     }
   };
 
+  const recoverAll = async () => {
+    setRecovering(true);
+    try {
+      const { data, error } = await supabase.rpc("recover_all_user_data" as any);
+      if (error) throw error;
+      const r = data as FullRecoveryResult;
+      setRecoveryResult(r);
+      const totalFixed = sumValues(r.fixed);
+      toast({
+        title: totalFixed > 0 ? "تم استرجاع البيانات بنجاح" : "البيانات سليمة",
+        description: totalFixed > 0
+          ? `تم إصلاح ${totalFixed} سجل وربطه بمؤسستك.`
+          : `لا توجد سجلات بحاجة لإصلاح.`,
+      });
+    } catch (e: any) {
+      toast({ title: "تعذّر استرجاع البيانات", description: e.message, variant: "destructive" });
+    } finally {
+      setRecovering(false);
+    }
+  };
+
   return (
     <Card className="border-2 border-amber-500/30">
       <CardHeader>
