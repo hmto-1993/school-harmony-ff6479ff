@@ -120,8 +120,8 @@ Deno.serve(async (req) => {
     }
 
     // ---- 4. App-level role assignment ----
-    // School owner → admin (manages teachers/students)
-    // Individual owner → admin + teacher (full self-management)
+    // Every new signup gets its OWN organization. Owner = admin app role.
+    // Individual teachers also get the 'teacher' app role for full self-service.
     const appRoles: Array<"admin" | "teacher"> = ["admin"];
     if (organization_type === "individual") {
       appRoles.push("teacher");
