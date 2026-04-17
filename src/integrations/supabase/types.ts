@@ -1959,6 +1959,21 @@ export type Database = {
         Args: { _class_ids: string[]; _teacher_id: string }
         Returns: boolean
       }
+      teacher_teaches_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
+      teacher_teaches_student: {
+        Args: { _student_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_has_org_role_in: {
+        Args: {
+          _roles: Database["public"]["Enums"]["org_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "teacher"
