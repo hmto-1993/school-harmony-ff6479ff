@@ -2226,6 +2226,7 @@ export type Database = {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
+      recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
       run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
@@ -2255,6 +2256,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      verify_tenant_isolation: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "teacher"
