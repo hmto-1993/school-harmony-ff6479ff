@@ -39,12 +39,16 @@ async function processFile(f: string) {
     const j = await ai.json();
     const content = j.choices?.[0]?.message?.content || "";
     let parsed: any = null;
-    const m = content.match(/\[[\s\S]*\]/);
-    if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
+    // Strip code fences and try to parse
+    const cleaned = content.replace(/```json|```/g, "").trim();
+    try { parsed = JSON.parse(cleaned); } catch {
+      const m = cleaned.match(/\[[\s\S]*\]/);
+      if (m) { try { parsed = JSON.parse(m[0]); } catch {} }
+    }
 
     await sb.from("recovery_action_log").insert({
       action: "forensic_pdf_extract",
-      details: { file: f, size: buf.length, count: Array.isArray(parsed) ? parsed.length : 0, students: parsed, raw_preview: parsed ? null : content.slice(0, 1000) },
+      details: { file: f, size: buf.length, count: Array.isArray(parsed) ? parsed.length : 0, students: parsed, raw_full: parsed ? null : content },
     });
   } catch (e: any) {
     await sb.from("recovery_action_log").insert({ action: "forensic_pdf_extract_error", details: { file: f, error: String(e?.message || e) } });
