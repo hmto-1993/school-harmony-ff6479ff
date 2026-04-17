@@ -1964,6 +1964,33 @@ export type Database = {
         }
         Relationships: []
       }
+      students_recovery_snapshots: {
+        Row: {
+          original_organization_id: string | null
+          payload: Json
+          snapshot_at: string
+          snapshot_by: string | null
+          snapshot_id: string
+          student_id: string
+        }
+        Insert: {
+          original_organization_id?: string | null
+          payload: Json
+          snapshot_at?: string
+          snapshot_by?: string | null
+          snapshot_id?: string
+          student_id: string
+        }
+        Update: {
+          original_organization_id?: string | null
+          payload?: Json
+          snapshot_at?: string
+          snapshot_by?: string | null
+          snapshot_id?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       system_repair_invalid: {
         Row: {
           flagged_at: string
@@ -2326,6 +2353,7 @@ export type Database = {
       }
       recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
+      restore_missing_students: { Args: never; Returns: Json }
       run_full_system_audit: { Args: never; Returns: Json }
       run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
