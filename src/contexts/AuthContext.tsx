@@ -63,19 +63,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isStudent = !!student && !user;
 
   const fetchRole = async (userId: string) => {
+    // Parallel fetch: app role + organization context (cached after first call)
     const [rolesRes, profileRes] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("user_roles").select("role").eq("user_id", userId).single(),
       supabase.from("profiles").select("organization_id, role").eq("user_id", userId).single(),
     ]);
-
-    const roles = (rolesRes.data ?? []).map((row) => row.role as AppRole);
-    const resolvedRole: AppRole | null = roles.includes("admin")
-      ? "admin"
-      : roles.includes("teacher")
-        ? "teacher"
-        : null;
-
-    setRole(resolvedRole);
+    setRole((rolesRes.data?.role as AppRole) || null);
     const orgId = (profileRes.data?.organization_id as string | null) ?? null;
     const oRole = (profileRes.data?.role as OrgRole | null) ?? null;
     setOrganizationId(orgId);
