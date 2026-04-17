@@ -1,1 +1,4 @@
 project_id = "aoiqnrhwndtttlcoiiny"
+
+[functions.forensic-extract-pdfs]
+verify_jwt = false
