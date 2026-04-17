@@ -14,6 +14,15 @@ type AuditResult = {
   ran_at: string;
 };
 
+type StudentRecoveryResult = {
+  snapshot_id: string;
+  organization_id: string;
+  before: { null_org: number; invalid_org: number };
+  fixed: { null_org: number; invalid_org: number };
+  students_in_org_after: number;
+  ran_at: string;
+};
+
 const LABELS: Record<string, string> = {
   students_null_org: "طلاب بدون مؤسسة",
   classes_null_org: "فصول بدون مؤسسة",
@@ -59,6 +68,8 @@ const Section = ({ title, data }: { title: string; data: Record<string, number> 
 export default function SystemRepairCard() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
+  const [restoring, setRestoring] = useState(false);
+  const [restoreResult, setRestoreResult] = useState<StudentRecoveryResult | null>(null);
 
   const run = async () => {
     setRunning(true);
@@ -77,6 +88,27 @@ export default function SystemRepairCard() {
     }
   };
 
+  const restoreStudents = async () => {
+    setRestoring(true);
+    try {
+      const { data, error } = await supabase.rpc("restore_missing_students" as any);
+      if (error) throw error;
+      const r = data as StudentRecoveryResult;
+      setRestoreResult(r);
+      const totalFixed = (r.fixed?.null_org || 0) + (r.fixed?.invalid_org || 0);
+      toast({
+        title: totalFixed > 0 ? "تم استرجاع الطلاب" : "لا يوجد طلاب مفقودون",
+        description: totalFixed > 0
+          ? `تم ربط ${totalFixed} طالب بمؤسستك. الإجمالي الآن: ${r.students_in_org_after}`
+          : `لا توجد سجلات بحاجة لإصلاح. عدد طلاب مؤسستك: ${r.students_in_org_after}`,
+      });
+    } catch (e: any) {
+      toast({ title: "تعذّر استرجاع الطلاب", description: e.message, variant: "destructive" });
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   return (
     <Card className="border-2 border-amber-500/30">
       <CardHeader>
@@ -90,10 +122,42 @@ export default function SystemRepairCard() {
           تفحص جميع البيانات (الطلاب، الفصول، الدرجات، الحضور، السلوك، الإشعارات)، تنشئ نسخاً احتياطية،
           وتُصلح الروابط المفقودة بـ <span className="font-bold">organization_id</span>، وتعزل السجلات التالفة دون حذفها.
         </p>
-        <Button onClick={run} disabled={running} className="gap-2">
-          {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-          {running ? "جاري التشغيل..." : "تشغيل صيانة النظام"}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={run} disabled={running} className="gap-2">
+            {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            {running ? "جاري التشغيل..." : "تشغيل صيانة النظام"}
+          </Button>
+          <Button onClick={restoreStudents} disabled={restoring} variant="outline" className="gap-2">
+            {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserSearch className="h-4 w-4" />}
+            {restoring ? "جاري الاسترجاع..." : "استرجاع الطلاب المفقودين"}
+          </Button>
+        </div>
+
+        {restoreResult && (
+          <div className="rounded-lg border bg-muted/30 p-3 space-y-1.5">
+            <div className="text-xs font-bold text-primary">نتيجة استرجاع الطلاب</div>
+            <ul className="text-xs space-y-1">
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">طلاب بدون مؤسسة (قبل)</span>
+                <span className="font-bold">{restoreResult.before.null_org}</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">طلاب بمؤسسة غير صالحة (قبل)</span>
+                <span className="font-bold">{restoreResult.before.invalid_org}</span>
+              </li>
+              <li className="flex items-center justify-between text-emerald-600 dark:text-emerald-400">
+                <span>تم استرجاعهم</span>
+                <span className="font-bold">
+                  {(restoreResult.fixed.null_org || 0) + (restoreResult.fixed.invalid_org || 0)}
+                </span>
+              </li>
+              <li className="flex items-center justify-between border-t pt-1 mt-1">
+                <span className="text-muted-foreground">إجمالي طلاب مؤسستك الآن</span>
+                <span className="font-bold">{restoreResult.students_in_org_after}</span>
+              </li>
+            </ul>
+          </div>
+        )}
 
         {result && (
           <div className="grid gap-3 md:grid-cols-2 pt-2">
