@@ -119,6 +119,45 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_backup: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          notes: string | null
+          organization_id: string | null
+          recorded_by: string | null
+          status: Database["public"]["Enums"]["attendance_status"] | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"] | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"] | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           class_id: string
@@ -126,7 +165,7 @@ export type Database = {
           date: string
           id: string
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           recorded_by: string
           status: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -138,7 +177,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           recorded_by: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -150,7 +189,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           recorded_by?: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id?: string
@@ -228,6 +267,45 @@ export type Database = {
           },
         ]
       }
+      behavior_backup: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          note: string | null
+          notified: boolean | null
+          organization_id: string | null
+          recorded_by: string | null
+          student_id: string | null
+          type: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          notified?: boolean | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          notified?: boolean | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       behavior_records: {
         Row: {
           class_id: string
@@ -236,7 +314,7 @@ export type Database = {
           id: string
           note: string | null
           notified: boolean
-          organization_id: string | null
+          organization_id: string
           recorded_by: string
           student_id: string
           type: string
@@ -248,7 +326,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
-          organization_id?: string | null
+          organization_id: string
           recorded_by: string
           student_id: string
           type: string
@@ -260,7 +338,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
-          organization_id?: string | null
+          organization_id?: string
           recorded_by?: string
           student_id?: string
           type?: string
@@ -338,7 +416,7 @@ export type Database = {
           grade: string
           id: string
           name: string
-          organization_id: string | null
+          organization_id: string
           section: string
         }
         Insert: {
@@ -347,7 +425,7 @@ export type Database = {
           grade: string
           id?: string
           name: string
-          organization_id?: string | null
+          organization_id: string
           section: string
         }
         Update: {
@@ -356,7 +434,7 @@ export type Database = {
           grade?: string
           id?: string
           name?: string
-          organization_id?: string | null
+          organization_id?: string
           section?: string
         }
         Relationships: [
@@ -368,6 +446,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      classes_backup: {
+        Row: {
+          academic_year: string | null
+          created_at: string | null
+          grade: string | null
+          id: string | null
+          name: string | null
+          organization_id: string | null
+          section: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+          section?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+          section?: string | null
+        }
+        Relationships: []
       }
       custom_form_sections: {
         Row: {
@@ -642,7 +750,7 @@ export type Database = {
           date: string
           id: string
           note: string | null
-          organization_id: string | null
+          organization_id: string
           period: number
           recorded_by: string
           score: number | null
@@ -655,7 +763,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
-          organization_id?: string | null
+          organization_id: string
           period?: number
           recorded_by: string
           score?: number | null
@@ -668,7 +776,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
-          organization_id?: string | null
+          organization_id?: string
           period?: number
           recorded_by?: string
           score?: number | null
@@ -705,6 +813,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      grades_backup: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          note: string | null
+          organization_id: string | null
+          period: number | null
+          recorded_by: string | null
+          score: number | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          organization_id?: string | null
+          period?: number | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          organization_id?: string | null
+          period?: number | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       lesson_plans: {
         Row: {
@@ -821,7 +971,7 @@ export type Database = {
           id: string
           is_read: boolean
           message: string
-          organization_id: string | null
+          organization_id: string
           status: string
           student_id: string
           type: string
@@ -832,7 +982,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message: string
-          organization_id?: string | null
+          organization_id: string
           status?: string
           student_id: string
           type: string
@@ -843,7 +993,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message?: string
-          organization_id?: string | null
+          organization_id?: string
           status?: string
           student_id?: string
           type?: string
@@ -871,6 +1021,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications_backup: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_read: boolean | null
+          message: string | null
+          organization_id: string | null
+          status: string | null
+          student_id: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          organization_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          organization_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Relationships: []
       }
       organizations: {
         Row: {
@@ -1598,7 +1784,7 @@ export type Database = {
           id: string
           national_id: string | null
           notes: string | null
-          organization_id: string | null
+          organization_id: string
           parent_phone: string | null
           updated_at: string
         }
@@ -1610,7 +1796,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id: string
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1622,7 +1808,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
-          organization_id?: string | null
+          organization_id?: string
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1642,6 +1828,99 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      students_backup: {
+        Row: {
+          academic_number: string | null
+          class_id: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          national_id: string | null
+          notes: string | null
+          organization_id: string | null
+          parent_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          academic_number?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          parent_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          academic_number?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          parent_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_repair_invalid: {
+        Row: {
+          flagged_at: string
+          id: string
+          payload: Json
+          reason: string
+          record_id: string | null
+          table_name: string
+        }
+        Insert: {
+          flagged_at?: string
+          id?: string
+          payload: Json
+          reason: string
+          record_id?: string | null
+          table_name: string
+        }
+        Update: {
+          flagged_at?: string
+          id?: string
+          payload?: Json
+          reason?: string
+          record_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
+      system_repair_runs: {
+        Row: {
+          fixed_counts: Json
+          id: string
+          invalid_counts: Json
+          notes: string | null
+          ran_at: string
+          ran_by: string | null
+        }
+        Insert: {
+          fixed_counts?: Json
+          id?: string
+          invalid_counts?: Json
+          notes?: string | null
+          ran_at?: string
+          ran_by?: string | null
+        }
+        Update: {
+          fixed_counts?: Json
+          id?: string
+          invalid_counts?: Json
+          notes?: string | null
+          ran_at?: string
+          ran_by?: string | null
+        }
+        Relationships: []
       }
       teacher_activities: {
         Row: {
@@ -1947,6 +2226,8 @@ export type Database = {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
+      resolve_default_org: { Args: never; Returns: string }
+      run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
