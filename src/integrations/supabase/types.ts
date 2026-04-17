@@ -119,6 +119,45 @@ export type Database = {
         }
         Relationships: []
       }
+      attendance_backup: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          notes: string | null
+          organization_id: string | null
+          recorded_by: string | null
+          status: Database["public"]["Enums"]["attendance_status"] | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"] | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          status?: Database["public"]["Enums"]["attendance_status"] | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       attendance_records: {
         Row: {
           class_id: string
@@ -126,6 +165,7 @@ export type Database = {
           date: string
           id: string
           notes: string | null
+          organization_id: string
           recorded_by: string
           status: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -137,6 +177,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          organization_id?: string
           recorded_by: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -148,6 +189,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          organization_id?: string
           recorded_by?: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id?: string
@@ -159,6 +201,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -218,6 +267,45 @@ export type Database = {
           },
         ]
       }
+      behavior_backup: {
+        Row: {
+          class_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          note: string | null
+          notified: boolean | null
+          organization_id: string | null
+          recorded_by: string | null
+          student_id: string | null
+          type: string | null
+        }
+        Insert: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          notified?: boolean | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          class_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          notified?: boolean | null
+          organization_id?: string | null
+          recorded_by?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Relationships: []
+      }
       behavior_records: {
         Row: {
           class_id: string
@@ -226,6 +314,7 @@ export type Database = {
           id: string
           note: string | null
           notified: boolean
+          organization_id: string
           recorded_by: string
           student_id: string
           type: string
@@ -237,6 +326,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
+          organization_id?: string
           recorded_by: string
           student_id: string
           type: string
@@ -248,6 +338,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
+          organization_id?: string
           recorded_by?: string
           student_id?: string
           type?: string
@@ -258,6 +349,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -318,6 +416,7 @@ export type Database = {
           grade: string
           id: string
           name: string
+          organization_id: string
           section: string
         }
         Insert: {
@@ -326,6 +425,7 @@ export type Database = {
           grade: string
           id?: string
           name: string
+          organization_id?: string
           section: string
         }
         Update: {
@@ -334,7 +434,46 @@ export type Database = {
           grade?: string
           id?: string
           name?: string
+          organization_id?: string
           section?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classes_backup: {
+        Row: {
+          academic_year: string | null
+          created_at: string | null
+          grade: string | null
+          id: string | null
+          name: string | null
+          organization_id: string | null
+          section: string | null
+        }
+        Insert: {
+          academic_year?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+          section?: string | null
+        }
+        Update: {
+          academic_year?: string | null
+          created_at?: string | null
+          grade?: string | null
+          id?: string | null
+          name?: string | null
+          organization_id?: string | null
+          section?: string | null
         }
         Relationships: []
       }
@@ -611,6 +750,7 @@ export type Database = {
           date: string
           id: string
           note: string | null
+          organization_id: string
           period: number
           recorded_by: string
           score: number | null
@@ -623,6 +763,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
+          organization_id?: string
           period?: number
           recorded_by: string
           score?: number | null
@@ -635,6 +776,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
+          organization_id?: string
           period?: number
           recorded_by?: string
           score?: number | null
@@ -647,6 +789,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "grade_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -664,6 +813,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      grades_backup: {
+        Row: {
+          category_id: string | null
+          created_at: string | null
+          date: string | null
+          id: string | null
+          note: string | null
+          organization_id: string | null
+          period: number | null
+          recorded_by: string | null
+          score: number | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          organization_id?: string | null
+          period?: number | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string | null
+          date?: string | null
+          id?: string | null
+          note?: string | null
+          organization_id?: string | null
+          period?: number | null
+          recorded_by?: string | null
+          score?: number | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       lesson_plans: {
         Row: {
@@ -780,6 +971,7 @@ export type Database = {
           id: string
           is_read: boolean
           message: string
+          organization_id: string
           status: string
           student_id: string
           type: string
@@ -790,6 +982,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message: string
+          organization_id?: string
           status?: string
           student_id: string
           type: string
@@ -800,11 +993,19 @@ export type Database = {
           id?: string
           is_read?: boolean
           message?: string
+          organization_id?: string
           status?: string
           student_id?: string
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_student_id_fkey"
             columns: ["student_id"]
@@ -820,6 +1021,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications_backup: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          is_read: boolean | null
+          message: string | null
+          organization_id: string | null
+          status: string | null
+          student_id: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          organization_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          is_read?: boolean | null
+          message?: string | null
+          organization_id?: string | null
+          status?: string | null
+          student_id?: string | null
+          type?: string | null
+        }
+        Relationships: []
       }
       organizations: {
         Row: {
@@ -954,7 +1191,9 @@ export type Database = {
           full_name: string
           id: string
           national_id: string | null
+          organization_id: string | null
           phone: string | null
+          role: Database["public"]["Enums"]["org_role"] | null
           updated_at: string
           user_id: string
         }
@@ -963,7 +1202,9 @@ export type Database = {
           full_name: string
           id?: string
           national_id?: string | null
+          organization_id?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["org_role"] | null
           updated_at?: string
           user_id: string
         }
@@ -972,11 +1213,21 @@ export type Database = {
           full_name?: string
           id?: string
           national_id?: string | null
+          organization_id?: string | null
           phone?: string | null
+          role?: Database["public"]["Enums"]["org_role"] | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_subscriptions: {
         Row: {
@@ -1234,6 +1485,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recovery_action_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+        }
+        Relationships: []
       }
       resource_files: {
         Row: {
@@ -1533,6 +1808,7 @@ export type Database = {
           id: string
           national_id: string | null
           notes: string | null
+          organization_id: string
           parent_phone: string | null
           updated_at: string
         }
@@ -1544,6 +1820,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
+          organization_id?: string
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1555,6 +1832,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
+          organization_id?: string
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1566,7 +1844,107 @@ export type Database = {
             referencedRelation: "classes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "students_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      students_backup: {
+        Row: {
+          academic_number: string | null
+          class_id: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string | null
+          national_id: string | null
+          notes: string | null
+          organization_id: string | null
+          parent_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          academic_number?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          parent_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          academic_number?: string | null
+          class_id?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string | null
+          national_id?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          parent_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_repair_invalid: {
+        Row: {
+          flagged_at: string
+          id: string
+          payload: Json
+          reason: string
+          record_id: string | null
+          table_name: string
+        }
+        Insert: {
+          flagged_at?: string
+          id?: string
+          payload: Json
+          reason: string
+          record_id?: string | null
+          table_name: string
+        }
+        Update: {
+          flagged_at?: string
+          id?: string
+          payload?: Json
+          reason?: string
+          record_id?: string | null
+          table_name?: string
+        }
+        Relationships: []
+      }
+      system_repair_runs: {
+        Row: {
+          fixed_counts: Json
+          id: string
+          invalid_counts: Json
+          notes: string | null
+          ran_at: string
+          ran_by: string | null
+        }
+        Insert: {
+          fixed_counts?: Json
+          id?: string
+          invalid_counts?: Json
+          notes?: string | null
+          ran_at?: string
+          ran_by?: string | null
+        }
+        Update: {
+          fixed_counts?: Json
+          id?: string
+          invalid_counts?: Json
+          notes?: string | null
+          ran_at?: string
+          ran_by?: string | null
+        }
+        Relationships: []
       }
       teacher_activities: {
         Row: {
@@ -1848,6 +2226,19 @@ export type Database = {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
+      get_user_national_id: { Args: { _user_id: string }; Returns: string }
+      get_user_org: { Args: { _user_id: string }; Returns: string }
+      get_user_org_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["org_role"]
+      }
+      has_org_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["org_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1855,11 +2246,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_recovery_mode: { Args: never; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
+      recover_primary_owner: { Args: never; Returns: Json }
+      resolve_default_org: { Args: never; Returns: string }
+      run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
@@ -1872,6 +2267,22 @@ export type Database = {
         Args: { _class_ids: string[]; _teacher_id: string }
         Returns: boolean
       }
+      teacher_teaches_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
+      teacher_teaches_student: {
+        Args: { _student_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_has_org_role_in: {
+        Args: {
+          _roles: Database["public"]["Enums"]["org_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      verify_tenant_isolation: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "teacher"
@@ -1881,6 +2292,7 @@ export type Database = {
         | "late"
         | "early_leave"
         | "sick_leave"
+      org_role: "owner" | "admin" | "teacher" | "student" | "parent"
       organization_type: "school" | "individual"
     }
     CompositeTypes: {
@@ -2017,6 +2429,7 @@ export const Constants = {
         "early_leave",
         "sick_leave",
       ],
+      org_role: ["owner", "admin", "teacher", "student", "parent"],
       organization_type: ["school", "individual"],
     },
   },
