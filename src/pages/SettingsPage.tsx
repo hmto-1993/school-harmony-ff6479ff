@@ -25,6 +25,7 @@ import TeacherManagementCard from "@/components/settings/TeacherManagementCard";
 import AdminRestrictionsCard from "@/components/settings/AdminRestrictionsCard";
 import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
+import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
@@ -324,6 +325,8 @@ export default function SettingsPage() {
                 />
               </>
             )}
+
+            {adminPerms.isPrimaryAdmin && <SystemRepairCard />}
 
             {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
               <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
