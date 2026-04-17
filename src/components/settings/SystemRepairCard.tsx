@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, Loader2, UserSearch } from "lucide-react";
+import { ShieldCheck, Loader2, UserSearch, LifeBuoy } from "lucide-react";
 
 type AuditResult = {
   run_id: string;
