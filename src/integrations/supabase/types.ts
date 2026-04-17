@@ -821,6 +821,30 @@ export type Database = {
           },
         ]
       }
+      organizations: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          type: Database["public"]["Enums"]["organization_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          type: Database["public"]["Enums"]["organization_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          type?: Database["public"]["Enums"]["organization_type"]
+        }
+        Relationships: []
+      }
       parent_messages: {
         Row: {
           body: string
@@ -1857,6 +1881,7 @@ export type Database = {
         | "late"
         | "early_leave"
         | "sick_leave"
+      organization_type: "school" | "individual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1992,6 +2017,7 @@ export const Constants = {
         "early_leave",
         "sick_leave",
       ],
+      organization_type: ["school", "individual"],
     },
   },
 } as const
