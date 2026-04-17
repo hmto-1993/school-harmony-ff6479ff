@@ -126,6 +126,7 @@ export type Database = {
           date: string
           id: string
           notes: string | null
+          organization_id: string | null
           recorded_by: string
           status: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -137,6 +138,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          organization_id?: string | null
           recorded_by: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -148,6 +150,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
+          organization_id?: string | null
           recorded_by?: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id?: string
@@ -159,6 +162,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -226,6 +236,7 @@ export type Database = {
           id: string
           note: string | null
           notified: boolean
+          organization_id: string | null
           recorded_by: string
           student_id: string
           type: string
@@ -237,6 +248,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
+          organization_id?: string | null
           recorded_by: string
           student_id: string
           type: string
@@ -248,6 +260,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
+          organization_id?: string | null
           recorded_by?: string
           student_id?: string
           type?: string
@@ -258,6 +271,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "behavior_records_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -318,6 +338,7 @@ export type Database = {
           grade: string
           id: string
           name: string
+          organization_id: string | null
           section: string
         }
         Insert: {
@@ -326,6 +347,7 @@ export type Database = {
           grade: string
           id?: string
           name: string
+          organization_id?: string | null
           section: string
         }
         Update: {
@@ -334,9 +356,18 @@ export type Database = {
           grade?: string
           id?: string
           name?: string
+          organization_id?: string | null
           section?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "classes_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       custom_form_sections: {
         Row: {
@@ -611,6 +642,7 @@ export type Database = {
           date: string
           id: string
           note: string | null
+          organization_id: string | null
           period: number
           recorded_by: string
           score: number | null
@@ -623,6 +655,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
+          organization_id?: string | null
           period?: number
           recorded_by: string
           score?: number | null
@@ -635,6 +668,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
+          organization_id?: string | null
           period?: number
           recorded_by?: string
           score?: number | null
@@ -647,6 +681,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "grade_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
           {
@@ -780,6 +821,7 @@ export type Database = {
           id: string
           is_read: boolean
           message: string
+          organization_id: string | null
           status: string
           student_id: string
           type: string
@@ -790,6 +832,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message: string
+          organization_id?: string | null
           status?: string
           student_id: string
           type: string
@@ -800,11 +843,19 @@ export type Database = {
           id?: string
           is_read?: boolean
           message?: string
+          organization_id?: string | null
           status?: string
           student_id?: string
           type?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_student_id_fkey"
             columns: ["student_id"]
@@ -1547,6 +1598,7 @@ export type Database = {
           id: string
           national_id: string | null
           notes: string | null
+          organization_id: string | null
           parent_phone: string | null
           updated_at: string
         }
@@ -1558,6 +1610,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
+          organization_id?: string | null
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1569,6 +1622,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
+          organization_id?: string | null
           parent_phone?: string | null
           updated_at?: string
         }
@@ -1578,6 +1632,13 @@ export type Database = {
             columns: ["class_id"]
             isOneToOne: false
             referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
