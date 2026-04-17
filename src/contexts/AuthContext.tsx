@@ -26,6 +26,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  organizationId: string | null;
+  orgRole: OrgRole | null;
   loading: boolean;
   student: StudentData | null;
   isStudent: boolean;
@@ -33,6 +35,8 @@ interface AuthContextType {
   signInStudent: (national_id: string, login_type?: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
+
+const ORG_CACHE_KEY = "auth_org_cache_v1";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
