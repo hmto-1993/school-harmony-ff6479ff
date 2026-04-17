@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 type AppRole = "admin" | "teacher";
+type OrgRole = "owner" | "admin" | "teacher" | "student" | "parent";
 
 interface StudentData {
   id: string;
