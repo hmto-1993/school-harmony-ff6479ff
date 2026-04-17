@@ -1486,30 +1486,6 @@ export type Database = {
           },
         ]
       }
-      recovery_action_log: {
-        Row: {
-          action: string
-          actor_id: string | null
-          created_at: string
-          details: Json
-          id: string
-        }
-        Insert: {
-          action: string
-          actor_id?: string | null
-          created_at?: string
-          details?: Json
-          id?: string
-        }
-        Update: {
-          action?: string
-          actor_id?: string | null
-          created_at?: string
-          details?: Json
-          id?: string
-        }
-        Relationships: []
-      }
       resource_files: {
         Row: {
           created_at: string
@@ -2226,7 +2202,6 @@ export type Database = {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
       }
-      get_user_national_id: { Args: { _user_id: string }; Returns: string }
       get_user_org: { Args: { _user_id: string }; Returns: string }
       get_user_org_role: {
         Args: { _user_id: string }
@@ -2246,13 +2221,11 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_recovery_mode: { Args: never; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
-      recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
       run_system_repair: { Args: never; Returns: Json }
       teacher_can_view_student_in_class: {
@@ -2282,7 +2255,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      verify_tenant_isolation: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "teacher"

@@ -6,7 +6,6 @@ import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import BackToTop from "@/components/BackToTop";
-import RecoveryModeBanner from "@/components/RecoveryModeBanner";
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -36,7 +35,6 @@ export default function DashboardLayout() {
 
       {/* Main */}
       <main className="flex-1 overflow-x-hidden overflow-y-auto min-w-0" dir="rtl">
-        <RecoveryModeBanner />
         {isMobile && (
           <button
             onClick={() => setMobileOpen(true)}
