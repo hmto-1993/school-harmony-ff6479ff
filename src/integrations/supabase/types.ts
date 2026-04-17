@@ -563,6 +563,42 @@ export type Database = {
           },
         ]
       }
+      data_recovery_log: {
+        Row: {
+          action: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          ran_at: string
+          ran_by: string | null
+          record_id: string | null
+          run_id: string
+          source_table: string
+        }
+        Insert: {
+          action: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          ran_at?: string
+          ran_by?: string | null
+          record_id?: string | null
+          run_id: string
+          source_table: string
+        }
+        Update: {
+          action?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          ran_at?: string
+          ran_by?: string | null
+          record_id?: string | null
+          run_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
       excuse_submissions: {
         Row: {
           created_at: string
@@ -2351,6 +2387,7 @@ export type Database = {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
       }
+      recover_all_user_data: { Args: never; Returns: Json }
       recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
       restore_missing_students: { Args: never; Returns: Json }

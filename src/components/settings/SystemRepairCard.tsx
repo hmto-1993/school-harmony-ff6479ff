@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, Loader2, UserSearch } from "lucide-react";
+import { ShieldCheck, Loader2, UserSearch, LifeBuoy } from "lucide-react";
 
 type AuditResult = {
   run_id: string;
@@ -65,11 +65,23 @@ const Section = ({ title, data }: { title: string; data: Record<string, number> 
   );
 };
 
+type FullRecoveryResult = {
+  run_id: string;
+  organization_id: string;
+  before: Record<string, number>;
+  after: Record<string, number>;
+  fixed: Record<string, number>;
+  totals: Record<string, number>;
+  ran_at: string;
+};
+
 export default function SystemRepairCard() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState<StudentRecoveryResult | null>(null);
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryResult, setRecoveryResult] = useState<FullRecoveryResult | null>(null);
 
   const run = async () => {
     setRunning(true);
@@ -109,6 +121,27 @@ export default function SystemRepairCard() {
     }
   };
 
+  const recoverAll = async () => {
+    setRecovering(true);
+    try {
+      const { data, error } = await supabase.rpc("recover_all_user_data" as any);
+      if (error) throw error;
+      const r = data as FullRecoveryResult;
+      setRecoveryResult(r);
+      const totalFixed = sumValues(r.fixed);
+      toast({
+        title: totalFixed > 0 ? "تم استرجاع البيانات بنجاح" : "البيانات سليمة",
+        description: totalFixed > 0
+          ? `تم إصلاح ${totalFixed} سجل وربطه بمؤسستك.`
+          : `لا توجد سجلات بحاجة لإصلاح.`,
+      });
+    } catch (e: any) {
+      toast({ title: "تعذّر استرجاع البيانات", description: e.message, variant: "destructive" });
+    } finally {
+      setRecovering(false);
+    }
+  };
+
   return (
     <Card className="border-2 border-amber-500/30">
       <CardHeader>
@@ -131,7 +164,25 @@ export default function SystemRepairCard() {
             {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserSearch className="h-4 w-4" />}
             {restoring ? "جاري الاسترجاع..." : "استرجاع الطلاب المفقودين"}
           </Button>
+          <Button onClick={recoverAll} disabled={recovering} variant="secondary" className="gap-2">
+            {recovering ? <Loader2 className="h-4 w-4 animate-spin" /> : <LifeBuoy className="h-4 w-4" />}
+            {recovering ? "جاري الاسترجاع الشامل..." : "استرجاع جميع البيانات (شامل)"}
+          </Button>
         </div>
+
+        {recoveryResult && (
+          <div className="rounded-lg border-2 border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2">
+            <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+              نتيجة الاسترجاع الشامل · {sumValues(recoveryResult.fixed)} سجل تم إصلاحه
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <Section title="قبل" data={recoveryResult.before} />
+              <Section title="بعد" data={recoveryResult.after} />
+              <Section title="تم الإصلاح" data={recoveryResult.fixed} />
+              <Section title="إجمالي مؤسستك" data={recoveryResult.totals} />
+            </div>
+          </div>
+        )}
 
         {restoreResult && (
           <div className="rounded-lg border bg-muted/30 p-3 space-y-1.5">
