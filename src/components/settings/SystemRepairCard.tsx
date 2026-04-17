@@ -65,11 +65,23 @@ const Section = ({ title, data }: { title: string; data: Record<string, number> 
   );
 };
 
+type FullRecoveryResult = {
+  run_id: string;
+  organization_id: string;
+  before: Record<string, number>;
+  after: Record<string, number>;
+  fixed: Record<string, number>;
+  totals: Record<string, number>;
+  ran_at: string;
+};
+
 export default function SystemRepairCard() {
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<AuditResult | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [restoreResult, setRestoreResult] = useState<StudentRecoveryResult | null>(null);
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryResult, setRecoveryResult] = useState<FullRecoveryResult | null>(null);
 
   const run = async () => {
     setRunning(true);
