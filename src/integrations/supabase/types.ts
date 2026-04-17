@@ -2255,7 +2255,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      verify_tenant_isolation: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "teacher"
