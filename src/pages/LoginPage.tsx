@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -261,14 +261,6 @@ export default function LoginPage() {
                 </form>
               </TabsContent>
             </Tabs>
-            <div className="mt-5 pt-4 border-t border-border/30 text-center">
-              <p className="text-sm text-muted-foreground">
-                ليس لديك حساب؟{" "}
-                <Link to="/register" className="font-semibold text-primary hover:underline">
-                  أنشئ حساباً جديداً
-                </Link>
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
