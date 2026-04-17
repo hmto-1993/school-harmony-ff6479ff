@@ -214,11 +214,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setRole(null);
+      setOrganizationId(null);
+      setOrgRole(null);
+      sessionStorage.removeItem(ORG_CACHE_KEY);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, organizationId, orgRole, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
       {children}
     </AuthContext.Provider>
   );
