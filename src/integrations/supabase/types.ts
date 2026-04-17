@@ -177,7 +177,7 @@ export type Database = {
           date?: string
           id?: string
           notes?: string | null
-          organization_id: string
+          organization_id?: string
           recorded_by: string
           status?: Database["public"]["Enums"]["attendance_status"]
           student_id: string
@@ -326,7 +326,7 @@ export type Database = {
           id?: string
           note?: string | null
           notified?: boolean
-          organization_id: string
+          organization_id?: string
           recorded_by: string
           student_id: string
           type: string
@@ -425,7 +425,7 @@ export type Database = {
           grade: string
           id?: string
           name: string
-          organization_id: string
+          organization_id?: string
           section: string
         }
         Update: {
@@ -763,7 +763,7 @@ export type Database = {
           date?: string
           id?: string
           note?: string | null
-          organization_id: string
+          organization_id?: string
           period?: number
           recorded_by: string
           score?: number | null
@@ -982,7 +982,7 @@ export type Database = {
           id?: string
           is_read?: boolean
           message: string
-          organization_id: string
+          organization_id?: string
           status?: string
           student_id: string
           type: string
@@ -1796,7 +1796,7 @@ export type Database = {
           id?: string
           national_id?: string | null
           notes?: string | null
-          organization_id: string
+          organization_id?: string
           parent_phone?: string | null
           updated_at?: string
         }
