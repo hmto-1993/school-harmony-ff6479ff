@@ -164,7 +164,25 @@ export default function SystemRepairCard() {
             {restoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserSearch className="h-4 w-4" />}
             {restoring ? "جاري الاسترجاع..." : "استرجاع الطلاب المفقودين"}
           </Button>
+          <Button onClick={recoverAll} disabled={recovering} variant="secondary" className="gap-2">
+            {recovering ? <Loader2 className="h-4 w-4 animate-spin" /> : <LifeBuoy className="h-4 w-4" />}
+            {recovering ? "جاري الاسترجاع الشامل..." : "استرجاع جميع البيانات (شامل)"}
+          </Button>
         </div>
+
+        {recoveryResult && (
+          <div className="rounded-lg border-2 border-emerald-500/30 bg-emerald-500/5 p-3 space-y-2">
+            <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+              نتيجة الاسترجاع الشامل · {sumValues(recoveryResult.fixed)} سجل تم إصلاحه
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <Section title="قبل" data={recoveryResult.before} />
+              <Section title="بعد" data={recoveryResult.after} />
+              <Section title="تم الإصلاح" data={recoveryResult.fixed} />
+              <Section title="إجمالي مؤسستك" data={recoveryResult.totals} />
+            </div>
+          </div>
+        )}
 
         {restoreResult && (
           <div className="rounded-lg border bg-muted/30 p-3 space-y-1.5">
