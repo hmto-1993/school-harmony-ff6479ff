@@ -262,12 +262,6 @@ export function useSettingsCategories(
     else toast({ title: "تم الحذف", description: `تم حذف ${toDelete.length} فئة من ${scopeLabel}` });
     await refresh();
   };
-      const { error } = await supabase.from("grade_categories").delete().eq("id", id);
-      if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
-      else toast({ title: "تم الحذف" });
-    }
-    fetchData();
-  };
 
   const handleReassignOrphanedCategories = async (targetClassId: string) => {
     const orphaned = categories.filter(c => c.class_id === null);
