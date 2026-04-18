@@ -28,6 +28,7 @@ import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
+import OwnerApprovalPanel from "@/components/settings/OwnerApprovalPanel";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
