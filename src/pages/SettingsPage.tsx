@@ -76,6 +76,12 @@ export default function SettingsPage() {
             للاطلاع فقط
           </span>
         )}
+        {restricted && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-l from-primary/15 to-accent/15 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
+            <Lock className="h-3.5 w-3.5" />
+            حساب اشتراك مستقل
+          </span>
+        )}
       </div>
 
       {/* ===== البطاقات الرئيسية ===== */}
