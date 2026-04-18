@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import BackToTop from "@/components/BackToTop";
+import SubscriptionExpiryBadge from "@/components/SubscriptionExpiryBadge";
 
 export default function DashboardLayout() {
   const location = useLocation();
@@ -46,6 +47,9 @@ export default function DashboardLayout() {
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden min-h-[calc(100vh-60px)]">
+          <div className="flex justify-end mb-3">
+            <SubscriptionExpiryBadge />
+          </div>
           <Outlet />
         </div>
       </main>

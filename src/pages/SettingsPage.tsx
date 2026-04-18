@@ -29,6 +29,7 @@ import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import OwnerApprovalPanel from "@/components/settings/OwnerApprovalPanel";
+import SubscriptionsManagementPanel from "@/components/settings/SubscriptionsManagementPanel";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
@@ -85,8 +86,9 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* Owner-only: pending account approvals */}
+      {/* Owner-only: pending account approvals + subscription lifecycle management */}
       {isPrimaryOwner && <OwnerApprovalPanel />}
+      {isPrimaryOwner && <SubscriptionsManagementPanel />}
 
       {/* ===== البطاقات الرئيسية ===== */}
       <div className="flex items-center gap-3 mb-3">

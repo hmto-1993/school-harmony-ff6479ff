@@ -1261,6 +1261,9 @@ export type Database = {
           organization_id: string | null
           phone: string | null
           role: Database["public"]["Enums"]["org_role"] | null
+          subscription_end: string | null
+          subscription_plan: string
+          subscription_start: string | null
           updated_at: string
           user_id: string
         }
@@ -1273,6 +1276,9 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["org_role"] | null
+          subscription_end?: string | null
+          subscription_plan?: string
+          subscription_start?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1285,6 +1291,9 @@ export type Database = {
           organization_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["org_role"] | null
+          subscription_end?: string | null
+          subscription_plan?: string
+          subscription_start?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2387,6 +2396,7 @@ export type Database = {
       is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
       is_recovery_mode: { Args: never; Returns: boolean }
       is_subscriber: { Args: { _user_id: string }; Returns: boolean }
+      is_subscription_active: { Args: { _user_id: string }; Returns: boolean }
       is_user_approved: { Args: { _user_id: string }; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {
@@ -2397,6 +2407,7 @@ export type Database = {
       recover_primary_owner: { Args: never; Returns: Json }
       resolve_default_org: { Args: never; Returns: string }
       restore_missing_students: { Args: never; Returns: Json }
+      revoke_subscriber: { Args: { _target_user: string }; Returns: Json }
       run_full_system_audit: { Args: never; Returns: Json }
       run_system_repair: { Args: never; Returns: Json }
       same_org_as_class: { Args: { _class_id: string }; Returns: boolean }
@@ -2404,6 +2415,15 @@ export type Database = {
       set_user_approval: {
         Args: {
           _status: Database["public"]["Enums"]["approval_status"]
+          _target_user: string
+        }
+        Returns: Json
+      }
+      set_user_subscription: {
+        Args: {
+          _end: string
+          _plan: string
+          _start: string
           _target_user: string
         }
         Returns: Json
