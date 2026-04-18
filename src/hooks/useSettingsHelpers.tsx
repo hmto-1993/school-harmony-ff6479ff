@@ -206,8 +206,11 @@ export function useSettingsCategories(
   };
 
   const handleAddCategory = async () => {
-    if (!newCatName.trim() || !newCatClassId) return;
-    if (newCatClassId === "all") {
+    if (!newCatName.trim()) return;
+    // عند تفعيل فلتر "جميع الفصول" يتم تعميم الإضافة على كل الفصول تلقائياً
+    const effectiveClassId = catClassFilter === "all" ? "all" : (newCatClassId || catClassFilter);
+    if (!effectiveClassId) return;
+    if (effectiveClassId === "all") {
       const inserts = classes.map(cls => {
         const classCats = categories.filter(c => c.class_id === cls.id);
         const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
