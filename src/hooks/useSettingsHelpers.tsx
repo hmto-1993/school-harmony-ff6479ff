@@ -206,8 +206,11 @@ export function useSettingsCategories(
   };
 
   const handleAddCategory = async () => {
-    if (!newCatName.trim() || !newCatClassId) return;
-    if (newCatClassId === "all") {
+    if (!newCatName.trim()) return;
+    // عند تفعيل فلتر "جميع الفصول" يتم تعميم الإضافة على كل الفصول تلقائياً
+    const effectiveClassId = catClassFilter === "all" ? "all" : (newCatClassId || catClassFilter);
+    if (!effectiveClassId) return;
+    if (effectiveClassId === "all") {
       const inserts = classes.map(cls => {
         const classCats = categories.filter(c => c.class_id === cls.id);
         const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
@@ -217,9 +220,9 @@ export function useSettingsCategories(
       if (results.some(r => r.error)) toast({ title: "خطأ", description: "فشل في الإضافة لبعض الفصول", variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}" لجميع الفصول` });
     } else {
-      const classCats = categories.filter(c => c.class_id === newCatClassId);
+      const classCats = categories.filter(c => c.class_id === effectiveClassId);
       const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
-      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: newCatClassId, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
+      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: effectiveClassId, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
       if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}"` });
     }
