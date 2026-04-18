@@ -318,8 +318,8 @@ export default function LoginPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="mt-5 pt-4 border-t border-border/40 flex items-center justify-between gap-3">
-              <span className="text-sm text-foreground">عميل جديد؟</span>
+            <div dir="rtl" className="mt-5 pt-4 border-t border-border/40 flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">مستخدم جديد؟</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <button
