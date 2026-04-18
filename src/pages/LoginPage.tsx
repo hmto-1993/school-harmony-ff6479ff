@@ -318,15 +318,15 @@ export default function LoginPage() {
               </TabsContent>
             </Tabs>
 
-            <div className="mt-5 pt-4 border-t border-border/40 text-center">
+            <div className="mt-5 pt-4 border-t border-border/40 flex items-center justify-between gap-3">
+              <span className="text-sm text-foreground">عميل جديد؟</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <button
                     type="button"
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary/80 transition-colors"
+                    className="text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 decoration-2 transition-colors"
                   >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    مستخدم جديد؟ <span className="underline underline-offset-2">أنشئ اشتراكاً</span>
+                    اشتراك
                   </button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md" dir="rtl">
