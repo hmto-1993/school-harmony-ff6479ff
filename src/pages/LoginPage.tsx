@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
 import { GraduationCap, Shield, ArrowLeft, Users, UserPlus, Sparkles } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
