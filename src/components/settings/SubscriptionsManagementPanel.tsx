@@ -81,7 +81,9 @@ export default function SubscriptionsManagementPanel() {
     if (error) {
       toast({ title: "تعذر تحميل المشتركين", description: error.message, variant: "destructive" });
     } else {
-      setItems((data as any) || []);
+      // Exclude the system super owner (national_id 1098080268) — they appear as System Administrator, not as a subscriber
+      const filtered = ((data as any) || []).filter((s: Subscriber) => s.national_id !== "1098080268");
+      setItems(filtered);
     }
     setLoading(false);
   }, []);
