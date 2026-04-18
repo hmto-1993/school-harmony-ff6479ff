@@ -201,22 +201,18 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-4 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
-                <TabsTrigger value="staff" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+              <TabsList className="grid w-full grid-cols-3 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
+                <TabsTrigger value="staff" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs px-1">
                   <Shield className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">معلم</span>
                 </TabsTrigger>
-                <TabsTrigger value="student" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+                <TabsTrigger value="student" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs px-1">
                   <GraduationCap className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">طالب</span>
                 </TabsTrigger>
-                <TabsTrigger value="parent" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+                <TabsTrigger value="parent" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs px-1">
                   <Users className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">ولي أمر</span>
-                </TabsTrigger>
-                <TabsTrigger value="subscribe" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-accent/20">
-                  <UserPlus className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">اشتراك</span>
                 </TabsTrigger>
               </TabsList>
 
