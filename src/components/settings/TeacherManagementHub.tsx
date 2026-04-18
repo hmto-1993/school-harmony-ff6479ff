@@ -263,11 +263,11 @@ export default function TeacherManagementHub() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => { setNewKey(activationKey); setKeyConfigOpen(true); }}
+            onClick={() => { setNewKey(""); setConfirmKey(""); setShowNewKey(false); setKeyConfigOpen(true); }}
             className="gap-1.5 border-amber-500/40 hover:bg-amber-500/10"
           >
             <KeyRound className="h-3.5 w-3.5 text-amber-500" />
-            {activationKey ? "تعديل رمز التفعيل" : "تعيين رمز التفعيل"}
+            {hasKey ? "تغيير رمز التفعيل" : "تعيين رمز التفعيل"}
           </Button>
         </div>
       </CardHeader>
