@@ -133,7 +133,14 @@ export function useSettingsClasses(fetchData: () => void) {
   };
 }
 
-export function useSettingsCategories(classes: ClassRow[], categories: GradeCategory[], fetchData: () => void) {
+export function useSettingsCategories(
+  classes: ClassRow[],
+  categories: GradeCategory[],
+  fetchData: () => void,
+  refreshCategoriesOnly?: () => Promise<void>,
+  setCategoriesDirect?: React.Dispatch<React.SetStateAction<GradeCategory[]>>,
+) {
+  const refresh = refreshCategoriesOnly || (async () => fetchData());
   const [editingCats, setEditingCats] = useState<Record<string, { weight: number; max_score: number; name?: string; category_group?: string }>>({});
   const [savingCats, setSavingCats] = useState(false);
   const [catClassFilter, setCatClassFilter] = useState("all");
