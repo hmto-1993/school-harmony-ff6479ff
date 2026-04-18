@@ -29,6 +29,8 @@ interface AuthContextType {
   approvalStatus: ApprovalStatus | null;
   subscriptionEnd: string | null;
   subscriptionExpired: boolean;
+  nationalId: string | null;
+  isSuperOwner: boolean;
   loading: boolean;
   student: StudentData | null;
   isStudent: boolean;
@@ -45,21 +47,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [nationalId, setNationalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentData | null>(null);
   const [studentRestoring, setStudentRestoring] = useState(() => !!sessionStorage.getItem("student_session"));
 
   const isStudent = !!student && !user;
-  const subscriptionExpired = !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= Date.now();
+  const isSuperOwner = nationalId === "1098080268";
+  const subscriptionExpired = !isSuperOwner && !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= Date.now();
 
   const fetchRole = async (userId: string) => {
     const [roleRes, profileRes] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("profiles").select("approval_status, subscription_end").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("approval_status, subscription_end, national_id").eq("user_id", userId).maybeSingle(),
     ]);
     setRole((roleRes.data?.role as AppRole) || null);
     setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
     setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
+    setNationalId(((profileRes.data as any)?.national_id as string) || null);
   };
 
   // Restore student session using HMAC token (no PII in storage)
@@ -127,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
           setApprovalStatus(null);
           setSubscriptionEnd(null);
+          setNationalId(null);
         }
         setLoading(false);
       }
@@ -206,7 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, approvalStatus, subscriptionEnd, subscriptionExpired, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, approvalStatus, subscriptionEnd, subscriptionExpired, nationalId, isSuperOwner, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2397,6 +2397,7 @@ export type Database = {
       is_recovery_mode: { Args: never; Returns: boolean }
       is_subscriber: { Args: { _user_id: string }; Returns: boolean }
       is_subscription_active: { Args: { _user_id: string }; Returns: boolean }
+      is_super_owner: { Args: { _user_id: string }; Returns: boolean }
       is_user_approved: { Args: { _user_id: string }; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {

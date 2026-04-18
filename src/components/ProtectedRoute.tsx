@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, loading, isStudent, approvalStatus, subscriptionExpired } = useAuth();
+  const { user, role, loading, isStudent, approvalStatus, subscriptionExpired, isSuperOwner } = useAuth();
 
   if (loading || (user && approvalStatus === null) || (allowedRoles && !role)) {
     return (
@@ -20,17 +20,16 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     );
   }
 
-  // If student is logged in, redirect to student dashboard
   if (isStudent) return <Navigate to="/student" replace />;
-
   if (!user) return <Navigate to="/login" replace />;
 
-  // Block users not yet approved (except admins, who are auto-approved by DB)
+  // Super owner bypasses ALL approval/subscription/role restrictions
+  if (isSuperOwner) return <>{children}</>;
+
   if (approvalStatus !== "approved" && role !== "admin") {
     return <Navigate to="/pending" replace />;
   }
 
-  // Block users whose subscription expired (admins/owners are exempt)
   if (subscriptionExpired && role !== "admin") {
     return <Navigate to="/expired" replace />;
   }
