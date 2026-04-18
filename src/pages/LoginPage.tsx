@@ -410,7 +410,6 @@ export default function LoginPage() {
                 </DialogContent>
               </Dialog>
             </div>
-            </Tabs>
           </CardContent>
         </Card>
       </div>
