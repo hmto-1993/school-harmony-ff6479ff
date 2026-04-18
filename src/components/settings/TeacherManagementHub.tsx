@@ -299,7 +299,7 @@ export default function TeacherManagementHub() {
 
             {/* ─── PENDING ─── */}
             <TabsContent value="pending" className="mt-4">
-              {!activationKey && (
+              {!hasKey && (
                 <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm flex items-start gap-2">
                   <KeyRound className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span className="text-amber-900 dark:text-amber-200">
