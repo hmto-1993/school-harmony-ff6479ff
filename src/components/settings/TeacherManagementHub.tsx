@@ -18,12 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon,
-  ShieldCheck, ShieldX, KeyRound, Users, UserCheck, Archive, Settings2, Mail, Phone, Eye, EyeOff,
+  ShieldCheck, ShieldX, KeyRound, Users, UserCheck, Archive, Settings2, Mail, Phone, Eye, EyeOff, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SUPER_OWNER_ID = "1098080268";
-const ACTIVATION_KEY_SETTING = "owner_activation_key";
 
 type Profile = {
   id: string;
