@@ -120,32 +120,36 @@ export default function TeacherManagementHub() {
     archived: profiles.filter((p) => p.approval_status === "rejected"),
   }), [profiles]);
 
-  // ── Activation key management ─────────────────────────────────
+  // ── Activation key management (hashed in DB) ──────────────────
   const saveActivationKey = async () => {
     const trimmed = newKey.trim();
     if (trimmed.length < 4) {
       toast({ title: "الرمز قصير جداً", description: "يجب ألا يقل الرمز عن 4 خانات", variant: "destructive" });
       return;
     }
+    if (trimmed !== confirmKey.trim()) {
+      toast({ title: "الرمزان غير متطابقين", description: "يرجى إعادة إدخال الرمز للتأكيد", variant: "destructive" });
+      return;
+    }
     setSavingKey(true);
-    const { error } = await supabase
-      .from("site_settings")
-      .upsert({ id: ACTIVATION_KEY_SETTING, value: trimmed, updated_at: new Date().toISOString() });
+    const { error } = await supabase.rpc("set_owner_activation_key", { _new_key: trimmed });
     setSavingKey(false);
     if (error) {
       toast({ title: "تعذر حفظ الرمز", description: error.message, variant: "destructive" });
       return;
     }
-    setActivationKey(trimmed);
+    setHasKey(true);
     setNewKey("");
+    setConfirmKey("");
+    setShowNewKey(false);
     setKeyConfigOpen(false);
-    toast({ title: "تم حفظ رمز التفعيل", description: "سيُطلب الرمز عند تفعيل أي حساب جديد" });
+    toast({ title: "تم حفظ رمز التفعيل بشكل مشفّر", description: "تم تخزين الرمز عبر تشفير bcrypt ولا يمكن استرجاعه" });
   };
 
   // ── Approve with security key ─────────────────────────────────
   const confirmApprove = async () => {
     if (!approveTarget) return;
-    if (!activationKey) {
+    if (!hasKey) {
       toast({
         title: "لم يتم تعيين رمز التفعيل",
         description: "يرجى تعيين رمز التفعيل من زر الإعدادات أعلى البطاقة أولاً",
@@ -153,11 +157,18 @@ export default function TeacherManagementHub() {
       });
       return;
     }
-    if (enteredKey.trim() !== activationKey) {
+    setApproving(true);
+    const { data: ok, error: verifyErr } = await supabase.rpc("verify_owner_activation_key", { _candidate: enteredKey.trim() });
+    if (verifyErr) {
+      setApproving(false);
+      toast({ title: "تعذر التحقق من الرمز", description: verifyErr.message, variant: "destructive" });
+      return;
+    }
+    if (!ok) {
+      setApproving(false);
       toast({ title: "رمز التفعيل غير صحيح", description: "تأكد من إدخال الرمز السري الصحيح", variant: "destructive" });
       return;
     }
-    setApproving(true);
     const { error } = await supabase.rpc("set_user_approval", {
       _target_user: approveTarget.user_id,
       _status: "approved",
