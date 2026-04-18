@@ -293,15 +293,15 @@ export default function SettingsPage() {
 
         {s.isAdmin && (
           <>
-            {adminPerms.isPrimaryAdmin && (
+            {adminPerms.isPrimaryAdmin && !restricted && (
               <AdminRestrictionsCard />
             )}
 
-            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && (
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && !restricted && (
               <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
             )}
 
-            {(adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && (
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && !restricted && (
               <>
                 <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
                   <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
@@ -330,7 +330,7 @@ export default function SettingsPage() {
               </>
             )}
 
-            {adminPerms.isPrimaryAdmin && <SystemRepairCard />}
+            {adminPerms.isPrimaryAdmin && !restricted && <SystemRepairCard />}
 
             {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
               <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
