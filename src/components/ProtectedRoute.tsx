@@ -7,9 +7,9 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, loading, isStudent } = useAuth();
+  const { user, role, loading, isStudent, approvalStatus } = useAuth();
 
-  if (loading || (allowedRoles && !role)) {
+  if (loading || (user && approvalStatus === null) || (allowedRoles && !role)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -24,6 +24,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   if (isStudent) return <Navigate to="/student" replace />;
 
   if (!user) return <Navigate to="/login" replace />;
+
+  // Block users not yet approved (except admins, who are auto-approved by DB)
+  if (approvalStatus !== "approved" && role !== "admin") {
+    return <Navigate to="/pending" replace />;
+  }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     return <Navigate to="/dashboard" replace />;
