@@ -142,9 +142,22 @@ export default function AttendanceTable({ records, allRecords, absenceAlerts, up
                   {record.status === "late" && (
                     <LateMinutesPicker
                       value={extractMinutes(record.notes)}
+                      excused={hasExcuse(record.notes)}
                       onChange={(mins) => {
-                        const cleanNote = record.notes.replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "").trim();
+                        const cleanNote = record.notes
+                          .replace(/تأخر\s*بعذر\s*[·\-–]?\s*/g, "")
+                          .replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "")
+                          .trim();
                         const prefix = mins > 0 ? `تأخر ${mins} دقيقة${cleanNote ? " · " : ""}` : "";
+                        updateNotes(record.student_id, prefix + cleanNote);
+                      }}
+                      onToggleExcuse={() => {
+                        const currentlyExcused = hasExcuse(record.notes);
+                        const cleanNote = record.notes
+                          .replace(/تأخر\s*بعذر\s*[·\-–]?\s*/g, "")
+                          .replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "")
+                          .trim();
+                        const prefix = currentlyExcused ? "" : `تأخر ${EXCUSED_MARKER}${cleanNote ? " · " : ""}`;
                         updateNotes(record.student_id, prefix + cleanNote);
                       }}
                     />
