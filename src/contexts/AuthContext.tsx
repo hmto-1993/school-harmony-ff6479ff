@@ -29,6 +29,8 @@ interface AuthContextType {
   approvalStatus: ApprovalStatus | null;
   subscriptionEnd: string | null;
   subscriptionExpired: boolean;
+  nationalId: string | null;
+  isSuperOwner: boolean;
   loading: boolean;
   student: StudentData | null;
   isStudent: boolean;
