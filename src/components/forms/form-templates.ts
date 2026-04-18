@@ -154,7 +154,7 @@ export const formTemplates: FormTemplate[] = [
     signatureLabels: ["معلم المادة", "الموجه الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
-      "⚠️ تنبيه إداري: تم رصد إحالة سرية للطالب/ {student_name} تتطلب تدخلاً عاجلاً.\nالتفاصيل متوفرة في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+      "⚠️ تنبيه إداري: تم رصد إحالة سرية للطالب/ {student_name} تتطلب تدخلاً عاجلاً.\nالتفاصيل متوفرة في المنصة.\n\nالإدارة المدرسية",
     fields: [
       ...commonAutoFields,
       { id: "referral_reason", label: "سبب الإحالة", type: "textarea", placeholder: "اذكر سبب الإحالة بالتفصيل..." },
@@ -192,7 +192,7 @@ export const formTemplates: FormTemplate[] = [
     signatureLabels: ["معلم المادة", "المرشد الطلابي", "قائد المدرسة"],
     whatsappEnabled: true,
     whatsappTemplate:
-      "المكرم ولي أمر الطالب/ {student_name}\n\nالسلام عليكم ورحمة الله وبركاته\n\nنأمل منكم مراجعة المدرسة (قسم التوجيه الطلابي) في يوم/ {visit_day} الموافق/ {visit_date} لمناقشة أمر يخص الطالب.\n\nثانوية الفيصلية - ألفا فيزياء",
+      "المكرم ولي أمر الطالب/ {student_name}\n\nالسلام عليكم ورحمة الله وبركاته\n\nنأمل منكم مراجعة المدرسة (قسم التوجيه الطلابي) في يوم/ {visit_day} الموافق/ {visit_date} لمناقشة أمر يخص الطالب.\n\nالإدارة المدرسية",
     fields: [
       ...commonAutoFields,
       { id: "visit_day", label: "يوم الزيارة", type: "text", placeholder: "مثال: الأحد" },
@@ -218,7 +218,7 @@ export const formTemplates: FormTemplate[] = [
     signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
-      "⚠️ تنبيه إداري: تم رصد واقعة تتطلب تدخلاً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المرفق/المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+      "⚠️ تنبيه إداري: تم رصد واقعة تتطلب تدخلاً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المرفق/المنصة.\n\nالإدارة المدرسية",
     fields: [
       ...commonAutoFields,
       { id: "incident_time", label: "وقت الواقعة", type: "text", placeholder: "مثال: 10:30 صباحاً" },
@@ -269,7 +269,7 @@ export const formTemplates: FormTemplate[] = [
     signatureLabels: ["المعلم المبلّغ", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
-      "🚨 تنبيه عاجل: تم رصد حالة عنف تتطلب تدخلاً فورياً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+      "🚨 تنبيه عاجل: تم رصد حالة عنف تتطلب تدخلاً فورياً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nالإدارة المدرسية",
     fields: [
       ...commonAutoFields,
       { id: "violence_type", label: "نوع العنف", type: "text", placeholder: "مثال: جسدي / لفظي / نفسي / إهمال" },
@@ -300,7 +300,7 @@ export const formTemplates: FormTemplate[] = [
     signatureLabels: ["المعلم المبلّغ", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
     adminAlertEnabled: true,
     adminAlertTemplate:
-      "🔴 تنبيه عالي الخطورة: تم رصد حالة تتطلب تدخلاً إدارياً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nثانوية الفيصلية - ألفا فيزياء",
+      "🔴 تنبيه عالي الخطورة: تم رصد حالة تتطلب تدخلاً إدارياً عاجلاً.\nالطالب: {student_name}\nالتفاصيل في المنصة.\n\nالإدارة المدرسية",
     fields: [
       ...commonAutoFields,
       { id: "risk_type", label: "نوع الخطورة", type: "text", placeholder: "مثال: تهديد / إيذاء نفسي / مخدرات" },

@@ -29,8 +29,8 @@ interface FormIdentityConfig {
 }
 
 const DEFAULT_CONFIG: FormIdentityConfig = {
-  headerRightLines: ["المملكة العربية السعودية", "وزارة التعليم", "الإدارة العامة للتعليم", "ثانوية الفيصلية"],
-  headerLeftLines: ["ألفا فيزياء", "Alpha Physics"],
+  headerRightLines: ["المملكة العربية السعودية", "وزارة التعليم", "[الإدارة التعليمية]", "[اسم المدرسة]"],
+  headerLeftLines: ["[اسم المعلم/المادة]", ""],
   headerFontSize: 9,
   ministryLogoUrl: "",
   schoolLogoUrl: "",

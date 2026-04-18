@@ -89,7 +89,7 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
             </div>
           </div>
         </div>
-        <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={props.loginSchoolName} onChange={(e) => props.setLoginSchoolName(e.target.value)} placeholder="مثال: ثانوية الفيصلية" /></div>
+        <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={props.loginSchoolName} onChange={(e) => props.setLoginSchoolName(e.target.value)} placeholder="أدخل اسم المدرسة" /></div>
         <div className="space-y-2"><Label>الوصف الفرعي</Label><Input value={props.loginSubtitle} onChange={(e) => props.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" /></div>
         <div className="space-y-2">
           <Label>عنوان لوحة التحكم</Label>
