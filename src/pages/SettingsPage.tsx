@@ -30,6 +30,7 @@ import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCa
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
+import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
@@ -45,8 +46,11 @@ import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
+  const { isSubscriber, isPrimaryOwner, loaded: subLoaded } = useSubscriberStatus();
+  // Subscribers see a curated, restricted settings view (whitelist enforced).
+  const restricted = isSubscriber;
 
-  if (s.loading || !adminPerms.loaded) {
+  if (s.loading || !adminPerms.loaded || !subLoaded) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
