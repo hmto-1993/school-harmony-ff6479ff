@@ -212,6 +212,13 @@ export function useSettingsCategories(
       const seen = new Map<string, GradeCategory>();
       classCats.forEach(c => { if (!seen.has(c.name)) seen.set(c.name, c); });
       const templateCats = Array.from(seen.values());
+      const templateNames = new Set(templateCats.map(t => editingCats[t.id]?.name || t.name));
+      // حذف أي فئة في أي فصل ليست ضمن قائمة "الجميع" — لفرض المطابقة الكاملة
+      const toRemove = classCats.filter(c => !templateNames.has(c.name)).map(c => c.id);
+      if (toRemove.length > 0) {
+        const { error: delErr } = await supabase.from("grade_categories").delete().in("id", toRemove);
+        if (delErr) hasError = true;
+      }
       for (const tpl of templateCats) {
         const editedVals = editingCats[tpl.id];
         const finalName = editedVals?.name || tpl.name;
