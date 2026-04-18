@@ -100,7 +100,7 @@ export default function TeacherManagementHub() {
         .from("profiles")
         .select("id, user_id, full_name, national_id, phone, approval_status, subscription_plan, subscription_start, subscription_end, created_at")
         .order("created_at", { ascending: false }),
-      supabase.from("site_settings").select("value").eq("id", ACTIVATION_KEY_SETTING).maybeSingle(),
+      supabase.rpc("has_owner_activation_key"),
     ]);
     if (profilesRes.error) {
       toast({ title: "تعذر تحميل البيانات", description: profilesRes.error.message, variant: "destructive" });
@@ -108,7 +108,7 @@ export default function TeacherManagementHub() {
       const filtered = ((profilesRes.data as any) || []).filter((p: Profile) => p.national_id !== SUPER_OWNER_ID);
       setProfiles(filtered);
     }
-    if (keyRes.data?.value) setActivationKey(keyRes.data.value);
+    if (!keyRes.error) setHasKey(Boolean(keyRes.data));
     setLoading(false);
   }, []);
 
