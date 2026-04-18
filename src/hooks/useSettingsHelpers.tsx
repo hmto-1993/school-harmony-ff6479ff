@@ -67,12 +67,58 @@ export function useSettingsClasses(fetchData: () => void) {
   const [importingClasses, setImportingClasses] = useState(false);
   const classFileRef = useRef<HTMLInputElement>(null);
   const [scheduleDialogClass, setScheduleDialogClass] = useState<{ id: string; name: string } | null>(null);
+  const [newClassStudentsPdf, setNewClassStudentsPdf] = useState<File | null>(null);
+  const [addingClass, setAddingClass] = useState(false);
 
   const handleAddClass = async () => {
     if (!newClassName.trim() || !newSection.trim()) return;
-    const { error } = await supabase.from("classes").insert({ name: newClassName, section: newSection, grade: newGrade, academic_year: newYear });
-    if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    else { toast({ title: "تمت الإضافة", description: `تمت إضافة الفصل ${newClassName}` }); setNewClassName(""); setNewSection(""); fetchData(); }
+    setAddingClass(true);
+    const { data: created, error } = await supabase
+      .from("classes")
+      .insert({ name: newClassName, section: newSection, grade: newGrade, academic_year: newYear })
+      .select("id, name")
+      .single();
+    if (error || !created) {
+      setAddingClass(false);
+      toast({ title: "خطأ", description: error?.message || "تعذر إنشاء الفصل", variant: "destructive" });
+      return;
+    }
+
+    // If a PDF was attached, parse it and import students into the new class
+    if (newClassStudentsPdf) {
+      try {
+        toast({ title: "جارٍ تحليل PDF", description: "يتم استخراج بيانات الطلاب بالذكاء الاصطناعي..." });
+        const buffer = await newClassStudentsPdf.arrayBuffer();
+        const base64 = btoa(new Uint8Array(buffer).reduce((d, b) => d + String.fromCharCode(b), ""));
+        const { data: pdfRes, error: pdfErr } = await supabase.functions.invoke("parse-pdf-students", { body: { pdfBase64: base64 } });
+        if (pdfErr || !pdfRes?.students?.length) {
+          toast({ title: "تنبيه", description: "تم إنشاء الفصل، لكن لم يتم استخراج طلاب من PDF", variant: "destructive" });
+        } else {
+          const inserts = (pdfRes.students as any[])
+            .filter((s) => s.full_name?.trim())
+            .map((s) => ({
+              full_name: String(s.full_name).trim(),
+              academic_number: s.academic_number ? String(s.academic_number).trim() : null,
+              national_id: s.national_id ? String(s.national_id).trim() : null,
+              parent_phone: s.parent_phone ? String(s.parent_phone).trim() : null,
+              class_id: created.id,
+            }));
+          if (inserts.length > 0) {
+            const { error: insErr, data: insData } = await supabase.from("students").insert(inserts).select("id");
+            if (insErr) toast({ title: "خطأ في استيراد الطلاب", description: insErr.message, variant: "destructive" });
+            else toast({ title: "تم", description: `تمت إضافة الفصل ${created.name} مع ${insData?.length || inserts.length} طالب` });
+          }
+        }
+      } catch (err: any) {
+        toast({ title: "خطأ في PDF", description: err.message || "تعذر تحليل الملف", variant: "destructive" });
+      }
+    } else {
+      toast({ title: "تمت الإضافة", description: `تمت إضافة الفصل ${created.name}` });
+    }
+
+    setNewClassName(""); setNewSection(""); setNewClassStudentsPdf(null);
+    setAddingClass(false);
+    fetchData();
   };
 
   const handleSaveClassEdit = async (id: string) => {
