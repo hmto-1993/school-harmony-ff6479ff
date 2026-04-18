@@ -8,18 +8,32 @@ import { statusOptions } from "@/hooks/useAttendanceData";
 
 const DELAY_PRESETS = [5, 10, 15, 20, 30, 45];
 
+const EXCUSED_MARKER = "بعذر";
+
 const extractMinutes = (notes: string): number => {
   const match = notes.match(/تأخر\s*(\d+)\s*دقيقة/);
   return match ? parseInt(match[1], 10) : 0;
 };
 
-function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins: number) => void }) {
+const hasExcuse = (notes: string): boolean => /تأخر\s*بعذر/.test(notes);
+
+function LateMinutesPicker({
+  value,
+  excused,
+  onChange,
+  onToggleExcuse,
+}: {
+  value: number;
+  excused: boolean;
+  onChange: (mins: number) => void;
+  onToggleExcuse: () => void;
+}) {
   return (
     <div className="flex items-center gap-1 mt-1.5 animate-fade-in">
       <Clock className="h-3 w-3 text-warning shrink-0" />
       <div className="flex gap-0.5 flex-wrap">
         {DELAY_PRESETS.map((mins) => {
-          const isActive = value === mins;
+          const isActive = value === mins && !excused;
           return (
             <button
               key={mins}
@@ -36,6 +50,18 @@ function LateMinutesPicker({ value, onChange }: { value: number; onChange: (mins
             </button>
           );
         })}
+        <button
+          type="button"
+          onClick={onToggleExcuse}
+          className={cn(
+            "h-6 px-2 rounded-md text-[10px] font-bold border transition-all duration-200",
+            excused
+              ? "bg-info/20 text-info border-info/40 ring-1 ring-info/20 shadow-sm scale-105"
+              : "bg-background text-muted-foreground border-border/50 hover:bg-info/10 hover:text-info hover:border-info/30 hover:scale-105"
+          )}
+        >
+          بعذر
+        </button>
       </div>
     </div>
   );
@@ -116,9 +142,22 @@ export default function AttendanceTable({ records, allRecords, absenceAlerts, up
                   {record.status === "late" && (
                     <LateMinutesPicker
                       value={extractMinutes(record.notes)}
+                      excused={hasExcuse(record.notes)}
                       onChange={(mins) => {
-                        const cleanNote = record.notes.replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "").trim();
+                        const cleanNote = record.notes
+                          .replace(/تأخر\s*بعذر\s*[·\-–]?\s*/g, "")
+                          .replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "")
+                          .trim();
                         const prefix = mins > 0 ? `تأخر ${mins} دقيقة${cleanNote ? " · " : ""}` : "";
+                        updateNotes(record.student_id, prefix + cleanNote);
+                      }}
+                      onToggleExcuse={() => {
+                        const currentlyExcused = hasExcuse(record.notes);
+                        const cleanNote = record.notes
+                          .replace(/تأخر\s*بعذر\s*[·\-–]?\s*/g, "")
+                          .replace(/تأخر\s*\d+\s*دقيقة\s*[·\-–]?\s*/g, "")
+                          .trim();
+                        const prefix = currentlyExcused ? "" : `تأخر ${EXCUSED_MARKER}${cleanNote ? " · " : ""}`;
                         updateNotes(record.student_id, prefix + cleanNote);
                       }}
                     />
