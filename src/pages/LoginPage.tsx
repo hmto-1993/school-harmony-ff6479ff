@@ -10,13 +10,18 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft, Users, UserPlus, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
   const [parentNationalId, setParentNationalId] = useState("");
+  // Subscription form
+  const [subFullName, setSubFullName] = useState("");
+  const [subNationalId, setSubNationalId] = useState("");
+  const [subEmail, setSubEmail] = useState("");
+  const [subPassword, setSubPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolSubtitle, setSchoolSubtitle] = useState("");
