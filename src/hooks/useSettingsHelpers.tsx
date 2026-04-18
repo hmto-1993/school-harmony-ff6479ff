@@ -279,7 +279,7 @@ export function useSettingsCategories(
       if (results.some(r => r.error)) toast({ title: "خطأ", description: "فشل ربط بعض الفئات", variant: "destructive" });
       else { const className = classes.find(c => c.id === targetClassId)?.name || ""; toast({ title: "تم الربط", description: `تم ربط ${orphaned.length} فئة بفصل ${className}` }); }
     }
-    fetchData();
+    await refresh();
   };
 
   const handleReorderCategory = async (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => {
@@ -301,7 +301,7 @@ export function useSettingsCategories(
         supabase.from("grade_categories").update({ sort_order: catA.sort_order }).eq("id", catB.id),
       ]);
     }
-    fetchData();
+    await refresh();
   };
 
   // Computed
@@ -320,7 +320,7 @@ export function useSettingsCategories(
 
   const getEffectiveGroup = (cat: GradeCategory) => editingCats[cat.id]?.category_group ?? cat.category_group;
   const classworkCategories = filteredCategories.filter(c => getEffectiveGroup(c) === "classwork");
-  const examCategories = filteredCategories.filter(c => getEffectiveGroup(c) === "exams");
+  const examCategories = filteredCategories.filter(c => getEffectiveGroup(c) === "exam");
 
   return {
     editingCats, setEditingCats, savingCats, catClassFilter, setCatClassFilter,
@@ -328,7 +328,8 @@ export function useSettingsCategories(
     newCatMaxScore, setNewCatMaxScore, newCatGroup, setNewCatGroup,
     newCatIsDeduction, setNewCatIsDeduction,
     orphanedCategories, filteredCategories, classworkCategories, examCategories,
-    handleSaveCategories, handleAddCategory, handleDeleteCategory, handleReassignOrphanedCategories, handleReorderCategory,
+    handleSaveCategories, handleAddCategory, handleDeleteCategory, handleDeleteAllCategories,
+    handleReassignOrphanedCategories, handleReorderCategory,
     initEditingCats,
   };
 }
