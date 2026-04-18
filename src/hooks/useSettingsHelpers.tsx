@@ -220,9 +220,9 @@ export function useSettingsCategories(
       if (results.some(r => r.error)) toast({ title: "خطأ", description: "فشل في الإضافة لبعض الفصول", variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}" لجميع الفصول` });
     } else {
-      const classCats = categories.filter(c => c.class_id === newCatClassId);
+      const classCats = categories.filter(c => c.class_id === effectiveClassId);
       const maxOrder = classCats.length > 0 ? Math.max(...classCats.map(c => c.sort_order)) : 0;
-      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: newCatClassId, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
+      const { error } = await supabase.from("grade_categories").insert({ name: newCatName, weight: newCatWeight, max_score: newCatMaxScore, class_id: effectiveClassId, sort_order: maxOrder + 1, category_group: newCatGroup, is_deduction: newCatIsDeduction });
       if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}"` });
     }
