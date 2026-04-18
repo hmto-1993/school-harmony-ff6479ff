@@ -132,6 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
           setApprovalStatus(null);
           setSubscriptionEnd(null);
+          setNationalId(null);
         }
         setLoading(false);
       }
