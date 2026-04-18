@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { CalendarClock, Infinity as InfinityIcon } from "lucide-react";
+import { CalendarClock, Infinity as InfinityIcon, Crown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
 
 export default function SubscriptionExpiryBadge() {
-  const { user } = useAuth();
+  const { user, isSuperOwner } = useAuth();
   const { isPrimaryOwner, loaded } = useSubscriberStatus();
   const [endDate, setEndDate] = useState<string | null>(null);
   const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
-    if (!user?.id || !loaded || isPrimaryOwner) return;
+    if (!user?.id || !loaded || isPrimaryOwner || isSuperOwner) return;
     supabase
       .from("profiles")
       .select("subscription_end")
@@ -22,7 +22,17 @@ export default function SubscriptionExpiryBadge() {
         setEndDate((data as any)?.subscription_end || null);
         setFetched(true);
       });
-  }, [user?.id, loaded, isPrimaryOwner]);
+  }, [user?.id, loaded, isPrimaryOwner, isSuperOwner]);
+
+  // Super owner gets a distinct "Owner" badge
+  if (isSuperOwner) {
+    return (
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-[11px] font-bold shadow-sm">
+        <Crown className="h-3.5 w-3.5" />
+        المالك الرئيسي
+      </div>
+    );
+  }
 
   // Hide for the platform owner or while not yet loaded
   if (!user || !loaded || isPrimaryOwner || !fetched) return null;
