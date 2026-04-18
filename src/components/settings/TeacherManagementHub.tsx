@@ -73,10 +73,12 @@ export default function TeacherManagementHub() {
   const [tab, setTab] = useState<"pending" | "approved" | "archived">("pending");
 
   // Activation key state
-  const [activationKey, setActivationKey] = useState<string>("");
+  // Activation key — value is bcrypt-hashed in DB and never exposed to the client
+  const [hasKey, setHasKey] = useState<boolean>(false);
   const [keyConfigOpen, setKeyConfigOpen] = useState(false);
-  const [showStoredKey, setShowStoredKey] = useState(false);
+  const [showNewKey, setShowNewKey] = useState(false);
   const [newKey, setNewKey] = useState("");
+  const [confirmKey, setConfirmKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
 
   // Approval dialog state
