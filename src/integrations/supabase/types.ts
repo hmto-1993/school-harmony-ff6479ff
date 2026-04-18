@@ -2381,7 +2381,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
       is_recovery_mode: { Args: never; Returns: boolean }
+      is_subscriber: { Args: { _user_id: string }; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {
         Args: { _class_id: string; _user_id: string }

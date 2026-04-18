@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/hooks/use-theme";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
+import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -61,6 +62,7 @@ interface AppSidebarProps {
 export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut, user } = useAuth();
   const { perms } = useTeacherPermissions();
+  const { isSubscriber } = useSubscriberStatus();
   const location = useLocation();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
@@ -98,10 +100,17 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   }, [user]);
 
   const baseLinks = role === "admin" ? adminLinks : teacherLinks;
-  // Hide settings for read-only teachers
-  const links = perms.read_only_mode && role !== "admin"
-    ? baseLinks.filter(l => l.to !== "/settings")
+  // Subscribers (non-primary owners) cannot see system-wide tools:
+  // - Visit logs (/student-logins): system-level analytics for primary owner only
+  // - Notifications page (/notifications): platform-wide notifications, isolated workspace doesn't need it
+  const subscriberBlacklist = new Set(["/student-logins", "/notifications"]);
+  let links = isSubscriber
+    ? baseLinks.filter(l => !subscriberBlacklist.has(l.to))
     : baseLinks;
+  // Hide settings for read-only teachers
+  if (perms.read_only_mode && role !== "admin") {
+    links = links.filter(l => l.to !== "/settings");
+  }
   const isCollapsed = !isMobile && collapsed;
 
   return (

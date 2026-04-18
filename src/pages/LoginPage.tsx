@@ -10,13 +10,18 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft, Users, UserPlus, Sparkles } from "lucide-react";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
   const [parentNationalId, setParentNationalId] = useState("");
+  // Subscription form
+  const [subFullName, setSubFullName] = useState("");
+  const [subNationalId, setSubNationalId] = useState("");
+  const [subEmail, setSubEmail] = useState("");
+  const [subPassword, setSubPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolSubtitle, setSchoolSubtitle] = useState("");
@@ -124,8 +129,58 @@ export default function LoginPage() {
     }
   };
 
+  const handleSubscribeSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanId = subNationalId.replace(/\D/g, "");
+    if (!subFullName.trim() || cleanId.length !== 10 || !subEmail.trim() || subPassword.length < 6) {
+      toast({
+        title: "بيانات ناقصة",
+        description: "يرجى تعبئة كافة الحقول. كلمة المرور 6 أحرف على الأقل.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email: subEmail.trim(),
+      password: subPassword,
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: {
+          full_name: subFullName.trim(),
+          national_id: cleanId,
+          signup_type: "subscriber",
+        },
+      },
+    });
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "تعذّر إنشاء الحساب",
+        description: error.message.includes("already") ? "هذا البريد مسجّل مسبقاً" : error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (data?.user && !data.session) {
+      toast({
+        title: "تم إنشاء الحساب ✓",
+        description: "تم إرسال رابط التفعيل إلى بريدك الإلكتروني. فعّل الحساب ثم سجّل دخولك.",
+      });
+    } else {
+      toast({
+        title: "أهلاً بك ✓",
+        description: "تم إنشاء بيئة عملك المستقلة بنجاح.",
+      });
+    }
+    setSubFullName(""); setSubNationalId(""); setSubEmail(""); setSubPassword("");
+  };
+
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-6">
       <div
         className="absolute inset-0 bg-cover bg-center brightness-[0.4]"
         style={{ backgroundImage: `url(${loginBg})` }}
@@ -145,18 +200,22 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="staff" dir="rtl">
-              <TabsList className="grid w-full grid-cols-3 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
-                <TabsTrigger value="staff" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
-                  <Shield className="h-4 w-4 shrink-0" />
-                  <span className="truncate">معلم / مدير</span>
+              <TabsList className="grid w-full grid-cols-4 mb-5 h-11 rounded-xl bg-muted/80 dark:bg-muted/40">
+                <TabsTrigger value="staff" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+                  <Shield className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">معلم</span>
                 </TabsTrigger>
-                <TabsTrigger value="student" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
-                  <GraduationCap className="h-4 w-4 shrink-0" />
+                <TabsTrigger value="student" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+                  <GraduationCap className="h-3.5 w-3.5 shrink-0" />
                   <span className="truncate">طالب</span>
                 </TabsTrigger>
-                <TabsTrigger value="parent" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs sm:text-sm px-1">
-                  <Users className="h-4 w-4 shrink-0" />
-                  <span className="truncate">ولي الأمر</span>
+                <TabsTrigger value="parent" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1">
+                  <Users className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">ولي أمر</span>
+                </TabsTrigger>
+                <TabsTrigger value="subscribe" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[11px] sm:text-xs px-1 data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-accent/20">
+                  <UserPlus className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">اشتراك</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -255,6 +314,81 @@ export default function LoginPage() {
                       <span className="flex items-center gap-2">
                         متابعة ابني
                         <ArrowLeft className="h-4 w-4" />
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="subscribe">
+                <form onSubmit={handleSubscribeSubmit} className="space-y-3">
+                  <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 text-center">
+                    <Sparkles className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-xs font-bold text-foreground">سجّل اشتراكاً جديداً</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      ستحصل على بيئة عمل مستقلة 100% — طلابك وفصولك وبياناتك خاصة بك وحدك.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-name" className="text-xs">الاسم الكامل</Label>
+                    <Input
+                      id="sub-name"
+                      value={subFullName}
+                      onChange={(e) => setSubFullName(e.target.value)}
+                      placeholder="أ. محمد بن عبدالله"
+                      className="h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-id" className="text-xs">رقم الهوية الوطنية</Label>
+                    <Input
+                      id="sub-id"
+                      inputMode="numeric"
+                      value={subNationalId}
+                      onChange={(e) => setSubNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="1XXXXXXXXX"
+                      dir="ltr"
+                      className="text-right h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-email" className="text-xs">البريد الإلكتروني</Label>
+                    <Input
+                      id="sub-email"
+                      type="email"
+                      value={subEmail}
+                      onChange={(e) => setSubEmail(e.target.value)}
+                      placeholder="example@mail.com"
+                      dir="ltr"
+                      className="text-right h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-pass" className="text-xs">كلمة المرور (6 أحرف فأكثر)</Label>
+                    <Input
+                      id="sub-pass"
+                      type="password"
+                      value={subPassword}
+                      onChange={(e) => setSubPassword(e.target.value)}
+                      placeholder="••••••••"
+                      dir="ltr"
+                      className="h-10 rounded-xl"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-11 rounded-xl bg-gradient-to-l from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold"
+                    disabled={loading}
+                  >
+                    {loading ? "جارٍ إنشاء الحساب..." : (
+                      <span className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        إنشاء حساب اشتراك
                       </span>
                     )}
                   </Button>

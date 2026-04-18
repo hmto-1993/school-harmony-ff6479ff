@@ -30,6 +30,7 @@ import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCa
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
+import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
@@ -45,8 +46,11 @@ import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
+  const { isSubscriber, isPrimaryOwner, loaded: subLoaded } = useSubscriberStatus();
+  // Subscribers see a curated, restricted settings view (whitelist enforced).
+  const restricted = isSubscriber;
 
-  if (s.loading || !adminPerms.loaded) {
+  if (s.loading || !adminPerms.loaded || !subLoaded) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -70,6 +74,12 @@ export default function SettingsPage() {
           <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
             <Eye className="h-3.5 w-3.5" />
             للاطلاع فقط
+          </span>
+        )}
+        {restricted && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-l from-primary/15 to-accent/15 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
+            <Lock className="h-3.5 w-3.5" />
+            حساب اشتراك مستقل
           </span>
         )}
       </div>
@@ -108,6 +118,8 @@ export default function SettingsPage() {
             if (c.key === "print" && !adminPerms.can_edit_print_header) return false;
             if (c.key === "form_identity" && !adminPerms.can_edit_form_identity) return false;
           }
+          // Subscriber blacklist: platform-wide messaging is reserved for primary owner
+          if (restricted && c.key === "popup") return false;
           return true;
         }).map((card) => (
           <button
@@ -289,15 +301,15 @@ export default function SettingsPage() {
 
         {s.isAdmin && (
           <>
-            {adminPerms.isPrimaryAdmin && (
+            {adminPerms.isPrimaryAdmin && !restricted && (
               <AdminRestrictionsCard />
             )}
 
-            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && (
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_manage_teachers) && !restricted && (
               <TeacherManagementCard teachers={s.teachers} setTeachers={s.setTeachers} />
             )}
 
-            {(adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && (
+            {(adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && !restricted && (
               <>
                 <CollapsibleSettingsCard icon={History} iconGradient="from-cyan-500 to-blue-600" iconShadow="shadow-lg shadow-cyan-500/20" title="سجل الدخول" description="استعراض تاريخ دخول المعلمين والمديرين">
                   <StaffLoginHistory teachers={s.teachers} currentUserId={s.user?.id || ""} currentUserName={s.profileName || "المدير"} />
@@ -326,7 +338,7 @@ export default function SettingsPage() {
               </>
             )}
 
-            {adminPerms.isPrimaryAdmin && <SystemRepairCard />}
+            {adminPerms.isPrimaryAdmin && !restricted && <SystemRepairCard />}
 
             {(adminPerms.isPrimaryAdmin || adminPerms.can_purge_data) && (
               <CollapsibleSettingsCard icon={Trash2} iconGradient="from-red-500 to-rose-600" iconShadow="shadow-lg shadow-red-500/20" title="تفريغ البيانات" description="حذف جميع سجلات الدرجات أو الحضور" className="border-destructive/20">
