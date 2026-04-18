@@ -223,7 +223,7 @@ export function useSettingsCategories(
       if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
       else toast({ title: "تمت الإضافة", description: `تمت إضافة فئة "${newCatName}"` });
     }
-    setNewCatName(""); setNewCatWeight(10); setNewCatMaxScore(100); setNewCatGroup("classwork"); setNewCatIsDeduction(false); fetchData();
+    setNewCatName(""); setNewCatWeight(10); setNewCatMaxScore(100); setNewCatGroup("classwork"); setNewCatIsDeduction(false); await refresh();
   };
 
   const handleDeleteCategory = async (id: string) => {
@@ -235,6 +235,33 @@ export function useSettingsCategories(
       if (results.some(r => r.error)) toast({ title: "خطأ", description: "فشل حذف بعض الفئات", variant: "destructive" });
       else toast({ title: "تم الحذف", description: `تم حذف "${cat.name}" من جميع الفصول` });
     } else {
+      const { error } = await supabase.from("grade_categories").delete().eq("id", id);
+      if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      else toast({ title: "تم الحذف" });
+    }
+    await refresh();
+  };
+
+  const handleDeleteAllCategories = async () => {
+    let toDelete: string[] = [];
+    let scopeLabel = "";
+    if (catClassFilter === "all") {
+      toDelete = categories.map(c => c.id);
+      scopeLabel = "جميع الفصول";
+    } else if (catClassFilter === "orphaned") {
+      toDelete = categories.filter(c => c.class_id === null).map(c => c.id);
+      scopeLabel = "الفئات غير المرتبطة";
+    } else {
+      toDelete = categories.filter(c => c.class_id === catClassFilter).map(c => c.id);
+      const cls = classes.find(c => c.id === catClassFilter);
+      scopeLabel = cls?.name || "الفصل";
+    }
+    if (toDelete.length === 0) { toast({ title: "لا توجد فئات للحذف" }); return; }
+    const { error } = await supabase.from("grade_categories").delete().in("id", toDelete);
+    if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
+    else toast({ title: "تم الحذف", description: `تم حذف ${toDelete.length} فئة من ${scopeLabel}` });
+    await refresh();
+  };
       const { error } = await supabase.from("grade_categories").delete().eq("id", id);
       if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
       else toast({ title: "تم الحذف" });
