@@ -188,7 +188,7 @@ export function useSettingsCategories(
         }
       }
       if (hasError) toast({ title: "خطأ في الحفظ", variant: "destructive" });
-      else { toast({ title: "تم الحفظ", description: "تم تعميم التغييرات على جميع الفصول" }); fetchData(); }
+      else { toast({ title: "تم الحفظ", description: "تم تعميم التغييرات على جميع الفصول" }); await refresh(); }
     } else {
       const filtered = categories.filter(c => c.class_id === catClassFilter);
       const updates = filtered.map(cat => {
@@ -200,7 +200,7 @@ export function useSettingsCategories(
       });
       const results = await Promise.all(updates);
       if (results.some(r => r.error)) toast({ title: "خطأ في الحفظ", variant: "destructive" });
-      else { toast({ title: "تم الحفظ", description: "تم تحديث فئات التقييم بنجاح" }); fetchData(); }
+      else { toast({ title: "تم الحفظ", description: "تم تحديث فئات التقييم بنجاح" }); await refresh(); }
     }
     setSavingCats(false); setEditingCats({});
   };
