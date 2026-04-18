@@ -175,6 +175,7 @@ export function useSettingsClasses(fetchData: () => void) {
     editingClassSection, setEditingClassSection, editingClassYear, setEditingClassYear,
     importClassesOpen, setImportClassesOpen, importedClasses, setImportedClasses, importingClasses, classFileRef,
     scheduleDialogClass, setScheduleDialogClass,
+    newClassStudentsPdf, setNewClassStudentsPdf, addingClass,
     handleAddClass, handleSaveClassEdit, startEditingClass, handleClassFileSelect, handleImportClasses, handleDeleteClass,
   };
 }
