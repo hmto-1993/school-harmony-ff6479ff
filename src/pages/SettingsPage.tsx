@@ -112,6 +112,8 @@ export default function SettingsPage() {
             if (c.key === "print" && !adminPerms.can_edit_print_header) return false;
             if (c.key === "form_identity" && !adminPerms.can_edit_form_identity) return false;
           }
+          // Subscriber blacklist: platform-wide messaging is reserved for primary owner
+          if (restricted && c.key === "popup") return false;
           return true;
         }).map((card) => (
           <button
