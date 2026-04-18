@@ -113,7 +113,7 @@ export function ClassesSettingsCard({ s }: { s: SettingsData }) {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-              <Dialog>
+              <Dialog onOpenChange={(v) => { if (!v) s.setNewClassStudentsPdf(null); }}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1.5">
                     <Plus className="h-4 w-4" />
@@ -148,14 +148,31 @@ export function ClassesSettingsCard({ s }: { s: SettingsData }) {
                         <Input value={s.newYear} onChange={(e) => s.setNewYear(e.target.value)} />
                       </div>
                     </div>
+                    <div className="space-y-1.5 pt-2 border-t border-border/50">
+                      <Label className="flex items-center gap-1.5">
+                        <FileText className="h-4 w-4 text-destructive" />
+                        استيراد طلاب من PDF (اختياري)
+                      </Label>
+                      <Input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => s.setNewClassStudentsPdf(e.target.files?.[0] || null)}
+                        className="cursor-pointer"
+                        disabled={s.addingClass}
+                      />
+                      {s.newClassStudentsPdf && (
+                        <p className="text-xs text-muted-foreground truncate">📎 {s.newClassStudentsPdf.name}</p>
+                      )}
+                      <p className="text-xs text-muted-foreground">سيتم تحليل الملف بالذكاء الاصطناعي وإضافة الطلاب للفصل بعد إنشائه.</p>
+                    </div>
                   </div>
                   <DialogFooter>
                     <DialogClose asChild>
-                      <Button variant="outline">إلغاء</Button>
+                      <Button variant="outline" disabled={s.addingClass}>إلغاء</Button>
                     </DialogClose>
-                    <Button onClick={s.handleAddClass}>
-                      <Plus className="h-4 w-4 ml-1.5" />
-                      إضافة
+                    <Button onClick={s.handleAddClass} disabled={s.addingClass}>
+                      {s.addingClass ? <Loader2 className="h-4 w-4 ml-1.5 animate-spin" /> : <Plus className="h-4 w-4 ml-1.5" />}
+                      {s.addingClass ? "جارٍ الإضافة..." : "إضافة"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
