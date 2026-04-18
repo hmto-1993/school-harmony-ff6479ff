@@ -85,6 +85,9 @@ export default function SettingsPage() {
         )}
       </div>
 
+      {/* Owner-only: pending account approvals */}
+      {isPrimaryOwner && <OwnerApprovalPanel />}
+
       {/* ===== البطاقات الرئيسية ===== */}
       <div className="flex items-center gap-3 mb-3">
         <div className="h-px flex-1 bg-gradient-to-l from-primary/40 to-transparent" />
