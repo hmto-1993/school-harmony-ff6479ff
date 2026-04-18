@@ -2395,6 +2395,8 @@ export type Database = {
       restore_missing_students: { Args: never; Returns: Json }
       run_full_system_audit: { Args: never; Returns: Json }
       run_system_repair: { Args: never; Returns: Json }
+      same_org_as_class: { Args: { _class_id: string }; Returns: boolean }
+      same_org_as_creator: { Args: { _creator_id: string }; Returns: boolean }
       teacher_can_view_student_in_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
