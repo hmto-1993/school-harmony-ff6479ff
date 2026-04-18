@@ -328,7 +328,12 @@ export function useSettingsData() {
   // Sub-hooks
   const profileHelper = useSettingsProfile(user);
   const classHelper = useSettingsClasses(fetchData);
-  const catHelpers = useSettingsCategories(classes, categories, fetchData);
+  const refreshCategoriesOnly = useCallback(async () => {
+    const { data } = await supabase.from("grade_categories").select("*, classes(name)").order("sort_order");
+    const catData = (data || []).map((c: any) => ({ ...c, class_name: c.classes?.name || "—" }));
+    setCategories(catData);
+  }, []);
+  const catHelpers = useSettingsCategories(classes, categories, fetchData, refreshCategoriesOnly, setCategories);
   const smsHelper = useSettingsSms();
 
   const handleUploadLetterhead = async (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { GraduationCap, Plus, Save, X, FileSpreadsheet, AlertTriangle } from "lucide-react";
+import { GraduationCap, Plus, Save, X, FileSpreadsheet, AlertTriangle, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -152,6 +153,32 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
                 <Save className="h-4 w-4" />
                 {s.savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
               </Button>
+            )}
+            {s.filteredCategories.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    حذف الكل
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      حذف جميع فئات التقييم{s.catClassFilter === "all" ? " من جميع الفصول" : s.catClassFilter === "orphaned" ? " غير المرتبطة" : ` من فصل "${s.classes.find(c => c.id === s.catClassFilter)?.name || ""}"`}؟
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم حذف {s.filteredCategories.length} فئة وجميع الدرجات المسجلة فيها بشكل نهائي. لا يمكن التراجع.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={s.handleDeleteAllCategories}>
+                      حذف الكل
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
           </div>
         )}
