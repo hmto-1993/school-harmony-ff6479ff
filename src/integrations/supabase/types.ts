@@ -1253,6 +1253,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_status: Database["public"]["Enums"]["approval_status"]
           created_at: string
           full_name: string
           id: string
@@ -1264,6 +1265,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
           created_at?: string
           full_name: string
           id?: string
@@ -1275,6 +1277,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approval_status?: Database["public"]["Enums"]["approval_status"]
           created_at?: string
           full_name?: string
           id?: string
@@ -2384,6 +2387,7 @@ export type Database = {
       is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
       is_recovery_mode: { Args: never; Returns: boolean }
       is_subscriber: { Args: { _user_id: string }; Returns: boolean }
+      is_user_approved: { Args: { _user_id: string }; Returns: boolean }
       is_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_viewer_for_class: {
         Args: { _class_id: string; _user_id: string }
@@ -2397,6 +2401,13 @@ export type Database = {
       run_system_repair: { Args: never; Returns: Json }
       same_org_as_class: { Args: { _class_id: string }; Returns: boolean }
       same_org_as_creator: { Args: { _creator_id: string }; Returns: boolean }
+      set_user_approval: {
+        Args: {
+          _status: Database["public"]["Enums"]["approval_status"]
+          _target_user: string
+        }
+        Returns: Json
+      }
       teacher_can_view_student_in_class: {
         Args: { _class_id: string; _user_id: string }
         Returns: boolean
@@ -2428,6 +2439,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "teacher"
+      approval_status: "pending" | "approved" | "rejected"
       attendance_status:
         | "present"
         | "absent"
@@ -2564,6 +2576,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "teacher"],
+      approval_status: ["pending", "approved", "rejected"],
       attendance_status: [
         "present",
         "absent",

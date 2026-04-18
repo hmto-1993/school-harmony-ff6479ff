@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
 type AppRole = "admin" | "teacher";
+export type ApprovalStatus = "pending" | "approved" | "rejected";
 
 interface StudentData {
   id: string;
@@ -25,6 +26,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  approvalStatus: ApprovalStatus | null;
   loading: boolean;
   student: StudentData | null;
   isStudent: boolean;
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentData | null>(null);
   const [studentRestoring, setStudentRestoring] = useState(() => !!sessionStorage.getItem("student_session"));
@@ -46,12 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isStudent = !!student && !user;
 
   const fetchRole = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .single();
-    setRole((data?.role as AppRole) || null);
+    const [roleRes, profileRes] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+      supabase.from("profiles").select("approval_status").eq("user_id", userId).maybeSingle(),
+    ]);
+    setRole((roleRes.data?.role as AppRole) || null);
+    setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
   };
 
   // Restore student session using HMAC token (no PII in storage)
@@ -117,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           fetchRole(session.user.id);
         } else {
           setRole(null);
+          setApprovalStatus(null);
         }
         setLoading(false);
       }
@@ -190,11 +194,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setSession(null);
       setRole(null);
+      setApprovalStatus(null);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, approvalStatus, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
       {children}
     </AuthContext.Provider>
   );
