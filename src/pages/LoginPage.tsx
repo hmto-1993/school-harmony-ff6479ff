@@ -319,6 +319,81 @@ export default function LoginPage() {
                   </Button>
                 </form>
               </TabsContent>
+
+              <TabsContent value="subscribe">
+                <form onSubmit={handleSubscribeSubmit} className="space-y-3">
+                  <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 text-center">
+                    <Sparkles className="h-5 w-5 text-primary mx-auto mb-1" />
+                    <p className="text-xs font-bold text-foreground">سجّل اشتراكاً جديداً</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      ستحصل على بيئة عمل مستقلة 100% — طلابك وفصولك وبياناتك خاصة بك وحدك.
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-name" className="text-xs">الاسم الكامل</Label>
+                    <Input
+                      id="sub-name"
+                      value={subFullName}
+                      onChange={(e) => setSubFullName(e.target.value)}
+                      placeholder="أ. محمد بن عبدالله"
+                      className="h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-id" className="text-xs">رقم الهوية الوطنية</Label>
+                    <Input
+                      id="sub-id"
+                      inputMode="numeric"
+                      value={subNationalId}
+                      onChange={(e) => setSubNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      placeholder="1XXXXXXXXX"
+                      dir="ltr"
+                      className="text-right h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-email" className="text-xs">البريد الإلكتروني</Label>
+                    <Input
+                      id="sub-email"
+                      type="email"
+                      value={subEmail}
+                      onChange={(e) => setSubEmail(e.target.value)}
+                      placeholder="example@mail.com"
+                      dir="ltr"
+                      className="text-right h-10 rounded-xl"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="sub-pass" className="text-xs">كلمة المرور (6 أحرف فأكثر)</Label>
+                    <Input
+                      id="sub-pass"
+                      type="password"
+                      value={subPassword}
+                      onChange={(e) => setSubPassword(e.target.value)}
+                      placeholder="••••••••"
+                      dir="ltr"
+                      className="h-10 rounded-xl"
+                      minLength={6}
+                      required
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-11 rounded-xl bg-gradient-to-l from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold"
+                    disabled={loading}
+                  >
+                    {loading ? "جارٍ إنشاء الحساب..." : (
+                      <span className="flex items-center gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        إنشاء حساب اشتراك
+                      </span>
+                    )}
+                  </Button>
+                </form>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
