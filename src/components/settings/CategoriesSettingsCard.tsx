@@ -154,6 +154,32 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
                 {s.savingCats ? "جارٍ الحفظ..." : "حفظ التعديلات"}
               </Button>
             )}
+            {s.filteredCategories.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    حذف الكل
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent dir="rtl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      حذف جميع فئات التقييم{s.catClassFilter === "all" ? " من جميع الفصول" : s.catClassFilter === "orphaned" ? " غير المرتبطة" : ` من فصل "${s.classes.find(c => c.id === s.catClassFilter)?.name || ""}"`}؟
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      سيتم حذف {s.filteredCategories.length} فئة وجميع الدرجات المسجلة فيها بشكل نهائي. لا يمكن التراجع.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                    <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={s.handleDeleteAllCategories}>
+                      حذف الكل
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
 
