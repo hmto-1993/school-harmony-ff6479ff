@@ -461,38 +461,54 @@ export default function TeacherManagementHub() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-500" />
-              {activationKey ? "تعديل رمز التفعيل الخاص" : "تعيين رمز التفعيل الخاص"}
+              {hasKey ? "تغيير رمز التفعيل الخاص" : "تعيين رمز التفعيل الخاص"}
             </DialogTitle>
             <DialogDescription>
-              هذا الرمز السري يحميك من التفعيل بالخطأ. سيُطلب منك إدخاله في كل مرة توافق فيها على حساب جديد.
+              يُحفظ الرمز بصيغة مشفّرة (bcrypt) في قاعدة البيانات ولا يمكن لأحد قراءته — حتى المالك. يُستخدم فقط للتحقق عند تفعيل أي حساب جديد.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            {activationKey && (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center justify-between gap-2">
-                  <Label className="text-xs text-muted-foreground">الرمز الحالي</Label>
-                  <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => setShowStoredKey((v) => !v)}>
-                    {showStoredKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    {showStoredKey ? "إخفاء" : "إظهار"}
-                  </Button>
-                </div>
-                <div className="font-mono mt-1 text-base tracking-wider">
-                  {showStoredKey ? activationKey : "•".repeat(activationKey.length)}
+            {hasKey && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-start gap-2 text-xs">
+                <Lock className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div className="text-muted-foreground">
+                  <span className="font-bold text-foreground">الرمز الحالي مُشفّر ومحمي.</span>
+                  <br />
+                  لا يمكن استرجاعه. أدخل رمزاً جديداً أدناه لاستبداله — وسيصبح هو الرمز المعتمد فوراً.
                 </div>
               </div>
             )}
             <div className="space-y-2">
               <Label>رمز التفعيل الجديد</Label>
-              <Input
-                type="text"
-                value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
-                placeholder="مثلاً: ALPHA-2026"
-                className="font-mono tracking-wider"
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  type={showNewKey ? "text" : "password"}
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="مثلاً: ALPHA-2026"
+                  className="font-mono tracking-wider pl-10"
+                  autoComplete="new-password"
+                />
+                <Button
+                  type="button" size="icon" variant="ghost"
+                  className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowNewKey((v) => !v)}
+                >
+                  {showNewKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
               <p className="text-[11px] text-muted-foreground">يفضل ألا يقل عن 6 خانات ويحتوي أرقاماً وحروفاً.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>تأكيد الرمز</Label>
+              <Input
+                type={showNewKey ? "text" : "password"}
+                value={confirmKey}
+                onChange={(e) => setConfirmKey(e.target.value)}
+                placeholder="أعد إدخال الرمز"
+                className="font-mono tracking-wider"
+                autoComplete="new-password"
+              />
             </div>
           </div>
           <DialogFooter>
