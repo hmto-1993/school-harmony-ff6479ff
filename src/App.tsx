@@ -40,6 +40,7 @@ const InstallPage = lazy(() => import("@/pages/InstallPage"));
 const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 const FormsPage = lazy(() => import("@/pages/FormsPage"));
 const PendingApprovalPage = lazy(() => import("@/pages/PendingApprovalPage"));
+const SubscriptionExpiredPage = lazy(() => import("@/pages/SubscriptionExpiredPage"));
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => {
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/shared/:token" element={<SharedViewPage />} />
                     <Route path="/pending" element={<PendingApprovalPage />} />
+                    <Route path="/expired" element={<SubscriptionExpiredPage />} />
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route
                       element={
