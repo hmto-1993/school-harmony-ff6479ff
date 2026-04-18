@@ -18,12 +18,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon,
-  ShieldCheck, ShieldX, KeyRound, Users, UserCheck, Archive, Settings2, Mail, Phone, Eye, EyeOff,
+  ShieldCheck, ShieldX, KeyRound, Users, UserCheck, Archive, Settings2, Mail, Phone, Eye, EyeOff, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SUPER_OWNER_ID = "1098080268";
-const ACTIVATION_KEY_SETTING = "owner_activation_key";
 
 type Profile = {
   id: string;
@@ -74,10 +73,12 @@ export default function TeacherManagementHub() {
   const [tab, setTab] = useState<"pending" | "approved" | "archived">("pending");
 
   // Activation key state
-  const [activationKey, setActivationKey] = useState<string>("");
+  // Activation key — value is bcrypt-hashed in DB and never exposed to the client
+  const [hasKey, setHasKey] = useState<boolean>(false);
   const [keyConfigOpen, setKeyConfigOpen] = useState(false);
-  const [showStoredKey, setShowStoredKey] = useState(false);
+  const [showNewKey, setShowNewKey] = useState(false);
   const [newKey, setNewKey] = useState("");
+  const [confirmKey, setConfirmKey] = useState("");
   const [savingKey, setSavingKey] = useState(false);
 
   // Approval dialog state
@@ -99,7 +100,7 @@ export default function TeacherManagementHub() {
         .from("profiles")
         .select("id, user_id, full_name, national_id, phone, approval_status, subscription_plan, subscription_start, subscription_end, created_at")
         .order("created_at", { ascending: false }),
-      supabase.from("site_settings").select("value").eq("id", ACTIVATION_KEY_SETTING).maybeSingle(),
+      supabase.rpc("has_owner_activation_key"),
     ]);
     if (profilesRes.error) {
       toast({ title: "تعذر تحميل البيانات", description: profilesRes.error.message, variant: "destructive" });
@@ -107,7 +108,7 @@ export default function TeacherManagementHub() {
       const filtered = ((profilesRes.data as any) || []).filter((p: Profile) => p.national_id !== SUPER_OWNER_ID);
       setProfiles(filtered);
     }
-    if (keyRes.data?.value) setActivationKey(keyRes.data.value);
+    if (!keyRes.error) setHasKey(Boolean(keyRes.data));
     setLoading(false);
   }, []);
 
@@ -119,32 +120,36 @@ export default function TeacherManagementHub() {
     archived: profiles.filter((p) => p.approval_status === "rejected"),
   }), [profiles]);
 
-  // ── Activation key management ─────────────────────────────────
+  // ── Activation key management (hashed in DB) ──────────────────
   const saveActivationKey = async () => {
     const trimmed = newKey.trim();
     if (trimmed.length < 4) {
       toast({ title: "الرمز قصير جداً", description: "يجب ألا يقل الرمز عن 4 خانات", variant: "destructive" });
       return;
     }
+    if (trimmed !== confirmKey.trim()) {
+      toast({ title: "الرمزان غير متطابقين", description: "يرجى إعادة إدخال الرمز للتأكيد", variant: "destructive" });
+      return;
+    }
     setSavingKey(true);
-    const { error } = await supabase
-      .from("site_settings")
-      .upsert({ id: ACTIVATION_KEY_SETTING, value: trimmed, updated_at: new Date().toISOString() });
+    const { error } = await supabase.rpc("set_owner_activation_key", { _new_key: trimmed });
     setSavingKey(false);
     if (error) {
       toast({ title: "تعذر حفظ الرمز", description: error.message, variant: "destructive" });
       return;
     }
-    setActivationKey(trimmed);
+    setHasKey(true);
     setNewKey("");
+    setConfirmKey("");
+    setShowNewKey(false);
     setKeyConfigOpen(false);
-    toast({ title: "تم حفظ رمز التفعيل", description: "سيُطلب الرمز عند تفعيل أي حساب جديد" });
+    toast({ title: "تم حفظ رمز التفعيل بشكل مشفّر", description: "تم تخزين الرمز عبر تشفير bcrypt ولا يمكن استرجاعه" });
   };
 
   // ── Approve with security key ─────────────────────────────────
   const confirmApprove = async () => {
     if (!approveTarget) return;
-    if (!activationKey) {
+    if (!hasKey) {
       toast({
         title: "لم يتم تعيين رمز التفعيل",
         description: "يرجى تعيين رمز التفعيل من زر الإعدادات أعلى البطاقة أولاً",
@@ -152,11 +157,18 @@ export default function TeacherManagementHub() {
       });
       return;
     }
-    if (enteredKey.trim() !== activationKey) {
+    setApproving(true);
+    const { data: ok, error: verifyErr } = await supabase.rpc("verify_owner_activation_key", { _candidate: enteredKey.trim() });
+    if (verifyErr) {
+      setApproving(false);
+      toast({ title: "تعذر التحقق من الرمز", description: verifyErr.message, variant: "destructive" });
+      return;
+    }
+    if (!ok) {
+      setApproving(false);
       toast({ title: "رمز التفعيل غير صحيح", description: "تأكد من إدخال الرمز السري الصحيح", variant: "destructive" });
       return;
     }
-    setApproving(true);
     const { error } = await supabase.rpc("set_user_approval", {
       _target_user: approveTarget.user_id,
       _status: "approved",
@@ -251,11 +263,11 @@ export default function TeacherManagementHub() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => { setNewKey(activationKey); setKeyConfigOpen(true); }}
+            onClick={() => { setNewKey(""); setConfirmKey(""); setShowNewKey(false); setKeyConfigOpen(true); }}
             className="gap-1.5 border-amber-500/40 hover:bg-amber-500/10"
           >
             <KeyRound className="h-3.5 w-3.5 text-amber-500" />
-            {activationKey ? "تعديل رمز التفعيل" : "تعيين رمز التفعيل"}
+            {hasKey ? "تغيير رمز التفعيل" : "تعيين رمز التفعيل"}
           </Button>
         </div>
       </CardHeader>
@@ -287,7 +299,7 @@ export default function TeacherManagementHub() {
 
             {/* ─── PENDING ─── */}
             <TabsContent value="pending" className="mt-4">
-              {!activationKey && (
+              {!hasKey && (
                 <div className="mb-4 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-sm flex items-start gap-2">
                   <KeyRound className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <span className="text-amber-900 dark:text-amber-200">
@@ -449,38 +461,54 @@ export default function TeacherManagementHub() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <KeyRound className="h-5 w-5 text-amber-500" />
-              {activationKey ? "تعديل رمز التفعيل الخاص" : "تعيين رمز التفعيل الخاص"}
+              {hasKey ? "تغيير رمز التفعيل الخاص" : "تعيين رمز التفعيل الخاص"}
             </DialogTitle>
             <DialogDescription>
-              هذا الرمز السري يحميك من التفعيل بالخطأ. سيُطلب منك إدخاله في كل مرة توافق فيها على حساب جديد.
+              يُحفظ الرمز بصيغة مشفّرة (bcrypt) في قاعدة البيانات ولا يمكن لأحد قراءته — حتى المالك. يُستخدم فقط للتحقق عند تفعيل أي حساب جديد.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
-            {activationKey && (
-              <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center justify-between gap-2">
-                  <Label className="text-xs text-muted-foreground">الرمز الحالي</Label>
-                  <Button size="sm" variant="ghost" className="h-7 gap-1" onClick={() => setShowStoredKey((v) => !v)}>
-                    {showStoredKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                    {showStoredKey ? "إخفاء" : "إظهار"}
-                  </Button>
-                </div>
-                <div className="font-mono mt-1 text-base tracking-wider">
-                  {showStoredKey ? activationKey : "•".repeat(activationKey.length)}
+            {hasKey && (
+              <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-start gap-2 text-xs">
+                <Lock className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div className="text-muted-foreground">
+                  <span className="font-bold text-foreground">الرمز الحالي مُشفّر ومحمي.</span>
+                  <br />
+                  لا يمكن استرجاعه. أدخل رمزاً جديداً أدناه لاستبداله — وسيصبح هو الرمز المعتمد فوراً.
                 </div>
               </div>
             )}
             <div className="space-y-2">
               <Label>رمز التفعيل الجديد</Label>
-              <Input
-                type="text"
-                value={newKey}
-                onChange={(e) => setNewKey(e.target.value)}
-                placeholder="مثلاً: ALPHA-2026"
-                className="font-mono tracking-wider"
-                autoComplete="off"
-              />
+              <div className="relative">
+                <Input
+                  type={showNewKey ? "text" : "password"}
+                  value={newKey}
+                  onChange={(e) => setNewKey(e.target.value)}
+                  placeholder="مثلاً: ALPHA-2026"
+                  className="font-mono tracking-wider pl-10"
+                  autoComplete="new-password"
+                />
+                <Button
+                  type="button" size="icon" variant="ghost"
+                  className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                  onClick={() => setShowNewKey((v) => !v)}
+                >
+                  {showNewKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
               <p className="text-[11px] text-muted-foreground">يفضل ألا يقل عن 6 خانات ويحتوي أرقاماً وحروفاً.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>تأكيد الرمز</Label>
+              <Input
+                type={showNewKey ? "text" : "password"}
+                value={confirmKey}
+                onChange={(e) => setConfirmKey(e.target.value)}
+                placeholder="أعد إدخال الرمز"
+                className="font-mono tracking-wider"
+                autoComplete="new-password"
+              />
             </div>
           </div>
           <DialogFooter>

@@ -1148,6 +1148,27 @@ export type Database = {
         }
         Relationships: []
       }
+      owner_activation_secret: {
+        Row: {
+          id: boolean
+          key_hash: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: boolean
+          key_hash: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: boolean
+          key_hash?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       parent_messages: {
         Row: {
           body: string
@@ -2386,6 +2407,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      has_owner_activation_key: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2393,6 +2415,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_caller_super_owner: { Args: never; Returns: boolean }
       is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
       is_recovery_mode: { Args: never; Returns: boolean }
       is_subscriber: { Args: { _user_id: string }; Returns: boolean }
@@ -2413,6 +2436,10 @@ export type Database = {
       run_system_repair: { Args: never; Returns: Json }
       same_org_as_class: { Args: { _class_id: string }; Returns: boolean }
       same_org_as_creator: { Args: { _creator_id: string }; Returns: boolean }
+      set_owner_activation_key: {
+        Args: { _new_key: string }
+        Returns: undefined
+      }
       set_user_approval: {
         Args: {
           _status: Database["public"]["Enums"]["approval_status"]
@@ -2454,6 +2481,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["org_role"][]
           _user_id: string
         }
+        Returns: boolean
+      }
+      verify_owner_activation_key: {
+        Args: { _candidate: string }
         Returns: boolean
       }
       verify_tenant_isolation: { Args: never; Returns: Json }
