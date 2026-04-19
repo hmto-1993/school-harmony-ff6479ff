@@ -329,6 +329,13 @@ export default function SmartRadar({
 
   const handlePickLevel = (level: "excellent" | "average" | "zero" | "star") => {
     if (selectedStudent) onSelectForParticipation(selectedStudent.student_id, level);
+    if (level === "excellent" || level === "star") {
+      if (!muted) playCorrectSound();
+      triggerFeedback("correct");
+    } else if (level === "zero") {
+      if (!muted) playWrongSound();
+      triggerFeedback("wrong");
+    }
     setShowParticipationPicker(false);
     setShowActions(false);
     setSelectedStudent(null);
@@ -349,6 +356,7 @@ export default function SmartRadar({
       if (isCorrect) playCorrectSound();
       else playWrongSound();
     }
+    triggerFeedback(isCorrect ? "correct" : "wrong");
 
     if (isCorrect && selectedStudent) {
       onQuizCorrect(selectedStudent.student_id, quizQuestion.score);
