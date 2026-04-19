@@ -149,9 +149,35 @@ export default function OwnerApprovalPanel() {
                     <span>سُجِّل: {new Date(p.created_at).toLocaleDateString("ar-SA")}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
                   {p.approval_status === "pending" ? (
                     <>
+                      <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-1">
+                        <button
+                          type="button"
+                          onClick={() => setTierChoice((s) => ({ ...s, [p.user_id]: "basic" }))}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition-all ${
+                            (tierChoice[p.user_id] || "basic") === "basic"
+                              ? "bg-muted-foreground/20 text-foreground"
+                              : "text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <Shield className="h-3 w-3" />
+                          أساسية
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTierChoice((s) => ({ ...s, [p.user_id]: "premium" }))}
+                          className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold transition-all ${
+                            tierChoice[p.user_id] === "premium"
+                              ? "bg-amber-500/20 text-amber-600 dark:text-amber-400"
+                              : "text-muted-foreground hover:bg-muted"
+                          }`}
+                        >
+                          <Crown className="h-3 w-3" />
+                          بريميوم
+                        </button>
+                      </div>
                       <Button
                         size="sm"
                         onClick={() => setStatus(p.user_id, "approved")}
@@ -163,7 +189,7 @@ export default function OwnerApprovalPanel() {
                         ) : (
                           <ShieldCheck className="h-4 w-4" />
                         )}
-                        تفعيل الحساب
+                        تفعيل
                       </Button>
                       <Button
                         size="sm"
