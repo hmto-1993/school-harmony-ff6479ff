@@ -492,6 +492,44 @@ export type Database = {
         }
         Relationships: []
       }
+      category_group_caps: {
+        Row: {
+          category_group: string
+          class_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          max_total: number
+          updated_at: string
+        }
+        Insert: {
+          category_group: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_total?: number
+          updated_at?: string
+        }
+        Update: {
+          category_group?: string
+          class_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          max_total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_group_caps_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_schedules: {
         Row: {
           class_id: string

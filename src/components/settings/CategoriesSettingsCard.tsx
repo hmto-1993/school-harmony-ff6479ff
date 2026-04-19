@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import CategoryTable from "@/components/settings/CategoryTable";
+import GroupCapEditor from "@/components/settings/GroupCapEditor";
 import type { SettingsData } from "./settings-types";
 
 export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
@@ -201,12 +202,20 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
           </div>
         )}
 
+        <GroupCapEditor groupKey="classwork" groupLabel="المهام الأدائية والمشاركة والتفاعل"
+          categories={s.classworkCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
+          onApplied={s.fetchData} colorScheme="emerald" />
+
         <CategoryTable title="المهام الأدائية والمشاركة والتفاعل" emoji="📝" colorScheme="emerald"
           emptyText="لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع"
           categories={s.classworkCategories} allCategories={s.categories} classes={s.classes}
           editingCats={s.editingCats} setEditingCats={s.setEditingCats} isAdmin={s.isAdmin}
           catClassFilter={s.catClassFilter} targetGroupLabel="الاختبارات" targetGroupKey="exam"
           onReorder={s.handleReorderCategory} onDelete={s.handleDeleteCategory} />
+
+        <GroupCapEditor groupKey="exam" groupLabel="الاختبارات"
+          categories={s.examCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
+          onApplied={s.fetchData} colorScheme="amber" />
 
         <CategoryTable title="الاختبارات" emoji="📋" colorScheme="amber"
           emptyText="لا توجد فئات — أضف: اختبار عملي، اختبار الفترة"
