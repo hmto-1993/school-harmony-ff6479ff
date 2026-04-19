@@ -12,6 +12,9 @@ import { Users, Eye, TrendingUp, Calendar, UserCheck, Users2 } from "lucide-reac
 import { format, subDays, isAfter } from "date-fns";
 import { ar } from "date-fns/locale";
 import ExportDialog from "@/components/student-logins/ExportDialog";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
+import { Crown, Lock } from "lucide-react";
 
 interface LoginRecord {
   id: string;
@@ -30,6 +33,7 @@ interface ClassInfo {
 }
 
 export default function StudentLoginsPage() {
+  const { loaded: tierLoaded, isPremium } = useSubscriptionTier();
   const [loginsTab, setLoginsTab] = usePersistedState("student_logins_tab", "classes");
   const [logins, setLogins] = useState<LoginRecord[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
@@ -39,8 +43,9 @@ export default function StudentLoginsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (tierLoaded && isPremium) fetchData();
+    else if (tierLoaded) setLoading(false);
+  }, [tierLoaded, isPremium]);
 
   const fetchData = async () => {
     setLoading(true);
