@@ -246,6 +246,67 @@ export default function AlphaLabOwnerCard() {
           </Button>
         </div>
 
+        {/* Smart rollout alerts (7+ days) */}
+        {isSuperOwner && smartAlerts.length > 0 && (
+          <div className="space-y-3">
+            {smartAlerts.map(({ feature, daysElapsed }) => (
+              <div
+                key={feature.id}
+                className="relative rounded-xl border-2 border-amber-400 bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 dark:from-amber-950/40 dark:via-yellow-950/30 dark:to-amber-900/40 p-4 shadow-[0_0_25px_rgba(251,191,36,0.35)] animate-fade-in overflow-hidden"
+              >
+                <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-amber-400/20 blur-2xl" />
+                <div className="relative flex items-start gap-3">
+                  <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center shadow-lg shadow-amber-500/40 shrink-0 animate-pulse">
+                    <Hourglass className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Sparkles className="h-4 w-4 text-amber-600" />
+                      <h5 className="text-sm font-bold text-amber-900 dark:text-amber-100">اقتراح ذكي من النظام</h5>
+                      <Badge className="bg-amber-500 text-white border-0 text-[10px]">{daysElapsed} يوم</Badge>
+                    </div>
+                    <p className="text-sm leading-relaxed text-amber-950 dark:text-amber-50">
+                      لقد أمضيت <strong>{daysElapsed} أيام</strong> في تجربة <strong>«{feature.name}»</strong> بنجاح.
+                      هل لاحظت أي مشاكل تقنية؟ إذا كان كل شيء يعمل بدقة، يمكنك إطلاقها لجميع المشتركين الآن.
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        onClick={() => handleReleaseGlobal(feature.id)}
+                        disabled={actingId === feature.id}
+                        className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white gap-1.5 shadow-md"
+                      >
+                        {actingId === feature.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Rocket className="h-3.5 w-3.5" />}
+                        إطلاق للجميع
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleSnooze(feature.id)}
+                        disabled={actingId === feature.id}
+                        className="gap-1.5 border-amber-400 text-amber-800 hover:bg-amber-100 dark:text-amber-200 dark:hover:bg-amber-900/40"
+                      >
+                        <Clock className="h-3.5 w-3.5" />
+                        تمديد التجربة (3 أيام)
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCancelFeature(feature.id)}
+                        disabled={actingId === feature.id}
+                        className="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                        إلغاء الميزة
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Features list */}
         {loading ? (
           <div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-violet-600" /></div>
