@@ -57,21 +57,26 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     const studentIds = students.map(s => s.id);
 
     let allGrades: any[] = [];
+    let manualScores: any[] = [];
     if (studentIds.length > 0) {
-      const { data } = await supabase
-        .from("grades")
-        .select("student_id, category_id, score, period")
-        .in("student_id", studentIds);
-      allGrades = data || [];
+      const [gradesRes, manualRes] = await Promise.all([
+        supabase.from("grades").select("student_id, category_id, score, period").in("student_id", studentIds),
+        supabase.from("manual_category_scores" as any).select("student_id, category_id, score, period").in("student_id", studentIds),
+      ]);
+      allGrades = gradesRes.data || [];
+      manualScores = (manualRes.data as any[]) || [];
     }
 
     const gradesMap = new Map<string, Map<number, Map<string, number | null>>>();
-    allGrades.forEach(g => {
-      if (!gradesMap.has(g.student_id)) gradesMap.set(g.student_id, new Map());
-      const periodMap = gradesMap.get(g.student_id)!;
-      if (!periodMap.has(g.period)) periodMap.set(g.period, new Map());
-      periodMap.get(g.period)!.set(g.category_id, g.score != null ? Number(g.score) : null);
-    });
+    const setScore = (studentId: string, period: number, catId: string, score: number | null) => {
+      if (!gradesMap.has(studentId)) gradesMap.set(studentId, new Map());
+      const periodMap = gradesMap.get(studentId)!;
+      if (!periodMap.has(period)) periodMap.set(period, new Map());
+      periodMap.get(period)!.set(catId, score);
+    };
+    allGrades.forEach(g => setScore(g.student_id, g.period, g.category_id, g.score != null ? Number(g.score) : null));
+    // manual scores override (they're the source of truth for non-daily categories)
+    manualScores.forEach(g => setScore(g.student_id, g.period, g.category_id, g.score != null ? Number(g.score) : null));
 
     const classMap = new Map(cls.map(c => [c.id, c.name]));
 
