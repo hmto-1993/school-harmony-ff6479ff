@@ -415,6 +415,8 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   const matchedCount = importRows.filter(r => r.status === "matched").length;
   const notFoundCount = importRows.filter(r => r.status === "not_found").length;
   const invalidCount = importRows.filter(r => r.status === "invalid_score").length;
+  const confirmedCount = importRows.filter(r => r.confirmed && r.status === "matched" && r.score !== null).length;
+  const allMatchedConfirmed = matchedCount > 0 && importRows.filter(r => r.status === "matched").every(r => r.confirmed);
 
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
