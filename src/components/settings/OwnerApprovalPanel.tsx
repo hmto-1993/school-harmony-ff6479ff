@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox } from "lucide-react";
+import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox, Crown, Shield } from "lucide-react";
+
+type TierChoice = "basic" | "premium";
 
 type PendingProfile = {
   id: string;
