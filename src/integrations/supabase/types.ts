@@ -456,6 +456,7 @@ export type Database = {
           name: string
           owner_first_enabled_at: string | null
           released_at: string | null
+          required_tier: Database["public"]["Enums"]["subscription_tier_type"]
           snooze_until: string | null
           updated_at: string
         }
@@ -470,6 +471,7 @@ export type Database = {
           name: string
           owner_first_enabled_at?: string | null
           released_at?: string | null
+          required_tier?: Database["public"]["Enums"]["subscription_tier_type"]
           snooze_until?: string | null
           updated_at?: string
         }
@@ -484,6 +486,7 @@ export type Database = {
           name?: string
           owner_first_enabled_at?: string | null
           released_at?: string | null
+          required_tier?: Database["public"]["Enums"]["subscription_tier_type"]
           snooze_until?: string | null
           updated_at?: string
         }
@@ -2175,6 +2178,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_tiers: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          started_at: string
+          tier: Database["public"]["Enums"]["subscription_tier_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          tier?: Database["public"]["Enums"]["subscription_tier_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          started_at?: string
+          tier?: Database["public"]["Enums"]["subscription_tier_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       system_repair_invalid: {
         Row: {
           flagged_at: string
@@ -2515,6 +2551,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["org_role"]
       }
+      get_user_tier: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["subscription_tier_type"]
+      }
       has_org_role: {
         Args: {
           _role: Database["public"]["Enums"]["org_role"]
@@ -2523,6 +2563,7 @@ export type Database = {
         Returns: boolean
       }
       has_owner_activation_key: { Args: never; Returns: boolean }
+      has_premium_access: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2579,6 +2620,13 @@ export type Database = {
         }
         Returns: Json
       }
+      set_user_tier: {
+        Args: {
+          _target_user: string
+          _tier: Database["public"]["Enums"]["subscription_tier_type"]
+        }
+        Returns: Json
+      }
       snooze_beta_feature: {
         Args: { _days?: number; _feature_id: string }
         Returns: Json
@@ -2627,6 +2675,7 @@ export type Database = {
         | "sick_leave"
       org_role: "owner" | "admin" | "teacher" | "student" | "parent"
       organization_type: "school" | "individual"
+      subscription_tier_type: "basic" | "premium"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2765,6 +2814,7 @@ export const Constants = {
       ],
       org_role: ["owner", "admin", "teacher", "student", "parent"],
       organization_type: ["school", "individual"],
+      subscription_tier_type: ["basic", "premium"],
     },
   },
 } as const
