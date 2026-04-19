@@ -108,7 +108,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     const tokenize = (s: string) =>
       normalize(s)
         .split(" ")
-        .filter(t => t.length > 1 && !["بن", "بنت", "عبد", "ال", "آل"].includes(t));
+        .filter(t => t.length > 1 && !["بن", "بنت"].includes(t));
 
     const fileName = normalize(name);
     const fileTokens = tokenize(name);
