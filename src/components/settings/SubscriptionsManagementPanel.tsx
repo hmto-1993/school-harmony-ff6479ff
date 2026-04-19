@@ -165,8 +165,8 @@ export default function SubscriptionsManagementPanel() {
               <TableHeader className="bg-muted/50">
                 <TableRow>
                   <TableHead className="text-right font-bold">اسم المعلم</TableHead>
-                  <TableHead className="text-right font-bold">الباقة</TableHead>
-                  <TableHead className="text-right font-bold">بدء الاشتراك</TableHead>
+                  <TableHead className="text-right font-bold">نوع الباقة</TableHead>
+                  <TableHead className="text-right font-bold">الخطة</TableHead>
                   <TableHead className="text-right font-bold">انتهاء الاشتراك</TableHead>
                   <TableHead className="text-right font-bold">المدة المتبقية</TableHead>
                   <TableHead className="text-right font-bold">الإجراءات</TableHead>
@@ -185,9 +185,25 @@ export default function SubscriptionsManagementPanel() {
                         )}
                       </TableCell>
                       <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleTier(s)}
+                          className={cn(
+                            "gap-1 h-7 text-xs border",
+                            s.tier === "premium"
+                              ? "bg-gradient-to-r from-amber-400 to-amber-600 text-white border-amber-500 hover:opacity-90"
+                              : "bg-gradient-to-r from-slate-200 to-slate-300 text-slate-700 dark:from-slate-700 dark:to-slate-600 dark:text-slate-200 border-slate-400/50",
+                          )}
+                          title="اضغط للتبديل بين الباقتين"
+                        >
+                          {s.tier === "premium" ? <Crown className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
+                          {s.tier === "premium" ? "بريميوم" : "أساسية"}
+                        </Button>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="outline" className={cn("border", plan.cls)}>{plan.label}</Badge>
                       </TableCell>
-                      <TableCell className="text-sm">{formatDate(s.subscription_start)}</TableCell>
                       <TableCell className="text-sm">{formatDate(s.subscription_end)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cn("border gap-1", TONE_CLS[cd.tone])}>
