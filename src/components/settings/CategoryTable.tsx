@@ -50,6 +50,7 @@ interface CategoryTableProps {
   targetGroupKey: string;
   onReorder: (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => void;
   onDelete: (id: string) => void;
+  headerExtra?: React.ReactNode;
 }
 
 export default function CategoryTable({
