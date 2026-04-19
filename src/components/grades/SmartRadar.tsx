@@ -538,7 +538,15 @@ export default function SmartRadar({
       )}
 
       {/* Scanner display */}
-      <div className="relative rounded-xl border border-primary/20 bg-black/40 p-4 mb-4 min-h-[120px] flex flex-col items-center justify-center">
+      <div
+        ref={scannerRef}
+        className={cn(
+          "relative rounded-xl border bg-black/40 p-4 mb-4 min-h-[120px] flex flex-col items-center justify-center transition-colors",
+          feedback === "correct" && "border-emerald-500/60 bg-emerald-950/30",
+          feedback === "wrong" && "border-rose-500/60 bg-rose-950/30 animate-radar-shake",
+          !feedback && "border-primary/20"
+        )}
+      >
         {spinning && (
           <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
             <div className="absolute w-full h-1 bg-gradient-to-l from-transparent via-primary/60 to-transparent animate-[scan_1.5s_linear_infinite]" />
@@ -546,12 +554,28 @@ export default function SmartRadar({
         )}
 
         {currentIndex >= 0 && students[currentIndex] ? (
-          <div className={cn("text-center transition-all duration-150", spinning && "scale-105", selectedStudent && "scale-110")}>
+          <div ref={studentNameRef} className={cn("relative text-center transition-all duration-150", spinning && "scale-105", selectedStudent && "scale-110")}>
             <div className={cn("text-2xl font-black tracking-wide", selectedStudent ? "text-primary" : "text-white/90")}>
               {students[currentIndex].full_name}
             </div>
-            {selectedStudent && (
+            {selectedStudent && !feedback && (
               <div className="mt-2 text-xs text-primary/70 font-medium animate-fade-in">تم الاختيار</div>
+            )}
+
+            {/* ✓ / ✗ feedback overlay above student name */}
+            {feedback === "correct" && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="h-14 w-14 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50 flex items-center justify-center animate-radar-pop ring-4 ring-emerald-400/30">
+                  <Check className="h-9 w-9 text-white stroke-[3.5]" strokeWidth={3.5} />
+                </div>
+              </div>
+            )}
+            {feedback === "wrong" && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="h-14 w-14 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50 flex items-center justify-center animate-radar-fade-out ring-4 ring-rose-400/30">
+                  <X className="h-9 w-9 text-white" strokeWidth={3.5} />
+                </div>
+              </div>
             )}
           </div>
         ) : (
