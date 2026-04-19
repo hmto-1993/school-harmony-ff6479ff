@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox, Crown, Shield } from "lucide-react";
+import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox, Crown, Shield, School, BookOpen } from "lucide-react";
 
 type TierChoice = "basic" | "premium";
 
@@ -14,6 +14,9 @@ type PendingProfile = {
   full_name: string;
   national_id: string | null;
   phone: string | null;
+  school: string | null;
+  specialty: string | null;
+  requested_tier: TierChoice | null;
   approval_status: "pending" | "approved" | "rejected";
   created_at: string;
 };
@@ -29,13 +32,17 @@ export default function OwnerApprovalPanel() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, user_id, full_name, national_id, phone, approval_status, created_at")
+      .select("id, user_id, full_name, national_id, phone, school, specialty, requested_tier, approval_status, created_at")
       .in("approval_status", ["pending", "rejected"])
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "تعذر تحميل القائمة", description: error.message, variant: "destructive" });
     } else {
-      setItems((data as any) || []);
+      const list = ((data as any) || []) as PendingProfile[];
+      setItems(list);
+      const initial: Record<string, TierChoice> = {};
+      list.forEach((p) => { if (p.requested_tier) initial[p.user_id] = p.requested_tier; });
+      setTierChoice((prev) => ({ ...initial, ...prev }));
     }
     setLoading(false);
   }, []);
@@ -124,13 +131,22 @@ export default function OwnerApprovalPanel() {
                 className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl border border-border bg-muted/30 hover:bg-muted/50 transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className="font-bold text-foreground truncate">{p.full_name || "بدون اسم"}</span>
                     {p.approval_status === "rejected" && (
                       <Badge variant="destructive" className="text-[10px]">مرفوض</Badge>
                     )}
                     {p.approval_status === "pending" && (
                       <Badge variant="secondary" className="text-[10px]">جديد</Badge>
+                    )}
+                    {p.requested_tier === "premium" ? (
+                      <Badge className="text-[10px] bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 gap-1">
+                        <Crown className="h-3 w-3" /> طلب: بريميوم
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] gap-1">
+                        <Shield className="h-3 w-3" /> طلب: أساسية
+                      </Badge>
                     )}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -144,6 +160,18 @@ export default function OwnerApprovalPanel() {
                       <span className="inline-flex items-center gap-1">
                         <Phone className="h-3 w-3" />
                         {p.phone}
+                      </span>
+                    )}
+                    {p.school && (
+                      <span className="inline-flex items-center gap-1">
+                        <School className="h-3 w-3" />
+                        {p.school}
+                      </span>
+                    )}
+                    {p.specialty && (
+                      <span className="inline-flex items-center gap-1">
+                        <BookOpen className="h-3 w-3" />
+                        {p.specialty}
                       </span>
                     )}
                     <span>سُجِّل: {new Date(p.created_at).toLocaleDateString("ar-SA")}</span>

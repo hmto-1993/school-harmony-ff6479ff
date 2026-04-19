@@ -10,19 +10,15 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft, Users, UserPlus, Sparkles } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
+import SignupWizardDialog from "@/components/auth/SignupWizardDialog";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [studentNationalId, setStudentNationalId] = useState("");
   const [parentNationalId, setParentNationalId] = useState("");
-  // Subscription form
-  const [subFullName, setSubFullName] = useState("");
-  const [subNationalId, setSubNationalId] = useState("");
-  const [subEmail, setSubEmail] = useState("");
-  const [subPassword, setSubPassword] = useState("");
+  const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [schoolName, setSchoolName] = useState("");
   const [schoolSubtitle, setSchoolSubtitle] = useState("");
@@ -130,56 +126,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubscribeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanId = subNationalId.replace(/\D/g, "");
-    if (!subFullName.trim() || cleanId.length !== 10 || !subEmail.trim() || subPassword.length < 6) {
-      toast({
-        title: "بيانات ناقصة",
-        description: "يرجى تعبئة كافة الحقول. كلمة المرور 6 أحرف على الأقل.",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: subEmail.trim(),
-      password: subPassword,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: {
-          full_name: subFullName.trim(),
-          national_id: cleanId,
-          signup_type: "subscriber",
-        },
-      },
-    });
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: "تعذّر إنشاء الحساب",
-        description: error.message.includes("already") ? "هذا البريد مسجّل مسبقاً" : error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "تم استلام طلبك بنجاح ✓",
-      description: "سيتم تفعيل حسابك (الباقة الأساسية) قريباً من قبل الإدارة. استعد لتجربة ألفا فيزياء! 🚀",
-      duration: 8000,
-    });
-    if (data?.user && !data.session) {
-      toast({
-        title: "تأكيد البريد الإلكتروني",
-        description: "تم إرسال رابط التفعيل إلى بريدك. فعّله ثم انتظر موافقة الإدارة.",
-        duration: 8000,
-      });
-    }
-    setSubFullName(""); setSubNationalId(""); setSubEmail(""); setSubPassword("");
-  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-6">
@@ -321,96 +268,16 @@ export default function LoginPage() {
 
             <div dir="rtl" className="mt-5 pt-4 border-t border-border/40 flex items-center justify-center gap-2">
               <span className="text-sm text-foreground">مستخدم جديد؟</span>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 decoration-2 transition-colors"
-                  >
-                    اشتراك
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md" dir="rtl">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2 text-right">
-                      <UserPlus className="h-5 w-5 text-primary" />
-                      إنشاء اشتراك جديد
-                    </DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleSubscribeSubmit} className="space-y-3">
-                    <div className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 to-accent/5 p-3 text-center">
-                      <p className="text-xs font-bold text-foreground">بيئة عمل مستقلة 100%</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        طلابك وفصولك وبياناتك خاصة بك وحدك.
-                      </p>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sub-name" className="text-xs">الاسم الكامل</Label>
-                      <Input
-                        id="sub-name"
-                        value={subFullName}
-                        onChange={(e) => setSubFullName(e.target.value)}
-                        placeholder="أ. محمد بن عبدالله"
-                        className="h-10 rounded-xl"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sub-id" className="text-xs">رقم الهوية الوطنية</Label>
-                      <Input
-                        id="sub-id"
-                        inputMode="numeric"
-                        value={subNationalId}
-                        onChange={(e) => setSubNationalId(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        placeholder="1XXXXXXXXX"
-                        dir="ltr"
-                        className="text-right h-10 rounded-xl"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sub-email" className="text-xs">البريد الإلكتروني</Label>
-                      <Input
-                        id="sub-email"
-                        type="email"
-                        value={subEmail}
-                        onChange={(e) => setSubEmail(e.target.value)}
-                        placeholder="example@mail.com"
-                        dir="ltr"
-                        className="text-right h-10 rounded-xl"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="sub-pass" className="text-xs">كلمة المرور (6 أحرف فأكثر)</Label>
-                      <Input
-                        id="sub-pass"
-                        type="password"
-                        value={subPassword}
-                        onChange={(e) => setSubPassword(e.target.value)}
-                        placeholder="••••••••"
-                        dir="ltr"
-                        className="h-10 rounded-xl"
-                        minLength={6}
-                        required
-                      />
-                    </div>
-                    <Button
-                      type="submit"
-                      className="w-full h-11 rounded-xl bg-gradient-to-l from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold"
-                      disabled={loading}
-                    >
-                      {loading ? "جارٍ إنشاء الحساب..." : (
-                        <span className="flex items-center gap-2">
-                          <UserPlus className="h-4 w-4" />
-                          إنشاء حساب اشتراك
-                        </span>
-                      )}
-                    </Button>
-                  </form>
-                </DialogContent>
-              </Dialog>
+              <button
+                type="button"
+                onClick={() => setSignupOpen(true)}
+                className="text-sm font-bold text-primary hover:text-primary/80 underline underline-offset-4 decoration-2 transition-colors"
+              >
+                اشتراك
+              </button>
             </div>
+            <SignupWizardDialog open={signupOpen} onOpenChange={setSignupOpen} />
+
           </CardContent>
         </Card>
       </div>
