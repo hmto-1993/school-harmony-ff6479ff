@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles, EyeOff } from "lucide-react";
+import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles, EyeOff, Crown, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -25,6 +25,7 @@ interface BetaFeatureRow {
   owner_first_enabled_at?: string | null;
   snooze_until?: string | null;
   released_at?: string | null;
+  required_tier?: "basic" | "premium";
 }
 
 interface SmartAlert {
