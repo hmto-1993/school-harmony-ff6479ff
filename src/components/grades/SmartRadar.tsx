@@ -1,13 +1,32 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import RadarQuizModal from "./RadarQuizModal";
+
+/** Fire a small celebratory confetti burst from a DOM element's position */
+export function fireRadarConfetti(el: HTMLElement | null) {
+  const rect = el?.getBoundingClientRect();
+  const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+  const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.4;
+  confetti({
+    particleCount: 70,
+    spread: 65,
+    startVelocity: 32,
+    gravity: 0.9,
+    scalar: 0.85,
+    ticks: 130,
+    origin: { x, y },
+    colors: ["#10b981", "#34d399", "#fbbf24", "#60a5fa", "#a78bfa"],
+    disableForReducedMotion: true,
+  });
+}
 
 // ── Types ──────────────────────────────────────────────────────────
 interface Student {
@@ -73,9 +92,24 @@ export default function SmartRadar({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickAudioRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Visual feedback state (✓ / ✗ overlay + shake)
+  const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const scannerRef = useRef<HTMLDivElement | null>(null);
+  const studentNameRef = useRef<HTMLDivElement | null>(null);
+
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
+
+  /** Trigger visual feedback (auto-clears after 800ms) */
+  const triggerFeedback = useCallback((kind: "correct" | "wrong") => {
+    setFeedback(kind);
+    if (kind === "correct") {
+      fireRadarConfetti(studentNameRef.current);
+    }
+    window.setTimeout(() => setFeedback(null), 850);
+  }, []);
+
 
   // Bank question source state
   const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
@@ -295,6 +329,13 @@ export default function SmartRadar({
 
   const handlePickLevel = (level: "excellent" | "average" | "zero" | "star") => {
     if (selectedStudent) onSelectForParticipation(selectedStudent.student_id, level);
+    if (level === "excellent" || level === "star") {
+      if (!muted) playCorrectSound();
+      triggerFeedback("correct");
+    } else if (level === "zero") {
+      if (!muted) playWrongSound();
+      triggerFeedback("wrong");
+    }
     setShowParticipationPicker(false);
     setShowActions(false);
     setSelectedStudent(null);
@@ -315,6 +356,7 @@ export default function SmartRadar({
       if (isCorrect) playCorrectSound();
       else playWrongSound();
     }
+    triggerFeedback(isCorrect ? "correct" : "wrong");
 
     if (isCorrect && selectedStudent) {
       onQuizCorrect(selectedStudent.student_id, quizQuestion.score);
@@ -496,7 +538,15 @@ export default function SmartRadar({
       )}
 
       {/* Scanner display */}
-      <div className="relative rounded-xl border border-primary/20 bg-black/40 p-4 mb-4 min-h-[120px] flex flex-col items-center justify-center">
+      <div
+        ref={scannerRef}
+        className={cn(
+          "relative rounded-xl border bg-black/40 p-4 mb-4 min-h-[120px] flex flex-col items-center justify-center transition-colors",
+          feedback === "correct" && "border-emerald-500/60 bg-emerald-950/30",
+          feedback === "wrong" && "border-rose-500/60 bg-rose-950/30 animate-radar-shake",
+          !feedback && "border-primary/20"
+        )}
+      >
         {spinning && (
           <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
             <div className="absolute w-full h-1 bg-gradient-to-l from-transparent via-primary/60 to-transparent animate-[scan_1.5s_linear_infinite]" />
@@ -504,12 +554,28 @@ export default function SmartRadar({
         )}
 
         {currentIndex >= 0 && students[currentIndex] ? (
-          <div className={cn("text-center transition-all duration-150", spinning && "scale-105", selectedStudent && "scale-110")}>
+          <div ref={studentNameRef} className={cn("relative text-center transition-all duration-150", spinning && "scale-105", selectedStudent && "scale-110")}>
             <div className={cn("text-2xl font-black tracking-wide", selectedStudent ? "text-primary" : "text-white/90")}>
               {students[currentIndex].full_name}
             </div>
-            {selectedStudent && (
+            {selectedStudent && !feedback && (
               <div className="mt-2 text-xs text-primary/70 font-medium animate-fade-in">تم الاختيار</div>
+            )}
+
+            {/* ✓ / ✗ feedback overlay above student name */}
+            {feedback === "correct" && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="h-14 w-14 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50 flex items-center justify-center animate-radar-pop ring-4 ring-emerald-400/30">
+                  <Check className="h-9 w-9 text-white stroke-[3.5]" strokeWidth={3.5} />
+                </div>
+              </div>
+            )}
+            {feedback === "wrong" && (
+              <div className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none">
+                <div className="h-14 w-14 rounded-full bg-rose-500 shadow-lg shadow-rose-500/50 flex items-center justify-center animate-radar-fade-out ring-4 ring-rose-400/30">
+                  <X className="h-9 w-9 text-white" strokeWidth={3.5} />
+                </div>
+              </div>
             )}
           </div>
         ) : (

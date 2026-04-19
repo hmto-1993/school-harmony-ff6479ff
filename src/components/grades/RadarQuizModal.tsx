@@ -41,11 +41,32 @@ export default function RadarQuizModal({
   const timerBorderColor = timeLeft <= 5 ? "border-rose-500/50" : timeLeft <= 15 ? "border-amber-500/50" : "border-emerald-500/50";
 
   return (
-    <div className="relative rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden" dir="rtl">
+    <div className={cn(
+      "relative rounded-2xl border-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden transition-colors",
+      quizResult === "wrong" && "border-rose-500/60 animate-radar-shake",
+      quizResult === "correct" && "border-emerald-500/60",
+      !quizResult && "border-primary/30"
+    )} dir="rtl">
       <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
         backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }} />
+
+      {/* ✓ / ✗ feedback overlay */}
+      {quizResult === "correct" && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="h-16 w-16 rounded-full bg-emerald-500 shadow-xl shadow-emerald-500/50 flex items-center justify-center animate-radar-pop ring-4 ring-emerald-400/30">
+            <Check className="h-10 w-10 text-white" strokeWidth={3.5} />
+          </div>
+        </div>
+      )}
+      {quizResult === "wrong" && (
+        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="h-16 w-16 rounded-full bg-rose-500 shadow-xl shadow-rose-500/50 flex items-center justify-center animate-radar-fade-out ring-4 ring-rose-400/30">
+            <X className="h-10 w-10 text-white" strokeWidth={3.5} />
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <div className="relative flex items-center justify-between mb-4">
