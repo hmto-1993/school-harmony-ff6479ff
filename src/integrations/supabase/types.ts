@@ -1357,6 +1357,48 @@ export type Database = {
           },
         ]
       }
+      platform_features: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          feature_key: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          required_tier: Database["public"]["Enums"]["subscription_tier_type"]
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string
+          feature_key: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          required_tier?: Database["public"]["Enums"]["subscription_tier_type"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          feature_key?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          required_tier?: Database["public"]["Enums"]["subscription_tier_type"]
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       popup_messages: {
         Row: {
           created_at: string
@@ -2603,6 +2645,13 @@ export type Database = {
       set_owner_activation_key: {
         Args: { _new_key: string }
         Returns: undefined
+      }
+      set_platform_feature_tier: {
+        Args: {
+          _feature_id: string
+          _tier: Database["public"]["Enums"]["subscription_tier_type"]
+        }
+        Returns: Json
       }
       set_user_approval: {
         Args: {
