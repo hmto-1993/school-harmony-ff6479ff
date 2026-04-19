@@ -87,17 +87,83 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   }, [selectedCategory, selectedPeriod, students]);
 
   const matchStudent = useCallback((name: string, nationalId: string | null): StudentInfo | null => {
+    // 1) National ID match (most reliable)
     if (nationalId) {
       const byId = students.find(s => s.national_id === nationalId);
       if (byId) return byId;
     }
-    const normalized = name.trim();
-    const byName = students.find(s => s.full_name.trim() === normalized);
-    if (byName) return byName;
-    const partial = students.find(s =>
-      s.full_name.trim().includes(normalized) || normalized.includes(s.full_name.trim())
-    );
-    return partial || null;
+
+    // Arabic-aware normalization: strip diacritics, normalize alef/yaa/taa marbuta, collapse spaces
+    const normalize = (s: string) =>
+      s
+        .replace(/[\u064B-\u0652\u0670\u0640]/g, "") // tashkeel + tatweel
+        .replace(/[إأآا]/g, "ا")
+        .replace(/ى/g, "ي")
+        .replace(/ة/g, "ه")
+        .replace(/ؤ/g, "و")
+        .replace(/ئ/g, "ي")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const tokenize = (s: string) =>
+      normalize(s)
+        .split(" ")
+        .filter(t => t.length > 1 && !["بن", "بنت", "عبد", "ال", "آل"].includes(t));
+
+    const fileName = normalize(name);
+    const fileTokens = tokenize(name);
+    if (fileTokens.length === 0) return null;
+
+    // 2) Exact normalized match
+    const exact = students.find(s => normalize(s.full_name) === fileName);
+    if (exact) return exact;
+
+    // 3) Substring (either way)
+    const sub = students.find(s => {
+      const sn = normalize(s.full_name);
+      return sn.includes(fileName) || fileName.includes(sn);
+    });
+    if (sub) return sub;
+
+    // 4) Minimum-token match: first + last + (middle if available)
+    //    A student matches if their full name contains the file's first + last token,
+    //    AND if the file has 3+ tokens, also the second token.
+    const fileFirst = fileTokens[0];
+    const fileLast = fileTokens[fileTokens.length - 1];
+    const fileSecond = fileTokens.length >= 3 ? fileTokens[1] : null;
+
+    const candidates = students
+      .map(s => {
+        const studentTokens = tokenize(s.full_name);
+        if (studentTokens.length === 0) return null;
+
+        const hasFirst = studentTokens.includes(fileFirst);
+        const hasLast = studentTokens.includes(fileLast);
+        if (!hasFirst || !hasLast) return null;
+
+        // If file has a middle name, prefer students whose name also contains it
+        const hasSecond = fileSecond ? studentTokens.includes(fileSecond) : true;
+
+        // Score: more shared tokens + bonus for middle name match
+        const shared = fileTokens.filter(t => studentTokens.includes(t)).length;
+        const score = shared + (hasSecond ? 0.5 : 0);
+        return { student: s, score, hasSecond };
+      })
+      .filter((c): c is { student: StudentInfo; score: number; hasSecond: boolean } => c !== null);
+
+    if (candidates.length === 0) return null;
+
+    // Prefer ones with middle-name match, then highest score
+    candidates.sort((a, b) => {
+      if (a.hasSecond !== b.hasSecond) return a.hasSecond ? -1 : 1;
+      return b.score - a.score;
+    });
+
+    // Only return if unambiguous (top score strictly higher than next, or only one)
+    if (candidates.length === 1) return candidates[0].student;
+    if (candidates[0].score > candidates[1].score) return candidates[0].student;
+
+    return null;
   }, [students]);
 
   const processRows = useCallback((rawRows: { name: string; id: string | null; score: number | null }[]) => {
