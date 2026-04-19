@@ -83,11 +83,18 @@ export default function SubscriptionsManagementPanel() {
       .order("subscription_end", { ascending: true, nullsFirst: false });
     if (error) {
       toast({ title: "تعذر تحميل المشتركين", description: error.message, variant: "destructive" });
-    } else {
-      // Exclude the system super owner (national_id 1098080268) — they appear as System Administrator, not as a subscriber
-      const filtered = ((data as any) || []).filter((s: Subscriber) => s.national_id !== "1098080268");
-      setItems(filtered);
+      setLoading(false);
+      return;
     }
+    const filtered = ((data as any) || []).filter((s: Subscriber) => s.national_id !== "1098080268");
+    // Hydrate tiers in parallel
+    const withTiers = await Promise.all(
+      filtered.map(async (s: Subscriber) => {
+        const { data: t } = await supabase.rpc("get_user_tier", { _user_id: s.user_id });
+        return { ...s, tier: ((t as Tier) || "basic") } as Subscriber;
+      }),
+    );
+    setItems(withTiers);
     setLoading(false);
   }, []);
 
@@ -123,6 +130,23 @@ export default function SubscriptionsManagementPanel() {
     const base = editEnd ? new Date(editEnd) : new Date();
     base.setDate(base.getDate() + days);
     setEditEnd(base.toISOString().split("T")[0]);
+  };
+
+  const toggleTier = async (s: Subscriber) => {
+    const newTier: Tier = s.tier === "premium" ? "basic" : "premium";
+    // Optimistic update
+    setItems((prev) => prev.map((it) => (it.user_id === s.user_id ? { ...it, tier: newTier } : it)));
+    const { error } = await supabase.rpc("set_user_tier", { _target_user: s.user_id, _tier: newTier });
+    if (error) {
+      // Revert on failure
+      setItems((prev) => prev.map((it) => (it.user_id === s.user_id ? { ...it, tier: s.tier } : it)));
+      toast({ title: "تعذر تغيير الباقة", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: newTier === "premium" ? "تمت الترقية إلى بريميوم 👑" : "تم التحويل إلى الأساسية",
+      description: `${s.full_name} أصبح الآن في باقة ${newTier === "premium" ? "بريميوم" : "أساسية"}`,
+    });
   };
 
   const revoke = async (userId: string) => {

@@ -9,6 +9,9 @@ import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-qu
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import RadarQuizModal from "./RadarQuizModal";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
+import { Lock } from "lucide-react";
 
 /** Fire a small celebratory confetti burst from a DOM element's position */
 export function fireRadarConfetti(el: HTMLElement | null) {
@@ -100,6 +103,13 @@ export default function SmartRadar({
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
+
+  // Premium gating: radar sound effects are a premium feature
+  const { isPremium, loaded: tierLoaded } = useSubscriptionTier();
+  const [showAudioUpgrade, setShowAudioUpgrade] = useState(false);
+  const audioLocked = tierLoaded && !isPremium;
+  // When locked, force-mute by ignoring any unmute attempts via a derived flag
+  const effectiveMuted = audioLocked ? true : muted;
 
   /** Trigger visual feedback (auto-clears after 800ms) */
   const triggerFeedback = useCallback((kind: "correct" | "wrong") => {
@@ -429,11 +439,26 @@ export default function SmartRadar({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={onToggleMute}
-            className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-            title={muted ? "تشغيل الصوت" : "كتم الصوت"}>
-            {muted ? <VolumeX className="h-4 w-4 text-white/50" /> : <Volume2 className="h-4 w-4 text-primary" />}
+          <button
+            type="button"
+            onClick={() => (audioLocked ? setShowAudioUpgrade(true) : onToggleMute())}
+            className="relative h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+            title={audioLocked ? "المؤثرات الصوتية - ميزة بريميوم" : effectiveMuted ? "تشغيل الصوت" : "كتم الصوت"}
+          >
+            {effectiveMuted ? <VolumeX className="h-4 w-4 text-white/50" /> : <Volume2 className="h-4 w-4 text-primary" />}
+            {audioLocked && (
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-amber-500 border border-amber-700 flex items-center justify-center shadow">
+                <Lock className="h-2 w-2 text-white" />
+              </span>
+            )}
           </button>
+          <UpgradeDialog
+            open={showAudioUpgrade}
+            onOpenChange={setShowAudioUpgrade}
+            featureName="المؤثرات الصوتية والبصرية للرادار"
+            description="استمتع بتجربة رادار غامرة مع أصوات احترافية ومؤثرات بصرية متقدمة، حصرياً لمشتركي ألفا بريميوم."
+          />
+
           {settings.sessionMemory && excluded.size > 0 && (
             <button type="button" onClick={handleReset}
               className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
