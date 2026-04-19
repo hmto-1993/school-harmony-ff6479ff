@@ -105,10 +105,26 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
         .replace(/\s+/g, " ")
         .trim();
 
-    const tokenize = (s: string) =>
-      normalize(s)
+    // Merge "عبد X" into a single token (عبدالله, عبدالرحمن...) so it isn't treated as two parts
+    const mergeAbd = (tokens: string[]): string[] => {
+      const out: string[] = [];
+      for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i] === "عبد" && i + 1 < tokens.length) {
+          out.push("عبد" + tokens[i + 1]);
+          i++;
+        } else {
+          out.push(tokens[i]);
+        }
+      }
+      return out;
+    };
+
+    const tokenize = (s: string) => {
+      const raw = normalize(s)
         .split(" ")
-        .filter(t => t.length > 1 && !["بن", "بنت"].includes(t));
+        .filter(t => t.length > 0 && !["بن", "بنت"].includes(t));
+      return mergeAbd(raw).filter(t => t.length > 1);
+    };
 
     const fileName = normalize(name);
     const fileTokens = tokenize(name);
