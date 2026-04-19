@@ -326,11 +326,46 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     setImportRows(prev => prev.filter((_, i) => i !== index));
   };
 
+  const updateRowMatch = (index: number, studentId: string) => {
+    const stu = students.find(s => s.id === studentId) || null;
+    setImportRows(prev => prev.map((r, i) => {
+      if (i !== index) return r;
+      const cat = categories.find(c => c.id === selectedCategory);
+      const maxScore = cat ? Number(cat.max_score) : 100;
+      let status: ImportRow["status"] = "matched";
+      if (!stu) status = "not_found";
+      else if (r.score === null || r.score < 0 || r.score > maxScore) status = "invalid_score";
+      return { ...r, matchedStudent: stu, status, manualOverride: true, confirmed: status === "matched" };
+    }));
+  };
+
+  const updateRowScore = (index: number, raw: string) => {
+    setImportRows(prev => prev.map((r, i) => {
+      if (i !== index) return r;
+      const cat = categories.find(c => c.id === selectedCategory);
+      const maxScore = cat ? Number(cat.max_score) : 100;
+      const score = raw === "" ? null : Number(raw);
+      const valid = score !== null && !isNaN(score) && score >= 0 && score <= maxScore;
+      let status: ImportRow["status"] = "matched";
+      if (!r.matchedStudent) status = "not_found";
+      else if (!valid) status = "invalid_score";
+      return { ...r, score: valid ? score : (raw === "" ? null : score), status, confirmed: status === "matched" ? r.confirmed : false };
+    }));
+  };
+
+  const toggleConfirm = (index: number) => {
+    setImportRows(prev => prev.map((r, i) => i === index ? { ...r, confirmed: !r.confirmed } : r));
+  };
+
+  const toggleConfirmAll = (value: boolean) => {
+    setImportRows(prev => prev.map(r => r.status === "matched" ? { ...r, confirmed: value } : r));
+  };
+
   const handleImport = async () => {
     if (!user || !selectedCategory) return;
     setSaving(true);
 
-    const validRows = importRows.filter(r => r.status === "matched" && r.matchedStudent && r.score !== null);
+    const validRows = importRows.filter(r => r.confirmed && r.status === "matched" && r.matchedStudent && r.score !== null);
 
     const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; category_id: string; score: number | null; recorded_by: string; period: number }[] = [];
