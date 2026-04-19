@@ -366,9 +366,13 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     setSaving(true);
 
     const validRows = importRows.filter(r => r.confirmed && r.status === "matched" && r.matchedStudent && r.score !== null);
+    const today = new Date().toISOString().slice(0, 10);
 
+    // 1) Save to manual_category_scores (final evaluation table)
     const updates: PromiseLike<any>[] = [];
-    const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
+    const manualInserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
+    // 2) ALSO save to grades table (so they appear in the class summary as a daily grade entry)
+    const gradeInserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number; date: string; note: string }[] = [];
 
     for (const row of validRows) {
       const existingId = existingGrades[row.matchedStudent!.id];
@@ -380,7 +384,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
             .then()
         );
       } else {
-        inserts.push({
+        manualInserts.push({
           student_id: row.matchedStudent!.id,
           category_id: selectedCategory,
           score: row.score as number,
@@ -388,19 +392,36 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
           period: selectedPeriod,
         });
       }
+
+      gradeInserts.push({
+        student_id: row.matchedStudent!.id,
+        category_id: selectedCategory,
+        score: row.score as number,
+        recorded_by: user.id,
+        period: selectedPeriod,
+        date: today,
+        note: "مستوردة من ملف",
+      });
     }
 
     const ops: PromiseLike<any>[] = [...updates];
-    if (inserts.length > 0) {
+    if (manualInserts.length > 0) {
       ops.push(
         supabase.from("manual_category_scores" as any)
-          .upsert(inserts, { onConflict: "student_id,category_id,period" })
+          .upsert(manualInserts, { onConflict: "student_id,category_id,period" })
+          .then()
+      );
+    }
+    if (gradeInserts.length > 0) {
+      ops.push(
+        supabase.from("grades")
+          .upsert(gradeInserts, { onConflict: "student_id,category_id,date,period" })
           .then()
       );
     }
     await Promise.all(ops);
 
-    toast({ title: "تم الاستيراد", description: `تم استيراد درجات ${validRows.length} طالب بنجاح` });
+    toast({ title: "تم الاستيراد", description: `تم استيراد درجات ${validRows.length} طالب — ستظهر في ملخص الفصل والتقييم النهائي` });
     setSaving(false);
     setImportRows([]);
     setFileName("");
