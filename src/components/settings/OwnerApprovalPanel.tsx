@@ -44,6 +44,19 @@ export default function OwnerApprovalPanel() {
 
   const setStatus = async (userId: string, status: "approved" | "rejected") => {
     setBusyId(userId);
+    // If approving, also set the chosen tier (default basic)
+    if (status === "approved") {
+      const chosenTier = tierChoice[userId] || "basic";
+      const { error: tierError } = await supabase.rpc("set_user_tier", {
+        _target_user: userId,
+        _tier: chosenTier,
+      });
+      if (tierError) {
+        setBusyId(null);
+        toast({ title: "تعذر تعيين الباقة", description: tierError.message, variant: "destructive" });
+        return;
+      }
+    }
     const { error } = await supabase.rpc("set_user_approval", {
       _target_user: userId,
       _status: status,
@@ -55,7 +68,9 @@ export default function OwnerApprovalPanel() {
     }
     toast({
       title: status === "approved" ? "تم تفعيل الحساب" : "تم رفض الطلب",
-      description: status === "approved" ? "أصبح بإمكان المستخدم الدخول الآن" : "تم تحديث حالة الطلب",
+      description: status === "approved"
+        ? `تم تفعيل المستخدم بباقة ${(tierChoice[userId] || "basic") === "premium" ? "بريميوم 👑" : "أساسية"}`
+        : "تم تحديث حالة الطلب",
     });
     load();
   };
