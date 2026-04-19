@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users, FileText, Loader2 } from "lucide-react";
+import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users, FileText, Loader2, Pencil } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
 import { safeWriteXLSX } from "@/lib/download-utils";
@@ -30,6 +32,8 @@ interface ImportRow {
   score: number | null;
   matchedStudent: StudentInfo | null;
   status: "matched" | "not_found" | "invalid_score";
+  confirmed: boolean;
+  manualOverride: boolean;
 }
 
 interface GradesImportProps {
@@ -105,10 +109,26 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
         .replace(/\s+/g, " ")
         .trim();
 
-    const tokenize = (s: string) =>
-      normalize(s)
+    // Merge "عبد X" into a single token (عبدالله, عبدالرحمن...) so it isn't treated as two parts
+    const mergeAbd = (tokens: string[]): string[] => {
+      const out: string[] = [];
+      for (let i = 0; i < tokens.length; i++) {
+        if (tokens[i] === "عبد" && i + 1 < tokens.length) {
+          out.push("عبد" + tokens[i + 1]);
+          i++;
+        } else {
+          out.push(tokens[i]);
+        }
+      }
+      return out;
+    };
+
+    const tokenize = (s: string) => {
+      const raw = normalize(s)
         .split(" ")
-        .filter(t => t.length > 1 && !["بن", "بنت", "عبد", "ال", "آل"].includes(t));
+        .filter(t => t.length > 0 && !["بن", "بنت"].includes(t));
+      return mergeAbd(raw).filter(t => t.length > 1);
+    };
 
     const fileName = normalize(name);
     const fileTokens = tokenize(name);
@@ -177,7 +197,15 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
         let status: ImportRow["status"] = "matched";
         if (!matched) status = "not_found";
         else if (row.score === null || row.score < 0 || row.score > maxScore) status = "invalid_score";
-        return { studentName: row.name, studentId: row.id, score: row.score, matchedStudent: matched, status };
+        return {
+          studentName: row.name,
+          studentId: row.id,
+          score: row.score,
+          matchedStudent: matched,
+          status,
+          confirmed: status === "matched", // auto-confirm clean matches; user can untick
+          manualOverride: false,
+        };
       });
 
     setImportRows(rows);
@@ -298,11 +326,46 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     setImportRows(prev => prev.filter((_, i) => i !== index));
   };
 
+  const updateRowMatch = (index: number, studentId: string) => {
+    const stu = students.find(s => s.id === studentId) || null;
+    setImportRows(prev => prev.map((r, i) => {
+      if (i !== index) return r;
+      const cat = categories.find(c => c.id === selectedCategory);
+      const maxScore = cat ? Number(cat.max_score) : 100;
+      let status: ImportRow["status"] = "matched";
+      if (!stu) status = "not_found";
+      else if (r.score === null || r.score < 0 || r.score > maxScore) status = "invalid_score";
+      return { ...r, matchedStudent: stu, status, manualOverride: true, confirmed: status === "matched" };
+    }));
+  };
+
+  const updateRowScore = (index: number, raw: string) => {
+    setImportRows(prev => prev.map((r, i) => {
+      if (i !== index) return r;
+      const cat = categories.find(c => c.id === selectedCategory);
+      const maxScore = cat ? Number(cat.max_score) : 100;
+      const score = raw === "" ? null : Number(raw);
+      const valid = score !== null && !isNaN(score) && score >= 0 && score <= maxScore;
+      let status: ImportRow["status"] = "matched";
+      if (!r.matchedStudent) status = "not_found";
+      else if (!valid) status = "invalid_score";
+      return { ...r, score: valid ? score : (raw === "" ? null : score), status, confirmed: status === "matched" ? r.confirmed : false };
+    }));
+  };
+
+  const toggleConfirm = (index: number) => {
+    setImportRows(prev => prev.map((r, i) => i === index ? { ...r, confirmed: !r.confirmed } : r));
+  };
+
+  const toggleConfirmAll = (value: boolean) => {
+    setImportRows(prev => prev.map(r => r.status === "matched" ? { ...r, confirmed: value } : r));
+  };
+
   const handleImport = async () => {
     if (!user || !selectedCategory) return;
     setSaving(true);
 
-    const validRows = importRows.filter(r => r.status === "matched" && r.matchedStudent && r.score !== null);
+    const validRows = importRows.filter(r => r.confirmed && r.status === "matched" && r.matchedStudent && r.score !== null);
 
     const updates: PromiseLike<any>[] = [];
     const inserts: { student_id: string; category_id: string; score: number | null; recorded_by: string; period: number }[] = [];
@@ -352,6 +415,8 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
   const matchedCount = importRows.filter(r => r.status === "matched").length;
   const notFoundCount = importRows.filter(r => r.status === "not_found").length;
   const invalidCount = importRows.filter(r => r.status === "invalid_score").length;
+  const confirmedCount = importRows.filter(r => r.confirmed && r.status === "matched" && r.score !== null).length;
+  const allMatchedConfirmed = matchedCount > 0 && importRows.filter(r => r.status === "matched").every(r => r.confirmed);
 
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
@@ -452,9 +517,19 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                   <table className="w-full text-sm border-separate border-spacing-0">
                     <thead>
                       <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                        <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl w-12">
+                          <div className="flex flex-col items-center gap-1">
+                            <Checkbox
+                              checked={allMatchedConfirmed}
+                              onCheckedChange={(v) => toggleConfirmAll(!!v)}
+                              aria-label="تأكيد الكل"
+                            />
+                            <span className="text-[10px] font-normal">تأكيد</span>
+                          </div>
+                        </th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">#</th>
                         <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">اسم الطالب (ملف)</th>
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب المطابق</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب المطابق (قابل للتعديل)</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الحالة</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-10"></th>
@@ -464,19 +539,50 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                       {importRows.map((row, i) => (
                         <tr key={i} className={cn(
                           i % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          i < importRows.length - 1 && "border-b border-border/20"
+                          i < importRows.length - 1 && "border-b border-border/20",
+                          row.confirmed && "ring-1 ring-inset ring-emerald-500/30"
                         )}>
+                          <td className="p-3 text-center">
+                            <Checkbox
+                              checked={row.confirmed}
+                              onCheckedChange={() => toggleConfirm(i)}
+                              disabled={row.status !== "matched" || row.score === null}
+                              aria-label="تأكيد الصف"
+                            />
+                          </td>
                           <td className="p-3 text-muted-foreground font-medium">{i + 1}</td>
                           <td className="p-3 font-medium">{row.studentName}</td>
-                          <td className="p-3">
-                            {row.matchedStudent ? (
-                              <span className="text-emerald-700 dark:text-emerald-300 font-medium">{row.matchedStudent.full_name}</span>
-                            ) : (
-                              <span className="text-rose-500">—</span>
+                          <td className="p-3 min-w-[200px]">
+                            <Select
+                              value={row.matchedStudent?.id || ""}
+                              onValueChange={(v) => updateRowMatch(i, v)}
+                            >
+                              <SelectTrigger className={cn(
+                                "h-9 text-xs",
+                                row.matchedStudent ? "text-emerald-700 dark:text-emerald-300" : "text-rose-500 border-rose-300 dark:border-rose-700"
+                              )}>
+                                <SelectValue placeholder="اختر الطالب يدوياً..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-72">
+                                {students.map(s => (
+                                  <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {row.manualOverride && (
+                              <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-primary">
+                                <Pencil className="h-3 w-3" /> معدّل يدوياً
+                              </span>
                             )}
                           </td>
-                          <td className="p-3 text-center font-bold">
-                            {row.score !== null ? row.score : "—"}
+                          <td className="p-3 text-center">
+                            <Input
+                              type="number"
+                              value={row.score ?? ""}
+                              onChange={(e) => updateRowScore(i, e.target.value)}
+                              className="h-9 w-20 text-center font-bold mx-auto"
+                              min={0}
+                            />
                           </td>
                           <td className="p-3 text-center">
                             {row.status === "matched" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />}
@@ -494,14 +600,18 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                   </table>
                 </div>
 
+                <p className="text-xs text-muted-foreground">
+                  💡 يمكنك تعديل الطالب المطابق أو الدرجة يدوياً، ثم تأكيد الصفوف الجاهزة قبل الاستيراد. لن يتم حفظ إلا الصفوف المؤكدة.
+                </p>
+
                 {/* Import button */}
                 <div className="flex justify-end gap-3 pt-2">
                   <Button variant="ghost" onClick={() => { setImportRows([]); setFileName(""); }}>
                     إلغاء
                   </Button>
-                  <Button onClick={handleImport} disabled={saving || matchedCount === 0} className="gap-2">
+                  <Button onClick={handleImport} disabled={saving || confirmedCount === 0} className="gap-2">
                     <Save className="h-4 w-4" />
-                    {saving ? "جارٍ الاستيراد..." : `استيراد ${matchedCount} درجة`}
+                    {saving ? "جارٍ الاستيراد..." : `استيراد ${confirmedCount} درجة مؤكدة`}
                   </Button>
                 </div>
               </div>
