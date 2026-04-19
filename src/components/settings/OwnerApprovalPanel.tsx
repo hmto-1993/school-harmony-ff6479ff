@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox, Crown, Shield } from "lucide-react";
+import { ShieldCheck, ShieldX, UserCheck, Mail, Phone, Loader2, Inbox, Crown, Shield, School, BookOpen } from "lucide-react";
 
 type TierChoice = "basic" | "premium";
 
@@ -14,6 +14,9 @@ type PendingProfile = {
   full_name: string;
   national_id: string | null;
   phone: string | null;
+  school: string | null;
+  specialty: string | null;
+  requested_tier: TierChoice | null;
   approval_status: "pending" | "approved" | "rejected";
   created_at: string;
 };
@@ -29,13 +32,17 @@ export default function OwnerApprovalPanel() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, user_id, full_name, national_id, phone, approval_status, created_at")
+      .select("id, user_id, full_name, national_id, phone, school, specialty, requested_tier, approval_status, created_at")
       .in("approval_status", ["pending", "rejected"])
       .order("created_at", { ascending: false });
     if (error) {
       toast({ title: "تعذر تحميل القائمة", description: error.message, variant: "destructive" });
     } else {
-      setItems((data as any) || []);
+      const list = ((data as any) || []) as PendingProfile[];
+      setItems(list);
+      const initial: Record<string, TierChoice> = {};
+      list.forEach((p) => { if (p.requested_tier) initial[p.user_id] = p.requested_tier; });
+      setTierChoice((prev) => ({ ...initial, ...prev }));
     }
     setLoading(false);
   }, []);
