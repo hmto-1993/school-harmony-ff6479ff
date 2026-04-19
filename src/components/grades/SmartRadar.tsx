@@ -92,9 +92,24 @@ export default function SmartRadar({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const tickAudioRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Visual feedback state (✓ / ✗ overlay + shake)
+  const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
+  const scannerRef = useRef<HTMLDivElement | null>(null);
+  const studentNameRef = useRef<HTMLDivElement | null>(null);
+
   const stopHumRef = useRef<(() => void) | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const questionsRef = useRef<RadarQuestion[]>([]);
+
+  /** Trigger visual feedback (auto-clears after 800ms) */
+  const triggerFeedback = useCallback((kind: "correct" | "wrong") => {
+    setFeedback(kind);
+    if (kind === "correct") {
+      fireRadarConfetti(studentNameRef.current);
+    }
+    window.setTimeout(() => setFeedback(null), 850);
+  }, []);
+
 
   // Bank question source state
   const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
