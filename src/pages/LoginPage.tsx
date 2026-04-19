@@ -126,56 +126,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubscribeSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanId = subNationalId.replace(/\D/g, "");
-    if (!subFullName.trim() || cleanId.length !== 10 || !subEmail.trim() || subPassword.length < 6) {
-      toast({
-        title: "بيانات ناقصة",
-        description: "يرجى تعبئة كافة الحقول. كلمة المرور 6 أحرف على الأقل.",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: subEmail.trim(),
-      password: subPassword,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: {
-          full_name: subFullName.trim(),
-          national_id: cleanId,
-          signup_type: "subscriber",
-        },
-      },
-    });
-    setLoading(false);
-
-    if (error) {
-      toast({
-        title: "تعذّر إنشاء الحساب",
-        description: error.message.includes("already") ? "هذا البريد مسجّل مسبقاً" : error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "تم استلام طلبك بنجاح ✓",
-      description: "سيتم تفعيل حسابك (الباقة الأساسية) قريباً من قبل الإدارة. استعد لتجربة ألفا فيزياء! 🚀",
-      duration: 8000,
-    });
-    if (data?.user && !data.session) {
-      toast({
-        title: "تأكيد البريد الإلكتروني",
-        description: "تم إرسال رابط التفعيل إلى بريدك. فعّله ثم انتظر موافقة الإدارة.",
-        duration: 8000,
-      });
-    }
-    setSubFullName(""); setSubNationalId(""); setSubEmail(""); setSubPassword("");
-  };
 
   return (
     <div className="relative flex min-h-screen items-center justify-center px-4 py-6">
