@@ -1,13 +1,32 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import RadarQuizModal from "./RadarQuizModal";
+
+/** Fire a small celebratory confetti burst from a DOM element's position */
+export function fireRadarConfetti(el: HTMLElement | null) {
+  const rect = el?.getBoundingClientRect();
+  const x = rect ? (rect.left + rect.width / 2) / window.innerWidth : 0.5;
+  const y = rect ? (rect.top + rect.height / 2) / window.innerHeight : 0.4;
+  confetti({
+    particleCount: 70,
+    spread: 65,
+    startVelocity: 32,
+    gravity: 0.9,
+    scalar: 0.85,
+    ticks: 130,
+    origin: { x, y },
+    colors: ["#10b981", "#34d399", "#fbbf24", "#60a5fa", "#a78bfa"],
+    disableForReducedMotion: true,
+  });
+}
 
 // ── Types ──────────────────────────────────────────────────────────
 interface Student {
