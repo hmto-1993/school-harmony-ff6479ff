@@ -122,7 +122,8 @@ export default function AlphaLabOwnerCard() {
         supabase.from("profiles").select("user_id, full_name").eq("role", "owner"),
         supabase.from("beta_feature_enrollments").select("feature_id, user_id, enabled"),
       ]);
-      setFeatures((feats ?? []) as BetaFeatureRow[]);
+      // Lab-First: hide officially released features (they became "native" part of the system)
+      setFeatures(((feats ?? []) as BetaFeatureRow[]).filter(f => !f.is_officially_released));
       const subList = (subs ?? []) as SubscriberRow[];
       setSubscribers(subList);
       setNameMap(Object.fromEntries(subList.map(s => [s.user_id, s.full_name])));
@@ -223,6 +224,14 @@ export default function AlphaLabOwnerCard() {
       </CardHeader>
 
       <CardContent className="space-y-5">
+        {/* Lab-First Policy banner */}
+        <div className="rounded-xl border border-violet-500/40 bg-gradient-to-l from-violet-500/10 to-fuchsia-500/10 p-3 flex items-start gap-2.5">
+          <Sparkles className="h-4 w-4 text-violet-600 shrink-0 mt-0.5" />
+          <div className="text-xs leading-relaxed text-foreground/90">
+            <strong className="text-violet-700 dark:text-violet-300">سياسة Lab-First:</strong> كل ميزة جديدة تُسجَّل هنا تلقائياً وتظهر لك (المالك) فقط. بعد تجربتها واعتمادها، تُطلق للجميع وتختفي من المختبر لتصبح جزءاً أصيلاً من النظام. الإصلاحات العاجلة فقط تُطبق مباشرة بدون تجربة.
+          </div>
+        </div>
+
         {/* Add new feature */}
         <div className="rounded-xl border-2 border-dashed border-violet-500/30 bg-violet-500/5 p-4 space-y-3">
           <h4 className="text-sm font-bold flex items-center gap-2"><Plus className="h-4 w-4 text-violet-600" />إضافة ميزة تجريبية</h4>
