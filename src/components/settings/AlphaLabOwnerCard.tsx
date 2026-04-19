@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles } from "lucide-react";
+import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -98,6 +98,16 @@ export default function AlphaLabOwnerCard() {
     setActingId(null);
     if (error) { toast({ title: "تعذر التأجيل", description: error.message, variant: "destructive" }); return; }
     toast({ title: "تم تمديد التجربة", description: "تم تأجيل التنبيه 3 أيام إضافية" });
+    load();
+  };
+
+  const handleHideFromSubscribers = async (id: string) => {
+    if (!confirm("إيقاف هذه الميزة عن المشتركين مع إبقائها مفعّلة في حسابك للتجربة؟")) return;
+    setActingId(id);
+    const { error } = await supabase.rpc("hide_beta_from_subscribers", { _feature_id: id });
+    setActingId(null);
+    if (error) { toast({ title: "تعذر الإخفاء", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "🔒 تم الإخفاء عن المشتركين", description: "الميزة لا تزال مفعّلة في حسابك" });
     load();
   };
 
@@ -360,6 +370,18 @@ export default function AlphaLabOwnerCard() {
                     <Button variant="outline" size="sm" onClick={() => openFeedback(f.id)} className="gap-1.5 text-xs">
                       <MessageSquare className="h-3.5 w-3.5" /> الملاحظات
                     </Button>
+                    {f.is_globally_enabled && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleHideFromSubscribers(f.id)}
+                        disabled={actingId === f.id}
+                        className="gap-1.5 text-xs border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                      >
+                        {actingId === f.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        إخفاء عن المشتركين
+                      </Button>
+                    )}
                   </div>
                 </div>
               );
