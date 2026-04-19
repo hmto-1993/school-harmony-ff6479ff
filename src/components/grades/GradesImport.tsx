@@ -368,17 +368,22 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     const validRows = importRows.filter(r => r.confirmed && r.status === "matched" && r.matchedStudent && r.score !== null);
 
     const updates: PromiseLike<any>[] = [];
-    const inserts: { student_id: string; category_id: string; score: number | null; recorded_by: string; period: number }[] = [];
+    const inserts: { student_id: string; category_id: string; score: number; recorded_by: string; period: number }[] = [];
 
     for (const row of validRows) {
       const existingId = existingGrades[row.matchedStudent!.id];
       if (existingId) {
-        updates.push(supabase.from("grades").update({ score: row.score }).eq("id", existingId).then());
+        updates.push(
+          supabase.from("manual_category_scores" as any)
+            .update({ score: row.score, updated_at: new Date().toISOString() })
+            .eq("id", existingId)
+            .then()
+        );
       } else {
         inserts.push({
           student_id: row.matchedStudent!.id,
           category_id: selectedCategory,
-          score: row.score,
+          score: row.score as number,
           recorded_by: user.id,
           period: selectedPeriod,
         });
@@ -387,7 +392,11 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
     const ops: PromiseLike<any>[] = [...updates];
     if (inserts.length > 0) {
-      ops.push(supabase.from("grades").upsert(inserts, { onConflict: "student_id,category_id,date,period" }).then());
+      ops.push(
+        supabase.from("manual_category_scores" as any)
+          .upsert(inserts, { onConflict: "student_id,category_id,period" })
+          .then()
+      );
     }
     await Promise.all(ops);
 
