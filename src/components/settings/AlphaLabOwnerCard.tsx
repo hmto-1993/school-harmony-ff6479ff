@@ -185,6 +185,17 @@ export default function AlphaLabOwnerCard() {
     toast({ title: "تم الحذف" });
   };
 
+  const toggleTier = async (f: BetaFeatureRow) => {
+    const next = (f.required_tier === "premium" ? "basic" : "premium") as "basic" | "premium";
+    const { error } = await supabase.from("beta_features").update({ required_tier: next } as any).eq("id", f.id);
+    if (error) { toast({ title: "خطأ", description: error.message, variant: "destructive" }); return; }
+    setFeatures(prev => prev.map(x => x.id === f.id ? { ...x, required_tier: next } : x));
+    toast({
+      title: next === "premium" ? "الميزة الآن حصرية للبريميوم" : "الميزة متاحة للجميع",
+      description: next === "premium" ? "لن يتمكن مشتركو الباقة الأساسية من رؤيتها" : "متاحة لجميع المشتركين بكافة الباقات",
+    });
+  };
+
   const toggleEnrollment = async (featureId: string, userId: string, enable: boolean) => {
     if (enable) {
       const { data: u } = await supabase.auth.getUser();
