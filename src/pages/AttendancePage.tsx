@@ -233,7 +233,24 @@ export default function AttendancePage() {
               />
 
               <div id="attendance-save" className="flex justify-end mt-4">
-                <Button onClick={handleSave} disabled={saving || isClassLocked || isViewOnly} className="shadow-md shadow-primary/20">
+                <Button
+                  onClick={() => {
+                    const main = document.querySelector("main");
+                    const scrollEl: HTMLElement | Window = main && main.scrollHeight > main.clientHeight ? (main as HTMLElement) : window;
+                    const y = scrollEl === window ? window.scrollY : (scrollEl as HTMLElement).scrollTop;
+                    handleSave();
+                    requestAnimationFrame(() => {
+                      if (scrollEl === window) window.scrollTo({ top: y });
+                      else (scrollEl as HTMLElement).scrollTop = y;
+                      setTimeout(() => {
+                        if (scrollEl === window) window.scrollTo({ top: y });
+                        else (scrollEl as HTMLElement).scrollTop = y;
+                      }, 50);
+                    });
+                  }}
+                  disabled={saving || isClassLocked || isViewOnly}
+                  className="shadow-md shadow-primary/20"
+                >
                   <Save className="h-4 w-4 ml-2" />
                   {isViewOnly ? "عرض فقط" : isClassLocked ? "🔒 مغلق" : saving ? "جارٍ الحفظ..." : "حفظ الحضور"}
                 </Button>

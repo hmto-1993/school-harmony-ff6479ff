@@ -756,7 +756,24 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
               </table>
             </div>
             <div id="grades-save" className="flex justify-end mt-4">
-              <Button onClick={handleSave} disabled={saving} className="shadow-md shadow-primary/20">
+              <Button
+                onClick={() => {
+                  const main = document.querySelector("main");
+                  const scrollEl: HTMLElement | Window = main && main.scrollHeight > main.clientHeight ? (main as HTMLElement) : window;
+                  const y = scrollEl === window ? window.scrollY : (scrollEl as HTMLElement).scrollTop;
+                  handleSave();
+                  requestAnimationFrame(() => {
+                    if (scrollEl === window) window.scrollTo({ top: y });
+                    else (scrollEl as HTMLElement).scrollTop = y;
+                    setTimeout(() => {
+                      if (scrollEl === window) window.scrollTo({ top: y });
+                      else (scrollEl as HTMLElement).scrollTop = y;
+                    }, 50);
+                  });
+                }}
+                disabled={saving}
+                className="shadow-md shadow-primary/20"
+              >
                 <Save className="h-4 w-4 ml-2" />
                 {saving ? "جارٍ الحفظ..." : "حفظ الدرجات"}
               </Button>
