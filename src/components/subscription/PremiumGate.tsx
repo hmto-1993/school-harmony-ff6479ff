@@ -106,3 +106,19 @@ export function UpgradeDialog({
     </Dialog>
   );
 }
+
+function UpgradeFooterButtons({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Button variant="outline" onClick={onClose}>حسناً، فهمت</Button>
+      <Button
+        onClick={() => { onClose(); navigate("/pricing"); }}
+        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white gap-1"
+      >
+        <Crown className="h-4 w-4" /> عرض الباقات
+        <ArrowLeft className="h-3.5 w-3.5" />
+      </Button>
+    </>
+  );
+}
