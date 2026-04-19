@@ -361,6 +361,15 @@ export default function AlphaLabOwnerCard() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="font-bold text-sm">{f.name}</h5>
                           <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-600">Beta</Badge>
+                          {f.required_tier === "premium" ? (
+                            <Badge className="text-[10px] gap-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0">
+                              <Crown className="h-2.5 w-2.5" />بريميوم
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] gap-0.5 border-slate-400/50">
+                              <Shield className="h-2.5 w-2.5" />للجميع
+                            </Badge>
+                          )}
                           <code className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{f.feature_key}</code>
                         </div>
                         {f.description && <p className="text-xs text-muted-foreground mt-1">{f.description}</p>}
