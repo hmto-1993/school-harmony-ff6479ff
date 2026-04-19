@@ -23,6 +23,7 @@ export default function OwnerApprovalPanel() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [tab, setTab] = useState<"pending" | "rejected">("pending");
+  const [tierChoice, setTierChoice] = useState<Record<string, TierChoice>>({});
 
   const load = useCallback(async () => {
     setLoading(true);
