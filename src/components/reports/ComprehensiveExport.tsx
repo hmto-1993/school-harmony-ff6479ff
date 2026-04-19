@@ -4,12 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
-import { FileText, ChevronDown, Loader2, Sparkles, FileBarChart } from "lucide-react";
+import { FileText, ChevronDown, Loader2, Sparkles, FileBarChart, Lock } from "lucide-react";
 import { finalizePDF } from "@/lib/arabic-pdf";
 import { buildSummaryPDF } from "@/lib/summary-pdf";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { buildComprehensivePDF, ComprehensiveData } from "./comprehensive-pdf-builders";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
 
 interface ComprehensiveExportProps {
   classes: { id: string; name: string }[];
@@ -19,6 +21,13 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const { isPremium, loaded: tierLoaded } = useSubscriptionTier();
+  const [showAIUpgrade, setShowAIUpgrade] = useState(false);
+  const aiLocked = tierLoaded && !isPremium;
+  const requireAI = (cb: () => void) => {
+    if (aiLocked) { setShowMenu(false); setShowAIUpgrade(true); return; }
+    cb();
+  };
 
   const fetchData = useCallback(async (): Promise<ComprehensiveData | null> => {
     if (!user || classes.length === 0) return null;
@@ -186,20 +195,28 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel className="text-xs text-muted-foreground">التقرير الشامل + ملخص ذكي</DropdownMenuLabel>
                     {([
-                      { key: "comprehensive" as const, label: "📊 شامل" },
-                      { key: "attendance" as const, label: "📋 التركيز على الحضور" },
-                      { key: "grades" as const, label: "📝 التركيز على الدرجات" },
-                      { key: "none" as const, label: "⏭️ بدون ملخص ذكي" },
+                      { key: "comprehensive" as const, label: "📊 شامل", ai: true },
+                      { key: "attendance" as const, label: "📋 التركيز على الحضور", ai: true },
+                      { key: "grades" as const, label: "📝 التركيز على الدرجات", ai: true },
+                      { key: "none" as const, label: "⏭️ بدون ملخص ذكي", ai: false },
                     ]).map(opt => (
-                      <DropdownMenuItem key={opt.key} onClick={() => handleExportComprehensive(opt.key)}>
-                        {opt.label}
+                      <DropdownMenuItem
+                        key={opt.key}
+                        onClick={() => (opt.ai ? requireAI(() => handleExportComprehensive(opt.key)) : handleExportComprehensive(opt.key))}
+                        className="flex items-center justify-between gap-2"
+                      >
+                        <span>{opt.label}</span>
+                        {opt.ai && aiLocked && <Lock className="h-3.5 w-3.5 text-amber-500" />}
                       </DropdownMenuItem>
                     ))}
                     <DropdownMenuSeparator />
                     <DropdownMenuLabel className="text-xs text-muted-foreground">ملخص مختصر</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => handleExportSummary(true)}>
-                      <Sparkles className="h-4 w-4 ml-2 text-primary" />
-                      ملخص مختصر + ذكي
+                    <DropdownMenuItem
+                      onClick={() => requireAI(() => handleExportSummary(true))}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="flex items-center"><Sparkles className="h-4 w-4 ml-2 text-primary" /> ملخص مختصر + ذكي</span>
+                      {aiLocked && <Lock className="h-3.5 w-3.5 text-amber-500" />}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleExportSummary(false)}>
                       📋 ملخص مختصر بدون ذكي
@@ -211,6 +228,12 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
           </div>
         </div>
       </CardContent>
+      <UpgradeDialog
+        open={showAIUpgrade}
+        onOpenChange={setShowAIUpgrade}
+        featureName="مساعد الصياغة بالذكاء الاصطناعي"
+        description="ولّد ملخصات احترافية ومخصّصة لتقاريرك بالذكاء الاصطناعي، حصرياً لمشتركي ألفا بريميوم."
+      />
     </Card>
   );
 }
