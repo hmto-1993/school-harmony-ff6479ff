@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2 } from "lucide-react";
+import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -21,6 +21,15 @@ interface BetaFeatureRow {
   description: string;
   icon: string;
   is_globally_enabled: boolean;
+  is_officially_released?: boolean;
+  owner_first_enabled_at?: string | null;
+  snooze_until?: string | null;
+  released_at?: string | null;
+}
+
+interface SmartAlert {
+  feature: BetaFeatureRow;
+  daysElapsed: number;
 }
 
 interface SubscriberRow { user_id: string; full_name: string; }
@@ -48,6 +57,62 @@ export default function AlphaLabOwnerCard() {
   const [openFeedbackId, setOpenFeedbackId] = useState<string | null>(null);
   const [feedbackList, setFeedbackList] = useState<FeedbackRow[]>([]);
   const [nameMap, setNameMap] = useState<Record<string, string>>({});
+  const [isSuperOwner, setIsSuperOwner] = useState(false);
+  const [actingId, setActingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const { data: prof } = await supabase.from("profiles").select("national_id").eq("user_id", u.user.id).maybeSingle();
+      setIsSuperOwner(prof?.national_id === "1098080268");
+    })();
+  }, []);
+
+  const smartAlerts: SmartAlert[] = features
+    .filter(f => {
+      if (f.is_officially_released || f.is_globally_enabled) return false;
+      if (!f.owner_first_enabled_at) return false;
+      if (f.snooze_until && new Date(f.snooze_until) > new Date()) return false;
+      const days = (Date.now() - new Date(f.owner_first_enabled_at).getTime()) / (1000 * 60 * 60 * 24);
+      return days >= 7;
+    })
+    .map(f => ({
+      feature: f,
+      daysElapsed: Math.floor((Date.now() - new Date(f.owner_first_enabled_at!).getTime()) / (1000 * 60 * 60 * 24)),
+    }));
+
+  const handleReleaseGlobal = async (id: string) => {
+    if (!confirm("إطلاق هذه الميزة رسمياً لجميع المشتركين؟ لا يمكن التراجع تلقائياً.")) return;
+    setActingId(id);
+    const { error } = await supabase.rpc("release_beta_feature_globally", { _feature_id: id });
+    setActingId(null);
+    if (error) { toast({ title: "تعذر الإطلاق", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "🚀 تم الإطلاق الرسمي", description: "الميزة الآن متاحة لجميع المشتركين" });
+    load();
+  };
+
+  const handleSnooze = async (id: string) => {
+    setActingId(id);
+    const { error } = await supabase.rpc("snooze_beta_feature", { _feature_id: id, _days: 3 });
+    setActingId(null);
+    if (error) { toast({ title: "تعذر التأجيل", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "تم تمديد التجربة", description: "تم تأجيل التنبيه 3 أيام إضافية" });
+    load();
+  };
+
+  const handleCancelFeature = async (id: string) => {
+    if (!confirm("إلغاء/تعطيل هذه الميزة تماماً؟")) return;
+    setActingId(id);
+    const { error } = await supabase.from("beta_features").update({ is_globally_enabled: false }).eq("id", id);
+    if (!error) {
+      await supabase.from("beta_feature_enrollments").delete().eq("feature_id", id);
+    }
+    setActingId(null);
+    if (error) { toast({ title: "خطأ", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "تم تعطيل الميزة", description: "تمت إزالة الوصول من جميع المشتركين" });
+    load();
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
