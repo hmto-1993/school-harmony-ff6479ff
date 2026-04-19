@@ -74,7 +74,13 @@ export default function GroupCapEditor({ groupKey, groupLabel, categories, class
     }
 
     setSaving(false);
+    // Preserve scroll position across the parent re-fetch/re-render
+    const scrollY = window.scrollY;
     onApplied();
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY, behavior: "auto" });
+      setTimeout(() => window.scrollTo({ top: scrollY, behavior: "auto" }), 50);
+    });
   };
 
   if (!isAdmin) return null;
