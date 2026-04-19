@@ -50,6 +50,7 @@ interface CategoryTableProps {
   targetGroupKey: string;
   onReorder: (catId: string, direction: "up" | "down", groupCats: GradeCategory[]) => void;
   onDelete: (id: string) => void;
+  headerExtra?: React.ReactNode;
 }
 
 export default function CategoryTable({
@@ -68,6 +69,7 @@ export default function CategoryTable({
   targetGroupKey,
   onReorder,
   onDelete,
+  headerExtra,
 }: CategoryTableProps) {
   const colorMap = {
     emerald: {
@@ -86,10 +88,13 @@ export default function CategoryTable({
 
   return (
     <div className="space-y-2">
-      <h3 className={`text-sm font-bold flex items-center gap-2 px-1 ${colors.title}`}>
-        <span>{emoji}</span>
-        {title}
-      </h3>
+      <div className="flex items-center justify-between gap-3 flex-wrap px-1">
+        <h3 className={`text-sm font-bold flex items-center gap-2 ${colors.title}`}>
+          <span>{emoji}</span>
+          {title}
+        </h3>
+        {headerExtra}
+      </div>
       <div className={`rounded-lg border ${colors.border} overflow-hidden`}>
         <Table>
           <TableHeader>
