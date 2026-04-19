@@ -41,6 +41,7 @@ const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 const FormsPage = lazy(() => import("@/pages/FormsPage"));
 const PendingApprovalPage = lazy(() => import("@/pages/PendingApprovalPage"));
 const SubscriptionExpiredPage = lazy(() => import("@/pages/SubscriptionExpiredPage"));
+const PricingPage = lazy(() => import("@/pages/PricingPage"));
 
 const queryClient = new QueryClient();
 
@@ -92,6 +93,7 @@ const App = () => {
                       <Route path="/activities" element={<ActivitiesPage />} />
                       <Route path="/student-logins" element={<ProtectedRoute allowedRoles={["admin"]}><StudentLoginsPage /></ProtectedRoute>} />
                       <Route path="/forms" element={<FormsPage />} />
+                      <Route path="/pricing" element={<PricingPage />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>

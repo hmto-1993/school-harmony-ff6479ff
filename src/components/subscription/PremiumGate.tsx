@@ -1,5 +1,6 @@
 import { ReactNode, useState, MouseEvent } from "react";
-import { Lock, Crown, Sparkles } from "lucide-react";
+import { Lock, Crown, Sparkles, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -98,10 +99,26 @@ export function UpgradeDialog({
             <li>• كافة الميزات التجريبية في مختبر ألفا</li>
           </ul>
         </div>
-        <DialogFooter className="sm:justify-center">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>حسناً، فهمت</Button>
+        <DialogFooter className="sm:justify-center gap-2 flex-col sm:flex-row">
+          <UpgradeFooterButtons onClose={() => onOpenChange(false)} />
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function UpgradeFooterButtons({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <>
+      <Button variant="outline" onClick={onClose}>حسناً، فهمت</Button>
+      <Button
+        onClick={() => { onClose(); navigate("/pricing"); }}
+        className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white gap-1"
+      >
+        <Crown className="h-4 w-4" /> عرض الباقات
+        <ArrowLeft className="h-3.5 w-3.5" />
+      </Button>
+    </>
   );
 }
