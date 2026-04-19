@@ -30,6 +30,7 @@ import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCa
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import TeacherManagementHub from "@/components/settings/TeacherManagementHub";
 import AlphaLabOwnerCard from "@/components/settings/AlphaLabOwnerCard";
+import PackageManagementPanel from "@/components/settings/PackageManagementPanel";
 import AlphaLabSubscriberCard from "@/components/settings/AlphaLabSubscriberCard";
 import { BetaErrorBoundary } from "@/components/beta/BetaErrorBoundary";
 import { useSettingsData } from "@/hooks/useSettingsData";
