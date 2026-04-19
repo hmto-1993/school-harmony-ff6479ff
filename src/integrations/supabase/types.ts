@@ -1476,6 +1476,7 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          is_super_owner_flag: boolean
           national_id: string | null
           organization_id: string | null
           phone: string | null
@@ -1496,6 +1497,7 @@ export type Database = {
           created_at?: string
           full_name: string
           id?: string
+          is_super_owner_flag?: boolean
           national_id?: string | null
           organization_id?: string | null
           phone?: string | null
@@ -1516,6 +1518,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          is_super_owner_flag?: boolean
           national_id?: string | null
           organization_id?: string | null
           phone?: string | null
