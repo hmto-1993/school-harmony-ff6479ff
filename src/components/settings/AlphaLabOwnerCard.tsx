@@ -391,6 +391,16 @@ export default function AlphaLabOwnerCard() {
                     <Button variant="outline" size="sm" onClick={() => openFeedback(f.id)} className="gap-1.5 text-xs">
                       <MessageSquare className="h-3.5 w-3.5" /> الملاحظات
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleTier(f)}
+                      className={`gap-1.5 text-xs ${f.required_tier === "premium" ? "border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10" : "border-slate-400/50"}`}
+                      title="تبديل نوع الباقة المطلوبة"
+                    >
+                      {f.required_tier === "premium" ? <Crown className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+                      {f.required_tier === "premium" ? "بريميوم" : "للجميع"}
+                    </Button>
                     {f.is_globally_enabled && (
                       <Button
                         variant="outline"
