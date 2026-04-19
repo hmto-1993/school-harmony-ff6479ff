@@ -517,9 +517,19 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                   <table className="w-full text-sm border-separate border-spacing-0">
                     <thead>
                       <tr className="bg-gradient-to-l from-primary/10 via-accent/5 to-primary/5 dark:from-primary/20 dark:via-accent/10 dark:to-primary/10">
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl">#</th>
+                        <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 first:rounded-tr-xl w-12">
+                          <div className="flex flex-col items-center gap-1">
+                            <Checkbox
+                              checked={allMatchedConfirmed}
+                              onCheckedChange={(v) => toggleConfirmAll(!!v)}
+                              aria-label="تأكيد الكل"
+                            />
+                            <span className="text-[10px] font-normal">تأكيد</span>
+                          </div>
+                        </th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">#</th>
                         <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">اسم الطالب (ملف)</th>
-                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب المطابق</th>
+                        <th className="text-right p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الطالب المطابق (قابل للتعديل)</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الدرجة</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20">الحالة</th>
                         <th className="text-center p-3 font-semibold text-primary text-xs border-b-2 border-primary/20 last:rounded-tl-xl w-10"></th>
@@ -529,19 +539,50 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                       {importRows.map((row, i) => (
                         <tr key={i} className={cn(
                           i % 2 === 0 ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
-                          i < importRows.length - 1 && "border-b border-border/20"
+                          i < importRows.length - 1 && "border-b border-border/20",
+                          row.confirmed && "ring-1 ring-inset ring-emerald-500/30"
                         )}>
+                          <td className="p-3 text-center">
+                            <Checkbox
+                              checked={row.confirmed}
+                              onCheckedChange={() => toggleConfirm(i)}
+                              disabled={row.status !== "matched" || row.score === null}
+                              aria-label="تأكيد الصف"
+                            />
+                          </td>
                           <td className="p-3 text-muted-foreground font-medium">{i + 1}</td>
                           <td className="p-3 font-medium">{row.studentName}</td>
-                          <td className="p-3">
-                            {row.matchedStudent ? (
-                              <span className="text-emerald-700 dark:text-emerald-300 font-medium">{row.matchedStudent.full_name}</span>
-                            ) : (
-                              <span className="text-rose-500">—</span>
+                          <td className="p-3 min-w-[200px]">
+                            <Select
+                              value={row.matchedStudent?.id || ""}
+                              onValueChange={(v) => updateRowMatch(i, v)}
+                            >
+                              <SelectTrigger className={cn(
+                                "h-9 text-xs",
+                                row.matchedStudent ? "text-emerald-700 dark:text-emerald-300" : "text-rose-500 border-rose-300 dark:border-rose-700"
+                              )}>
+                                <SelectValue placeholder="اختر الطالب يدوياً..." />
+                              </SelectTrigger>
+                              <SelectContent className="max-h-72">
+                                {students.map(s => (
+                                  <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {row.manualOverride && (
+                              <span className="inline-flex items-center gap-1 mt-1 text-[10px] text-primary">
+                                <Pencil className="h-3 w-3" /> معدّل يدوياً
+                              </span>
                             )}
                           </td>
-                          <td className="p-3 text-center font-bold">
-                            {row.score !== null ? row.score : "—"}
+                          <td className="p-3 text-center">
+                            <Input
+                              type="number"
+                              value={row.score ?? ""}
+                              onChange={(e) => updateRowScore(i, e.target.value)}
+                              className="h-9 w-20 text-center font-bold mx-auto"
+                              min={0}
+                            />
                           </td>
                           <td className="p-3 text-center">
                             {row.status === "matched" && <CheckCircle2 className="h-4 w-4 text-emerald-500 mx-auto" />}
@@ -559,14 +600,18 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
                   </table>
                 </div>
 
+                <p className="text-xs text-muted-foreground">
+                  💡 يمكنك تعديل الطالب المطابق أو الدرجة يدوياً، ثم تأكيد الصفوف الجاهزة قبل الاستيراد. لن يتم حفظ إلا الصفوف المؤكدة.
+                </p>
+
                 {/* Import button */}
                 <div className="flex justify-end gap-3 pt-2">
                   <Button variant="ghost" onClick={() => { setImportRows([]); setFileName(""); }}>
                     إلغاء
                   </Button>
-                  <Button onClick={handleImport} disabled={saving || matchedCount === 0} className="gap-2">
+                  <Button onClick={handleImport} disabled={saving || confirmedCount === 0} className="gap-2">
                     <Save className="h-4 w-4" />
-                    {saving ? "جارٍ الاستيراد..." : `استيراد ${matchedCount} درجة`}
+                    {saving ? "جارٍ الاستيراد..." : `استيراد ${confirmedCount} درجة مؤكدة`}
                   </Button>
                 </div>
               </div>
