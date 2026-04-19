@@ -1441,7 +1441,12 @@ export type Database = {
           national_id: string | null
           organization_id: string | null
           phone: string | null
+          requested_tier:
+            | Database["public"]["Enums"]["subscription_tier_type"]
+            | null
           role: Database["public"]["Enums"]["org_role"] | null
+          school: string | null
+          specialty: string | null
           subscription_end: string | null
           subscription_plan: string
           subscription_start: string | null
@@ -1456,7 +1461,12 @@ export type Database = {
           national_id?: string | null
           organization_id?: string | null
           phone?: string | null
+          requested_tier?:
+            | Database["public"]["Enums"]["subscription_tier_type"]
+            | null
           role?: Database["public"]["Enums"]["org_role"] | null
+          school?: string | null
+          specialty?: string | null
           subscription_end?: string | null
           subscription_plan?: string
           subscription_start?: string | null
@@ -1471,7 +1481,12 @@ export type Database = {
           national_id?: string | null
           organization_id?: string | null
           phone?: string | null
+          requested_tier?:
+            | Database["public"]["Enums"]["subscription_tier_type"]
+            | null
           role?: Database["public"]["Enums"]["org_role"] | null
+          school?: string | null
+          specialty?: string | null
           subscription_end?: string | null
           subscription_plan?: string
           subscription_start?: string | null
