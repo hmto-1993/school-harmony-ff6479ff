@@ -452,7 +452,11 @@ export type Database = {
           icon: string
           id: string
           is_globally_enabled: boolean
+          is_officially_released: boolean
           name: string
+          owner_first_enabled_at: string | null
+          released_at: string | null
+          snooze_until: string | null
           updated_at: string
         }
         Insert: {
@@ -462,7 +466,11 @@ export type Database = {
           icon?: string
           id?: string
           is_globally_enabled?: boolean
+          is_officially_released?: boolean
           name: string
+          owner_first_enabled_at?: string | null
+          released_at?: string | null
+          snooze_until?: string | null
           updated_at?: string
         }
         Update: {
@@ -472,7 +480,11 @@ export type Database = {
           icon?: string
           id?: string
           is_globally_enabled?: boolean
+          is_officially_released?: boolean
           name?: string
+          owner_first_enabled_at?: string | null
+          released_at?: string | null
+          snooze_until?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2532,6 +2544,10 @@ export type Database = {
       }
       recover_all_user_data: { Args: never; Returns: Json }
       recover_primary_owner: { Args: never; Returns: Json }
+      release_beta_feature_globally: {
+        Args: { _feature_id: string }
+        Returns: Json
+      }
       resolve_default_org: { Args: never; Returns: string }
       restore_missing_students: { Args: never; Returns: Json }
       revoke_subscriber: { Args: { _target_user: string }; Returns: Json }
@@ -2557,6 +2573,10 @@ export type Database = {
           _start: string
           _target_user: string
         }
+        Returns: Json
+      }
+      snooze_beta_feature: {
+        Args: { _days?: number; _feature_id: string }
         Returns: Json
       }
       teacher_can_view_student_in_class: {
