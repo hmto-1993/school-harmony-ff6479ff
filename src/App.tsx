@@ -41,6 +41,7 @@ const SharedViewPage = lazy(() => import("@/pages/SharedViewPage"));
 const FormsPage = lazy(() => import("@/pages/FormsPage"));
 const PendingApprovalPage = lazy(() => import("@/pages/PendingApprovalPage"));
 const SubscriptionExpiredPage = lazy(() => import("@/pages/SubscriptionExpiredPage"));
+const PricingPage = lazy(() => import("@/pages/PricingPage"));
 
 const queryClient = new QueryClient();
 
