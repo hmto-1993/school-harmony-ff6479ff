@@ -78,13 +78,13 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
     if (!selectedCategory || students.length === 0) return;
     const loadExisting = async () => {
       const { data } = await supabase
-        .from("grades")
+        .from("manual_category_scores" as any)
         .select("id, student_id")
         .eq("category_id", selectedCategory)
         .eq("period", selectedPeriod)
         .in("student_id", students.map(s => s.id));
       const map: Record<string, string> = {};
-      (data || []).forEach(g => { map[g.student_id] = g.id; });
+      (data || []).forEach((g: any) => { map[g.student_id] = g.id; });
       setExistingGrades(map);
     };
     loadExisting();
