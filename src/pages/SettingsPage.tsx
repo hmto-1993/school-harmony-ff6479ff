@@ -92,6 +92,9 @@ export default function SettingsPage() {
       {/* Owner-only: unified teacher management hub (approvals + subscriptions + archive) */}
       {isPrimaryOwner && <TeacherManagementHub />}
 
+      {/* Owner-only: Packages & Subscriptions management */}
+      {isPrimaryOwner && <PackageManagementPanel />}
+
       {/* Owner-only: Alpha Lab management */}
       {isPrimaryOwner && (
         <BetaErrorBoundary featureName="Alpha Lab Owner">
