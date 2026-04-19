@@ -99,8 +99,8 @@ export function UpgradeDialog({
             <li>• كافة الميزات التجريبية في مختبر ألفا</li>
           </ul>
         </div>
-        <DialogFooter className="sm:justify-center">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>حسناً، فهمت</Button>
+        <DialogFooter className="sm:justify-center gap-2 flex-col sm:flex-row">
+          <UpgradeFooterButtons onClose={() => onOpenChange(false)} />
         </DialogFooter>
       </DialogContent>
     </Dialog>
