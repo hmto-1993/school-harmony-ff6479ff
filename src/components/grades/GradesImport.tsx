@@ -30,6 +30,8 @@ interface ImportRow {
   score: number | null;
   matchedStudent: StudentInfo | null;
   status: "matched" | "not_found" | "invalid_score";
+  confirmed: boolean;
+  manualOverride: boolean;
 }
 
 interface GradesImportProps {
