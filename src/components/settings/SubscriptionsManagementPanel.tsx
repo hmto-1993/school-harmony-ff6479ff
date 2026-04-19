@@ -15,8 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon } from "lucide-react";
+import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type Tier = "basic" | "premium";
 
 type Subscriber = {
   id: string;
@@ -27,6 +29,7 @@ type Subscriber = {
   subscription_plan: string;
   subscription_start: string | null;
   subscription_end: string | null;
+  tier?: Tier;
 };
 
 const PLAN_LABELS: Record<string, { label: string; cls: string }> = {
