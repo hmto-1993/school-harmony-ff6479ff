@@ -70,16 +70,21 @@ export default function PendingApprovalPage() {
           ) : (
             <>
               <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-3">
-                أهلاً بك في ألفا فيزياء
+                شكراً لتسجيلك في ألفا فيزياء 🎓
                 <span className="block text-primary text-xl md:text-2xl mt-2">
-                  حسابك قيد المراجعة الآن
+                  حسابك بانتظار إتمام الاشتراك
                 </span>
               </h1>
               <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
-                سيقوم المالك بمراجعة طلبك وتفعيل صلاحياتك قريباً.
+                تم استلام طلبك للانضمام إلى المنصة بنجاح.
                 <br />
-                ستتمكن من الدخول واستخدام جميع الأدوات فور الموافقة على حسابك.
+                <strong className="text-foreground">يرجى التواصل مع الإدارة لإتمام دفع الاشتراك وتفعيل حسابك.</strong>
+                <br />
+                ستتمكن من الدخول واستخدام جميع الأدوات فور تأكيد الاشتراك من قبل المالك.
               </p>
+              <div className="mt-5 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm text-foreground/85 text-right">
+                💡 جميع الباقات (الأساسية والمتكاملة) تتطلب اشتراكاً مدفوعاً وتفعيلاً يدوياً من إدارة المنصة لضمان جودة الخدمة.
+              </div>
             </>
           )}
 

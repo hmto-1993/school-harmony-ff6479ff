@@ -78,8 +78,8 @@ export default function PricingPage() {
                   {!isPremium && <Badge className="mr-auto bg-sky-500 hover:bg-sky-500">باقتك الحالية</Badge>}
                 </div>
                 <div className="my-4 pb-4 border-b border-border/60">
-                  <div className="text-3xl font-extrabold">مجانية</div>
-                  <div className="text-xs text-muted-foreground mt-1">لجميع المعلمين المعتمدين</div>
+                  <div className="text-3xl font-extrabold">اشتراك مدفوع</div>
+                  <div className="text-xs text-muted-foreground mt-1">يفعّل يدوياً بعد إتمام الدفع</div>
                 </div>
                 <ul className="space-y-0.5">
                   {basic.map((f) => <FeatureItem key={f.id} f={f} />)}

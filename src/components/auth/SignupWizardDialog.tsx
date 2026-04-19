@@ -16,19 +16,19 @@ interface Props {
 type Tier = "basic" | "premium";
 
 const BASIC_FEATURES = [
-  "إدارة الفصول والطلاب",
-  "رصد الدرجات والحضور",
-  "تقارير PDF احترافية",
-  "نماذج إدارية جاهزة",
-  "بوابة الطالب وولي الأمر",
+  "إدارة الطلاب والفصول",
+  "النماذج والخطابات الإدارية",
+  "الرادار التقليدي لرصد الدرجات",
+  "رصد الحضور والسلوك",
+  "تقارير PDF أساسية",
 ];
 
 const PREMIUM_FEATURES = [
-  { icon: Sparkles, text: "الرادار الذكي بالمؤثرات التفاعلية" },
-  { icon: Sparkles, text: "مساعد الصياغة بالذكاء الاصطناعي" },
-  { icon: Activity, text: "حركات ومؤثرات بصرية متقدمة" },
-  { icon: Eye, text: "سجل الزيارات والتحليلات المتقدمة" },
-  { icon: CheckCircle2, text: "كافة ميزات الباقة الأساسية" },
+  { icon: Sparkles, text: "الرادار الذكي بالمؤثرات والصوتيات" },
+  { icon: Sparkles, text: "مساعد الذكاء الاصطناعي للصياغة" },
+  { icon: Activity, text: "التقارير المتقدمة والتحليلات" },
+  { icon: Eye, text: "سجل الزيارات ومركز المراقبة" },
+  { icon: CheckCircle2, text: "كل ميزات الباقة الأساسية + المزيد" },
 ];
 
 export default function SignupWizardDialog({ open, onOpenChange }: Props) {
@@ -99,14 +99,11 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
       return;
     }
 
+    const tierName = tier === "premium" ? "باقة ألفا المتكاملة (Premium)" : "باقة ألفا الأساسية";
     toast({
-      title: tier === "premium"
-        ? "تم استلام طلبك للباقة المتكاملة 👑"
-        : "تم استلام طلبك بنجاح ✓",
-      description: tier === "premium"
-        ? "سيتم تفعيل ميزات البريميوم فور مراجعة الإدارة. مرحباً بك في ألفا فيزياء! 🚀"
-        : "سيتم تفعيل حسابك (الباقة الأساسية) قريباً من قبل الإدارة.",
-      duration: 9000,
+      title: "شكراً لتسجيلك في ألفا فيزياء 🎓",
+      description: `تم استلام طلبك للانضمام إلى ${tierName}. يرجى التواصل مع الإدارة لإتمام الاشتراك وتفعيل حسابك.`,
+      duration: 11000,
     });
     if (data?.user && !data.session) {
       toast({
@@ -202,7 +199,8 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
                   <span className="font-bold text-foreground">الأساسية</span>
                   {tier === "basic" && <CheckCircle2 className="h-4 w-4 text-primary mr-auto" />}
                 </div>
-                <p className="text-[11px] text-muted-foreground mb-2">مثالية للبدء السريع</p>
+                <p className="text-[11px] text-muted-foreground mb-1">الأدوات الجوهرية للتدريس</p>
+                <p className="text-[10px] font-bold text-sky-600 dark:text-sky-400 mb-2">💳 اشتراك مدفوع — يفعّل بعد الدفع</p>
                 <ul className="space-y-1 text-[11px] text-foreground/80">
                   {BASIC_FEATURES.map((f) => (
                     <li key={f} className="flex items-start gap-1">
@@ -231,7 +229,8 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
                   <span className="font-bold text-foreground">المتكاملة</span>
                   {tier === "premium" && <CheckCircle2 className="h-4 w-4 text-amber-500 mr-auto" />}
                 </div>
-                <p className="text-[11px] text-muted-foreground mb-2">تجربة احترافية كاملة</p>
+                <p className="text-[11px] text-muted-foreground mb-1">التجربة الاحترافية الكاملة</p>
+                <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mb-2">👑 اشتراك مميّز — يفعّل بعد الدفع</p>
                 <ul className="space-y-1 text-[11px] text-foreground/80">
                   {PREMIUM_FEATURES.map(({ icon: Icon, text }) => (
                     <li key={text} className="flex items-start gap-1">
@@ -243,11 +242,11 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
               </button>
             </div>
 
-            {tier === "premium" && (
-              <div className="rounded-xl border border-amber-300/40 bg-amber-50/50 dark:bg-amber-950/20 p-2.5 text-[11px] text-foreground/80 text-center">
-                💡 ميزات البريميوم ستبقى مقفلة بانتظار مراجعة الإدارة وتفعيلها لك يدوياً.
-              </div>
-            )}
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 text-[11px] text-foreground/85 text-center leading-relaxed">
+              ⚠️ <strong>كلا الباقتين تتطلبان اشتراكاً مدفوعاً</strong> وتفعيلاً يدوياً من إدارة المنصة.
+              <br />
+              بعد إتمام التسجيل، تواصل مع الإدارة لإتمام الدفع وتفعيل حسابك.
+            </div>
 
             <div className="flex gap-2">
               <Button
