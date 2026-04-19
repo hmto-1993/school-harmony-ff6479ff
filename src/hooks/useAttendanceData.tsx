@@ -246,8 +246,8 @@ export function useAttendanceData() {
     setAbsenceAlerts(alerts);
   }, [selectedClass]);
 
-  const loadStudents = useCallback(async () => {
-    setStudentsLoading(true);
+  const loadStudents = useCallback(async (silent = false) => {
+    if (!silent) setStudentsLoading(true);
     const [{ data: students }, { data: attendance }] = await Promise.all([
       supabase.from("students").select("id, full_name").eq("class_id", selectedClass).order("full_name"),
       supabase.from("attendance_records").select("id, student_id, status, notes").eq("class_id", selectedClass).eq("date", date),
@@ -265,7 +265,7 @@ export function useAttendanceData() {
         };
       })
     );
-    setStudentsLoading(false);
+    if (!silent) setStudentsLoading(false);
   }, [selectedClass, date]);
 
 
@@ -345,7 +345,9 @@ export function useAttendanceData() {
         if (error) throw new Error(error.message || "فشل إدخال سجلات الحضور");
       }
       toast({ title: "تم الحفظ", description: "تم حفظ سجلات الحضور بنجاح" });
-      loadStudents();
+      // Silent refresh — avoid swapping in the loading skeleton which collapses
+      // page height and causes the scroll position to jump to the top.
+      loadStudents(true);
       loadWeeklyProgress();
     } catch (err: any) {
       toast({ title: "فشل حفظ الحضور", description: err?.message || "حدث خطأ غير متوقع أثناء الحفظ.", variant: "destructive" });
