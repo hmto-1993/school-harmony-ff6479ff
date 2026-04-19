@@ -374,6 +374,109 @@ export type Database = {
           },
         ]
       }
+      beta_feature_enrollments: {
+        Row: {
+          enabled: boolean
+          enrolled_at: string
+          enrolled_by: string | null
+          feature_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          enabled?: boolean
+          enrolled_at?: string
+          enrolled_by?: string | null
+          feature_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          enabled?: boolean
+          enrolled_at?: string
+          enrolled_by?: string | null
+          feature_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_feature_enrollments_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "beta_features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_feature_feedback: {
+        Row: {
+          created_at: string
+          feature_id: string
+          id: string
+          message: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_id: string
+          id?: string
+          message?: string
+          rating?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_id?: string
+          id?: string
+          message?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_feature_feedback_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "beta_features"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_features: {
+        Row: {
+          created_at: string
+          description: string
+          feature_key: string
+          icon: string
+          id: string
+          is_globally_enabled: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          feature_key: string
+          icon?: string
+          id?: string
+          is_globally_enabled?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          feature_key?: string
+          icon?: string
+          id?: string
+          is_globally_enabled?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       class_schedules: {
         Row: {
           class_id: string

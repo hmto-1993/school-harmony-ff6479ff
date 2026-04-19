@@ -29,6 +29,9 @@ import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import TeacherManagementHub from "@/components/settings/TeacherManagementHub";
+import AlphaLabOwnerCard from "@/components/settings/AlphaLabOwnerCard";
+import AlphaLabSubscriberCard from "@/components/settings/AlphaLabSubscriberCard";
+import { BetaErrorBoundary } from "@/components/beta/BetaErrorBoundary";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
@@ -87,6 +90,20 @@ export default function SettingsPage() {
 
       {/* Owner-only: unified teacher management hub (approvals + subscriptions + archive) */}
       {isPrimaryOwner && <TeacherManagementHub />}
+
+      {/* Owner-only: Alpha Lab management */}
+      {isPrimaryOwner && (
+        <BetaErrorBoundary featureName="Alpha Lab Owner">
+          <AlphaLabOwnerCard />
+        </BetaErrorBoundary>
+      )}
+
+      {/* Subscriber view: enabled beta features + feedback */}
+      {restricted && (
+        <BetaErrorBoundary featureName="Alpha Lab">
+          <AlphaLabSubscriberCard />
+        </BetaErrorBoundary>
+      )}
 
       {/* ===== البطاقات الرئيسية ===== */}
       <div className="flex items-center gap-3 mb-3">
