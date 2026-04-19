@@ -27,6 +27,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/hooks/use-theme";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { Lock } from "lucide-react";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -63,6 +66,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut, user } = useAuth();
   const { perms } = useTeacherPermissions();
   const { isSubscriber } = useSubscriberStatus();
+  const { isPremium, loaded: tierLoaded } = useSubscriptionTier();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
@@ -143,6 +148,30 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         {links.map((link) => {
           const isActive = location.pathname === link.to;
           const showBadge = link.to === "/notifications" && unreadParentMessages > 0;
+          // Premium-gated routes (basic users see lock and upgrade dialog)
+          const isPremiumRoute = link.to === "/student-logins";
+          const isLocked = isPremiumRoute && tierLoaded && !isPremium;
+
+          if (isLocked) {
+            return (
+              <button
+                key={link.to}
+                type="button"
+                onClick={() => setUpgradeOpen(true)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200 relative",
+                  isCollapsed && "justify-center px-2",
+                  "text-sidebar-foreground/40 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                )}
+                title="ميزة بريميوم"
+              >
+                <link.icon className="h-[18px] w-[18px] shrink-0" />
+                {!isCollapsed && <span>{link.label}</span>}
+                <Lock className={cn("h-3.5 w-3.5 text-amber-500", isCollapsed ? "absolute -top-0.5 -right-0.5" : "mr-auto")} />
+              </button>
+            );
+          }
+
           return (
             <Link
               key={link.to}
@@ -173,6 +202,12 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
           );
         })}
       </nav>
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        featureName="سجل الزيارات والتقارير المتقدمة"
+        description="تتبع زيارات الطلاب وأولياء الأمور وتحليلات الاستخدام متاحة حصرياً ضمن باقة ألفا بريميوم."
+      />
 
       {/* Footer */}
       <div className="p-3 border-t border-sidebar-border/50 space-y-1">

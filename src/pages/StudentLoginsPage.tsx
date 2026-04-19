@@ -12,6 +12,9 @@ import { Users, Eye, TrendingUp, Calendar, UserCheck, Users2 } from "lucide-reac
 import { format, subDays, isAfter } from "date-fns";
 import { ar } from "date-fns/locale";
 import ExportDialog from "@/components/student-logins/ExportDialog";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
+import { Crown, Lock } from "lucide-react";
 
 interface LoginRecord {
   id: string;
@@ -30,6 +33,7 @@ interface ClassInfo {
 }
 
 export default function StudentLoginsPage() {
+  const { loaded: tierLoaded, isPremium } = useSubscriptionTier();
   const [loginsTab, setLoginsTab] = usePersistedState("student_logins_tab", "classes");
   const [logins, setLogins] = useState<LoginRecord[]>([]);
   const [classes, setClasses] = useState<ClassInfo[]>([]);
@@ -39,8 +43,9 @@ export default function StudentLoginsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (tierLoaded && isPremium) fetchData();
+    else if (tierLoaded) setLoading(false);
+  }, [tierLoaded, isPremium]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -143,10 +148,33 @@ export default function StudentLoginsPage() {
     return studentStats.filter((s) => s.classId === classId);
   }, [studentStats]);
 
-  if (loading) {
+  if (!tierLoaded || loading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center space-y-4" dir="rtl">
+        <div className="relative">
+          <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-2xl" />
+          <div className="relative p-5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 shadow-xl">
+            <Crown className="h-10 w-10 text-white" />
+          </div>
+        </div>
+        <div className="max-w-md space-y-2">
+          <h1 className="text-2xl font-bold">سجل الزيارات — ميزة بريميوم</h1>
+          <p className="text-muted-foreground">
+            تتبع زيارات الطلاب وأولياء الأمور وتحليلات الاستخدام متاحة حصرياً ضمن باقة <strong>ألفا بريميوم</strong>. تواصل مع الإدارة لترقية اشتراكك.
+          </p>
+        </div>
+        <Button className="gap-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white" disabled>
+          <Lock className="h-4 w-4" />
+          محتوى مقفل
+        </Button>
       </div>
     );
   }

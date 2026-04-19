@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles, EyeOff } from "lucide-react";
+import { Atom, FlaskConical, Plus, Trash2, MessageSquare, Star, Users, Loader2, Hourglass, Rocket, Clock, XCircle, Sparkles, EyeOff, Crown, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -25,6 +25,7 @@ interface BetaFeatureRow {
   owner_first_enabled_at?: string | null;
   snooze_until?: string | null;
   released_at?: string | null;
+  required_tier?: "basic" | "premium";
 }
 
 interface SmartAlert {
@@ -182,6 +183,17 @@ export default function AlphaLabOwnerCard() {
     if (error) { toast({ title: "خطأ", description: error.message, variant: "destructive" }); return; }
     setFeatures(prev => prev.filter(f => f.id !== id));
     toast({ title: "تم الحذف" });
+  };
+
+  const toggleTier = async (f: BetaFeatureRow) => {
+    const next = (f.required_tier === "premium" ? "basic" : "premium") as "basic" | "premium";
+    const { error } = await supabase.from("beta_features").update({ required_tier: next } as any).eq("id", f.id);
+    if (error) { toast({ title: "خطأ", description: error.message, variant: "destructive" }); return; }
+    setFeatures(prev => prev.map(x => x.id === f.id ? { ...x, required_tier: next } : x));
+    toast({
+      title: next === "premium" ? "الميزة الآن حصرية للبريميوم" : "الميزة متاحة للجميع",
+      description: next === "premium" ? "لن يتمكن مشتركو الباقة الأساسية من رؤيتها" : "متاحة لجميع المشتركين بكافة الباقات",
+    });
   };
 
   const toggleEnrollment = async (featureId: string, userId: string, enable: boolean) => {
@@ -349,6 +361,15 @@ export default function AlphaLabOwnerCard() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="font-bold text-sm">{f.name}</h5>
                           <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-600">Beta</Badge>
+                          {f.required_tier === "premium" ? (
+                            <Badge className="text-[10px] gap-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0">
+                              <Crown className="h-2.5 w-2.5" />بريميوم
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] gap-0.5 border-slate-400/50">
+                              <Shield className="h-2.5 w-2.5" />للجميع
+                            </Badge>
+                          )}
                           <code className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{f.feature_key}</code>
                         </div>
                         {f.description && <p className="text-xs text-muted-foreground mt-1">{f.description}</p>}
@@ -369,6 +390,16 @@ export default function AlphaLabOwnerCard() {
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => openFeedback(f.id)} className="gap-1.5 text-xs">
                       <MessageSquare className="h-3.5 w-3.5" /> الملاحظات
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleTier(f)}
+                      className={`gap-1.5 text-xs ${f.required_tier === "premium" ? "border-amber-500/40 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10" : "border-slate-400/50"}`}
+                      title="تبديل نوع الباقة المطلوبة"
+                    >
+                      {f.required_tier === "premium" ? <Crown className="h-3.5 w-3.5" /> : <Shield className="h-3.5 w-3.5" />}
+                      {f.required_tier === "premium" ? "بريميوم" : "للجميع"}
                     </Button>
                     {f.is_globally_enabled && (
                       <Button
