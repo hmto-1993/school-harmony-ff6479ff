@@ -202,27 +202,29 @@ export function CategoriesSettingsCard({ s }: { s: SettingsData }) {
           </div>
         )}
 
-        <GroupCapEditor groupKey="classwork" groupLabel="المهام الأدائية والمشاركة والتفاعل"
-          categories={s.classworkCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
-          onApplied={s.fetchData} colorScheme="emerald" />
-
         <CategoryTable title="المهام الأدائية والمشاركة والتفاعل" emoji="📝" colorScheme="emerald"
           emptyText="لا توجد فئات — أضف: المشاركة، الواجبات، الأعمال والمشاريع"
           categories={s.classworkCategories} allCategories={s.categories} classes={s.classes}
           editingCats={s.editingCats} setEditingCats={s.setEditingCats} isAdmin={s.isAdmin}
           catClassFilter={s.catClassFilter} targetGroupLabel="الاختبارات" targetGroupKey="exam"
-          onReorder={s.handleReorderCategory} onDelete={s.handleDeleteCategory} />
-
-        <GroupCapEditor groupKey="exam" groupLabel="الاختبارات"
-          categories={s.examCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
-          onApplied={s.fetchData} colorScheme="amber" />
+          onReorder={s.handleReorderCategory} onDelete={s.handleDeleteCategory}
+          headerExtra={
+            <GroupCapEditor groupKey="classwork" groupLabel="المهام الأدائية والمشاركة والتفاعل"
+              categories={s.classworkCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
+              classes={s.classes} onApplied={s.fetchData} />
+          } />
 
         <CategoryTable title="الاختبارات" emoji="📋" colorScheme="amber"
           emptyText="لا توجد فئات — أضف: اختبار عملي، اختبار الفترة"
           categories={s.examCategories} allCategories={s.categories} classes={s.classes}
           editingCats={s.editingCats} setEditingCats={s.setEditingCats} isAdmin={s.isAdmin}
           catClassFilter={s.catClassFilter} targetGroupLabel="المهام الأدائية" targetGroupKey="classwork"
-          onReorder={s.handleReorderCategory} onDelete={s.handleDeleteCategory} />
+          onReorder={s.handleReorderCategory} onDelete={s.handleDeleteCategory}
+          headerExtra={
+            <GroupCapEditor groupKey="exam" groupLabel="الاختبارات"
+              categories={s.examCategories} classFilter={s.catClassFilter} isAdmin={s.isAdmin}
+              classes={s.classes} onApplied={s.fetchData} />
+          } />
 
         {s.catClassFilter === "all" && (
           <p className="text-xs text-muted-foreground text-center">
