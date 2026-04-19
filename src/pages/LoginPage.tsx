@@ -166,15 +166,16 @@ export default function LoginPage() {
       return;
     }
 
+    toast({
+      title: "تم استلام طلبك بنجاح ✓",
+      description: "سيتم تفعيل حسابك (الباقة الأساسية) قريباً من قبل الإدارة. استعد لتجربة ألفا فيزياء! 🚀",
+      duration: 8000,
+    });
     if (data?.user && !data.session) {
       toast({
-        title: "تم إنشاء الحساب ✓",
-        description: "تم إرسال رابط التفعيل إلى بريدك الإلكتروني. فعّل الحساب ثم سجّل دخولك.",
-      });
-    } else {
-      toast({
-        title: "أهلاً بك ✓",
-        description: "تم إنشاء بيئة عملك المستقلة بنجاح.",
+        title: "تأكيد البريد الإلكتروني",
+        description: "تم إرسال رابط التفعيل إلى بريدك. فعّله ثم انتظر موافقة الإدارة.",
+        duration: 8000,
       });
     }
     setSubFullName(""); setSubNationalId(""); setSubEmail(""); setSubPassword("");
