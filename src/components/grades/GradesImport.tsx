@@ -195,7 +195,15 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
         let status: ImportRow["status"] = "matched";
         if (!matched) status = "not_found";
         else if (row.score === null || row.score < 0 || row.score > maxScore) status = "invalid_score";
-        return { studentName: row.name, studentId: row.id, score: row.score, matchedStudent: matched, status };
+        return {
+          studentName: row.name,
+          studentId: row.id,
+          score: row.score,
+          matchedStudent: matched,
+          status,
+          confirmed: status === "matched", // auto-confirm clean matches; user can untick
+          manualOverride: false,
+        };
       });
 
     setImportRows(rows);
