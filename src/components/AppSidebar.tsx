@@ -27,6 +27,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/hooks/use-theme";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { Lock } from "lucide-react";
+import { UpgradeDialog } from "@/components/subscription/PremiumGate";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -63,6 +66,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const { role, signOut, user } = useAuth();
   const { perms } = useTeacherPermissions();
   const { isSubscriber } = useSubscriberStatus();
+  const { isPremium, loaded: tierLoaded } = useSubscriptionTier();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();

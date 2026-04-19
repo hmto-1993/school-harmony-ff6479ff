@@ -3,6 +3,7 @@ import { LayoutDashboard, Sparkles, Printer, Calendar, BookOpen, GraduationCap, 
 import ShareDialog from "@/components/shared/ShareDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import TierBadge from "@/components/subscription/TierBadge";
 import { useMemo, useEffect, useState } from "react";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +91,10 @@ export default function DashboardHeader({ onPrint, locked, onToggleLock, onReset
               <LayoutDashboard className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{dashboardTitle}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{dashboardTitle}</h1>
+                <TierBadge />
+              </div>
               <p className="text-sm text-white/70 mt-0.5 hidden sm:block">نظرة شاملة على أداء الطلاب اليوم</p>
             </div>
           </div>
