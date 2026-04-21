@@ -343,7 +343,7 @@ export default function PerformanceDashboard() {
               مستويات الطلاب
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              <Select value={levelsTypeFilter} onValueChange={(v) => setLevelsTypeFilter(v as "daily" | "exams")}>
+              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as "daily" | "exams"); setLevelsCategoryFilter("all"); }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
