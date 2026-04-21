@@ -24,7 +24,11 @@ interface StudentRow {
 }
 
 const EXAM_KEYWORDS = ["اختبار", "امتحان", "فترة", "نهائي", "test", "exam"];
+const HOMEWORK_KEYWORDS = ["واجب", "homework"];
+const PARTICIPATION_KEYWORDS = ["مشارك", "تفاعل", "participation"];
 const isExamCategory = (name: string) => EXAM_KEYWORDS.some(k => name.includes(k));
+const isHomeworkCategory = (name: string) => HOMEWORK_KEYWORDS.some(k => name.includes(k));
+const isParticipationCategory = (name: string) => PARTICIPATION_KEYWORDS.some(k => name.includes(k));
 
 function getPerformanceColor(diff: number) {
   if (diff >= 5) return "bg-emerald-100 text-emerald-700 border-emerald-200";
