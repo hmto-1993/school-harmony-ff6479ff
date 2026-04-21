@@ -97,6 +97,37 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       setRadarSettings(s);
     });
   }, []);
+
+  // Cumulative interaction totals per student for the current class
+  // (used by Smart Radar's "target lowest" toggle).
+  const [cumulativeTotals, setCumulativeTotals] = React.useState<Record<string, number>>({});
+  React.useEffect(() => {
+    if (!selectedClass || !radarOpen) return;
+    let cancelled = false;
+    (async () => {
+      const { data: classStudents } = await supabase
+        .from("students")
+        .select("id")
+        .eq("class_id", selectedClass);
+      const ids = ((classStudents as any[]) || []).map((r: any) => r.id);
+      if (ids.length === 0) { if (!cancelled) setCumulativeTotals({}); return; }
+      const [{ data: gradeRows }, { data: cats }] = await Promise.all([
+        supabase.from("grades").select("student_id, score, category_id").in("student_id", ids),
+        supabase.from("grade_categories").select("id, is_deduction"),
+      ]);
+      const deductionMap = new Map<string, boolean>();
+      ((cats as any[]) || []).forEach((c: any) => deductionMap.set(c.id, !!c.is_deduction));
+      const totals: Record<string, number> = {};
+      ids.forEach((id: string) => { totals[id] = 0; });
+      ((gradeRows as any[]) || []).forEach((g: any) => {
+        const v = Number(g.score) || 0;
+        const isDeduction = deductionMap.get(g.category_id);
+        totals[g.student_id] = (totals[g.student_id] || 0) + (isDeduction ? -v : v);
+      });
+      if (!cancelled) setCumulativeTotals(totals);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedClass, radarOpen]);
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
@@ -386,7 +417,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {radarOpen && gradeTab === "assessment" && (
               <div className="mb-4 no-print">
                 <SmartRadar
-                  students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name }))}
+                  students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name, totalScore: cumulativeTotals[sg.student_id] ?? 0 }))}
                   settings={radarSettings}
                   muted={radarMuted}
                   participatedStudentIds={(() => {
