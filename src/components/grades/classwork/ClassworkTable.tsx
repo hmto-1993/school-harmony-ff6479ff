@@ -120,13 +120,18 @@ export default function ClassworkTable({
                           })() : cat.is_deduction ? (() => {
                             const count = sg.deductionCounts?.[cat.id] ?? 0;
                             return (
-                              <div className="flex items-center justify-center" dir="ltr">
+                              <div className="flex flex-col items-center leading-tight" dir="ltr">
                                 <span className={cn(
-                                  "text-base font-extrabold tabular-nums",
+                                  "text-sm font-extrabold tabular-nums",
                                   count > 0 ? "text-destructive dark:text-red-400" : "text-muted-foreground"
                                 )}>
                                   {count}
                                 </span>
+                                {count > 0 && (
+                                  <span className="text-[10px] font-semibold text-destructive/80 dark:text-red-400/80 tabular-nums">
+                                    (−{manualScore})
+                                  </span>
+                                )}
                               </div>
                             );
                           })() : (

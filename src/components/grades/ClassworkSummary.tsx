@@ -69,7 +69,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   const dedCount = student.deductionCounts?.[cat.id] ?? 0;
                   const scoreDisplay = cat.is_deduction
                     ? (dedCount > 0
-                        ? `<span style="color:#dc2626;font-weight:bold;font-size:14px;">${dedCount}</span>`
+                        ? `<span style="color:#dc2626;font-weight:bold;">${dedCount}</span><br><span style="color:#dc2626;font-size:9px;">(−${rawScore})</span>`
                         : `<span style="color:#94a3b8;">0</span>`)
                     : String(rawScore);
                   return `
