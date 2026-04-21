@@ -22,38 +22,44 @@ interface PodiumStudent {
 const RANK_CONFIG = {
   1: {
     label: "المركز الأول",
-    crown: "text-amber-300",
-    glow: "shadow-[0_0_60px_rgba(251,191,36,0.55)]",
-    border: "border-amber-300/70",
-    bg: "from-amber-400/30 via-yellow-300/20 to-amber-500/10",
-    ring: "ring-amber-300/60",
-    text: "text-amber-200",
+    crown: "text-amber-500 dark:text-amber-300",
+    glow: "shadow-[0_4px_20px_rgba(251,191,36,0.25)] dark:shadow-[0_0_60px_rgba(251,191,36,0.55)]",
+    border: "border-amber-400 dark:border-amber-300/70",
+    bg: "from-white via-amber-50/40 to-white dark:from-amber-400/30 dark:via-yellow-300/20 dark:to-amber-500/10",
+    ring: "ring-amber-400/50 dark:ring-amber-300/60",
+    text: "text-slate-900 dark:text-amber-200",
+    scoreBadge: "bg-amber-50 text-amber-700 border-amber-300 dark:bg-slate-900/50 dark:text-amber-200 dark:border-amber-300/70",
+    rankBadge: "bg-amber-500 text-white border-amber-600 dark:bg-slate-900/60 dark:text-amber-200 dark:border-amber-300/70",
     height: "h-44 sm:h-52",
-    pillar: "from-amber-400/40 to-amber-600/20",
+    pillar: "from-amber-300/60 to-amber-500/30 dark:from-amber-400/40 dark:to-amber-600/20",
     iconSize: "h-10 w-10",
   },
   2: {
     label: "المركز الثاني",
-    crown: "text-slate-200",
-    glow: "shadow-[0_0_35px_rgba(203,213,225,0.35)]",
-    border: "border-slate-300/60",
-    bg: "from-slate-300/25 via-slate-200/15 to-slate-400/10",
-    ring: "ring-slate-300/50",
-    text: "text-slate-100",
+    crown: "text-slate-500 dark:text-slate-200",
+    glow: "shadow-[0_4px_16px_rgba(148,163,184,0.2)] dark:shadow-[0_0_35px_rgba(203,213,225,0.35)]",
+    border: "border-slate-400 dark:border-slate-300/60",
+    bg: "from-white via-slate-50/60 to-white dark:from-slate-300/25 dark:via-slate-200/15 dark:to-slate-400/10",
+    ring: "ring-slate-400/40 dark:ring-slate-300/50",
+    text: "text-slate-900 dark:text-slate-100",
+    scoreBadge: "bg-slate-50 text-slate-700 border-slate-300 dark:bg-slate-900/50 dark:text-slate-100 dark:border-slate-300/60",
+    rankBadge: "bg-slate-500 text-white border-slate-600 dark:bg-slate-900/60 dark:text-slate-100 dark:border-slate-300/60",
     height: "h-36 sm:h-40",
-    pillar: "from-slate-300/35 to-slate-500/15",
+    pillar: "from-slate-300/60 to-slate-500/30 dark:from-slate-300/35 dark:to-slate-500/15",
     iconSize: "h-8 w-8",
   },
   3: {
     label: "المركز الثالث",
-    crown: "text-orange-300",
-    glow: "shadow-[0_0_30px_rgba(251,146,60,0.35)]",
-    border: "border-orange-400/60",
-    bg: "from-orange-400/25 via-amber-600/15 to-orange-500/10",
-    ring: "ring-orange-300/50",
-    text: "text-orange-200",
+    crown: "text-orange-600 dark:text-orange-300",
+    glow: "shadow-[0_4px_16px_rgba(234,88,12,0.2)] dark:shadow-[0_0_30px_rgba(251,146,60,0.35)]",
+    border: "border-orange-500 dark:border-orange-400/60",
+    bg: "from-white via-orange-50/50 to-white dark:from-orange-400/25 dark:via-amber-600/15 dark:to-orange-500/10",
+    ring: "ring-orange-400/40 dark:ring-orange-300/50",
+    text: "text-slate-900 dark:text-orange-200",
+    scoreBadge: "bg-orange-50 text-orange-700 border-orange-300 dark:bg-slate-900/50 dark:text-orange-200 dark:border-orange-400/60",
+    rankBadge: "bg-orange-500 text-white border-orange-600 dark:bg-slate-900/60 dark:text-orange-200 dark:border-orange-400/60",
     height: "h-32 sm:h-36",
-    pillar: "from-orange-400/35 to-orange-600/15",
+    pillar: "from-orange-300/60 to-orange-500/30 dark:from-orange-400/35 dark:to-orange-600/15",
     iconSize: "h-8 w-8",
   },
 } as const;
@@ -212,10 +218,8 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
                         {/* Rank number badge */}
                         <div
                           className={cn(
-                            "relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black border-2",
-                            cfg.border,
-                            "bg-slate-900/60 backdrop-blur",
-                            cfg.text
+                            "relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black border-2 backdrop-blur",
+                            cfg.rankBadge
                           )}
                         >
                           {p.rank}
@@ -235,10 +239,8 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
                         {/* Score */}
                         <div
                           className={cn(
-                            "relative z-10 mt-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold border",
-                            "bg-slate-900/50 backdrop-blur",
-                            cfg.border,
-                            cfg.text
+                            "relative z-10 mt-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold border backdrop-blur",
+                            cfg.scoreBadge
                           )}
                         >
                           {p.score} نقطة
