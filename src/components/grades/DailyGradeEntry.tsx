@@ -338,6 +338,31 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           <p className="text-center py-12 text-muted-foreground">لم يتم إعداد فئات التقييم لهذا الفصل بعد</p>
         ) : (
           <>
+            {/* Alpha Leaderboard — live podium for top 3 */}
+            <div className="mb-4">
+              <AlphaLeaderboard
+                classId={selectedClass}
+                className={classes.find(c => c.id === selectedClass)?.name || "الفصل"}
+                students={filteredStudentGrades.map(sg => {
+                  let earned = 0;
+                  for (const cat of categories) {
+                    const v = sg.grades[cat.id];
+                    if (v == null) continue;
+                    earned += cat.is_deduction ? -Number(v) : Number(v);
+                  }
+                  return {
+                    student_id: sg.student_id,
+                    full_name: sg.full_name,
+                    class_name: "",
+                    class_id: selectedClass,
+                    manualScores: {},
+                    manualScoreIds: {},
+                    dailyIcons: {},
+                    earnedTotal: earned,
+                  };
+                })}
+              />
+            </div>
             {/* Smart Radar */}
             {radarOpen && gradeTab === "assessment" && (
               <div className="mb-4 no-print">
