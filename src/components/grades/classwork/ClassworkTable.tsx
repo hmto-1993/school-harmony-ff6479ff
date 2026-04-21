@@ -37,7 +37,9 @@ export default function ClassworkTable({
                     "text-center p-2 font-bold text-xs border-b-2 border-primary/20 min-w-[55px] border-r-2 border-r-border",
                     isEditing
                       ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-info/10 text-info dark:bg-info/20"
+                      : cat.is_deduction
+                        ? "bg-destructive/15 text-destructive dark:bg-destructive/25 dark:text-red-400"
+                        : "bg-info/10 text-info dark:bg-info/20"
                   )}>
                     <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1
                       ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
@@ -48,10 +50,12 @@ export default function ClassworkTable({
                     "text-center p-2 font-semibold text-xs border-b-2 border-primary/20 min-w-[55px]",
                     isEditing
                       ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                      : "bg-warning/10 text-warning dark:bg-warning/20"
+                      : cat.is_deduction
+                        ? "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-red-400"
+                        : "bg-warning/10 text-warning dark:bg-warning/20"
                   )}>
-                    <div>الدرجة</div>
-                    <div className="text-[10px] opacity-80">من {Number(cat.max_score)}</div>
+                    <div>{cat.is_deduction ? "الخصم" : "الدرجة"}</div>
+                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
                   </th>
                 </React.Fragment>
               ))}
@@ -92,9 +96,13 @@ export default function ClassworkTable({
                         </td>
                         <td className={cn(
                           "p-1.5 text-center border-l border-border/10",
-                          isEditing ? "bg-emerald-500/10" : "bg-warning/5 dark:bg-warning/10"
+                          isEditing
+                            ? "bg-emerald-500/10"
+                            : cat.is_deduction
+                              ? "bg-destructive/10 dark:bg-destructive/20"
+                              : "bg-warning/5 dark:bg-warning/10"
                         )}>
-                          {isEditing ? (() => {
+                          {isEditing && !cat.is_deduction ? (() => {
                             const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                             return (
                               <Input
@@ -110,7 +118,17 @@ export default function ClassworkTable({
                               />
                             );
                           })() : (
-                            <span className="text-xs font-semibold text-muted-foreground">{manualScore}</span>
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                "text-xs font-bold tabular-nums",
+                                cat.is_deduction && manualScore > 0
+                                  ? "text-destructive dark:text-red-400"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {cat.is_deduction && manualScore > 0 ? `−${manualScore}` : manualScore}
+                            </span>
                           )}
                         </td>
                       </React.Fragment>
