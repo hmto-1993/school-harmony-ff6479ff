@@ -276,10 +276,19 @@ export default function SubscriptionsManagementPanel() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <Button size="sm" variant="outline" className="gap-1 h-8" onClick={() => openEdit(s)}>
                             <Pencil className="h-3.5 w-3.5" />
                             تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 h-8 text-amber-700 dark:text-amber-300 border-amber-500/40"
+                            onClick={() => { setPwTarget(s); setNewPassword(""); setShowPw(false); }}
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                            كلمة المرور
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
