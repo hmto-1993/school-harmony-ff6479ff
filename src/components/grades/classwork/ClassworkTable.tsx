@@ -54,8 +54,8 @@ export default function ClassworkTable({
                         ? "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-red-400"
                         : "bg-warning/10 text-warning dark:bg-warning/20"
                   )}>
-                    <div>{cat.is_deduction ? "الخصم" : "الدرجة"}</div>
-                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
+                    <div>{cat.is_deduction ? "عدد المخالفات" : "الدرجة"}</div>
+                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `الخصم حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
                   </th>
                 </React.Fragment>
               ))}
@@ -117,17 +117,26 @@ export default function ClassworkTable({
                                 disabled={!!locked}
                               />
                             );
+                          })() : cat.is_deduction ? (() => {
+                            const count = sg.deductionCounts?.[cat.id] ?? 0;
+                            return (
+                              <div className="flex flex-col items-center leading-tight" dir="ltr">
+                                <span className={cn(
+                                  "text-sm font-extrabold tabular-nums",
+                                  count > 0 ? "text-destructive dark:text-red-400" : "text-muted-foreground"
+                                )}>
+                                  {count}
+                                </span>
+                                {count > 0 && (
+                                  <span className="text-[10px] font-semibold text-destructive/80 dark:text-red-400/80 tabular-nums">
+                                    (−{manualScore})
+                                  </span>
+                                )}
+                              </div>
+                            );
                           })() : (
-                            <span
-                              dir="ltr"
-                              className={cn(
-                                "text-xs font-bold tabular-nums",
-                                cat.is_deduction && manualScore > 0
-                                  ? "text-destructive dark:text-red-400"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {cat.is_deduction && manualScore > 0 ? `−${manualScore}` : manualScore}
+                            <span dir="ltr" className="text-xs font-bold tabular-nums text-muted-foreground">
+                              {manualScore}
                             </span>
                           )}
                         </td>
