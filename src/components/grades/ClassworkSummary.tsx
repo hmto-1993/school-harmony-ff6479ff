@@ -185,6 +185,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const delta = cat.is_deduction ? -score : score;
       earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
 
+      // Skip icon rendering for deduction categories — they show as negative numbers instead
+      if (cat.is_deduction) return;
+
       if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
       const studentMap = dailyIconsMap.get(g.student_id)!;
       if (!studentMap.has(g.category_id)) studentMap.set(g.category_id, []);
