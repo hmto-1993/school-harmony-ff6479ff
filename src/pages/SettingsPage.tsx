@@ -109,42 +109,6 @@ export default function SettingsPage() {
         </BetaErrorBoundary>
       )}
 
-      {/* ===== بوابات التحكم (اختصار بارز) ===== */}
-      {s.isAdmin && (adminPerms.isPrimaryAdmin || adminPerms.can_access_settings) && (
-        <>
-          <div className="flex items-center gap-3 mb-3">
-            <div className="h-px flex-1 bg-gradient-to-l from-indigo-500/40 to-transparent" />
-            <h2 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 tracking-wide">🚪 بوابات التحكم</h2>
-            <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/40 to-transparent" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            {[
-              { key: "visibility", icon: Eye, label: "بوابة الطالب", desc: "التحكم بظهور الدرجات والحضور والسلوك للطالب", gradient: "from-indigo-500 to-violet-600", shadow: "shadow-indigo-500/20" },
-              { key: "parent_portal", icon: Heart, label: "بوابة ولي الأمر", desc: "التحكم بظهور البيانات والرسائل لولي الأمر", gradient: "from-pink-500 to-rose-600", shadow: "shadow-pink-500/20" },
-            ].map((card) => (
-              <button
-                key={card.key}
-                onClick={() => s.setActiveCard(s.activeCard === card.key ? null : card.key)}
-                className={cn(
-                  "relative flex items-center gap-4 p-5 rounded-2xl border-2 transition-all duration-300 text-right group",
-                  s.activeCard === card.key
-                    ? "border-primary bg-primary/5 shadow-xl scale-[1.01]"
-                    : "border-border/50 bg-card shadow-md hover:shadow-lg hover:border-primary/30"
-                )}
-              >
-                <div className={cn("flex items-center justify-center h-14 w-14 rounded-xl shadow-lg text-white shrink-0 bg-gradient-to-br", card.gradient, card.shadow, "group-hover:scale-110 transition-transform duration-300")}>
-                  <card.icon className="h-6 w-6" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground">{card.label}</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">{card.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
       {/* ===== البطاقات الرئيسية ===== */}
       <div className="flex items-center gap-3 mb-3">
         <div className="h-px flex-1 bg-gradient-to-l from-primary/40 to-transparent" />
