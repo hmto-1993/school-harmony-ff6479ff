@@ -379,12 +379,17 @@ export default function PerformanceDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="type:daily">المشاركة والواجبات</SelectItem>
-                  {uniqueCatsByName(categories).length > 0 && (
-                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-muted-foreground border-t border-border/50">— فئة محددة —</div>
+                  {uniqueCatsByName(dailyCats).length > 0 && (
+                    <>
+                      <SelectSeparator />
+                      <SelectGroup>
+                        <SelectLabel className="text-[10px] text-muted-foreground">فئة محددة</SelectLabel>
+                        {uniqueCatsByName(dailyCats).map(c => (
+                          <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </>
                   )}
-                  {uniqueCatsByName(categories).map(c => (
-                    <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsPeriodFilter} onValueChange={(v) => setLevelsPeriodFilter(v as "today" | "7d" | "all")}>
