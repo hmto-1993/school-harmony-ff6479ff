@@ -27,6 +27,8 @@ interface BetaFeatureRow {
   snooze_until?: string | null;
   released_at?: string | null;
   required_tier?: "basic" | "premium";
+  change_type?: "new" | "updated";
+  last_changed_at?: string;
 }
 
 interface SmartAlert {
