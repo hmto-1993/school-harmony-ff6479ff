@@ -446,6 +446,7 @@ export type Database = {
       }
       beta_features: {
         Row: {
+          change_type: string
           created_at: string
           description: string
           feature_key: string
@@ -453,6 +454,7 @@ export type Database = {
           id: string
           is_globally_enabled: boolean
           is_officially_released: boolean
+          last_changed_at: string
           name: string
           owner_first_enabled_at: string | null
           released_at: string | null
@@ -461,6 +463,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          change_type?: string
           created_at?: string
           description?: string
           feature_key: string
@@ -468,6 +471,7 @@ export type Database = {
           id?: string
           is_globally_enabled?: boolean
           is_officially_released?: boolean
+          last_changed_at?: string
           name: string
           owner_first_enabled_at?: string | null
           released_at?: string | null
@@ -476,6 +480,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          change_type?: string
           created_at?: string
           description?: string
           feature_key?: string
@@ -483,6 +488,7 @@ export type Database = {
           id?: string
           is_globally_enabled?: boolean
           is_officially_released?: boolean
+          last_changed_at?: string
           name?: string
           owner_first_enabled_at?: string | null
           released_at?: string | null

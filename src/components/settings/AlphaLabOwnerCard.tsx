@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { BetaChangeBadge } from "./BetaChangeBadge";
 
 interface BetaFeatureRow {
   id: string;
@@ -26,6 +27,8 @@ interface BetaFeatureRow {
   snooze_until?: string | null;
   released_at?: string | null;
   required_tier?: "basic" | "premium";
+  change_type?: "new" | "updated";
+  last_changed_at?: string;
 }
 
 interface SmartAlert {
@@ -360,6 +363,7 @@ export default function AlphaLabOwnerCard() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="font-bold text-sm">{f.name}</h5>
+                          <BetaChangeBadge changeType={f.change_type} lastChangedAt={f.last_changed_at} />
                           <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-600">Beta</Badge>
                           {f.required_tier === "premium" ? (
                             <Badge className="text-[10px] gap-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0">

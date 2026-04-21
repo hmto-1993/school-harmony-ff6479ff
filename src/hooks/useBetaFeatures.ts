@@ -8,6 +8,8 @@ export interface BetaFeature {
   description: string;
   icon: string;
   is_globally_enabled: boolean;
+  change_type?: "new" | "updated";
+  last_changed_at?: string;
 }
 
 export interface BetaEnrollment {
