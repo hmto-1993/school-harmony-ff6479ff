@@ -58,9 +58,9 @@ export default function PerformanceDashboard() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
-  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"participation" | "homework" | "daily" | "exams">("daily");
+  // Unified scope filter: "type:daily" | "type:participation" | "type:homework" | "type:exams" | "cat:<name>"
+  const [levelsScopeFilter, setLevelsScopeFilter] = useState<string>("type:daily");
   const [levelsPeriodFilter, setLevelsPeriodFilter] = useState<"today" | "7d" | "all">("all");
-  const [levelsCategoryFilter, setLevelsCategoryFilter] = useState<string>("all");
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
