@@ -256,6 +256,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const edits: Record<string, string> = {};
     students.forEach(s => {
       editableCats.forEach(cat => {
+        if (cat.is_deduction) return; // deductions are managed via daily violations entry
         edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0);
       });
     });
