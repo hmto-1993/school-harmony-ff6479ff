@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useMyBetaFeatures, type BetaFeature } from "@/hooks/useBetaFeatures";
+import { BetaChangeBadge } from "./BetaChangeBadge";
 
 export default function AlphaLabSubscriberCard() {
   const { features, loading } = useMyBetaFeatures();
