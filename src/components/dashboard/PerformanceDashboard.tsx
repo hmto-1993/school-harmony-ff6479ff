@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
 interface StudentInfo { id: string; full_name: string; class_id: string | null; }
-interface GradeRecord { score: number | null; category_id: string; student_id: string; }
+interface GradeRecord { score: number | null; category_id: string; student_id: string; date: string; }
 interface CategoryInfo { id: string; name: string; max_score: number; class_id: string | null; }
 
 interface StudentRow {
