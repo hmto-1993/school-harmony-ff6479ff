@@ -179,10 +179,18 @@ export default function SmartRadar({
   }, [selectedBankLesson]);
 
   const participatedSet = new Set(participatedStudentIds);
-  const available = students.filter(
+  const baseAvailable = students.filter(
     (s) => (!settings.sessionMemory || !excluded.has(s.student_id)) &&
            (!excludeParticipated || !participatedSet.has(s.student_id))
   );
+  // When "target lowest" is ON, narrow the pool to students whose cumulative
+  // interaction score equals the minimum among the remaining base pool.
+  const available = (() => {
+    if (!targetLowest || baseAvailable.length === 0) return baseAvailable;
+    const scored = baseAvailable.map(s => ({ s, score: s.totalScore ?? 0 }));
+    const min = Math.min(...scored.map(x => x.score));
+    return scored.filter(x => x.score <= min).map(x => x.s);
+  })();
 
   // ── Timer logic ──────────────────────────────────────────────────
   const clearTimers = useCallback(() => {
