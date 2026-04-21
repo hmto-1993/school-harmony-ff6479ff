@@ -735,12 +735,21 @@ export default function SmartRadar({
       ) : (
         <Button onClick={handleSpin} disabled={spinning || allExcluded}
           className={cn("w-full h-12 text-base font-bold rounded-xl transition-all",
-            spinning ? "bg-primary/20 text-primary border-primary/30" : "bg-gradient-to-l from-primary to-primary/80 text-primary-foreground hover:shadow-lg hover:shadow-primary/30"
+            spinning
+              ? targetLowest
+                ? "bg-violet-500/20 text-violet-200 border-violet-400/40"
+                : "bg-primary/20 text-primary border-primary/30"
+              : targetLowest
+                ? "bg-gradient-to-l from-violet-500 to-violet-600 text-white hover:shadow-lg hover:shadow-violet-500/40 animate-pulse"
+                : "bg-gradient-to-l from-primary to-primary/80 text-primary-foreground hover:shadow-lg hover:shadow-primary/30"
           )}>
           {spinning ? (
-            <span className="flex items-center gap-2"><Radar className="h-5 w-5 animate-spin" />جاري البحث...</span>
+            <span className="flex items-center gap-2"><Radar className="h-5 w-5 animate-spin" />{targetLowest ? "استهداف الأقل تفاعلاً..." : "جاري البحث..."}</span>
           ) : allExcluded ? "تم اختيار الجميع" : (
-            <span className="flex items-center gap-2"><Radar className="h-5 w-5" />تشغيل الرادار</span>
+            <span className="flex items-center gap-2">
+              {targetLowest ? <Target className="h-5 w-5" /> : <Radar className="h-5 w-5" />}
+              {targetLowest ? "تشغيل وضع الاستهداف" : "تشغيل الرادار"}
+            </span>
           )}
         </Button>
       )}
