@@ -363,6 +363,7 @@ export default function AlphaLabOwnerCard() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="font-bold text-sm">{f.name}</h5>
+                          <BetaChangeBadge changeType={f.change_type} lastChangedAt={f.last_changed_at} />
                           <Badge variant="outline" className="text-[10px] border-violet-500/40 text-violet-600">Beta</Badge>
                           {f.required_tier === "premium" ? (
                             <Badge className="text-[10px] gap-0.5 bg-gradient-to-r from-amber-500 to-amber-600 text-white border-0">
