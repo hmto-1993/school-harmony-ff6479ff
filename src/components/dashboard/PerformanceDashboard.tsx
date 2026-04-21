@@ -182,10 +182,19 @@ export default function PerformanceDashboard() {
     return { classAverages, studentRows, classAvg, scatter, scatterAvg };
   };
 
-  const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
-  const examData = useMemo(() => computeData(examCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
-  const levelsData = levelsTypeFilter === "daily" ? dailyData : examData;
-  const activeCats = levelsTypeFilter === "daily" ? dailyCats : examCats;
+  const levelsCatsByType: Record<string, CategoryInfo[]> = {
+    daily: dailyCats,
+    participation: participationCats,
+    homework: homeworkCats,
+    exams: examCats,
+  };
+  const activeCats = levelsCatsByType[levelsTypeFilter] || dailyCats;
+  const levelsData = useMemo(
+    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter),
+    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]
+  );
+  const dailyData = useMemo(() => computeData(dailyCats, "all", "all", "all"), [dailyCats, grades, students, classes, selectedClass]);
+  const examData = useMemo(() => computeData(examCats, "all", "all", "all"), [examCats, grades, students, classes, selectedClass]);
 
   const renderCharts = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
     <div className="space-y-4">
