@@ -16,7 +16,6 @@ export interface SummaryRow {
   manualScores: Record<string, number>;
   manualScoreIds: Record<string, string>;
   dailyIcons: Record<string, DailyIcon[]>;
-  deductionCounts: Record<string, number>;
   earnedTotal: number;
 }
 
