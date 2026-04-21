@@ -179,8 +179,10 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const dailyIconsMap = new Map<string, Map<string, DailyIcon[]>>();
     const earnedTotalsMap = new Map<string, number>();
-    // Sum of daily deduction grades per student/category — shown as the negative score in the cell
+    // Sum of daily deduction grades per student/category — used for total calculation
     const deductionTotalsMap = new Map<string, Map<string, number>>();
+    // Count of daily violation entries per student/category — shown in the deduction column
+    const deductionCountsMap = new Map<string, Map<string, number>>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
@@ -191,11 +193,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const delta = cat.is_deduction ? -score : score;
       earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
 
-      // Skip icon rendering for deduction categories — they show as negative numbers instead
+      // Skip icon rendering for deduction categories — they show as a count instead
       if (cat.is_deduction) {
         if (!deductionTotalsMap.has(g.student_id)) deductionTotalsMap.set(g.student_id, new Map());
         const m = deductionTotalsMap.get(g.student_id)!;
         m.set(g.category_id, (m.get(g.category_id) || 0) + score);
+
+        if (!deductionCountsMap.has(g.student_id)) deductionCountsMap.set(g.student_id, new Map());
+        const cm = deductionCountsMap.get(g.student_id)!;
+        cm.set(g.category_id, (cm.get(g.category_id) || 0) + 1);
         return;
       }
 
@@ -224,14 +230,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const studentManualMap = manualMap.get(s.id) || new Map();
       const studentDailyMap = dailyIconsMap.get(s.id) || new Map();
       const studentDeductionMap = deductionTotalsMap.get(s.id) || new Map();
+      const studentDeductionCountMap = deductionCountsMap.get(s.id) || new Map();
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
       const dailyIcons: Record<string, DailyIcon[]> = {};
+      const deductionCounts: Record<string, number> = {};
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
         if (c.is_deduction) {
-          // Deduction columns reflect the cumulative daily deductions
+          // Deduction columns reflect the cumulative daily deductions (used for totals)
           manualScores[c.id] = studentDeductionMap.get(c.id) || 0;
+          deductionCounts[c.id] = studentDeductionCountMap.get(c.id) || 0;
         } else {
           manualScores[c.id] = m?.score ?? 0;
         }
@@ -241,7 +250,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        manualScores, manualScoreIds, dailyIcons,
+        manualScores, manualScoreIds, dailyIcons, deductionCounts,
         earnedTotal: earnedTotalsMap.get(s.id) || 0,
       };
     });
