@@ -82,7 +82,22 @@ export default function ClassworkTable({
                   "border-b border-border/40",
                 )}>
                   <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                  <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">{sg.full_name}</td>
+                  <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">
+                    <button
+                      type="button"
+                      onClick={() => setViolationDialog({
+                        studentId: sg.student_id,
+                        studentName: sg.full_name,
+                        categoryId: null,
+                        categoryName: "",
+                      })}
+                      className="text-right hover:text-primary hover:underline transition-colors no-print"
+                      title="عرض سجل كل المخالفات"
+                    >
+                      {sg.full_name}
+                    </button>
+                    <span className="hidden print:inline">{sg.full_name}</span>
+                  </td>
 
                   {categories.map(cat => {
                     const cellKey = `${sg.student_id}__${cat.id}`;
