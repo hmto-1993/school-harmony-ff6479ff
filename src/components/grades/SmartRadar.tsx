@@ -512,7 +512,44 @@ export default function SmartRadar({
         </div>
       )}
 
-      {/* Quick controls (before spin) */}
+      {/* Target lowest cumulative interaction toggle */}
+      <div className={cn(
+        "relative flex items-center justify-between mb-3 px-2 py-2 rounded-lg border transition-colors",
+        targetLowest
+          ? "border-violet-400/40 bg-violet-500/10 shadow-[0_0_18px_-6px_rgba(139,92,246,0.55)]"
+          : "border-white/10 bg-white/5"
+      )}>
+        <div className="flex items-center gap-1.5">
+          <Target className={cn("h-3.5 w-3.5 transition-colors", targetLowest ? "text-violet-300" : "text-white/50")} />
+          <div className="flex flex-col">
+            <span className={cn("text-[11px] font-bold transition-colors", targetLowest ? "text-violet-200" : "text-white/70")}>
+              استهداف الأقل تفاعلاً كلياً
+            </span>
+            <span className="text-[9px] text-white/40 leading-tight">
+              {targetLowest ? "البحث ضمن الطلاب الأقل نقاطاً في السجل الكلي" : "اختيار عشوائي من المتاحين"}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setTargetLowest(p => !p)}
+          aria-pressed={targetLowest}
+          className={cn(
+            "h-6 w-11 rounded-full border transition-colors relative shrink-0",
+            targetLowest
+              ? "bg-violet-500/40 border-violet-400/60"
+              : "bg-white/10 border-white/20"
+          )}
+        >
+          <span className={cn(
+            "absolute top-0.5 h-[18px] w-[18px] rounded-full transition-all",
+            targetLowest
+              ? "bg-violet-300 right-0.5 shadow-[0_0_8px_rgba(196,181,253,0.8)]"
+              : "bg-white/50 left-0.5"
+          )} />
+        </button>
+      </div>
+
       {!spinning && !showActions && !selectedStudent && settings.quizEnabled && (
         <div className="relative mb-3 space-y-2.5">
           {/* Bank chapter/lesson selector */}
