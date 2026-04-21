@@ -185,6 +185,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     })
   ), [filteredStudentGrades, violationCats]);
 
+  // Top performers (net score) for smart-card green glow
+  const topPerformerIds = React.useMemo(() => {
+    const scored = filteredStudentGrades.map(sg => {
+      let earned = 0;
+      for (const cat of categories) {
+        const v = sg.grades[cat.id];
+        if (v == null) continue;
+        earned += cat.is_deduction ? -Number(v) : Number(v);
+      }
+      return { id: sg.student_id, earned };
+    });
+    return new Set(
+      scored.filter(s => s.earned > 0).sort((a, b) => b.earned - a.earned).slice(0, 3).map(s => s.id)
+    );
+  }, [filteredStudentGrades, categories]);
+
   const buildViolationsTableHTML = () => {
     const headerCells = [
       '<th style="width:30px;">#</th>',
@@ -602,12 +618,23 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       return score != null && score !== 0;
                     });
 
+                    // Smart card status: pulsating red for 3+ violations, green glow for top performers
+                    const violationsCount = violationCats.reduce((acc, cat) => {
+                      const score = sg.grades[cat.id];
+                      return acc + (score != null && score !== 0 ? 1 : 0);
+                    }, 0);
+                    const isCriticalViolator = violationsCount >= 3;
+                    const isTopPerformer = !isHidden && !isCriticalViolator && topPerformerIds.has(sg.student_id);
+
                     return (
                       <tr key={sg.student_id} className={cn(
-                        "group transition-all duration-200 cursor-default border-b border-border/30",
-                        isHidden ? "opacity-50 bg-destructive/5 dark:bg-destructive/10" : cn("hover:bg-sky-100/60 dark:hover:bg-sky-900/30", isEven ? "bg-card" : "bg-muted/40 dark:bg-muted/25"),
+                        "group transition-all duration-200 cursor-default border-b border-border/30 smart-card-glass",
+                        isHidden && "opacity-50 bg-destructive/5 dark:bg-destructive/10",
+                        !isHidden && "hover:bg-sky-100/60 dark:hover:bg-sky-900/30",
                         referralInfo.hasReferral && "bg-destructive/5 dark:bg-destructive/10",
-                        hasActiveViolation && !referralInfo.hasReferral && "bg-amber-50/60 dark:bg-amber-500/8 border-amber-200/40 dark:border-amber-500/15",
+                        hasActiveViolation && !referralInfo.hasReferral && !isCriticalViolator && "bg-amber-50/60 dark:bg-amber-500/8 border-amber-200/40 dark:border-amber-500/15",
+                        isCriticalViolator && "smart-card-glow-red",
+                        isTopPerformer && "smart-card-glow-green",
                       )}>
                         <td className="p-3 text-muted-foreground font-medium border-l-2 border-border transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
                         <td className="p-3 font-semibold border-l-2 border-border whitespace-nowrap text-sm transition-all duration-200 group-hover:text-primary group-hover:bg-sky-100/40 dark:group-hover:bg-sky-900/20">
