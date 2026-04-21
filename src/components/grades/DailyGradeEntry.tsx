@@ -106,20 +106,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     let cancelled = false;
     (async () => {
       const { data: classStudents } = await supabase
-        .from("class_students")
-        .select("student_id")
+        .from("students")
+        .select("id")
         .eq("class_id", selectedClass);
-      const ids = (classStudents || []).map((r: any) => r.student_id);
+      const ids = ((classStudents as any[]) || []).map((r: any) => r.id);
       if (ids.length === 0) { if (!cancelled) setCumulativeTotals({}); return; }
-      const { data: gradeRows } = await supabase
-        .from("grades")
-        .select("student_id, score, category_id, grade_categories!inner(is_deduction)")
-        .in("student_id", ids);
+      const [{ data: gradeRows }, { data: cats }] = await Promise.all([
+        supabase.from("grades").select("student_id, score, category_id").in("student_id", ids),
+        supabase.from("grade_categories").select("id, is_deduction"),
+      ]);
+      const deductionMap = new Map<string, boolean>();
+      ((cats as any[]) || []).forEach((c: any) => deductionMap.set(c.id, !!c.is_deduction));
       const totals: Record<string, number> = {};
       ids.forEach((id: string) => { totals[id] = 0; });
-      (gradeRows || []).forEach((g: any) => {
-        const isDeduction = g.grade_categories?.is_deduction;
+      ((gradeRows as any[]) || []).forEach((g: any) => {
         const v = Number(g.score) || 0;
+        const isDeduction = deductionMap.get(g.category_id);
         totals[g.student_id] = (totals[g.student_id] || 0) + (isDeduction ? -v : v);
       });
       if (!cancelled) setCumulativeTotals(totals);
