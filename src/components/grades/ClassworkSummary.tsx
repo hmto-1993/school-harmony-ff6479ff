@@ -46,8 +46,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             <th style="width:30px;">#</th>
             <th style="width:24%;">الطالب</th>
             ${group.categories.map((cat) => `
-              <th style="width:auto;border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.name}</th>
-              <th style="width:auto;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "الخصم" : "الدرجة"}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</span></th>
+              <th style="width:auto;border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "مخالفة" : cat.name}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? "العدد" : ""}</span></th>
+              <th style="width:auto;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "الخصم" : "الدرجة"}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? "مجموع الخصم" : `من ${Number(cat.max_score)}`}</span></th>
             `).join("")}
             <th style="width:auto;">الإجمالي</th>
             <th style="width:auto;background:#ecfdf5;color:#059669;">الدرجات المكتسبة</th>
@@ -66,11 +66,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                     ? `<div class="icons-cell">${icons.map(getPrintIconSpan).join("")}</div>`
                     : "";
                   const rawScore = student.manualScores[cat.id] ?? 0;
+                  const dedCount = student.deductionCounts?.[cat.id] ?? 0;
+                  const firstCellHTML = cat.is_deduction
+                    ? `<span style="color:${dedCount > 0 ? "#dc2626" : "#64748b"};font-weight:bold;">${dedCount}</span>`
+                    : iconsHTML;
                   const scoreDisplay = cat.is_deduction && rawScore > 0
                     ? `<span style="color:#dc2626;font-weight:bold;">−${rawScore}</span>`
                     : String(rawScore);
                   return `
-                    <td style="border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fef2f2;" : ""}">${iconsHTML}</td>
+                    <td style="border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fef2f2;" : ""}">${firstCellHTML}</td>
                     <td style="${cat.is_deduction ? "background:#fef2f2;" : ""}">${scoreDisplay}</td>
                   `;
                 }).join("")}
