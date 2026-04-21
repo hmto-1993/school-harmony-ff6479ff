@@ -166,6 +166,41 @@ export default function SubscriptionsManagementPanel() {
     load();
   };
 
+  const isStrongPassword = (pw: string) =>
+    /[A-Za-z\u0600-\u06FF]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9\u0600-\u06FF\s]/.test(pw);
+
+  const changePassword = async () => {
+    if (!pwTarget) return;
+    if (!isStrongPassword(newPassword)) {
+      toast({
+        title: "كلمة مرور ضعيفة",
+        description: "يجب أن تحتوي على حروف وأرقام ورموز معاً (مثال: Teacher@2026)",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPwBusy(true);
+    const { data, error } = await supabase.functions.invoke("manage-users", {
+      body: { action: "change_password", user_id: pwTarget.user_id, password: newPassword },
+    });
+    setPwBusy(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "تعذر تغيير كلمة المرور",
+        description: (data as any)?.error || error?.message || "حدث خطأ",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({
+      title: "تم تغيير كلمة المرور ✅",
+      description: `كلمة مرور ${pwTarget.full_name} الجديدة سارية الآن`,
+    });
+    setPwTarget(null);
+    setNewPassword("");
+    setShowPw(false);
+  };
+
   return (
     <Card className="border-amber-500/30">
       <CardHeader className="pb-3">
