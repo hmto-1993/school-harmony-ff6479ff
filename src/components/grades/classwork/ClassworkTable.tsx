@@ -127,6 +127,11 @@ export default function ClassworkTable({
                                 )}>
                                   {count}
                                 </span>
+                                {count > 0 && (
+                                  <span className="text-[10px] font-semibold text-destructive/80 dark:text-red-400/80 tabular-nums">
+                                    (−{manualScore})
+                                  </span>
+                                )}
                               </div>
                             );
                           })() : (
