@@ -190,9 +190,10 @@ export default function PerformanceDashboard() {
   };
   // Resolve unified scope -> active categories + category-name filter
   const [scopeKind, scopeValue] = levelsScopeFilter.split(":");
-  const activeCats = scopeKind === "type"
-    ? (levelsCatsByType[scopeValue] || dailyCats)
-    : categories.filter(c => c.name === scopeValue);
+  const activeCats = useMemo(() => {
+    if (scopeKind === "type") return levelsCatsByType[scopeValue] || dailyCats;
+    return categories.filter(c => c.name === scopeValue);
+  }, [scopeKind, scopeValue, dailyCats, participationCats, homeworkCats, examCats, categories]);
   const activeCategoryName = scopeKind === "cat" ? scopeValue : "all";
   const levelsData = useMemo(
     () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, activeCategoryName),
