@@ -92,7 +92,11 @@ export default function ClassworkTable({
                         </td>
                         <td className={cn(
                           "p-1.5 text-center border-l border-border/10",
-                          isEditing ? "bg-emerald-500/10" : "bg-warning/5 dark:bg-warning/10"
+                          isEditing
+                            ? "bg-emerald-500/10"
+                            : cat.is_deduction
+                              ? "bg-destructive/10 dark:bg-destructive/20"
+                              : "bg-warning/5 dark:bg-warning/10"
                         )}>
                           {isEditing ? (() => {
                             const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
@@ -110,7 +114,17 @@ export default function ClassworkTable({
                               />
                             );
                           })() : (
-                            <span className="text-xs font-semibold text-muted-foreground">{manualScore}</span>
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                "text-xs font-bold tabular-nums",
+                                cat.is_deduction && manualScore > 0
+                                  ? "text-destructive dark:text-red-400"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {cat.is_deduction && manualScore > 0 ? `−${manualScore}` : manualScore}
+                            </span>
                           )}
                         </td>
                       </React.Fragment>
