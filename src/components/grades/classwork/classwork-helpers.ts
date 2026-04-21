@@ -42,8 +42,14 @@ export function restoreSlotsFromScore({
 export const calcManualSubtotal = (scores: Record<string, number>, cats: CategoryInfo[]) => {
   let score = 0, max = 0;
   cats.forEach(cat => {
-    max += Number(cat.max_score);
-    score += scores[cat.id] ?? 0;
+    const val = scores[cat.id] ?? 0;
+    if (cat.is_deduction) {
+      // Deductions reduce the total; do not add to max
+      score -= val;
+    } else {
+      max += Number(cat.max_score);
+      score += val;
+    }
   });
   return { score, max };
 };
