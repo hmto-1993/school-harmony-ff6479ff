@@ -378,9 +378,6 @@ export default function PerformanceDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="type:daily">المشاركة والواجبات</SelectItem>
-                  <SelectItem value="type:participation">المشاركة فقط</SelectItem>
-                  <SelectItem value="type:homework">الواجبات فقط</SelectItem>
-                  <SelectItem value="type:exams">الاختبارات</SelectItem>
                   {uniqueCatsByName(categories).length > 0 && (
                     <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-muted-foreground border-t border-border/50">— فئة محددة —</div>
                   )}
