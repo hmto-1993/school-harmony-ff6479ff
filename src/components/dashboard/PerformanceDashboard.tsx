@@ -267,7 +267,16 @@ export default function PerformanceDashboard() {
                       {row.name}
                     </span>
                   </td>
-                  <td className="p-2.5 text-center font-bold bg-primary/[0.02] dark:bg-primary/[0.05] border-l border-border/10">{row.score}%</td>
+                  <td className="p-2.5 text-center font-bold bg-primary/[0.02] dark:bg-primary/[0.05] border-l border-border/10 tabular-nums" dir="ltr">
+                    {row.maxTotal > 0 ? (
+                      <>
+                        <span>{row.total}</span>
+                        <span className="text-muted-foreground font-normal"> / {row.maxTotal}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
                     <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
                       {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
