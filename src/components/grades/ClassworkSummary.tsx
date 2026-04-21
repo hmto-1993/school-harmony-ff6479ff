@@ -17,7 +17,7 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import type { ClassInfo, CategoryInfo, SummaryRow, ClassworkSummaryProps } from "./classwork/classwork-types";
 import { isParticipation, DEFAULT_MAX_SLOTS, getMaxDisplayIcons, restoreSlotsFromScore, calcManualSubtotal } from "./classwork/classwork-helpers";
 import ClassworkTable from "./classwork/ClassworkTable";
-import AlphaLeaderboard from "./classwork/AlphaLeaderboard";
+import ClassAlphaDashboard from "./classwork/ClassAlphaDashboard";
 import type { DailyIcon } from "./classwork/classwork-types";
 
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
@@ -349,7 +349,16 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
         return (
           <div key={group.id} className="space-y-3">
-          <AlphaLeaderboard classId={group.id} className={group.name} students={group.students} />
+          <ClassAlphaDashboard
+            classId={group.id}
+            className={group.name}
+            students={group.students.map(s => ({
+              student_id: s.student_id,
+              full_name: s.full_name,
+              earnedTotal: s.earnedTotal,
+              violationsCount: Object.values(s.deductionCounts || {}).reduce((a, b) => a + (b || 0), 0),
+            }))}
+          />
           <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
             <CardHeader className="pb-3 no-print">
               <div className="flex items-center justify-between flex-wrap gap-2">

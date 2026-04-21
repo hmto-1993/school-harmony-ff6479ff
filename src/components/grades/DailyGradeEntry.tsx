@@ -22,7 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
 import SmartRadar from "./SmartRadar";
-import AlphaLeaderboard from "./classwork/AlphaLeaderboard";
+import ClassAlphaDashboard from "./classwork/ClassAlphaDashboard";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
@@ -357,25 +357,27 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
           <>
             {/* Alpha Leaderboard — live podium for top 3 */}
             <div className="mb-4">
-              <AlphaLeaderboard
+              <ClassAlphaDashboard
                 classId={selectedClass}
                 className={classes.find(c => c.id === selectedClass)?.name || "الفصل"}
                 students={filteredStudentGrades.map(sg => {
                   let earned = 0;
+                  let violations = 0;
                   for (const cat of categories) {
                     const v = sg.grades[cat.id];
                     if (v == null) continue;
-                    earned += cat.is_deduction ? -Number(v) : Number(v);
+                    if (cat.is_deduction) {
+                      earned -= Number(v);
+                      if (Number(v) > 0) violations += 1;
+                    } else {
+                      earned += Number(v);
+                    }
                   }
                   return {
                     student_id: sg.student_id,
                     full_name: sg.full_name,
-                    class_name: "",
-                    class_id: selectedClass,
-                    manualScores: {},
-                    manualScoreIds: {},
-                    dailyIcons: {},
                     earnedTotal: earned,
+                    violationsCount: violations,
                   };
                 })}
               />
