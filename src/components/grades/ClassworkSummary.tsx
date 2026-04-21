@@ -230,14 +230,17 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const studentManualMap = manualMap.get(s.id) || new Map();
       const studentDailyMap = dailyIconsMap.get(s.id) || new Map();
       const studentDeductionMap = deductionTotalsMap.get(s.id) || new Map();
+      const studentDeductionCountMap = deductionCountsMap.get(s.id) || new Map();
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
       const dailyIcons: Record<string, DailyIcon[]> = {};
+      const deductionCounts: Record<string, number> = {};
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
         if (c.is_deduction) {
-          // Deduction columns reflect the cumulative daily deductions
+          // Deduction columns reflect the cumulative daily deductions (no max cap)
           manualScores[c.id] = studentDeductionMap.get(c.id) || 0;
+          deductionCounts[c.id] = studentDeductionCountMap.get(c.id) || 0;
         } else {
           manualScores[c.id] = m?.score ?? 0;
         }
@@ -247,7 +250,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       return {
         student_id: s.id, full_name: s.full_name,
         class_name: classMap.get(s.class_id!) || "", class_id: s.class_id!,
-        manualScores, manualScoreIds, dailyIcons,
+        manualScores, manualScoreIds, dailyIcons, deductionCounts,
         earnedTotal: earnedTotalsMap.get(s.id) || 0,
       };
     });
