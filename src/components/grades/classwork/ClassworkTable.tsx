@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { DailyIconComponent } from "./DailyIconComponent";
 import { getMaxDisplayIcons, calcManualSubtotal, isParticipation } from "./classwork-helpers";
 import type { CategoryInfo, SummaryRow } from "./classwork-types";
+import ViolationHistoryDialog from "./ViolationHistoryDialog";
 
 interface Props {
   students: SummaryRow[];
@@ -20,6 +21,10 @@ export default function ClassworkTable({
   students, categories, isEditing, tempEdits, setTempEdits,
   fillAllCatId, selectedPeriod, tableRef,
 }: Props) {
+  const [violationDialog, setViolationDialog] = useState<{
+    studentId: string; studentName: string; categoryId: string | null; categoryName: string;
+  } | null>(null);
+
   return (
     <>
       <div className="hidden print:block text-center mb-2">
@@ -77,7 +82,22 @@ export default function ClassworkTable({
                   "border-b border-border/40",
                 )}>
                   <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
-                  <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">{sg.full_name}</td>
+                  <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">
+                    <button
+                      type="button"
+                      onClick={() => setViolationDialog({
+                        studentId: sg.student_id,
+                        studentName: sg.full_name,
+                        categoryId: null,
+                        categoryName: "",
+                      })}
+                      className="text-right hover:text-primary hover:underline transition-colors no-print"
+                      title="عرض سجل كل المخالفات"
+                    >
+                      {sg.full_name}
+                    </button>
+                    <span className="hidden print:inline">{sg.full_name}</span>
+                  </td>
 
                   {categories.map(cat => {
                     const cellKey = `${sg.student_id}__${cat.id}`;
@@ -93,17 +113,26 @@ export default function ClassworkTable({
                           cat.is_deduction && "bg-destructive/10 dark:bg-destructive/20"
                         )}>
                           {cat.is_deduction ? (
-                            <span
-                              dir="ltr"
+                            <button
+                              type="button"
+                              onClick={() => deductionCount > 0 && setViolationDialog({
+                                studentId: sg.student_id,
+                                studentName: sg.full_name,
+                                categoryId: cat.id,
+                                categoryName: cat.name,
+                              })}
+                              disabled={deductionCount === 0}
                               className={cn(
-                                "text-xs font-bold tabular-nums",
+                                "text-xs font-bold tabular-nums w-full no-print",
                                 deductionCount > 0
-                                  ? "text-destructive dark:text-red-400"
-                                  : "text-muted-foreground"
+                                  ? "text-destructive dark:text-red-400 hover:underline cursor-pointer"
+                                  : "text-muted-foreground cursor-default"
                               )}
+                              dir="ltr"
+                              title={deductionCount > 0 ? "عرض سجل المخالفات" : ""}
                             >
                               {deductionCount}
-                            </span>
+                            </button>
                           ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
                               {icons.map((icon, idx) => (
@@ -165,6 +194,16 @@ export default function ClassworkTable({
           </tbody>
         </table>
       </div>
+
+      <ViolationHistoryDialog
+        open={!!violationDialog}
+        onOpenChange={(o) => { if (!o) setViolationDialog(null); }}
+        studentId={violationDialog?.studentId ?? null}
+        studentName={violationDialog?.studentName ?? ""}
+        categoryId={violationDialog?.categoryId ?? null}
+        categoryName={violationDialog?.categoryName}
+        period={selectedPeriod}
+      />
     </>
   );
 }
