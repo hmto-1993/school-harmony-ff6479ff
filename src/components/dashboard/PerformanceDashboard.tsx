@@ -229,6 +229,7 @@ export default function PerformanceDashboard() {
 
   const renderLevelTable = (rows: StudentRow[], isBottom?: boolean) => {
     const accentColor = isBottom ? "destructive" : "success";
+    const totalCount = levelsData.studentRows.length;
     return (
       <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
         <table className="w-full text-sm border-separate border-spacing-0">
@@ -242,6 +243,7 @@ export default function PerformanceDashboard() {
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2 first:rounded-tr-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>#</th>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الطالب</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الدرجة</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الترتيب</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 last:rounded-tl-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الفرق</th>
             </tr>
           </thead>
@@ -278,8 +280,20 @@ export default function PerformanceDashboard() {
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
-                  </td>
-                  <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
+                   </td>
+                   <td className="p-2.5 text-center border-l border-border/10 tabular-nums" dir="ltr">
+                     {(() => {
+                       const all = levelsData.studentRows;
+                       const rank = all.filter(s => s.total > row.total).length + 1;
+                       return (
+                         <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                           {rank}
+                           <span className="text-muted-foreground font-normal ms-1">/ {totalCount}</span>
+                         </span>
+                       );
+                     })()}
+                   </td>
+                   <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
                     <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
                       {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
                       {row.diff < 0 && <TrendingDown className="h-3 w-3" />}
