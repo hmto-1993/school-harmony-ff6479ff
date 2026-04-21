@@ -139,9 +139,11 @@ export default function PerformanceDashboard() {
       const maxTotal = t ? t.maxTotal : 0;
       return { name: s.full_name, score, diff: 0, total, maxTotal };
     });
-    const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.score, 0) / studentRows.length * 10) / 10 : 0;
-    studentRows.forEach(r => { r.diff = Math.round((r.score - classAvg) * 10) / 10; });
-    studentRows.sort((a, b) => b.score - a.score);
+    // Average & diff are computed on actual earned points (total) so the
+    // table column, the displayed average, and the +/- diff use the same scale.
+    const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.total, 0) / studentRows.length * 10) / 10 : 0;
+    studentRows.forEach(r => { r.diff = Math.round((r.total - classAvg) * 10) / 10; });
+    studentRows.sort((a, b) => b.total - a.total);
 
     return { classAverages, studentRows, classAvg, scatter, scatterAvg };
   };
@@ -327,7 +329,7 @@ export default function PerformanceDashboard() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{levelsData.classAvg}%</span></span>
+              <span className="text-xs text-muted-foreground">متوسط الدرجات: <span className="font-bold text-foreground tabular-nums">{levelsData.classAvg}</span></span>
             </div>
           </div>
         </CardHeader>
