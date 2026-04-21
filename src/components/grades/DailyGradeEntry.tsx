@@ -97,6 +97,35 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       setRadarSettings(s);
     });
   }, []);
+
+  // Cumulative interaction totals per student for the current class
+  // (used by Smart Radar's "target lowest" toggle).
+  const [cumulativeTotals, setCumulativeTotals] = React.useState<Record<string, number>>({});
+  React.useEffect(() => {
+    if (!selectedClass || !radarOpen) return;
+    let cancelled = false;
+    (async () => {
+      const { data: classStudents } = await supabase
+        .from("class_students")
+        .select("student_id")
+        .eq("class_id", selectedClass);
+      const ids = (classStudents || []).map((r: any) => r.student_id);
+      if (ids.length === 0) { if (!cancelled) setCumulativeTotals({}); return; }
+      const { data: gradeRows } = await supabase
+        .from("grades")
+        .select("student_id, score, category_id, grade_categories!inner(is_deduction)")
+        .in("student_id", ids);
+      const totals: Record<string, number> = {};
+      ids.forEach((id: string) => { totals[id] = 0; });
+      (gradeRows || []).forEach((g: any) => {
+        const isDeduction = g.grade_categories?.is_deduction;
+        const v = Number(g.score) || 0;
+        totals[g.student_id] = (totals[g.student_id] || 0) + (isDeduction ? -v : v);
+      });
+      if (!cancelled) setCumulativeTotals(totals);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedClass, radarOpen]);
   const {
     classes, categories, saving, selectedDate, setSelectedDate,
     selectedCategory, setSelectedCategory,
