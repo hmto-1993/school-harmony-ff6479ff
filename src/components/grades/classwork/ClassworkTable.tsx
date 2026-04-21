@@ -54,8 +54,8 @@ export default function ClassworkTable({
                         ? "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-red-400"
                         : "bg-warning/10 text-warning dark:bg-warning/20"
                   )}>
-                    <div>{cat.is_deduction ? "الخصم" : "الدرجة"}</div>
-                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
+                    <div>{cat.is_deduction ? "عدد المخالفات" : "الدرجة"}</div>
+                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `الخصم حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
                   </th>
                 </React.Fragment>
               ))}
