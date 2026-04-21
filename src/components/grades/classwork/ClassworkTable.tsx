@@ -41,10 +41,12 @@ export default function ClassworkTable({
                         ? "bg-destructive/15 text-destructive dark:bg-destructive/25 dark:text-red-400"
                         : "bg-info/10 text-info dark:bg-info/20"
                   )}>
-                    <div className="leading-tight">{cat.name.split(/\s*و\s*/).length > 1
-                      ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
-                      : cat.name
-                    }</div>
+                    <div className="leading-tight">{cat.is_deduction ? "مخالفة" : (
+                      cat.name.split(/\s*و\s*/).length > 1
+                        ? cat.name.split(/\s*و\s*/).map((part, pi) => <div key={pi}>{pi > 0 ? `و${part}` : part}</div>)
+                        : cat.name
+                    )}</div>
+                    {cat.is_deduction && <div className="text-[10px] opacity-80">العدد</div>}
                   </th>
                   <th className={cn(
                     "text-center p-2 font-semibold text-xs border-b-2 border-primary/20 min-w-[55px]",
@@ -55,7 +57,7 @@ export default function ClassworkTable({
                         : "bg-warning/10 text-warning dark:bg-warning/20"
                   )}>
                     <div>{cat.is_deduction ? "الخصم" : "الدرجة"}</div>
-                    <div className="text-[10px] opacity-80">{cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</div>
+                    <div className="text-[10px] opacity-80">{cat.is_deduction ? "مجموع الخصم" : `من ${Number(cat.max_score)}`}</div>
                   </th>
                 </React.Fragment>
               ))}
@@ -83,10 +85,26 @@ export default function ClassworkTable({
                     const maxDisplay = getMaxDisplayIcons(cat.name);
                     const icons = allIcons.slice(0, maxDisplay);
                     const manualScore = sg.manualScores[cat.id] ?? 0;
+                    const deductionCount = sg.deductionCounts?.[cat.id] ?? 0;
                     return (
                       <React.Fragment key={cat.id}>
-                        <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
-                          {icons.length > 0 && (
+                        <td className={cn(
+                          "p-1.5 text-center border-l border-border/10 border-r-2 border-r-border",
+                          cat.is_deduction && "bg-destructive/10 dark:bg-destructive/20"
+                        )}>
+                          {cat.is_deduction ? (
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                "text-xs font-bold tabular-nums",
+                                deductionCount > 0
+                                  ? "text-destructive dark:text-red-400"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {deductionCount}
+                            </span>
+                          ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
                               {icons.map((icon, idx) => (
                                 <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
