@@ -185,6 +185,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     })
   ), [filteredStudentGrades, violationCats]);
 
+  // Top performers (net score) for smart-card green glow
+  const topPerformerIds = React.useMemo(() => {
+    const scored = filteredStudentGrades.map(sg => {
+      let earned = 0;
+      for (const cat of categories) {
+        const v = sg.grades[cat.id];
+        if (v == null) continue;
+        earned += cat.is_deduction ? -Number(v) : Number(v);
+      }
+      return { id: sg.student_id, earned };
+    });
+    return new Set(
+      scored.filter(s => s.earned > 0).sort((a, b) => b.earned - a.earned).slice(0, 3).map(s => s.id)
+    );
+  }, [filteredStudentGrades, categories]);
+
   const buildViolationsTableHTML = () => {
     const headerCells = [
       '<th style="width:30px;">#</th>',
