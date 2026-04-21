@@ -634,6 +634,26 @@ export default function SmartRadar({
             {selectedStudent && !feedback && (
               <div className="mt-2 text-xs text-primary/70 font-medium animate-fade-in">تم الاختيار</div>
             )}
+            {selectedStudent && targetLowest && !feedback && (() => {
+              const score = selectedStudent.totalScore ?? 0;
+              // Rank ascending: 1 = lowest cumulative score
+              const sorted = [...students]
+                .map(s => s.totalScore ?? 0)
+                .sort((a, b) => a - b);
+              const rank = sorted.findIndex(v => v >= score) + 1;
+              const total = students.length;
+              return (
+                <div className="mt-2 inline-flex flex-wrap items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/15 border border-violet-400/40 text-violet-200 text-[11px] font-bold animate-fade-in shadow-md shadow-violet-500/20">
+                  <Target className="h-3.5 w-3.5 text-violet-300" />
+                  <span>سبب الاختيار:</span>
+                  <span className="text-violet-100">الأقل تفاعلاً</span>
+                  <span className="text-violet-300/70">•</span>
+                  <span>النقاط التراكمية: <span className="text-violet-100">{score}</span></span>
+                  <span className="text-violet-300/70">•</span>
+                  <span>الترتيب: <span className="text-violet-100">{rank}</span> من {total}</span>
+                </div>
+              );
+            })()}
 
             {/* ✓ / ✗ feedback overlay above student name */}
             {feedback === "correct" && (
