@@ -153,8 +153,10 @@ export default function PerformanceDashboard() {
       const d = new Date(); d.setDate(d.getDate() - 6);
       dateMin = d.toISOString().slice(0, 10);
     }
+    const catNameMap: Record<string, string> = {};
+    catFilter.forEach(c => { catNameMap[c.id] = c.name; });
     const levelsGrades = filteredGrades.filter(g => {
-      if (categoryIdFilter !== "all" && g.category_id !== categoryIdFilter) return false;
+      if (categoryIdFilter !== "all" && catNameMap[g.category_id] !== categoryIdFilter) return false;
       if (dateMin && g.date < dateMin) return false;
       return true;
     });
