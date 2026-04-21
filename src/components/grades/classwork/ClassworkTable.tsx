@@ -85,10 +85,26 @@ export default function ClassworkTable({
                     const maxDisplay = getMaxDisplayIcons(cat.name);
                     const icons = allIcons.slice(0, maxDisplay);
                     const manualScore = sg.manualScores[cat.id] ?? 0;
+                    const deductionCount = sg.deductionCounts?.[cat.id] ?? 0;
                     return (
                       <React.Fragment key={cat.id}>
-                        <td className="p-1.5 text-center border-l border-border/10 border-r-2 border-r-border">
-                          {icons.length > 0 && (
+                        <td className={cn(
+                          "p-1.5 text-center border-l border-border/10 border-r-2 border-r-border",
+                          cat.is_deduction && "bg-destructive/10 dark:bg-destructive/20"
+                        )}>
+                          {cat.is_deduction ? (
+                            <span
+                              dir="ltr"
+                              className={cn(
+                                "text-xs font-bold tabular-nums",
+                                deductionCount > 0
+                                  ? "text-destructive dark:text-red-400"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {deductionCount}
+                            </span>
+                          ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
                               {icons.map((icon, idx) => (
                                 <DailyIconComponent key={idx} icon={icon} size="h-3.5 w-3.5" />
