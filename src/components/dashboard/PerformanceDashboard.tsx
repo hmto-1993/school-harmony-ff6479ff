@@ -229,6 +229,7 @@ export default function PerformanceDashboard() {
 
   const renderLevelTable = (rows: StudentRow[], isBottom?: boolean) => {
     const accentColor = isBottom ? "destructive" : "success";
+    const totalCount = levelsData.studentRows.length;
     return (
       <div className="overflow-auto rounded-xl border border-border/40 shadow-sm">
         <table className="w-full text-sm border-separate border-spacing-0">
@@ -242,6 +243,7 @@ export default function PerformanceDashboard() {
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2 first:rounded-tr-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>#</th>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الطالب</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الدرجة</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الترتيب</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 last:rounded-tl-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الفرق</th>
             </tr>
           </thead>
