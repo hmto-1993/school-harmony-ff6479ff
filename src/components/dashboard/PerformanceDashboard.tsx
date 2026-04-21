@@ -239,7 +239,7 @@ export default function PerformanceDashboard() {
             )}>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2 first:rounded-tr-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>#</th>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الطالب</th>
-              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>النسبة %</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الدرجة</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 last:rounded-tl-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الفرق</th>
             </tr>
           </thead>
