@@ -3,7 +3,7 @@ import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check, Target } from "lucide-react";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
@@ -35,6 +35,8 @@ export function fireRadarConfetti(el: HTMLElement | null) {
 interface Student {
   student_id: string;
   full_name: string;
+  /** Total cumulative interaction score for the subject (used by "target lowest" mode) */
+  totalScore?: number;
 }
 
 export interface RadarSettings {
@@ -80,6 +82,7 @@ export default function SmartRadar({
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
   const [excludeParticipated, setExcludeParticipated] = useState(true);
+  const [targetLowest, setTargetLowest] = useState(false);
 
   // Quick duration override (before spinning)
   const [localDuration, setLocalDuration] = useState(settings.quizDuration);
