@@ -96,14 +96,14 @@ export default function PerformanceDashboard() {
     return { dailyCats: daily, examCats: exams };
   }, [categories]);
 
-  const computeData = (catFilter: CategoryInfo[], levelsFilter: string) => {
+  const computeData = (catFilter: CategoryInfo[], levelsFilter: string, periodFilter: "today" | "7d" | "all", categoryIdFilter: string) => {
     const catIds = new Set(catFilter.map(c => c.id));
     const catMax: Record<string, number> = {};
     catFilter.forEach(c => { catMax[c.id] = c.max_score; });
 
     const filteredGrades = grades.filter(g => catIds.has(g.category_id) && g.score != null);
 
-    // Per-student totals
+    // Per-student totals (used for charts — uses all dates & all categories of the type)
     const studentTotals: Record<string, { total: number; maxTotal: number }> = {};
     filteredGrades.forEach(g => {
       if (!studentTotals[g.student_id]) studentTotals[g.student_id] = { total: 0, maxTotal: 0 };
@@ -132,17 +132,34 @@ export default function PerformanceDashboard() {
     const scatterAvg = scatterRows.length > 0 ? Math.round(scatterRows.reduce((a, b) => a + b.score, 0) / scatterRows.length * 10) / 10 : 0;
     const scatter = scatterRows.map((r, i) => ({ name: r.name, score: r.score, index: i + 1 }));
 
-    // Levels uses levelsFilter
+    // === Levels computation: apply period + category filters ===
+    let dateMin: string | null = null;
+    if (periodFilter === "today") {
+      dateMin = new Date().toISOString().slice(0, 10);
+    } else if (periodFilter === "7d") {
+      const d = new Date(); d.setDate(d.getDate() - 6);
+      dateMin = d.toISOString().slice(0, 10);
+    }
+    const levelsGrades = filteredGrades.filter(g => {
+      if (categoryIdFilter !== "all" && g.category_id !== categoryIdFilter) return false;
+      if (dateMin && g.date < dateMin) return false;
+      return true;
+    });
+    const levelsTotals: Record<string, { total: number; maxTotal: number }> = {};
+    levelsGrades.forEach(g => {
+      if (!levelsTotals[g.student_id]) levelsTotals[g.student_id] = { total: 0, maxTotal: 0 };
+      levelsTotals[g.student_id].total += g.score!;
+      levelsTotals[g.student_id].maxTotal += (catMax[g.category_id] || 0);
+    });
+
     const levelsStudents = levelsFilter === "all" ? students : students.filter(s => s.class_id === levelsFilter);
     let studentRows: StudentRow[] = levelsStudents.map(s => {
-      const t = studentTotals[s.id];
+      const t = levelsTotals[s.id];
       const score = t ? (t.maxTotal > 0 ? Math.round((t.total / t.maxTotal) * 100 * 10) / 10 : 0) : 0;
       const total = t ? Math.round(t.total * 10) / 10 : 0;
       const maxTotal = t ? t.maxTotal : 0;
       return { name: s.full_name, score, diff: 0, total, maxTotal };
     });
-    // Average & diff are computed on actual earned points (total) so the
-    // table column, the displayed average, and the +/- diff use the same scale.
     const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.total, 0) / studentRows.length * 10) / 10 : 0;
     studentRows.forEach(r => { r.diff = Math.round((r.total - classAvg) * 10) / 10; });
     studentRows.sort((a, b) => b.total - a.total);
@@ -150,9 +167,10 @@ export default function PerformanceDashboard() {
     return { classAverages, studentRows, classAvg, scatter, scatterAvg };
   };
 
-  const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter]);
-  const examData = useMemo(() => computeData(examCats, levelsClassFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter]);
+  const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
+  const examData = useMemo(() => computeData(examCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
   const levelsData = levelsTypeFilter === "daily" ? dailyData : examData;
+  const activeCats = levelsTypeFilter === "daily" ? dailyCats : examCats;
 
   const renderCharts = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
     <div className="space-y-4">
