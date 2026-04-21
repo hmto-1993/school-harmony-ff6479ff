@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { DailyIconComponent } from "./DailyIconComponent";
 import { getMaxDisplayIcons, calcManualSubtotal, isParticipation } from "./classwork-helpers";
 import type { CategoryInfo, SummaryRow } from "./classwork-types";
+import ViolationHistoryDialog from "./ViolationHistoryDialog";
 
 interface Props {
   students: SummaryRow[];
@@ -20,6 +21,10 @@ export default function ClassworkTable({
   students, categories, isEditing, tempEdits, setTempEdits,
   fillAllCatId, selectedPeriod, tableRef,
 }: Props) {
+  const [violationDialog, setViolationDialog] = useState<{
+    studentId: string; studentName: string; categoryId: string | null; categoryName: string;
+  } | null>(null);
+
   return (
     <>
       <div className="hidden print:block text-center mb-2">
