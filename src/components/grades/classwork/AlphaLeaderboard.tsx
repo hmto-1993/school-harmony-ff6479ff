@@ -108,28 +108,29 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
     <div
       className={cn(
         "relative overflow-hidden rounded-2xl border backdrop-blur-xl no-print transition-all duration-500",
-        "border-white/10 dark:border-white/10",
-        "bg-gradient-to-br from-slate-900/70 via-indigo-950/60 to-slate-900/70",
-        "shadow-[0_8px_40px_rgba(0,0,0,0.35)]"
+        "border-amber-200/60 dark:border-white/10",
+        "bg-gradient-to-br from-amber-50/90 via-white/80 to-amber-50/90",
+        "dark:bg-gradient-to-br dark:from-slate-900/70 dark:via-indigo-950/60 dark:to-slate-900/70",
+        "shadow-[0_8px_30px_rgba(251,191,36,0.18)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.35)]"
       )}
     >
       {/* Decorative cosmic blobs */}
-      <div className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full bg-amber-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-indigo-500/15 blur-3xl" />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.04] [background-image:radial-gradient(circle_at_1px_1px,white_1px,transparent_0)] [background-size:18px_18px]" />
+      <div className="pointer-events-none absolute -top-20 -right-16 h-56 w-56 rounded-full bg-amber-400/20 dark:bg-amber-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -left-16 h-56 w-56 rounded-full bg-indigo-400/15 dark:bg-indigo-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.05] dark:opacity-[0.04] [background-image:radial-gradient(circle_at_1px_1px,hsl(var(--foreground))_1px,transparent_0)] [background-size:18px_18px]" />
 
       {/* Header */}
-      <div className="relative flex items-center justify-between gap-2 px-4 py-3 border-b border-white/5">
+      <div className="relative flex items-center justify-between gap-2 px-4 py-3 border-b border-amber-200/50 dark:border-white/5">
         <div className="flex items-center gap-2.5">
           <div className="relative">
-            <Trophy className="h-5 w-5 text-amber-300" />
-            <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-amber-200 animate-pulse" />
+            <Trophy className="h-5 w-5 text-amber-500 dark:text-amber-300" />
+            <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-amber-400 dark:text-amber-200 animate-pulse" />
           </div>
           <div className="flex flex-col">
-            <h3 className="text-sm font-bold bg-gradient-to-l from-amber-200 via-yellow-100 to-amber-300 bg-clip-text text-transparent">
+            <h3 className="text-sm font-bold bg-gradient-to-l from-amber-600 via-yellow-500 to-amber-600 dark:from-amber-200 dark:via-yellow-100 dark:to-amber-300 bg-clip-text text-transparent">
               لوحة شرف ألفا
             </h3>
-            <p className="text-[10px] text-slate-300/70">
+            <p className="text-[10px] text-muted-foreground dark:text-slate-300/70">
               المتميزون في {className} — حسب صافي الدرجات
             </p>
           </div>
@@ -138,7 +139,8 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
           onClick={() => setHidden(!hidden)}
           className={cn(
             "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300",
-            "bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 hover:border-white/20",
+            "bg-amber-100/70 hover:bg-amber-200/70 text-amber-800 border border-amber-300/60",
+            "dark:bg-white/5 dark:hover:bg-white/10 dark:text-slate-200 dark:border-white/10 dark:hover:border-white/20",
             "backdrop-blur-md"
           )}
           title={hidden ? "إظهار اللوحة" : "إخفاء اللوحة"}
@@ -160,7 +162,7 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
           >
             <div className="relative px-4 pt-6 pb-4">
               {podium.length === 0 ? (
-                <p className="text-center text-sm text-slate-300/60 py-6">
+                <p className="text-center text-sm text-muted-foreground dark:text-slate-300/60 py-6">
                   لا توجد درجات كافية لعرض المتصدرين بعد
                 </p>
               ) : (
