@@ -26,9 +26,9 @@ interface ViolationRow {
   category_name: string;
 }
 
-export default function ViolationHistoryDialog({
+const ViolationHistoryDialog = React.forwardRef<HTMLDivElement, Props>(function ViolationHistoryDialog({
   open, onOpenChange, studentId, studentName, categoryId, categoryName, period,
-}: Props) {
+}, _ref) {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<ViolationRow[]>([]);
 
