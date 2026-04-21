@@ -17,8 +17,10 @@ interface CategoryInfo { id: string; name: string; max_score: number; class_id: 
 
 interface StudentRow {
   name: string;
-  score: number;
+  score: number; // percentage (used for sorting/diff)
   diff: number;
+  total: number; // actual earned points
+  maxTotal: number; // maximum possible points
 }
 
 const EXAM_KEYWORDS = ["اختبار", "امتحان", "فترة", "نهائي", "test", "exam"];
