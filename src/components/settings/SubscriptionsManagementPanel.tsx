@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon, Shield } from "lucide-react";
+import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon, Shield, KeyRound, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tier = "basic" | "premium";
