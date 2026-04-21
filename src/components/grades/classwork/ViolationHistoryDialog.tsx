@@ -183,4 +183,6 @@ const ViolationHistoryDialog = React.forwardRef<HTMLDivElement, Props>(function 
       </DialogContent>
     </Dialog>
   );
-}
+});
+
+export default ViolationHistoryDialog;
