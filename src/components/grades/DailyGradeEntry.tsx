@@ -22,6 +22,7 @@ import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/comp
 import { formTemplates } from "@/components/forms/form-templates";
 import FormDialog from "@/components/forms/FormDialog";
 import SmartRadar from "./SmartRadar";
+import AlphaLeaderboard from "./classwork/AlphaLeaderboard";
 import { supabase } from "@/integrations/supabase/client";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
