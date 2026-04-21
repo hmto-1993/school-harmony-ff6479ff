@@ -218,10 +218,8 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
                         {/* Rank number badge */}
                         <div
                           className={cn(
-                            "relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black border-2",
-                            cfg.border,
-                            "bg-slate-900/60 backdrop-blur",
-                            cfg.text
+                            "relative z-10 flex h-7 w-7 items-center justify-center rounded-full text-xs font-black border-2 backdrop-blur",
+                            cfg.rankBadge
                           )}
                         >
                           {p.rank}
@@ -241,10 +239,8 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
                         {/* Score */}
                         <div
                           className={cn(
-                            "relative z-10 mt-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold border",
-                            "bg-slate-900/50 backdrop-blur",
-                            cfg.border,
-                            cfg.text
+                            "relative z-10 mt-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold border backdrop-blur",
+                            cfg.scoreBadge
                           )}
                         >
                           {p.score} نقطة
