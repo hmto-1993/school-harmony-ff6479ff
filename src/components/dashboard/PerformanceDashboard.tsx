@@ -58,7 +58,7 @@ export default function PerformanceDashboard() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
-  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"daily" | "exams">("daily");
+  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"participation" | "homework" | "daily" | "exams">("daily");
   const [levelsPeriodFilter, setLevelsPeriodFilter] = useState<"today" | "7d" | "all">("all");
   const [levelsCategoryFilter, setLevelsCategoryFilter] = useState<string>("all");
   const [isVisible, setIsVisible] = useState(false);
