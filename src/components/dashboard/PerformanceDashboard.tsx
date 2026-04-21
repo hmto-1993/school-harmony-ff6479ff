@@ -264,6 +264,18 @@ export default function PerformanceDashboard() {
                   <td className={cn("p-2.5 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>
                     {isBottom ? levelsData.studentRows.length - (rows.length - 1 - i) : i + 1}
                   </td>
+                  <td className="p-2.5 text-center border-l border-border/10 tabular-nums" dir="ltr">
+                    {(() => {
+                      const all = levelsData.studentRows;
+                      const rank = all.filter(s => s.total > row.total).length + 1;
+                      return (
+                        <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                          {rank}
+                          <span className="text-muted-foreground font-normal ms-1">/ {totalCount}</span>
+                        </span>
+                      );
+                    })()}
+                  </td>
                   <td className="p-2.5 font-medium border-l border-border/10">
                     <span className="flex items-center gap-1.5">
                       {!isBottom && <Star className="h-3.5 w-3.5 text-amber-500 fill-amber-500 shrink-0" />}
@@ -280,19 +292,7 @@ export default function PerformanceDashboard() {
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
-                   </td>
-                   <td className="p-2.5 text-center border-l border-border/10 tabular-nums" dir="ltr">
-                     {(() => {
-                       const all = levelsData.studentRows;
-                       const rank = all.filter(s => s.total > row.total).length + 1;
-                       return (
-                         <span className="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
-                           {rank}
-                           <span className="text-muted-foreground font-normal ms-1">/ {totalCount}</span>
-                         </span>
-                       );
-                     })()}
-                   </td>
+                  </td>
                    <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
                     <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
                       {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
