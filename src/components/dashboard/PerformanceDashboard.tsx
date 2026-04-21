@@ -17,8 +17,10 @@ interface CategoryInfo { id: string; name: string; max_score: number; class_id: 
 
 interface StudentRow {
   name: string;
-  score: number;
+  score: number; // percentage (used for sorting/diff)
   diff: number;
+  total: number; // actual earned points
+  maxTotal: number; // maximum possible points
 }
 
 const EXAM_KEYWORDS = ["اختبار", "امتحان", "فترة", "نهائي", "test", "exam"];
@@ -130,10 +132,12 @@ export default function PerformanceDashboard() {
 
     // Levels uses levelsFilter
     const levelsStudents = levelsFilter === "all" ? students : students.filter(s => s.class_id === levelsFilter);
-    let studentRows = levelsStudents.map(s => {
+    let studentRows: StudentRow[] = levelsStudents.map(s => {
       const t = studentTotals[s.id];
       const score = t ? (t.maxTotal > 0 ? Math.round((t.total / t.maxTotal) * 100 * 10) / 10 : 0) : 0;
-      return { name: s.full_name, score, diff: 0 };
+      const total = t ? Math.round(t.total * 10) / 10 : 0;
+      const maxTotal = t ? t.maxTotal : 0;
+      return { name: s.full_name, score, diff: 0, total, maxTotal };
     });
     const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.score, 0) / studentRows.length * 10) / 10 : 0;
     studentRows.forEach(r => { r.diff = Math.round((r.score - classAvg) * 10) / 10; });
@@ -235,7 +239,7 @@ export default function PerformanceDashboard() {
             )}>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2 first:rounded-tr-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>#</th>
               <th className={cn("text-right p-2.5 font-semibold text-xs border-b-2", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الطالب</th>
-              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>النسبة %</th>
+              <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 bg-primary/5 dark:bg-primary/10", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الدرجة</th>
               <th className={cn("text-center p-2.5 font-semibold text-xs border-b-2 last:rounded-tl-xl", isBottom ? "text-destructive border-destructive/20" : "text-success border-success/20")}>الفرق</th>
             </tr>
           </thead>
@@ -263,7 +267,16 @@ export default function PerformanceDashboard() {
                       {row.name}
                     </span>
                   </td>
-                  <td className="p-2.5 text-center font-bold bg-primary/[0.02] dark:bg-primary/[0.05] border-l border-border/10">{row.score}%</td>
+                  <td className="p-2.5 text-center font-bold bg-primary/[0.02] dark:bg-primary/[0.05] border-l border-border/10 tabular-nums" dir="ltr">
+                    {row.maxTotal > 0 ? (
+                      <>
+                        <span>{row.total}</span>
+                        <span className="text-muted-foreground font-normal"> / {row.maxTotal}</span>
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
                   <td className={cn("p-2.5 text-center", isLast && "last:rounded-bl-xl")}>
                     <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-semibold border ${getPerformanceColor(row.diff)}`}>
                       {row.diff > 0 && <TrendingUp className="h-3 w-3" />}
