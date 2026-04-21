@@ -329,7 +329,7 @@ export default function PerformanceDashboard() {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-xs text-muted-foreground">المتوسط: <span className="font-bold text-foreground">{levelsData.classAvg}%</span></span>
+              <span className="text-xs text-muted-foreground">متوسط الدرجات: <span className="font-bold text-foreground tabular-nums">{levelsData.classAvg}</span></span>
             </div>
           </div>
         </CardHeader>
