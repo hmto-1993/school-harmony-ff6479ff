@@ -451,6 +451,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
               />
             </CardContent>
           </Card>
+          </div>
         );
       })}
     </div>
