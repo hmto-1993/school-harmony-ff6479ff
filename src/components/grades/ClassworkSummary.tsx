@@ -46,8 +46,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             <th style="width:30px;">#</th>
             <th style="width:24%;">الطالب</th>
             ${group.categories.map((cat) => `
-              <th style="width:auto;border-right:2px solid #93c5fd;">${cat.name}</th>
-              <th style="width:auto;">الدرجة<br><span style="font-size:9px;color:#64748b;">من ${Number(cat.max_score)}</span></th>
+              <th style="width:auto;border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.name}</th>
+              <th style="width:auto;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "الخصم" : "الدرجة"}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</span></th>
             `).join("")}
             <th style="width:auto;">الإجمالي</th>
             <th style="width:auto;background:#ecfdf5;color:#059669;">الدرجات المكتسبة</th>
@@ -65,9 +65,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                   const iconsHTML = icons.length
                     ? `<div class="icons-cell">${icons.map(getPrintIconSpan).join("")}</div>`
                     : "";
+                  const rawScore = student.manualScores[cat.id] ?? 0;
+                  const scoreDisplay = cat.is_deduction && rawScore > 0
+                    ? `<span style="color:#dc2626;font-weight:bold;">−${rawScore}</span>`
+                    : String(rawScore);
                   return `
-                    <td style="border-right:2px solid #93c5fd;">${iconsHTML}</td>
-                    <td>${student.manualScores[cat.id] ?? 0}</td>
+                    <td style="border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fef2f2;" : ""}">${iconsHTML}</td>
+                    <td style="${cat.is_deduction ? "background:#fef2f2;" : ""}">${scoreDisplay}</td>
                   `;
                 }).join("")}
                 <td class="subtotal-cell">${subtotal.score} / ${subtotal.max}</td>
