@@ -17,6 +17,7 @@ import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import type { ClassInfo, CategoryInfo, SummaryRow, ClassworkSummaryProps } from "./classwork/classwork-types";
 import { isParticipation, DEFAULT_MAX_SLOTS, getMaxDisplayIcons, restoreSlotsFromScore, calcManualSubtotal } from "./classwork/classwork-helpers";
 import ClassworkTable from "./classwork/ClassworkTable";
+import AlphaLeaderboard from "./classwork/AlphaLeaderboard";
 import type { DailyIcon } from "./classwork/classwork-types";
 
 export default function ClassworkSummary({ selectedClass, onClassChange, selectedPeriod = 1 }: ClassworkSummaryProps) {
@@ -347,7 +348,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         const isEditing = editingClassId === group.id;
 
         return (
-          <Card key={group.id} className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+          <div key={group.id} className="space-y-3">
+          <AlphaLeaderboard classId={group.id} className={group.name} students={group.students} />
+          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
             <CardHeader className="pb-3 no-print">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2">
