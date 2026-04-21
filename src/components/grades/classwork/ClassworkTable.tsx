@@ -194,6 +194,16 @@ export default function ClassworkTable({
           </tbody>
         </table>
       </div>
+
+      <ViolationHistoryDialog
+        open={!!violationDialog}
+        onOpenChange={(o) => { if (!o) setViolationDialog(null); }}
+        studentId={violationDialog?.studentId ?? null}
+        studentName={violationDialog?.studentName ?? ""}
+        categoryId={violationDialog?.categoryId ?? null}
+        categoryName={violationDialog?.categoryName}
+        period={selectedPeriod}
+      />
     </>
   );
 }
