@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ScatterChart, Scatter, ZAxis, Cell,
 } from "recharts";
-import { Trophy, Users, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen, ClipboardList } from "lucide-react";
+import { Trophy, Users, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen, ClipboardList, MessageSquare, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
@@ -24,7 +24,11 @@ interface StudentRow {
 }
 
 const EXAM_KEYWORDS = ["اختبار", "امتحان", "فترة", "نهائي", "test", "exam"];
+const HOMEWORK_KEYWORDS = ["واجب", "homework"];
+const PARTICIPATION_KEYWORDS = ["مشارك", "تفاعل", "participation"];
 const isExamCategory = (name: string) => EXAM_KEYWORDS.some(k => name.includes(k));
+const isHomeworkCategory = (name: string) => HOMEWORK_KEYWORDS.some(k => name.includes(k));
+const isParticipationCategory = (name: string) => PARTICIPATION_KEYWORDS.some(k => name.includes(k));
 
 function getPerformanceColor(diff: number) {
   if (diff >= 5) return "bg-emerald-100 text-emerald-700 border-emerald-200";
@@ -54,7 +58,7 @@ export default function PerformanceDashboard() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
-  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"daily" | "exams">("daily");
+  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"participation" | "homework" | "daily" | "exams">("daily");
   const [levelsPeriodFilter, setLevelsPeriodFilter] = useState<"today" | "7d" | "all">("all");
   const [levelsCategoryFilter, setLevelsCategoryFilter] = useState<string>("all");
   const [isVisible, setIsVisible] = useState(false);
@@ -90,11 +94,20 @@ export default function PerformanceDashboard() {
     setCategories(cat || []);
   };
 
-  const { dailyCats, examCats } = useMemo(() => {
-    const daily = categories.filter(c => !isExamCategory(c.name));
+  const { dailyCats, examCats, participationCats, homeworkCats } = useMemo(() => {
     const exams = categories.filter(c => isExamCategory(c.name));
-    return { dailyCats: daily, examCats: exams };
+    const daily = categories.filter(c => !isExamCategory(c.name));
+    const participation = daily.filter(c => isParticipationCategory(c.name));
+    const homework = daily.filter(c => isHomeworkCategory(c.name));
+    return { dailyCats: daily, examCats: exams, participationCats: participation, homeworkCats: homework };
   }, [categories]);
+
+  // Build a unique-by-name list for the category filter dropdown so duplicates across classes don't repeat.
+  const uniqueCatsByName = (cats: CategoryInfo[]) => {
+    const map = new Map<string, CategoryInfo>();
+    cats.forEach(c => { if (!map.has(c.name)) map.set(c.name, c); });
+    return Array.from(map.values());
+  };
 
   const computeData = (catFilter: CategoryInfo[], levelsFilter: string, periodFilter: "today" | "7d" | "all", categoryIdFilter: string) => {
     const catIds = new Set(catFilter.map(c => c.id));
@@ -140,8 +153,10 @@ export default function PerformanceDashboard() {
       const d = new Date(); d.setDate(d.getDate() - 6);
       dateMin = d.toISOString().slice(0, 10);
     }
+    const catNameMap: Record<string, string> = {};
+    catFilter.forEach(c => { catNameMap[c.id] = c.name; });
     const levelsGrades = filteredGrades.filter(g => {
-      if (categoryIdFilter !== "all" && g.category_id !== categoryIdFilter) return false;
+      if (categoryIdFilter !== "all" && catNameMap[g.category_id] !== categoryIdFilter) return false;
       if (dateMin && g.date < dateMin) return false;
       return true;
     });
@@ -167,10 +182,19 @@ export default function PerformanceDashboard() {
     return { classAverages, studentRows, classAvg, scatter, scatterAvg };
   };
 
-  const dailyData = useMemo(() => computeData(dailyCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [dailyCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
-  const examData = useMemo(() => computeData(examCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter), [examCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]);
-  const levelsData = levelsTypeFilter === "daily" ? dailyData : examData;
-  const activeCats = levelsTypeFilter === "daily" ? dailyCats : examCats;
+  const levelsCatsByType: Record<string, CategoryInfo[]> = {
+    daily: dailyCats,
+    participation: participationCats,
+    homework: homeworkCats,
+    exams: examCats,
+  };
+  const activeCats = levelsCatsByType[levelsTypeFilter] || dailyCats;
+  const levelsData = useMemo(
+    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter),
+    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]
+  );
+  const dailyData = useMemo(() => computeData(dailyCats, "all", "all", "all"), [dailyCats, grades, students, classes, selectedClass]);
+  const examData = useMemo(() => computeData(examCats, "all", "all", "all"), [examCats, grades, students, classes, selectedClass]);
 
   const renderCharts = (data: ReturnType<typeof computeData>, emptyMsg: string) => (
     <div className="space-y-4">
@@ -343,12 +367,14 @@ export default function PerformanceDashboard() {
               مستويات الطلاب
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as "daily" | "exams"); setLevelsCategoryFilter("all"); }}>
+              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as any); setLevelsCategoryFilter("all"); }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="daily">المشاركة والواجبات</SelectItem>
+                  <SelectItem value="participation">المشاركة فقط</SelectItem>
+                  <SelectItem value="homework">الواجبات فقط</SelectItem>
                   <SelectItem value="exams">الاختبارات</SelectItem>
                 </SelectContent>
               </Select>
@@ -368,8 +394,8 @@ export default function PerformanceDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">كل الفئات</SelectItem>
-                  {activeCats.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  {uniqueCatsByName(activeCats).map(c => (
+                    <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
