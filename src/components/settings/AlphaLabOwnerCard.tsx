@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { BetaChangeBadge } from "./BetaChangeBadge";
 
 interface BetaFeatureRow {
   id: string;
