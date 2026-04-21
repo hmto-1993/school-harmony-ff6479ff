@@ -219,12 +219,18 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const classCats = cats.filter((c) => c.class_id === s.class_id || c.class_id === null);
       const studentManualMap = manualMap.get(s.id) || new Map();
       const studentDailyMap = dailyIconsMap.get(s.id) || new Map();
+      const studentDeductionMap = deductionTotalsMap.get(s.id) || new Map();
       const manualScores: Record<string, number> = {};
       const manualScoreIds: Record<string, string> = {};
       const dailyIcons: Record<string, DailyIcon[]> = {};
       classCats.forEach((c) => {
         const m = studentManualMap.get(c.id);
-        manualScores[c.id] = m?.score ?? 0;
+        if (c.is_deduction) {
+          // Deduction columns reflect the cumulative daily deductions
+          manualScores[c.id] = studentDeductionMap.get(c.id) || 0;
+        } else {
+          manualScores[c.id] = m?.score ?? 0;
+        }
         if (m?.id) manualScoreIds[c.id] = m.id;
         dailyIcons[c.id] = studentDailyMap.get(c.id) || [];
       });
