@@ -181,8 +181,9 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const cat = cats.find(c => c.id === g.category_id);
       if (!cat) return;
 
-      // Accumulate earned total
-      earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + score);
+      // Accumulate earned total (deductions reduce, others add)
+      const delta = cat.is_deduction ? -score : score;
+      earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
 
       if (!dailyIconsMap.has(g.student_id)) dailyIconsMap.set(g.student_id, new Map());
       const studentMap = dailyIconsMap.get(g.student_id)!;
