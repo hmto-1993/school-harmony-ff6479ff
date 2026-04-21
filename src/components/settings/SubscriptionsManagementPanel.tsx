@@ -376,6 +376,54 @@ export default function SubscriptionsManagementPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={!!pwTarget} onOpenChange={(o) => { if (!o) { setPwTarget(null); setNewPassword(""); setShowPw(false); } }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-amber-600" />
+              تغيير كلمة المرور: {pwTarget?.full_name}
+            </DialogTitle>
+            <DialogDescription>
+              ستحل كلمة المرور الجديدة محل القديمة فوراً. يجب أن تحتوي على مزيج من الحروف والأرقام والرموز.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>كلمة المرور الجديدة</Label>
+            <div className="relative">
+              <Input
+                type={showPw ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="مثال: Teacher@2026"
+                className="pl-10"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              يجب أن تجمع بين حروف (A-Z أو ا-ي) وأرقام (0-9) ورموز (مثل @ # $ ! %).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPwTarget(null); setNewPassword(""); setShowPw(false); }} disabled={pwBusy}>
+              إلغاء
+            </Button>
+            <Button onClick={changePassword} disabled={pwBusy || !newPassword} className="gap-2">
+              {pwBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              حفظ كلمة المرور
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
