@@ -58,9 +58,9 @@ export default function PerformanceDashboard() {
   const [categories, setCategories] = useState<CategoryInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState("all");
   const [levelsClassFilter, setLevelsClassFilter] = useState("all");
-  const [levelsTypeFilter, setLevelsTypeFilter] = useState<"participation" | "homework" | "daily" | "exams">("daily");
+  // Unified scope filter: "type:daily" | "type:participation" | "type:homework" | "type:exams" | "cat:<name>"
+  const [levelsScopeFilter, setLevelsScopeFilter] = useState<string>("type:daily");
   const [levelsPeriodFilter, setLevelsPeriodFilter] = useState<"today" | "7d" | "all">("all");
-  const [levelsCategoryFilter, setLevelsCategoryFilter] = useState<string>("all");
   const [isVisible, setIsVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -188,10 +188,15 @@ export default function PerformanceDashboard() {
     homework: homeworkCats,
     exams: examCats,
   };
-  const activeCats = levelsCatsByType[levelsTypeFilter] || dailyCats;
+  // Resolve unified scope -> active categories + category-name filter
+  const [scopeKind, scopeValue] = levelsScopeFilter.split(":");
+  const activeCats = scopeKind === "type"
+    ? (levelsCatsByType[scopeValue] || dailyCats)
+    : categories.filter(c => c.name === scopeValue);
+  const activeCategoryName = scopeKind === "cat" ? scopeValue : "all";
   const levelsData = useMemo(
-    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter),
-    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]
+    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, activeCategoryName),
+    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, activeCategoryName]
   );
   const dailyData = useMemo(() => computeData(dailyCats, "all", "all", "all"), [dailyCats, grades, students, classes, selectedClass]);
   const examData = useMemo(() => computeData(examCats, "all", "all", "all"), [examCats, grades, students, classes, selectedClass]);
@@ -367,15 +372,21 @@ export default function PerformanceDashboard() {
               مستويات الطلاب
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as any); setLevelsCategoryFilter("all"); }}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
+              <Select value={levelsScopeFilter} onValueChange={setLevelsScopeFilter}>
+                <SelectTrigger className="w-[200px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">المشاركة والواجبات</SelectItem>
-                  <SelectItem value="participation">المشاركة فقط</SelectItem>
-                  <SelectItem value="homework">الواجبات فقط</SelectItem>
-                  <SelectItem value="exams">الاختبارات</SelectItem>
+                  <SelectItem value="type:daily">المشاركة والواجبات</SelectItem>
+                  <SelectItem value="type:participation">المشاركة فقط</SelectItem>
+                  <SelectItem value="type:homework">الواجبات فقط</SelectItem>
+                  <SelectItem value="type:exams">الاختبارات</SelectItem>
+                  {uniqueCatsByName(categories).length > 0 && (
+                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-muted-foreground border-t border-border/50">— فئة محددة —</div>
+                  )}
+                  {uniqueCatsByName(categories).map(c => (
+                    <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsPeriodFilter} onValueChange={(v) => setLevelsPeriodFilter(v as "today" | "7d" | "all")}>
@@ -386,17 +397,6 @@ export default function PerformanceDashboard() {
                   <SelectItem value="today">اليوم</SelectItem>
                   <SelectItem value="7d">آخر 7 أيام</SelectItem>
                   <SelectItem value="all">كامل الفصل</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={levelsCategoryFilter} onValueChange={setLevelsCategoryFilter}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
-                  <SelectValue placeholder="الفئة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">كل الفئات</SelectItem>
-                  {uniqueCatsByName(activeCats).map(c => (
-                    <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
