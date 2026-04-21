@@ -98,17 +98,26 @@ export default function ClassworkTable({
                           cat.is_deduction && "bg-destructive/10 dark:bg-destructive/20"
                         )}>
                           {cat.is_deduction ? (
-                            <span
-                              dir="ltr"
+                            <button
+                              type="button"
+                              onClick={() => deductionCount > 0 && setViolationDialog({
+                                studentId: sg.student_id,
+                                studentName: sg.full_name,
+                                categoryId: cat.id,
+                                categoryName: cat.name,
+                              })}
+                              disabled={deductionCount === 0}
                               className={cn(
-                                "text-xs font-bold tabular-nums",
+                                "text-xs font-bold tabular-nums w-full no-print",
                                 deductionCount > 0
-                                  ? "text-destructive dark:text-red-400"
-                                  : "text-muted-foreground"
+                                  ? "text-destructive dark:text-red-400 hover:underline cursor-pointer"
+                                  : "text-muted-foreground cursor-default"
                               )}
+                              dir="ltr"
+                              title={deductionCount > 0 ? "عرض سجل المخالفات" : ""}
                             >
                               {deductionCount}
-                            </span>
+                            </button>
                           ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
                               {icons.map((icon, idx) => (
