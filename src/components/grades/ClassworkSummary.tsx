@@ -47,7 +47,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             <th style="width:24%;">الطالب</th>
             ${group.categories.map((cat) => `
               <th style="width:auto;border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.name}</th>
-              <th style="width:auto;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "الخصم" : "الدرجة"}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? `حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</span></th>
+              <th style="width:auto;${cat.is_deduction ? "background:#fee2e2;color:#b91c1c;" : ""}">${cat.is_deduction ? "عدد المخالفات" : "الدرجة"}<br><span style="font-size:9px;color:#64748b;">${cat.is_deduction ? `الخصم حتى −${Number(cat.max_score)}` : `من ${Number(cat.max_score)}`}</span></th>
             `).join("")}
             <th style="width:auto;">الإجمالي</th>
             <th style="width:auto;background:#ecfdf5;color:#059669;">الدرجات المكتسبة</th>
@@ -66,8 +66,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                     ? `<div class="icons-cell">${icons.map(getPrintIconSpan).join("")}</div>`
                     : "";
                   const rawScore = student.manualScores[cat.id] ?? 0;
-                  const scoreDisplay = cat.is_deduction && rawScore > 0
-                    ? `<span style="color:#dc2626;font-weight:bold;">−${rawScore}</span>`
+                  const dedCount = student.deductionCounts?.[cat.id] ?? 0;
+                  const scoreDisplay = cat.is_deduction
+                    ? (dedCount > 0
+                        ? `<span style="color:#dc2626;font-weight:bold;">${dedCount}</span><br><span style="color:#dc2626;font-size:9px;">(−${rawScore})</span>`
+                        : `<span style="color:#94a3b8;">0</span>`)
                     : String(rawScore);
                   return `
                     <td style="border-right:2px solid #93c5fd;${cat.is_deduction ? "background:#fef2f2;" : ""}">${iconsHTML}</td>
