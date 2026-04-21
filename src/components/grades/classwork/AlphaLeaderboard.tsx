@@ -162,7 +162,7 @@ export default function AlphaLeaderboard({ classId, className, students }: Props
           >
             <div className="relative px-4 pt-6 pb-4">
               {podium.length === 0 ? (
-                <p className="text-center text-sm text-slate-300/60 py-6">
+                <p className="text-center text-sm text-muted-foreground dark:text-slate-300/60 py-6">
                   لا توجد درجات كافية لعرض المتصدرين بعد
                 </p>
               ) : (
