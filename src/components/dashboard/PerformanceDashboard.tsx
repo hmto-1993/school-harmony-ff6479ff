@@ -132,10 +132,12 @@ export default function PerformanceDashboard() {
 
     // Levels uses levelsFilter
     const levelsStudents = levelsFilter === "all" ? students : students.filter(s => s.class_id === levelsFilter);
-    let studentRows = levelsStudents.map(s => {
+    let studentRows: StudentRow[] = levelsStudents.map(s => {
       const t = studentTotals[s.id];
       const score = t ? (t.maxTotal > 0 ? Math.round((t.total / t.maxTotal) * 100 * 10) / 10 : 0) : 0;
-      return { name: s.full_name, score, diff: 0 };
+      const total = t ? Math.round(t.total * 10) / 10 : 0;
+      const maxTotal = t ? t.maxTotal : 0;
+      return { name: s.full_name, score, diff: 0, total, maxTotal };
     });
     const classAvg = studentRows.length > 0 ? Math.round(studentRows.reduce((a, b) => a + b.score, 0) / studentRows.length * 10) / 10 : 0;
     studentRows.forEach(r => { r.diff = Math.round((r.score - classAvg) * 10) / 10; });
