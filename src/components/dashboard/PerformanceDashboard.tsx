@@ -372,15 +372,21 @@ export default function PerformanceDashboard() {
               مستويات الطلاب
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as any); setLevelsCategoryFilter("all"); }}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
+              <Select value={levelsScopeFilter} onValueChange={setLevelsScopeFilter}>
+                <SelectTrigger className="w-[200px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">المشاركة والواجبات</SelectItem>
-                  <SelectItem value="participation">المشاركة فقط</SelectItem>
-                  <SelectItem value="homework">الواجبات فقط</SelectItem>
-                  <SelectItem value="exams">الاختبارات</SelectItem>
+                  <SelectItem value="type:daily">المشاركة والواجبات</SelectItem>
+                  <SelectItem value="type:participation">المشاركة فقط</SelectItem>
+                  <SelectItem value="type:homework">الواجبات فقط</SelectItem>
+                  <SelectItem value="type:exams">الاختبارات</SelectItem>
+                  {uniqueCatsByName(categories).length > 0 && (
+                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-muted-foreground border-t border-border/50">— فئة محددة —</div>
+                  )}
+                  {uniqueCatsByName(categories).map(c => (
+                    <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsPeriodFilter} onValueChange={(v) => setLevelsPeriodFilter(v as "today" | "7d" | "all")}>
@@ -391,17 +397,6 @@ export default function PerformanceDashboard() {
                   <SelectItem value="today">اليوم</SelectItem>
                   <SelectItem value="7d">آخر 7 أيام</SelectItem>
                   <SelectItem value="all">كامل الفصل</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={levelsCategoryFilter} onValueChange={setLevelsCategoryFilter}>
-                <SelectTrigger className="w-[160px] h-8 text-xs">
-                  <SelectValue placeholder="الفئة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">كل الفئات</SelectItem>
-                  {uniqueCatsByName(activeCats).map(c => (
-                    <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
