@@ -181,6 +181,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     const earnedTotalsMap = new Map<string, number>();
     // Sum of daily deduction grades per student/category — shown as the negative score in the cell
     const deductionTotalsMap = new Map<string, Map<string, number>>();
+    // Count of deduction events per student/category — shown under "مخالفة" column
+    const deductionCountsMap = new Map<string, Map<string, number>>();
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
@@ -191,11 +193,15 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const delta = cat.is_deduction ? -score : score;
       earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
 
-      // Skip icon rendering for deduction categories — they show as negative numbers instead
+      // Skip icon rendering for deduction categories — they show as count + negative number
       if (cat.is_deduction) {
         if (!deductionTotalsMap.has(g.student_id)) deductionTotalsMap.set(g.student_id, new Map());
-        const m = deductionTotalsMap.get(g.student_id)!;
-        m.set(g.category_id, (m.get(g.category_id) || 0) + score);
+        const sumMap = deductionTotalsMap.get(g.student_id)!;
+        sumMap.set(g.category_id, (sumMap.get(g.category_id) || 0) + score);
+        if (!deductionCountsMap.has(g.student_id)) deductionCountsMap.set(g.student_id, new Map());
+        const cntMap = deductionCountsMap.get(g.student_id)!;
+        // Count any recorded deduction event (even score=0 was filtered above by null check; >0 = real violation)
+        if (score > 0) cntMap.set(g.category_id, (cntMap.get(g.category_id) || 0) + 1);
         return;
       }
 
