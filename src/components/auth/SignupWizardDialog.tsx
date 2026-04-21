@@ -54,14 +54,29 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setNationalId(""); setEmail(""); setPassword(""); setTier("basic");
   };
 
+  const isStrongPassword = (pw: string) => {
+    const hasLetter = /[A-Za-z\u0600-\u06FF]/.test(pw);
+    const hasNumber = /\d/.test(pw);
+    const hasSymbol = /[^A-Za-z0-9\u0600-\u06FF\s]/.test(pw);
+    return hasLetter && hasNumber && hasSymbol;
+  };
+
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanId = nationalId.replace(/\D/g, "");
     if (!fullName.trim() || !phone.trim() || !school.trim() || !specialty.trim() ||
-        cleanId.length !== 10 || !email.trim() || password.length < 6) {
+        cleanId.length !== 10 || !email.trim() || !password) {
       toast({
         title: "بيانات ناقصة",
-        description: "يرجى تعبئة كافة الحقول. الهوية 10 أرقام وكلمة المرور 6 أحرف على الأقل.",
+        description: "يرجى تعبئة كافة الحقول. رقم الهوية يجب أن يكون 10 أرقام.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!isStrongPassword(password)) {
+      toast({
+        title: "كلمة المرور ضعيفة",
+        description: "يجب أن تحتوي كلمة المرور على مزيج من الحروف والأرقام والرموز (مثال: Ahmed@2026!).",
         variant: "destructive",
       });
       return;
@@ -91,9 +106,17 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setLoading(false);
 
     if (error) {
+      const msg = error.message.toLowerCase();
+      let arabicMsg = error.message;
+      if (msg.includes("already")) arabicMsg = "هذا البريد مسجّل مسبقاً";
+      else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("known")) {
+        arabicMsg = "كلمة المرور ضعيفة أو شائعة. اختر مزيجاً من الحروف والأرقام والرموز (مثال: Ahmed@2026!).";
+      } else if (msg.includes("password")) {
+        arabicMsg = "كلمة المرور غير مقبولة. يجب أن تحتوي على مزيج من الحروف والأرقام والرموز.";
+      }
       toast({
         title: "تعذّر إنشاء الحساب",
-        description: error.message.includes("already") ? "هذا البريد مسجّل مسبقاً" : error.message,
+        description: arabicMsg,
         variant: "destructive",
       });
       return;
@@ -169,9 +192,10 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
                   placeholder="example@mail.com" dir="ltr" className="text-right h-10 rounded-xl" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sw-pass" className="text-xs">كلمة المرور (6+) *</Label>
+                <Label htmlFor="sw-pass" className="text-xs">كلمة المرور (حروف + أرقام + رموز) *</Label>
                 <Input id="sw-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••" dir="ltr" className="h-10 rounded-xl" minLength={6} required />
+                  placeholder="مثال: Ahmed@2026!" dir="ltr" className="h-10 rounded-xl" required />
+                <p className="text-[10px] text-muted-foreground">يجب أن تحتوي على مزيج من الحروف والأرقام والرموز</p>
               </div>
             </div>
             <Button type="submit" className="w-full h-11 rounded-xl bg-gradient-to-l from-primary to-accent text-primary-foreground font-semibold">
