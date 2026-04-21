@@ -352,6 +352,27 @@ export default function PerformanceDashboard() {
                   <SelectItem value="exams">الاختبارات</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={levelsPeriodFilter} onValueChange={(v) => setLevelsPeriodFilter(v as "today" | "7d" | "all")}>
+                <SelectTrigger className="w-[130px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">اليوم</SelectItem>
+                  <SelectItem value="7d">آخر 7 أيام</SelectItem>
+                  <SelectItem value="all">كامل الفصل</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={levelsCategoryFilter} onValueChange={setLevelsCategoryFilter}>
+                <SelectTrigger className="w-[160px] h-8 text-xs">
+                  <SelectValue placeholder="الفئة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الفئات</SelectItem>
+                  {activeCats.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={levelsClassFilter} onValueChange={setLevelsClassFilter}>
                  <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue placeholder="اختر الفصل" />
