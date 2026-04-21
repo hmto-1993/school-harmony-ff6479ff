@@ -102,7 +102,7 @@ export default function ClassworkTable({
                               ? "bg-destructive/10 dark:bg-destructive/20"
                               : "bg-warning/5 dark:bg-warning/10"
                         )}>
-                          {isEditing ? (() => {
+                          {isEditing && !cat.is_deduction ? (() => {
                             const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                             return (
                               <Input
