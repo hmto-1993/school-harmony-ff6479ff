@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ScatterChart, Scatter, ZAxis, Cell,
 } from "recharts";
-import { Trophy, Users, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen, ClipboardList } from "lucide-react";
+import { Trophy, Users, TrendingUp, TrendingDown, Star, AlertTriangle, BookOpen, ClipboardList, MessageSquare, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ClassInfo { id: string; name: string; }
