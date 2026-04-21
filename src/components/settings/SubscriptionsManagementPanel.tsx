@@ -74,6 +74,11 @@ export default function SubscriptionsManagementPanel() {
   const [editStart, setEditStart] = useState<string>("");
   const [editEnd, setEditEnd] = useState<string>("");
 
+  const [pwTarget, setPwTarget] = useState<Subscriber | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [pwBusy, setPwBusy] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
