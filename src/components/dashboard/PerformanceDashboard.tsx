@@ -94,11 +94,20 @@ export default function PerformanceDashboard() {
     setCategories(cat || []);
   };
 
-  const { dailyCats, examCats } = useMemo(() => {
-    const daily = categories.filter(c => !isExamCategory(c.name));
+  const { dailyCats, examCats, participationCats, homeworkCats } = useMemo(() => {
     const exams = categories.filter(c => isExamCategory(c.name));
-    return { dailyCats: daily, examCats: exams };
+    const daily = categories.filter(c => !isExamCategory(c.name));
+    const participation = daily.filter(c => isParticipationCategory(c.name));
+    const homework = daily.filter(c => isHomeworkCategory(c.name));
+    return { dailyCats: daily, examCats: exams, participationCats: participation, homeworkCats: homework };
   }, [categories]);
+
+  // Build a unique-by-name list for the category filter dropdown so duplicates across classes don't repeat.
+  const uniqueCatsByName = (cats: CategoryInfo[]) => {
+    const map = new Map<string, CategoryInfo>();
+    cats.forEach(c => { if (!map.has(c.name)) map.set(c.name, c); });
+    return Array.from(map.values());
+  };
 
   const computeData = (catFilter: CategoryInfo[], levelsFilter: string, periodFilter: "today" | "7d" | "all", categoryIdFilter: string) => {
     const catIds = new Set(catFilter.map(c => c.id));
