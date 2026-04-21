@@ -188,10 +188,15 @@ export default function PerformanceDashboard() {
     homework: homeworkCats,
     exams: examCats,
   };
-  const activeCats = levelsCatsByType[levelsTypeFilter] || dailyCats;
+  // Resolve unified scope -> active categories + category-name filter
+  const [scopeKind, scopeValue] = levelsScopeFilter.split(":");
+  const activeCats = scopeKind === "type"
+    ? (levelsCatsByType[scopeValue] || dailyCats)
+    : categories.filter(c => c.name === scopeValue);
+  const activeCategoryName = scopeKind === "cat" ? scopeValue : "all";
   const levelsData = useMemo(
-    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter),
-    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, levelsCategoryFilter]
+    () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, activeCategoryName),
+    [activeCats, grades, students, classes, selectedClass, levelsClassFilter, levelsPeriodFilter, activeCategoryName]
   );
   const dailyData = useMemo(() => computeData(dailyCats, "all", "all", "all"), [dailyCats, grades, students, classes, selectedClass]);
   const examData = useMemo(() => computeData(examCats, "all", "all", "all"), [examCats, grades, students, classes, selectedClass]);
