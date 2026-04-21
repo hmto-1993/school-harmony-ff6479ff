@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, ScatterChart, Scatter, ZAxis, Cell,
@@ -190,9 +190,10 @@ export default function PerformanceDashboard() {
   };
   // Resolve unified scope -> active categories + category-name filter
   const [scopeKind, scopeValue] = levelsScopeFilter.split(":");
-  const activeCats = scopeKind === "type"
-    ? (levelsCatsByType[scopeValue] || dailyCats)
-    : categories.filter(c => c.name === scopeValue);
+  const activeCats = useMemo(() => {
+    if (scopeKind === "type") return levelsCatsByType[scopeValue] || dailyCats;
+    return categories.filter(c => c.name === scopeValue);
+  }, [scopeKind, scopeValue, dailyCats, participationCats, homeworkCats, examCats, categories]);
   const activeCategoryName = scopeKind === "cat" ? scopeValue : "all";
   const levelsData = useMemo(
     () => computeData(activeCats, levelsClassFilter, levelsPeriodFilter, activeCategoryName),
@@ -378,12 +379,17 @@ export default function PerformanceDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="type:daily">المشاركة والواجبات</SelectItem>
-                  {uniqueCatsByName(categories).length > 0 && (
-                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-muted-foreground border-t border-border/50">— فئة محددة —</div>
+                  {uniqueCatsByName(dailyCats).length > 0 && (
+                    <>
+                      <SelectSeparator />
+                      <SelectGroup>
+                        <SelectLabel className="text-[10px] text-muted-foreground">فئة محددة</SelectLabel>
+                        {uniqueCatsByName(dailyCats).map(c => (
+                          <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </>
                   )}
-                  {uniqueCatsByName(categories).map(c => (
-                    <SelectItem key={c.name} value={`cat:${c.name}`}>{c.name}</SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
               <Select value={levelsPeriodFilter} onValueChange={(v) => setLevelsPeriodFilter(v as "today" | "7d" | "all")}>
