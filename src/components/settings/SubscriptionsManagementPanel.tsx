@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon, Shield } from "lucide-react";
+import { Crown, Loader2, CalendarClock, Pencil, Trash2, Inbox, Infinity as InfinityIcon, Shield, KeyRound, Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Tier = "basic" | "premium";
@@ -73,6 +73,11 @@ export default function SubscriptionsManagementPanel() {
   const [editPlan, setEditPlan] = useState<string>("basic");
   const [editStart, setEditStart] = useState<string>("");
   const [editEnd, setEditEnd] = useState<string>("");
+
+  const [pwTarget, setPwTarget] = useState<Subscriber | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [pwBusy, setPwBusy] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -161,6 +166,41 @@ export default function SubscriptionsManagementPanel() {
     load();
   };
 
+  const isStrongPassword = (pw: string) =>
+    /[A-Za-z\u0600-\u06FF]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9\u0600-\u06FF\s]/.test(pw);
+
+  const changePassword = async () => {
+    if (!pwTarget) return;
+    if (!isStrongPassword(newPassword)) {
+      toast({
+        title: "كلمة مرور ضعيفة",
+        description: "يجب أن تحتوي على حروف وأرقام ورموز معاً (مثال: Teacher@2026)",
+        variant: "destructive",
+      });
+      return;
+    }
+    setPwBusy(true);
+    const { data, error } = await supabase.functions.invoke("manage-users", {
+      body: { action: "change_password", user_id: pwTarget.user_id, password: newPassword },
+    });
+    setPwBusy(false);
+    if (error || (data as any)?.error) {
+      toast({
+        title: "تعذر تغيير كلمة المرور",
+        description: (data as any)?.error || error?.message || "حدث خطأ",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({
+      title: "تم تغيير كلمة المرور ✅",
+      description: `كلمة مرور ${pwTarget.full_name} الجديدة سارية الآن`,
+    });
+    setPwTarget(null);
+    setNewPassword("");
+    setShowPw(false);
+  };
+
   return (
     <Card className="border-amber-500/30">
       <CardHeader className="pb-3">
@@ -236,10 +276,19 @@ export default function SubscriptionsManagementPanel() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <Button size="sm" variant="outline" className="gap-1 h-8" onClick={() => openEdit(s)}>
                             <Pencil className="h-3.5 w-3.5" />
                             تعديل
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1 h-8 text-amber-700 dark:text-amber-300 border-amber-500/40"
+                            onClick={() => { setPwTarget(s); setNewPassword(""); setShowPw(false); }}
+                          >
+                            <KeyRound className="h-3.5 w-3.5" />
+                            كلمة المرور
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -323,6 +372,54 @@ export default function SubscriptionsManagementPanel() {
             <Button onClick={saveEdit} disabled={busy} className="gap-2">
               {busy && <Loader2 className="h-4 w-4 animate-spin" />}
               حفظ التغييرات
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change Password Dialog */}
+      <Dialog open={!!pwTarget} onOpenChange={(o) => { if (!o) { setPwTarget(null); setNewPassword(""); setShowPw(false); } }}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-amber-600" />
+              تغيير كلمة المرور: {pwTarget?.full_name}
+            </DialogTitle>
+            <DialogDescription>
+              ستحل كلمة المرور الجديدة محل القديمة فوراً. يجب أن تحتوي على مزيج من الحروف والأرقام والرموز.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>كلمة المرور الجديدة</Label>
+            <div className="relative">
+              <Input
+                type={showPw ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="مثال: Teacher@2026"
+                className="pl-10"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw((v) => !v)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              يجب أن تجمع بين حروف (A-Z أو ا-ي) وأرقام (0-9) ورموز (مثل @ # $ ! %).
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setPwTarget(null); setNewPassword(""); setShowPw(false); }} disabled={pwBusy}>
+              إلغاء
+            </Button>
+            <Button onClick={changePassword} disabled={pwBusy || !newPassword} className="gap-2">
+              {pwBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              حفظ كلمة المرور
             </Button>
           </DialogFooter>
         </DialogContent>
