@@ -106,9 +106,17 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setLoading(false);
 
     if (error) {
+      const msg = error.message.toLowerCase();
+      let arabicMsg = error.message;
+      if (msg.includes("already")) arabicMsg = "هذا البريد مسجّل مسبقاً";
+      else if (msg.includes("weak") || msg.includes("pwned") || msg.includes("known")) {
+        arabicMsg = "كلمة المرور ضعيفة أو شائعة. اختر مزيجاً من الحروف والأرقام والرموز (مثال: Ahmed@2026!).";
+      } else if (msg.includes("password")) {
+        arabicMsg = "كلمة المرور غير مقبولة. يجب أن تحتوي على مزيج من الحروف والأرقام والرموز.";
+      }
       toast({
         title: "تعذّر إنشاء الحساب",
-        description: error.message.includes("already") ? "هذا البريد مسجّل مسبقاً" : error.message,
+        description: arabicMsg,
         variant: "destructive",
       });
       return;
