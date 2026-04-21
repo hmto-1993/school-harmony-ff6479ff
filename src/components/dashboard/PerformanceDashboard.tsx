@@ -367,12 +367,14 @@ export default function PerformanceDashboard() {
               مستويات الطلاب
             </CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
-              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as "daily" | "exams"); setLevelsCategoryFilter("all"); }}>
+              <Select value={levelsTypeFilter} onValueChange={(v) => { setLevelsTypeFilter(v as any); setLevelsCategoryFilter("all"); }}>
                 <SelectTrigger className="w-[160px] h-8 text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="daily">المشاركة والواجبات</SelectItem>
+                  <SelectItem value="participation">المشاركة فقط</SelectItem>
+                  <SelectItem value="homework">الواجبات فقط</SelectItem>
                   <SelectItem value="exams">الاختبارات</SelectItem>
                 </SelectContent>
               </Select>
@@ -392,8 +394,8 @@ export default function PerformanceDashboard() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">كل الفئات</SelectItem>
-                  {activeCats.map(c => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  {uniqueCatsByName(activeCats).map(c => (
+                    <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
