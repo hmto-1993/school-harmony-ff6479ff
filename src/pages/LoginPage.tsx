@@ -65,7 +65,7 @@ export default function LoginPage() {
       // Only attempt to send if we got a real email — never reveal which case occurred
       if (data?.email && !data.email.includes("***") && data.email.includes("@")) {
         await supabase.auth.resetPasswordForEmail(data.email, {
-          redirectTo: `${window.location.origin}/login`,
+          redirectTo: `${window.location.origin}/reset-password`,
         });
       }
     } catch {

@@ -42,6 +42,7 @@ const FormsPage = lazy(() => import("@/pages/FormsPage"));
 const PendingApprovalPage = lazy(() => import("@/pages/PendingApprovalPage"));
 const SubscriptionExpiredPage = lazy(() => import("@/pages/SubscriptionExpiredPage"));
 const PricingPage = lazy(() => import("@/pages/PricingPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => {
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/install" element={<InstallPage />} />
                     <Route path="/student" element={<StudentDashboard />} />
                     <Route path="/shared/:token" element={<SharedViewPage />} />
