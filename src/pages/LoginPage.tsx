@@ -42,6 +42,53 @@ export default function LoginPage() {
     if (isStudent) navigate("/student", { replace: true });
   }, [user, isStudent, navigate]);
 
+  const handleForgotPassword = async () => {
+    if (!nationalId.trim()) {
+      toast({
+        title: "أدخل رقم الهوية أولاً",
+        description: "يرجى كتابة رقم الهوية الوطنية ثم الضغط على نسيت كلمة المرور",
+        variant: "destructive",
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error: lookupError } = await supabase.functions.invoke("lookup-staff-email", {
+        body: { national_id: nationalId.trim() },
+      });
+      if (lookupError || data?.error || !data?.email || data.email.includes("***")) {
+        toast({
+          title: "تم إرسال الطلب",
+          description: "إذا كان رقم الهوية مسجلاً، سيصلك رابط إعادة التعيين على بريدك المسجل",
+        });
+        setLoading(false);
+        return;
+      }
+      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (error) {
+        toast({
+          title: "تعذّر إرسال الرابط",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "تم الإرسال ✅",
+          description: "تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني المسجل. تحقق من صندوق الوارد (وقد تجده في الرسائل المهملة).",
+        });
+      }
+    } catch {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ في الاتصال",
+        variant: "destructive",
+      });
+    }
+    setLoading(false);
+  };
+
   const handleStaffSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nationalId.trim() || !password.trim()) return;
@@ -201,6 +248,14 @@ export default function LoginPage() {
                       </span>
                     )}
                   </Button>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading}
+                    className="w-full text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors disabled:opacity-50"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
                 </form>
               </TabsContent>
 
