@@ -248,6 +248,14 @@ export default function LoginPage() {
                       </span>
                     )}
                   </Button>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={loading}
+                    className="w-full text-sm text-primary hover:text-primary/80 underline underline-offset-4 transition-colors disabled:opacity-50"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
                 </form>
               </TabsContent>
 
