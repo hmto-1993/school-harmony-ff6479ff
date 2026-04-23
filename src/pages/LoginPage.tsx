@@ -12,6 +12,7 @@ import defaultSchoolLogo from "@/assets/school-logo.jpg";
 import loginBg from "@/assets/login-bg.jpg";
 import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
 import SignupWizardDialog from "@/components/auth/SignupWizardDialog";
+import BrandName from "@/components/BrandName";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
@@ -20,8 +21,8 @@ export default function LoginPage() {
   const [parentNationalId, setParentNationalId] = useState("");
   const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState("");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("");
+  const [schoolName, setSchoolName] = useState("منصة المتميز التعليمية");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس والفصول الدراسية");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
   const navigate = useNavigate();
@@ -172,12 +173,13 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         <Card className="bg-card/95 border-border/30 shadow-2xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
-            <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
-              <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
+            <div className="relative rounded-2xl bg-gradient-to-br from-card/95 via-card/85 to-muted/60 dark:from-muted/70 dark:via-muted/50 dark:to-muted/30 p-2.5 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] ring-1 ring-[hsl(42,40%,55%)]/30 dark:ring-[hsl(42,40%,55%)]/20">
+              <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="h-20 w-auto rounded-xl" />
+              <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
             </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-foreground">{schoolName}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">{schoolSubtitle}</p>
+              <BrandName name={schoolName} className="text-2xl md:text-[26px] leading-tight" />
+              <p className="mt-1.5 text-xs tracking-wide text-muted-foreground/80">{schoolSubtitle}</p>
             </div>
           </CardHeader>
           <CardContent>

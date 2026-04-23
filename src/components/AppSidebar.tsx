@@ -30,6 +30,7 @@ import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
 import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
 import { Lock } from "lucide-react";
 import { UpgradeDialog } from "@/components/subscription/PremiumGate";
+import BrandName from "@/components/BrandName";
 
 const adminLinks = [
   { to: "/dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
@@ -72,8 +73,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
-  const [schoolName, setSchoolName] = useState("");
-  const [schoolSubtitle, setSchoolSubtitle] = useState("");
+  const [schoolName, setSchoolName] = useState("منصة المتميز التعليمية");
+  const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس");
   const [unreadParentMessages, setUnreadParentMessages] = useState(0);
 
   useEffect(() => {
@@ -132,13 +133,14 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         isCollapsed && "justify-center"
       )}>
         <div className="relative">
-          <img src={schoolLogo} alt="الشعار" className="h-10 w-10 rounded-xl object-cover" />
+          <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-[hsl(42,55%,55%)]/40 via-transparent to-foreground/20 blur-[2px]" />
+          <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="relative h-10 w-10 rounded-xl object-cover ring-1 ring-[hsl(42,40%,55%)]/40" />
           <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
-            <h2 className="text-sm font-bold truncate">{schoolName}</h2>
-            <p className="text-[11px] text-sidebar-foreground/50 font-light">{schoolSubtitle}</p>
+            <BrandName name={schoolName} className="text-[13px] leading-tight" />
+            <p className="text-[11px] text-sidebar-foreground/50 font-light truncate mt-0.5">{schoolSubtitle}</p>
           </div>
         )}
       </div>
