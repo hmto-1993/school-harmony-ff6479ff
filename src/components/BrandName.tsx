@@ -16,7 +16,7 @@ export default function BrandName({ name, className, goldWord = "التعليم�
   const hasGold = parts.length > 1;
 
   return (
-    <span className={cn("inline-flex items-baseline gap-1.5 font-extrabold tracking-tight", className)}>
+    <span dir="rtl" className={cn("inline-flex items-baseline gap-1.5 font-extrabold tracking-tight", className)}>
       {hasGold ? (
         <>
           <span className="bg-gradient-to-b from-foreground via-foreground/85 to-foreground/55 bg-clip-text text-transparent dark:from-white dark:via-white/85 dark:to-white/50">
