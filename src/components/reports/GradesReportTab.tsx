@@ -15,6 +15,7 @@ import HomeworkPanel from "./grades-smart/HomeworkPanel";
 import GradesViewControls from "./grades-smart/GradesViewControls";
 import LevelsReport from "./grades-smart/LevelsReport";
 import AbsenceReasonDialog from "./grades-smart/AbsenceReasonDialog";
+import SectionGradesTable from "./grades-smart/SectionGradesTable";
 import { useHomeworkTargets, useExamAbsences } from "./grades-smart/useGradesSmartData";
 import {
   studentPercent, classifyLevel, getReasonLabel, homeworkStatus,
