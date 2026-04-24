@@ -418,6 +418,8 @@ export function useReportsData() {
     categoryMeta,
     loadingGrades,
     fetchGrades,
+    gradesScope,
+    setGradesScope,
     // Preview
     previewOpen,
     setPreviewOpen,

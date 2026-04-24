@@ -33,16 +33,18 @@ interface GradesReportTabProps {
   exportGradesExcel: () => void;
   exportGradesPDF: () => void;
   shareGradesWhatsApp: () => void;
+  scope: "current" | "all";
+  setScope: (s: "current" | "all") => void;
 }
 
 export default function GradesReportTab({
   gradeData, categoryNames, categoryMeta = [], loadingGrades, selectedClass,
   fetchGrades, onPreview, exportGradesExcel, exportGradesPDF, shareGradesWhatsApp,
+  scope, setScope,
 }: GradesReportTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("raw");
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [scope, setScope] = useState<"current" | "all">("current");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [showLevelsReport, setShowLevelsReport] = useState(false);
   const [absDialog, setAbsDialog] = useState<{ open: boolean; studentId?: string; studentName?: string; categoryId?: string; categoryName?: string }>({ open: false });
