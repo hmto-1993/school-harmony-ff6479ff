@@ -146,6 +146,8 @@ export default function ReportsPage() {
             exportGradesExcel={r.exportGradesExcel}
             exportGradesPDF={r.exportGradesPDF}
             shareGradesWhatsApp={r.shareGradesWhatsApp}
+            scope={r.gradesScope}
+            setScope={r.setGradesScope}
           />
         </TabsContent>
 
