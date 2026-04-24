@@ -48,6 +48,7 @@ export default function GradesReportTab({
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [showLevelsReport, setShowLevelsReport] = useState(false);
+  const [activeSection, setActiveSection] = useState<"homework" | "exams">("exams");
   const [absDialog, setAbsDialog] = useState<{ open: boolean; studentId?: string; studentName?: string; categoryId?: string; categoryName?: string }>({ open: false });
 
   const { homeworkCategories, targets, saveTarget } = useHomeworkTargets(selectedClass, categoryMeta);
@@ -167,103 +168,77 @@ export default function GradesReportTab({
       </div>
 
       {gradeData.length > 0 && (
-        <>
-          <HomeworkPanel
-            homeworkCategories={homeworkCategories}
-            targets={targets}
-            saveTarget={saveTarget}
-            rows={gradeData}
-          />
+        <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as "homework" | "exams")} dir="rtl">
+          <TabsList className="grid grid-cols-2 w-full max-w-md print:hidden">
+            <TabsTrigger value="exams" className="gap-1.5">
+              <GraduationCap className="h-4 w-4" />
+              الاختبارات ({examCategories.length})
+            </TabsTrigger>
+            <TabsTrigger value="homework" className="gap-1.5">
+              <ClipboardCheck className="h-4 w-4" />
+              الواجبات ({homeworkCategories.length})
+            </TabsTrigger>
+          </TabsList>
 
-          <GradesViewControls
-            viewMode={viewMode} setViewMode={setViewMode}
-            sortKey={sortKey} setSortKey={setSortKey}
-            sortDir={sortDir} setSortDir={setSortDir}
-            scope={scope} setScope={setScope}
-            examFilter={examFilter} setExamFilter={setExamFilter}
-            examCategories={examCategories}
-            showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
-          />
+          <TabsContent value="homework" className="space-y-4 mt-4">
+            <HomeworkPanel
+              homeworkCategories={homeworkCategories}
+              targets={targets}
+              saveTarget={saveTarget}
+              rows={gradeData}
+            />
+            {homeworkCategories.length > 0 && (
+              <SectionGradesTable
+                title="جدول الواجبات"
+                categories={homeworkCategories}
+                rows={sortedRows}
+                allCategoriesMeta={categoryMeta}
+                examCategories={examCategories}
+                viewMode={viewMode}
+                formatCellValue={formatCellValue}
+                absences={absences}
+                absKey={absKey}
+                onAbsentClick={(s, c) => setAbsDialog({ open: true, studentId: s.student_id, studentName: s.student_name, categoryId: c.id, categoryName: c.name })}
+              />
+            )}
+          </TabsContent>
 
-          {showLevelsReport && (
-            <LevelsReport rows={filteredRows} categories={categoryMeta} />
-          )}
+          <TabsContent value="exams" className="space-y-4 mt-4">
+            <GradesViewControls
+              viewMode={viewMode} setViewMode={setViewMode}
+              sortKey={sortKey} setSortKey={setSortKey}
+              sortDir={sortDir} setSortDir={setSortDir}
+              scope={scope} setScope={setScope}
+              examFilter={examFilter} setExamFilter={setExamFilter}
+              examCategories={examCategories}
+              showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
+            />
 
-          <div className="print-area space-y-4">
-            <ReportPrintHeader reportType="grades" />
-            <PrintWatermark reportType="grades" />
-            <GradesChart data={filteredRows} categoryNames={categoryNames} />
+            {showLevelsReport && (
+              <LevelsReport rows={filteredRows} categories={categoryMeta} />
+            )}
 
-            <Card className="border-0 shadow-lg bg-card">
-              <CardContent className="pt-4">
-                <div className="max-h-[400px] overflow-auto rounded-xl border border-border/30">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gradient-to-l from-success/5 to-primary/5 dark:from-success/10 dark:to-primary/10">
-                        <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
-                        {categoryNames.map((name) => (
-                          <TableHead key={name} className="text-center font-semibold">{name}</TableHead>
-                        ))}
-                        <TableHead className="text-center font-semibold">
-                          {viewMode === "percent" ? "النسبة %" : "المجموع"}
-                        </TableHead>
-                        <TableHead className="text-center font-semibold">المستوى</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedRows.map((row, i) => {
-                        const percent = studentPercent(row, categoryMeta);
-                        const lvl = classifyLevel(percent);
-                        return (
-                          <TableRow key={i} className={i % 2 === 0 ? "bg-muted/20" : ""}>
-                            <TableCell className="font-medium">{row.student_name}</TableCell>
-                            {categoryNames.map((name) => {
-                              const cat = categoryMeta.find((c) => c.name === name);
-                              const score = row.categories[name];
-                              const isExam = cat && examCategories.find((e) => e.id === cat.id);
-                              const isAbsent = score === null || score === undefined;
-                              const absRecord = cat && row.student_id
-                                ? absences[absKey(row.student_id, cat.id)] : undefined;
-                              return (
-                                <TableCell key={name} className="text-center text-muted-foreground">
-                                  {!isAbsent ? (
-                                    formatCellValue(score, cat)
-                                  ) : isExam && row.student_id && cat ? (
-                                    <button
-                                      className="inline-flex items-center gap-1 text-xs text-destructive hover:underline print:hidden"
-                                      onClick={() => setAbsDialog({
-                                        open: true, studentId: row.student_id, studentName: row.student_name,
-                                        categoryId: cat.id, categoryName: cat.name,
-                                      })}
-                                      title={absRecord ? `${getReasonLabel(absRecord.reason)}${absRecord.notes ? ` — ${absRecord.notes}` : ""}` : "تسجيل سبب الغياب"}
-                                    >
-                                      <AlertCircle className="h-3 w-3" />
-                                      {absRecord ? getReasonLabel(absRecord.reason) : "غائب"}
-                                    </button>
-                                  ) : "—"}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell className="text-center">
-                              <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-0 font-bold">
-                                {viewMode === "percent" ? `${percent.toFixed(1)}%` : row.total}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Badge variant="outline" style={{ color: lvl.color, borderColor: lvl.color }}>
-                                {lvl.label}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </>
+            <div className="print-area space-y-4">
+              <ReportPrintHeader reportType="grades" />
+              <PrintWatermark reportType="grades" />
+              <GradesChart data={filteredRows} categoryNames={categoryNames} />
+
+              <SectionGradesTable
+                title="جدول الاختبارات"
+                categories={examCategories.length > 0 ? examCategories : categoryMeta}
+                rows={sortedRows}
+                allCategoriesMeta={categoryMeta}
+                examCategories={examCategories}
+                viewMode={viewMode}
+                formatCellValue={formatCellValue}
+                absences={absences}
+                absKey={absKey}
+                onAbsentClick={(s, c) => setAbsDialog({ open: true, studentId: s.student_id, studentName: s.student_name, categoryId: c.id, categoryName: c.name })}
+                showTotal
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
       )}
 
       {!loadingGrades && gradeData.length === 0 && (
