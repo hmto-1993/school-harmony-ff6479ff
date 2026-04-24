@@ -119,6 +119,17 @@ export default function ReportFilters({
                 }}
               />
             </div>
+          ) : reportType === "semester" ? (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground">النطاق</Label>
+              <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
+                <span className="font-medium">📅 كامل الفصل الدراسي</span>
+                <span className="mx-2 text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">
+                  {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
+                </span>
+              </div>
+            </div>
           ) : (
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-muted-foreground">الأسابيع</Label>
