@@ -761,6 +761,42 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_absences: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          organization_id: string
+          reason: string
+          recorded_by: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          reason?: string
+          recorded_by: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          reason?: string
+          recorded_by?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       excuse_submissions: {
         Row: {
           created_at: string
@@ -1051,6 +1087,39 @@ export type Database = {
           score?: number | null
           student_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      homework_targets: {
+        Row: {
+          category_id: string
+          class_id: string
+          created_at: string
+          created_by: string
+          id: string
+          organization_id: string
+          required_count: number
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          class_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          organization_id?: string
+          required_count?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          class_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          organization_id?: string
+          required_count?: number
+          updated_at?: string
         }
         Relationships: []
       }
