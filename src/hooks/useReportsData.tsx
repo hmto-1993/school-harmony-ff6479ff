@@ -383,6 +383,7 @@ export function useReportsData() {
     // Grades
     gradeData,
     categoryNames,
+    categoryMeta,
     loadingGrades,
     fetchGrades,
     // Preview
