@@ -241,6 +241,7 @@ export default function GradesReportTab({
                 absKey={absKey}
                 onAbsentClick={(s, c) => setAbsDialog({ open: true, studentId: s.student_id, studentName: s.student_name, categoryId: c.id, categoryName: c.name })}
                 showTotal
+                showLevelPerCell
               />
             </div>
           </TabsContent>
