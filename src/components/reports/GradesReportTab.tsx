@@ -53,10 +53,13 @@ export default function GradesReportTab({
   const [absDialog, setAbsDialog] = useState<{ open: boolean; studentId?: string; studentName?: string; categoryId?: string; categoryName?: string }>({ open: false });
 
   const { homeworkCategories, targets, saveTarget } = useHomeworkTargets(selectedClass, categoryMeta);
-  // Exam categories = non-homework
+  // Exam categories: ONLY "الفترة" (period exam) و "العملي" (practical)
   const examCategories = useMemo(
-    () => categoryMeta.filter((c) => !homeworkCategories.find((h) => h.id === c.id)),
-    [categoryMeta, homeworkCategories]
+    () => categoryMeta.filter((c) => {
+      const n = c.name || "";
+      return n.includes("فترة") || n.includes("عملي") || n.toLowerCase().includes("period") || n.toLowerCase().includes("practical");
+    }),
+    [categoryMeta]
   );
   const { absences, saveAbsence, key: absKey } = useExamAbsences(selectedClass, examCategories);
 
