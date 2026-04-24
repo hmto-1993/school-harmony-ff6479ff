@@ -16,6 +16,7 @@ import GradesViewControls from "./grades-smart/GradesViewControls";
 import LevelsReport from "./grades-smart/LevelsReport";
 import AbsenceReasonDialog from "./grades-smart/AbsenceReasonDialog";
 import SectionGradesTable from "./grades-smart/SectionGradesTable";
+import ExamsSummaryPanel from "./grades-smart/ExamsSummaryPanel";
 import { useHomeworkTargets, useExamAbsences } from "./grades-smart/useGradesSmartData";
 import {
   studentPercent, classifyLevel, getReasonLabel, homeworkStatus,
@@ -208,6 +209,7 @@ export default function GradesReportTab({
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-4 mt-4">
+            <ExamsSummaryPanel examCategories={examCategories} rows={filteredRows} />
             <GradesViewControls
               viewMode={viewMode} setViewMode={setViewMode}
               sortKey={sortKey} setSortKey={setSortKey}
