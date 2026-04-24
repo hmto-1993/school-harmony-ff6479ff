@@ -41,7 +41,7 @@ interface AttendanceReportTabProps {
   exportAttendanceExcel: () => void;
   exportAttendancePDF: () => void;
   shareAttendanceWhatsApp: () => void;
-  reportType: "daily" | "periodic";
+  reportType: "daily" | "periodic" | "semester";
   students: { id: string; full_name: string; parent_phone: string | null }[];
   periodsPerWeek: number;
   dateFrom: string;

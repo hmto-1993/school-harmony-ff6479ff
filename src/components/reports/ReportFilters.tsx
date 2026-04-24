@@ -22,8 +22,8 @@ interface ReportFiltersProps {
   students: { id: string; full_name: string; class_id?: string | null }[];
   selectedStudent: string;
   setSelectedStudent: (v: string) => void;
-  reportType: "daily" | "periodic";
-  setReportType: (v: "daily" | "periodic") => void;
+  reportType: "daily" | "periodic" | "semester";
+  setReportType: (v: "daily" | "periodic" | "semester") => void;
   dateFromDate: Date;
   setDateFromDate: (d: Date) => void;
   dateToDate: Date;
@@ -97,7 +97,7 @@ export default function ReportFilters({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground">نوع التقرير</Label>
-            <Select value={reportType} onValueChange={(v: "daily" | "periodic") => setReportType(v)}>
+            <Select value={reportType} onValueChange={(v: "daily" | "periodic" | "semester") => setReportType(v)}>
               <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>

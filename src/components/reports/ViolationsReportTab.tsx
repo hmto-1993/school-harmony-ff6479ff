@@ -14,7 +14,7 @@ interface ViolationsReportTabProps {
   dateFrom: string;
   dateTo: string;
   selectedStudent: string;
-  reportType: "daily" | "periodic";
+  reportType: "daily" | "periodic" | "semester";
 }
 
 interface ViolationRecord {

@@ -33,7 +33,7 @@ export function useReportsData() {
   const [dateFromDate, setDateFromDate] = useState<Date>(new Date());
   const [dateToDate, setDateToDate] = useState<Date>(new Date());
   const [selectedWeeks, setSelectedWeeks] = useState<number[]>([]);
-  const [reportType, setReportType] = useState<"daily" | "periodic">("daily");
+  const [reportType, setReportType] = useState<"daily" | "periodic" | "semester">("daily");
   const dateFrom = format(dateFromDate, "yyyy-MM-dd");
   const dateTo = format(dateToDate, "yyyy-MM-dd");
 
@@ -98,7 +98,7 @@ export function useReportsData() {
     );
   }, [getWeeksInfo]);
 
-  const handleReportTypeChange = useCallback((v: "daily" | "periodic") => {
+  const handleReportTypeChange = useCallback((v: "daily" | "periodic" | "semester") => {
     setReportType(v);
     if (v === "daily") {
       setDateToDate(dateFromDate);
