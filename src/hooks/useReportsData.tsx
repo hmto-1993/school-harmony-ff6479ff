@@ -47,6 +47,7 @@ export function useReportsData() {
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
   const [categoryMeta, setCategoryMeta] = useState<CategoryMeta[]>([]);
   const [loadingGrades, setLoadingGrades] = useState(false);
+  const [gradesScope, setGradesScope] = useState<"current" | "all">("current");
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState<"attendance" | "grades" | "behavior">("attendance");
@@ -226,65 +227,96 @@ export function useReportsData() {
     if (!selectedClass) return;
     setLoadingGrades(true);
 
+    // Determine which classes to fetch from
+    const useAllClasses = gradesScope === "all";
+    const targetClassIds = useAllClasses
+      ? classes.map((c) => c.id)
+      : (selectedClass === "all" ? classes.map((c) => c.id) : [selectedClass]);
+
+    if (targetClassIds.length === 0) {
+      setGradeData([]); setCategoryNames([]); setCategoryMeta([]);
+      setLoadingGrades(false);
+      return;
+    }
+
+    // Fetch categories from target classes
     const { data: cats } = await supabase
       .from("grade_categories")
-      .select("id, name, weight, max_score, category_group")
-      .eq("class_id", selectedClass)
+      .select("id, name, weight, max_score, category_group, class_id")
+      .in("class_id", targetClassIds)
       .order("sort_order");
 
-    const categories = cats || [];
+    // Deduplicate categories by name (merge equivalent categories across classes)
+    const categoriesByName = new Map<string, any>();
+    const catIdToName = new Map<string, string>();
+    (cats || []).forEach((c: any) => {
+      if (!categoriesByName.has(c.name)) {
+        categoriesByName.set(c.name, {
+          id: c.id, name: c.name,
+          max_score: Number(c.max_score) || 100,
+          weight: Number(c.weight) || 0,
+          group: c.category_group,
+        });
+      }
+      catIdToName.set(c.id, c.name);
+    });
+    const categories = Array.from(categoriesByName.values());
     setCategoryNames(categories.map((c) => c.name));
-    setCategoryMeta(categories.map((c: any) => ({
-      id: c.id, name: c.name, max_score: Number(c.max_score) || 100,
-      weight: Number(c.weight) || 0, group: c.category_group,
-    })));
+    setCategoryMeta(categories);
 
+    // Fetch students from target classes
     let studentsQuery = supabase
       .from("students")
-      .select("id, full_name")
-      .eq("class_id", selectedClass)
+      .select("id, full_name, class_id")
+      .in("class_id", targetClassIds)
       .order("full_name");
 
-    if (selectedStudent !== "all") {
+    if (!useAllClasses && selectedStudent !== "all" && selectedClass !== "all") {
       studentsQuery = studentsQuery.eq("id", selectedStudent);
     }
 
     const { data: studentsData } = await studentsQuery;
     const filteredStudents = studentsData || [];
 
-    if (!filteredStudents || filteredStudents.length === 0) {
+    if (filteredStudents.length === 0) {
       setGradeData([]);
       setLoadingGrades(false);
       return;
     }
 
     const studentIds = filteredStudents.map((s) => s.id);
-    const gradesQuery = supabase
+    const { data: grades } = await supabase
       .from("grades")
       .select("student_id, category_id, score, created_at")
       .in("student_id", studentIds)
       .gte("created_at", `${dateFrom}T00:00:00`)
       .lte("created_at", `${dateTo}T23:59:59`);
 
-    const { data: grades } = await gradesQuery;
-
+    // Map: student_id -> categoryName -> score (handles duplicate cat ids across classes)
     const gradeMap: Record<string, Record<string, number | null>> = {};
     (grades || []).forEach((g: any) => {
+      const name = catIdToName.get(g.category_id);
+      if (!name) return;
       if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
-      gradeMap[g.student_id][g.category_id] = g.score;
+      gradeMap[g.student_id][name] = g.score;
     });
 
-    const rows: GradeRow[] = filteredStudents.map((s) => {
+    const rows: GradeRow[] = filteredStudents.map((s: any) => {
       const catScores: Record<string, number | null> = {};
       let total = 0;
       categories.forEach((cat) => {
-        const score = gradeMap[s.id]?.[cat.id] ?? null;
+        const score = gradeMap[s.id]?.[cat.name] ?? null;
         catScores[cat.name] = score;
         if (score !== null) {
           total += (score / cat.max_score) * cat.weight;
         }
       });
-      return { student_id: s.id, student_name: s.full_name, categories: catScores, total: Math.round(total * 100) / 100 };
+      return {
+        student_id: s.id,
+        student_name: s.full_name,
+        categories: catScores,
+        total: Math.round(total * 100) / 100,
+      };
     });
 
     setGradeData(rows);
