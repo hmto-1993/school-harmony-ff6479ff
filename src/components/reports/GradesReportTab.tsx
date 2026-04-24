@@ -93,12 +93,12 @@ export default function GradesReportTab({
             const score = r.categories[cat.name];
             const submitted = score === null || score === undefined ? 0 : Math.min(score, required);
             const status = homeworkStatus(submitted, required);
-            acc[status.key]++;
+            acc[status.key as "complete" | "partial" | "missing"]++;
             return acc;
           },
-          { complete: 0, partial: 0, missing: 0 } as Record<string, number>
+          { complete: 0, partial: 0, missing: 0 }
         );
-        return { name: cat.name, ...stats };
+        return { name: cat.name, complete: stats.complete, partial: stats.partial, missing: stats.missing };
       });
       const { blob, fileName } = await buildLevelsReportPDF(filteredRows, categoryMeta, hwStats);
       const url = URL.createObjectURL(blob);
