@@ -22,8 +22,8 @@ interface ReportFiltersProps {
   students: { id: string; full_name: string; class_id?: string | null }[];
   selectedStudent: string;
   setSelectedStudent: (v: string) => void;
-  reportType: "daily" | "periodic";
-  setReportType: (v: "daily" | "periodic") => void;
+  reportType: "daily" | "periodic" | "semester";
+  setReportType: (v: "daily" | "periodic" | "semester") => void;
   dateFromDate: Date;
   setDateFromDate: (d: Date) => void;
   dateToDate: Date;
@@ -97,13 +97,14 @@ export default function ReportFilters({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-semibold text-muted-foreground">نوع التقرير</Label>
-            <Select value={reportType} onValueChange={(v: "daily" | "periodic") => setReportType(v)}>
+            <Select value={reportType} onValueChange={(v: "daily" | "periodic" | "semester") => setReportType(v)}>
               <SelectTrigger className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily">يومي</SelectItem>
                 <SelectItem value="periodic">أسبوعي</SelectItem>
+                <SelectItem value="semester">الفصلي</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -117,6 +118,17 @@ export default function ReportFilters({
                   setDateToDate(d);
                 }}
               />
+            </div>
+          ) : reportType === "semester" ? (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-muted-foreground">النطاق</Label>
+              <div className="h-10 flex items-center px-3 rounded-md border border-border bg-muted/30 text-sm">
+                <span className="font-medium">📅 كامل الفصل الدراسي</span>
+                <span className="mx-2 text-muted-foreground">·</span>
+                <span className="text-xs text-muted-foreground">
+                  {format(dateFromDate, "yyyy-MM-dd")} → {format(dateToDate, "yyyy-MM-dd")}
+                </span>
+              </div>
             </div>
           ) : (
             <div className="space-y-1.5">
