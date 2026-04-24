@@ -104,6 +104,7 @@ export default function ReportFilters({
               <SelectContent>
                 <SelectItem value="daily">يومي</SelectItem>
                 <SelectItem value="periodic">أسبوعي</SelectItem>
+                <SelectItem value="semester">الفصلي</SelectItem>
               </SelectContent>
             </Select>
           </div>
