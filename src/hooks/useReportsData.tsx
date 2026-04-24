@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { format } from "date-fns";
-import { useReportSending, type AttendanceRow, type GradeRow } from "@/hooks/useReportSending";
+import { useReportSending, type AttendanceRow, type GradeRow, type CategoryMeta } from "@/hooks/useReportSending";
 
 const STATUS_LABELS: Record<string, string> = {
   present: "حاضر",
@@ -22,7 +22,7 @@ export interface ClassOption {
 }
 
 export { STATUS_LABELS };
-export type { AttendanceRow, GradeRow };
+export type { AttendanceRow, GradeRow, CategoryMeta };
 
 export function useReportsData() {
   const { role, user } = useAuth();
@@ -45,6 +45,7 @@ export function useReportsData() {
 
   const [gradeData, setGradeData] = useState<GradeRow[]>([]);
   const [categoryNames, setCategoryNames] = useState<string[]>([]);
+  const [categoryMeta, setCategoryMeta] = useState<CategoryMeta[]>([]);
   const [loadingGrades, setLoadingGrades] = useState(false);
 
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -227,12 +228,16 @@ export function useReportsData() {
 
     const { data: cats } = await supabase
       .from("grade_categories")
-      .select("id, name, weight, max_score")
+      .select("id, name, weight, max_score, category_group")
       .eq("class_id", selectedClass)
       .order("sort_order");
 
     const categories = cats || [];
     setCategoryNames(categories.map((c) => c.name));
+    setCategoryMeta(categories.map((c: any) => ({
+      id: c.id, name: c.name, max_score: Number(c.max_score) || 100,
+      weight: Number(c.weight) || 0, group: c.category_group,
+    })));
 
     let studentsQuery = supabase
       .from("students")
@@ -279,7 +284,7 @@ export function useReportsData() {
           total += (score / cat.max_score) * cat.weight;
         }
       });
-      return { student_name: s.full_name, categories: catScores, total: Math.round(total * 100) / 100 };
+      return { student_id: s.id, student_name: s.full_name, categories: catScores, total: Math.round(total * 100) / 100 };
     });
 
     setGradeData(rows);
