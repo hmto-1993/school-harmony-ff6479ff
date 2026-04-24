@@ -74,7 +74,26 @@ export default function SectionGradesTable({
                       return (
                         <TableCell key={cat.id} className="text-center text-muted-foreground">
                           {!isAbsent ? (
-                            formatCellValue(score, cat)
+                            showLevelPerCell && cat.max_score ? (
+                              (() => {
+                                const pct = (Number(score) / cat.max_score) * 100;
+                                const lvl = classifyLevel(pct);
+                                return (
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span>{formatCellValue(score, cat)}</span>
+                                    <Badge
+                                      variant="outline"
+                                      className="text-[10px] px-1.5 py-0 leading-tight"
+                                      style={{ color: lvl.color, borderColor: lvl.color }}
+                                    >
+                                      {lvl.label}
+                                    </Badge>
+                                  </div>
+                                );
+                              })()
+                            ) : (
+                              formatCellValue(score, cat)
+                            )
                           ) : isExam && row.student_id ? (
                             <button
                               className="inline-flex items-center gap-1 text-xs text-destructive hover:underline print:hidden"
