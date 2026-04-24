@@ -3,6 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertCircle } from "lucide-react";
 import { studentPercent, classifyLevel, getReasonLabel } from "./grades-helpers";
+
+interface SectionGradesTableExtraProps {
+  showLevelPerCell?: boolean;
+}
 import type { CategoryMeta, GradeRow } from "@/hooks/useReportSending";
 
 interface Props {
