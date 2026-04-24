@@ -103,13 +103,21 @@ export function useReportsData() {
     if (v === "daily") {
       setDateToDate(dateFromDate);
       setSelectedWeeks([]);
-    } else {
+    } else if (v === "periodic") {
       const weeksInfo = getWeeksInfo();
       const activeWeek = weeksInfo.find(w => w.weekNumber === currentWeek) || weeksInfo[0];
       if (activeWeek) {
         setSelectedWeeks([activeWeek.weekNumber]);
         setDateFromDate(activeWeek.startDate);
         setDateToDate(activeWeek.endDate);
+      }
+    } else {
+      // semester: full term range
+      const weeksInfo = getWeeksInfo();
+      if (weeksInfo.length > 0) {
+        setSelectedWeeks([]);
+        setDateFromDate(weeksInfo[0].startDate);
+        setDateToDate(weeksInfo[weeksInfo.length - 1].endDate);
       }
     }
   }, [dateFromDate, getWeeksInfo, currentWeek]);
