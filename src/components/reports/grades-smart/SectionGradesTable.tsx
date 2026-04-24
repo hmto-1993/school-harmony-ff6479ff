@@ -21,11 +21,12 @@ interface Props {
   absKey: (studentId: string, categoryId: string) => string;
   onAbsentClick: (student: GradeRow, cat: CategoryMeta) => void;
   showTotal?: boolean;
+  showLevelPerCell?: boolean;
 }
 
 export default function SectionGradesTable({
   title, categories, rows, allCategoriesMeta, examCategories, viewMode,
-  formatCellValue, absences, absKey, onAbsentClick, showTotal = false,
+  formatCellValue, absences, absKey, onAbsentClick, showTotal = false, showLevelPerCell = false,
 }: Props) {
   if (categories.length === 0) {
     return (
