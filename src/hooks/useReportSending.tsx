@@ -20,9 +20,18 @@ export interface AttendanceRow {
 }
 
 export interface GradeRow {
+  student_id?: string;
   student_name: string;
   categories: Record<string, number | null>;
   total: number;
+}
+
+export interface CategoryMeta {
+  id: string;
+  name: string;
+  max_score: number;
+  weight: number;
+  group?: string;
 }
 
 interface UseReportSendingParams {
