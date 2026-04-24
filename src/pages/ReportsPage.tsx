@@ -138,6 +138,7 @@ export default function ReportsPage() {
           <GradesReportTab
             gradeData={r.gradeData}
             categoryNames={r.categoryNames}
+            categoryMeta={r.categoryMeta}
             loadingGrades={r.loadingGrades}
             selectedClass={r.selectedClass}
             fetchGrades={r.fetchGrades}
