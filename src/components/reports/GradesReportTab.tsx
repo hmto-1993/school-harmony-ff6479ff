@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BarChart3, Users, Eye, FileText, AlertCircle, Share2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { BarChart3, Users, Eye, FileText, AlertCircle, Share2, ClipboardCheck, GraduationCap } from "lucide-react";
 import { useMemo, useState } from "react";
 import GradesChart from "@/components/reports/GradesChart";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
