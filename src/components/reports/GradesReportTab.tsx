@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { BarChart3, Users, Eye, FileText, AlertCircle } from "lucide-react";
+import { BarChart3, Users, Eye, FileText, AlertCircle, Share2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import GradesChart from "@/components/reports/GradesChart";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
@@ -83,30 +83,48 @@ export default function GradesReportTab({
     return `${Math.round((score / cat.max_score) * 100)}%`;
   };
 
+  const buildLevelsBlob = async () => {
+    const { buildLevelsReportPDF } = await import("./grades-smart/levels-pdf-builder");
+    const hwStats = homeworkCategories.map((cat) => {
+      const required = targets[cat.id] ?? 0;
+      const stats = filteredRows.reduce(
+        (acc, r) => {
+          const score = r.categories[cat.name];
+          const submitted = score === null || score === undefined ? 0 : Math.min(score, required);
+          const status = homeworkStatus(submitted, required);
+          acc[status.key as "complete" | "partial" | "missing"]++;
+          return acc;
+        },
+        { complete: 0, partial: 0, missing: 0 }
+      );
+      return { name: cat.name, complete: stats.complete, partial: stats.partial, missing: stats.missing };
+    });
+    return buildLevelsReportPDF(filteredRows, categoryMeta, hwStats);
+  };
+
   const handleExportLevelsPDF = async () => {
     try {
-      const { buildLevelsReportPDF } = await import("./grades-smart/levels-pdf-builder");
-      const hwStats = homeworkCategories.map((cat) => {
-        const required = targets[cat.id] ?? 0;
-        const stats = filteredRows.reduce(
-          (acc, r) => {
-            const score = r.categories[cat.name];
-            const submitted = score === null || score === undefined ? 0 : Math.min(score, required);
-            const status = homeworkStatus(submitted, required);
-            acc[status.key as "complete" | "partial" | "missing"]++;
-            return acc;
-          },
-          { complete: 0, partial: 0, missing: 0 }
-        );
-        return { name: cat.name, complete: stats.complete, partial: stats.partial, missing: stats.missing };
-      });
-      const { blob, fileName } = await buildLevelsReportPDF(filteredRows, categoryMeta, hwStats);
+      const { blob, fileName } = await buildLevelsBlob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = fileName;
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       URL.revokeObjectURL(url);
       toast({ title: "تم التصدير", description: "تقرير المستويات بصيغة PDF" });
+    } catch (e: any) {
+      toast({ title: "خطأ", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const handleShareLevelsWhatsApp = async () => {
+    try {
+      const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
+      const { blob, fileName } = await buildLevelsBlob();
+      const result = await sharePDFViaWhatsApp(blob, fileName, "📊 تقرير تصنيف المستويات");
+      toast({
+        title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF",
+        description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب",
+      });
     } catch (e: any) {
       toast({ title: "خطأ", description: e.message, variant: "destructive" });
     }
@@ -126,6 +144,14 @@ export default function GradesReportTab({
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportLevelsPDF} className="gap-1.5">
               <FileText className="h-4 w-4" />تصدير المستويات PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShareLevelsWhatsApp}
+              className="gap-1.5 text-success border-success/30 hover:bg-success/10"
+            >
+              <Share2 className="h-4 w-4" />إرسال المستويات واتساب
             </Button>
             <ReportExportDialog
               title="تصدير تقرير الدرجات"
