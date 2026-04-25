@@ -546,19 +546,28 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
 
       {/* Header */}
       <div className="relative flex items-center justify-between gap-2 px-4 py-2.5 border-b border-white/40 dark:border-white/5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="relative">
             <Sparkles className="h-4 w-4 text-indigo-500 dark:text-indigo-300" />
           </div>
-          <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-foreground dark:text-slate-100">
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-sm font-bold text-foreground dark:text-slate-100 truncate">
               لوحة تصنيف الفصل الذكية
             </h3>
-            <p className="text-[10px] text-muted-foreground dark:text-slate-400">
+            <p className="text-[10px] text-muted-foreground dark:text-slate-400 truncate">
               {className} — تحديث لحظي حسب الرصد
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setDashCollapsed(!dashCollapsed)}
+          className="flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/5 border border-white/50 dark:border-white/10 bg-white/40 dark:bg-white/5 transition-all shrink-0"
+          aria-label={dashCollapsed ? "إظهار اللوحة" : "إخفاء اللوحة"}
+        >
+          {dashCollapsed ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+          <span>{dashCollapsed ? "إظهار" : "إخفاء"}</span>
+          {dashCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+        </button>
       </div>
 
       {/* Distribution KPI bar */}
