@@ -98,8 +98,8 @@ export default function GradesPage() {
   });
 
   const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
-  const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
-  const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
+  const [activeType, setActiveType] = usePerClassState("grades_active_type", selectedClass, "daily");
+  const [selectedPeriod, setSelectedPeriod] = usePerClassState("grades_selected_period", selectedClass, 1);
 
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
   const canView = perms.can_view_grades || perms.read_only_mode;
