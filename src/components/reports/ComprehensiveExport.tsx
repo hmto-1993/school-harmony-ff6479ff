@@ -15,9 +15,10 @@ import { UpgradeDialog } from "@/components/subscription/PremiumGate";
 
 interface ComprehensiveExportProps {
   classes: { id: string; name: string }[];
+  variant?: "card" | "header";
 }
 
-export default function ComprehensiveExport({ classes }: ComprehensiveExportProps) {
+export default function ComprehensiveExport({ classes, variant = "card" }: ComprehensiveExportProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -167,6 +168,59 @@ export default function ComprehensiveExport({ classes }: ComprehensiveExportProp
   }, [fetchData]);
 
   if (classes.length === 0) return null;
+
+  // Slim header trigger variant
+  if (variant === "header") {
+    return (
+      <>
+        <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline" disabled={loading} className="gap-1.5 bg-background/60 backdrop-blur">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBarChart className="h-4 w-4 text-primary" />}
+              {loading ? "جارٍ التصدير..." : "تقرير شامل"}
+              <ChevronDown className="h-3 w-3 opacity-60" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuLabel className="text-xs text-muted-foreground">التقرير الشامل + ملخص ذكي</DropdownMenuLabel>
+            {([
+              { key: "comprehensive" as const, label: "📊 شامل", ai: true },
+              { key: "attendance" as const, label: "📋 التركيز على الحضور", ai: true },
+              { key: "grades" as const, label: "📝 التركيز على الدرجات", ai: true },
+              { key: "none" as const, label: "⏭️ بدون ملخص ذكي", ai: false },
+            ]).map(opt => (
+              <DropdownMenuItem
+                key={opt.key}
+                onClick={() => (opt.ai ? requireAI(() => handleExportComprehensive(opt.key)) : handleExportComprehensive(opt.key))}
+                className="flex items-center justify-between gap-2"
+              >
+                <span>{opt.label}</span>
+                {opt.ai && aiLocked && <Lock className="h-3.5 w-3.5 text-amber-500" />}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground">ملخص مختصر</DropdownMenuLabel>
+            <DropdownMenuItem
+              onClick={() => requireAI(() => handleExportSummary(true))}
+              className="flex items-center justify-between gap-2"
+            >
+              <span className="flex items-center"><Sparkles className="h-4 w-4 ml-2 text-primary" /> ملخص مختصر + ذكي</span>
+              {aiLocked && <Lock className="h-3.5 w-3.5 text-amber-500" />}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleExportSummary(false)}>
+              📋 ملخص مختصر بدون ذكي
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <UpgradeDialog
+          open={showAIUpgrade}
+          onOpenChange={setShowAIUpgrade}
+          featureName="مساعد الصياغة بالذكاء الاصطناعي"
+          description="ولّد ملخصات احترافية ومخصّصة لتقاريرك بالذكاء الاصطناعي، حصرياً لمشتركي ألفا بريميوم."
+        />
+      </>
+    );
+  }
 
   return (
     <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
