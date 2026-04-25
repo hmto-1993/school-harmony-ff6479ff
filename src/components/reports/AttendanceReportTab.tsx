@@ -14,7 +14,15 @@ import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport"
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintWatermark from "@/components/shared/PrintWatermark";
 import ReportExportDialog from "@/components/reports/ReportExportDialog";
+import { safeWriteXLSX } from "@/lib/download-utils";
+import { toast } from "@/hooks/use-toast";
 import type { AttendanceRow } from "@/hooks/useReportSending";
+
+const STATUS_FILTER_LABELS: Record<string, string> = {
+  present: "الحاضرون",
+  absent: "الغائبون",
+  late: "المتأخرون",
+};
 
 const STATUS_LABELS: Record<string, string> = {
   present: "حاضر",
