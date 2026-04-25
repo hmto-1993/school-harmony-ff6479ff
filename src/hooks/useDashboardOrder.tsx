@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
 
-const STORAGE_KEY = "dashboard-widget-order";
+const STORAGE_KEY = "dashboard-widget-order-v2";
 const LOCK_KEY = "dashboard-widgets-locked";
 
 export const DEFAULT_ORDER = [
-  "attendanceAndComparison",
-  "performanceDashboard",
-  "widgetGrid",
   "fullTimetable",
+  "attendanceAndComparison",
+  "widgetGrid",
   "smartSummary",
+  "performanceDashboard",
   "honorRoll",
 ];
 
