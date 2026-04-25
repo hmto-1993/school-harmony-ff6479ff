@@ -1,0 +1,1 @@
+UPDATE public.site_settings SET value='https://aoiqnrhwndtttlcoiiny.supabase.co/storage/v1/object/public/school-assets/school-logo-almtmez.png', updated_at = now() WHERE id='school_logo_url';
