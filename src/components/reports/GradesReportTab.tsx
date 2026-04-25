@@ -230,6 +230,7 @@ export default function GradesReportTab({
               sortKey={sortKey} setSortKey={setSortKey}
               sortDir={sortDir} setSortDir={setSortDir}
               scope={scope} setScope={setScope}
+              period={period} setPeriod={setPeriod}
               examFilter={examFilter} setExamFilter={setExamFilter}
               examCategories={examCategories}
               showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
