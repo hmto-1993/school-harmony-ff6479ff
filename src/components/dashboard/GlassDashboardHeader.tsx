@@ -152,52 +152,28 @@ export default function GlassDashboardHeader({
               </div>
             </div>
 
-            {/* Bottom row: chips with date/week + hero attendance */}
-            <div className="flex items-end justify-between gap-4 flex-wrap">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground">
-                  <span className="text-primary">●</span> {dayName}
+            {/* Bottom row: chips with date/week */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground">
+                <span className="text-primary">●</span> {dayName}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground/80 tabular-nums">
+                {today}
+              </span>
+              {hijriDate && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground/70">
+                  {hijriDate}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground/80 tabular-nums">
-                  {today}
+              )}
+              {currentWeek && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/30 px-3 py-1 text-xs font-semibold text-primary">
+                  الأسبوع {currentWeek}{calendarData ? `/${calendarData.total_weeks}` : ""}
                 </span>
-                {hijriDate && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-background/70 backdrop-blur-sm border border-border/40 px-3 py-1 text-xs font-medium text-foreground/70">
-                    {hijriDate}
-                  </span>
-                )}
-                {currentWeek && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 backdrop-blur-sm border border-primary/30 px-3 py-1 text-xs font-semibold text-primary">
-                    الأسبوع {currentWeek}{calendarData ? `/${calendarData.total_weeks}` : ""}
-                  </span>
-                )}
-                {todayExam && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 backdrop-blur-sm border border-warning/30 px-3 py-1 text-xs font-semibold text-warning">
-                    {todayExam.label}
-                  </span>
-                )}
-              </div>
-
-              {/* Hero attendance pill */}
-              {totalStudents > 0 && (
-                <div className="flex items-center gap-3 rounded-2xl bg-background/70 backdrop-blur-md border border-border/40 px-4 py-2.5 shadow-lg">
-                  <div className="flex flex-col items-end leading-tight">
-                    <span className="text-[10px] text-muted-foreground font-medium">حضور اليوم</span>
-                    <span className="text-xs font-medium text-foreground/80 tabular-nums">
-                      {todayPresent} <span className="text-muted-foreground">/ {totalStudents}</span>
-                    </span>
-                  </div>
-                  <div className={`relative h-12 w-12 rounded-full grid place-items-center font-black text-sm tabular-nums ${
-                    attendanceRate >= 90 ? "text-success" : attendanceRate >= 70 ? "text-warning" : "text-destructive"
-                  }`}>
-                    <svg className="absolute inset-0 -rotate-90" viewBox="0 0 48 48">
-                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="4" />
-                      <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"
-                        strokeDasharray={`${(attendanceRate / 100) * 125.66} 125.66`} />
-                    </svg>
-                    <span>{attendanceRate}<span className="text-[9px]">%</span></span>
-                  </div>
-                </div>
+              )}
+              {todayExam && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-warning/15 backdrop-blur-sm border border-warning/30 px-3 py-1 text-xs font-semibold text-warning">
+                  {todayExam.label}
+                </span>
               )}
             </div>
           </div>
