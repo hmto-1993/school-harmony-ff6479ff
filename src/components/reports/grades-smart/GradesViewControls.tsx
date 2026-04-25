@@ -15,6 +15,8 @@ interface Props {
   setSortDir: (d: SortDir) => void;
   scope: "current" | "all";
   setScope: (s: "current" | "all") => void;
+  period: 1 | 2;
+  setPeriod: (p: 1 | 2) => void;
   examFilter: string;
   setExamFilter: (v: string) => void;
   examCategories: { id: string; name: string }[];
