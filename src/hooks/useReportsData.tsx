@@ -7,6 +7,7 @@ import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
 import { format } from "date-fns";
 import { useReportSending, type AttendanceRow, type GradeRow, type CategoryMeta } from "@/hooks/useReportSending";
+import { usePersistedState } from "@/hooks/usePersistedState";
 
 const STATUS_LABELS: Record<string, string> = {
   present: "حاضر",
