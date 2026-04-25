@@ -174,7 +174,11 @@ export default function LoginPage() {
         <Card className="bg-card/95 border-border/30 shadow-2xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
             <div className="relative rounded-2xl bg-gradient-to-br from-card/95 via-card/85 to-muted/60 dark:from-muted/70 dark:via-muted/50 dark:to-muted/30 p-2.5 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] ring-1 ring-[hsl(42,40%,55%)]/30 dark:ring-[hsl(42,40%,55%)]/20">
-              <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="h-20 w-auto rounded-xl" />
+              <img
+                src={schoolLogo}
+                alt="شعار منصة المتميز التعليمية"
+                className="h-24 w-24 md:h-28 md:w-28 rounded-2xl object-contain bg-white/70 dark:bg-white/10 p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
+              />
               <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
             </div>
             <div className="text-center">

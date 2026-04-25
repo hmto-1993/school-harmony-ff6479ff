@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Link } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import schoolLogo from "@/assets/school-logo.png";
 import { useState, useEffect } from "react";
@@ -43,7 +43,13 @@ export default function DashboardLayout() {
           >
             <Menu className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-primary">القائمة</span>
-            <img src={schoolLogo} alt="شعار المدرسة" className="h-8 w-8 rounded-lg object-cover mr-auto" />
+            <Link to="/dashboard" onClick={(e) => e.stopPropagation()} className="mr-auto inline-flex">
+              <img
+                src={schoolLogo}
+                alt="شعار منصة المتميز التعليمية"
+                className="h-9 w-9 rounded-lg object-contain bg-white/60 dark:bg-white/5 p-0.5 ring-1 ring-primary/15 shadow-[0_2px_8px_-2px_hsl(var(--primary)/0.25)] transition-transform duration-300 ease-out hover:scale-105"
+              />
+            </Link>
           </button>
         )}
         <div className="p-4 md:p-8 max-w-7xl mx-auto w-full max-w-full overflow-x-hidden min-h-[calc(100vh-60px)]">
