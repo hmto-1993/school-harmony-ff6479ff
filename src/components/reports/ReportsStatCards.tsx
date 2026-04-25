@@ -223,10 +223,9 @@ export default function ReportsStatCards({
   }>({ violations: 0, positive: 0, violationRows: [] });
 
   useEffect(() => {
-    if (activeTab !== "behavior") return;
     const fetchBehavior = async () => {
       const targetIds = selectedClass === "all" ? classes.map(c => c.id) : [selectedClass];
-      if (targetIds.length === 0) return;
+      if (targetIds.length === 0) { setBehaviorStats({ violations: 0, positive: 0, violationRows: [] }); return; }
       const { data } = await supabase
         .from("behavior_records")
         .select("type, note, student_id, students(full_name)")
@@ -251,90 +250,74 @@ export default function ReportsStatCards({
       setBehaviorStats({ violations, positive, violationRows });
     };
     fetchBehavior();
-  }, [activeTab, selectedClass, dateFrom, dateTo, classes]);
+  }, [selectedClass, dateFrom, dateTo, classes]);
 
-  // ============ Build cards by tab ============
-  let cards: StatCard[] = [];
-
-  if (activeTab === "attendance") {
-    cards = [
-      {
-        label: "نسبة الانتظام",
-        value: attendanceRate, suffix: "%",
-        hint: `${present} حضور من ${total} سجل`,
-        icon: UserCheck,
-        tone: attendanceRate >= 85 ? "success" : attendanceRate >= 70 ? "warning" : "destructive",
-        trend: attendanceRate >= 85 ? "up" : attendanceRate < 70 ? "down" : "flat",
+  // ============ Build all cards (always visible) ============
+  const cards: StatCard[] = [
+    {
+      label: "نسبة الانتظام",
+      value: attendanceRate, suffix: "%",
+      hint: `${present} حضور من ${total} سجل`,
+      icon: UserCheck,
+      tone: attendanceRate >= 85 ? "success" : attendanceRate >= 70 ? "warning" : "destructive",
+      trend: attendanceRate >= 85 ? "up" : attendanceRate < 70 ? "down" : "flat",
+    },
+    {
+      label: "الأكثر غياباً",
+      value: topAbsent?.value ?? 0, suffix: topAbsent ? "غياب" : "",
+      hint: topAbsent?.name || `لا غياب • ${absent} غياب • ${late} تأخر`,
+      icon: UserX,
+      tone: topAbsent && topAbsent.value >= 3 ? "destructive" : "warning",
+      detail: {
+        title: "ترتيب الطلاب حسب الغياب",
+        description: `${absenceList.length} طالب • إجمالي ${absent} غياب و ${late} تأخر`,
+        rows: absenceList, valueLabel: "غياب", sortDir: "desc",
       },
-      {
-        label: "الأكثر غياباً",
-        value: topAbsent?.value ?? 0, suffix: topAbsent ? "غياب" : "",
-        hint: topAbsent?.name || `لا غياب • ${absent} غياب • ${late} تأخر`,
-        icon: UserX,
-        tone: topAbsent && topAbsent.value >= 3 ? "destructive" : "warning",
-        detail: {
-          title: "ترتيب الطلاب حسب الغياب",
-          description: `${absenceList.length} طالب • إجمالي ${absent} غياب و ${late} تأخر`,
-          rows: absenceList,
-          valueLabel: "غياب",
-          sortDir: "desc",
-        },
+    },
+    {
+      label: "متوسط الأداء",
+      value: avgGrade, suffix: "/ 100",
+      hint: `${validGrades.length} طالب • ${passingRate}% ناجحون`,
+      icon: GraduationCap,
+      tone: avgGrade >= 80 ? "success" : avgGrade >= 60 ? "info" : "warning",
+      trend: avgGrade >= 80 ? "up" : avgGrade < 60 ? "down" : "flat",
+    },
+    {
+      label: "الطالب الأول",
+      value: topStudent ? Math.round(topStudent.total) : "—",
+      suffix: topStudent ? "نقطة" : "",
+      hint: topStudent?.student_name || "لا توجد بيانات",
+      icon: Award, tone: "accent",
+      detail: {
+        title: "ترتيب الطلاب حسب الدرجات",
+        description: `${validGrades.length} طالب • متوسط ${avgGrade} • ${passingCount} ناجح`,
+        rows: topList, valueLabel: "نقطة", sortDir: "desc",
       },
-    ];
-  } else if (activeTab === "grades") {
-    cards = [
-      {
-        label: "متوسط الأداء",
-        value: avgGrade, suffix: "/ 100",
-        hint: `${validGrades.length} طالب • ${passingRate}% ناجحون`,
-        icon: GraduationCap,
-        tone: avgGrade >= 80 ? "success" : avgGrade >= 60 ? "info" : "warning",
-        trend: avgGrade >= 80 ? "up" : avgGrade < 60 ? "down" : "flat",
+    },
+    {
+      label: "إجمالي المخالفات",
+      value: behaviorStats.violations,
+      hint: `${behaviorStats.positive} ملاحظة إيجابية مقابلها`,
+      icon: AlertTriangle,
+      tone: behaviorStats.violations === 0 ? "success" : behaviorStats.violations >= 10 ? "destructive" : "warning",
+      trend: behaviorStats.violations === 0 ? "up" : behaviorStats.violations >= 10 ? "down" : "flat",
+    },
+    {
+      label: "الأكثر مخالفة",
+      value: behaviorStats.violationRows[0]?.value ?? 0,
+      suffix: behaviorStats.violationRows.length > 0 ? "مخالفة" : "",
+      hint: behaviorStats.violationRows[0]?.name || "لا توجد مخالفات",
+      icon: behaviorStats.violations === 0 ? ShieldCheck : Sparkles,
+      tone: (behaviorStats.violationRows[0]?.value ?? 0) >= 5
+        ? "destructive"
+        : (behaviorStats.violationRows[0]?.value ?? 0) > 0 ? "warning" : "success",
+      detail: {
+        title: "ترتيب الطلاب حسب المخالفات",
+        description: `${behaviorStats.violationRows.length} طالب • إجمالي ${behaviorStats.violations} مخالفة`,
+        rows: behaviorStats.violationRows, valueLabel: "مخالفة", sortDir: "desc",
       },
-      {
-        label: "الطالب الأول",
-        value: topStudent ? Math.round(topStudent.total) : "—",
-        suffix: topStudent ? "نقطة" : "",
-        hint: topStudent?.student_name || "لا توجد بيانات",
-        icon: Award, tone: "accent",
-        detail: {
-          title: "ترتيب الطلاب حسب الدرجات",
-          description: `${validGrades.length} طالب • متوسط ${avgGrade} • ${passingCount} ناجح`,
-          rows: topList,
-          valueLabel: "نقطة",
-          sortDir: "desc",
-        },
-      },
-    ];
-  } else if (activeTab === "behavior") {
-    cards = [
-      {
-        label: "إجمالي المخالفات",
-        value: behaviorStats.violations,
-        hint: `${behaviorStats.positive} ملاحظة إيجابية مقابلها`,
-        icon: AlertTriangle,
-        tone: behaviorStats.violations === 0 ? "success" : behaviorStats.violations >= 10 ? "destructive" : "warning",
-        trend: behaviorStats.violations === 0 ? "up" : behaviorStats.violations >= 10 ? "down" : "flat",
-      },
-      {
-        label: "الأكثر مخالفة",
-        value: behaviorStats.violationRows[0]?.value ?? 0,
-        suffix: behaviorStats.violationRows.length > 0 ? "مخالفة" : "",
-        hint: behaviorStats.violationRows[0]?.name || "لا توجد مخالفات",
-        icon: behaviorStats.violations === 0 ? ShieldCheck : Sparkles,
-        tone: (behaviorStats.violationRows[0]?.value ?? 0) >= 5
-          ? "destructive"
-          : (behaviorStats.violationRows[0]?.value ?? 0) > 0 ? "warning" : "success",
-        detail: {
-          title: "ترتيب الطلاب حسب المخالفات",
-          description: `${behaviorStats.violationRows.length} طالب • إجمالي ${behaviorStats.violations} مخالفة`,
-          rows: behaviorStats.violationRows,
-          valueLabel: "مخالفة",
-          sortDir: "desc",
-        },
-      },
-    ];
-  }
+    },
+  ];
 
   if (cards.length === 0) return null;
 
