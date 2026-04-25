@@ -1,8 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock, Eye } from "lucide-react";
+import {
+  ClipboardList, BarChart3, UserCheck, BookOpen, Users, FileDown, Lock,
+  PenLine, LineChart, GraduationCap, ChevronDown,
+} from "lucide-react";
 import DailyGradeEntry from "@/components/grades/DailyGradeEntry";
 import GradesSummary from "@/components/grades/GradesSummary";
 import ClassworkSummary from "@/components/grades/ClassworkSummary";
@@ -13,36 +16,66 @@ import NoorExportDialog from "@/components/grades/NoorExportDialog";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
 import PrintWatermark from "@/components/shared/PrintWatermark";
 import PrintFooterSignatures from "@/components/shared/PrintFooterSignatures";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 
 import { cn } from "@/lib/utils";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
 import { useTeacherPermissions } from "@/hooks/useTeacherPermissions";
 
-const ENTRY_TYPES = [
-  { id: "daily", label: "تفاعل اليوم", icon: ClipboardList, color: "text-blue-500", bg: "bg-blue-500/10" },
-  { id: "classwork", label: "التفاعل الكلي", icon: BarChart3, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-  { id: "behavior", label: "السلوك", icon: UserCheck, color: "text-amber-500", bg: "bg-amber-500/10" },
-  { id: "summary", label: "التقييم النهائي", icon: BarChart3, color: "text-purple-500", bg: "bg-purple-500/10" },
-  { id: "semester", label: "ملخص الفصل", icon: BookOpen, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { id: "import", label: "استيراد من ملف", icon: FileDown, color: "text-teal-500", bg: "bg-teal-500/10" },
-] as const;
+// === Sub-tabs config (3 main groups) ===
+const GROUPS = {
+  entry: {
+    id: "entry", label: "الإدخال", icon: PenLine, color: "primary",
+    desc: "إدخال الدرجات اليومية والسلوك والاستيراد",
+  },
+  analysis: {
+    id: "analysis", label: "التحليل", icon: LineChart, color: "info",
+    desc: "التفاعل الكلي والتقييم النهائي",
+  },
+  semester: {
+    id: "semester", label: "الفصل الدراسي", icon: GraduationCap, color: "accent",
+    desc: "ملخص نتائج الفصل",
+  },
+} as const;
+
+const SUB_TABS = {
+  entry: [
+    { id: "daily", label: "تفاعل اليوم", icon: ClipboardList },
+    { id: "behavior", label: "السلوك", icon: UserCheck },
+    { id: "import", label: "استيراد", icon: FileDown },
+  ],
+  analysis: [
+    { id: "classwork", label: "التفاعل الكلي", icon: BarChart3 },
+    { id: "summary", label: "التقييم النهائي", icon: BarChart3 },
+  ],
+  semester: [
+    { id: "semester", label: "ملخص الفصل", icon: BookOpen },
+  ],
+} as const;
 
 const PERIODS = [
   { id: 1, label: "الفترة الأولى" },
   { id: 2, label: "الفترة الثانية" },
 ];
 
+function getGroupForType(type: string): keyof typeof GROUPS {
+  if (["daily", "behavior", "import"].includes(type)) return "entry";
+  if (["classwork", "summary"].includes(type)) return "analysis";
+  return "semester";
+}
+
 export default function GradesPage() {
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const { data: classesRaw, isLoading: classesLoading } = useQuery({
     queryKey: ["classes-list"],
     queryFn: async () => {
-      const [{ data: cls }, { data: lockData }] = await Promise.all([
-        supabase.from("classes").select("id, name").order("name"),
-        supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle(),
-      ]);
-      return { classes: cls || [], overrideLock: lockData?.value === "true" };
+      const { data: cls } = await supabase.from("classes").select("id, name").order("name");
+      return { classes: cls || [] };
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -63,186 +96,190 @@ export default function GradesPage() {
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
+
   const [selectedClass, setSelectedClass] = usePersistedState("selected_class", "");
   const [activeType, setActiveType] = usePersistedState("grades_active_type", "daily");
   const [selectedPeriod, setSelectedPeriod] = usePersistedState("grades_selected_period", 1);
 
-  const handlePeriodChange = (period: number) => {
-    setSelectedPeriod(period);
-  };
-
   const canEdit = perms.can_manage_grades && !perms.read_only_mode;
   const canView = perms.can_view_grades || perms.read_only_mode;
 
-  const availableTypes = canEdit
-    ? ENTRY_TYPES
-    : ENTRY_TYPES.filter((t) => t.id === "summary" || t.id === "semester" || t.id === "daily" || t.id === "classwork");
+  // Filter sub-tabs based on permissions
+  const visibleSubTabs = useMemo(() => {
+    if (canEdit) return SUB_TABS;
+    return {
+      entry: SUB_TABS.entry.filter(t => t.id === "daily"),
+      analysis: SUB_TABS.analysis,
+      semester: SUB_TABS.semester,
+    };
+  }, [canEdit]);
 
-  const showPeriodSelector = activeType === "daily" || activeType === "classwork" || activeType === "summary" || activeType === "import";
+  const activeGroup = getGroupForType(activeType);
+  const showPeriodSelector = ["daily", "classwork", "summary", "import"].includes(activeType);
 
-  // Set default active type to summary if can't edit
+  const studentCount = selectedClass ? (classCounts[selectedClass] || 0) : 0;
+  const selectedClassName = classes.find(c => c.id === selectedClass)?.name || "";
+
   useEffect(() => {
     if (permsLoaded && !canEdit && (activeType === "behavior" || activeType === "import")) {
       setActiveType("daily");
     }
   }, [permsLoaded, canEdit, activeType, setActiveType]);
 
+  const handleGroupChange = (newGroup: string) => {
+    const firstTab = visibleSubTabs[newGroup as keyof typeof SUB_TABS]?.[0];
+    if (firstTab) setActiveType(firstTab.id);
+  };
+
   if (permsLoaded && !canView) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <EmptyState
-          icon={Lock}
-          title="لا تملك صلاحية عرض الدرجات"
-          description="تواصل مع المدير لتفعيل صلاحية مشاهدة الدرجات"
-        />
+        <EmptyState icon={Lock} title="لا تملك صلاحية عرض الدرجات" description="تواصل مع المدير لتفعيل صلاحية مشاهدة الدرجات" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3 no-print">
-        <div>
-          <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">
-            الدرجات والتقييمات
-          </h1>
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-muted-foreground">إدخال وعرض درجات الطلاب حسب فئات التقييم</p>
-            <AcademicWeekBadge />
+    <div className="space-y-5 animate-fade-in">
+      {/* === Glassmorphism Header === */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl p-5 shadow-card no-print">
+        {/* Decorative blobs */}
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
+
+        <div className="relative flex items-start justify-between flex-wrap gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-black bg-gradient-to-l from-primary via-primary to-accent bg-clip-text text-transparent">
+                الدرجات والتقييمات
+              </h1>
+              <AcademicWeekBadge />
+            </div>
+            <p className="text-sm text-muted-foreground">{GROUPS[activeGroup].desc}</p>
           </div>
+
+          {canEdit && (
+            <div className="flex items-center gap-2">
+              <NoorExportDialog />
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <NoorExportDialog />
+
+        {/* === Unified Toolbar === */}
+        <div className="relative mt-5 flex items-center gap-2 flex-wrap">
+          {/* Class Picker */}
+          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md px-2 py-1.5 shadow-sm">
+            <div className="h-7 w-7 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+              <Users className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <Select value={selectedClass} onValueChange={setSelectedClass} disabled={classesLoading}>
+              <SelectTrigger className="h-8 w-[160px] border-0 bg-transparent focus:ring-0 font-bold text-sm">
+                <SelectValue placeholder="اختر الفصل" />
+              </SelectTrigger>
+              <SelectContent>
+                {classes.map((cls) => (
+                  <SelectItem key={cls.id} value={cls.id}>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">{cls.name}</span>
+                      {classCounts[cls.id] !== undefined && (
+                        <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
+                          {classCounts[cls.id]}
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedClass && (
+              <Badge variant="secondary" className="h-6 px-2 text-[11px] font-bold gap-1">
+                {studentCount}
+                <span className="font-normal text-muted-foreground">طالب</span>
+              </Badge>
+            )}
+          </div>
+
+          {/* Period Selector */}
+          {selectedClass && showPeriodSelector && (
+            <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md p-1 shadow-sm">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setSelectedPeriod(p.id)}
+                  className={cn(
+                    "px-3 h-8 text-xs font-bold rounded-lg transition-all duration-200",
+                    selectedPeriod === p.id
+                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Class Cards — Cosmic Cyan palette */}
-      <div className="no-print">
-        <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
-          <Users className="h-4 w-4" />
-          اختر الفصل
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          {classesLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-2xl border-2 border-border/30 p-4 text-center animate-pulse">
-                <div className="mx-auto w-11 h-11 rounded-xl bg-muted/50 mb-2.5" />
-                <div className="h-4 w-16 mx-auto rounded bg-muted/50 mb-1.5" />
-                <div className="h-3 w-12 mx-auto rounded bg-muted/40" />
-              </div>
-            ))
-          ) : classes.length === 0 ? (
-            <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
-          ) : (
-          classes.map((cls, i) => {
-            const isActive = selectedClass === cls.id;
-            const count = classCounts[cls.id] || 0;
-            return (
-              <button
-                key={cls.id}
-                onClick={() => setSelectedClass(cls.id)}
-                className={cn(
-                  "relative p-4 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 overflow-hidden group",
-                  isActive
-                    ? "bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 border-primary shadow-lg shadow-primary/20 ring-2 ring-primary/25"
-                    : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-primary/40 hover:shadow-primary/10"
-                )}
-              >
-                <div className={cn(
-                  "mx-auto w-11 h-11 rounded-xl flex items-center justify-center mb-2.5 transition-all duration-300 group-hover:scale-110 shadow-sm",
-                  isActive ? "bg-gradient-to-br from-primary to-primary/70 shadow-md shadow-primary/30" : "bg-muted"
-                )}>
-                  <Users className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground")} />
-                </div>
-                <span className={cn("text-sm font-bold block", isActive ? "text-primary" : "text-foreground")}>
-                  {cls.name}
-                </span>
-                {classCounts[cls.id] !== undefined ? (
-                <span className={cn("text-[11px] mt-1 block font-medium", isActive ? "text-primary/70" : "text-muted-foreground")}>
-                  {count} طالب
-                </span>
-                ) : (
-                <span className="mt-1 block h-3 w-12 mx-auto rounded bg-muted/50 animate-pulse" />
-                )}
-                
-              </button>
-            );
-          }))}
-        </div>
-      </div>
-
-      {/* Entry Type Cards — green active, colorful icons */}
+      {/* === Main Group Tabs === */}
       {selectedClass && !classesLoading && (
-        <div className="animate-fade-in no-print">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">نوع الإدخال</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {availableTypes.map((type, i) => {
-              const Icon = type.icon;
-              const isActive = activeType === type.id;
-              return (
-                <button
-                  key={type.id}
-                  onClick={() => setActiveType(type.id)}
-                  className={cn(
-                    "relative flex flex-col items-center gap-2.5 p-5 rounded-2xl border-2 text-center transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
-                    isActive
-                      ? "bg-gradient-to-br from-success/20 via-success/10 to-success/5 border-success shadow-lg shadow-success/20 ring-2 ring-success/25"
-                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-success/40 hover:shadow-success/10"
-                  )}
-                  style={{ animationDelay: `${i * 50}ms`, animationFillMode: "both" }}
-                >
-                  <div className={cn(
-                    "flex items-center justify-center h-12 w-12 rounded-xl transition-all duration-300 group-hover:scale-110 shadow-sm",
-                    isActive ? "bg-gradient-to-br from-success to-success/70 shadow-md shadow-success/30" : type.bg
-                  )}>
-                    <Icon className={cn("h-5 w-5", isActive ? "text-success-foreground" : type.color)} />
-                  </div>
-                  <span className={cn("text-xs font-bold", isActive ? "text-success" : "text-foreground")}>
-                    {type.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div className="no-print animate-fade-in">
+          <Tabs value={activeGroup} onValueChange={handleGroupChange} dir="rtl">
+            <TabsList className="h-auto w-full grid grid-cols-3 gap-2 bg-card/60 backdrop-blur-xl border border-border/40 p-2 rounded-2xl shadow-card">
+              {Object.values(GROUPS).map((g) => {
+                const Icon = g.icon;
+                const isActive = activeGroup === g.id;
+                const colorMap: Record<string, string> = {
+                  primary: "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-primary/30",
+                  info: "data-[state=active]:bg-info data-[state=active]:text-info-foreground data-[state=active]:shadow-info/30",
+                  accent: "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-accent/30",
+                };
+                return (
+                  <TabsTrigger
+                    key={g.id}
+                    value={g.id}
+                    className={cn(
+                      "flex items-center justify-center gap-2 h-11 rounded-xl font-bold text-sm transition-all duration-300",
+                      "data-[state=active]:shadow-md data-[state=active]:font-extrabold",
+                      colorMap[g.color]
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <span>{g.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+
+          {/* Sub-tabs (Pills) */}
+          {visibleSubTabs[activeGroup].length > 1 && (
+            <div className="mt-3 flex items-center gap-1.5 flex-wrap p-1.5 rounded-xl border border-border/40 bg-card/40 backdrop-blur-md">
+              {visibleSubTabs[activeGroup].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeType === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveType(tab.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-bold transition-all duration-200",
+                      isActive
+                        ? "bg-foreground/90 text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Period Cards — unified amber tint, active = primary */}
-      {selectedClass && showPeriodSelector && (
-        <div className="animate-fade-in no-print">
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">الفترة</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg">
-            {PERIODS.map((period, i) => {
-              const isActive = selectedPeriod === period.id;
-              return (
-                <button
-                  key={period.id}
-                  onClick={() => handlePeriodChange(period.id)}
-                  className={cn(
-                    "relative flex items-center justify-center gap-2.5 p-4 rounded-2xl border-2 transition-all duration-300 hover:scale-[1.04] hover:-translate-y-1 group animate-fade-in",
-                    isActive
-                      ? "bg-gradient-to-br from-success/20 via-success/10 to-success/5 border-success shadow-lg shadow-success/20 ring-2 ring-success/25"
-                      : "bg-card border-border/60 shadow-md hover:shadow-lg hover:border-success/40 hover:shadow-success/10"
-                  )}
-                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: "both" }}
-                >
-                  <div className={cn(
-                    "h-3.5 w-3.5 rounded-full transition-all duration-300 shadow-sm",
-                    isActive ? "bg-success scale-125 shadow-md shadow-success/40" : "bg-muted-foreground/30"
-                  )} />
-                  <span className={cn("text-sm font-bold", isActive ? "text-success" : "text-foreground")}>
-                    {period.label}
-                  </span>
-                  
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Content or Empty State */}
+      {/* === Content === */}
       {selectedClass && !classesLoading ? (
         <div className="animate-fade-in print-area">
           <ReportPrintHeader reportType="grades" />
@@ -272,7 +309,7 @@ export default function GradesPage() {
         <EmptyState
           icon={ClipboardList}
           title="اختر فصلاً للبدء"
-          description="حدد الفصل الدراسي من الأعلى لعرض وإدخال درجات الطلاب"
+          description="حدد الفصل الدراسي من الشريط العلوي لعرض وإدخال درجات الطلاب"
         />
       )}
     </div>
