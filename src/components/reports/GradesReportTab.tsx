@@ -39,12 +39,14 @@ interface GradesReportTabProps {
   shareGradesWhatsApp: () => void;
   scope: "current" | "all";
   setScope: (s: "current" | "all") => void;
+  period: 1 | 2;
+  setPeriod: (p: 1 | 2) => void;
 }
 
 export default function GradesReportTab({
   gradeData, categoryNames, categoryMeta = [], loadingGrades, selectedClass,
   fetchGrades, onPreview, exportGradesExcel, exportGradesPDF, shareGradesWhatsApp,
-  scope, setScope,
+  scope, setScope, period, setPeriod,
 }: GradesReportTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("raw");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -228,6 +230,7 @@ export default function GradesReportTab({
               sortKey={sortKey} setSortKey={setSortKey}
               sortDir={sortDir} setSortDir={setSortDir}
               scope={scope} setScope={setScope}
+              period={period} setPeriod={setPeriod}
               examFilter={examFilter} setExamFilter={setExamFilter}
               examCategories={examCategories}
               showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
