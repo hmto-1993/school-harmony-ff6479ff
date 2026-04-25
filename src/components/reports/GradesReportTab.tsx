@@ -46,7 +46,7 @@ interface GradesReportTabProps {
 export default function GradesReportTab({
   gradeData, categoryNames, categoryMeta = [], loadingGrades, selectedClass,
   fetchGrades, onPreview, exportGradesExcel, exportGradesPDF, shareGradesWhatsApp,
-  scope, setScope,
+  scope, setScope, period, setPeriod,
 }: GradesReportTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("raw");
   const [sortKey, setSortKey] = useState<SortKey>("name");
