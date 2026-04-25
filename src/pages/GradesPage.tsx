@@ -165,57 +165,89 @@ export default function GradesPage() {
           )}
         </div>
 
-        {/* === Unified Toolbar === */}
-        <div className="relative mt-5 flex items-center gap-2 flex-wrap">
-          {/* Class Picker */}
-          <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md px-2 py-1.5 shadow-sm">
-            <div className="h-7 w-7 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
-              <Users className="h-3.5 w-3.5 text-primary" />
-            </div>
-            <Select value={selectedClass} onValueChange={setSelectedClass} disabled={classesLoading}>
-              <SelectTrigger className="h-8 w-[160px] border-0 bg-transparent focus:ring-0 font-bold text-sm">
-                <SelectValue placeholder="اختر الفصل" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((cls) => (
-                  <SelectItem key={cls.id} value={cls.id}>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{cls.name}</span>
-                      {classCounts[cls.id] !== undefined && (
-                        <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">
-                          {classCounts[cls.id]}
-                        </Badge>
-                      )}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {/* === Class Cards === */}
+        <div className="relative mt-5 space-y-3">
+          <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+            <Users className="h-3.5 w-3.5" />
+            <span>اختر الفصل الدراسي</span>
             {selectedClass && (
-              <Badge variant="secondary" className="h-6 px-2 text-[11px] font-bold gap-1">
+              <Badge variant="secondary" className="h-5 px-2 text-[10px] font-bold gap-1">
                 {studentCount}
                 <span className="font-normal text-muted-foreground">طالب</span>
               </Badge>
             )}
           </div>
 
+          {classesLoading ? (
+            <div className="text-sm text-muted-foreground">جاري التحميل...</div>
+          ) : classes.length === 0 ? (
+            <div className="text-sm text-muted-foreground">لا توجد فصول بعد</div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+              {classes.map((cls) => {
+                const isActive = selectedClass === cls.id;
+                const count = classCounts[cls.id] || 0;
+                return (
+                  <button
+                    key={cls.id}
+                    onClick={() => setSelectedClass(cls.id)}
+                    className={cn(
+                      "group relative flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-right transition-all duration-200",
+                      "backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow-md",
+                      isActive
+                        ? "border-primary bg-gradient-to-br from-primary/15 to-accent/10 shadow-primary/20"
+                        : "border-border/40 bg-background/60 hover:border-primary/40 hover:bg-background/80"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className={cn(
+                        "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                        isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
+                      )}>
+                        <BookOpen className="h-3.5 w-3.5" />
+                      </div>
+                      <span className={cn(
+                        "font-bold text-sm truncate",
+                        isActive ? "text-primary" : "text-foreground"
+                      )}>
+                        {cls.name}
+                      </span>
+                    </div>
+                    <Badge
+                      variant={isActive ? "default" : "secondary"}
+                      className={cn(
+                        "h-5 px-1.5 text-[10px] font-bold shrink-0",
+                        isActive && "bg-primary/90 text-primary-foreground"
+                      )}
+                    >
+                      {count}
+                    </Badge>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Period Selector */}
           {selectedClass && showPeriodSelector && (
-            <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md p-1 shadow-sm">
-              {PERIODS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setSelectedPeriod(p.id)}
-                  className={cn(
-                    "px-3 h-8 text-xs font-bold rounded-lg transition-all duration-200",
-                    selectedPeriod === p.id
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-xs font-bold text-muted-foreground">الفترة:</span>
+              <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md p-1 shadow-sm">
+                {PERIODS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedPeriod(p.id)}
+                    className={cn(
+                      "px-3 h-8 text-xs font-bold rounded-lg transition-all duration-200",
+                      selectedPeriod === p.id
+                        ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
