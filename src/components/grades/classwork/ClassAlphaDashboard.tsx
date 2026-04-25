@@ -493,6 +493,7 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
   const [hideElite, setHideElite] = usePersistedState<boolean>(`alpha_dash_elite_hidden_${classId}`, false);
   const [hideGround, setHideGround] = usePersistedState<boolean>(`alpha_dash_ground_hidden_${classId}`, false);
   const [hideAlert, setHideAlert] = usePersistedState<boolean>(`alpha_dash_alert_hidden_${classId}`, false);
+  const [dashCollapsed, setDashCollapsed] = usePersistedState<boolean>(`alpha_dash_collapsed_${classId}`, false);
 
   const { elite, ground, alert } = useMemo(() => {
     const alertList = students
@@ -545,58 +546,80 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
 
       {/* Header */}
       <div className="relative flex items-center justify-between gap-2 px-4 py-2.5 border-b border-white/40 dark:border-white/5">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0">
           <div className="relative">
             <Sparkles className="h-4 w-4 text-indigo-500 dark:text-indigo-300" />
           </div>
-          <div className="flex flex-col">
-            <h3 className="text-sm font-bold text-foreground dark:text-slate-100">
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-sm font-bold text-foreground dark:text-slate-100 truncate">
               لوحة تصنيف الفصل الذكية
             </h3>
-            <p className="text-[10px] text-muted-foreground dark:text-slate-400">
+            <p className="text-[10px] text-muted-foreground dark:text-slate-400 truncate">
               {className} — تحديث لحظي حسب الرصد
             </p>
           </div>
         </div>
+        <button
+          onClick={() => setDashCollapsed(!dashCollapsed)}
+          className="flex items-center gap-1 h-7 px-2.5 rounded-lg text-[11px] font-bold text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/5 border border-white/50 dark:border-white/10 bg-white/40 dark:bg-white/5 transition-all shrink-0"
+          aria-label={dashCollapsed ? "إظهار اللوحة" : "إخفاء اللوحة"}
+        >
+          {dashCollapsed ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+          <span>{dashCollapsed ? "إظهار" : "إخفاء"}</span>
+          {dashCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+        </button>
       </div>
 
-      {/* Distribution KPI bar */}
-      <DistributionBar
-        elite={elite.length}
-        ground={ground.length}
-        alert={alert.length}
-        total={students.length}
-      />
+      <AnimatePresence initial={false}>
+        {!dashCollapsed && (
+          <motion.div
+            key="dash-body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            {/* Distribution KPI bar */}
+            <DistributionBar
+              elite={elite.length}
+              ground={ground.length}
+              alert={alert.length}
+              total={students.length}
+            />
 
-      {/* Three sections */}
-      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-0">
-        <Section
-          cfg={SECTIONS.elite}
-          students={elite}
-          totalStudents={students.length}
-          hidden={hideElite}
-          onToggle={() => setHideElite(!hideElite)}
-          showScore
-          trendDelta={deltas.elite}
-        />
-        <Section
-          cfg={SECTIONS.ground}
-          students={ground}
-          totalStudents={students.length}
-          hidden={hideGround}
-          onToggle={() => setHideGround(!hideGround)}
-          trendDelta={deltas.ground}
-        />
-        <Section
-          cfg={SECTIONS.alert}
-          students={alert}
-          totalStudents={students.length}
-          hidden={hideAlert}
-          onToggle={() => setHideAlert(!hideAlert)}
-          showViolations
-          trendDelta={deltas.alert}
-        />
-      </div>
+            {/* Three sections */}
+            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-0">
+              <Section
+                cfg={SECTIONS.elite}
+                students={elite}
+                totalStudents={students.length}
+                hidden={hideElite}
+                onToggle={() => setHideElite(!hideElite)}
+                showScore
+                trendDelta={deltas.elite}
+              />
+              <Section
+                cfg={SECTIONS.ground}
+                students={ground}
+                totalStudents={students.length}
+                hidden={hideGround}
+                onToggle={() => setHideGround(!hideGround)}
+                trendDelta={deltas.ground}
+              />
+              <Section
+                cfg={SECTIONS.alert}
+                students={alert}
+                totalStudents={students.length}
+                hidden={hideAlert}
+                onToggle={() => setHideAlert(!hideAlert)}
+                showViolations
+                trendDelta={deltas.alert}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
