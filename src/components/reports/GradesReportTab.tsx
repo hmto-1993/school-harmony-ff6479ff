@@ -226,6 +226,7 @@ export default function GradesReportTab({
               examFilter={examFilter}
               setExamFilter={setExamFilter}
             />
+            <PeriodComparePanel selectedClass={selectedClass} categoryMeta={categoryMeta} />
             <GradesViewControls
               viewMode={viewMode} setViewMode={setViewMode}
               sortKey={sortKey} setSortKey={setSortKey}
