@@ -48,16 +48,16 @@ export default function GradesViewControls({
             <Percent className={`h-3.5 w-3.5 ${viewMode === "percent" ? "text-primary" : "text-muted-foreground"}`} />
           </div>
 
-          {/* Scope */}
+          {/* Period (الفترة الأولى / الفترة الثانية) */}
           <div className="flex items-center gap-1.5">
             <Label className="text-xs text-muted-foreground">النطاق:</Label>
-            <Select value={scope} onValueChange={(v: any) => setScope(v)}>
+            <Select value={String(period)} onValueChange={(v) => setPeriod(Number(v) as 1 | 2)}>
               <SelectTrigger className="h-8 w-[160px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="current">الفصل الحالي</SelectItem>
-                <SelectItem value="all">جميع الشعب</SelectItem>
+                <SelectItem value="1">الفترة الأولى</SelectItem>
+                <SelectItem value="2">الفترة الثانية</SelectItem>
               </SelectContent>
             </Select>
           </div>
