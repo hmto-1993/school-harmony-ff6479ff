@@ -1,6 +1,6 @@
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 import {
   LayoutDashboard,
   Users,
@@ -132,11 +132,15 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
         "flex items-center gap-3 p-4 border-b border-sidebar-border/50",
         isCollapsed && "justify-center"
       )}>
-        <div className="relative">
+        <Link to="/dashboard" className="relative group" aria-label="الذهاب إلى لوحة التحكم">
           <span className="absolute -inset-0.5 rounded-xl bg-gradient-to-br from-[hsl(42,55%,55%)]/40 via-transparent to-foreground/20 blur-[2px]" />
-          <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="relative h-10 w-10 rounded-xl object-cover ring-1 ring-[hsl(42,40%,55%)]/40" />
+          <img
+            src={schoolLogo}
+            alt="شعار منصة المتميز التعليمية"
+            className="relative h-10 w-10 rounded-xl object-contain bg-white/80 dark:bg-white/5 p-0.5 ring-1 ring-[hsl(42,40%,55%)]/40 shadow-[0_4px_12px_-4px_hsl(var(--primary)/0.4)] transition-transform duration-300 ease-out group-hover:scale-105"
+          />
           <div className="absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full bg-success border-2 border-sidebar-background" />
-        </div>
+        </Link>
         {!isCollapsed && (
           <div className="min-w-0">
             <BrandName name={schoolName} className="text-[13px] leading-tight" />

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import defaultSchoolLogo from "@/assets/school-logo.jpg";
+import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
 import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
 
@@ -95,7 +95,11 @@ export default function ResetPasswordPage() {
         <Card className="bg-card/95 border-border/30 shadow-2xl backdrop-blur-xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
             <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
-              <img src={schoolLogo} alt="شعار المدرسة" className="h-20 w-auto rounded-xl" />
+              <img
+                src={schoolLogo}
+                alt="شعار منصة المتميز التعليمية"
+                className="h-24 w-24 rounded-2xl object-contain bg-white/70 dark:bg-white/10 p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
+              />
             </div>
             <div className="text-center">
               <h1 className="text-2xl font-bold text-foreground">{schoolName || "إعادة تعيين كلمة المرور"}</h1>
