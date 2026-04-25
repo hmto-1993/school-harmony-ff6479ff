@@ -39,6 +39,8 @@ interface GradesReportTabProps {
   shareGradesWhatsApp: () => void;
   scope: "current" | "all";
   setScope: (s: "current" | "all") => void;
+  period: 1 | 2;
+  setPeriod: (p: 1 | 2) => void;
 }
 
 export default function GradesReportTab({
