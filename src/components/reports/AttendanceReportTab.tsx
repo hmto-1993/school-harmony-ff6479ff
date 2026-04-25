@@ -192,6 +192,63 @@ export default function AttendanceReportTab({
     );
   };
 
+  const filterActive = statusFilter !== "all";
+  const filteredAttendance = useMemo(
+    () => filterRows(attendanceData),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [attendanceData, statusFilter]
+  );
+
+  // Wrapped export functions — choose dataset by selected scope
+  const STATUS_LABELS_AR: Record<string, string> = {
+    present: "حاضر", absent: "غائب", late: "متأخر",
+    early_leave: "خروج مبكر", sick_leave: "إجازة مرضية",
+  };
+
+  const handleExportExcel = async (scope: "all" | "filtered") => {
+    if (scope === "all") return exportAttendanceExcel();
+    if (filteredAttendance.length === 0) {
+      toast({ title: "لا توجد بيانات", description: "لا يوجد سجلات في الفلتر الحالي", variant: "destructive" });
+      return;
+    }
+    const XLSX = await import("xlsx");
+    const ws = XLSX.utils.json_to_sheet(
+      filteredAttendance.map((r) => ({
+        "اسم الطالب": r.student_name,
+        الفصل: r.class_name || "",
+        التاريخ: r.date,
+        الحالة: STATUS_LABELS_AR[r.status] || r.status,
+        ملاحظات: r.notes || "",
+      }))
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
+    safeWriteXLSX(wb, `تقرير_الحضور_${STATUS_FILTER_LABELS[statusFilter] || ""}_${dateFrom}_${dateTo}.xlsx`);
+  };
+
+  const handleExportPDF = async (scope: "all" | "filtered") => {
+    if (scope === "all") return exportAttendancePDF();
+    if (filteredAttendance.length === 0) {
+      toast({ title: "لا توجد بيانات", description: "لا يوجد سجلات في الفلتر الحالي", variant: "destructive" });
+      return;
+    }
+    const { buildAttendancePDF, savePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildAttendancePDF(filteredAttendance, dateFrom, dateTo);
+    savePDFBlob(blob, fileName);
+  };
+
+  const handleShareWhatsApp = async (scope: "all" | "filtered") => {
+    if (scope === "all") return shareAttendanceWhatsApp();
+    if (filteredAttendance.length === 0) {
+      toast({ title: "لا توجد بيانات", description: "لا يوجد سجلات في الفلتر الحالي", variant: "destructive" });
+      return;
+    }
+    const { buildAttendancePDF, sharePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildAttendancePDF(filteredAttendance, dateFrom, dateTo);
+    const result = await sharePDFBlob(blob, fileName, `📋 تقرير الحضور (${STATUS_FILTER_LABELS[statusFilter] || ""})`);
+    toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 flex-wrap print:hidden">
@@ -219,9 +276,13 @@ export default function AttendanceReportTab({
             </Button>
             <ReportExportDialog
               title="تصدير تقرير الحضور"
-              onExportExcel={exportAttendanceExcel}
-              onExportPDF={exportAttendancePDF}
-              onShareWhatsApp={shareAttendanceWhatsApp}
+              filterActive={filterActive}
+              filterLabel={filterActive ? STATUS_FILTER_LABELS[statusFilter] : undefined}
+              filteredCount={filteredAttendance.length}
+              totalCount={attendanceData.length}
+              onExportExcel={handleExportExcel}
+              onExportPDF={handleExportPDF}
+              onShareWhatsApp={handleShareWhatsApp}
             />
           </>
         )}
