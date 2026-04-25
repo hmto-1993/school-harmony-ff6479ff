@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import defaultSchoolLogo from "@/assets/school-logo.jpg";
+import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
 import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
 import SignupWizardDialog from "@/components/auth/SignupWizardDialog";

@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
-import schoolLogo from "@/assets/school-logo.jpg";
+import schoolLogo from "@/assets/school-logo.png";
 import { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
