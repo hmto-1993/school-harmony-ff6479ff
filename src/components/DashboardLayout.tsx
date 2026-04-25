@@ -44,11 +44,11 @@ export default function DashboardLayout() {
             <Menu className="h-5 w-5 text-primary" />
             <span className="text-sm font-semibold text-primary">القائمة</span>
             <Link to="/dashboard" onClick={(e) => e.stopPropagation()} className="mr-auto inline-flex">
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center overflow-hidden transition-transform duration-300 ease-out hover:scale-105 bg-white/50 ring-1 ring-primary/20 shadow-[0_3px_10px_-3px_hsl(var(--primary)/0.3)] dark:bg-white dark:ring-primary/30 dark:shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.5)]">
+              <div className="h-12 w-12 rounded-xl flex items-center justify-center overflow-hidden transition-transform duration-300 ease-out hover:scale-105 bg-white/50 ring-1 ring-primary/20 shadow-[0_3px_10px_-3px_hsl(var(--primary)/0.3)] dark:bg-white dark:ring-primary/30 dark:shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.5)]">
                 <img
                   src={schoolLogo}
                   alt="شعار منصة المتميز التعليمية"
-                  className="h-9 w-9 object-contain drop-shadow-sm"
+                  className="h-11 w-11 object-contain drop-shadow-sm"
                 />
               </div>
             </Link>
