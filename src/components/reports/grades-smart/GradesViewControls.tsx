@@ -20,6 +20,8 @@ interface Props {
   examCategories: { id: string; name: string }[];
   showLevelsReport: boolean;
   setShowLevelsReport: (v: boolean) => void;
+  examColumn?: string;
+  setExamColumn?: (v: string) => void;
 }
 
 export default function GradesViewControls({
