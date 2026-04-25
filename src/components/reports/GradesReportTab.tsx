@@ -143,6 +143,57 @@ export default function GradesReportTab({
     ? examCategories
     : examCategories.filter((c) => c.id === examColumn);
 
+  // Filter active when user narrows by exam column or "missing-grades" exam filter
+  const filterActive = examFilter !== "all" || examColumn !== "all";
+  const filterLabel = (() => {
+    const parts: string[] = [];
+    if (examColumn !== "all") {
+      const col = examCategories.find((c) => c.id === examColumn);
+      if (col) parts.push(col.name);
+    }
+    if (examFilter !== "all") {
+      const ex = examCategories.find((c) => c.id === examFilter);
+      if (ex) parts.push(`ناقص: ${ex.name}`);
+    }
+    return parts.join(" • ");
+  })();
+
+  // Wrapped exports: when scope === "filtered", export sortedRows + visible categories
+  const handleExportExcel = async (scope: "all" | "filtered") => {
+    if (scope === "all") return exportGradesExcel();
+    const cats = visibleExamCategories.length > 0 ? visibleExamCategories : categoryMeta;
+    const catNames = cats.map((c) => c.name);
+    const XLSX = await import("xlsx");
+    const rows = sortedRows.map((r) => {
+      const row: Record<string, any> = { "اسم الطالب": r.student_name };
+      catNames.forEach((n) => { row[n] = r.categories[n] ?? "—"; });
+      row["المجموع"] = r.total;
+      return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "تقرير الدرجات");
+    const { safeWriteXLSX } = await import("@/lib/download-utils");
+    safeWriteXLSX(wb, `تقرير_الدرجات_مفلتر.xlsx`);
+  };
+
+  const handleExportPDF = async (scope: "all" | "filtered") => {
+    if (scope === "all") return exportGradesPDF();
+    const cats = visibleExamCategories.length > 0 ? visibleExamCategories : categoryMeta;
+    const { buildGradesPDF, savePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildGradesPDF(sortedRows, cats.map((c) => c.name));
+    savePDFBlob(blob, fileName);
+  };
+
+  const handleShareWhatsApp = async (scope: "all" | "filtered") => {
+    if (scope === "all") return shareGradesWhatsApp();
+    const cats = visibleExamCategories.length > 0 ? visibleExamCategories : categoryMeta;
+    const { buildGradesPDF, sharePDFBlob } = await import("@/lib/report-pdf-builders");
+    const { blob, fileName } = await buildGradesPDF(sortedRows, cats.map((c) => c.name));
+    const result = await sharePDFBlob(blob, fileName, `📋 تقرير الدرجات (مفلتر)`);
+    toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
+  };
+
   return (
     <div className="space-y-4">
       {/* Unified action toolbar */}
@@ -171,9 +222,13 @@ export default function GradesReportTab({
             <div className="flex-1" />
             <ReportExportDialog
               title="تصدير تقرير الدرجات"
-              onExportExcel={exportGradesExcel}
-              onExportPDF={exportGradesPDF}
-              onShareWhatsApp={shareGradesWhatsApp}
+              filterActive={filterActive}
+              filterLabel={filterActive ? filterLabel : undefined}
+              filteredCount={sortedRows.length}
+              totalCount={gradeData.length}
+              onExportExcel={handleExportExcel}
+              onExportPDF={handleExportPDF}
+              onShareWhatsApp={handleShareWhatsApp}
             />
           </>
         )}
