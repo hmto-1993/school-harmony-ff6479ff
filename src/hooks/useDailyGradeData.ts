@@ -85,7 +85,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   const { user } = useAuth();
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = usePerClassState<string>("daily_selected_category", selectedClass, "");
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);
