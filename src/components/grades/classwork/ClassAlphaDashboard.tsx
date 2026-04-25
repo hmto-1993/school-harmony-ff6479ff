@@ -570,56 +570,62 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
         </button>
       </div>
 
-      <AnimatePresence initial={false}>
-        {!dashCollapsed && (
-          <motion.div
-            key="dash-body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.25, ease: "easeInOut" }}
-            className="overflow-hidden"
-          >
-            {/* Distribution KPI bar */}
-            <DistributionBar
-              elite={elite.length}
-              ground={ground.length}
-              alert={alert.length}
-              total={students.length}
-            />
+      <motion.div
+        initial={false}
+        animate={{
+          height: dashCollapsed ? 0 : "auto",
+          opacity: dashCollapsed ? 0 : 1,
+        }}
+        transition={{
+          height: { duration: 0.45, ease: [0.32, 0.72, 0, 1] },
+          opacity: { duration: dashCollapsed ? 0.18 : 0.35, ease: "easeOut", delay: dashCollapsed ? 0 : 0.1 },
+        }}
+        style={{ overflow: "hidden", willChange: "height, opacity" }}
+      >
+        <motion.div
+          initial={false}
+          animate={{ y: dashCollapsed ? -8 : 0 }}
+          transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+        >
+          {/* Distribution KPI bar */}
+          <DistributionBar
+            elite={elite.length}
+            ground={ground.length}
+            alert={alert.length}
+            total={students.length}
+          />
 
-            {/* Three sections */}
-            <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-0">
-              <Section
-                cfg={SECTIONS.elite}
-                students={elite}
-                totalStudents={students.length}
-                hidden={hideElite}
-                onToggle={() => setHideElite(!hideElite)}
-                showScore
-                trendDelta={deltas.elite}
-              />
-              <Section
-                cfg={SECTIONS.ground}
-                students={ground}
-                totalStudents={students.length}
-                hidden={hideGround}
-                onToggle={() => setHideGround(!hideGround)}
-                trendDelta={deltas.ground}
-              />
-              <Section
-                cfg={SECTIONS.alert}
-                students={alert}
-                totalStudents={students.length}
-                hidden={hideAlert}
-                onToggle={() => setHideAlert(!hideAlert)}
-                showViolations
-                trendDelta={deltas.alert}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* Three sections */}
+          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-0">
+            <Section
+              cfg={SECTIONS.elite}
+              students={elite}
+              totalStudents={students.length}
+              hidden={hideElite}
+              onToggle={() => setHideElite(!hideElite)}
+              showScore
+              trendDelta={deltas.elite}
+            />
+            <Section
+              cfg={SECTIONS.ground}
+              students={ground}
+              totalStudents={students.length}
+              hidden={hideGround}
+              onToggle={() => setHideGround(!hideGround)}
+              trendDelta={deltas.ground}
+            />
+            <Section
+              cfg={SECTIONS.alert}
+              students={alert}
+              totalStudents={students.length}
+              hidden={hideAlert}
+              onToggle={() => setHideAlert(!hideAlert)}
+              showViolations
+              trendDelta={deltas.alert}
+            />
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
