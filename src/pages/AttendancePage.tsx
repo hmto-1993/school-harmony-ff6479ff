@@ -1,9 +1,8 @@
-import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
-import { Save, CheckCircle2, ClipboardCheck, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle } from "lucide-react";
+import { Save, CheckCircle2, ClipboardCheck, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, StickyNote } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
