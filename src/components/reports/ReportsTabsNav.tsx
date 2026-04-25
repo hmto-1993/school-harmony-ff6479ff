@@ -1,19 +1,17 @@
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ClipboardCheck, GraduationCap, ShieldAlert, Trophy, FileText, ChevronRight, ChevronLeft } from "lucide-react";
+import { ClipboardCheck, GraduationCap, ShieldAlert, ChevronRight, ChevronLeft, BarChart3 } from "lucide-react";
 
 const TABS = [
-  { value: "attendance", label: "الحضور", icon: ClipboardCheck, accent: "primary" },
+  { value: "attendance", label: "الحضور والتحليل", icon: ClipboardCheck, accent: "primary" },
   { value: "grades", label: "الدرجات", icon: GraduationCap, accent: "success" },
   { value: "behavior", label: "السلوك والمخالفات", icon: ShieldAlert, accent: "warning" },
-  { value: "analytics", label: "تحليل شهري", icon: Trophy, accent: "primary" },
-  { value: "comprehensive", label: "تقارير شاملة", icon: FileText, accent: "success" },
 ] as const;
 
 const ACCENT_CLS: Record<string, string> = {
-  primary: "data-[state=active]:bg-primary/15 data-[state=active]:text-primary",
-  success: "data-[state=active]:bg-success/15 data-[state=active]:text-success",
-  warning: "data-[state=active]:bg-warning/15 data-[state=active]:text-warning",
+  primary: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/10",
+  success: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-success/20 data-[state=active]:to-success/10 data-[state=active]:text-success data-[state=active]:shadow-md data-[state=active]:shadow-success/10",
+  warning: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-warning/20 data-[state=active]:to-warning/10 data-[state=active]:shadow-md data-[state=active]:shadow-warning/10",
 };
 
 interface Props {
@@ -29,14 +27,16 @@ export default function ReportsTabsNav({ activeTab, onChange }: Props) {
 
   return (
     <div className="space-y-2 print:hidden">
-      <TabsList className="report-tabs-list w-full justify-start h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl flex-wrap">
+      <TabsList className="report-tabs-list w-full justify-start h-auto p-1.5 gap-1.5 bg-card/70 backdrop-blur-xl border border-border/40 rounded-2xl flex-wrap shadow-sm">
         {TABS.map((t) => {
           const Icon = t.icon;
+          const isWarning = t.accent === "warning";
           return (
             <TabsTrigger
               key={t.value}
               value={t.value}
-              className={`report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:shadow-sm ${ACCENT_CLS[t.accent]}`}
+              className={`report-tab gap-1.5 rounded-xl px-4 py-2.5 font-medium transition-all bg-transparent text-foreground/70 hover:bg-muted/50 ${ACCENT_CLS[t.accent]}`}
+              style={isWarning ? { /* keep using warning text via inline if needed */ } : undefined}
             >
               <Icon className="h-4 w-4" />
               {t.label}
@@ -48,10 +48,10 @@ export default function ReportsTabsNav({ activeTab, onChange }: Props) {
       <div className="flex items-center justify-between gap-2 px-1">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onChange(prev.value)}
-          className="gap-1.5 h-8"
+          className="gap-1.5 h-8 hover:bg-muted/50"
           aria-label={`السابق: ${prev.label}`}
         >
           <ChevronRight className="h-4 w-4" />
@@ -65,10 +65,10 @@ export default function ReportsTabsNav({ activeTab, onChange }: Props) {
 
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
           onClick={() => onChange(next.value)}
-          className="gap-1.5 h-8"
+          className="gap-1.5 h-8 hover:bg-muted/50"
           aria-label={`التالي: ${next.label}`}
         >
           <span className="text-xs font-medium">{next.label}</span>
