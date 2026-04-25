@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePerClassState } from "@/hooks/usePerClassState";
 import { format, subDays, addDays, isToday } from "date-fns";
 
 // ── Types ──────────────────────────────────────────────────────────
