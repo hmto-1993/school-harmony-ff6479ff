@@ -219,6 +219,7 @@ export default function GradesReportTab({
               examFilter={examFilter} setExamFilter={setExamFilter}
               examCategories={examCategories}
               showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
+              examColumn={examColumn} setExamColumn={setExamColumn}
             />
 
             {showLevelsReport && (
