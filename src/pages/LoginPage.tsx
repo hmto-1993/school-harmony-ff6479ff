@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس والفصول الدراسية");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
 
