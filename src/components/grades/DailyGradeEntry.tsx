@@ -298,22 +298,95 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
 
   // ── Render ─────────────────────────────────────────────────────
   return (
-    <Card className="border-0 shadow-lg bg-card">
-      <CardHeader className="pb-3 no-print">
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-            <CardTitle className="text-lg">إدخال الدرجات اليومية</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              {categories.length > 0 && (
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full sm:w-56"><SelectValue placeholder="جميع الفئات" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">جميع الفئات</SelectItem>
-                    {dailyCategories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+    <Card className="border border-border/40 shadow-card bg-card/70 backdrop-blur-xl overflow-hidden">
+      <CardHeader className="pb-3 no-print relative">
+        {/* Decorative blob */}
+        <div className="absolute -top-12 -left-12 h-32 w-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+
+        <div className="relative flex flex-col gap-3">
+          {/* Top row: Title + Date Nav */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md shadow-primary/30 shrink-0">
+                <ClipboardList className="h-4.5 w-4.5 text-primary-foreground" />
+              </div>
+              <div>
+                <CardTitle className="text-base font-extrabold leading-tight">إدخال الدرجات اليومية</CardTitle>
+                <p className="text-[11px] text-muted-foreground">رصد سريع وذكي لتفاعل الحصة</p>
+              </div>
+            </div>
+
+            {/* Date Navigator Pill */}
+            <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-background/70 backdrop-blur-md p-1 shadow-sm">
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={goToPrevDay} title="اليوم السابق">
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+              <HijriDatePicker date={selectedDate} onDateChange={setSelectedDate} />
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={goToNextDay} disabled={isToday(selectedDate)} title="اليوم التالي">
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              {!isToday(selectedDate) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] font-bold text-primary hover:bg-primary/10 rounded-lg"
+                  onClick={goToToday}
+                >
+                  اليوم
+                </Button>
               )}
-              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
+            </div>
+          </div>
+
+          {/* Bottom row: Tools toolbar */}
+          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/30">
+            {/* Smart Radar — primary action (assessment only) */}
+            {gradeTab === "assessment" && (
+              <Button
+                variant={radarOpen ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "h-8 gap-1.5 text-xs font-bold rounded-lg transition-all duration-300",
+                  radarOpen
+                    ? "bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-md shadow-primary/30"
+                    : "border-primary/30 text-primary hover:bg-primary/10"
+                )}
+                onClick={() => setRadarOpen(!radarOpen)}
+              >
+                <Radar className={cn("h-3.5 w-3.5", radarOpen && "animate-pulse")} />
+                الرادار الذكي
+              </Button>
+            )}
+
+            {/* Category Filter */}
+            {categories.length > 0 && (
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="h-8 w-auto min-w-[140px] text-xs font-semibold bg-background/70 border-border/50 rounded-lg">
+                  <SelectValue placeholder="جميع الفئات" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">جميع الفئات</SelectItem>
+                  {dailyCategories.map((cat) => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Spacer pushes actions left */}
+            <div className="flex-1" />
+
+            {/* Action chips */}
+            <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
+
+            {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
+              <>
+                <div className="flex items-center gap-0.5 rounded-lg border border-border/50 bg-background/60 p-0.5">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary" title="تصدير PDF" onClick={handleExportPDF}>
+                    <FileText className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-md hover:bg-primary/10 hover:text-primary" title="طباعة" onClick={handlePrintTable}>
+                    <Printer className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
                 <GradesExportDialog
                   title="الإدخال اليومي"
                   fileName="الإدخال_اليومي"
@@ -335,47 +408,26 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     return [{ className, headers, rows }] as ExportTableGroup[];
                   })()}
                 />
-              )}
-              {selectedClass && categories.length > 0 && gradeTab !== "violations" && (
-                <div className="flex items-center gap-0.5">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="تصدير PDF" onClick={handleExportPDF}><FileText className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" title="طباعة" onClick={handlePrintTable}><Printer className="h-4 w-4" /></Button>
-                </div>
-              )}
-              {selectedClass && categories.length > 0 && gradeTab === "violations" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs">
-                      <FileText className="h-4 w-4" />تصدير
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleExportViolationsPDF} className="gap-2 cursor-pointer">
-                      <FileText className="h-4 w-4" />تصدير PDF
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleShareViolationsWhatsApp} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
-                      <MessageCircle className="h-4 w-4" />إرسال عبر واتساب
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <ScrollToSaveButton targetId="grades-save" label="حفظ ↓" />
-            <Button
-              variant={radarOpen ? "default" : "outline"}
-              size="sm"
-              className="h-8 gap-1.5 text-xs"
-              onClick={() => setRadarOpen(!radarOpen)}
-            >
-              <Radar className="h-4 w-4" />
-              الرادار
-            </Button>
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToPrevDay}><ChevronRight className="h-4 w-4" /></Button>
-            <HijriDatePicker date={selectedDate} onDateChange={setSelectedDate} />
-            <Button variant="outline" size="icon" className="h-8 w-8" onClick={goToNextDay} disabled={isToday(selectedDate)}><ChevronLeft className="h-4 w-4" /></Button>
-            {!isToday(selectedDate) && <Button variant="ghost" size="sm" className="text-xs" onClick={goToToday}>اليوم</Button>}
+              </>
+            )}
+
+            {selectedClass && categories.length > 0 && gradeTab === "violations" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-bold rounded-lg">
+                    <FileText className="h-3.5 w-3.5" />تصدير
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportViolationsPDF} className="gap-2 cursor-pointer">
+                    <FileText className="h-4 w-4" />تصدير PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShareViolationsWhatsApp} className="gap-2 cursor-pointer text-success">
+                    <MessageCircle className="h-4 w-4" />إرسال عبر واتساب
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </CardHeader>
