@@ -10,9 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft, Users, Sun, Moon } from "lucide-react";
 import SignupWizardDialog from "@/components/auth/SignupWizardDialog";
 import BrandName from "@/components/BrandName";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
