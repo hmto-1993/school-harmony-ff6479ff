@@ -17,6 +17,7 @@ import LevelsReport from "./grades-smart/LevelsReport";
 import AbsenceReasonDialog from "./grades-smart/AbsenceReasonDialog";
 import SectionGradesTable from "./grades-smart/SectionGradesTable";
 import ExamsSummaryPanel from "./grades-smart/ExamsSummaryPanel";
+import MissingGradesAlert from "./grades-smart/MissingGradesAlert";
 import { useHomeworkTargets, useExamAbsences } from "./grades-smart/useGradesSmartData";
 import {
   studentPercent, classifyLevel, getReasonLabel, homeworkStatus,
