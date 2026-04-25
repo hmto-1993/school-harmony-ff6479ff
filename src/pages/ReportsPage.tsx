@@ -1,21 +1,17 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import {
-  ClipboardCheck, GraduationCap, Heart, Trophy, FileText, Users2, Lock, AlertTriangle,
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Lock } from "lucide-react";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
-import BehaviorReport from "@/components/reports/BehaviorReport";
-import ViolationsReportTab from "@/components/reports/ViolationsReportTab";
 import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
 import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
 import ReportFilters from "@/components/reports/ReportFilters";
 import AttendanceReportTab from "@/components/reports/AttendanceReportTab";
 import GradesReportTab from "@/components/reports/GradesReportTab";
+import BehaviorViolationsTab from "@/components/reports/BehaviorViolationsTab";
 import BulkSendConfirmDialog from "@/components/reports/BulkSendConfirmDialog";
+import BulkSendProgressCard from "@/components/reports/BulkSendProgressCard";
 import ReportsHeader from "@/components/reports/ReportsHeader";
+import ReportsTabsNav from "@/components/reports/ReportsTabsNav";
 import { AttendancePreviewContent, GradesPreviewContent } from "@/components/reports/ReportPreviewContent";
 import { useReportsData } from "@/hooks/useReportsData";
 
@@ -47,25 +43,12 @@ export default function ReportsPage() {
         setBulkConfirm={r.setBulkConfirm}
       />
 
-      {/* Bulk send progress */}
-      {r.bulkProgress.active && (
-        <Card className="border-0 shadow-lg bg-card/80 print:hidden">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <Users2 className="h-5 w-5 text-primary" />
-              <div className="flex-1 space-y-1.5">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">جارٍ الإرسال الجماعي...</span>
-                  <span className="text-muted-foreground">{r.bulkProgress.current} / {r.bulkProgress.total}</span>
-                </div>
-                <Progress value={(r.bulkProgress.current / r.bulkProgress.total) * 100} className="h-2" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <BulkSendProgressCard
+        current={r.bulkProgress.current}
+        total={r.bulkProgress.total}
+        active={r.bulkProgress.active}
+      />
 
-      {/* Filters */}
       <ReportFilters
         classes={r.classes}
         selectedClass={r.selectedClass}
@@ -86,34 +69,8 @@ export default function ReportsPage() {
         currentWeek={r.currentWeek}
       />
 
-      {/* Report Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
-        <TabsList className="report-tabs-list w-full justify-start print:hidden h-auto p-1.5 gap-1.5 bg-muted/60 rounded-xl">
-          <TabsTrigger value="attendance" className="report-tab report-tab--attendance gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
-            <ClipboardCheck className="h-4 w-4" />
-            تقرير الحضور
-          </TabsTrigger>
-          <TabsTrigger value="grades" className="report-tab report-tab--grades gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
-            <GraduationCap className="h-4 w-4" />
-            تقرير الدرجات
-          </TabsTrigger>
-          <TabsTrigger value="behavior" className="report-tab report-tab--behavior gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all">
-            <Heart className="h-4 w-4" />
-            تقرير السلوك
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-amber-500/15 data-[state=active]:text-amber-700 dark:data-[state=active]:text-amber-400">
-            <Trophy className="h-4 w-4" />
-            التحليل الشهري
-          </TabsTrigger>
-          <TabsTrigger value="violations" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:text-red-400">
-            <AlertTriangle className="h-4 w-4" />
-            المخالفات
-          </TabsTrigger>
-          <TabsTrigger value="comprehensive" className="report-tab gap-1.5 rounded-lg px-4 py-2.5 font-medium transition-all data-[state=active]:bg-blue-500/15 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-400">
-            <FileText className="h-4 w-4" />
-            تقارير شاملة
-          </TabsTrigger>
-        </TabsList>
+        <ReportsTabsNav />
 
         <TabsContent value="attendance">
           <AttendanceReportTab
@@ -154,15 +111,17 @@ export default function ReportsPage() {
         </TabsContent>
 
         <TabsContent value="behavior" className="space-y-4">
-          <BehaviorReport selectedClass={r.selectedClass} dateFrom={r.dateFrom} dateTo={r.dateTo} selectedStudent={r.selectedStudent} />
+          <BehaviorViolationsTab
+            selectedClass={r.selectedClass}
+            dateFrom={r.dateFrom}
+            dateTo={r.dateTo}
+            selectedStudent={r.selectedStudent}
+            reportType={r.reportType}
+          />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
           <MonthlyAnalytics selectedClass={r.selectedClass} classes={r.classes} />
-        </TabsContent>
-
-        <TabsContent value="violations" className="space-y-4">
-          <ViolationsReportTab selectedClass={r.selectedClass} dateFrom={r.dateFrom} dateTo={r.dateTo} selectedStudent={r.selectedStudent} reportType={r.reportType} />
         </TabsContent>
 
         <TabsContent value="comprehensive" className="space-y-4">
@@ -170,7 +129,6 @@ export default function ReportsPage() {
         </TabsContent>
       </Tabs>
 
-      {/* Print Preview Dialog */}
       <PrintPreviewDialog
         open={r.previewOpen}
         onOpenChange={r.setPreviewOpen}
@@ -185,7 +143,6 @@ export default function ReportsPage() {
         )}
       </PrintPreviewDialog>
 
-      {/* Bulk send confirmation dialog */}
       <BulkSendConfirmDialog
         open={r.bulkConfirm.open}
         onOpenChange={(open) => r.setBulkConfirm((prev: any) => ({ ...prev, open }))}
