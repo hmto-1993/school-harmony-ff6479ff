@@ -43,6 +43,12 @@ export default function ReportsPage() {
         classes={r.classes}
       />
 
+      <ReportsStatCards
+        studentsCount={r.students.length}
+        attendanceData={r.attendanceData}
+        gradeData={r.gradeData}
+      />
+
       <BulkSendProgressCard
         current={r.bulkProgress.current}
         total={r.bulkProgress.total}
