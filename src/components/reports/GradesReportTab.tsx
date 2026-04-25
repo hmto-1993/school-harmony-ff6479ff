@@ -18,6 +18,7 @@ import AbsenceReasonDialog from "./grades-smart/AbsenceReasonDialog";
 import SectionGradesTable from "./grades-smart/SectionGradesTable";
 import ExamsSummaryPanel from "./grades-smart/ExamsSummaryPanel";
 import MissingGradesAlert from "./grades-smart/MissingGradesAlert";
+import PeriodComparePanel from "./grades-smart/PeriodComparePanel";
 import { useHomeworkTargets, useExamAbsences } from "./grades-smart/useGradesSmartData";
 import {
   studentPercent, classifyLevel, getReasonLabel, homeworkStatus,
@@ -225,6 +226,7 @@ export default function GradesReportTab({
               examFilter={examFilter}
               setExamFilter={setExamFilter}
             />
+            <PeriodComparePanel selectedClass={selectedClass} categoryMeta={categoryMeta} />
             <GradesViewControls
               viewMode={viewMode} setViewMode={setViewMode}
               sortKey={sortKey} setSortKey={setSortKey}
