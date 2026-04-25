@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Logo visual contract — Mobile header > renders header logo with object-contain on 'mobile-360' > header-logo-360 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
+
+exports[`Logo visual contract — Mobile header > renders header logo with object-contain on 'mobile-414' > header-logo-414 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
+
+exports[`Logo visual contract — Sidebar > renders logo with object-contain and no fixed crop on 'desktop-1280' > sidebar-logo-1280 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
+
+exports[`Logo visual contract — Sidebar > renders logo with object-contain and no fixed crop on 'mobile-360' > sidebar-logo-360 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
+
+exports[`Logo visual contract — Sidebar > renders logo with object-contain and no fixed crop on 'mobile-414' > sidebar-logo-414 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
+
+exports[`Logo visual contract — Sidebar > renders logo with object-contain and no fixed crop on 'tablet-768' > sidebar-logo-768 1`] = `"h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"`;
