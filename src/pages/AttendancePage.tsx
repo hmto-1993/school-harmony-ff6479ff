@@ -1,9 +1,8 @@
-import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HijriDatePicker } from "@/components/ui/hijri-date-picker";
-import { Save, CheckCircle2, ClipboardCheck, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle } from "lucide-react";
+import { Save, CheckCircle2, ClipboardCheck, Search, CalendarIcon, ArrowRightLeft, Lock, AlertTriangle, StickyNote } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import EmptyState from "@/components/EmptyState";
 import AcademicWeekBadge from "@/components/dashboard/AcademicWeekBadge";
@@ -104,27 +103,81 @@ export default function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent flex items-center gap-2">
-          <ClipboardCheck className="h-7 w-7 text-primary" />
-          التحضير
-        </h1>
-        <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className="text-muted-foreground">التاريخ:</span>
-          <HijriDatePicker date={selectedDate} onDateChange={(d) => setSelectedDate(d)} />
-          <AcademicWeekBadge date={selectedDate} />
-          {selectedClass && records.some(r => r.existing_id) && (
-            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => { setMoveTargetDate(selectedDate); setMoveDialogOpen(true); }}>
-              <ArrowRightLeft className="h-3.5 w-3.5" />
-              نقل الحصة
-            </Button>
-          )}
-          {savedDayNote && (
-            <span className="text-xs px-2 py-1 rounded-md bg-info/10 text-info border border-info/30">📝 {savedDayNote}</span>
-          )}
+    <div className="space-y-5 animate-fade-in">
+      {/* === Glassmorphism Header === */}
+      <div className="relative overflow-hidden rounded-2xl border border-border/40 bg-card/60 backdrop-blur-xl p-5 shadow-card no-print">
+        {/* Decorative blobs */}
+        <div className="absolute -top-16 -right-16 h-48 w-48 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
+
+        <div className="relative flex items-start justify-between flex-wrap gap-4">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <ClipboardCheck className="h-7 w-7 text-primary" />
+              <h1 className="text-2xl font-black bg-gradient-to-l from-primary via-primary to-accent bg-clip-text text-transparent">
+                التحضير
+              </h1>
+              <AcademicWeekBadge date={selectedDate} />
+            </div>
+            <p className="text-sm text-muted-foreground">رصد حضور الطلاب اليومي مع متابعة التقدم الأسبوعي</p>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 rounded-xl border border-border/40 bg-background/60 backdrop-blur-md px-3 py-1.5 shadow-sm">
+              <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground" />
+              <HijriDatePicker date={selectedDate} onDateChange={(d) => setSelectedDate(d)} />
+            </div>
+            {selectedClass && records.some(r => r.existing_id) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs h-9 bg-background/60 backdrop-blur-md border-border/40"
+                onClick={() => { setMoveTargetDate(selectedDate); setMoveDialogOpen(true); }}
+              >
+                <ArrowRightLeft className="h-3.5 w-3.5" />
+                نقل الحصة
+              </Button>
+            )}
+          </div>
         </div>
+
+        {/* === Class Cards === */}
+        <div className="relative mt-5">
+          <AttendanceClassSelector
+            classes={classes} classesLoading={classesLoading}
+            selectedClass={selectedClass} onSelectClass={setSelectedClass}
+            weeklyProgress={weeklyProgress} weeklyProgressLoaded={weeklyProgressLoaded}
+            overrideLock={overrideLock}
+          />
+        </div>
+
+        {/* Day Note (inline within header) */}
+        {selectedClass && (
+          <div className="relative mt-4 flex items-center gap-2 rounded-xl border border-border/40 bg-background/60 backdrop-blur-md p-2 pr-3 shadow-sm">
+            <StickyNote className="h-4 w-4 text-info shrink-0" />
+            <Input
+              value={dayNote}
+              onChange={(e) => setDayNote(e.target.value)}
+              placeholder="ملاحظة اليوم (مثال: إجازة، مرضي، تأجيل...)"
+              className="flex-1 h-8 text-sm border-0 bg-transparent shadow-none focus-visible:ring-0 px-1"
+            />
+            {savedDayNote && dayNote === savedDayNote && (
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-info/10 text-info border border-info/30 shrink-0">
+                ✓ محفوظة
+              </span>
+            )}
+            <Button
+              onClick={saveDayNote}
+              disabled={savingNote || dayNote === savedDayNote}
+              size="sm"
+              variant="ghost"
+              className="shrink-0 h-8 px-2 text-xs"
+            >
+              <Save className="h-3.5 w-3.5 ml-1" />
+              حفظ
+            </Button>
+          </div>
+        )}
       </div>
 
       <MoveSessionDialogs
@@ -134,28 +187,6 @@ export default function AttendancePage() {
         moveTargetDate={moveTargetDate} setMoveTargetDate={setMoveTargetDate}
         movingDate={movingDate} onMoveSession={handleMoveSession}
       />
-
-      <AttendanceClassSelector
-        classes={classes} classesLoading={classesLoading}
-        selectedClass={selectedClass} onSelectClass={setSelectedClass}
-        weeklyProgress={weeklyProgress} weeklyProgressLoaded={weeklyProgressLoaded}
-        overrideLock={overrideLock}
-      />
-
-      {/* Day Note */}
-      {selectedClass && (
-        <Card className="border-0 shadow-sm bg-card/60">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-2">
-              <Input value={dayNote} onChange={(e) => setDayNote(e.target.value)} placeholder="ملاحظة اليوم (مثال: إجازة، مرضي، تأجيل...)" className="flex-1 h-9 text-sm" />
-              <Button onClick={saveDayNote} disabled={savingNote || dayNote === savedDayNote} size="sm" variant="outline" className="shrink-0">
-                <Save className="h-4 w-4 ml-1" />
-                حفظ الملاحظة
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Lock Banner */}
       {isClassLocked && selectedClass && (
