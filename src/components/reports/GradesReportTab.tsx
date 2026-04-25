@@ -51,6 +51,7 @@ export default function GradesReportTab({
   const [examFilter, setExamFilter] = useState<string>("all");
   const [showLevelsReport, setShowLevelsReport] = useState(false);
   const [activeSection, setActiveSection] = useState<"homework" | "exams">("exams");
+  const [examColumn, setExamColumn] = useState<string>("all");
   const [absDialog, setAbsDialog] = useState<{ open: boolean; studentId?: string; studentName?: string; categoryId?: string; categoryName?: string }>({ open: false });
 
   const { homeworkCategories, targets, saveTarget } = useHomeworkTargets(selectedClass, categoryMeta);
@@ -218,6 +219,7 @@ export default function GradesReportTab({
               examFilter={examFilter} setExamFilter={setExamFilter}
               examCategories={examCategories}
               showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
+              examColumn={examColumn} setExamColumn={setExamColumn}
             />
 
             {showLevelsReport && (
@@ -231,7 +233,11 @@ export default function GradesReportTab({
 
               <SectionGradesTable
                 title="جدول الاختبارات"
-                categories={examCategories.length > 0 ? examCategories : categoryMeta}
+                categories={
+                  examColumn === "all" || examCategories.length === 0
+                    ? (examCategories.length > 0 ? examCategories : categoryMeta)
+                    : examCategories.filter((c) => c.id === examColumn)
+                }
                 rows={sortedRows}
                 allCategoriesMeta={categoryMeta}
                 examCategories={examCategories}

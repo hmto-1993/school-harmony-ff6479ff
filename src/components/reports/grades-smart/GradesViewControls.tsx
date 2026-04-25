@@ -20,12 +20,14 @@ interface Props {
   examCategories: { id: string; name: string }[];
   showLevelsReport: boolean;
   setShowLevelsReport: (v: boolean) => void;
+  examColumn?: string;
+  setExamColumn?: (v: string) => void;
 }
 
 export default function GradesViewControls({
   viewMode, setViewMode, sortKey, setSortKey, sortDir, setSortDir,
   scope, setScope, examFilter, setExamFilter, examCategories,
-  showLevelsReport, setShowLevelsReport,
+  showLevelsReport, setShowLevelsReport, examColumn, setExamColumn,
 }: Props) {
   return (
     <Card className="border-0 shadow-md bg-card/80 print:hidden">
@@ -93,19 +95,37 @@ export default function GradesViewControls({
         </div>
 
         {/* Exam filter */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Label className="text-xs text-muted-foreground">فلتر الاختبارات:</Label>
-          <Select value={examFilter} onValueChange={setExamFilter}>
-            <SelectTrigger className="h-8 w-[220px] text-xs">
-              <SelectValue placeholder="اختر اختباراً..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">عرض جميع الطلاب</SelectItem>
-              {examCategories.map((c) => (
-                <SelectItem key={c.id} value={c.id}>الطلاب الذين لم يختبروا في: {c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center gap-3">
+          {setExamColumn && (
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs text-muted-foreground">عرض الأعمدة:</Label>
+              <Select value={examColumn || "all"} onValueChange={setExamColumn}>
+                <SelectTrigger className="h-8 w-[180px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الفترة + العملي</SelectItem>
+                  {examCategories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name} فقط</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="flex items-center gap-1.5">
+            <Label className="text-xs text-muted-foreground">فلتر الاختبارات:</Label>
+            <Select value={examFilter} onValueChange={setExamFilter}>
+              <SelectTrigger className="h-8 w-[220px] text-xs">
+                <SelectValue placeholder="اختر اختباراً..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">عرض جميع الطلاب</SelectItem>
+                {examCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>الطلاب الذين لم يختبروا في: {c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardContent>
     </Card>
