@@ -70,7 +70,7 @@ export default function ReportsPage() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
-        <ReportsTabsNav />
+        <ReportsTabsNav activeTab={activeTab} onChange={setActiveTab} />
 
         <TabsContent value="attendance">
           <AttendanceReportTab
