@@ -300,9 +300,24 @@ export function useReportsData() {
       .gte("created_at", `${dateFrom}T00:00:00`)
       .lte("created_at", `${dateTo}T23:59:59`);
 
+    // Also fetch manual_category_scores (used for exam-type categories: الفترة/العملي).
+    // These are NOT date-bounded — they are absolute period scores, so we must not
+    // clip them by the report date range or they would falsely appear as "missing".
+    const { data: manualScores } = await supabase
+      .from("manual_category_scores")
+      .select("student_id, category_id, score")
+      .in("student_id", studentIds);
+
     // Map: student_id -> categoryName -> score (handles duplicate cat ids across classes)
     const gradeMap: Record<string, Record<string, number | null>> = {};
     (grades || []).forEach((g: any) => {
+      const name = catIdToName.get(g.category_id);
+      if (!name) return;
+      if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
+      gradeMap[g.student_id][name] = g.score;
+    });
+    // manual scores take precedence (source of truth for exam categories)
+    (manualScores || []).forEach((g: any) => {
       const name = catIdToName.get(g.category_id);
       if (!name) return;
       if (!gradeMap[g.student_id]) gradeMap[g.student_id] = {};
