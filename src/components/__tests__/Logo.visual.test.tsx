@@ -5,15 +5,23 @@ import { MemoryRouter } from "react-router-dom";
 // --- Mocks ---------------------------------------------------------------
 vi.mock("@/assets/school-logo.png", () => ({ default: "/school-logo.png" }));
 
+// Thenable chainable mock — every method returns the same proxy that also resolves to empty data
+const makeChain = (): any => {
+  const result = { data: [], error: null, count: 0 };
+  const chain: any = new Proxy(function () {}, {
+    get(_t, prop) {
+      if (prop === "then") return (cb: any) => Promise.resolve(result).then(cb);
+      if (prop === "catch") return (cb: any) => Promise.resolve(result).catch(cb);
+      return () => makeChain();
+    },
+    apply() {
+      return makeChain();
+    },
+  });
+  return chain;
+};
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: () => ({
-      select: () => ({
-        in: () => Promise.resolve({ data: [] }),
-        eq: () => ({ maybeSingle: () => Promise.resolve({ data: null }) }),
-      }),
-    }),
-  },
+  supabase: { from: () => makeChain() },
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
