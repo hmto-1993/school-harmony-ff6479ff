@@ -134,7 +134,8 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
       )}>
         <Link to="/dashboard" className="relative group shrink-0" aria-label="الذهاب إلى لوحة التحكم">
           <span className="absolute -inset-1 rounded-2xl bg-gradient-to-br from-[hsl(42,55%,55%)]/30 via-transparent to-primary/20 blur-md opacity-70 group-hover:opacity-100 transition-opacity" />
-          <div className="relative h-12 w-12 rounded-2xl bg-white flex items-center justify-center ring-1 ring-[hsl(42,40%,55%)]/50 shadow-[0_6px_20px_-6px_hsl(var(--primary)/0.5)] transition-transform duration-300 ease-out group-hover:scale-105 overflow-hidden">
+          {/* Light mode: subtle transparent backdrop. Dark mode: bright white card to make navy/teal logo pop */}
+          <div className="relative h-12 w-12 rounded-2xl flex items-center justify-center overflow-hidden transition-transform duration-300 ease-out group-hover:scale-105 bg-white/40 ring-1 ring-primary/20 shadow-[0_4px_14px_-4px_hsl(var(--primary)/0.35)] dark:bg-white dark:ring-[hsl(42,40%,55%)]/50 dark:shadow-[0_6px_22px_-6px_hsl(var(--primary)/0.55)]">
             <img
               src={schoolLogo}
               alt="شعار منصة المتميز التعليمية"
