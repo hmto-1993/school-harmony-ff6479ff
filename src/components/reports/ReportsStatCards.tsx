@@ -238,7 +238,8 @@ export default function ReportsStatCards({
       const positive = rows.filter((r: any) => r.type === "positive").length;
       const byStudent = new Map<string, { name: string; count: number; lastNote?: string }>();
       rows.filter((r: any) => r.type !== "positive").forEach((r: any) => {
-        const cur = byStudent.get(r.student_id) || { name: r.students?.full_name || "—", count: 0 };
+        const cur: { name: string; count: number; lastNote?: string } =
+          byStudent.get(r.student_id) || { name: r.students?.full_name || "—", count: 0 };
         cur.count++;
         if (r.note) cur.lastNote = r.note;
         byStudent.set(r.student_id, cur);
