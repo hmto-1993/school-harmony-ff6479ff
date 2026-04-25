@@ -177,7 +177,8 @@ export default function LoginPage() {
               <img
                 src={schoolLogo}
                 alt="شعار منصة المتميز التعليمية"
-                className="h-24 w-24 md:h-28 md:w-28 rounded-2xl object-contain bg-white/70 dark:bg-white/10 p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
+                onError={() => setSchoolLogo(defaultSchoolLogo)}
+                className="h-24 w-24 md:h-28 md:w-28 rounded-2xl object-contain bg-white/70 dark:bg-white p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
               />
               <span className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10" />
             </div>
