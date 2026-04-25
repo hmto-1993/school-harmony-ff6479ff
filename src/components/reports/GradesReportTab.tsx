@@ -1,11 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { BarChart3, Users, Eye, FileText, AlertCircle, Share2, ClipboardCheck, GraduationCap } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { BarChart3, Users, Eye, FileText, Share2, ClipboardCheck, GraduationCap, Activity, ChevronDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import GradesChart from "@/components/reports/GradesChart";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
@@ -21,7 +18,7 @@ import MissingGradesAlert from "./grades-smart/MissingGradesAlert";
 import PeriodComparePanel from "./grades-smart/PeriodComparePanel";
 import { useHomeworkTargets, useExamAbsences } from "./grades-smart/useGradesSmartData";
 import {
-  studentPercent, classifyLevel, getReasonLabel, homeworkStatus,
+  studentPercent, homeworkStatus,
   type ViewMode, type SortKey, type SortDir,
 } from "./grades-smart/grades-helpers";
 import { toast } from "@/hooks/use-toast";
@@ -47,7 +44,7 @@ interface GradesReportTabProps {
 export default function GradesReportTab({
   gradeData, categoryNames, categoryMeta = [], loadingGrades, selectedClass,
   fetchGrades, onPreview, exportGradesExcel, exportGradesPDF, shareGradesWhatsApp,
-  scope, setScope, period, setPeriod,
+  period, setPeriod,
 }: GradesReportTabProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("raw");
   const [sortKey, setSortKey] = useState<SortKey>("name");
@@ -56,10 +53,10 @@ export default function GradesReportTab({
   const [showLevelsReport, setShowLevelsReport] = useState(false);
   const [activeSection, setActiveSection] = useState<"homework" | "exams">("exams");
   const [examColumn, setExamColumn] = useState<string>("all");
+  const [analyticsOpen, setAnalyticsOpen] = useState(true);
   const [absDialog, setAbsDialog] = useState<{ open: boolean; studentId?: string; studentName?: string; categoryId?: string; categoryName?: string }>({ open: false });
 
   const { homeworkCategories, targets, saveTarget } = useHomeworkTargets(selectedClass, categoryMeta);
-  // Exam categories: ONLY "الفترة" (period exam) و "العملي" (practical)
   const examCategories = useMemo(
     () => categoryMeta.filter((c) => {
       const n = c.name || "";
@@ -69,7 +66,6 @@ export default function GradesReportTab({
   );
   const { absences, saveAbsence, key: absKey } = useExamAbsences(selectedClass, examCategories);
 
-  // Apply exam filter (students who didn't take a specific exam = score is null)
   const filteredRows = useMemo(() => {
     if (examFilter === "all") return gradeData;
     const cat = examCategories.find((c) => c.id === examFilter);
@@ -77,7 +73,6 @@ export default function GradesReportTab({
     return gradeData.filter((r) => r.categories[cat.name] === null || r.categories[cat.name] === undefined);
   }, [gradeData, examFilter, examCategories]);
 
-  // Sort rows
   const sortedRows = useMemo(() => {
     const arr = [...filteredRows];
     arr.sort((a, b) => {
@@ -144,29 +139,36 @@ export default function GradesReportTab({
     }
   };
 
+  const visibleExamCategories = examColumn === "all"
+    ? examCategories
+    : examCategories.filter((c) => c.id === examColumn);
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 flex-wrap print:hidden">
-        <Button onClick={fetchGrades} disabled={loadingGrades || !selectedClass}>
-          <BarChart3 className="h-4 w-4 ml-1.5" />
+      {/* Unified action toolbar */}
+      <div className="flex items-center gap-2 flex-wrap print:hidden p-2 rounded-xl bg-muted/30 border border-border/30">
+        <Button onClick={fetchGrades} disabled={loadingGrades || !selectedClass} size="sm" className="gap-1.5">
+          <BarChart3 className="h-4 w-4" />
           {loadingGrades ? "جارٍ التحميل..." : "عرض التقرير"}
         </Button>
         {gradeData.length > 0 && (
           <>
-            <Button variant="outline" size="sm" onClick={onPreview} className="gap-1.5">
+            <div className="h-6 w-px bg-border/60 mx-1" />
+            <Button variant="ghost" size="sm" onClick={onPreview} className="gap-1.5 h-8">
               <Eye className="h-4 w-4" />معاينة
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExportLevelsPDF} className="gap-1.5">
-              <FileText className="h-4 w-4" />تصدير المستويات PDF
+            <Button variant="ghost" size="sm" onClick={handleExportLevelsPDF} className="gap-1.5 h-8">
+              <FileText className="h-4 w-4" />المستويات PDF
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleShareLevelsWhatsApp}
-              className="gap-1.5 text-success border-success/30 hover:bg-success/10"
+              className="gap-1.5 h-8 text-success hover:bg-success/10"
             >
-              <Share2 className="h-4 w-4" />إرسال المستويات واتساب
+              <Share2 className="h-4 w-4" />واتساب المستويات
             </Button>
+            <div className="flex-1" />
             <ReportExportDialog
               title="تصدير تقرير الدرجات"
               onExportExcel={exportGradesExcel}
@@ -190,7 +192,7 @@ export default function GradesReportTab({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="homework" className="space-y-4 mt-4">
+          <TabsContent value="homework" className="space-y-4 mt-4 animate-fade-in">
             <HomeworkPanel
               homeworkCategories={homeworkCategories}
               targets={targets}
@@ -213,31 +215,47 @@ export default function GradesReportTab({
             )}
           </TabsContent>
 
-          <TabsContent value="exams" className="space-y-4 mt-4">
-            <ExamsSummaryPanel examCategories={examCategories} rows={gradeData} />
-            <MissingGradesAlert
-              examCategories={examCategories}
-              visibleCategories={
-                examColumn === "all"
-                  ? examCategories
-                  : examCategories.filter((c) => c.id === examColumn)
-              }
-              rows={gradeData}
-              examFilter={examFilter}
-              setExamFilter={setExamFilter}
-            />
-            <PeriodComparePanel selectedClass={selectedClass} categoryMeta={categoryMeta} />
+          <TabsContent value="exams" className="space-y-4 mt-4 animate-fade-in">
+            {/* Controls (consolidated) */}
             <GradesViewControls
               viewMode={viewMode} setViewMode={setViewMode}
               sortKey={sortKey} setSortKey={setSortKey}
               sortDir={sortDir} setSortDir={setSortDir}
-              scope={scope} setScope={setScope}
               period={period} setPeriod={setPeriod}
-              examFilter={examFilter} setExamFilter={setExamFilter}
               examCategories={examCategories}
               showLevelsReport={showLevelsReport} setShowLevelsReport={setShowLevelsReport}
               examColumn={examColumn} setExamColumn={setExamColumn}
             />
+
+            {/* Missing grades — also acts as the exam filter */}
+            <MissingGradesAlert
+              examCategories={examCategories}
+              visibleCategories={visibleExamCategories}
+              rows={gradeData}
+              examFilter={examFilter}
+              setExamFilter={setExamFilter}
+            />
+
+            {/* Analytics block (collapsible) */}
+            <Collapsible open={analyticsOpen} onOpenChange={setAnalyticsOpen}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between h-9 px-3 rounded-lg bg-gradient-to-l from-primary/5 to-success/5 border border-border/30 hover:from-primary/10 hover:to-success/10 print:hidden"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold">
+                    <Activity className="h-4 w-4 text-primary" />
+                    لوحة التحليلات
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform ${analyticsOpen ? "rotate-180" : ""}`} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-3 animate-fade-in">
+                <ExamsSummaryPanel examCategories={examCategories} rows={gradeData} />
+                <PeriodComparePanel selectedClass={selectedClass} categoryMeta={categoryMeta} />
+              </CollapsibleContent>
+            </Collapsible>
 
             {showLevelsReport && (
               <LevelsReport rows={filteredRows} categories={categoryMeta} />
@@ -251,9 +269,7 @@ export default function GradesReportTab({
               <SectionGradesTable
                 title="جدول الاختبارات"
                 categories={
-                  examColumn === "all" || examCategories.length === 0
-                    ? (examCategories.length > 0 ? examCategories : categoryMeta)
-                    : examCategories.filter((c) => c.id === examColumn)
+                  visibleExamCategories.length > 0 ? visibleExamCategories : categoryMeta
                 }
                 rows={sortedRows}
                 allCategoriesMeta={categoryMeta}
