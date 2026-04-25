@@ -44,9 +44,14 @@ export default function ReportsPage() {
       />
 
       <ReportsStatCards
+        activeTab={activeTab}
         studentsCount={r.students.length}
         attendanceData={r.attendanceData}
         gradeData={r.gradeData}
+        selectedClass={r.selectedClass}
+        dateFrom={r.dateFrom}
+        dateTo={r.dateTo}
+        classes={r.classes}
       />
 
       <BulkSendProgressCard
