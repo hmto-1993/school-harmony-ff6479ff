@@ -4,12 +4,12 @@ const STORAGE_KEY = "dashboard-widget-order";
 const LOCK_KEY = "dashboard-widgets-locked";
 
 export const DEFAULT_ORDER = [
-  "smartSummary",
-  "fullTimetable",
-  "widgetGrid",
-  "honorRoll",
   "attendanceAndComparison",
   "performanceDashboard",
+  "widgetGrid",
+  "fullTimetable",
+  "smartSummary",
+  "honorRoll",
 ];
 
 export function useDashboardOrder() {

@@ -3,8 +3,8 @@ import { safePrint } from "@/lib/print-utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardStatCards from "@/components/dashboard/DashboardStatCards";
+import GlassDashboardHeader from "@/components/dashboard/GlassDashboardHeader";
+import GlassStatStrip from "@/components/dashboard/GlassStatStrip";
 import AttendanceOverview from "@/components/dashboard/AttendanceOverview";
 import PeriodComparison from "@/components/dashboard/PeriodComparison";
 import PerformanceDashboard from "@/components/dashboard/PerformanceDashboard";
@@ -179,24 +179,26 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-5">
-        <DashboardHeader
+        <GlassDashboardHeader
           onPrint={handlePrint}
           locked={locked}
           onToggleLock={toggleLock}
           onResetOrder={resetOrder}
         />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border/40 bg-card p-4 flex flex-col items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-muted animate-pulse" />
-              <div className="h-7 w-14 rounded-lg bg-muted animate-pulse" />
-              <div className="h-3 w-16 rounded bg-muted/60 animate-pulse" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border/30 bg-card/70 backdrop-blur-md p-3.5 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-muted animate-pulse" />
+              <div className="flex-1 space-y-2">
+                <div className="h-6 w-12 rounded-md bg-muted animate-pulse" />
+                <div className="h-3 w-16 rounded bg-muted/60 animate-pulse" />
+              </div>
             </div>
           ))}
         </div>
         <div className="space-y-5">
-          {[180, 120, 200].map((h, i) => (
-            <div key={i} className="rounded-2xl bg-card border border-border/40 animate-pulse" style={{ height: h }} />
+          {[200, 180, 160].map((h, i) => (
+            <div key={i} className="rounded-2xl bg-card/60 backdrop-blur-md border border-border/30 animate-pulse" style={{ height: h }} />
           ))}
         </div>
       </div>
@@ -205,21 +207,23 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <DashboardHeader
+      <GlassDashboardHeader
         onPrint={handlePrint}
         locked={locked}
         onToggleLock={toggleLock}
         onResetOrder={resetOrder}
+        attendanceRate={attendanceRate}
+        totalStudents={totalStudents}
+        todayPresent={todayPresent}
       />
 
-      <DashboardStatCards
+      <GlassStatStrip
         totalStudents={totalStudents}
         totalClasses={totalClasses}
         todayPresent={todayPresent}
         todayAbsent={todayAbsent}
         todayLate={todayLate}
         attendanceRate={attendanceRate}
-        loading={false}
       />
 
       {order.map((id) => renderWidget(id))}
