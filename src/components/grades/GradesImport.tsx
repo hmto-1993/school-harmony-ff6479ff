@@ -51,7 +51,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [students, setStudents] = useState<StudentInfo[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = usePerClassState<string>("import_selected_category", selectedClass, "");
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
