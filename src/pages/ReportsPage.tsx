@@ -148,6 +148,8 @@ export default function ReportsPage() {
             shareGradesWhatsApp={r.shareGradesWhatsApp}
             scope={r.gradesScope}
             setScope={r.setGradesScope}
+            period={r.gradesPeriod}
+            setPeriod={r.setGradesPeriod}
           />
         </TabsContent>
 
