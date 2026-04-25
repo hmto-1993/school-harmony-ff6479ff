@@ -163,12 +163,12 @@ export default function LoginPage() {
 
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-6">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-6 bg-background">
       <div
-        className="absolute inset-0 bg-cover bg-center brightness-[0.4]"
+        className="absolute inset-0 bg-cover bg-center brightness-90 dark:brightness-[0.4]"
         style={{ backgroundImage: `url(${loginBg})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-accent/10 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/50 to-background/70 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
         <Card className="bg-card/95 border-border/30 shadow-2xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
