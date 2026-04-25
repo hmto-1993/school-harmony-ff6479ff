@@ -28,7 +28,7 @@ interface Props {
 
 export default function GradesViewControls({
   viewMode, setViewMode, sortKey, setSortKey, sortDir, setSortDir,
-  scope, setScope, examFilter, setExamFilter, examCategories,
+  scope, setScope, period, setPeriod, examFilter, setExamFilter, examCategories,
   showLevelsReport, setShowLevelsReport, examColumn, setExamColumn,
 }: Props) {
   return (
