@@ -1,4 +1,5 @@
-import { Users, Lock, CheckCircle2 } from "lucide-react";
+import { Users, Lock, CheckCircle2, BookOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { WeeklyProgress } from "@/hooks/useAttendanceData";
 
@@ -12,85 +13,80 @@ interface Props {
   overrideLock: boolean;
 }
 
-const colorPalette = [
-  { gradient: "from-primary/15 to-primary/5", border: "border-primary/40", text: "text-primary", iconBg: "bg-primary/20" },
-  { gradient: "from-accent/15 to-accent/5", border: "border-accent/40", text: "text-accent", iconBg: "bg-accent/20" },
-  { gradient: "from-success/15 to-success/5", border: "border-success/40", text: "text-success", iconBg: "bg-success/20" },
-  { gradient: "from-warning/15 to-warning/5", border: "border-warning/40", text: "text-warning", iconBg: "bg-warning/20" },
-  { gradient: "from-info/15 to-info/5", border: "border-info/40", text: "text-info", iconBg: "bg-info/20" },
-  { gradient: "from-destructive/15 to-destructive/5", border: "border-destructive/40", text: "text-destructive", iconBg: "bg-destructive/20" },
-];
-
 export default function AttendanceClassSelector({
   classes, classesLoading, selectedClass, onSelectClass,
   weeklyProgress, weeklyProgressLoaded, overrideLock,
 }: Props) {
   return (
-    <div>
-      <h2 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
-        <Users className="h-4 w-4" />
-        اختر الفصل
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {classesLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-xl border-2 border-border/30 p-3 text-center animate-pulse">
-              <div className="mx-auto w-10 h-10 rounded-lg bg-muted/50 mb-2" />
-              <div className="h-4 w-20 mx-auto rounded bg-muted/50 mb-1.5" />
-              <div className="h-4 w-10 mx-auto rounded-full bg-muted/40" />
-            </div>
-          ))
-        ) : classes.length === 0 ? (
-          <div className="col-span-full text-center text-muted-foreground py-8">لا توجد فصول مسندة إليك</div>
-        ) : (
-          classes.map((c, index) => {
-            const isSelected = selectedClass === c.id;
-            const color = colorPalette[index % colorPalette.length];
-            const progress = weeklyProgress[c.id];
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
+        <Users className="h-3.5 w-3.5" />
+        <span>اختر الفصل لبدء التحضير</span>
+      </div>
+
+      {classesLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-12 rounded-xl bg-muted/40 animate-pulse" />
+          ))}
+        </div>
+      ) : classes.length === 0 ? (
+        <div className="text-sm text-muted-foreground py-4 text-center">لا توجد فصول مسندة إليك</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+          {classes.map((cls) => {
+            const isActive = selectedClass === cls.id;
+            const progress = weeklyProgress[cls.id];
             const sessions = progress?.sessions ?? 0;
             const limit = progress?.limit ?? 5;
             const isComplete = sessions >= limit;
             return (
               <button
-                key={c.id}
-                onClick={() => onSelectClass(c.id)}
+                key={cls.id}
+                onClick={() => onSelectClass(cls.id)}
                 className={cn(
-                  "relative rounded-xl border-2 p-3 text-center transition-all duration-300 group cursor-pointer animate-fade-in",
-                  `bg-gradient-to-br ${color.gradient}`,
-                  isSelected
-                    ? `${color.border} ring-2 ring-current/10 shadow-lg scale-[1.02]`
-                    : "border-border/30 hover:border-border/60 hover:shadow-md hover:scale-[1.01]"
+                  "group relative flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border text-right transition-all duration-200",
+                  "backdrop-blur-md shadow-sm hover:scale-[1.02] hover:shadow-md",
+                  isActive
+                    ? "border-primary bg-gradient-to-br from-primary/15 to-accent/10 shadow-primary/20"
+                    : "border-border/40 bg-background/60 hover:border-primary/40 hover:bg-background/80"
                 )}
-                style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
               >
-                <div className={cn(
-                  "mx-auto w-10 h-10 rounded-lg flex items-center justify-center mb-2 transition-all duration-300 group-hover:scale-110",
-                  isSelected ? color.iconBg : "bg-muted/50"
-                )}>
-                  <Users className={cn("h-5 w-5", isSelected ? color.text : "text-muted-foreground")} />
-                </div>
-                <p className={cn("text-sm font-bold truncate", isSelected ? color.text : "text-foreground")}>{c.name}</p>
-                {weeklyProgressLoaded ? (
+                <div className="flex items-center gap-2 min-w-0">
                   <div className={cn(
-                    "mt-1.5 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold border",
-                    isComplete && !overrideLock
-                      ? "bg-success/15 text-success border-success/30"
-                      : isComplete && overrideLock
-                      ? "bg-success/15 text-success border-success/30"
-                      : "bg-muted/60 text-muted-foreground border-border/40"
+                    "h-7 w-7 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                    isActive ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
                   )}>
+                    <BookOpen className="h-3.5 w-3.5" />
+                  </div>
+                  <span className={cn(
+                    "font-bold text-sm truncate",
+                    isActive ? "text-primary" : "text-foreground"
+                  )}>
+                    {cls.name}
+                  </span>
+                </div>
+                {weeklyProgressLoaded ? (
+                  <Badge
+                    variant={isActive ? "default" : "secondary"}
+                    className={cn(
+                      "h-5 px-1.5 text-[10px] font-bold shrink-0 gap-0.5",
+                      isComplete && !overrideLock && "bg-success/15 text-success hover:bg-success/20",
+                      isComplete && overrideLock && "bg-success/15 text-success hover:bg-success/20",
+                      isActive && !isComplete && "bg-primary/90 text-primary-foreground"
+                    )}
+                  >
                     {isComplete && !overrideLock ? <Lock className="h-2.5 w-2.5" /> : isComplete ? <CheckCircle2 className="h-2.5 w-2.5" /> : null}
                     {sessions}/{limit}
-                  </div>
+                  </Badge>
                 ) : (
-                  <div className="mt-1.5 inline-block h-4 w-10 rounded-full bg-muted/50 animate-pulse" />
+                  <div className="h-5 w-10 rounded-full bg-muted/50 animate-pulse shrink-0" />
                 )}
-                {isSelected && <div className={cn("absolute top-2 left-2 w-2.5 h-2.5 rounded-full animate-pulse", "bg-primary")} />}
               </button>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
     </div>
   );
 }
