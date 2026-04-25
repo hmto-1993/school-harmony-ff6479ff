@@ -27,7 +27,7 @@ interface Props {
 export default function GradesViewControls({
   viewMode, setViewMode, sortKey, setSortKey, sortDir, setSortDir,
   scope, setScope, examFilter, setExamFilter, examCategories,
-  showLevelsReport, setShowLevelsReport,
+  showLevelsReport, setShowLevelsReport, examColumn, setExamColumn,
 }: Props) {
   return (
     <Card className="border-0 shadow-md bg-card/80 print:hidden">
