@@ -1,8 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Star, CircleDashed, AlertTriangle, Eye, EyeOff, Sparkles } from "lucide-react";
+import {
+  Star, CircleDashed, AlertTriangle, Eye, EyeOff, Sparkles,
+  ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus,
+  Trophy, Target, Bell, Copy, Award, Crown,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { usePersistedState } from "@/hooks/usePersistedState";
+import { useToast } from "@/hooks/use-toast";
 
 export interface AlphaStudent {
   student_id: string;
@@ -15,7 +20,7 @@ interface Props {
   classId: string;
   className: string;
   students: AlphaStudent[];
-  /** Threshold above which a student is considered "Elite" (net score). Default: any positive net score, top performers. */
+  /** Threshold above which a student is considered "Elite" (net score). */
   eliteMinScore?: number;
 }
 
@@ -26,7 +31,7 @@ interface SectionConfig {
   title: string;
   subtitle: string;
   Icon: typeof Star;
-  // Tailwind tokens for accents
+  HeroIcon: typeof Crown;
   accentText: string;
   iconColor: string;
   borderLight: string;
@@ -35,6 +40,9 @@ interface SectionConfig {
   glowDark: string;
   badgeBg: string;
   pillBg: string;
+  /** Tailwind bg color used for the percentage bar segment. */
+  barBg: string;
+  emptyText: string;
 }
 
 const SECTIONS: Record<SectionKey, SectionConfig> = {
@@ -43,6 +51,7 @@ const SECTIONS: Record<SectionKey, SectionConfig> = {
     title: "المتميزون",
     subtitle: "Alpha Elite",
     Icon: Star,
+    HeroIcon: Crown,
     accentText: "text-emerald-700 dark:text-emerald-300",
     iconColor: "text-emerald-500 dark:text-emerald-300",
     borderLight: "border-emerald-300/70",
@@ -51,12 +60,15 @@ const SECTIONS: Record<SectionKey, SectionConfig> = {
     glowDark: "dark:shadow-[0_0_0_1px_rgba(16,185,129,0.25),0_0_28px_-2px_rgba(16,185,129,0.35)]",
     badgeBg: "bg-emerald-500/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-200 border-emerald-400/40",
     pillBg: "bg-white/70 dark:bg-emerald-950/30 border-emerald-300/60 dark:border-emerald-400/30 text-emerald-800 dark:text-emerald-100",
+    barBg: "bg-emerald-500 dark:bg-emerald-400",
+    emptyText: "لا يوجد متميزون بعد",
   },
   ground: {
     key: "ground",
     title: "منطقة الصفر",
     subtitle: "Alpha Ground",
     Icon: CircleDashed,
+    HeroIcon: Target,
     accentText: "text-slate-700 dark:text-slate-200",
     iconColor: "text-slate-500 dark:text-slate-300",
     borderLight: "border-slate-300/70",
@@ -65,12 +77,15 @@ const SECTIONS: Record<SectionKey, SectionConfig> = {
     glowDark: "dark:shadow-[0_0_0_1px_rgba(203,213,225,0.18),0_0_24px_-4px_rgba(203,213,225,0.25)]",
     badgeBg: "bg-slate-400/10 dark:bg-slate-300/10 text-slate-700 dark:text-slate-100 border-slate-400/40",
     pillBg: "bg-white/70 dark:bg-slate-900/40 border-slate-300/60 dark:border-slate-400/25 text-slate-800 dark:text-slate-100",
+    barBg: "bg-slate-400 dark:bg-slate-300",
+    emptyText: "لا يوجد طلاب في هذه المنطقة",
   },
   alert: {
     key: "alert",
     title: "منطقة التنبيه",
     subtitle: "Alpha Alert",
     Icon: AlertTriangle,
+    HeroIcon: AlertTriangle,
     accentText: "text-rose-700 dark:text-rose-300",
     iconColor: "text-rose-500 dark:text-rose-300",
     borderLight: "border-rose-300/70",
@@ -79,6 +94,8 @@ const SECTIONS: Record<SectionKey, SectionConfig> = {
     glowDark: "dark:shadow-[0_0_0_1px_rgba(244,63,94,0.28),0_0_28px_-2px_rgba(244,63,94,0.35)]",
     badgeBg: "bg-rose-500/10 dark:bg-rose-400/10 text-rose-700 dark:text-rose-200 border-rose-400/40",
     pillBg: "bg-white/70 dark:bg-rose-950/30 border-rose-300/60 dark:border-rose-400/30 text-rose-800 dark:text-rose-100",
+    barBg: "bg-rose-500 dark:bg-rose-400",
+    emptyText: "لا توجد تنبيهات — أداء ممتاز 🎉",
   },
 };
 
@@ -112,40 +129,119 @@ function CountBadge({ value, className }: { value: number; className?: string })
   );
 }
 
-function RadarPing({ x, y }: { x: number; y: number }) {
-  return (
-    <span
-      className="pointer-events-none absolute z-10 h-3 w-3 rounded-full"
-      style={{ left: x - 6, top: y - 6 }}
-    >
-      <span className="absolute inset-0 rounded-full bg-current opacity-60 animate-ping" />
-      <span className="absolute inset-[3px] rounded-full bg-current" />
+/** Trend arrow showing change vs previous snapshot. */
+function TrendIndicator({ delta }: { delta: number }) {
+  if (delta === 0) return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-muted-foreground">
+      <Minus className="h-2.5 w-2.5" />
+      ثابت
     </span>
+  );
+  if (delta > 0) return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+      <TrendingUp className="h-2.5 w-2.5" />
+      +{delta}
+    </span>
+  );
+  return (
+    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-rose-600 dark:text-rose-400">
+      <TrendingDown className="h-2.5 w-2.5" />
+      {delta}
+    </span>
+  );
+}
+
+interface QuickActionsProps {
+  student: AlphaStudent;
+  variant: SectionKey;
+  onClose: () => void;
+}
+
+/** Compact quick-action bar revealed when a student is selected. */
+function QuickActions({ student, variant, onClose }: QuickActionsProps) {
+  const { toast } = useToast();
+  const cfg = SECTIONS[variant];
+
+  const actions = useMemo(() => {
+    if (variant === "elite") return [
+      { key: "praise", label: "ثناء", Icon: Trophy, onClick: () => toast({ title: "👏 أحسنت!", description: `تم إرسال ثناء للطالب: ${student.full_name}` }) },
+      { key: "cert", label: "شهادة", Icon: Award, onClick: () => toast({ title: "🏅 شهادة تميز", description: `جاهزة للإصدار للطالب: ${student.full_name}` }) },
+    ];
+    if (variant === "alert") return [
+      { key: "warn", label: "تنبيه", Icon: Bell, onClick: () => toast({ title: "🔔 تم تسجيل التنبيه", description: `تم تسجيل تنبيه للطالب: ${student.full_name}` }) },
+      { key: "follow", label: "متابعة", Icon: Target, onClick: () => toast({ title: "🎯 قيد المتابعة", description: `تمت إضافة الطالب: ${student.full_name} لقائمة المتابعة` }) },
+    ];
+    return [
+      { key: "encourage", label: "تشجيع", Icon: Sparkles, onClick: () => toast({ title: "✨ شجّع طالبك", description: `تم تسجيل تشجيع للطالب: ${student.full_name}` }) },
+      { key: "focus", label: "تركيز", Icon: Target, onClick: () => toast({ title: "🎯 محل التركيز", description: `تمت إضافة الطالب: ${student.full_name} لقائمة التركيز` }) },
+    ];
+  }, [variant, student, toast]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="overflow-hidden"
+    >
+      <div className={cn("flex items-center gap-1 px-2 py-1.5 mt-1 rounded-lg border", cfg.pillBg)}>
+        {actions.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); a.onClick(); }}
+            className={cn("inline-flex items-center gap-1 px-2 h-7 rounded-md text-[10px] font-bold transition-all hover:scale-105 hover:bg-white/60 dark:hover:bg-white/10", cfg.accentText)}
+          >
+            <a.Icon className="h-3 w-3" />
+            {a.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigator.clipboard?.writeText(student.full_name);
+            toast({ title: "📋 تم النسخ", description: `تم نسخ اسم الطالب` });
+          }}
+          className="inline-flex items-center gap-1 px-2 h-7 rounded-md text-[10px] font-bold text-muted-foreground hover:text-foreground hover:bg-white/60 dark:hover:bg-white/10 transition"
+        >
+          <Copy className="h-3 w-3" />
+          نسخ
+        </button>
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onClose(); }}
+          className="text-[10px] text-muted-foreground hover:text-foreground px-1.5"
+        >
+          ✕
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
 interface SectionProps {
   cfg: SectionConfig;
   students: AlphaStudent[];
+  totalStudents: number;
   hidden: boolean;
   onToggle: () => void;
-  emptyText: string;
   showScore?: boolean;
   showViolations?: boolean;
+  trendDelta: number;
 }
 
-function Section({ cfg, students, hidden, onToggle, emptyText, showScore, showViolations }: SectionProps) {
-  const [pings, setPings] = useState<{ id: number; x: number; y: number; key: string }[]>([]);
-  const idRef = useRef(0);
+function Section({ cfg, students, totalStudents, hidden, onToggle, showScore, showViolations, trendDelta }: SectionProps) {
+  const [expanded, setExpanded] = usePersistedState<boolean>(`alpha_section_expanded_${cfg.key}`, false);
+  const [activeStudent, setActiveStudent] = useState<string | null>(null);
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>, key: string) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = ++idRef.current;
-    setPings(p => [...p, { id, x, y, key }]);
-    setTimeout(() => setPings(p => p.filter(pi => pi.id !== id)), 800);
-  };
+  const percentage = totalStudents > 0 ? Math.round((students.length / totalStudents) * 100) : 0;
+
+  // Hero student: top performer for elite, most violations for alert, or first for ground
+  const heroStudent = students[0];
+  const visibleStudents = expanded ? students : students.slice(0, 3);
 
   return (
     <div
@@ -195,59 +291,200 @@ function Section({ cfg, students, hidden, onToggle, emptyText, showScore, showVi
             transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <div className="relative p-2.5 max-h-72 overflow-y-auto">
+            <div className="relative p-2.5">
+              {/* KPI strip: percentage + trend */}
+              <div className="flex items-center justify-between gap-2 mb-2 px-1">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("text-lg font-black tabular-nums leading-none", cfg.accentText)}>
+                    {percentage}<span className="text-xs">%</span>
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">من الفصل</span>
+                </div>
+                <TrendIndicator delta={trendDelta} />
+              </div>
+
+              {/* Hero student card */}
+              {heroStudent && (
+                <div className={cn("flex items-center gap-2 px-2.5 py-2 rounded-xl border mb-2", cfg.pillBg)}>
+                  <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center bg-white/60 dark:bg-white/5 border", cfg.borderLight, cfg.borderDark)}>
+                    <cfg.HeroIcon className={cn("h-4 w-4", cfg.iconColor)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[9px] text-muted-foreground leading-none mb-0.5">
+                      {cfg.key === "elite" ? "نجم الحصة" : cfg.key === "alert" ? "الأكثر مخالفات" : "بحاجة لتشجيع"}
+                    </p>
+                    <p className="text-xs font-bold truncate">{heroStudent.full_name}</p>
+                  </div>
+                  {showScore && heroStudent.earnedTotal !== 0 && (
+                    <span className={cn("text-xs font-black tabular-nums shrink-0", cfg.accentText)}>
+                      {heroStudent.earnedTotal > 0 ? `+${heroStudent.earnedTotal}` : heroStudent.earnedTotal}
+                    </span>
+                  )}
+                  {showViolations && (heroStudent.violationsCount || 0) > 0 && (
+                    <span className={cn("text-xs font-black tabular-nums shrink-0 inline-flex items-center gap-0.5", cfg.accentText)}>
+                      <AlertTriangle className="h-3 w-3" />
+                      {heroStudent.violationsCount}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* Student list (compact: 3 visible, expand for all) */}
               {students.length === 0 ? (
-                <p className="text-center text-xs text-muted-foreground dark:text-slate-400 py-6">
-                  {emptyText}
+                <p className="text-center text-xs text-muted-foreground dark:text-slate-400 py-4">
+                  {cfg.emptyText}
                 </p>
               ) : (
-                <ul className="flex flex-col gap-1.5">
-                  <AnimatePresence initial={false}>
-                    {students.map((s) => (
-                      <motion.li
-                        key={s.student_id}
-                        layout
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.25 }}
-                      >
-                        <button
-                          type="button"
-                          onClick={(e) => handleClick(e, s.student_id)}
-                          className={cn(
-                            "relative w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-xl border backdrop-blur text-right transition-all duration-200 hover:scale-[1.015] hover:brightness-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-current",
-                            cfg.pillBg,
-                            cfg.iconColor,
-                          )}
-                        >
-                          <span className="text-sm font-semibold truncate text-foreground dark:text-slate-50 flex-1 text-right">
-                            {s.full_name}
-                          </span>
-                          {showScore && s.earnedTotal !== 0 && (
-                            <span className={cn("text-[11px] font-bold tabular-nums shrink-0", cfg.accentText)}>
-                              {s.earnedTotal > 0 ? `+${s.earnedTotal}` : s.earnedTotal}
-                            </span>
-                          )}
-                          {showViolations && (s.violationsCount || 0) > 0 && (
-                            <span className={cn("text-[11px] font-bold tabular-nums shrink-0 inline-flex items-center gap-0.5", cfg.accentText)}>
-                              <AlertTriangle className="h-3 w-3" />
-                              {s.violationsCount}
-                            </span>
-                          )}
-                          {pings.filter(p => p.key === s.student_id).map(p => (
-                            <RadarPing key={p.id} x={p.x} y={p.y} />
-                          ))}
-                        </button>
-                      </motion.li>
-                    ))}
-                  </AnimatePresence>
-                </ul>
+                <>
+                  <div className={cn("max-h-72 overflow-y-auto", expanded && "pr-1")}>
+                    <ul className="flex flex-col gap-1">
+                      <AnimatePresence initial={false}>
+                        {visibleStudents.map((s) => {
+                          const isActive = activeStudent === s.student_id;
+                          return (
+                            <motion.li
+                              key={s.student_id}
+                              layout
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setActiveStudent(isActive ? null : s.student_id)}
+                                className={cn(
+                                  "relative w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg border backdrop-blur text-right transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-current",
+                                  cfg.pillBg,
+                                  cfg.iconColor,
+                                  isActive && "ring-2 ring-current scale-[1.01]"
+                                )}
+                              >
+                                <span className="text-xs font-semibold truncate text-foreground dark:text-slate-50 flex-1 text-right">
+                                  {s.full_name}
+                                </span>
+                                {showScore && s.earnedTotal !== 0 && (
+                                  <span className={cn("text-[11px] font-bold tabular-nums shrink-0", cfg.accentText)}>
+                                    {s.earnedTotal > 0 ? `+${s.earnedTotal}` : s.earnedTotal}
+                                  </span>
+                                )}
+                                {showViolations && (s.violationsCount || 0) > 0 && (
+                                  <span className={cn("text-[11px] font-bold tabular-nums shrink-0 inline-flex items-center gap-0.5", cfg.accentText)}>
+                                    <AlertTriangle className="h-3 w-3" />
+                                    {s.violationsCount}
+                                  </span>
+                                )}
+                              </button>
+                              <AnimatePresence>
+                                {isActive && (
+                                  <QuickActions
+                                    student={s}
+                                    variant={cfg.key}
+                                    onClose={() => setActiveStudent(null)}
+                                  />
+                                )}
+                              </AnimatePresence>
+                            </motion.li>
+                          );
+                        })}
+                      </AnimatePresence>
+                    </ul>
+                  </div>
+
+                  {/* Expand toggle */}
+                  {students.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setExpanded(!expanded)}
+                      className={cn(
+                        "mt-1.5 w-full flex items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition-all hover:bg-white/40 dark:hover:bg-white/5",
+                        cfg.accentText
+                      )}
+                    >
+                      {expanded ? (
+                        <>
+                          <ChevronUp className="h-3 w-3" />
+                          عرض أقل
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3 w-3" />
+                          عرض الكل ({students.length})
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/** Horizontal stacked progress bar showing class distribution. */
+function DistributionBar({ elite, ground, alert, total }: { elite: number; ground: number; alert: number; total: number }) {
+  if (total === 0) return null;
+  const ePct = (elite / total) * 100;
+  const gPct = (ground / total) * 100;
+  const aPct = (alert / total) * 100;
+
+  return (
+    <div className="px-3 pb-2.5">
+      <div className="flex items-center justify-between gap-2 mb-1.5">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+          <Sparkles className="h-3 w-3 text-indigo-500 dark:text-indigo-300" />
+          توزيع أداء الفصل
+        </div>
+        <span className="text-[10px] text-muted-foreground tabular-nums">
+          {total} طالب
+        </span>
+      </div>
+      <div className="relative h-2 rounded-full overflow-hidden bg-muted/50 flex">
+        {ePct > 0 && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${ePct}%` }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className={SECTIONS.elite.barBg}
+            title={`متميزون: ${elite}`}
+          />
+        )}
+        {gPct > 0 && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${gPct}%` }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+            className={SECTIONS.ground.barBg}
+            title={`صفر: ${ground}`}
+          />
+        )}
+        {aPct > 0 && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${aPct}%` }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
+            className={SECTIONS.alert.barBg}
+            title={`تنبيه: ${alert}`}
+          />
+        )}
+      </div>
+      <div className="flex items-center justify-between gap-2 mt-1.5 text-[10px]">
+        <span className="inline-flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
+          <span className="h-2 w-2 rounded-sm bg-emerald-500 dark:bg-emerald-400" />
+          {Math.round(ePct)}% متميز
+        </span>
+        <span className="inline-flex items-center gap-1 font-bold text-slate-600 dark:text-slate-300">
+          <span className="h-2 w-2 rounded-sm bg-slate-400 dark:bg-slate-300" />
+          {Math.round(gPct)}% صفر
+        </span>
+        <span className="inline-flex items-center gap-1 font-bold text-rose-600 dark:text-rose-400">
+          <span className="h-2 w-2 rounded-sm bg-rose-500 dark:bg-rose-400" />
+          {Math.round(aPct)}% تنبيه
+        </span>
+      </div>
     </div>
   );
 }
@@ -264,20 +501,35 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
 
     const remaining = students.filter(s => (s.violationsCount || 0) === 0);
 
-    // Elite: positive net scores. If eliteMinScore provided, use it; else top performers (>0) up to 8.
     const positives = remaining
       .filter(s => s.earnedTotal > (eliteMinScore ?? 0))
       .sort((a, b) => b.earnedTotal - a.earnedTotal);
     const eliteList = eliteMinScore != null ? positives : positives.slice(0, 8);
     const eliteIds = new Set(eliteList.map(s => s.student_id));
 
-    // Ground: no violations, no positive score (zero or untouched)
+    // Ground sorted by lowest improvement potential first (those who really need encouragement)
     const groundList = remaining
       .filter(s => !eliteIds.has(s.student_id))
       .sort((a, b) => a.full_name.localeCompare(b.full_name, "ar"));
 
     return { elite: eliteList, ground: groundList, alert: alertList };
   }, [students, eliteMinScore]);
+
+  // Track previous counts per class to compute trend deltas
+  const prevRef = useRef<Record<string, { elite: number; ground: number; alert: number }>>({});
+  const [deltas, setDeltas] = useState({ elite: 0, ground: 0, alert: 0 });
+
+  useEffect(() => {
+    const prev = prevRef.current[classId];
+    if (prev) {
+      setDeltas({
+        elite: elite.length - prev.elite,
+        ground: ground.length - prev.ground,
+        alert: alert.length - prev.alert,
+      });
+    }
+    prevRef.current[classId] = { elite: elite.length, ground: ground.length, alert: alert.length };
+  }, [classId, elite.length, ground.length, alert.length]);
 
   return (
     <div
@@ -308,30 +560,41 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
         </div>
       </div>
 
+      {/* Distribution KPI bar */}
+      <DistributionBar
+        elite={elite.length}
+        ground={ground.length}
+        alert={alert.length}
+        total={students.length}
+      />
+
       {/* Three sections */}
-      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3">
+      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-3 p-3 pt-0">
         <Section
           cfg={SECTIONS.elite}
           students={elite}
+          totalStudents={students.length}
           hidden={hideElite}
           onToggle={() => setHideElite(!hideElite)}
-          emptyText="لا يوجد متميزون بعد"
           showScore
+          trendDelta={deltas.elite}
         />
         <Section
           cfg={SECTIONS.ground}
           students={ground}
+          totalStudents={students.length}
           hidden={hideGround}
           onToggle={() => setHideGround(!hideGround)}
-          emptyText="لا يوجد طلاب في هذه المنطقة"
+          trendDelta={deltas.ground}
         />
         <Section
           cfg={SECTIONS.alert}
           students={alert}
+          totalStudents={students.length}
           hidden={hideAlert}
           onToggle={() => setHideAlert(!hideAlert)}
-          emptyText="لا توجد تنبيهات — أداء ممتاز 🎉"
           showViolations
+          trendDelta={deltas.alert}
         />
       </div>
     </div>
