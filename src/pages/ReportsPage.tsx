@@ -9,6 +9,7 @@ import BehaviorViolationsTab from "@/components/reports/BehaviorViolationsTab";
 import BulkSendConfirmDialog from "@/components/reports/BulkSendConfirmDialog";
 import BulkSendProgressCard from "@/components/reports/BulkSendProgressCard";
 import ReportsHeader from "@/components/reports/ReportsHeader";
+import ReportsStatCards from "@/components/reports/ReportsStatCards";
 import ReportsTabsNav from "@/components/reports/ReportsTabsNav";
 import { AttendancePreviewContent, GradesPreviewContent } from "@/components/reports/ReportPreviewContent";
 import { useReportsData } from "@/hooks/useReportsData";
