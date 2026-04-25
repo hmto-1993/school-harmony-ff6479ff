@@ -2,10 +2,8 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { Lock } from "lucide-react";
 import PrintPreviewDialog from "@/components/reports/PrintPreviewDialog";
-import MonthlyAnalytics from "@/components/reports/MonthlyAnalytics";
-import ComprehensiveExport from "@/components/reports/ComprehensiveExport";
 import ReportFilters from "@/components/reports/ReportFilters";
-import AttendanceReportTab from "@/components/reports/AttendanceReportTab";
+import AttendanceAnalyticsTab from "@/components/reports/AttendanceAnalyticsTab";
 import GradesReportTab from "@/components/reports/GradesReportTab";
 import BehaviorViolationsTab from "@/components/reports/BehaviorViolationsTab";
 import BulkSendConfirmDialog from "@/components/reports/BulkSendConfirmDialog";
@@ -34,13 +32,14 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       <ReportsHeader
         sendingSMS={r.sendingSMS}
         selectedStudent={r.selectedStudent}
         handleSendSMS={r.handleSendSMS}
         handleSendWhatsApp={r.handleSendWhatsApp}
         setBulkConfirm={r.setBulkConfirm}
+        classes={r.classes}
       />
 
       <BulkSendProgressCard
@@ -73,7 +72,7 @@ export default function ReportsPage() {
         <ReportsTabsNav activeTab={activeTab} onChange={setActiveTab} />
 
         <TabsContent value="attendance" className="animate-fade-in">
-          <AttendanceReportTab
+          <AttendanceAnalyticsTab
             attendanceData={r.attendanceData}
             loadingAttendance={r.loadingAttendance}
             selectedClass={r.selectedClass}
@@ -88,6 +87,7 @@ export default function ReportsPage() {
             dateFrom={r.dateFrom}
             dateTo={r.dateTo}
             className={r.className}
+            classes={r.classes}
           />
         </TabsContent>
 
@@ -118,14 +118,6 @@ export default function ReportsPage() {
             selectedStudent={r.selectedStudent}
             reportType={r.reportType}
           />
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4 animate-fade-in">
-          <MonthlyAnalytics selectedClass={r.selectedClass} classes={r.classes} />
-        </TabsContent>
-
-        <TabsContent value="comprehensive" className="space-y-4 animate-fade-in">
-          <ComprehensiveExport classes={r.classes} />
         </TabsContent>
       </Tabs>
 
