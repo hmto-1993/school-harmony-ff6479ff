@@ -48,7 +48,7 @@ export function useReportsData() {
   const [categoryMeta, setCategoryMeta] = useState<CategoryMeta[]>([]);
   const [loadingGrades, setLoadingGrades] = useState(false);
   const [gradesScope, setGradesScope] = useState<"current" | "all">("current");
-  const [gradesPeriod, setGradesPeriod] = useState<1 | 2>(1);
+  const [gradesPeriod, setGradesPeriod] = usePersistedState<1 | 2>("reports.gradesPeriod", 1);
 
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewType, setPreviewType] = useState<"attendance" | "grades" | "behavior">("attendance");
