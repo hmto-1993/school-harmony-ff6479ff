@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePerClassState } from "@/hooks/usePerClassState";
 import { format, subDays, addDays, isToday } from "date-fns";
 
 // ── Types ──────────────────────────────────────────────────────────
@@ -84,7 +85,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   const { user } = useAuth();
   const { toast } = useToast();
   const [classes, setClasses] = useState<{ id: string; name: string }[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = usePerClassState<string>("daily_selected_category", selectedClass, "");
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([]);
   const [saving, setSaving] = useState(false);

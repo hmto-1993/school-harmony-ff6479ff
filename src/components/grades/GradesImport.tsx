@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { usePerClassState } from "@/hooks/usePerClassState";
 import { Download, FileSpreadsheet, CheckCircle2, AlertCircle, X, Save, Users, FileText, Loader2, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -50,7 +51,7 @@ export default function GradesImport({ selectedClass, onClassChange, selectedPer
 
   const [categories, setCategories] = useState<GradeCategory[]>([]);
   const [students, setStudents] = useState<StudentInfo[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = usePerClassState<string>("import_selected_category", selectedClass, "");
   const [importRows, setImportRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
