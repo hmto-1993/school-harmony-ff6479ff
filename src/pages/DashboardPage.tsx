@@ -139,7 +139,7 @@ export default function DashboardPage() {
     smartSummary: <SmartDashboardSummary />,
     fullTimetable: <FullTimetableWidget />,
     attendanceAndComparison: (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <AttendanceOverview
           todayPresent={todayPresent}
           todayAbsent={todayAbsent}
@@ -148,7 +148,6 @@ export default function DashboardPage() {
           classStats={classStats}
         />
         <PeriodComparison />
-        <SafeZoneCounter />
       </div>
     ),
     widgetGrid: (
