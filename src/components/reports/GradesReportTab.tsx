@@ -233,7 +233,11 @@ export default function GradesReportTab({
 
               <SectionGradesTable
                 title="جدول الاختبارات"
-                categories={examCategories.length > 0 ? examCategories : categoryMeta}
+                categories={
+                  examColumn === "all" || examCategories.length === 0
+                    ? (examCategories.length > 0 ? examCategories : categoryMeta)
+                    : examCategories.filter((c) => c.id === examColumn)
+                }
                 rows={sortedRows}
                 allCategoriesMeta={categoryMeta}
                 examCategories={examCategories}
