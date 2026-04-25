@@ -493,6 +493,7 @@ export default function ClassAlphaDashboard({ classId, className, students, elit
   const [hideElite, setHideElite] = usePersistedState<boolean>(`alpha_dash_elite_hidden_${classId}`, false);
   const [hideGround, setHideGround] = usePersistedState<boolean>(`alpha_dash_ground_hidden_${classId}`, false);
   const [hideAlert, setHideAlert] = usePersistedState<boolean>(`alpha_dash_alert_hidden_${classId}`, false);
+  const [dashCollapsed, setDashCollapsed] = usePersistedState<boolean>(`alpha_dash_collapsed_${classId}`, false);
 
   const { elite, ground, alert } = useMemo(() => {
     const alertList = students
