@@ -445,6 +445,8 @@ export function useReportsData() {
     fetchGrades,
     gradesScope,
     setGradesScope,
+    gradesPeriod,
+    setGradesPeriod,
     // Preview
     previewOpen,
     setPreviewOpen,
