@@ -9,9 +9,9 @@ const TABS = [
 ] as const;
 
 const ACCENT_CLS: Record<string, string> = {
-  primary: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-primary/20 data-[state=active]:to-primary/10 data-[state=active]:text-primary data-[state=active]:shadow-md data-[state=active]:shadow-primary/10",
-  success: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-success/20 data-[state=active]:to-success/10 data-[state=active]:text-success data-[state=active]:shadow-md data-[state=active]:shadow-success/10",
-  warning: "data-[state=active]:bg-gradient-to-br data-[state=active]:from-warning/20 data-[state=active]:to-warning/10 data-[state=active]:shadow-md data-[state=active]:shadow-warning/10",
+  primary: "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:shadow-primary/30 data-[state=active]:font-semibold",
+  success: "data-[state=active]:bg-success data-[state=active]:text-success-foreground data-[state=active]:shadow-md data-[state=active]:shadow-success/30 data-[state=active]:font-semibold",
+  warning: "data-[state=active]:bg-warning data-[state=active]:text-warning-foreground data-[state=active]:shadow-md data-[state=active]:shadow-warning/30 data-[state=active]:font-semibold",
 };
 
 interface Props {
