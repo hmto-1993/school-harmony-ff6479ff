@@ -211,7 +211,18 @@ export default function GradesReportTab({
           </TabsContent>
 
           <TabsContent value="exams" className="space-y-4 mt-4">
-            <ExamsSummaryPanel examCategories={examCategories} rows={filteredRows} />
+            <ExamsSummaryPanel examCategories={examCategories} rows={gradeData} />
+            <MissingGradesAlert
+              examCategories={examCategories}
+              visibleCategories={
+                examColumn === "all"
+                  ? examCategories
+                  : examCategories.filter((c) => c.id === examColumn)
+              }
+              rows={gradeData}
+              examFilter={examFilter}
+              setExamFilter={setExamFilter}
+            />
             <GradesViewControls
               viewMode={viewMode} setViewMode={setViewMode}
               sortKey={sortKey} setSortKey={setSortKey}
