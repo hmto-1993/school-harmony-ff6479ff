@@ -10,9 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
-import { GraduationCap, Shield, ArrowLeft, Users } from "lucide-react";
+import { GraduationCap, Shield, ArrowLeft, Users, Sun, Moon } from "lucide-react";
 import SignupWizardDialog from "@/components/auth/SignupWizardDialog";
 import BrandName from "@/components/BrandName";
+import { useTheme } from "@/hooks/use-theme";
 
 export default function LoginPage() {
   const [nationalId, setNationalId] = useState("");
@@ -25,6 +26,7 @@ export default function LoginPage() {
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس والفصول الدراسية");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -171,6 +173,18 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/50 to-background/70 dark:from-black/50 dark:via-black/30 dark:to-black/40" />
 
       <div className="relative z-10 w-full max-w-md animate-fade-in">
+        <div className="flex justify-end mb-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={toggleTheme}
+            className="rounded-full bg-card/80 backdrop-blur-sm border-border/40 shadow-md hover:bg-card"
+            aria-label="تبديل الوضع"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
+        </div>
         <Card className="bg-card/95 border-border/30 shadow-2xl dark:bg-card/90 dark:border-border/20 dark:shadow-black/40">
           <CardHeader className="flex flex-col items-center gap-4 pb-2">
             <div className="relative rounded-2xl bg-gradient-to-br from-card/95 via-card/85 to-muted/60 dark:from-muted/70 dark:via-muted/50 dark:to-muted/30 p-2.5 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] ring-1 ring-[hsl(42,40%,55%)]/30 dark:ring-[hsl(42,40%,55%)]/20">
