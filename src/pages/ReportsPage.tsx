@@ -72,7 +72,7 @@ export default function ReportsPage() {
       <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
         <ReportsTabsNav activeTab={activeTab} onChange={setActiveTab} />
 
-        <TabsContent value="attendance">
+        <TabsContent value="attendance" className="animate-fade-in">
           <AttendanceReportTab
             attendanceData={r.attendanceData}
             loadingAttendance={r.loadingAttendance}
@@ -91,7 +91,7 @@ export default function ReportsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="grades">
+        <TabsContent value="grades" className="animate-fade-in">
           <GradesReportTab
             gradeData={r.gradeData}
             categoryNames={r.categoryNames}
@@ -110,7 +110,7 @@ export default function ReportsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="behavior" className="space-y-4">
+        <TabsContent value="behavior" className="space-y-4 animate-fade-in">
           <BehaviorViolationsTab
             selectedClass={r.selectedClass}
             dateFrom={r.dateFrom}
@@ -120,11 +120,11 @@ export default function ReportsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="analytics" className="space-y-4">
+        <TabsContent value="analytics" className="space-y-4 animate-fade-in">
           <MonthlyAnalytics selectedClass={r.selectedClass} classes={r.classes} />
         </TabsContent>
 
-        <TabsContent value="comprehensive" className="space-y-4">
+        <TabsContent value="comprehensive" className="space-y-4 animate-fade-in">
           <ComprehensiveExport classes={r.classes} />
         </TabsContent>
       </Tabs>
