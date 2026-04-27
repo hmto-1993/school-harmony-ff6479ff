@@ -10,8 +10,17 @@ import StudentImportDialog from "@/components/student/StudentImportDialog";
 import StudentFormDialog from "@/components/student/StudentFormDialog";
 import StudentClassSummary from "@/components/student/StudentClassSummary";
 import StudentTable from "@/components/student/StudentTable";
+import StudentsPageErrorBoundary from "@/components/StudentsPageErrorBoundary";
 
 export default function StudentsPage() {
+  return (
+    <StudentsPageErrorBoundary>
+      <StudentsPageInner />
+    </StudentsPageErrorBoundary>
+  );
+}
+
+function StudentsPageInner() {
   const { role } = useAuth();
   const { perms, loaded: permsLoaded } = useTeacherPermissions();
   const data = useStudentsData();
