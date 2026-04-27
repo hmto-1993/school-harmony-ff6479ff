@@ -76,8 +76,8 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     }
     if (!isStrongPassword(password)) {
       toast({
-        title: "كلمة المرور ضعيفة",
-        description: "يجب أن تحتوي كلمة المرور على مزيج من الحروف والأرقام والرموز (مثال: Ahmed@2026!).",
+        title: "كلمة المرور غير مكتملة",
+        description: "يجب ألا تقل عن 8 خانات وتحتوي على حروف وأرقام ورموز (مثال: Ahmed@2026).",
         variant: "destructive",
       });
       return;
