@@ -23,6 +23,20 @@ function formatPhone(phone: string): string {
   return formatted;
 }
 
+async function readProviderResponse(response: Response) {
+  const raw = await response.text();
+  if (!raw.trim()) {
+    return { httpStatus: response.status, httpOk: response.ok, raw: "" };
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    return { ...parsed, httpStatus: response.status, httpOk: response.ok };
+  } catch (_error) {
+    return { httpStatus: response.status, httpOk: response.ok, raw };
+  }
+}
+
 async function sendViaMsegat(phone: string, message: string, settings: Record<string, string>) {
   const username = settings["sms_provider_username"] || Deno.env.get("MSEGAT_USERNAME");
   const apiKey = settings["sms_provider_api_key"] || Deno.env.get("MSEGAT_API_KEY");
@@ -45,13 +59,13 @@ async function sendViaMsegat(phone: string, message: string, settings: Record<st
     }),
   });
 
-  const result = await response.json();
+  const result = await readProviderResponse(response);
   console.log("MSEGAT response:", JSON.stringify(result));
 
   if (result.code === "1" || result.code === 1) {
     return { success: true, message: "تم إرسال الرسالة بنجاح", result };
   } else {
-    return { success: false, error: result.message || "فشل إرسال الرسالة", result };
+    return { success: false, error: result.message || result.raw || "فشل إرسال الرسالة", result };
   }
 }
 
@@ -69,6 +83,7 @@ async function sendViaUnifonic(phone: string, message: string, settings: Record<
     AppSid: appSid,
     Recipient: formattedPhone,
     Body: message,
+    responseType: "JSON",
     ...(sender ? { SenderID: sender } : {}),
   });
 
@@ -78,13 +93,13 @@ async function sendViaUnifonic(phone: string, message: string, settings: Record<
     body: params.toString(),
   });
 
-  const result = await response.json();
+  const result = await readProviderResponse(response);
   console.log("Unifonic response:", JSON.stringify(result));
 
   if (result.success === true || result.Success === "true" || result.errorCode === "ER-00") {
     return { success: true, message: "تم إرسال الرسالة بنجاح", result };
   } else {
-    return { success: false, error: result.message || result.Message || "فشل إرسال الرسالة", result };
+    return { success: false, error: result.message || result.Message || result.raw || "فشل إرسال الرسالة", result };
   }
 }
 
@@ -111,13 +126,13 @@ async function sendViaTaqnyat(phone: string, message: string, settings: Record<s
     }),
   });
 
-  const result = await response.json();
+  const result = await readProviderResponse(response);
   console.log("Taqnyat response:", JSON.stringify(result));
 
-  if (result.statusCode === 201 || result.statusCode === 200) {
+  if (result.statusCode === 201 || result.statusCode === 200 || (response.ok && !result.raw)) {
     return { success: true, message: "تم إرسال الرسالة بنجاح", result };
   } else {
-    return { success: false, error: result.message || "فشل إرسال الرسالة", result };
+    return { success: false, error: result.message || result.raw || "فشل إرسال الرسالة", result };
   }
 }
 
