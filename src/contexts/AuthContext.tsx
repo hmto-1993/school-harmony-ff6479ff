@@ -57,19 +57,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subscriptionExpired = !isSuperOwner && !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= Date.now();
 
   const fetchRole = async (userId: string) => {
-    const [roleRes, profileRes] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-      supabase.from("profiles").select("approval_status, subscription_end, national_id, role").eq("user_id", userId).maybeSingle(),
-    ]);
-    const globalRole = (roleRes.data?.role as AppRole) || null;
-    const orgRole = (profileRes.data as any)?.role as string | undefined;
-    // Independent subscribers (org owners) act as admins of their own isolated workspace.
-    // RLS still enforces tenant isolation via organization_id — this only unlocks the UI.
-    const effectiveRole: AppRole | null = globalRole || (orgRole === "owner" ? "admin" : (orgRole === "teacher" ? "teacher" : null));
-    setRole(effectiveRole);
-    setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
-    setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
-    setNationalId(((profileRes.data as any)?.national_id as string) || null);
+    try {
+      const [roleRes, profileRes] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("approval_status, subscription_end, national_id, role").eq("user_id", userId).maybeSingle(),
+      ]);
+      const globalRole = (roleRes.data?.role as AppRole) || null;
+      const orgRole = (profileRes.data as any)?.role as string | undefined;
+      // Independent subscribers (org owners) act as admins of their own isolated workspace.
+      // RLS still enforces tenant isolation via organization_id — this only unlocks the UI.
+      const effectiveRole: AppRole | null = globalRole || (orgRole === "owner" ? "admin" : (orgRole === "teacher" ? "teacher" : null));
+      setRole(effectiveRole);
+      setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
+      setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
+      setNationalId(((profileRes.data as any)?.national_id as string) || null);
+    } catch (err) {
+      // Never leave the auth context in a perpetual loading state.
+      console.error("[AuthContext] fetchRole failed:", err);
+      setRole(null);
+      setApprovalStatus("pending");
+      setSubscriptionEnd(null);
+      setNationalId(null);
+    }
   };
 
   // Restore student session using HMAC token (no PII in storage)
