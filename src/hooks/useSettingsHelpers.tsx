@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { ClassRow, GradeCategory } from "./useSettingsData";
+import { validatePassword } from "@/lib/password-policy";
 
 export function useSettingsProfile(user: any) {
   const [profileName, setProfileName] = useState("");
@@ -32,6 +33,11 @@ export function useSettingsProfile(user: any) {
 
   const handleChangeOwnPassword = async () => {
     if (!newOwnPassword.trim() || !currentPassword.trim()) return;
+    const policyErr = validatePassword(newOwnPassword);
+    if (policyErr) {
+      toast({ title: "كلمة المرور غير مكتملة", description: policyErr, variant: "destructive" });
+      return;
+    }
     if (newOwnPassword !== confirmOwnPassword) {
       toast({ title: "خطأ", description: "كلمة المرور الجديدة غير متطابقة", variant: "destructive" }); return;
     }

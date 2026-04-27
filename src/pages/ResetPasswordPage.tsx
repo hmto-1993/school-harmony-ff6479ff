@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
 import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
+import { validatePassword, PASSWORD_POLICY_HINT } from "@/lib/password-policy";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -45,13 +46,6 @@ export default function ResetPasswordPage() {
     return () => subscription.unsubscribe();
   }, []);
 
-  const validatePassword = (pwd: string): string | null => {
-    if (pwd.length < 8) return "كلمة المرور يجب أن تكون 8 أحرف على الأقل";
-    if (!/[A-Za-z]/.test(pwd)) return "يجب أن تحتوي على حرف واحد على الأقل";
-    if (!/[0-9]/.test(pwd)) return "يجب أن تحتوي على رقم واحد على الأقل";
-    if (!/[^A-Za-z0-9]/.test(pwd)) return "يجب أن تحتوي على رمز خاص واحد على الأقل";
-    return null;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
