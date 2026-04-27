@@ -2,6 +2,7 @@ import { useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { ClassRow, GradeCategory } from "./useSettingsData";
+import { validatePassword } from "@/lib/password-policy";
 
 export function useSettingsProfile(user: any) {
   const [profileName, setProfileName] = useState("");
