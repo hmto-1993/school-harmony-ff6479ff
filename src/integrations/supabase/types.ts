@@ -575,6 +575,7 @@ export type Database = {
         Row: {
           academic_year: string
           created_at: string
+          created_by: string | null
           grade: string
           id: string
           name: string
@@ -584,6 +585,7 @@ export type Database = {
         Insert: {
           academic_year?: string
           created_at?: string
+          created_by?: string | null
           grade: string
           id?: string
           name: string
@@ -593,6 +595,7 @@ export type Database = {
         Update: {
           academic_year?: string
           created_at?: string
+          created_by?: string | null
           grade?: string
           id?: string
           name?: string

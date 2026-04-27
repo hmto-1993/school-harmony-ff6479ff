@@ -40,15 +40,16 @@ export function ClassesSettingsCard({ s }: { s: SettingsData }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {s.isAdmin && (
+          {s.canCreateClasses && (
             <div className="flex gap-2 flex-wrap">
-              <Dialog open={s.importClassesOpen} onOpenChange={(v) => { s.setImportClassesOpen(v); if (!v) s.setImportedClasses([]); }}>
-                <DialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="gap-1.5">
-                    <Download className="h-4 w-4" />
-                    استيراد من Excel
-                  </Button>
-                </DialogTrigger>
+              {s.isAdmin && (
+                <Dialog open={s.importClassesOpen} onOpenChange={(v) => { s.setImportClassesOpen(v); if (!v) s.setImportedClasses([]); }}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="gap-1.5">
+                      <Download className="h-4 w-4" />
+                      استيراد من Excel
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent dir="rtl" className="max-w-xl">
                   <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
@@ -112,7 +113,8 @@ export function ClassesSettingsCard({ s }: { s: SettingsData }) {
                     )}
                   </DialogFooter>
                 </DialogContent>
-              </Dialog>
+                </Dialog>
+              )}
               <Dialog onOpenChange={(v) => { if (!v) s.setNewClassStudentsPdf(null); }}>
                 <DialogTrigger asChild>
                   <Button size="sm" className="gap-1.5">
