@@ -54,13 +54,6 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setNationalId(""); setEmail(""); setPassword(""); setTier("basic");
   };
 
-  const isStrongPassword = (pw: string) => {
-    if (pw.length < 8) return false;
-    const hasLetter = /[A-Za-z\u0600-\u06FF]/.test(pw);
-    const hasNumber = /\d/.test(pw);
-    const hasSymbol = /[^A-Za-z0-9\u0600-\u06FF\s]/.test(pw);
-    return hasLetter && hasNumber && hasSymbol;
-  };
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
