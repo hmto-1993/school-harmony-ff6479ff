@@ -100,11 +100,29 @@ export default function LoginPage() {
 
       const { error } = await signIn(data.email, password);
       if (error) {
-        toast({
-          title: "خطأ في تسجيل الدخول",
-          description: "رقم الهوية أو كلمة المرور غير صحيحة",
-          variant: "destructive",
-        });
+        const msg = (error as any)?.message || "";
+        const code = (error as any)?.code || "";
+        const isUnconfirmed = code === "email_not_confirmed" || /not confirmed|confirm/i.test(msg);
+
+        if (isUnconfirmed) {
+          // إعادة إرسال رابط التأكيد تلقائياً
+          await supabase.auth.resend({
+            type: "signup",
+            email: data.email,
+            options: { emailRedirectTo: `${window.location.origin}/` },
+          });
+          toast({
+            title: "البريد الإلكتروني لم يُؤكَّد بعد",
+            description: "أرسلنا لك رابط تأكيد جديد على بريدك. يرجى فتحه ثم العودة لتسجيل الدخول.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "خطأ في تسجيل الدخول",
+            description: "رقم الهوية أو كلمة المرور غير صحيحة",
+            variant: "destructive",
+          });
+        }
       }
     } catch {
       toast({
