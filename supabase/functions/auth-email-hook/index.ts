@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'تأكيد البريد الإلكتروني - منصة المتميز',
+  invite: 'دعوة للانضمام - منصة المتميز',
+  magiclink: 'رابط تسجيل الدخول - منصة المتميز',
+  recovery: 'استعادة كلمة المرور - منصة المتميز',
+  email_change: 'تأكيد البريد الإلكتروني الجديد - منصة المتميز',
+  reauthentication: 'رمز التحقق - منصة المتميز',
 }
 
 // Template mapping
@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "ahmed-physics"
+const SITE_NAME = "منصة المتميز"
 const SENDER_DOMAIN = "alpha.almtmez.com"
 const ROOT_DOMAIN = "almtmez.com"
 const FROM_DOMAIN = "almtmez.com" // Domain shown in From address (may be root or sender subdomain)
