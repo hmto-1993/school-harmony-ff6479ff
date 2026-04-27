@@ -31,6 +31,7 @@ export interface GradeCategory {
 export function useSettingsData() {
   const { role, user } = useAuth();
   const isAdmin = role === "admin";
+  const canCreateClasses = isAdmin || role === "teacher";
   const { calendarType: calendarTypeLocal, setCalendarType: setGlobalCalendarType } = useCalendarType();
 
   const [classes, setClasses] = useState<ClassRow[]>([]);
@@ -349,7 +350,7 @@ export function useSettingsData() {
   useEffect(() => { fetchData(); }, []);
 
   return {
-    isAdmin, user, role, loading, activeCard, setActiveCard,
+    isAdmin, canCreateClasses, user, role, loading, activeCard, setActiveCard,
     // Classes
     classes, ...classHelper,
     // Categories
