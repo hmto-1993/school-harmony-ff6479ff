@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { UserPlus, ArrowLeft, ArrowRight, Shield, Crown, CheckCircle2, Sparkles, Activity, Eye } from "lucide-react";
+import { isStrongPassword, validatePassword } from "@/lib/password-policy";
 
 interface Props {
   open: boolean;
