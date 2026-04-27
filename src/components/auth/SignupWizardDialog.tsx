@@ -193,10 +193,10 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
                   placeholder="example@mail.com" dir="ltr" className="text-right h-10 rounded-xl" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="sw-pass" className="text-xs">كلمة المرور (حروف + أرقام + رموز) *</Label>
+                <Label htmlFor="sw-pass" className="text-xs">كلمة المرور (8+ خانات: حروف + أرقام + رموز) *</Label>
                 <Input id="sw-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                  placeholder="مثال: Ahmed@2026!" dir="ltr" className="h-10 rounded-xl" required />
-                <p className="text-[10px] text-muted-foreground">يجب أن تحتوي على مزيج من الحروف والأرقام والرموز</p>
+                  placeholder="مثال: Ahmed@2026" dir="ltr" className="h-10 rounded-xl" required />
+                <p className="text-[10px] text-muted-foreground">8 خانات على الأقل تشمل حروف وأرقام ورمز واحد</p>
               </div>
             </div>
             <Button type="submit" className="w-full h-11 rounded-xl bg-gradient-to-l from-primary to-accent text-primary-foreground font-semibold">
