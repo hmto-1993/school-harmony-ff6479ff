@@ -24,10 +24,15 @@ interface SmsSettingsCardProps {
 
 export function SmsSettingsCard(props: SmsSettingsCardProps) {
   const handleTestSms = async () => {
+    const phone = window.prompt("أدخل رقم الجوال للاختبار (مثال: 05xxxxxxxx)");
+    if (!phone || phone.trim().length < 9) {
+      toast({ title: "رقم غير صالح", description: "الرجاء إدخال رقم جوال صحيح", variant: "destructive" });
+      return;
+    }
     props.setTestingSms(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-sms", {
-        body: { phone: props.providerSender, message: "رسالة اختبارية من النظام - Test SMS" },
+        body: { phone: phone.trim(), message: "رسالة اختبارية من النظام - Test SMS" },
       });
       if (error) {
         toast({ title: "فشل الاختبار", description: error.message, variant: "destructive" });
