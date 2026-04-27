@@ -9,7 +9,13 @@ interface ProtectedRouteProps {
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, role, loading, isStudent, approvalStatus, subscriptionExpired, isSuperOwner } = useAuth();
 
-  if (loading || (user && approvalStatus === null) || (allowedRoles && !role)) {
+  // Show loader only while:
+  // - Initial auth state is resolving, OR
+  // - We have a user but their profile (approvalStatus) hasn't loaded yet.
+  // Do NOT block on `!role`: a logged-in user may legitimately have no role
+  // (e.g. teacher in an org without admin rights) — the role-mismatch check
+  // below handles redirection.
+  if (loading || (user && approvalStatus === null)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
