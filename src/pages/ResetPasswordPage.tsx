@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import defaultSchoolLogo from "@/assets/school-logo.png";
 import loginBg from "@/assets/login-bg.jpg";
 import { ArrowLeft, KeyRound, ShieldCheck } from "lucide-react";
+import { validatePassword, PASSWORD_POLICY_HINT } from "@/lib/password-policy";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
