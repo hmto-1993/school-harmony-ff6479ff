@@ -60,10 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchRole = async (userId: string) => {
     try {
-      const [roleRes, profileRes] = await Promise.all([
+      // Race against a 8s timeout so a flaky mobile network never blocks the UI forever.
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("fetchRole timeout")), 8000)
+      );
+      const query = Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id").eq("user_id", userId).maybeSingle(),
       ]);
+      const [roleRes, profileRes] = await Promise.race([query, timeout]) as any;
       const rawGlobalRole = roleRes.data?.role as string | undefined;
       const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
       const orgRole = (profileRes.data as any)?.role as string | undefined;
