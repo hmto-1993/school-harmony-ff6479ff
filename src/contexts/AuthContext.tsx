@@ -156,33 +156,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    
+    // Hard failsafe: if anything stalls (Service Worker, blocked storage, dead network),
+    // never keep the splash screen up for more than 10s.
+    const failsafe = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[AuthContext] Auth init timeout — releasing loading state");
+        setLoading(false);
+      }
+    }, 10000);
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        // Do NOT await inside the callback — Supabase docs warn this can deadlock.
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchRole(session.user.id);
+          fetchRole(session.user.id).finally(() => {
+            if (!cancelled) setLoading(false);
+          });
         } else {
           setRole(null);
           setApprovalStatus(null);
           setSubscriptionEnd(null);
           setOrganizationId(null);
           setNationalId(null);
+          if (!cancelled) setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchRole(session.user.id);
+        fetchRole(session.user.id).finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
+    }).catch((err) => {
+      console.error("[AuthContext] getSession failed:", err);
+      if (!cancelled) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      clearTimeout(failsafe);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
