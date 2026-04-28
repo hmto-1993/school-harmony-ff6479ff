@@ -195,6 +195,7 @@ export function useSettingsData() {
 
   const fetchData = async () => {
     setLoading(true);
+    try {
 
     const coreQueries = Promise.all([
       supabase.from("classes").select("*").order("name"),
@@ -334,7 +335,12 @@ export function useSettingsData() {
     ((schedulesRes as any).data || []).forEach((s: any) => { schedMap[s.class_id] = { periodsPerWeek: s.periods_per_week || 5, daysOfWeek: s.days_of_week || [0, 1, 2, 3, 4] }; });
     setClassSchedules(schedMap);
 
-    setLoading(false);
+    } catch (err: any) {
+      console.error("[useSettingsData] fetchData failed:", err);
+      toast({ title: "تعذر تحميل الإعدادات", description: err?.message || "حدث خطأ أثناء تحميل البيانات", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Sub-hooks
@@ -358,7 +364,7 @@ export function useSettingsData() {
     else { setLetterheadUrl(data.url); toast({ title: "تم الرفع", description: "تم تحديث ورقة الطباعة بنجاح" }); }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [user?.id, organizationId, role]);
 
   return {
     isAdmin, canCreateClasses, user, role, loading, activeCard, setActiveCard,
