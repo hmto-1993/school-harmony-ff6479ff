@@ -42,62 +42,68 @@ export default function PrintHeaderEditor() {
     loadConfig(selectedReportType);
   }, [selectedReportType]);
 
-  const getSettingKey = (reportType: string) =>
+  const getBaseKey = (reportType: string) =>
     reportType === "__default__" ? "print_header_config" : `print_header_config_${reportType}`;
 
   const loadConfig = async (reportType: string) => {
     setLoadingConfig(true);
-    const key = getSettingKey(reportType);
-    const { data } = await supabase.from("site_settings").select("value").eq("id", key).single();
-
-    if (data?.value) {
-      try {
-        const parsed = JSON.parse(data.value);
+    try {
+      const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+      const wantsDefault = reportType === "__default__";
+      const parsed = wantsDefault
+        ? await fetchScopedPrintHeader()
+        : await fetchScopedPrintHeader(reportType);
+      if (parsed) {
         normalizeConfig(parsed);
         setConfig(parsed);
-      } catch { setConfig(defaultConfig); }
-    } else if (reportType !== "__default__") {
-      const { data: defData } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
-      if (defData?.value) {
-        try {
-          const parsed = JSON.parse(defData.value);
-          normalizeConfig(parsed);
-          setConfig(parsed);
-        } catch { setConfig(defaultConfig); }
+      } else if (!wantsDefault) {
+        const defParsed = await fetchScopedPrintHeader();
+        if (defParsed) { normalizeConfig(defParsed); setConfig(defParsed); }
+        else setConfig(defaultConfig);
       } else { setConfig(defaultConfig); }
-    } else { setConfig(defaultConfig); }
+    } catch { setConfig(defaultConfig); }
     setLoadingConfig(false);
   };
 
   const handleSave = async () => {
     setSaving(true);
-    const key = getSettingKey(selectedReportType);
+    const baseKey = getBaseKey(selectedReportType);
     const value = JSON.stringify(config);
-    const { data: existing } = await supabase.from("site_settings").select("id").eq("id", key).single();
+    // Resolve the actual id to write against — scoped per-tenant for non-admins.
+    const { getWriteScopedHeaderId } = await import("@/lib/print-header-fetch");
+    const writeId = selectedReportType === "__default__"
+      ? await getWriteScopedHeaderId()
+      : await getWriteScopedHeaderId(selectedReportType);
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("id", writeId).maybeSingle();
     let error;
     if (existing) {
-      ({ error } = await supabase.from("site_settings").update({ value }).eq("id", key));
+      ({ error } = await supabase.from("site_settings").update({ value }).eq("id", writeId));
     } else {
-      ({ error } = await supabase.from("site_settings").insert({ id: key, value }));
+      // Insert with the base key — the BEFORE-INSERT trigger scopes it for owners,
+      // and admins keep it global. This preserves the legacy primary-owner flow.
+      ({ error } = await supabase.from("site_settings").insert({ id: baseKey, value }));
     }
     setSaving(false);
     if (error) {
       toast({ title: "خطأ", description: error.message, variant: "destructive" });
     } else {
+      // Invalidate cached print headers so the next print picks up the new values
+      try {
+        const mod = await import("@/lib/grades-print-helpers");
+        mod.clearPrintHeaderCache?.();
+      } catch { /* ignore */ }
       const rt = reportTypes.find(r => r.id === selectedReportType);
       toast({ title: "تم الحفظ", description: `تم حفظ ترويسة ${rt?.label || ""}` });
     }
   };
 
   const handleCopyFromDefault = async () => {
-    const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
-    if (data?.value) {
-      try {
-        const parsed = JSON.parse(data.value);
-        normalizeConfig(parsed);
-        setConfig(parsed);
-        toast({ title: "تم النسخ", description: "تم نسخ الترويسة الافتراضية كقاعدة" });
-      } catch {}
+    const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+    const parsed = await fetchScopedPrintHeader();
+    if (parsed) {
+      normalizeConfig(parsed);
+      setConfig(parsed);
+      toast({ title: "تم النسخ", description: "تم نسخ الترويسة الافتراضية كقاعدة" });
     }
   };
 
