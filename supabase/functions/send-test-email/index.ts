@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       from: "نظام المتميز <noreply@alpha.almtmez.com>",
       subject: subj,
       html: body,
+      text: "بريد اختبار من نظام المتميز - إذا وصلك هذا البريد فالنظام يعمل بشكل صحيح",
       purpose: "transactional",
       idempotency_key: `test-${Date.now()}`,
     };
