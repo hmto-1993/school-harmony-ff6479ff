@@ -38,14 +38,19 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/handle-email-unsubscribe?email=${encodeURIComponent(recipient)}`;
     const payload = {
       to: recipient,
       from: "نظام المتميز <noreply@alpha.almtmez.com>",
       subject: subj,
-      html: body,
+      html: body + `<div style="text-align:center;margin-top:20px;font-size:12px;color:#94a3b8;"><a href="${unsubUrl}" style="color:#94a3b8;">إلغاء الاشتراك</a></div>`,
       text: "بريد اختبار من نظام المتميز - إذا وصلك هذا البريد فالنظام يعمل بشكل صحيح",
       purpose: "transactional",
       idempotency_key: `test-${Date.now()}`,
+      headers: {
+        "List-Unsubscribe": `<${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     };
 
     const { data, error } = await supabase.rpc("enqueue_email", {
