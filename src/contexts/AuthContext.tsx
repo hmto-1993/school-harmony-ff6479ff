@@ -222,6 +222,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Drop any tenant-scoped print header cache so the next sign-in fetches fresh data
+    try {
+      const [{ clearPrintHeaderOrgCache }, { clearPrintHeaderCache }] = await Promise.all([
+        import("@/lib/print-header-fetch"),
+        import("@/lib/grades-print-helpers"),
+      ]);
+      clearPrintHeaderOrgCache();
+      clearPrintHeaderCache();
+    } catch { /* ignore */ }
     if (student) {
       setStudent(null);
       sessionStorage.removeItem("student_session");
