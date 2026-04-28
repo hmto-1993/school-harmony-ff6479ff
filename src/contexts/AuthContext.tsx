@@ -64,7 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id").eq("user_id", userId).maybeSingle(),
       ]);
-      const globalRole = (roleRes.data?.role as AppRole) || null;
+      const rawGlobalRole = roleRes.data?.role as string | undefined;
+      const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
       const orgRole = (profileRes.data as any)?.role as string | undefined;
       // Independent subscribers (org owners) act as admins of their own isolated workspace.
       // RLS still enforces tenant isolation via organization_id — this only unlocks the UI.
