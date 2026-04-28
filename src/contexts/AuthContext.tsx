@@ -126,6 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } else {
               sessionStorage.removeItem("student_session");
             }
+          }).catch((err) => {
+            console.error("[AuthContext] restore student session failed:", err);
+            sessionStorage.removeItem("student_session");
+          }).finally(() => {
             setStudentRestoring(false);
           });
         } else {
@@ -146,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          fetchRole(session.user.id);
+          await fetchRole(session.user.id);
         } else {
           setRole(null);
           setApprovalStatus(null);
@@ -158,11 +162,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRole(session.user.id);
+        await fetchRole(session.user.id);
       }
       setLoading(false);
     });
