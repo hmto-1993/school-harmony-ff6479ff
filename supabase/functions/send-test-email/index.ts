@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
           </p>
           <div style="background:#eff6ff;border-right:4px solid #3b82f6;padding:12px 16px;margin:20px 0;border-radius:6px;">
             <p style="margin:0;color:#1e3a8a;font-size:14px;">
-              📧 المرسل: alpha.almtmez.com<br/>
+              📧 المرسل: <a href="https://www.almtmez.com" style="color:#1e40af;text-decoration:none;">www.almtmez.com</a><br/>
               🕐 الوقت: ${new Date().toLocaleString("ar-SA")}
             </p>
           </div>
