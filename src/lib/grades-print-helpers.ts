@@ -1,7 +1,7 @@
 /**
  * Helpers for grades-print.ts — config cache, HTML builders, CSS
  */
-import { supabase } from "@/integrations/supabase/client";
+import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 
 /* ──────────────────────────── Config cache ───────────────────── */
 
@@ -15,62 +15,30 @@ function getCached(cache: Map<string, { data: any; ts: number }>, key: string): 
   return undefined;
 }
 
+export function clearPrintHeaderCache() {
+  headerCache.clear();
+  footerCache.clear();
+}
+
 /* ──────────────────────────── Data fetchers ──────────────────── */
 
 export async function fetchHeaderConfig(reportType = "grades"): Promise<any | null> {
   const cached = getCached(headerCache, reportType);
   if (cached !== undefined) return cached;
-  try {
-    const { data } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", `print_header_config_${reportType}`)
-      .single();
-    if (data?.value) {
-      try { const parsed = JSON.parse(data.value); headerCache.set(reportType, { data: parsed, ts: Date.now() }); return parsed; } catch { /* skip */ }
-    }
-    const { data: def } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", "print_header_config")
-      .single();
-    if (def?.value) {
-      try { const parsed = JSON.parse(def.value); headerCache.set(reportType, { data: parsed, ts: Date.now() }); return parsed; } catch { /* skip */ }
-    }
-  } catch { /* skip */ }
-  headerCache.set(reportType, { data: null, ts: Date.now() });
-  return null;
+  const parsed = await fetchScopedPrintHeader(reportType);
+  headerCache.set(reportType, { data: parsed, ts: Date.now() });
+  return parsed;
 }
 
 export async function fetchFooterConfig(reportType = "grades"): Promise<any | null> {
   const cached = getCached(footerCache, reportType);
   if (cached !== undefined) return cached;
-  try {
-    const { data } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", `print_header_config_${reportType}`)
-      .single();
-    let config: any = null;
-    if (data?.value) {
-      try { config = JSON.parse(data.value); } catch { /* skip */ }
-    }
-    if (!config?.footerSignatures) {
-      const { data: def } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-      if (def?.value) {
-        try { config = JSON.parse(def.value); } catch { /* skip */ }
-      }
-    }
-    const result = config?.footerSignatures?.enabled ? config.footerSignatures : null;
-    footerCache.set(reportType, { data: result, ts: Date.now() });
-    return result;
-  } catch { /* skip */ }
-  footerCache.set(reportType, { data: null, ts: Date.now() });
-  return null;
+  // Try report-specific first; if it lacks footerSignatures, fall back to default config.
+  let config = await fetchScopedPrintHeader(reportType);
+  if (!config?.footerSignatures) config = await fetchScopedPrintHeader();
+  const result = config?.footerSignatures?.enabled ? config.footerSignatures : null;
+  footerCache.set(reportType, { data: result, ts: Date.now() });
+  return result;
 }
 
 /* ──────────────────────────── HTML builders ──────────────────── */
