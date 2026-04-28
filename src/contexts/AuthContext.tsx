@@ -60,10 +60,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchRole = async (userId: string) => {
     try {
-      const [roleRes, profileRes] = await Promise.all([
+      // Race against a 8s timeout so a flaky mobile network never blocks the UI forever.
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("fetchRole timeout")), 8000)
+      );
+      const query = Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id").eq("user_id", userId).maybeSingle(),
       ]);
+      const [roleRes, profileRes] = await Promise.race([query, timeout]) as any;
       const rawGlobalRole = roleRes.data?.role as string | undefined;
       const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
       const orgRole = (profileRes.data as any)?.role as string | undefined;
@@ -89,89 +94,120 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore student session using HMAC token (no PII in storage)
   useEffect(() => {
     const saved = sessionStorage.getItem("student_session");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        const { student_id, session_token, session_issued_at, login_type } = parsed;
-        
-        if (student_id && session_token && session_issued_at) {
-          // Secure restore via HMAC token verification
-          supabase.functions.invoke("restore-student-session", {
-            body: { student_id, session_token, session_issued_at, login_type: login_type || "student" },
-          }).then(({ data, error }) => {
-            if (!error && data && !data.error) {
-              setStudent({
-                id: data.student.id,
-                full_name: data.student.full_name,
-                national_id: data.student.national_id,
-                academic_number: data.student.academic_number || null,
-                class_id: data.student.class_id || null,
-                class: data.student.class,
-                grades: data.grades,
-                behaviors: data.behaviors,
-                attendance: data.attendance,
-                visibility: data.visibility || { grades: true, attendance: true, behavior: true },
-                evalSettings: data.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 },
-                session_token: data.session_token,
-                session_issued_at: data.session_issued_at,
-                login_type: login_type || "student",
-              });
-              // Update stored token with the fresh one
-              sessionStorage.setItem("student_session", JSON.stringify({
-                student_id: data.student.id,
-                session_token: data.session_token,
-                session_issued_at: data.session_issued_at,
-                login_type: login_type || "student",
-              }));
-            } else {
-              sessionStorage.removeItem("student_session");
-            }
-          }).catch((err) => {
-            console.error("[AuthContext] restore student session failed:", err);
+    if (!saved) return;
+    
+    // Hard timeout: never let restore block the UI more than 7s on poor networks.
+    const failsafe = setTimeout(() => setStudentRestoring(false), 7000);
+    
+    try {
+      const parsed = JSON.parse(saved);
+      const { student_id, session_token, session_issued_at, login_type } = parsed;
+      
+      if (student_id && session_token && session_issued_at) {
+        // Secure restore via HMAC token verification
+        supabase.functions.invoke("restore-student-session", {
+          body: { student_id, session_token, session_issued_at, login_type: login_type || "student" },
+        }).then(({ data, error }) => {
+          if (!error && data && !data.error) {
+            setStudent({
+              id: data.student.id,
+              full_name: data.student.full_name,
+              national_id: data.student.national_id,
+              academic_number: data.student.academic_number || null,
+              class_id: data.student.class_id || null,
+              class: data.student.class,
+              grades: data.grades,
+              behaviors: data.behaviors,
+              attendance: data.attendance,
+              visibility: data.visibility || { grades: true, attendance: true, behavior: true },
+              evalSettings: data.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 },
+              session_token: data.session_token,
+              session_issued_at: data.session_issued_at,
+              login_type: login_type || "student",
+            });
+            sessionStorage.setItem("student_session", JSON.stringify({
+              student_id: data.student.id,
+              session_token: data.session_token,
+              session_issued_at: data.session_issued_at,
+              login_type: login_type || "student",
+            }));
+          } else {
             sessionStorage.removeItem("student_session");
-          }).finally(() => {
-            setStudentRestoring(false);
-          });
-        } else {
-          // Invalid or legacy format — require re-login
+          }
+        }).catch((err) => {
+          console.error("[AuthContext] restore student session failed:", err);
           sessionStorage.removeItem("student_session");
+        }).finally(() => {
+          clearTimeout(failsafe);
           setStudentRestoring(false);
-        }
-      } catch {
+        });
+      } else {
         sessionStorage.removeItem("student_session");
+        clearTimeout(failsafe);
         setStudentRestoring(false);
       }
+    } catch {
+      sessionStorage.removeItem("student_session");
+      clearTimeout(failsafe);
+      setStudentRestoring(false);
     }
+    
+    return () => clearTimeout(failsafe);
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    
+    // Hard failsafe: if anything stalls (Service Worker, blocked storage, dead network),
+    // never keep the splash screen up for more than 10s.
+    const failsafe = setTimeout(() => {
+      if (!cancelled) {
+        console.warn("[AuthContext] Auth init timeout — releasing loading state");
+        setLoading(false);
+      }
+    }, 10000);
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        // Do NOT await inside the callback — Supabase docs warn this can deadlock.
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchRole(session.user.id);
+          fetchRole(session.user.id).finally(() => {
+            if (!cancelled) setLoading(false);
+          });
         } else {
           setRole(null);
           setApprovalStatus(null);
           setSubscriptionEnd(null);
           setOrganizationId(null);
           setNationalId(null);
+          if (!cancelled) setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchRole(session.user.id);
+        fetchRole(session.user.id).finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
+    }).catch((err) => {
+      console.error("[AuthContext] getSession failed:", err);
+      if (!cancelled) setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      clearTimeout(failsafe);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
