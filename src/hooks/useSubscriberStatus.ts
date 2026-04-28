@@ -43,8 +43,8 @@ export function useSubscriberStatus(): SubscriberStatus {
 
       const isPrimary = primaryRes.data === true;
       const profileRole = profileRes.data?.role;
-      // Subscriber = profile.role === 'owner' AND not the system primary owner AND not global admin
-      const isSubscriber = !isPrimary && profileRole === "owner" && role !== "admin";
+      // Subscriber owners are admins inside their own isolated workspace, but not platform owners.
+      const isSubscriber = !isPrimary && profileRole === "owner";
 
       setStatus({
         loaded: true,
