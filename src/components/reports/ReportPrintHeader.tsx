@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 /**
  * Renders the configured print header for a specific report type.
  * Falls back to the default header if no report-specific config exists.
+ * Tenant-scoped: each subscriber sees their own configured header.
  * Only visible in print mode.
  */
 export default function ReportPrintHeader({ reportType }: Props) {
@@ -16,27 +17,8 @@ export default function ReportPrintHeader({ reportType }: Props) {
 
   useEffect(() => {
     (async () => {
-      // Try report-specific first
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", `print_header_config_${reportType}`)
-        .single();
-
-      if (data?.value) {
-        try { setConfig(JSON.parse(data.value)); return; } catch {}
-      }
-
-      // Fallback to default
-      const { data: def } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-
-      if (def?.value) {
-        try { setConfig(JSON.parse(def.value)); } catch {}
-      }
+      const parsed = await fetchScopedPrintHeader(reportType);
+      if (parsed) setConfig(parsed as PrintHeaderConfig);
     })();
   }, [reportType]);
 
