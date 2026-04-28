@@ -118,26 +118,9 @@ function ReportPrintHeaderInline({
 
   useEffect(() => {
     (async () => {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", `print_header_config_${reportType}`)
-        .single();
-
-      if (data?.value) {
-        try { setConfig(JSON.parse(data.value)); return; } catch {}
-      }
-
-      const { data: def } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-
-      if (def?.value) {
-        try { setConfig(JSON.parse(def.value)); } catch {}
-      }
+      const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+      const parsed = await fetchScopedPrintHeader(reportType);
+      if (parsed) setConfig(parsed);
     })();
   }, [reportType]);
 
