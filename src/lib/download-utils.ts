@@ -1,4 +1,5 @@
-import * as XLSX from "xlsx";
+// xlsx is loaded lazily inside safeWriteXLSX to keep it out of the main bundle.
+import type { WorkBook } from "xlsx";
 
 /**
  * Detect if running as installed PWA (standalone mode)
@@ -87,12 +88,13 @@ export async function safeDownload(blob: Blob, fileName: string) {
 /**
  * Safe XLSX export - replaces XLSX.writeFile for PWA compatibility
  */
-export function safeWriteXLSX(wb: XLSX.WorkBook, fileName: string) {
+export async function safeWriteXLSX(wb: WorkBook, fileName: string) {
+  const XLSX = await import("xlsx");
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   const blob = new Blob([wbout], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  safeDownload(blob, fileName);
+  await safeDownload(blob, fileName);
 }
 
 /**

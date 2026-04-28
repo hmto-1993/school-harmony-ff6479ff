@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
-import * as XLSX from "xlsx";
 import { createArabicPDF, getArabicTableStyles, finalizePDF } from "@/lib/arabic-pdf";
 import { safeWriteXLSX } from "@/lib/download-utils";
 import autoTable from "jspdf-autotable";
