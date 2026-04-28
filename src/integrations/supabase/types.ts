@@ -2828,6 +2828,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_access_scoped_setting_id: {
+        Args: { _setting_id: string; _user_id: string }
+        Returns: boolean
+      }
       check_teacher_write_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
@@ -2872,6 +2876,10 @@ export type Database = {
       }
       is_caller_super_owner: { Args: never; Returns: boolean }
       is_primary_owner: { Args: { _user_id: string }; Returns: boolean }
+      is_public_site_setting: {
+        Args: { _setting_id: string }
+        Returns: boolean
+      }
       is_recovery_mode: { Args: never; Returns: boolean }
       is_subscriber: { Args: { _user_id: string }; Returns: boolean }
       is_subscription_active: { Args: { _user_id: string }; Returns: boolean }
