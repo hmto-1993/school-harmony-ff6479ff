@@ -38,7 +38,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/handle-email-unsubscribe?email=${encodeURIComponent(recipient)}`;
+    // Get or create unsubscribe token for recipient
+    let { data: tokenRow } = await supabase
+      .from("email_unsubscribe_tokens")
+      .select("token")
+      .eq("email", recipient)
+      .maybeSingle();
+    if (!tokenRow) {
+      const newToken = crypto.randomUUID();
+      const { data: inserted } = await supabase
+        .from("email_unsubscribe_tokens")
+        .insert({ email: recipient, token: newToken })
+        .select("token")
+        .single();
+      tokenRow = inserted;
+    }
+    const unsubToken = tokenRow!.token;
+    const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/handle-email-unsubscribe?token=${unsubToken}`;
+
     const payload = {
       to: recipient,
       from: "نظام المتميز <noreply@alpha.almtmez.com>",
@@ -47,6 +64,7 @@ Deno.serve(async (req) => {
       text: "بريد اختبار من نظام المتميز - إذا وصلك هذا البريد فالنظام يعمل بشكل صحيح",
       purpose: "transactional",
       idempotency_key: `test-${Date.now()}`,
+      unsubscribe_token: unsubToken,
       headers: {
         "List-Unsubscribe": `<${unsubUrl}>`,
         "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
