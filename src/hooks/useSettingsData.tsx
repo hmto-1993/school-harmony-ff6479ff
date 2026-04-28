@@ -238,14 +238,23 @@ export function useSettingsData() {
     // Teachers
     if ((teachersRes as any).data?.teachers) setTeachers((teachersRes as any).data.teachers);
 
+    const normalizeSettingsRows = (rows: any) =>
+      Array.from(resolveScopedSettings(rows, organizationId), ([id, value]) => ({ id, value }));
+    const letterheadSettings = resolveScopedSettings((lhRes as any).data, organizationId);
+    const smsSettings = normalizeSettingsRows((smsRes as any).data);
+    const loginSettings = normalizeSettingsRows((loginRes as any).data);
+    const allSettings = normalizeSettingsRows((settingsRes as any).data);
+    const overrideSettings = resolveScopedSettings((overrideRes as any).data, organizationId);
+    const adminReadOnlySettings = normalizeSettingsRows((adminReadOnlyRes as any).data);
+
     // Letterhead
-    if ((lhRes as any).data?.value) setLetterheadUrl((lhRes as any).data.value);
+    if (letterheadSettings.get("print_letterhead_url")) setLetterheadUrl(letterheadSettings.get("print_letterhead_url") || "");
 
     // SMS
-    smsHelper.loadSms((smsRes as any).data);
+    smsHelper.loadSms(smsSettings);
 
     // Login settings
-    ((loginRes as any).data || []).forEach((s: any) => {
+    loginSettings.forEach((s: any) => {
       if (s.id === "school_name") setLoginSchoolName(s.value || "");
       if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
       if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
@@ -254,7 +263,7 @@ export function useSettingsData() {
     });
 
     // All settings
-    ((settingsRes as any).data || []).forEach((s: any) => {
+    allSettings.forEach((s: any) => {
       if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
       if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
       if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
@@ -318,8 +327,8 @@ export function useSettingsData() {
     });
 
     if (popupHistoryRes.data) setPopupHistory(popupHistoryRes.data as any);
-    if ((overrideRes as any).data?.value) setAttendanceOverrideLock((overrideRes as any).data.value === "true");
-    ((adminReadOnlyRes as any).data || []).forEach((s: any) => { if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true"); });
+    if (overrideSettings.has("attendance_override_lock")) setAttendanceOverrideLock(overrideSettings.get("attendance_override_lock") === "true");
+    adminReadOnlySettings.forEach((s: any) => { if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true"); });
 
     const schedMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
     ((schedulesRes as any).data || []).forEach((s: any) => { schedMap[s.class_id] = { periodsPerWeek: s.periods_per_week || 5, daysOfWeek: s.days_of_week || [0, 1, 2, 3, 4] }; });
