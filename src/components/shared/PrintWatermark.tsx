@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 
 interface WatermarkConfig {
   enabled: boolean;
@@ -20,32 +20,11 @@ export default function PrintWatermark({ reportType }: Props) {
 
   useEffect(() => {
     (async () => {
-      // Try report-specific first
-      if (reportType) {
-        const { data } = await supabase
-          .from("site_settings")
-          .select("value")
-          .eq("id", `print_header_config_${reportType}`)
-          .single();
-        if (data?.value) {
-          try {
-            const parsed = JSON.parse(data.value);
-            if (parsed.watermark?.enabled) { setWm(parsed.watermark); return; }
-          } catch {}
-        }
-      }
-      // Fallback to default
-      const { data: def } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-      if (def?.value) {
-        try {
-          const parsed = JSON.parse(def.value);
-          if (parsed.watermark?.enabled) setWm(parsed.watermark);
-        } catch {}
-      }
+      // Try report-specific first, then default — both already tenant-scoped.
+      const parsed =
+        (reportType ? await fetchScopedPrintHeader(reportType) : null) ||
+        (await fetchScopedPrintHeader());
+      if (parsed?.watermark?.enabled) setWm(parsed.watermark);
     })();
   }, [reportType]);
 
