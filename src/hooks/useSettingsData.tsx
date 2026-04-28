@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useCalendarType } from "@/hooks/useCalendarType";
 import { useSettingsProfile, useSettingsClasses, useSettingsCategories, useSettingsSms } from "./useSettingsHelpers";
+import { expandScopedSettingIds, resolveScopedSettings } from "@/lib/site-settings-scope";
 
 export interface ClassRow {
   id: string;
@@ -29,9 +30,10 @@ export interface GradeCategory {
 }
 
 export function useSettingsData() {
-  const { role, user } = useAuth();
+  const { role, user, organizationId } = useAuth();
   const isAdmin = role === "admin";
   const canCreateClasses = isAdmin || role === "teacher";
+  const scopedIds = (ids: string[]) => expandScopedSettingIds(ids, organizationId);
   const { calendarType: calendarTypeLocal, setCalendarType: setGlobalCalendarType } = useCalendarType();
 
   const [classes, setClasses] = useState<ClassRow[]>([]);
@@ -202,13 +204,13 @@ export function useSettingsData() {
 
     const profileQuery = user ? supabase.from("profiles").select("full_name, phone, national_id").eq("user_id", user.id).single() : Promise.resolve({ data: null });
     const teachersQuery = user && isAdmin ? supabase.functions.invoke("manage-users", { body: { action: "list_teachers" } }) : Promise.resolve({ data: null });
-    const letterheadQuery = supabase.from("site_settings").select("value").eq("id", "print_letterhead_url").single();
-    const smsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"]) : Promise.resolve({ data: null });
-    const loginQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"]) : Promise.resolve({ data: null });
-    const settingsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_show_activities", "student_show_library", "student_show_honor_roll", "student_show_absence_warning", "student_show_national_id", "student_show_deductions", "student_welcome_enabled", "student_welcome_message", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "parent_show_deductions", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"]) : Promise.resolve({ data: null });
+    const letterheadQuery = supabase.from("site_settings").select("id, value").in("id", scopedIds(["print_letterhead_url"]));
+    const smsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", scopedIds(["sms_provider", "sms_provider_username", "sms_provider_api_key", "sms_provider_sender"])) : Promise.resolve({ data: null });
+    const loginQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", scopedIds(["school_name", "school_subtitle", "school_logo_url", "default_academic_year", "dashboard_title"])) : Promise.resolve({ data: null });
+    const settingsQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", scopedIds(["quiz_color_mcq", "quiz_color_tf", "quiz_color_selected", "student_show_grades", "student_show_attendance", "student_show_behavior", "student_hidden_categories", "student_show_daily_grades", "student_show_classwork_icons", "student_classwork_icons_count", "student_show_activities", "student_show_library", "student_show_honor_roll", "student_show_absence_warning", "student_show_national_id", "student_show_deductions", "student_welcome_enabled", "student_welcome_message", "student_popup_enabled", "student_popup_title", "student_popup_message", "student_popup_expiry", "student_popup_target_type", "student_popup_target_classes", "student_popup_action", "student_popup_repeat", "honor_roll_enabled", "absence_threshold", "absence_allowed_sessions", "absence_mode", "total_term_sessions", "parent_welcome_enabled", "parent_welcome_message", "parent_show_national_id", "parent_show_grades", "parent_show_attendance", "parent_show_behavior", "parent_show_honor_roll", "parent_show_absence_warning", "parent_show_contact_teacher", "parent_grades_default_view", "parent_grades_show_percentage", "parent_grades_show_eval", "parent_grades_visible_periods", "parent_grades_hidden_categories", "parent_show_daily_grades", "parent_show_classwork_icons", "parent_classwork_icons_count", "parent_show_library", "parent_show_activities", "parent_show_deductions", "daily_extra_slots_enabled", "daily_extra_slots_disabled_cats", "daily_max_slots", "daily_max_slots_per_cat", "parent_pdf_header"])) : Promise.resolve({ data: null });
     const popupHistoryQuery = isAdmin ? supabase.from("popup_messages").select("*").order("created_at", { ascending: false }).limit(20) : Promise.resolve({ data: null });
-    const overrideQuery = isAdmin ? supabase.from("site_settings").select("value").eq("id", "attendance_override_lock").maybeSingle() : Promise.resolve({ data: null });
-    const adminReadOnlyQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", ["admin_read_only"]) : Promise.resolve({ data: null });
+    const overrideQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", scopedIds(["attendance_override_lock"])) : Promise.resolve({ data: null });
+    const adminReadOnlyQuery = isAdmin ? supabase.from("site_settings").select("id, value").in("id", scopedIds(["admin_read_only"])) : Promise.resolve({ data: null });
     const schedulesQuery = isAdmin ? supabase.from("class_schedules").select("class_id, periods_per_week, days_of_week") : Promise.resolve({ data: null });
 
     const [
@@ -236,14 +238,23 @@ export function useSettingsData() {
     // Teachers
     if ((teachersRes as any).data?.teachers) setTeachers((teachersRes as any).data.teachers);
 
+    const normalizeSettingsRows = (rows: any) =>
+      Array.from(resolveScopedSettings(rows, organizationId), ([id, value]) => ({ id, value }));
+    const letterheadSettings = resolveScopedSettings((lhRes as any).data, organizationId);
+    const smsSettings = normalizeSettingsRows((smsRes as any).data);
+    const loginSettings = normalizeSettingsRows((loginRes as any).data);
+    const allSettings = normalizeSettingsRows((settingsRes as any).data);
+    const overrideSettings = resolveScopedSettings((overrideRes as any).data, organizationId);
+    const adminReadOnlySettings = normalizeSettingsRows((adminReadOnlyRes as any).data);
+
     // Letterhead
-    if ((lhRes as any).data?.value) setLetterheadUrl((lhRes as any).data.value);
+    if (letterheadSettings.get("print_letterhead_url")) setLetterheadUrl(letterheadSettings.get("print_letterhead_url") || "");
 
     // SMS
-    smsHelper.loadSms((smsRes as any).data);
+    smsHelper.loadSms(smsSettings);
 
     // Login settings
-    ((loginRes as any).data || []).forEach((s: any) => {
+    loginSettings.forEach((s: any) => {
       if (s.id === "school_name") setLoginSchoolName(s.value || "");
       if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
       if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
@@ -252,7 +263,7 @@ export function useSettingsData() {
     });
 
     // All settings
-    ((settingsRes as any).data || []).forEach((s: any) => {
+    allSettings.forEach((s: any) => {
       if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
       if (s.id === "quiz_color_tf" && s.value) setQuizColorTf(s.value);
       if (s.id === "quiz_color_selected" && s.value) setQuizColorSelected(s.value);
@@ -316,8 +327,8 @@ export function useSettingsData() {
     });
 
     if (popupHistoryRes.data) setPopupHistory(popupHistoryRes.data as any);
-    if ((overrideRes as any).data?.value) setAttendanceOverrideLock((overrideRes as any).data.value === "true");
-    ((adminReadOnlyRes as any).data || []).forEach((s: any) => { if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true"); });
+    if (overrideSettings.has("attendance_override_lock")) setAttendanceOverrideLock(overrideSettings.get("attendance_override_lock") === "true");
+    adminReadOnlySettings.forEach((s: any) => { if (s.id === "admin_read_only") setAdminReadOnly(s.value === "true"); });
 
     const schedMap: Record<string, { periodsPerWeek: number; daysOfWeek: number[] }> = {};
     ((schedulesRes as any).data || []).forEach((s: any) => { schedMap[s.class_id] = { periodsPerWeek: s.periods_per_week || 5, daysOfWeek: s.days_of_week || [0, 1, 2, 3, 4] }; });
