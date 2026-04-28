@@ -28,6 +28,7 @@ interface AuthContextType {
   role: AppRole | null;
   approvalStatus: ApprovalStatus | null;
   subscriptionEnd: string | null;
+  organizationId: string | null;
   subscriptionExpired: boolean;
   nationalId: string | null;
   isSuperOwner: boolean;
@@ -47,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [approvalStatus, setApprovalStatus] = useState<ApprovalStatus | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [nationalId, setNationalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentData | null>(null);
@@ -60,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const [roleRes, profileRes] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-        supabase.from("profiles").select("approval_status, subscription_end, national_id, role").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id").eq("user_id", userId).maybeSingle(),
       ]);
       const globalRole = (roleRes.data?.role as AppRole) || null;
       const orgRole = (profileRes.data as any)?.role as string | undefined;
@@ -70,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(effectiveRole);
       setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
       setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
+      setOrganizationId(((profileRes.data as any)?.organization_id as string) || null);
       setNationalId(((profileRes.data as any)?.national_id as string) || null);
     } catch (err) {
       // Never leave the auth context in a perpetual loading state.
@@ -77,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       setApprovalStatus("pending");
       setSubscriptionEnd(null);
+      setOrganizationId(null);
       setNationalId(null);
     }
   };
@@ -146,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setRole(null);
           setApprovalStatus(null);
           setSubscriptionEnd(null);
+          setOrganizationId(null);
           setNationalId(null);
         }
         setLoading(false);
@@ -222,11 +227,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       setApprovalStatus(null);
       setSubscriptionEnd(null);
+      setOrganizationId(null);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, role, approvalStatus, subscriptionEnd, subscriptionExpired, nationalId, isSuperOwner, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, approvalStatus, subscriptionEnd, organizationId, subscriptionExpired, nationalId, isSuperOwner, loading: loading || studentRestoring, student, isStudent, signIn, signInStudent, signOut }}>
       {children}
     </AuthContext.Provider>
   );
