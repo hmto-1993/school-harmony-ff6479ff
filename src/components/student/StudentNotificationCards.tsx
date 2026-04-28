@@ -82,13 +82,12 @@ export default function StudentNotificationCards({ studentId, studentName, class
 
   useEffect(() => {
     (async () => {
-      const [h1, h2, subj] = await Promise.all([
-        supabase.from("site_settings").select("value").eq("id", "print_header_config_grades").single(),
-        supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
+      const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+      const [parsed, subj] = await Promise.all([
+        fetchScopedPrintHeader("grades"),
         supabase.from("site_settings").select("value").eq("id", "subject_name").maybeSingle(),
       ]);
-      const hVal = h1.data?.value || h2.data?.value;
-      if (hVal) try { setHeaderConfig(JSON.parse(hVal)); } catch {}
+      if (parsed) setHeaderConfig(parsed as any);
       if (subj.data?.value) setSubjectName(subj.data.value);
     })();
   }, []);
