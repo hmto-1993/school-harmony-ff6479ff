@@ -35,7 +35,8 @@ interface GradesExportDialogProps {
 export default function GradesExportDialog({ title, fileName, groups, extraSheets, trigger, tableRef }: GradesExportDialogProps) {
   const [open, setOpen] = useState(false);
 
-  const exportExcel = () => {
+  const exportExcel = async () => {
+    const XLSX = await import("xlsx");
     const wb = XLSX.utils.book_new();
 
     groups.forEach((group) => {
@@ -44,7 +45,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
 
       if (group.groupHeaders && group.groupHeaders.length > 0) {
         const expandedRow: (string)[] = [];
-        const merges: XLSX.Range[] = [];
+        const merges: import("xlsx").Range[] = [];
         let col = 0;
         group.groupHeaders.forEach(gh => {
           expandedRow.push(gh.label);
@@ -79,7 +80,7 @@ export default function GradesExportDialog({ title, fileName, groups, extraSheet
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sheet.data), sheet.name.substring(0, 31));
     });
 
-    safeWriteXLSX(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    await safeWriteXLSX(wb, `${fileName}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
     toast.success("تم تصدير ملف Excel بنجاح");
     setOpen(false);
   };
