@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import type { FooterSignaturesConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
@@ -11,32 +11,10 @@ export default function PrintFooterSignatures({ reportType }: Props) {
 
   useEffect(() => {
     (async () => {
-      // Try report-specific config first
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", `print_header_config_${reportType}`)
-        .single();
-
-      let config: any = null;
-      if (data?.value) {
-        try { config = JSON.parse(data.value); } catch {}
-      }
-
-      if (!config?.footerSignatures) {
-        const { data: def } = await supabase
-          .from("site_settings")
-          .select("value")
-          .eq("id", "print_header_config")
-          .single();
-        if (def?.value) {
-          try { config = JSON.parse(def.value); } catch {}
-        }
-      }
-
-      if (config?.footerSignatures?.enabled) {
-        setSignatures(config.footerSignatures);
-      }
+      // Tenant-scoped: report-specific → default fallback handled inside fetchScopedPrintHeader
+      let config = await fetchScopedPrintHeader(reportType);
+      if (!config?.footerSignatures) config = await fetchScopedPrintHeader();
+      if (config?.footerSignatures?.enabled) setSignatures(config.footerSignatures);
     })();
   }, [reportType]);
 

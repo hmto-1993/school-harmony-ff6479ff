@@ -55,33 +55,11 @@ export default function AbsenceWarningSlip({
   const fetchData = async () => {
     setLoading(true);
 
-    // Fetch header config
-    const { data: headerData } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", "print_header_config_attendance")
-      .single();
-
-    if (headerData?.value) {
-      try {
-        setHeaderConfig(JSON.parse(headerData.value));
-      } catch {
-        // Try default
-        const { data: def } = await supabase
-          .from("site_settings")
-          .select("value")
-          .eq("id", "print_header_config")
-          .single();
-        if (def?.value) try { setHeaderConfig(JSON.parse(def.value)); } catch {}
-      }
-    } else {
-      const { data: def } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("id", "print_header_config")
-        .single();
-      if (def?.value) try { setHeaderConfig(JSON.parse(def.value)); } catch {}
-    }
+    // Fetch tenant-scoped header config (attendance → default fallback handled inside helper)
+    const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+    let parsed = await fetchScopedPrintHeader("attendance");
+    if (!parsed) parsed = await fetchScopedPrintHeader();
+    if (parsed) setHeaderConfig(parsed as any);
 
     // Fetch absent dates
     const { data: attendance } = await supabase

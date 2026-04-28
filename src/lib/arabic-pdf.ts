@@ -77,33 +77,12 @@ export async function registerArabicFont(doc: jsPDF): Promise<void> {
   doc.setFont("Amiri");
 }
 
-/** Fetch print header config from site_settings */
+/** Fetch print header config from site_settings (tenant-scoped). */
 async function fetchPrintHeaderConfig(
   reportType?: string
 ): Promise<PrintHeaderConfig | null> {
-  // Try report-specific first
-  if (reportType) {
-    const { data } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("id", `print_header_config_${reportType}`)
-      .single();
-    if (data?.value) {
-      try { return JSON.parse(data.value); } catch {}
-    }
-  }
-
-  // Fallback to default
-  const { data: def } = await supabase
-    .from("site_settings")
-    .select("value")
-    .eq("id", "print_header_config")
-    .single();
-  if (def?.value) {
-    try { return JSON.parse(def.value); } catch {}
-  }
-
-  return null;
+  const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+  return (await fetchScopedPrintHeader(reportType)) as PrintHeaderConfig | null;
 }
 
 /** Convert an image URL to base64 data URL plus its intrinsic size for PDF embedding */

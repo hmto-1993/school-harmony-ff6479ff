@@ -77,8 +77,9 @@ export default function DashboardPrintView({
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("site_settings").select("value").eq("id", "print_header_config").single();
-      if (data?.value) { try { setHeaderConfig(JSON.parse(data.value)); } catch {} }
+      const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+      const parsed = await fetchScopedPrintHeader();
+      if (parsed) setHeaderConfig(parsed);
 
       // Fetch lesson plans for current week
       if (currentWeek) {
