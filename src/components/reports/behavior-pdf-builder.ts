@@ -47,17 +47,10 @@ export async function buildBehaviorPDFBlob(
   let watermark: any = undefined;
   let margin = 12;
 
-  // Fetch config only for watermark & margin info
-  const [behaviorHeaderRes, defaultHeaderRes] = await Promise.all([
-    supabase.from("site_settings").select("value").eq("id", "print_header_config_behavior").single(),
-    supabase.from("site_settings").select("value").eq("id", "print_header_config").single(),
-  ]);
-
-  let headerConfig: any = null;
-  for (const result of [behaviorHeaderRes, defaultHeaderRes]) {
-    if (!result.data?.value) continue;
-    try { headerConfig = JSON.parse(result.data.value); break; } catch { /* ignore */ }
-  }
+  // Fetch tenant-scoped header config (behavior → default fallback handled inside helper)
+  const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+  let headerConfig: any = await fetchScopedPrintHeader("behavior");
+  if (!headerConfig) headerConfig = await fetchScopedPrintHeader();
 
   if (headerConfig?.watermark?.enabled) watermark = headerConfig.watermark;
   margin = headerConfig?.margins?.side ?? 12;
