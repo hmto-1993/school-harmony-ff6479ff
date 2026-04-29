@@ -261,6 +261,7 @@ export function useSettingsData() {
       if (s.id === "school_subtitle") setLoginSubtitle(s.value || "");
       if (s.id === "school_logo_url") setSchoolLogoUrl(s.value || "");
       if (s.id === "dashboard_title") setDashboardTitle(s.value || "");
+      if (s.id === "education_department") setEducationDepartment(s.value || "");
       if (s.id === "default_academic_year" && s.value) { setDefaultAcademicYear(s.value); classHelper.newYear !== s.value && (() => {})(); }
     });
 
