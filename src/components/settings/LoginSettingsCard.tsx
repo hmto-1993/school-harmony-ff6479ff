@@ -52,7 +52,7 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
 
   const handleSave = async () => {
     props.setSavingLogin(true);
-    const upserts: Promise<any>[] = [
+    const upserts: any[] = [
       supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
