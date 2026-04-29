@@ -1,22 +1,37 @@
 /**
  * Centralized fetcher for print header / footer configs.
- * Each subscriber/owner has their OWN scoped settings stored as
- *   org:{organization_id}:print_header_config[_<reportType>]
- * while the global defaults live at the unscoped id.
  *
- * Reading order:
- *   1. org:{orgId}:print_header_config_<reportType>   (per-report, per-tenant)
- *   2. org:{orgId}:print_header_config                (default, per-tenant)
- *   3. print_header_config_<reportType>               (global per-report)
- *   4. print_header_config                            (global default)
+ * 🔒 SCOPE MODEL (separated owner vs subscribers):
+ *   - PRIMARY OWNER (super/primary admin): has a PRIVATE header config that affects
+ *     ONLY their own printed reports. Stored at:
+ *        owner:print_header_config[_<reportType>]
+ *   - GLOBAL TEMPLATE FOR SUBSCRIBERS: maintained ONLY by the primary owner via
+ *     a separate "subscribers template" editor. Stored at:
+ *        template:print_header_config[_<reportType>]
+ *   - SUBSCRIBERS: read-only consumers of the global template. Their previous
+ *     per-org overrides at `org:{orgId}:*` are still honored as a higher-priority
+ *     fallback so existing customizations don't break, but they have no UI to
+ *     modify them anymore. The primary owner's PRIVATE config is NEVER read by
+ *     subscribers.
  *
- * This guarantees each subscriber's printed reports show THEIR school,
- * teacher and principal — not whatever the primary owner has configured.
+ * Reading order (subscribers):
+ *   1. org:{orgId}:print_header_config_<reportType>  (legacy per-tenant override)
+ *   2. org:{orgId}:print_header_config               (legacy per-tenant default)
+ *   3. template:print_header_config_<reportType>     (owner-managed global template)
+ *   4. template:print_header_config                  (owner-managed global default)
+ *   5. print_header_config_<reportType>              (legacy global)
+ *   6. print_header_config                           (legacy global default)
+ *
+ * Reading order (primary owner):
+ *   1. owner:print_header_config_<reportType>
+ *   2. owner:print_header_config
+ *   (NO fallback to template/global — owner's private header is independent.)
  */
 import { supabase } from "@/integrations/supabase/client";
 
 let cachedOrgId: string | null | undefined; // undefined = not fetched
 let cachedOrgUserId: string | null = null;
+let cachedIsPrimary: boolean | undefined;
 
 async function getCurrentOrgId(): Promise<string | null> {
   try {
@@ -24,6 +39,7 @@ async function getCurrentOrgId(): Promise<string | null> {
     if (!user) {
       cachedOrgId = null;
       cachedOrgUserId = null;
+      cachedIsPrimary = undefined;
       return null;
     }
     if (cachedOrgId !== undefined && cachedOrgUserId === user.id) return cachedOrgId ?? null;
@@ -40,20 +56,50 @@ async function getCurrentOrgId(): Promise<string | null> {
   }
 }
 
+async function getIsPrimaryOwner(): Promise<boolean> {
+  if (cachedIsPrimary !== undefined) return cachedIsPrimary;
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { cachedIsPrimary = false; return false; }
+    const { data } = await supabase.rpc("is_primary_owner", { _user_id: user.id });
+    cachedIsPrimary = data === true;
+    return cachedIsPrimary;
+  } catch {
+    cachedIsPrimary = false;
+    return false;
+  }
+}
+
 export function clearPrintHeaderOrgCache() {
   cachedOrgId = undefined;
   cachedOrgUserId = null;
+  cachedIsPrimary = undefined;
 }
 
 /** Build the candidate ids for a given report type, in priority order. */
-export function buildHeaderCandidateIds(reportType: string | undefined, orgId: string | null): string[] {
+export function buildHeaderCandidateIds(
+  reportType: string | undefined,
+  orgId: string | null,
+  isPrimaryOwner: boolean,
+): string[] {
   const base = "print_header_config";
   const reportKey = reportType ? `${base}_${reportType}` : base;
   const ids: string[] = [];
+
+  if (isPrimaryOwner) {
+    // Owner reads ONLY from their private namespace.
+    if (reportType) ids.push(`owner:${reportKey}`);
+    ids.push(`owner:${base}`);
+    return Array.from(new Set(ids));
+  }
+
+  // Subscribers (and anonymous): legacy per-org → owner's published template → legacy global
   if (orgId) {
     if (reportType) ids.push(`org:${orgId}:${reportKey}`);
     ids.push(`org:${orgId}:${base}`);
   }
+  if (reportType) ids.push(`template:${reportKey}`);
+  ids.push(`template:${base}`);
   if (reportType) ids.push(reportKey);
   ids.push(base);
   return Array.from(new Set(ids));
@@ -61,12 +107,33 @@ export function buildHeaderCandidateIds(reportType: string | undefined, orgId: s
 
 /**
  * Returns the parsed print-header config for the current user, or null.
- * Falls back from per-report → default; from tenant-scoped → global.
+ *
+ * @param reportType  - optional per-report variant
+ * @param scope       - read scope override (used by the editor):
+ *                       'auto'      → owner reads owner:*, others read template/org/legacy
+ *                       'owner'     → force owner private namespace
+ *                       'template'  → force the global subscribers template
  */
-export async function fetchScopedPrintHeader(reportType?: string): Promise<any | null> {
+export async function fetchScopedPrintHeader(
+  reportType?: string,
+  scope: "auto" | "owner" | "template" = "auto",
+): Promise<any | null> {
   try {
     const orgId = await getCurrentOrgId();
-    const ids = buildHeaderCandidateIds(reportType, orgId);
+    const isPrimary = await getIsPrimaryOwner();
+    const base = "print_header_config";
+    const reportKey = reportType ? `${base}_${reportType}` : base;
+
+    let ids: string[];
+    if (scope === "owner") {
+      ids = reportType ? [`owner:${reportKey}`, `owner:${base}`] : [`owner:${base}`];
+    } else if (scope === "template") {
+      ids = reportType ? [`template:${reportKey}`, `template:${base}`] : [`template:${base}`];
+    } else {
+      ids = buildHeaderCandidateIds(reportType, orgId, isPrimary);
+    }
+    ids = Array.from(new Set(ids));
+
     const { data } = await supabase
       .from("site_settings")
       .select("id, value")
@@ -86,12 +153,24 @@ export async function fetchScopedPrintHeader(reportType?: string): Promise<any |
 }
 
 /**
- * Returns the scoped id that the CURRENT user should write to for a given report type.
- * (The DB trigger also enforces this on writes, but using the explicit id keeps
- *  reads and writes symmetric and avoids creating duplicate global rows.)
+ * Returns the id that the CURRENT user should write to for a given report type.
+ *
+ * @param reportType  - optional per-report variant
+ * @param scope       - 'private' (owner's private header) | 'template' (global subscribers template)
+ *                       For non-owners we always fall back to legacy org-scoped ids (rarely used now,
+ *                       since subscribers no longer have an editor UI).
  */
-export async function getWriteScopedHeaderId(reportType?: string): Promise<string> {
-  const orgId = await getCurrentOrgId();
+export async function getWriteScopedHeaderId(
+  reportType?: string,
+  scope: "private" | "template" = "private",
+): Promise<string> {
+  const isPrimary = await getIsPrimaryOwner();
   const base = reportType ? `print_header_config_${reportType}` : "print_header_config";
+
+  if (isPrimary) {
+    return scope === "template" ? `template:${base}` : `owner:${base}`;
+  }
+  // Non-owner fallback (legacy): write to org scope.
+  const orgId = await getCurrentOrgId();
   return orgId ? `org:${orgId}:${base}` : base;
 }
