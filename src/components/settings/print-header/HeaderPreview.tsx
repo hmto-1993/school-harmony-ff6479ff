@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
+import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
