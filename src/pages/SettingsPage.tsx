@@ -61,7 +61,20 @@ function ProfileRow({ label, children }: { label: string; children: React.ReactN
   );
 }
 
-export default function SettingsPage() {
+/** قسم قابل للطي مع رأس بسيط — للأقسام التي تحتوي مكوناتها على بطاقتها الخاصة */
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Collapsible defaultOpen={false} className="space-y-2">
+      <CollapsibleTrigger className="w-full group flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/60 hover:bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm transition-colors">
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
   const { isSubscriber, isPrimaryOwner, loaded: subLoaded } = useSubscriberStatus();
