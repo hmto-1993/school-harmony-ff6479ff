@@ -11,6 +11,7 @@ import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
 import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
+import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface Props {
   open: boolean;
