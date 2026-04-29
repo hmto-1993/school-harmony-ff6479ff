@@ -9,6 +9,7 @@ import { Printer, Send, X, Loader2, MessageCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 interface AbsentDate {
   date: string;
@@ -248,11 +249,13 @@ export default function AbsenceWarningSlip({
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                  {headerConfig.centerSection.images.map((img, i) =>
-                    img ? (
+                  {headerConfig.centerSection.images.map((img, i) => {
+                    const src = resolveLogoSrc(i, img);
+                    if (!src) return null;
+                    return (
                       <img
                         key={i}
-                        src={img}
+                        src={src}
                         alt=""
                         style={{
                           width: `${headerConfig.centerSection.imagesSizes[i] || 60}px`,
@@ -260,8 +263,8 @@ export default function AbsenceWarningSlip({
                           objectFit: "contain",
                         }}
                       />
-                    ) : null
-                  )}
+                    );
+                  })}
                 </div>
 
                 <div
