@@ -115,12 +115,17 @@ function ReportPrintHeaderInline({
   reportType: "attendance" | "grades" | "behavior";
 }) {
   const [config, setConfig] = useState<any>(null);
+  const [rightLines, setRightLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { fetchScopedPrintHeader } = await import("@/lib/print-header-fetch");
+      const [{ fetchScopedPrintHeader }, { fetchDynamicRightLines }] = await Promise.all([
+        import("@/lib/print-header-fetch"),
+        import("@/lib/dynamic-header-lines"),
+      ]);
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed);
+      setRightLines(await fetchDynamicRightLines());
     })();
   }, [reportType]);
 
