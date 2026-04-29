@@ -27,6 +27,8 @@ import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import TeacherManagementHub from "@/components/settings/TeacherManagementHub";
 import AlphaLabOwnerCard from "@/components/settings/AlphaLabOwnerCard";
