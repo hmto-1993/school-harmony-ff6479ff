@@ -14,6 +14,12 @@ export function useSettingsProfile(user: any) {
   const [confirmOwnPassword, setConfirmOwnPassword] = useState("");
   const [changingOwnPassword, setChangingOwnPassword] = useState(false);
 
+  // Institution fields (stored in site_settings, tenant-scoped automatically by DB trigger)
+  const [profileSchoolName, setProfileSchoolName] = useState("");
+  const [profileEducationDepartment, setProfileEducationDepartment] = useState("");
+  const [profileDefaultAcademicYear, setProfileDefaultAcademicYear] = useState("");
+  const [profileSubjectName, setProfileSubjectName] = useState("");
+
   const loadProfile = (data: any) => {
     if (data) {
       setProfileName(data.full_name || "");
@@ -22,13 +28,37 @@ export function useSettingsProfile(user: any) {
     }
   };
 
+  const loadInstitution = (vals: { school_name?: string; education_department?: string; default_academic_year?: string; subject_name?: string }) => {
+    if (vals.school_name !== undefined) setProfileSchoolName(vals.school_name || "");
+    if (vals.education_department !== undefined) setProfileEducationDepartment(vals.education_department || "");
+    if (vals.default_academic_year !== undefined) setProfileDefaultAcademicYear(vals.default_academic_year || "");
+    if (vals.subject_name !== undefined) setProfileSubjectName(vals.subject_name || "");
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     setSavingProfile(true);
     const { error } = await supabase.from("profiles").update({ full_name: profileName, phone: profilePhone, national_id: profileNationalId || null }).eq("user_id", user.id);
+    if (error) {
+      setSavingProfile(false);
+      toast({ title: "خطأ", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Save institution fields to site_settings (DB trigger scopes them to org automatically)
+    const rows = [
+      { id: "school_name", value: profileSchoolName.trim() },
+      { id: "education_department", value: profileEducationDepartment.trim() },
+      { id: "default_academic_year", value: profileDefaultAcademicYear.trim() },
+      { id: "subject_name", value: profileSubjectName.trim() },
+    ];
+    const { error: settingsError } = await supabase.from("site_settings").upsert(rows, { onConflict: "id" });
     setSavingProfile(false);
-    if (error) toast({ title: "خطأ", description: error.message, variant: "destructive" });
-    else toast({ title: "تم الحفظ", description: "تم تحديث الملف الشخصي بنجاح" });
+    if (settingsError) {
+      toast({ title: "تم حفظ البيانات الشخصية، لكن تعذر حفظ بيانات المؤسسة", description: settingsError.message, variant: "destructive" });
+    } else {
+      toast({ title: "تم الحفظ", description: "تم تحديث الملف الشخصي وبيانات المؤسسة بنجاح" });
+    }
   };
 
   const handleChangeOwnPassword = async () => {
@@ -52,7 +82,11 @@ export function useSettingsProfile(user: any) {
 
   return {
     profileName, setProfileName, profilePhone, setProfilePhone, profileNationalId, setProfileNationalId,
-    savingProfile, handleSaveProfile, loadProfile,
+    savingProfile, handleSaveProfile, loadProfile, loadInstitution,
+    profileSchoolName, setProfileSchoolName,
+    profileEducationDepartment, setProfileEducationDepartment,
+    profileDefaultAcademicYear, setProfileDefaultAcademicYear,
+    profileSubjectName, setProfileSubjectName,
     currentPassword, setCurrentPassword, newOwnPassword, setNewOwnPassword, confirmOwnPassword, setConfirmOwnPassword,
     changingOwnPassword, handleChangeOwnPassword,
   };
