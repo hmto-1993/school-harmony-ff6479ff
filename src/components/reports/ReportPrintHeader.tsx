@@ -90,6 +90,11 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
                 key={i}
                 src={src}
                 alt=""
+                onError={(e) => {
+                  const fallback = resolveLogoSrc(i, "");
+                  const target = e.currentTarget;
+                  if (fallback && target.src !== fallback) target.src = fallback;
+                }}
                 style={{
                   width: `${config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i] ?? 60}px`,
                   height: `${config.centerSection.imagesSizes[i] || 60}px`,
