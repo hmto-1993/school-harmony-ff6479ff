@@ -45,6 +45,10 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
   const [nationalId, setNationalId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Institution fields (auto-saved into site_settings via signup trigger, used in print headers)
+  const [educationDepartment, setEducationDepartment] = useState("");
+  const [defaultAcademicYear, setDefaultAcademicYear] = useState("1446-1447");
+  const [subjectName, setSubjectName] = useState("");
 
   // Step 2 selection
   const [tier, setTier] = useState<Tier>("basic");
@@ -53,6 +57,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setStep(1);
     setFullName(""); setPhone(""); setSchool(""); setSpecialty("");
     setNationalId(""); setEmail(""); setPassword(""); setTier("basic");
+    setEducationDepartment(""); setDefaultAcademicYear("1446-1447"); setSubjectName("");
   };
 
 
@@ -93,6 +98,9 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
           phone: phone.trim(),
           school: school.trim(),
           specialty: specialty.trim(),
+          education_department: educationDepartment.trim(),
+          default_academic_year: defaultAcademicYear.trim(),
+          subject_name: subjectName.trim(),
           requested_tier: tier,
           signup_type: "subscriber",
         },
