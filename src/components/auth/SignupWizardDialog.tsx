@@ -45,6 +45,10 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
   const [nationalId, setNationalId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // Institution fields (auto-saved into site_settings via signup trigger, used in print headers)
+  const [educationDepartment, setEducationDepartment] = useState("");
+  const [defaultAcademicYear, setDefaultAcademicYear] = useState("1446-1447");
+  const [subjectName, setSubjectName] = useState("");
 
   // Step 2 selection
   const [tier, setTier] = useState<Tier>("basic");
@@ -53,6 +57,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     setStep(1);
     setFullName(""); setPhone(""); setSchool(""); setSpecialty("");
     setNationalId(""); setEmail(""); setPassword(""); setTier("basic");
+    setEducationDepartment(""); setDefaultAcademicYear("1446-1447"); setSubjectName("");
   };
 
 
@@ -60,6 +65,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     e.preventDefault();
     const cleanId = nationalId.replace(/\D/g, "");
     if (!fullName.trim() || !phone.trim() || !school.trim() || !specialty.trim() ||
+        !educationDepartment.trim() || !defaultAcademicYear.trim() || !subjectName.trim() ||
         cleanId.length !== 10 || !email.trim() || !password) {
       toast({
         title: "بيانات ناقصة",
@@ -93,6 +99,9 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
           phone: phone.trim(),
           school: school.trim(),
           specialty: specialty.trim(),
+          education_department: educationDepartment.trim(),
+          default_academic_year: defaultAcademicYear.trim(),
+          subject_name: subjectName.trim(),
           requested_tier: tier,
           signup_type: "subscriber",
         },
@@ -180,6 +189,21 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
                 <Label htmlFor="sw-spec" className="text-xs">التخصص *</Label>
                 <Input id="sw-spec" value={specialty} onChange={(e) => setSpecialty(e.target.value)}
                   placeholder="فيزياء، كيمياء..." className="h-10 rounded-xl" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sw-dept" className="text-xs">المنطقة الإدارية *</Label>
+                <Input id="sw-dept" value={educationDepartment} onChange={(e) => setEducationDepartment(e.target.value)}
+                  placeholder="مثال: الرياض" className="h-10 rounded-xl" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sw-year" className="text-xs">السنة الدراسية *</Label>
+                <Input id="sw-year" value={defaultAcademicYear} onChange={(e) => setDefaultAcademicYear(e.target.value)}
+                  placeholder="1446-1447" dir="ltr" className="text-right h-10 rounded-xl" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sw-subject" className="text-xs">المادة *</Label>
+                <Input id="sw-subject" value={subjectName} onChange={(e) => setSubjectName(e.target.value)}
+                  placeholder="مثال: الفيزياء" className="h-10 rounded-xl" required />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="sw-email" className="text-xs">البريد الإلكتروني *</Label>
