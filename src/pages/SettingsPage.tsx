@@ -304,6 +304,29 @@ export default function SettingsPage() {
               <Label>رقم الهوية الوطنية</Label>
               <Input value={s.profileNationalId} onChange={(e) => s.setProfileNationalId(e.target.value)} placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
             </div>
+
+            {/* بيانات المؤسسة (تُستخدم في ترويسة الطباعة وغيرها) */}
+            <div className="border-t pt-4 mt-2 space-y-3">
+              <h4 className="text-sm font-bold">🏫 بيانات المؤسسة</h4>
+              <p className="text-xs text-muted-foreground">تظهر هذه القيم تلقائياً في ترويسة الطباعة وتقارير الطلاب وأولياء الأمور.</p>
+              <div className="space-y-2">
+                <Label>اسم المدرسة</Label>
+                <Input value={s.profileSchoolName} onChange={(e) => s.setProfileSchoolName(e.target.value)} placeholder="مثال: ثانوية الملك فهد" />
+              </div>
+              <div className="space-y-2">
+                <Label>المنطقة الإدارية</Label>
+                <Input value={s.profileEducationDepartment} onChange={(e) => s.setProfileEducationDepartment(e.target.value)} placeholder="مثال: الرياض" />
+              </div>
+              <div className="space-y-2">
+                <Label>السنة الدراسية الافتراضية</Label>
+                <Input value={s.profileDefaultAcademicYear} onChange={(e) => s.setProfileDefaultAcademicYear(e.target.value)} placeholder="1446-1447" dir="ltr" className="text-right" />
+              </div>
+              <div className="space-y-2">
+                <Label>اسم المادة</Label>
+                <Input value={s.profileSubjectName} onChange={(e) => s.setProfileSubjectName(e.target.value)} placeholder="مثال: الفيزياء" />
+              </div>
+            </div>
+
             <Button onClick={s.handleSaveProfile} disabled={s.savingProfile} className="gap-1.5">
               <Save className="h-4 w-4" />{s.savingProfile ? "جارٍ الحفظ..." : "حفظ الملف الشخصي"}
             </Button>
