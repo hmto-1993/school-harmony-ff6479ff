@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
-import { supabase } from "@/integrations/supabase/client";
-import { expandScopedSettingIds, resolveScopedSettings } from "@/lib/site-settings-scope";
+import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
@@ -29,41 +28,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
     (async () => {
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed as PrintHeaderConfig);
-
-      // Resolve dynamic right-side values from tenant-scoped site_settings
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        let orgId: string | null = null;
-        if (user) {
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("organization_id")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          orgId = (prof?.organization_id as string | null) ?? null;
-        }
-        const ids = expandScopedSettingIds(["education_department", "school_name"], orgId);
-        const { data: rows } = await supabase
-          .from("site_settings")
-          .select("id, value")
-          .in("id", ids);
-        const map = resolveScopedSettings(rows as any, orgId);
-        const department = (map.get("education_department") || "").trim();
-        const schoolName = (map.get("school_name") || "").trim();
-        setRightLines([
-          "المملكة العربية السعودية",
-          "وزارة التعليم",
-          department ? `الإدارة العامة للتعليم بمنطقة: ${department}` : "الإدارة العامة للتعليم بمنطقة: ............",
-          schoolName || "............",
-        ]);
-      } catch {
-        setRightLines([
-          "المملكة العربية السعودية",
-          "وزارة التعليم",
-          "الإدارة العامة للتعليم بمنطقة: ............",
-          "............",
-        ]);
-      }
+      setRightLines(await fetchDynamicRightLines());
     })();
   }, [reportType]);
 
