@@ -8,7 +8,7 @@ import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, T
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
-import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
+import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
@@ -25,9 +25,11 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
   const [uploading, setUploading] = useState<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dynamicRightLines, setDynamicRightLines] = useState<string[] | null>(null);
+  const [dynamicLeftLines, setDynamicLeftLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     fetchDynamicRightLines().then(setDynamicRightLines);
+    fetchDynamicLeftLines().then(setDynamicLeftLines);
   }, []);
 
   const updateLine = (section: "rightSection" | "leftSection", index: number, value: string) => {
@@ -130,16 +132,31 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
   ) => {
     const section = config[sectionKey];
     const readOnly = !!options?.readOnly;
-    // For the right section we always render the dynamic, read-only values
-    // (lines 1-2 hardcoded, line 3 = education_department, line 4 = school_name).
+    // Read-only sections render dynamic values pulled from settings.
+    // Right = subscriber identity; Left = academic context (year/term/class/subject).
+    const fallbackRight = [
+      "المملكة العربية السعودية",
+      "وزارة التعليم",
+      "الإدارة العامة للتعليم بمنطقة: ............",
+      "............",
+    ];
+    const fallbackLeft = [
+      "السنة الدراسية: ............",
+      "الفصل الدراسي: ............",
+      "الصف: ............",
+      "المادة: ............",
+    ];
     const displayLines = readOnly
-      ? (dynamicRightLines ?? [
-          "المملكة العربية السعودية",
-          "وزارة التعليم",
-          "الإدارة العامة للتعليم بمنطقة: ............",
-          "............",
-        ])
+      ? sectionKey === "rightSection"
+        ? (dynamicRightLines ?? fallbackRight)
+        : (dynamicLeftLines ?? fallbackLeft)
       : section.lines;
+    const readOnlyAlign: "right" | "left" = sectionKey === "rightSection" ? "right" : "left";
+    const readOnlyDir: "rtl" | "ltr" = sectionKey === "rightSection" ? "rtl" : "rtl"; // keep RTL doc flow
+    const readOnlyHint =
+      sectionKey === "rightSection"
+        ? "🔒 يُجلب تلقائياً من إعدادات المشترك (المنطقة + اسم المدرسة) — غير قابل للتعديل."
+        : "🔒 يُجلب تلقائياً (السنة الدراسية + الفصل + الصف + المادة) — غير قابل للتعديل.";
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -195,15 +212,15 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           {readOnly ? (
             <div
               className="rounded-md border bg-muted/40 px-3 py-2 space-y-1"
-              style={{ textAlign: "right", direction: "rtl" }}
+              style={{ textAlign: readOnlyAlign, direction: readOnlyDir }}
             >
               {displayLines.map((line, i) => (
-                <p key={i} className="text-sm font-medium text-foreground/90 select-text" style={{ margin: 0 }}>
+                <p key={i} className="text-sm font-medium text-foreground/90 select-text" style={{ margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {line}
                 </p>
               ))}
-              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2">
-                🔒 يُجلب تلقائياً من إعدادات المشترك (المنطقة + اسم المدرسة) — غير قابل للتعديل اليدوي.
+              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2" style={{ textAlign: "right" }}>
+                {readOnlyHint}
               </p>
             </div>
           ) : (
@@ -295,7 +312,7 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           </CardContent>
         </Card>
 
-        <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />)}</CardContent></Card>
+        <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />, { readOnly: true })}</CardContent></Card>
       </div>
     </div>
   );

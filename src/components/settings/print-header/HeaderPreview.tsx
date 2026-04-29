@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
-import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
+import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
@@ -15,10 +15,13 @@ interface HeaderPreviewProps {
 
 export default function HeaderPreview({ config, previewRef, exporting, onExportPng }: HeaderPreviewProps) {
   const [dynamicRightLines, setDynamicRightLines] = useState<string[] | null>(null);
+  const [dynamicLeftLines, setDynamicLeftLines] = useState<string[] | null>(null);
   useEffect(() => {
     fetchDynamicRightLines().then(setDynamicRightLines);
+    fetchDynamicLeftLines().then(setDynamicLeftLines);
   }, []);
   const rightLines = dynamicRightLines ?? config.rightSection.lines;
+  const leftLines = dynamicLeftLines ?? config.leftSection.lines;
   return (
     <Card className="border-dashed border-2">
       <CardContent className="p-3">
@@ -90,8 +93,8 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             </div>
             {/* Left section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
-                {config.leftSection.lines.map((line, i) => (
+              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
+                {leftLines.map((line, i) => (
                   <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}
               </div>

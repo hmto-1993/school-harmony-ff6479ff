@@ -116,16 +116,19 @@ function ReportPrintHeaderInline({
 }) {
   const [config, setConfig] = useState<any>(null);
   const [rightLines, setRightLines] = useState<string[] | null>(null);
+  const [leftLines, setLeftLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [{ fetchScopedPrintHeader }, { fetchDynamicRightLines }] = await Promise.all([
+      const [{ fetchScopedPrintHeader }, { fetchDynamicRightLines, fetchDynamicLeftLines }] = await Promise.all([
         import("@/lib/print-header-fetch"),
         import("@/lib/dynamic-header-lines"),
       ]);
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed);
-      setRightLines(await fetchDynamicRightLines());
+      const [r, l] = await Promise.all([fetchDynamicRightLines(), fetchDynamicLeftLines()]);
+      setRightLines(r);
+      setLeftLines(l);
     })();
   }, [reportType]);
 
@@ -185,14 +188,14 @@ function ReportPrintHeaderInline({
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
-              textAlign: config.leftSection?.align || "left",
+              textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
               color: config.leftSection?.color || "#1e293b",
             }}
           >
-            {(config.leftSection?.lines || []).map((line: string, i: number) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            {(leftLines ?? config.leftSection?.lines ?? []).map((line: string, i: number) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
             ))}
           </div>
         </div>
