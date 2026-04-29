@@ -280,7 +280,7 @@ export default function SettingsPage() {
         <div className="h-px flex-1 bg-gradient-to-r from-muted-foreground/30 to-transparent" />
       </div>
       <div className="space-y-4">
-        {adminPerms.isPrimaryAdmin && s.isAdmin && (
+        {isPrimaryOwner && (
           <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-sm font-bold">
             <Lock className="h-4 w-4 shrink-0" />
             المالك الرئيسي للنظام
