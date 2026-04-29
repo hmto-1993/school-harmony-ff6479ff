@@ -24,6 +24,21 @@ interface LoginSettingsCardProps {
 }
 
 export function LoginSettingsCard(props: LoginSettingsCardProps) {
+  // Self-contained: education department (الإدارة العامة للتعليم بمنطقة …) for print header right block
+  const [educationDept, setEducationDept] = useState("");
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .ilike("id", "%education_department")
+        .limit(5);
+      const rows = (data || []) as Array<{ id: string; value: string | null }>;
+      const scoped = rows.find(r => r.id.startsWith("org:"));
+      const global = rows.find(r => r.id === "education_department");
+      setEducationDept(((scoped?.value ?? global?.value) || "").toString());
+    })();
+  }, []);
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
