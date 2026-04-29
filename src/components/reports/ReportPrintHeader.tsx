@@ -52,14 +52,23 @@ export default function ReportPrintHeader({ reportType }: Props) {
               width: "fit-content",
               maxWidth: "100%",
               marginLeft: "auto",
-              textAlign: (config.rightSection.align || "right") as any,
+              textAlign: "right",
               fontSize: `${config.rightSection.fontSize}px`,
               lineHeight: 1.8,
               color: config.rightSection.color || "#1e293b",
             }}
           >
-            {config.rightSection.lines.map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            {buildRightHeaderLines(dynRight).map((row, i) => (
+              <p key={i} style={{ margin: 0 }}>
+                {row.label ? (
+                  <>
+                    <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
+                    <span style={{ fontWeight: 500 }}>{row.value}</span>
+                  </>
+                ) : (
+                  <span style={{ fontWeight: row.bold ? 700 : 600 }}>{row.value}</span>
+                )}
+              </p>
             ))}
           </div>
         </div>
