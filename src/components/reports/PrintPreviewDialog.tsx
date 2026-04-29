@@ -116,16 +116,19 @@ function ReportPrintHeaderInline({
 }) {
   const [config, setConfig] = useState<any>(null);
   const [rightLines, setRightLines] = useState<string[] | null>(null);
+  const [leftLines, setLeftLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     (async () => {
-      const [{ fetchScopedPrintHeader }, { fetchDynamicRightLines }] = await Promise.all([
+      const [{ fetchScopedPrintHeader }, { fetchDynamicRightLines, fetchDynamicLeftLines }] = await Promise.all([
         import("@/lib/print-header-fetch"),
         import("@/lib/dynamic-header-lines"),
       ]);
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed);
-      setRightLines(await fetchDynamicRightLines());
+      const [r, l] = await Promise.all([fetchDynamicRightLines(), fetchDynamicLeftLines()]);
+      setRightLines(r);
+      setLeftLines(l);
     })();
   }, [reportType]);
 
