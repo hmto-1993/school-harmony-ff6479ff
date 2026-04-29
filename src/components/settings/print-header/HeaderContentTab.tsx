@@ -122,29 +122,53 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
     });
   };
 
-  const renderTextSection = (sectionKey: "rightSection" | "leftSection", title: string, icon: React.ReactNode) => {
+  const renderTextSection = (
+    sectionKey: "rightSection" | "leftSection",
+    title: string,
+    icon: React.ReactNode,
+    options?: { readOnly?: boolean }
+  ) => {
     const section = config[sectionKey];
+    const readOnly = !!options?.readOnly;
+    // For the right section we always render the dynamic, read-only values
+    // (lines 1-2 hardcoded, line 3 = education_department, line 4 = school_name).
+    const displayLines = readOnly
+      ? (dynamicRightLines ?? [
+          "المملكة العربية السعودية",
+          "وزارة التعليم",
+          "الإدارة العامة للتعليم بمنطقة: ............",
+          "............",
+        ])
+      : section.lines;
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <Label className="flex items-center gap-2 font-semibold text-sm">{icon}{title}</Label>
-          <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => addLine(sectionKey)}>
-            <Plus className="h-3 w-3" />سطر
-          </Button>
+          {readOnly ? (
+            <span className="flex items-center gap-1 text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              <Lock className="h-3 w-3" />للقراءة فقط
+            </span>
+          ) : (
+            <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => addLine(sectionKey)}>
+              <Plus className="h-3 w-3" />سطر
+            </Button>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">المحاذاة:</Label>
-          <div className="flex border rounded-md overflow-hidden">
-            {alignOptions.map((opt) => (
-              <button key={opt.value} type="button"
-                className={`p-1.5 transition-colors ${section.align === opt.value ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
-                onClick={() => setConfig((prev) => ({ ...prev, [sectionKey]: { ...prev[sectionKey], align: opt.value as any } }))}
-              >
-                <opt.icon className="h-3.5 w-3.5" />
-              </button>
-            ))}
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">المحاذاة:</Label>
+            <div className="flex border rounded-md overflow-hidden">
+              {alignOptions.map((opt) => (
+                <button key={opt.value} type="button"
+                  className={`p-1.5 transition-colors ${section.align === opt.value ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}
+                  onClick={() => setConfig((prev) => ({ ...prev, [sectionKey]: { ...prev[sectionKey], align: opt.value as any } }))}
+                >
+                  <opt.icon className="h-3.5 w-3.5" />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex items-center gap-3">
           <Label className="text-xs text-muted-foreground whitespace-nowrap">حجم الخط:</Label>
           <Slider min={8} max={20} step={1} value={[section.fontSize]}
@@ -168,16 +192,32 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           </div>
         </div>
         <div className="space-y-2">
-          {section.lines.map((line, i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <Input value={line} onChange={(e) => updateLine(sectionKey, i, e.target.value)} className="h-8 text-sm" placeholder={`سطر ${i + 1}`} dir="rtl" />
-              {section.lines.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => removeLine(sectionKey, i)}>
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              )}
+          {readOnly ? (
+            <div
+              className="rounded-md border bg-muted/40 px-3 py-2 space-y-1"
+              style={{ textAlign: "right", direction: "rtl" }}
+            >
+              {displayLines.map((line, i) => (
+                <p key={i} className="text-sm font-medium text-foreground/90 select-text" style={{ margin: 0 }}>
+                  {line}
+                </p>
+              ))}
+              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2">
+                🔒 يُجلب تلقائياً من إعدادات المشترك (المنطقة + اسم المدرسة) — غير قابل للتعديل اليدوي.
+              </p>
             </div>
-          ))}
+          ) : (
+            section.lines.map((line, i) => (
+              <div key={i} className="flex items-center gap-1.5">
+                <Input value={line} onChange={(e) => updateLine(sectionKey, i, e.target.value)} className="h-8 text-sm" placeholder={`سطر ${i + 1}`} dir="rtl" />
+                {section.lines.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => removeLine(sectionKey, i)}>
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     );
