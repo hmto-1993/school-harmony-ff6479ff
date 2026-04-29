@@ -186,7 +186,7 @@ function ReportPrintHeaderInline({
           )}
         </div>
 
-        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-end" }}>
+        <div dir="ltr" style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-start" }}>
           <div
             style={{
               width: "fit-content",
