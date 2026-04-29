@@ -18,6 +18,7 @@ interface LoginSettingsCardProps {
   setLoginSubtitle: (v: string) => void;
   dashboardTitle: string;
   setDashboardTitle: (v: string) => void;
+  // Kept for backward-compatibility with SettingsPage props but no longer rendered
   educationDepartment?: string;
   setEducationDepartment?: (v: string) => void;
   savingLogin: boolean;
@@ -52,15 +53,12 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
 
   const handleSave = async () => {
     props.setSavingLogin(true);
-    const upserts: any[] = [
-      supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
+    // ملاحظة: هذه الإعدادات مستقلة تماماً عن ترويسة الطباعة.
+    // نحفظ فقط الوصف الفرعي وعنوان لوحة التحكم، ولا نلمس اسم المدرسة/المنطقة التعليمية هنا.
+    const results = await Promise.all([
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
-    ];
-    if (props.educationDepartment !== undefined) {
-      upserts.push(supabase.from("site_settings").upsert({ id: "education_department", value: props.educationDepartment }));
-    }
-    const results = await Promise.all(upserts);
+    ]);
     props.setSavingLogin(false);
     if (results.some((r) => r.error)) {
       toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
@@ -70,14 +68,20 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
   };
 
   return (
-    <CollapsibleSettingsCard icon={SettingsIcon} iconGradient="from-indigo-500 to-violet-600" iconShadow="shadow-lg shadow-indigo-500/20" title="إعدادات صفحة تسجيل الدخول" description="تخصيص شعار واسم المدرسة">
+    <CollapsibleSettingsCard
+      icon={SettingsIcon}
+      iconGradient="from-indigo-500 to-violet-600"
+      iconShadow="shadow-lg shadow-indigo-500/20"
+      title="إعدادات صفحة تسجيل الدخول"
+      description="تخصيص شعار واسم المنصة (مستقلة عن ترويسة الطباعة)"
+    >
       <div className="space-y-4 max-w-md">
         <div className="space-y-2">
-          <Label>شعار المدرسة</Label>
+          <Label>شعار المنصة</Label>
           <div className="flex items-center gap-4">
             <div className="h-20 w-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/30">
               {props.schoolLogoUrl ? (
-                <img src={props.schoolLogoUrl} alt="شعار المدرسة" className="h-full w-full object-cover rounded-xl" />
+                <img src={props.schoolLogoUrl} alt="شعار المنصة" className="h-full w-full object-cover rounded-xl" />
               ) : (
                 <Upload className="h-6 w-6 text-muted-foreground" />
               )}
@@ -94,27 +98,26 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
               )}
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">يظهر في صفحة تسجيل الدخول فقط، ولا علاقة له بترويسة الطباعة.</p>
         </div>
-        <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={props.loginSchoolName} onChange={(e) => props.setLoginSchoolName(e.target.value)} placeholder="أدخل اسم المدرسة" /></div>
-        <div className="space-y-2"><Label>الوصف الفرعي</Label><Input value={props.loginSubtitle} onChange={(e) => props.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" /></div>
+
+        <div className="space-y-2">
+          <Label>اسم المنصة</Label>
+          <Input value="منصة المتميز التعليمية" disabled readOnly className="bg-muted/40" />
+          <p className="text-[11px] text-muted-foreground">اسم ثابت لا يمكن تعديله.</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label>الوصف الفرعي</Label>
+          <Input value={props.loginSubtitle} onChange={(e) => props.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" />
+        </div>
+
         <div className="space-y-2">
           <Label>عنوان لوحة التحكم</Label>
           <Input value={props.dashboardTitle} onChange={(e) => props.setDashboardTitle(e.target.value)} placeholder="لوحة التحكم" />
           <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
         </div>
-        {props.setEducationDepartment && (
-          <div className="space-y-2">
-            <Label>المنطقة التعليمية</Label>
-            <Input
-              value={props.educationDepartment ?? ""}
-              onChange={(e) => props.setEducationDepartment?.(e.target.value)}
-              placeholder="مثال: الرياض"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              تظهر في ترويسة الطباعة بصيغة: «الإدارة العامة للتعليم بمنطقة: ...»
-            </p>
-          </div>
-        )}
+
         <Button disabled={props.savingLogin} className="gap-1.5" onClick={handleSave}>
           <Save className="h-4 w-4" />{props.savingLogin ? "جارٍ الحفظ..." : "حفظ"}
         </Button>
