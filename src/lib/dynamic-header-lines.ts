@@ -20,6 +20,21 @@ import { expandScopedSettingIds, resolveScopedSettings } from "@/lib/site-settin
 
 const DASH = "............";
 
+/** Map English/numeric semester values to Arabic ordinals. */
+function arabicizeSemester(raw: string): string {
+  const v = raw.trim().toLowerCase();
+  if (!v) return "";
+  const map: Record<string, string> = {
+    "first": "الأول", "1": "الأول", "1st": "الأول", "one": "الأول",
+    "الفصل الأول": "الأول", "الأول": "الأول",
+    "second": "الثاني", "2": "الثاني", "2nd": "الثاني", "two": "الثاني",
+    "الفصل الثاني": "الثاني", "الثاني": "الثاني",
+    "third": "الثالث", "3": "الثالث", "3rd": "الثالث", "three": "الثالث",
+    "الفصل الثالث": "الثالث", "الثالث": "الثالث",
+  };
+  return map[v] || raw;
+}
+
 async function getOrgId(): Promise<string | null> {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -84,7 +99,8 @@ export async function fetchDynamicLeftLines(ctx: LeftHeaderContext = {}): Promis
     const [{ data: rows }, { data: cal }] = await Promise.all([settingsPromise, calendarPromise]);
     const map = resolveScopedSettings(rows as any, orgId);
     const academicYear = (map.get("default_academic_year") || (cal?.academic_year as string | undefined) || "").trim();
-    const semester = ((cal?.semester as string | undefined) || "").trim();
+    const semesterRaw = ((cal?.semester as string | undefined) || "").trim();
+    const semester = arabicizeSemester(semesterRaw);
     const subject = (ctx.subject || map.get("subject_name") || "").trim();
     const className = (ctx.className || "").trim();
 

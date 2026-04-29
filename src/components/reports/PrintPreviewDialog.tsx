@@ -185,9 +185,7 @@ function ReportPrintHeaderInline({
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
-              width: "fit-content",
-              maxWidth: "100%",
-              marginRight: "auto",
+              width: "100%",
               textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
@@ -195,7 +193,7 @@ function ReportPrintHeaderInline({
             }}
           >
             {(leftLines ?? config.leftSection?.lines ?? []).map((line: string, i: number) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
+              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap", textAlign: "left", direction: "rtl", unicodeBidi: "plaintext" }}>{line}</p>
             ))}
           </div>
         </div>
