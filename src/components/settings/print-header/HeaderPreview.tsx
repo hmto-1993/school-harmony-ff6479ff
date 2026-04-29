@@ -14,6 +14,7 @@ interface HeaderPreviewProps {
 }
 
 export default function HeaderPreview({ config, previewRef, exporting, onExportPng }: HeaderPreviewProps) {
+  const dyn = useDynamicLeftHeader();
   return (
     <Card className="border-dashed border-2">
       <CardContent className="p-3">
