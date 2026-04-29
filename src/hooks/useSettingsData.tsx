@@ -432,6 +432,7 @@ export function useSettingsData() {
     ...smsHelper,
     // Login
     loginSchoolName, setLoginSchoolName, loginSubtitle, setLoginSubtitle, dashboardTitle, setDashboardTitle,
+    educationDepartment, setEducationDepartment,
     savingLogin, setSavingLogin, schoolLogoUrl, setSchoolLogoUrl, uploadingLogo, setUploadingLogo, logoInputRef,
     // Fetch
     fetchData,
