@@ -118,6 +118,7 @@ function ReportPrintHeaderInline({
 }) {
   const [config, setConfig] = useState<any>(null);
   const dyn = useDynamicLeftHeader();
+  const dynRight = useDynamicRightHeader();
 
   useEffect(() => {
     (async () => {
