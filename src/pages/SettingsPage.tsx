@@ -27,6 +27,8 @@ import StaffLoginHistory from "@/components/settings/StaffLoginHistory";
 import DataPurgeSection from "@/components/settings/DataPurgeSection";
 import SystemRepairCard from "@/components/settings/SystemRepairCard";
 import CollapsibleSettingsCard from "@/components/settings/CollapsibleSettingsCard";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown } from "lucide-react";
 import RadarSettingsCard from "@/components/settings/RadarSettingsCard";
 import TeacherManagementHub from "@/components/settings/TeacherManagementHub";
 import AlphaLabOwnerCard from "@/components/settings/AlphaLabOwnerCard";
@@ -56,6 +58,21 @@ function ProfileRow({ label, children }: { label: string; children: React.ReactN
       <Label className="text-sm font-medium text-foreground sm:text-right">{label}</Label>
       <div className="min-w-0">{children}</div>
     </div>
+  );
+}
+
+/** قسم قابل للطي مع رأس بسيط — للأقسام التي تحتوي مكوناتها على بطاقتها الخاصة */
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <Collapsible defaultOpen={false} className="space-y-2">
+      <CollapsibleTrigger className="w-full group flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-card/60 hover:bg-card/80 backdrop-blur-sm border border-border/40 shadow-sm transition-colors">
+        <h3 className="text-sm font-bold text-foreground">{title}</h3>
+        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-data-[state=open]:rotate-180" />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -104,23 +121,35 @@ export default function SettingsPage() {
       </div>
 
       {/* Owner-only: unified teacher management hub (approvals + subscriptions + archive) */}
-      {isPrimaryOwner && <TeacherManagementHub />}
+      {isPrimaryOwner && (
+        <CollapsibleSection title="إدارة المعلمين">
+          <TeacherManagementHub />
+        </CollapsibleSection>
+      )}
 
       {/* Owner-only: Packages & Subscriptions management */}
-      {isPrimaryOwner && <PackageManagementPanel />}
+      {isPrimaryOwner && (
+        <CollapsibleSection title="الباقات">
+          <PackageManagementPanel />
+        </CollapsibleSection>
+      )}
 
       {/* Owner-only: Alpha Lab management */}
       {isPrimaryOwner && (
-        <BetaErrorBoundary featureName="Alpha Lab Owner">
-          <AlphaLabOwnerCard />
-        </BetaErrorBoundary>
+        <CollapsibleSection title="مختبر ألفا">
+          <BetaErrorBoundary featureName="Alpha Lab Owner">
+            <AlphaLabOwnerCard />
+          </BetaErrorBoundary>
+        </CollapsibleSection>
       )}
 
       {/* Subscriber view: enabled beta features + feedback */}
       {restricted && (
-        <BetaErrorBoundary featureName="Alpha Lab">
-          <AlphaLabSubscriberCard />
-        </BetaErrorBoundary>
+        <CollapsibleSection title="مختبر ألفا">
+          <BetaErrorBoundary featureName="Alpha Lab">
+            <AlphaLabSubscriberCard />
+          </BetaErrorBoundary>
+        </CollapsibleSection>
       )}
 
       {/* ===== البطاقات الرئيسية ===== */}
