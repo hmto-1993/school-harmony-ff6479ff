@@ -241,7 +241,7 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4">{renderTextSection("rightSection", "الجانب الأيمن", <Type className="h-4 w-4" />)}</CardContent></Card>
+        <Card><CardContent className="p-4">{renderTextSection("rightSection", "الجانب الأيمن", <Type className="h-4 w-4" />, { readOnly: true })}</CardContent></Card>
 
         {/* Center images */}
         <Card>
