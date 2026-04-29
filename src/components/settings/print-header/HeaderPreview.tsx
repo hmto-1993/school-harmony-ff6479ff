@@ -96,7 +96,7 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
               ))}
             </div>
             {/* Left section — auto-populated dynamic data */}
-            <div dir="ltr" style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-start" }}>
+            <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-end" }}>
               <div style={{ width: "fit-content", maxWidth: "100%", textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
                 {buildLeftHeaderLines(dyn).map((row, i) => (
                   <p key={i} style={{ margin: 0, whiteSpace: "nowrap" }}>
