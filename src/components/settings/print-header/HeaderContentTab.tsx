@@ -8,7 +8,7 @@ import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, T
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
-import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
+import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
