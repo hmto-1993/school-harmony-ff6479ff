@@ -46,7 +46,7 @@ export default function DashboardLayout() {
             <Link to="/dashboard" onClick={(e) => e.stopPropagation()} className="mr-auto inline-flex">
               <img
                 src={schoolLogo}
-                alt="شعار منصة المتميز التعليمية"
+                alt="شعار منصة المتميز الرقمية"
                 className="h-20 w-20 object-contain transition-transform duration-300 ease-out hover:scale-105 drop-shadow-[0_3px_8px_hsl(var(--primary)/0.3)]"
               />
             </Link>

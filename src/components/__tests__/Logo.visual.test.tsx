@@ -81,7 +81,7 @@ describe("Logo visual contract — Sidebar", () => {
         <AppSidebar />
       </MemoryRouter>
     );
-    const logo = screen.getByAltText("شعار منصة المتميز التعليمية") as HTMLImageElement;
+    const logo = screen.getByAltText("شعار منصة المتميز الرقمية") as HTMLImageElement;
     expect(logo).toBeInTheDocument();
     expect(logo.className).toMatch(/object-contain/);
     // Must not use object-cover (which crops)
@@ -107,7 +107,7 @@ describe("Logo visual contract — Mobile header", () => {
         </MemoryRouter>
       );
       const logos = screen.getAllByAltText(
-        "شعار منصة المتميز التعليمية"
+        "شعار منصة المتميز الرقمية"
       ) as HTMLImageElement[];
       // Header logo is the one inside the sticky top bar (not sidebar)
       const headerLogo = logos.find(l => !l.className.includes("drop-shadow-sm")) ?? logos[0];

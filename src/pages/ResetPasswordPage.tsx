@@ -91,7 +91,7 @@ export default function ResetPasswordPage() {
             <div className="rounded-2xl bg-card/80 dark:bg-muted/60 p-2 shadow-card ring-1 ring-border/20 dark:ring-border/10">
               <img
                 src={schoolLogo}
-                alt="شعار منصة المتميز التعليمية"
+                alt="شعار منصة المتميز الرقمية"
                 className="h-24 w-24 rounded-2xl object-contain bg-white/70 dark:bg-white/10 p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
               />
             </div>

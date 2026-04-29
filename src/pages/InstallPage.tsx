@@ -47,7 +47,7 @@ export default function InstallPage() {
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
-            <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="h-12 w-12 rounded-xl object-contain bg-white/80 dark:bg-white/10 p-1 ring-1 ring-primary/15 shadow-md transition-transform duration-300 ease-out hover:scale-105" />
+            <img src={schoolLogo} alt="شعار منصة المتميز الرقمية" className="h-12 w-12 rounded-xl object-contain bg-white/80 dark:bg-white/10 p-1 ring-1 ring-primary/15 shadow-md transition-transform duration-300 ease-out hover:scale-105" />
             <div>
               <h1 className="text-lg font-bold text-foreground">تثبيت التطبيق</h1>
               <p className="text-xs text-muted-foreground">Almtmez Educational Platform</p>

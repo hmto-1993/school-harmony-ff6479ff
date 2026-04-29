@@ -128,7 +128,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
 
     const tierName = tier === "premium" ? "باقة ألفا المتكاملة (Premium)" : "باقة ألفا الأساسية";
     toast({
-      title: "شكراً لتسجيلك في منصة المتميز التعليمية 🎓",
+      title: "شكراً لتسجيلك في منصة المتميز الرقمية 🎓",
       description: `تم استلام طلبك للانضمام إلى ${tierName}. يرجى التواصل مع الإدارة لإتمام الاشتراك وتفعيل حسابك.`,
       duration: 11000,
     });
@@ -149,7 +149,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-right">
             <UserPlus className="h-5 w-5 text-primary" />
-            {step === 1 ? "إنشاء اشتراك جديد" : "اختر خطة العمل المناسبة لك في منصة المتميز التعليمية"}
+            {step === 1 ? "إنشاء اشتراك جديد" : "اختر خطة العمل المناسبة لك في منصة المتميز الرقمية"}
           </DialogTitle>
           <DialogDescription className="text-right text-xs text-muted-foreground">
             {step === 1 ? "أدخل بياناتك الأساسية لإنشاء حساب اشتراك جديد." : "اختر الباقة الأنسب لك للمتابعة."}
