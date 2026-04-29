@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
+import { resolveLogoSrc } from "@/lib/default-logos";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
@@ -81,11 +82,13 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
 
         {/* Center images */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, margin: "0 auto" }}>
-          {config.centerSection.images.map((img, i) =>
-            img ? (
+          {config.centerSection.images.map((img, i) => {
+            const src = resolveLogoSrc(i, img);
+            if (!src) return null;
+            return (
               <img
                 key={i}
-                src={img}
+                src={src}
                 alt=""
                 style={{
                   width: `${config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i] ?? 60}px`,
@@ -93,8 +96,8 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
                   objectFit: "contain",
                 }}
               />
-            ) : null
-          )}
+            );
+          })}
         </div>
 
         {/* Left text — block pinned to LEFT of section, lines right-aligned to longest */}
