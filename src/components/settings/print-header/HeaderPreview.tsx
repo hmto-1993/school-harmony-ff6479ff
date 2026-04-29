@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
 import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
