@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   // اسم المنصة ثابت ولا يُقرأ من قاعدة البيانات (لا يمكن تعديله)
-  const schoolName = "منصة المتميز التعليمية";
+  const schoolName = "منصة المتميز الرقمية";
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس والفصول الدراسية");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
@@ -209,7 +209,7 @@ export default function LoginPage() {
             <div className="relative rounded-2xl bg-gradient-to-br from-card/95 via-card/85 to-muted/60 dark:from-muted/70 dark:via-muted/50 dark:to-muted/30 p-2.5 shadow-[0_8px_30px_-8px_rgba(0,0,0,0.25)] ring-1 ring-[hsl(42,40%,55%)]/30 dark:ring-[hsl(42,40%,55%)]/20">
               <img
                 src={schoolLogo}
-                alt="شعار منصة المتميز التعليمية"
+                alt="شعار منصة المتميز الرقمية"
                 onError={() => setSchoolLogo(defaultSchoolLogo)}
                 className="h-24 w-24 md:h-28 md:w-28 rounded-2xl object-contain bg-white/70 dark:bg-white p-2 ring-1 ring-white/30 shadow-[0_8px_30px_-6px_rgba(0,0,0,0.35)] backdrop-blur-md transition-transform duration-300 ease-out hover:scale-105"
               />

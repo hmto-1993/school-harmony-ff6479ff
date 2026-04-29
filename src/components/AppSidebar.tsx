@@ -73,7 +73,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
   const isMobile = useIsMobile();
   const { theme, toggleTheme } = useTheme();
   const [collapsed, setCollapsed] = useState(false);
-  const [schoolName, setSchoolName] = useState("منصة المتميز التعليمية");
+  const [schoolName, setSchoolName] = useState("منصة المتميز الرقمية");
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس");
   const [unreadParentMessages, setUnreadParentMessages] = useState(0);
 
@@ -136,7 +136,7 @@ export default function AppSidebar({ onNavigate }: AppSidebarProps) {
           <div className="relative h-24 w-24 flex items-center justify-center transition-transform duration-300 ease-out group-hover:scale-105">
             <img
               src={schoolLogo}
-              alt="شعار منصة المتميز التعليمية"
+              alt="شعار منصة المتميز الرقمية"
               className="h-24 w-24 object-contain drop-shadow-[0_4px_10px_hsl(var(--primary)/0.35)]"
             />
           </div>

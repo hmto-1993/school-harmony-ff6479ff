@@ -234,7 +234,7 @@ export default function FormIdentitySettings({ onClose }: Props) {
 
           {/* School Logo */}
           <div className="space-y-2">
-            <Label className="text-xs">شعار المدرسة / منصة المتميز التعليمية (يسار)</Label>
+            <Label className="text-xs">شعار المدرسة / منصة المتميز الرقمية (يسار)</Label>
             {config.schoolLogoUrl ? (
               <div className="relative w-20 h-20 border rounded-lg overflow-hidden bg-muted">
                 <img src={config.schoolLogoUrl} alt="شعار المدرسة" className="w-full h-full object-contain" />

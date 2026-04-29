@@ -41,7 +41,7 @@ export const RecoveryEmail = ({
             height="84"
             style={logo}
           />
-          <Text style={brand}>منصة المتميز التعليمية</Text>
+          <Text style={brand}>منصة المتميز الرقمية</Text>
         </Section>
 
         <Section style={card}>
@@ -72,7 +72,7 @@ export const RecoveryEmail = ({
         </Section>
 
         <Text style={brandFooter}>
-          © منصة المتميز التعليمية — رسالة آلية، يرجى عدم الرد عليها.
+          © منصة المتميز الرقمية — رسالة آلية، يرجى عدم الرد عليها.
         </Text>
       </Container>
     </Body>

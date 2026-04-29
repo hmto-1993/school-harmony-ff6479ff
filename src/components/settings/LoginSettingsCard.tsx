@@ -103,7 +103,7 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
 
         <div className="space-y-2">
           <Label>اسم المنصة</Label>
-          <Input value="منصة المتميز التعليمية" disabled readOnly className="bg-muted/40" />
+          <Input value="منصة المتميز الرقمية" disabled readOnly className="bg-muted/40" />
           <p className="text-[11px] text-muted-foreground">اسم ثابت لا يمكن تعديله.</p>
         </div>
 
