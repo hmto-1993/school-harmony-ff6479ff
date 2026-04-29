@@ -185,9 +185,7 @@ function ReportPrintHeaderInline({
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
-              width: "fit-content",
-              maxWidth: "100%",
-              marginLeft: "auto",
+              width: "100%",
               textAlign: "right",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,

@@ -97,13 +97,11 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
           )}
         </div>
 
-        {/* Left text — block aligned to the right edge of longest line */}
+        {/* Left text — dynamic read-only lines, right-aligned per owner request */}
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
-              width: "fit-content",
-              maxWidth: "100%",
-              marginLeft: "auto",
+              width: "100%",
               textAlign: "right",
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,
