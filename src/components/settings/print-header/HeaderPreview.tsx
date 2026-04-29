@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
-import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
@@ -14,7 +13,6 @@ interface HeaderPreviewProps {
 }
 
 export default function HeaderPreview({ config, previewRef, exporting, onExportPng }: HeaderPreviewProps) {
-  const dyn = useDynamicLeftHeader();
   return (
     <Card className="border-dashed border-2">
       <CardContent className="p-3">
@@ -84,14 +82,11 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
                 </div>
               ))}
             </div>
-            {/* Left section — auto-populated dynamic data */}
+            {/* Left section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
-                {buildLeftHeaderLines(dyn).map((row, i) => (
-                  <p key={i} style={{ margin: 0, whiteSpace: "nowrap" }}>
-                    <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
-                    <span style={{ fontWeight: 500 }}>{row.value}</span>
-                  </p>
+              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: config.leftSection.align || "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
+                {config.leftSection.lines.map((line, i) => (
+                  <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}
               </div>
             </div>

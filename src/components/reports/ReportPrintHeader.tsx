@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
-import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface Props {
   reportType: "attendance" | "grades" | "behavior" | "violations";
@@ -15,7 +14,6 @@ interface Props {
  */
 export default function ReportPrintHeader({ reportType }: Props) {
   const [config, setConfig] = useState<PrintHeaderConfig | null>(null);
-  const dyn = useDynamicLeftHeader();
 
   useEffect(() => {
     (async () => {
@@ -80,24 +78,21 @@ export default function ReportPrintHeader({ reportType }: Props) {
           )}
         </div>
 
-        {/* Left text — auto-populated dynamic data (Year / Semester / Grade / Subject) */}
+        {/* Left text */}
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
-              textAlign: "left",
+              textAlign: (config.leftSection.align || "left") as any,
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,
               color: config.leftSection.color || "#1e293b",
             }}
           >
-            {buildLeftHeaderLines(dyn).map((row, i) => (
-              <p key={i} style={{ margin: 0 }}>
-                <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
-                <span style={{ fontWeight: 500 }}>{row.value}</span>
-              </p>
+            {config.leftSection.lines.map((line, i) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
         </div>
