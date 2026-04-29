@@ -4,7 +4,7 @@
  * Right side (FROZEN, per owner request):
  *   1. المملكة العربية السعودية (ثابت)
  *   2. وزارة التعليم (ثابت)
- *   3. الإدارة العامة للتعليم بمنطقة: <education_department>
+ *   3. الإدارة العامة للتعليم بمنطقة <education_department>
  *   4. <school_name>
  *
  * Left side (FROZEN, per owner request):
@@ -64,14 +64,14 @@ export async function fetchDynamicRightLines(): Promise<string[]> {
     return [
       "المملكة العربية السعودية",
       "وزارة التعليم",
-      department ? `الإدارة العامة للتعليم بمنطقة: ${department}` : `الإدارة العامة للتعليم بمنطقة: ${DASH}`,
+      department ? `الإدارة العامة للتعليم بمنطقة ${department}` : `الإدارة العامة للتعليم بمنطقة ${DASH}`,
       schoolName || DASH,
     ];
   } catch {
     return [
       "المملكة العربية السعودية",
       "وزارة التعليم",
-      `الإدارة العامة للتعليم بمنطقة: ${DASH}`,
+      `الإدارة العامة للتعليم بمنطقة ${DASH}`,
       DASH,
     ];
   }
