@@ -132,16 +132,31 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
   ) => {
     const section = config[sectionKey];
     const readOnly = !!options?.readOnly;
-    // For the right section we always render the dynamic, read-only values
-    // (lines 1-2 hardcoded, line 3 = education_department, line 4 = school_name).
+    // Read-only sections render dynamic values pulled from settings.
+    // Right = subscriber identity; Left = academic context (year/term/class/subject).
+    const fallbackRight = [
+      "المملكة العربية السعودية",
+      "وزارة التعليم",
+      "الإدارة العامة للتعليم بمنطقة: ............",
+      "............",
+    ];
+    const fallbackLeft = [
+      "السنة الدراسية: ............",
+      "الفصل الدراسي: ............",
+      "الصف: ............",
+      "المادة: ............",
+    ];
     const displayLines = readOnly
-      ? (dynamicRightLines ?? [
-          "المملكة العربية السعودية",
-          "وزارة التعليم",
-          "الإدارة العامة للتعليم بمنطقة: ............",
-          "............",
-        ])
+      ? sectionKey === "rightSection"
+        ? (dynamicRightLines ?? fallbackRight)
+        : (dynamicLeftLines ?? fallbackLeft)
       : section.lines;
+    const readOnlyAlign: "right" | "left" = sectionKey === "rightSection" ? "right" : "left";
+    const readOnlyDir: "rtl" | "ltr" = sectionKey === "rightSection" ? "rtl" : "rtl"; // keep RTL doc flow
+    const readOnlyHint =
+      sectionKey === "rightSection"
+        ? "🔒 يُجلب تلقائياً من إعدادات المشترك (المنطقة + اسم المدرسة) — غير قابل للتعديل."
+        : "🔒 يُجلب تلقائياً (السنة الدراسية + الفصل + الصف + المادة) — غير قابل للتعديل.";
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
