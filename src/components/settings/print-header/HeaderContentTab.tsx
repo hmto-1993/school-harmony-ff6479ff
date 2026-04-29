@@ -24,6 +24,11 @@ const alignOptions = [
 export default function HeaderContentTab({ config, setConfig }: HeaderContentTabProps) {
   const [uploading, setUploading] = useState<number | null>(null);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dynamicRightLines, setDynamicRightLines] = useState<string[] | null>(null);
+
+  useEffect(() => {
+    fetchDynamicRightLines().then(setDynamicRightLines);
+  }, []);
 
   const updateLine = (section: "rightSection" | "leftSection", index: number, value: string) => {
     setConfig((prev) => {
