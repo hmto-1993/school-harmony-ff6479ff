@@ -98,13 +98,13 @@ export default function ReportPrintHeader({ reportType }: Props) {
               width: "fit-content",
               maxWidth: "100%",
               marginLeft: "auto",
-              textAlign: (config.rightSection.align || "right") as any,
+              textAlign: "right",
               fontSize: `${config.rightSection.fontSize}px`,
               lineHeight: 1.8,
               color: config.rightSection.color || "#1e293b",
             }}
           >
-            {config.rightSection.lines.map((line, i) => (
+            {(rightLines ?? config.rightSection.lines).map((line, i) => (
               <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
