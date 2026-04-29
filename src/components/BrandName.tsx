@@ -8,7 +8,7 @@ interface BrandNameProps {
 
 /**
  * يعرض اسم المنصة بتدرج رمادي/أسود فخم مع تلوين كلمة محددة بالذهبي المطفي.
- * مثال: "منصة المتميز الرقمية" → "التعليمية" بالذهبي.
+ * مثال: "منصة المتميز الرقمية" → "المتميز" بالذهبي.
  */
 export default function BrandName({ name, className, goldWord = "المتميز" }: BrandNameProps) {
   if (!name) return null;
