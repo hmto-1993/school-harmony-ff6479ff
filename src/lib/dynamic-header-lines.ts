@@ -64,7 +64,7 @@ export async function fetchDynamicRightLines(): Promise<string[]> {
     return [
       "المملكة العربية السعودية",
       "وزارة التعليم",
-      department ? `الإدارة العامة للتعليم بمنطقة: ${department}` : `الإدارة العامة للتعليم بمنطقة: ${DASH}`,
+      department ? `الإدارة العامة للتعليم بمنطقة ${department}` : `الإدارة العامة للتعليم بمنطقة ${DASH}`,
       schoolName || DASH,
     ];
   } catch {
