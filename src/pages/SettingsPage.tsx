@@ -362,6 +362,7 @@ export default function SettingsPage() {
                   loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
                   loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
                   dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
+                  educationDepartment={s.educationDepartment} setEducationDepartment={s.setEducationDepartment}
                   savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
                 />
               </>
