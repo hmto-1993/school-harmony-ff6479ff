@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
+import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface Props {
   open: boolean;
