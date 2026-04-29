@@ -24,6 +24,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
 
   if (!config) return null;
 
+  // ⚠️ FROZEN LAYOUT — DO NOT MODIFY ⚠️
+  // تم تثبيت جميع إعدادات التنسيق والمحاذاة (Positions/Alignment/Flex/Margins)
+  // الخاصة بأقسام الترويسة (الأيمن/الأوسط/الأيسر) بناءً على طلب المالك.
+  // يُمنع تغيير أي خاصية CSS متعلقة بالتموضع (display/flex/justify/align/margin/text-align)
+  // أو إعادة ترتيب الأقسام. القيم الديناميكية القادمة من config (ألوان/أحجام خط/صور) مسموح بها فقط.
   return (
     <div
       className="print-only mb-1"
