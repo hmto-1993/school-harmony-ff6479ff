@@ -65,6 +65,7 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
     e.preventDefault();
     const cleanId = nationalId.replace(/\D/g, "");
     if (!fullName.trim() || !phone.trim() || !school.trim() || !specialty.trim() ||
+        !educationDepartment.trim() || !defaultAcademicYear.trim() || !subjectName.trim() ||
         cleanId.length !== 10 || !email.trim() || !password) {
       toast({
         title: "بيانات ناقصة",
