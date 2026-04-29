@@ -17,6 +17,7 @@ interface Props {
 export default function ReportPrintHeader({ reportType }: Props) {
   const [config, setConfig] = useState<PrintHeaderConfig | null>(null);
   const dyn = useDynamicLeftHeader();
+  const dynRight = useDynamicRightHeader();
 
   useEffect(() => {
     (async () => {
