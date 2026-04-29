@@ -84,7 +84,8 @@ export async function fetchDynamicLeftLines(ctx: LeftHeaderContext = {}): Promis
     const [{ data: rows }, { data: cal }] = await Promise.all([settingsPromise, calendarPromise]);
     const map = resolveScopedSettings(rows as any, orgId);
     const academicYear = (map.get("default_academic_year") || (cal?.academic_year as string | undefined) || "").trim();
-    const semester = ((cal?.semester as string | undefined) || "").trim();
+    const semesterRaw = ((cal?.semester as string | undefined) || "").trim();
+    const semester = arabicizeSemester(semesterRaw);
     const subject = (ctx.subject || map.get("subject_name") || "").trim();
     const className = (ctx.className || "").trim();
 
