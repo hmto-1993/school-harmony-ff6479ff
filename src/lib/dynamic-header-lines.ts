@@ -4,7 +4,7 @@
  * Right side (FROZEN, per owner request):
  *   1. المملكة العربية السعودية (ثابت)
  *   2. وزارة التعليم (ثابت)
- *   3. الإدارة العامة للتعليم بمنطقة: <education_department>
+ *   3. الإدارة العامة للتعليم بمنطقة <education_department>
  *   4. <school_name>
  *
  * Left side (FROZEN, per owner request):
