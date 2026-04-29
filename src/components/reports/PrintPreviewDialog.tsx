@@ -116,6 +116,7 @@ function ReportPrintHeaderInline({
   reportType: "attendance" | "grades" | "behavior";
 }) {
   const [config, setConfig] = useState<any>(null);
+  const dyn = useDynamicLeftHeader();
 
   useEffect(() => {
     (async () => {
