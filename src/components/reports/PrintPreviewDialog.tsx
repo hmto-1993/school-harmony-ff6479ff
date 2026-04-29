@@ -188,14 +188,14 @@ function ReportPrintHeaderInline({
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
-              textAlign: config.leftSection?.align || "left",
+              textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
               color: config.leftSection?.color || "#1e293b",
             }}
           >
-            {(config.leftSection?.lines || []).map((line: string, i: number) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            {(leftLines ?? config.leftSection?.lines ?? []).map((line: string, i: number) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
             ))}
           </div>
         </div>
