@@ -97,19 +97,21 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
           )}
         </div>
 
-        {/* Left text — FROZEN: text-align:left, dynamic read-only lines */}
+        {/* Left text — block pinned to LEFT of section, lines right-aligned to longest */}
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
-              width: "100%",
-              textAlign: "left",
+              width: "fit-content",
+              maxWidth: "100%",
+              marginRight: "auto",
+              textAlign: "right",
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,
               color: config.leftSection.color || "#1e293b",
             }}
           >
             {(leftLines ?? config.leftSection.lines).map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap", textAlign: "left", direction: "rtl", unicodeBidi: "plaintext" }}>{line}</p>
+              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap", textAlign: "right", direction: "rtl", unicodeBidi: "plaintext" }}>{line}</p>
             ))}
           </div>
         </div>
