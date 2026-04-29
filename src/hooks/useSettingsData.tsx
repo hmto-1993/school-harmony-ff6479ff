@@ -265,6 +265,16 @@ export function useSettingsData() {
       if (s.id === "default_academic_year" && s.value) { setDefaultAcademicYear(s.value); classHelper.newYear !== s.value && (() => {})(); }
     });
 
+    // Sync institution fields into Profile card (Settings > Profile)
+    const loginMap = new Map<string, string>();
+    loginSettings.forEach((s: any) => loginMap.set(s.id, s.value || ""));
+    profileHelper.loadInstitution({
+      school_name: loginMap.get("school_name"),
+      education_department: loginMap.get("education_department"),
+      default_academic_year: loginMap.get("default_academic_year"),
+      subject_name: loginMap.get("subject_name"),
+    });
+
     // All settings
     allSettings.forEach((s: any) => {
       if (s.id === "quiz_color_mcq" && s.value) setQuizColorMcq(s.value);
