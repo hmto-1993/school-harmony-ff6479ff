@@ -66,8 +66,8 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             marginBottom: `${(config.margins?.borderBottomMargin ?? 8) * 2}px`,
           }}>
             {/* Right section — auto-populated dynamic data (Kingdom / Ministry / Dept / School) */}
-            <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginLeft: "auto", textAlign: "right", fontSize: `${config.rightSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
+            <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
+              <div style={{ width: "fit-content", maxWidth: "100%", textAlign: "right", fontSize: `${config.rightSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
                 {buildRightHeaderLines(dynRight).map((row, i) => (
                   <p key={i} style={{ margin: 0, whiteSpace: "nowrap" }}>
                     {row.label ? (
@@ -96,8 +96,8 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
               ))}
             </div>
             {/* Left section — auto-populated dynamic data */}
-            <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginRight: "auto", textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
+            <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-end" }}>
+              <div style={{ width: "fit-content", maxWidth: "100%", textAlign: "left", fontSize: `${config.leftSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
                 {buildLeftHeaderLines(dyn).map((row, i) => (
                   <p key={i} style={{ margin: 0, whiteSpace: "nowrap" }}>
                     <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
