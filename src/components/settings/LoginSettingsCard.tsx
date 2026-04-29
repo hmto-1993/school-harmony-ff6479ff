@@ -52,11 +52,15 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
 
   const handleSave = async () => {
     props.setSavingLogin(true);
-    const results = await Promise.all([
+    const upserts: Promise<any>[] = [
       supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
-    ]);
+    ];
+    if (props.educationDepartment !== undefined) {
+      upserts.push(supabase.from("site_settings").upsert({ id: "education_department", value: props.educationDepartment }));
+    }
+    const results = await Promise.all(upserts);
     props.setSavingLogin(false);
     if (results.some((r) => r.error)) {
       toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
