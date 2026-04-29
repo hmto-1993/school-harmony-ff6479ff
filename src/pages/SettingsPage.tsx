@@ -68,6 +68,9 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <div className="flex justify-end">
+        <SubscriptionExpiryBadge />
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold bg-gradient-to-l from-primary to-accent bg-clip-text text-transparent">الإعدادات</h1>
