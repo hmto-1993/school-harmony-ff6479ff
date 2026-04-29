@@ -46,12 +46,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
         }}
       >
         {/* Right text */}
-        <div style={{ flex: "1 1 0%" }}>
+        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
-              marginLeft: "auto",
               textAlign: "right",
               fontSize: `${config.rightSection.fontSize}px`,
               lineHeight: 1.8,
@@ -92,12 +91,11 @@ export default function ReportPrintHeader({ reportType }: Props) {
         </div>
 
         {/* Left text — auto-populated dynamic data (Year / Semester / Grade / Subject) */}
-        <div style={{ flex: "1 1 0%" }}>
+        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
-              marginRight: "auto",
               textAlign: "left",
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,
