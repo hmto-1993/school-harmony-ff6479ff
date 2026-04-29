@@ -166,11 +166,13 @@ function ReportPrintHeaderInline({
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0, margin: "0 auto" }}>
-          {(config.centerSection?.images || []).map((img: string, i: number) =>
-            img ? (
+          {(config.centerSection?.images || []).map((img: string, i: number) => {
+            const src = resolveLogoSrc(i, img);
+            if (!src) return null;
+            return (
               <img
                 key={i}
-                src={img}
+                src={src}
                 alt=""
                 style={{
                   width: `${config.centerSection?.imagesWidths?.[i] ?? config.centerSection?.imagesSizes?.[i] ?? 60}px`,
@@ -178,8 +180,8 @@ function ReportPrintHeaderInline({
                   objectFit: "contain",
                 }}
               />
-            ) : null
-          )}
+            );
+          })}
         </div>
 
         <div style={{ flex: "1 1 0%" }}>
