@@ -7,7 +7,7 @@ export default function SubscriptionExpiredPage() {
   const { signOut } = useAuth();
 
   useEffect(() => {
-    document.title = "انتهى الاشتراك | ألفا فيزياء";
+    document.title = "انتهى الاشتراك | منصة المتميز التعليمية";
   }, []);
 
   return (
@@ -23,7 +23,7 @@ export default function SubscriptionExpiredPage() {
               انتهى اشتراكك
             </h1>
             <p className="text-muted-foreground leading-relaxed mb-6">
-              نشكرك على استخدامك منصة ألفا فيزياء. لقد انتهت صلاحية اشتراكك الحالي،
+              نشكرك على استخدامك منصة منصة المتميز التعليمية. لقد انتهت صلاحية اشتراكك الحالي،
               ولن تتمكن من الوصول إلى أدوات المنصة حتى يتم تجديد الاشتراك.
             </p>
             <div className="rounded-xl bg-muted/50 border border-border p-4 mb-6 text-right">
@@ -42,7 +42,7 @@ export default function SubscriptionExpiredPage() {
           </div>
         </div>
         <p className="text-center mt-4 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} ألفا فيزياء — جميع الحقوق محفوظة
+          © {new Date().getFullYear()} منصة المتميز التعليمية — جميع الحقوق محفوظة
         </p>
       </div>
     </div>
