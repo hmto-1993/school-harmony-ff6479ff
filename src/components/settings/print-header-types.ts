@@ -68,6 +68,9 @@ export interface ReportTypeOption {
   icon: string;
 }
 
+// Default Ministry of Education logo (شعار 2) — applied for all subscribers
+export const DEFAULT_MOE_LOGO = "/moe-logo-default.png";
+
 export const defaultWatermark: WatermarkConfig = {
   enabled: false,
   text: "سري",
@@ -115,7 +118,7 @@ export const defaultConfig: PrintHeaderConfig = {
     color: "#1e293b",
   },
   centerSection: {
-    images: ["", "", ""],
+    images: ["", DEFAULT_MOE_LOGO, ""],
     imagesSizes: [60, 80, 60],
   },
   leftSection: {
@@ -154,4 +157,9 @@ export const normalizeConfig = (parsed: any) => {
   if (!parsed.footerSignatures) parsed.footerSignatures = defaultFooterSignatures;
   if (!parsed.margins) parsed.margins = defaultMargins;
   if (!parsed.advanced) parsed.advanced = defaultAdvanced;
+  // Ensure shape of centerSection.images and apply MOE logo default for slot 2 if empty
+  if (!parsed.centerSection) parsed.centerSection = { images: ["", "", ""], imagesSizes: [60, 80, 60] };
+  if (!Array.isArray(parsed.centerSection.images)) parsed.centerSection.images = ["", "", ""];
+  while (parsed.centerSection.images.length < 3) parsed.centerSection.images.push("");
+  if (!parsed.centerSection.images[1]) parsed.centerSection.images[1] = DEFAULT_MOE_LOGO;
 };
