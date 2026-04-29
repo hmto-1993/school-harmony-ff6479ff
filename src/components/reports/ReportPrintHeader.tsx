@@ -91,7 +91,7 @@ export default function ReportPrintHeader({ reportType }: Props) {
         </div>
 
         {/* Left text — auto-populated dynamic data (Year / Semester / Grade / Subject) */}
-        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
+        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-end" }}>
           <div
             style={{
               width: "fit-content",
