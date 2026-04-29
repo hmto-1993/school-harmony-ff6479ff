@@ -101,9 +101,7 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
         <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
-              width: "fit-content",
-              maxWidth: "100%",
-              marginRight: "auto",
+              width: "100%",
               textAlign: "left",
               fontSize: `${config.leftSection.fontSize}px`,
               lineHeight: 1.8,
@@ -111,7 +109,7 @@ export default function ReportPrintHeader({ reportType, className, subject }: Pr
             }}
           >
             {(leftLines ?? config.leftSection.lines).map((line, i) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line}</p>
+              <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap", textAlign: "left", direction: "rtl", unicodeBidi: "plaintext" }}>{line}</p>
             ))}
           </div>
         </div>
