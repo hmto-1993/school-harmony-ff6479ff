@@ -18,6 +18,8 @@ interface LoginSettingsCardProps {
   setLoginSubtitle: (v: string) => void;
   dashboardTitle: string;
   setDashboardTitle: (v: string) => void;
+  educationDepartment?: string;
+  setEducationDepartment?: (v: string) => void;
   savingLogin: boolean;
   setSavingLogin: (v: boolean) => void;
 }
