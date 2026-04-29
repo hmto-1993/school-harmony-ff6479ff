@@ -6,7 +6,7 @@ import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import BackToTop from "@/components/BackToTop";
-import SubscriptionExpiryBadge from "@/components/SubscriptionExpiryBadge";
+
 
 export default function DashboardLayout() {
   const location = useLocation();
