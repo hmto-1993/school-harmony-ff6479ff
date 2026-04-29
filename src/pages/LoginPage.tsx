@@ -22,7 +22,8 @@ export default function LoginPage() {
   const [parentNationalId, setParentNationalId] = useState("");
   const [signupOpen, setSignupOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState("منصة المتميز التعليمية");
+  // اسم المنصة ثابت ولا يُقرأ من قاعدة البيانات (لا يمكن تعديله)
+  const schoolName = "منصة المتميز التعليمية";
   const [schoolSubtitle, setSchoolSubtitle] = useState("نظام إدارة المدارس والفصول الدراسية");
   const [schoolLogo, setSchoolLogo] = useState(defaultSchoolLogo);
   const { signIn, signInStudent, user, isStudent } = useAuth();
@@ -33,7 +34,7 @@ export default function LoginPage() {
   useEffect(() => {
     supabase.from("site_settings").select("id, value").then(({ data }) => {
       data?.forEach((row) => {
-        if (row.id === "school_name") setSchoolName(row.value);
+        // ملاحظة: school_name مُتجاهَل عمداً — اسم المنصة ثابت
         if (row.id === "school_subtitle") setSchoolSubtitle(row.value);
         if (row.id === "school_logo_url" && row.value) setSchoolLogo(row.value);
       });

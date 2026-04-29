@@ -410,16 +410,17 @@ export default function SettingsPage() {
                   testingSms={s.testingSms} setTestingSms={s.setTestingSms}
                 />
 
-                <LoginSettingsCard
-                  schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
-                  uploadingLogo={s.uploadingLogo} setUploadingLogo={s.setUploadingLogo}
-                  logoInputRef={s.logoInputRef}
-                  loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
-                  loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
-                  dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
-                  educationDepartment={s.educationDepartment} setEducationDepartment={s.setEducationDepartment}
-                  savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
-                />
+                {isPrimaryOwner && (
+                  <LoginSettingsCard
+                    schoolLogoUrl={s.schoolLogoUrl} setSchoolLogoUrl={s.setSchoolLogoUrl}
+                    uploadingLogo={s.uploadingLogo} setUploadingLogo={s.setUploadingLogo}
+                    logoInputRef={s.logoInputRef}
+                    loginSchoolName={s.loginSchoolName} setLoginSchoolName={s.setLoginSchoolName}
+                    loginSubtitle={s.loginSubtitle} setLoginSubtitle={s.setLoginSubtitle}
+                    dashboardTitle={s.dashboardTitle} setDashboardTitle={s.setDashboardTitle}
+                    savingLogin={s.savingLogin} setSavingLogin={s.setSavingLogin}
+                  />
+                )}
               </>
             )}
 
