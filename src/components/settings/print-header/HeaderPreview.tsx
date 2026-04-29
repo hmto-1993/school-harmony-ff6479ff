@@ -80,17 +80,20 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: `${8 * 0.7}px`, flexShrink: 0, margin: "0 auto" }}>
-              {config.centerSection.images.map((img, i) => (
-                <div key={i}>
-                  {img ? (
-                    <img src={img} alt={`شعار ${i + 1}`} style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px`, objectFit: "contain" }} />
-                  ) : (
-                    <div className="border-2 border-dashed rounded flex items-center justify-center bg-muted/30" style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px` }}>
-                      <ImageIcon className="h-3 w-3 text-muted-foreground/40" />
-                    </div>
-                  )}
-                </div>
-              ))}
+              {config.centerSection.images.map((img, i) => {
+                const src = resolveLogoSrc(i, img);
+                return (
+                  <div key={i}>
+                    {src ? (
+                      <img src={src} alt={`شعار ${i + 1}`} style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px`, objectFit: "contain" }} />
+                    ) : (
+                      <div className="border-2 border-dashed rounded flex items-center justify-center bg-muted/30" style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px` }}>
+                        <ImageIcon className="h-3 w-3 text-muted-foreground/40" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             {/* Left section */}
             <div style={{ flex: "1 1 0%" }}>
