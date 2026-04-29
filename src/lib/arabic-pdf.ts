@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import { supabase } from "@/integrations/supabase/client";
 import { safeDownload } from "@/lib/download-utils";
 import { getPrintOrientation } from "@/lib/print-utils";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 const FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf";
 const FONT_BOLD_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf";
@@ -147,11 +148,12 @@ async function renderPrintHeaderFromConfig(
     widthMm: number;
     heightMm: number;
   }>>((acc, src, index) => {
-    if (!src) return acc;
+    const resolved = resolveLogoSrc(index, src);
+    if (!resolved) return acc;
     const heightPx = config.centerSection.imagesSizes[index] || 60;
     const widthPx = config.centerSection.imagesWidths?.[index] ?? heightPx;
     acc.push({
-      src,
+      src: resolved,
       widthMm: widthPx * pxToMm,
       heightMm: heightPx * pxToMm,
     });

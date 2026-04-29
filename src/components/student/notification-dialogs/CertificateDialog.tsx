@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Award, Printer, X } from "lucide-react";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 interface FullMarkGrade {
   categoryName: string;
@@ -49,7 +50,7 @@ export default function CertificateDialog({ open, onOpenChange, studentName, cla
                 {headerConfig.rightSection.lines.map((l, i) => (<p key={i} style={{ margin: 0, fontWeight: 600 }}>{l}</p>))}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                {headerConfig.centerSection.images.map((img, i) => img ? <img key={i} src={img} alt="" style={{ width: `${headerConfig.centerSection.imagesSizes[i] || 60}px`, height: `${headerConfig.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} /> : null)}
+                {headerConfig.centerSection.images.map((img, i) => { const s = resolveLogoSrc(i, img); return s ? <img key={i} src={s} alt="" style={{ width: `${headerConfig.centerSection.imagesSizes[i] || 60}px`, height: `${headerConfig.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} /> : null; })}
               </div>
               <div style={{ flex: 1, textAlign: headerConfig.leftSection.align, fontSize: `${headerConfig.leftSection.fontSize}px`, lineHeight: 1.8, color: headerConfig.leftSection.color || "#1e293b" }}>
                 {headerConfig.leftSection.lines.map((l, i) => (<p key={i} style={{ margin: 0, fontWeight: 600 }}>{l}</p>))}

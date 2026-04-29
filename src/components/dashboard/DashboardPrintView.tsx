@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 import PrintWatermark from "@/components/shared/PrintWatermark";
 import { useAcademicWeek } from "@/hooks/useAcademicWeek";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 interface ClassStats {
   name: string;
@@ -36,11 +37,13 @@ function PrintHeader({ config, schoolName, today, dayName }: { config: PrintHead
           ))}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-          {config.centerSection.images.map((img, i) =>
-            img ? (
-              <img key={i} src={img} alt="" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
-            ) : null
-          )}
+          {config.centerSection.images.map((img, i) => {
+            const src = resolveLogoSrc(i, img);
+            if (!src) return null;
+            return (
+              <img key={i} src={src} alt="" style={{ width: `${config.centerSection.imagesSizes[i] || 60}px`, height: `${config.centerSection.imagesSizes[i] || 60}px`, objectFit: "contain" }} />
+            );
+          })}
         </div>
         <div style={{ maxWidth: "40%", textAlign: "center", fontSize: `${config.leftSection.fontSize}px`, lineHeight: 1.8, color: config.leftSection.color || "#1e293b" }}>
           {config.leftSection.lines.map((line, i) => (
