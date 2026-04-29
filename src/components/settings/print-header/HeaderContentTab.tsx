@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw } from "lucide-react";
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
