@@ -1,9 +1,10 @@
-import { RefObject } from "react";
+import { RefObject, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
+import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
@@ -13,6 +14,11 @@ interface HeaderPreviewProps {
 }
 
 export default function HeaderPreview({ config, previewRef, exporting, onExportPng }: HeaderPreviewProps) {
+  const [dynamicRightLines, setDynamicRightLines] = useState<string[] | null>(null);
+  useEffect(() => {
+    fetchDynamicRightLines().then(setDynamicRightLines);
+  }, []);
+  const rightLines = dynamicRightLines ?? config.rightSection.lines;
   return (
     <Card className="border-dashed border-2">
       <CardContent className="p-3">
