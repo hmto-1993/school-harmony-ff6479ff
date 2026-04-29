@@ -156,7 +156,7 @@ function ReportPrintHeaderInline({
               color: config.rightSection?.color || "#1e293b",
             }}
           >
-            {(config.rightSection?.lines || []).map((line: string, i: number) => (
+            {(rightLines ?? config.rightSection?.lines ?? []).map((line: string, i: number) => (
               <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
