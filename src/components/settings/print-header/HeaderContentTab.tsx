@@ -137,7 +137,7 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
     const fallbackRight = [
       "المملكة العربية السعودية",
       "وزارة التعليم",
-      "الإدارة العامة للتعليم بمنطقة: ............",
+      "الإدارة العامة للتعليم بمنطقة ............",
       "............",
     ];
     const fallbackLeft = [
