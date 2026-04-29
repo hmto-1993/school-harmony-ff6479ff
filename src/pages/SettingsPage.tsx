@@ -49,6 +49,16 @@ import { QuizColorsCard } from "@/components/settings/QuizColorsCard";
 import { LoginSettingsCard } from "@/components/settings/LoginSettingsCard";
 import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 
+/** صف أفقي: تسمية على اليمين + حقل إدخال على اليسار، ينهار رأسياً على الجوال */
+function ProfileRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] sm:items-center gap-2 sm:gap-4">
+      <Label className="text-sm font-medium text-foreground sm:text-right">{label}</Label>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
