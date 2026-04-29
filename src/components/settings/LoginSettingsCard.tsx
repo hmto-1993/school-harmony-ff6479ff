@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,21 @@ interface LoginSettingsCardProps {
 }
 
 export function LoginSettingsCard(props: LoginSettingsCardProps) {
+  // Self-contained: education department (الإدارة العامة للتعليم بمنطقة …) for print header right block
+  const [educationDept, setEducationDept] = useState("");
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("id, value")
+        .ilike("id", "%education_department")
+        .limit(5);
+      const rows = (data || []) as Array<{ id: string; value: string | null }>;
+      const scoped = rows.find(r => r.id.startsWith("org:"));
+      const global = rows.find(r => r.id === "education_department");
+      setEducationDept(((scoped?.value ?? global?.value) || "").toString());
+    })();
+  }, []);
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -54,6 +70,7 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
       supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
+      supabase.from("site_settings").upsert({ id: "education_department", value: educationDept }),
     ]);
     props.setSavingLogin(false);
     if (results.some((r) => r.error)) {
@@ -89,7 +106,12 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
             </div>
           </div>
         </div>
-        <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={props.loginSchoolName} onChange={(e) => props.setLoginSchoolName(e.target.value)} placeholder="أدخل اسم المدرسة" /></div>
+        <div className="space-y-2"><Label>اسم المدرسة</Label><Input value={props.loginSchoolName} onChange={(e) => props.setLoginSchoolName(e.target.value)} placeholder="مثال: ثانوية الفيصلية" /></div>
+        <div className="space-y-2">
+          <Label>الإدارة العامة للتعليم بمنطقة</Label>
+          <Input value={educationDept} onChange={(e) => setEducationDept(e.target.value)} placeholder="مثال: الباحة" />
+          <p className="text-[11px] text-muted-foreground">تظهر تلقائياً في الجانب الأيمن من ترويسة الطباعة</p>
+        </div>
         <div className="space-y-2"><Label>الوصف الفرعي</Label><Input value={props.loginSubtitle} onChange={(e) => props.setLoginSubtitle(e.target.value)} placeholder="مثال: نظام إدارة المدرسة" /></div>
         <div className="space-y-2">
           <Label>عنوان لوحة التحكم</Label>

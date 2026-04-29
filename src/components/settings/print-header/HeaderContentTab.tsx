@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
 import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
+import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
@@ -197,7 +198,7 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
         </Button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4">{renderTextSection("rightSection", "الجانب الأيمن", <Type className="h-4 w-4" />)}</CardContent></Card>
+        <Card><CardContent className="p-4"><DynamicRightSectionEditor config={config} setConfig={setConfig} /></CardContent></Card>
 
         {/* Center images */}
         <Card>
@@ -354,6 +355,125 @@ function DynamicLeftSectionEditor({
               value={section.color || "#1e293b"}
               onChange={(e) =>
                 setConfig((prev) => ({ ...prev, leftSection: { ...prev.leftSection, color: e.target.value } }))
+              }
+              className="w-7 h-7 p-0 border-0 cursor-pointer rounded"
+              title="لون مخصص"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {!canCustomize && (
+        <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 leading-relaxed">
+          تخصيص حجم الخط واللون لهذه الكتلة متاح لمشتركي باقة <strong>البريميوم</strong> فقط.
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Editor for the RIGHT block of the print header.
+ * Content is auto-populated: Kingdom, Ministry (constants),
+ * Education department & School name (from tenant settings / profile).
+ * Font size & color are gated to premium subscribers.
+ */
+function DynamicRightSectionEditor({
+  config,
+  setConfig,
+}: {
+  config: PrintHeaderConfig;
+  setConfig: Dispatch<SetStateAction<PrintHeaderConfig>>;
+}) {
+  const tier = useSubscriptionTier();
+  const dyn = useDynamicRightHeader();
+  const canCustomize = tier.isPremium || tier.isDeveloper;
+  const section = config.rightSection;
+  const lines = buildRightHeaderLines(dyn);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 font-semibold text-sm">
+          <Type className="h-4 w-4" />
+          الجانب الأيمن (تلقائي)
+        </Label>
+        {canCustomize ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+            <Sparkles className="h-3 w-3" /> بريميوم
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+            <Lock className="h-3 w-3" /> تخصيص بريميوم
+          </span>
+        )}
+      </div>
+
+      <p className="text-[11px] leading-relaxed text-muted-foreground bg-muted/40 border rounded-md p-2">
+        تُعبَّأ تلقائياً: المملكة العربية السعودية، وزارة التعليم،
+        الإدارة العامة للتعليم بمنطقة (من الإعدادات)، واسم المدرسة (من الإعدادات).
+        لتعديل اسم الإدارة أو المدرسة استخدم بطاقة "إعدادات صفحة تسجيل الدخول".
+      </p>
+
+      <div className="rounded-md border bg-white p-2 text-right" dir="rtl" style={{ color: section.color || "#1e293b" }}>
+        {lines.map((row, i) => (
+          <p key={i} className="m-0" style={{ fontSize: `${section.fontSize}px`, lineHeight: 1.7 }}>
+            {row.label ? (
+              <>
+                <span className="font-bold">{row.label}:</span>{" "}
+                <span className="font-medium">{row.value}</span>
+              </>
+            ) : (
+              <span style={{ fontWeight: row.bold ? 700 : 600 }}>{row.value}</span>
+            )}
+          </p>
+        ))}
+      </div>
+
+      <fieldset
+        disabled={!canCustomize}
+        className={canCustomize ? "space-y-3" : "space-y-3 opacity-60 pointer-events-none select-none"}
+      >
+        <div className="flex items-center gap-3">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">حجم الخط:</Label>
+          <Slider
+            min={8}
+            max={20}
+            step={1}
+            value={[section.fontSize]}
+            onValueChange={([v]) =>
+              setConfig((prev) => ({ ...prev, rightSection: { ...prev.rightSection, fontSize: v } }))
+            }
+            className="flex-1"
+          />
+          <span className="text-xs font-mono w-6 text-center">{section.fontSize}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Palette className="h-3 w-3" />
+            اللون:
+          </Label>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {presetColors.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`w-5 h-5 rounded-full border-2 transition-all ${
+                  (section.color || "#1e293b") === c
+                    ? "border-primary scale-110 ring-2 ring-primary/30"
+                    : "border-transparent hover:scale-105"
+                }`}
+                style={{ backgroundColor: c }}
+                onClick={() =>
+                  setConfig((prev) => ({ ...prev, rightSection: { ...prev.rightSection, color: c } }))
+                }
+              />
+            ))}
+            <Input
+              type="color"
+              value={section.color || "#1e293b"}
+              onChange={(e) =>
+                setConfig((prev) => ({ ...prev, rightSection: { ...prev.rightSection, color: e.target.value } }))
               }
               className="w-7 h-7 p-0 border-0 cursor-pointer rounded"
               title="لون مخصص"
