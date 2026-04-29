@@ -121,23 +121,35 @@ export default function SettingsPage() {
       </div>
 
       {/* Owner-only: unified teacher management hub (approvals + subscriptions + archive) */}
-      {isPrimaryOwner && <TeacherManagementHub />}
+      {isPrimaryOwner && (
+        <CollapsibleSection title="إدارة المعلمين">
+          <TeacherManagementHub />
+        </CollapsibleSection>
+      )}
 
       {/* Owner-only: Packages & Subscriptions management */}
-      {isPrimaryOwner && <PackageManagementPanel />}
+      {isPrimaryOwner && (
+        <CollapsibleSection title="الباقات">
+          <PackageManagementPanel />
+        </CollapsibleSection>
+      )}
 
       {/* Owner-only: Alpha Lab management */}
       {isPrimaryOwner && (
-        <BetaErrorBoundary featureName="Alpha Lab Owner">
-          <AlphaLabOwnerCard />
-        </BetaErrorBoundary>
+        <CollapsibleSection title="مختبر ألفا">
+          <BetaErrorBoundary featureName="Alpha Lab Owner">
+            <AlphaLabOwnerCard />
+          </BetaErrorBoundary>
+        </CollapsibleSection>
       )}
 
       {/* Subscriber view: enabled beta features + feedback */}
       {restricted && (
-        <BetaErrorBoundary featureName="Alpha Lab">
-          <AlphaLabSubscriberCard />
-        </BetaErrorBoundary>
+        <CollapsibleSection title="مختبر ألفا">
+          <BetaErrorBoundary featureName="Alpha Lab">
+            <AlphaLabSubscriberCard />
+          </BetaErrorBoundary>
+        </CollapsibleSection>
       )}
 
       {/* ===== البطاقات الرئيسية ===== */}
