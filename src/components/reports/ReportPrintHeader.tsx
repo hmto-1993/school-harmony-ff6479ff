@@ -1,36 +1,40 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
-import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
+import { fetchDynamicRightLines, fetchDynamicLeftLines } from "@/lib/dynamic-header-lines";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
   reportType: "attendance" | "grades" | "behavior" | "violations";
+  className?: string | null;
+  subject?: string | null;
 }
 
 /**
  * Renders the configured print header for a specific report type.
- * Falls back to the default header if no report-specific config exists.
- * Tenant-scoped: each subscriber sees their own configured header.
- * Only visible in print mode.
+ * Tenant-scoped + dynamic right/left side bindings (read-only).
  *
- * 🔒 Right-side dynamic data binding (per owner request):
- *   Line 1: "المملكة العربية السعودية" (ثابت)
- *   Line 2: "وزارة التعليم" (ثابت)
- *   Line 3: "الإدارة العامة للتعليم بمنطقة: " + education_department (من إعدادات المشترك)
- *   Line 4: school_name (من إعدادات المشترك)
- * لا يتم تعديل أي خاصية CSS — فقط استبدال محتوى النص.
+ * 🔒 Right side: المملكة / وزارة التعليم / الإدارة العامة للتعليم بمنطقة <education_department> / <school_name>
+ * 🔒 Left  side: السنة الدراسية / الفصل الدراسي / الصف / المادة
+ *
+ * Layout (flex/justify/align/margin/text-align) is FROZEN — do not modify.
  */
-export default function ReportPrintHeader({ reportType }: Props) {
+export default function ReportPrintHeader({ reportType, className, subject }: Props) {
   const [config, setConfig] = useState<PrintHeaderConfig | null>(null);
   const [rightLines, setRightLines] = useState<string[] | null>(null);
+  const [leftLines, setLeftLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     (async () => {
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed as PrintHeaderConfig);
-      setRightLines(await fetchDynamicRightLines());
+      const [r, l] = await Promise.all([
+        fetchDynamicRightLines(),
+        fetchDynamicLeftLines({ className, subject }),
+      ]);
+      setRightLines(r);
+      setLeftLines(l);
     })();
-  }, [reportType]);
+  }, [reportType, className, subject]);
 
   if (!config) return null;
 
