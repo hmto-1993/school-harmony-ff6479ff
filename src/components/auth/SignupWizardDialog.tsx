@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +151,9 @@ export default function SignupWizardDialog({ open, onOpenChange }: Props) {
             <UserPlus className="h-5 w-5 text-primary" />
             {step === 1 ? "إنشاء اشتراك جديد" : "اختر خطة العمل المناسبة لك في منصة المتميز التعليمية"}
           </DialogTitle>
+          <DialogDescription className="text-right text-xs text-muted-foreground">
+            {step === 1 ? "أدخل بياناتك الأساسية لإنشاء حساب اشتراك جديد." : "اختر الباقة الأنسب لك للمتابعة."}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Progress */}
