@@ -71,7 +71,7 @@ export async function fetchDynamicRightLines(): Promise<string[]> {
     return [
       "المملكة العربية السعودية",
       "وزارة التعليم",
-      `الإدارة العامة للتعليم بمنطقة: ${DASH}`,
+      `الإدارة العامة للتعليم بمنطقة ${DASH}`,
       DASH,
     ];
   }
