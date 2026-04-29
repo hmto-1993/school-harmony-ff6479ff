@@ -50,7 +50,7 @@ export default function InstallPage() {
             <img src={schoolLogo} alt="شعار منصة المتميز التعليمية" className="h-12 w-12 rounded-xl object-contain bg-white/80 dark:bg-white/10 p-1 ring-1 ring-primary/15 shadow-md transition-transform duration-300 ease-out hover:scale-105" />
             <div>
               <h1 className="text-lg font-bold text-foreground">تثبيت التطبيق</h1>
-              <p className="text-xs text-muted-foreground">Alpha Physics</p>
+              <p className="text-xs text-muted-foreground">Almtmez Educational Platform</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5">

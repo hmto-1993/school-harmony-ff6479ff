@@ -154,7 +154,7 @@ export function useFormsPageData() {
       items.forEach(item => { doc.text(`• ${item}`, pageW - 20, y, { align: "right" }); y += 9; });
       y += 5;
       doc.setFontSize(9); doc.setTextColor(150, 150, 150);
-      doc.text("ألفا فيزياء — Alpha Physics", pageW / 2, y, { align: "center" });
+      doc.text("منصة المتميز التعليمية", pageW / 2, y, { align: "center" });
       const fileName = `تقرير_إنجاز_${className}.pdf`;
       const blob = doc.output("blob");
       const file = new File([blob], fileName, { type: "application/pdf" });

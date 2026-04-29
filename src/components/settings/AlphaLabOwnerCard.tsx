@@ -242,7 +242,7 @@ export default function AlphaLabOwnerCard() {
               مختبر ألفا | Alpha Lab
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              هنا نصنع مستقبل ألفا فيزياء.. جرب الميزات الجديدة وشاركنا في تطويرها 🧪
+              هنا نصنع مستقبل منصة المتميز التعليمية.. جرب الميزات الجديدة وشاركنا في تطويرها 🧪
             </p>
           </div>
         </CardTitle>
