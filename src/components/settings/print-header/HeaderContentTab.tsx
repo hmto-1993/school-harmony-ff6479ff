@@ -212,15 +212,15 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           {readOnly ? (
             <div
               className="rounded-md border bg-muted/40 px-3 py-2 space-y-1"
-              style={{ textAlign: "right", direction: "rtl" }}
+              style={{ textAlign: readOnlyAlign, direction: readOnlyDir }}
             >
               {displayLines.map((line, i) => (
-                <p key={i} className="text-sm font-medium text-foreground/90 select-text" style={{ margin: 0 }}>
+                <p key={i} className="text-sm font-medium text-foreground/90 select-text" style={{ margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                   {line}
                 </p>
               ))}
-              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2">
-                🔒 يُجلب تلقائياً من إعدادات المشترك (المنطقة + اسم المدرسة) — غير قابل للتعديل اليدوي.
+              <p className="text-[10px] text-muted-foreground pt-1 border-t mt-2" style={{ textAlign: "right" }}>
+                {readOnlyHint}
               </p>
             </div>
           ) : (
