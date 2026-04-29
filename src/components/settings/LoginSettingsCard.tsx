@@ -102,6 +102,19 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
           <Input value={props.dashboardTitle} onChange={(e) => props.setDashboardTitle(e.target.value)} placeholder="لوحة التحكم" />
           <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
         </div>
+        {props.setEducationDepartment && (
+          <div className="space-y-2">
+            <Label>المنطقة التعليمية</Label>
+            <Input
+              value={props.educationDepartment ?? ""}
+              onChange={(e) => props.setEducationDepartment?.(e.target.value)}
+              placeholder="مثال: الرياض"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              تظهر في ترويسة الطباعة بصيغة: «الإدارة العامة للتعليم بمنطقة: ...»
+            </p>
+          </div>
+        )}
         <Button disabled={props.savingLogin} className="gap-1.5" onClick={handleSave}>
           <Save className="h-4 w-4" />{props.savingLogin ? "جارٍ الحفظ..." : "حفظ"}
         </Button>
