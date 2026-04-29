@@ -49,6 +49,16 @@ import { QuizColorsCard } from "@/components/settings/QuizColorsCard";
 import { LoginSettingsCard } from "@/components/settings/LoginSettingsCard";
 import { SmsSettingsCard } from "@/components/settings/SmsSettingsCard";
 
+/** صف أفقي: تسمية على اليمين + حقل إدخال على اليسار، ينهار رأسياً على الجوال */
+function ProfileRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] sm:items-center gap-2 sm:gap-4">
+      <Label className="text-sm font-medium text-foreground sm:text-right">{label}</Label>
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
@@ -291,59 +301,52 @@ export default function SettingsPage() {
           </div>
         )}
         <CollapsibleSettingsCard icon={UserCircle} iconGradient="from-pink-500 to-rose-600" iconShadow="shadow-lg shadow-pink-500/20" title="الملف الشخصي" description="تعديل بياناتك الشخصية وكلمة المرور">
-          <div className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <Label>الاسم الكامل</Label>
+          <div className="space-y-3 max-w-3xl">
+            <ProfileRow label="الاسم الكامل">
               <Input value={s.profileName} onChange={(e) => s.setProfileName(e.target.value)} placeholder="الاسم الكامل" />
-            </div>
-            <div className="space-y-2">
-              <Label>رقم الجوال</Label>
+            </ProfileRow>
+            <ProfileRow label="رقم الجوال">
               <Input value={s.profilePhone} onChange={(e) => s.setProfilePhone(e.target.value)} placeholder="05XXXXXXXX" dir="ltr" className="text-right" />
-            </div>
-            <div className="space-y-2">
-              <Label>رقم الهوية الوطنية</Label>
+            </ProfileRow>
+            <ProfileRow label="رقم الهوية الوطنية">
               <Input value={s.profileNationalId} onChange={(e) => s.setProfileNationalId(e.target.value)} placeholder="1XXXXXXXXX" dir="ltr" className="text-right" inputMode="numeric" />
-            </div>
+            </ProfileRow>
 
             {/* بيانات المؤسسة (تُستخدم في ترويسة الطباعة وغيرها) */}
             <div className="border-t pt-4 mt-2 space-y-3">
               <h4 className="text-sm font-bold">🏫 بيانات المؤسسة</h4>
               <p className="text-xs text-muted-foreground">تظهر هذه القيم تلقائياً في ترويسة الطباعة وتقارير الطلاب وأولياء الأمور.</p>
-              <div className="space-y-2">
-                <Label>اسم المدرسة</Label>
+              <ProfileRow label="اسم المدرسة">
                 <Input value={s.profileSchoolName} onChange={(e) => s.setProfileSchoolName(e.target.value)} placeholder="مثال: ثانوية الملك فهد" />
-              </div>
-              <div className="space-y-2">
-                <Label>المنطقة الإدارية</Label>
+              </ProfileRow>
+              <ProfileRow label="المنطقة الإدارية">
                 <Input value={s.profileEducationDepartment} onChange={(e) => s.setProfileEducationDepartment(e.target.value)} placeholder="مثال: الرياض" />
-              </div>
-              <div className="space-y-2">
-                <Label>السنة الدراسية الافتراضية</Label>
+              </ProfileRow>
+              <ProfileRow label="السنة الدراسية الافتراضية">
                 <Input value={s.profileDefaultAcademicYear} onChange={(e) => s.setProfileDefaultAcademicYear(e.target.value)} placeholder="1446-1447" dir="ltr" className="text-right" />
-              </div>
-              <div className="space-y-2">
-                <Label>اسم المادة</Label>
+              </ProfileRow>
+              <ProfileRow label="اسم المادة">
                 <Input value={s.profileSubjectName} onChange={(e) => s.setProfileSubjectName(e.target.value)} placeholder="مثال: الفيزياء" />
-              </div>
+              </ProfileRow>
             </div>
 
-            <Button onClick={s.handleSaveProfile} disabled={s.savingProfile} className="gap-1.5">
-              <Save className="h-4 w-4" />{s.savingProfile ? "جارٍ الحفظ..." : "حفظ الملف الشخصي"}
-            </Button>
+            <div className="pt-2">
+              <Button onClick={s.handleSaveProfile} disabled={s.savingProfile} className="gap-1.5">
+                <Save className="h-4 w-4" />{s.savingProfile ? "جارٍ الحفظ..." : "حفظ الملف الشخصي"}
+              </Button>
+            </div>
+
             <div className="border-t pt-4 mt-4 space-y-3">
               <h4 className="text-sm font-bold flex items-center gap-2"><KeyRound className="h-4 w-4" />تغيير كلمة المرور</h4>
-              <div className="space-y-2">
-                <Label>كلمة المرور الحالية</Label>
+              <ProfileRow label="كلمة المرور الحالية">
                 <Input type="password" value={s.currentPassword} onChange={(e) => s.setCurrentPassword(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>كلمة المرور الجديدة</Label>
+              </ProfileRow>
+              <ProfileRow label="كلمة المرور الجديدة">
                 <Input type="password" value={s.newOwnPassword} onChange={(e) => s.setNewOwnPassword(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>تأكيد كلمة المرور</Label>
+              </ProfileRow>
+              <ProfileRow label="تأكيد كلمة المرور">
                 <Input type="password" value={s.confirmOwnPassword} onChange={(e) => s.setConfirmOwnPassword(e.target.value)} />
-              </div>
+              </ProfileRow>
               <Button onClick={s.handleChangeOwnPassword} disabled={s.changingOwnPassword} variant="outline" className="gap-1.5">
                 <KeyRound className="h-4 w-4" />{s.changingOwnPassword ? "جارٍ التغيير..." : "تغيير كلمة المرور"}
               </Button>
