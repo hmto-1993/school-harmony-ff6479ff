@@ -1,13 +1,14 @@
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw } from "lucide-react";
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
+import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
