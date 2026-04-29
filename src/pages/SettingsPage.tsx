@@ -36,6 +36,7 @@ import { BetaErrorBoundary } from "@/components/beta/BetaErrorBoundary";
 import { useSettingsData } from "@/hooks/useSettingsData";
 import { useAdminPerms } from "@/hooks/useAdminPerms";
 import { useSubscriberStatus } from "@/hooks/useSubscriberStatus";
+import SubscriptionExpiryBadge from "@/components/SubscriptionExpiryBadge";
 
 import { ClassesSettingsCard } from "@/components/settings/ClassesSettingsCard";
 import { CategoriesSettingsCard } from "@/components/settings/CategoriesSettingsCard";
