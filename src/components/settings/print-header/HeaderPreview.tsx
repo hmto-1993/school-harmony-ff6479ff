@@ -85,7 +85,17 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
                 return (
                   <div key={i}>
                     {src ? (
-                      <img src={src} alt={`شعار ${i + 1}`} style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px`, objectFit: "contain" }} />
+                      <img
+                        src={src}
+                        alt={`شعار ${i + 1}`}
+                        onError={(e) => {
+                          // Fallback to default logo for slot 1 if saved URL fails
+                          const fallback = resolveLogoSrc(i, "");
+                          const target = e.currentTarget;
+                          if (fallback && target.src !== fallback) target.src = fallback;
+                        }}
+                        style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px`, objectFit: "contain" }}
+                      />
                     ) : (
                       <div className="border-2 border-dashed rounded flex items-center justify-center bg-muted/30" style={{ width: `${((config.centerSection.imagesWidths?.[i] ?? config.centerSection.imagesSizes[i]) || 60) * 0.7}px`, height: `${(config.centerSection.imagesSizes[i] || 60) * 0.7}px` }}>
                         <ImageIcon className="h-3 w-3 text-muted-foreground/40" />
