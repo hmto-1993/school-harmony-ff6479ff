@@ -163,6 +163,7 @@ export function useSettingsData() {
   const [loginSchoolName, setLoginSchoolName] = useState("");
   const [loginSubtitle, setLoginSubtitle] = useState("");
   const [dashboardTitle, setDashboardTitle] = useState("");
+  const [educationDepartment, setEducationDepartment] = useState("");
   const [savingLogin, setSavingLogin] = useState(false);
   const [schoolLogoUrl, setSchoolLogoUrl] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
