@@ -11,6 +11,7 @@ import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
 import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
+import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface Props {
   open: boolean;
@@ -115,6 +116,7 @@ function ReportPrintHeaderInline({
   reportType: "attendance" | "grades" | "behavior";
 }) {
   const [config, setConfig] = useState<any>(null);
+  const dyn = useDynamicLeftHeader();
 
   useEffect(() => {
     (async () => {
@@ -180,14 +182,17 @@ function ReportPrintHeaderInline({
               width: "fit-content",
               maxWidth: "100%",
               marginRight: "auto",
-              textAlign: config.leftSection?.align || "left",
+              textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
               color: config.leftSection?.color || "#1e293b",
             }}
           >
-            {(config.leftSection?.lines || []).map((line: string, i: number) => (
-              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
+            {buildLeftHeaderLines(dyn).map((row, i) => (
+              <p key={i} style={{ margin: 0 }}>
+                <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
+                <span style={{ fontWeight: 500 }}>{row.value}</span>
+              </p>
             ))}
           </div>
         </div>

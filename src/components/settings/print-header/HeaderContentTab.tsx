@@ -4,10 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw } from "lucide-react";
+import { Plus, Trash2, AlignLeft, AlignCenter, AlignRight, Image as ImageIcon, Type, GripVertical, ArrowLeft, ArrowRight, Palette, RotateCcw, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
+import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
+import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
@@ -249,8 +251,122 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           </CardContent>
         </Card>
 
-        <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />)}</CardContent></Card>
+        <Card><CardContent className="p-4"><DynamicLeftSectionEditor config={config} setConfig={setConfig} /></CardContent></Card>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Editor for the LEFT block of the print header.
+ * Content is auto-populated from the database (academic year / semester / grade / subject).
+ * Font size & color are gated to premium subscribers; everyone else sees a read-only preview
+ * and can still see what will be printed.
+ */
+function DynamicLeftSectionEditor({
+  config,
+  setConfig,
+}: {
+  config: PrintHeaderConfig;
+  setConfig: Dispatch<SetStateAction<PrintHeaderConfig>>;
+}) {
+  const tier = useSubscriptionTier();
+  const dyn = useDynamicLeftHeader();
+  const canCustomize = tier.isPremium || tier.isDeveloper;
+  const section = config.leftSection;
+  const lines = buildLeftHeaderLines(dyn);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <Label className="flex items-center gap-2 font-semibold text-sm">
+          <Type className="h-4 w-4" />
+          الجانب الأيسر (تلقائي)
+        </Label>
+        {canCustomize ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+            <Sparkles className="h-3 w-3" /> بريميوم
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-foreground border">
+            <Lock className="h-3 w-3" /> تخصيص بريميوم
+          </span>
+        )}
+      </div>
+
+      <p className="text-[11px] leading-relaxed text-muted-foreground bg-muted/40 border rounded-md p-2">
+        تُعبَّأ هذه البيانات تلقائياً من النظام: السنة الدراسية، الفصل الدراسي،
+        الصف (حسب الفصل المختار)، والمادة. لا يمكن تعديل النصوص يدوياً.
+      </p>
+
+      {/* Read-only preview of the auto data */}
+      <div className="rounded-md border bg-white p-2 text-right" dir="rtl" style={{ color: section.color || "#1e293b" }}>
+        {lines.map((row, i) => (
+          <p key={i} className="m-0 text-xs" style={{ fontSize: `${section.fontSize}px`, lineHeight: 1.7 }}>
+            <span className="font-bold">{row.label}:</span>{" "}
+            <span className="font-medium">{row.value}</span>
+          </p>
+        ))}
+      </div>
+
+      {/* Premium-only customization */}
+      <fieldset
+        disabled={!canCustomize}
+        className={canCustomize ? "space-y-3" : "space-y-3 opacity-60 pointer-events-none select-none"}
+      >
+        <div className="flex items-center gap-3">
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">حجم الخط:</Label>
+          <Slider
+            min={8}
+            max={20}
+            step={1}
+            value={[section.fontSize]}
+            onValueChange={([v]) =>
+              setConfig((prev) => ({ ...prev, leftSection: { ...prev.leftSection, fontSize: v } }))
+            }
+            className="flex-1"
+          />
+          <span className="text-xs font-mono w-6 text-center">{section.fontSize}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Label className="text-xs text-muted-foreground flex items-center gap-1">
+            <Palette className="h-3 w-3" />
+            اللون:
+          </Label>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {presetColors.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`w-5 h-5 rounded-full border-2 transition-all ${
+                  (section.color || "#1e293b") === c
+                    ? "border-primary scale-110 ring-2 ring-primary/30"
+                    : "border-transparent hover:scale-105"
+                }`}
+                style={{ backgroundColor: c }}
+                onClick={() =>
+                  setConfig((prev) => ({ ...prev, leftSection: { ...prev.leftSection, color: c } }))
+                }
+              />
+            ))}
+            <Input
+              type="color"
+              value={section.color || "#1e293b"}
+              onChange={(e) =>
+                setConfig((prev) => ({ ...prev, leftSection: { ...prev.leftSection, color: e.target.value } }))
+              }
+              className="w-7 h-7 p-0 border-0 cursor-pointer rounded"
+              title="لون مخصص"
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      {!canCustomize && (
+        <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-2 leading-relaxed">
+          تخصيص حجم الخط واللون لهذه الكتلة متاح لمشتركي باقة <strong>البريميوم</strong> فقط.
+        </p>
+      )}
     </div>
   );
 }
