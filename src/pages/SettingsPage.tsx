@@ -75,6 +75,8 @@ function CollapsibleSection({ title, children }: { title: string; children: Reac
     </Collapsible>
   );
 }
+
+export default function SettingsPage() {
   const s = useSettingsData();
   const adminPerms = useAdminPerms();
   const { isSubscriber, isPrimaryOwner, loaded: subLoaded } = useSubscriberStatus();
