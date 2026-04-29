@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
+import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface Props {
   reportType: "attendance" | "grades" | "behavior" | "violations";
