@@ -312,7 +312,7 @@ export default function HeaderContentTab({ config, setConfig }: HeaderContentTab
           </CardContent>
         </Card>
 
-        <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />)}</CardContent></Card>
+        <Card><CardContent className="p-4">{renderTextSection("leftSection", "الجانب الأيسر", <Type className="h-4 w-4" />, { readOnly: true })}</CardContent></Card>
       </div>
     </div>
   );
