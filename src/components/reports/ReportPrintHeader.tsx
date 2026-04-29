@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
-import { supabase } from "@/integrations/supabase/client";
-import { expandScopedSettingIds, resolveScopedSettings } from "@/lib/site-settings-scope";
+import { fetchDynamicRightLines } from "@/lib/dynamic-header-lines";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
