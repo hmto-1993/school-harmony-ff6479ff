@@ -10,6 +10,7 @@ import { Printer, Upload, X, ArrowRight } from "lucide-react";
 import { toPng } from "html-to-image";
 import { toast } from "@/hooks/use-toast";
 import { safePrint } from "@/lib/print-utils";
+import { resolveLogoSrc } from "@/lib/default-logos";
 import ReportPrintHeader from "./ReportPrintHeader";
 
 interface Props {
