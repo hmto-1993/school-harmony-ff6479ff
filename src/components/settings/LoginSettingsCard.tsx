@@ -18,6 +18,8 @@ interface LoginSettingsCardProps {
   setLoginSubtitle: (v: string) => void;
   dashboardTitle: string;
   setDashboardTitle: (v: string) => void;
+  educationDepartment?: string;
+  setEducationDepartment?: (v: string) => void;
   savingLogin: boolean;
   setSavingLogin: (v: boolean) => void;
 }
@@ -50,11 +52,15 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
 
   const handleSave = async () => {
     props.setSavingLogin(true);
-    const results = await Promise.all([
+    const upserts: any[] = [
       supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
-    ]);
+    ];
+    if (props.educationDepartment !== undefined) {
+      upserts.push(supabase.from("site_settings").upsert({ id: "education_department", value: props.educationDepartment }));
+    }
+    const results = await Promise.all(upserts);
     props.setSavingLogin(false);
     if (results.some((r) => r.error)) {
       toast({ title: "خطأ", description: "فشل حفظ الإعدادات", variant: "destructive" });
@@ -96,6 +102,19 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
           <Input value={props.dashboardTitle} onChange={(e) => props.setDashboardTitle(e.target.value)} placeholder="لوحة التحكم" />
           <p className="text-[11px] text-muted-foreground">يظهر في أعلى لوحة التحكم الرئيسية</p>
         </div>
+        {props.setEducationDepartment && (
+          <div className="space-y-2">
+            <Label>المنطقة التعليمية</Label>
+            <Input
+              value={props.educationDepartment ?? ""}
+              onChange={(e) => props.setEducationDepartment?.(e.target.value)}
+              placeholder="مثال: الرياض"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              تظهر في ترويسة الطباعة بصيغة: «الإدارة العامة للتعليم بمنطقة: ...»
+            </p>
+          </div>
+        )}
         <Button disabled={props.savingLogin} className="gap-1.5" onClick={handleSave}>
           <Save className="h-4 w-4" />{props.savingLogin ? "جارٍ الحفظ..." : "حفظ"}
         </Button>

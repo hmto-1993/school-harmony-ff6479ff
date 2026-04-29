@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
+import { supabase } from "@/integrations/supabase/client";
+import { expandScopedSettingIds, resolveScopedSettings } from "@/lib/site-settings-scope";
 import type { PrintHeaderConfig } from "@/components/settings/PrintHeaderEditor";
 
 interface Props {
@@ -11,14 +13,57 @@ interface Props {
  * Falls back to the default header if no report-specific config exists.
  * Tenant-scoped: each subscriber sees their own configured header.
  * Only visible in print mode.
+ *
+ * 🔒 Right-side dynamic data binding (per owner request):
+ *   Line 1: "المملكة العربية السعودية" (ثابت)
+ *   Line 2: "وزارة التعليم" (ثابت)
+ *   Line 3: "الإدارة العامة للتعليم بمنطقة: " + education_department (من إعدادات المشترك)
+ *   Line 4: school_name (من إعدادات المشترك)
+ * لا يتم تعديل أي خاصية CSS — فقط استبدال محتوى النص.
  */
 export default function ReportPrintHeader({ reportType }: Props) {
   const [config, setConfig] = useState<PrintHeaderConfig | null>(null);
+  const [rightLines, setRightLines] = useState<string[] | null>(null);
 
   useEffect(() => {
     (async () => {
       const parsed = await fetchScopedPrintHeader(reportType);
       if (parsed) setConfig(parsed as PrintHeaderConfig);
+
+      // Resolve dynamic right-side values from tenant-scoped site_settings
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        let orgId: string | null = null;
+        if (user) {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("organization_id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          orgId = (prof?.organization_id as string | null) ?? null;
+        }
+        const ids = expandScopedSettingIds(["education_department", "school_name"], orgId);
+        const { data: rows } = await supabase
+          .from("site_settings")
+          .select("id, value")
+          .in("id", ids);
+        const map = resolveScopedSettings(rows as any, orgId);
+        const department = (map.get("education_department") || "").trim();
+        const schoolName = (map.get("school_name") || "").trim();
+        setRightLines([
+          "المملكة العربية السعودية",
+          "وزارة التعليم",
+          department ? `الإدارة العامة للتعليم بمنطقة: ${department}` : "الإدارة العامة للتعليم بمنطقة: ............",
+          schoolName || "............",
+        ]);
+      } catch {
+        setRightLines([
+          "المملكة العربية السعودية",
+          "وزارة التعليم",
+          "الإدارة العامة للتعليم بمنطقة: ............",
+          "............",
+        ]);
+      }
     })();
   }, [reportType]);
 
@@ -53,13 +98,13 @@ export default function ReportPrintHeader({ reportType }: Props) {
               width: "fit-content",
               maxWidth: "100%",
               marginLeft: "auto",
-              textAlign: (config.rightSection.align || "right") as any,
+              textAlign: "right",
               fontSize: `${config.rightSection.fontSize}px`,
               lineHeight: 1.8,
               color: config.rightSection.color || "#1e293b",
             }}
           >
-            {config.rightSection.lines.map((line, i) => (
+            {(rightLines ?? config.rightSection.lines).map((line, i) => (
               <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
