@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { PrintHeaderConfig, defaultConfig, presetColors } from "../print-header-types";
 import { useSubscriptionTier } from "@/hooks/useSubscriptionTier";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
+import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface HeaderContentTabProps {
   config: PrintHeaderConfig;
