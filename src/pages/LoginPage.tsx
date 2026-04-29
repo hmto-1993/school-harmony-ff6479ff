@@ -36,7 +36,11 @@ export default function LoginPage() {
       data?.forEach((row) => {
         // ملاحظة: school_name مُتجاهَل عمداً — اسم المنصة ثابت
         if (row.id === "school_subtitle") setSchoolSubtitle(row.value);
-        if (row.id === "school_logo_url" && row.value) setSchoolLogo(row.value);
+        if (row.id === "school_logo_url" && row.value) {
+          // Cache-bust uploaded logos so users always see the latest version
+          const sep = row.value.includes("?") ? "&" : "?";
+          setSchoolLogo(`${row.value}${sep}t=${Date.now()}`);
+        }
       });
     });
   }, []);
