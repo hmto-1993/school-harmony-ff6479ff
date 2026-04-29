@@ -12,7 +12,6 @@ import { toast } from "@/hooks/use-toast";
 import { safePrint } from "@/lib/print-utils";
 import ReportPrintHeader from "./ReportPrintHeader";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
-import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface Props {
   open: boolean;
@@ -118,7 +117,6 @@ function ReportPrintHeaderInline({
 }) {
   const [config, setConfig] = useState<any>(null);
   const dyn = useDynamicLeftHeader();
-  const dynRight = useDynamicRightHeader();
 
   useEffect(() => {
     (async () => {
@@ -143,28 +141,20 @@ function ReportPrintHeaderInline({
           gap: "12px",
         }}
       >
-        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
+        <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
-              textAlign: "right",
+              marginLeft: "auto",
+              textAlign: config.rightSection?.align || "right",
               fontSize: `${config.rightSection?.fontSize || 12}px`,
               lineHeight: 1.8,
               color: config.rightSection?.color || "#1e293b",
             }}
           >
-            {buildRightHeaderLines(dynRight).map((row, i) => (
-              <p key={i} style={{ margin: 0 }}>
-                {row.label ? (
-                  <>
-                    <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
-                    <span style={{ fontWeight: 500 }}>{row.value}</span>
-                  </>
-                ) : (
-                  <span style={{ fontWeight: row.bold ? 700 : 600 }}>{row.value}</span>
-                )}
-              </p>
+            {(config.rightSection?.lines || []).map((line: string, i: number) => (
+              <p key={i} style={{ margin: 0, fontWeight: 600 }}>{line}</p>
             ))}
           </div>
         </div>
@@ -186,11 +176,12 @@ function ReportPrintHeaderInline({
           )}
         </div>
 
-        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "flex-end" }}>
+        <div style={{ flex: "1 1 0%" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
+              marginRight: "auto",
               textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,

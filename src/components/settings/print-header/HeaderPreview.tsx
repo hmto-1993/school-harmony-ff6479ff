@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Download, Image as ImageIcon } from "lucide-react";
 import { PrintHeaderConfig } from "../print-header-types";
 import { useDynamicLeftHeader, buildLeftHeaderLines } from "@/hooks/useDynamicLeftHeader";
-import { useDynamicRightHeader, buildRightHeaderLines } from "@/hooks/useDynamicRightHeader";
 
 interface HeaderPreviewProps {
   config: PrintHeaderConfig;
@@ -16,7 +15,6 @@ interface HeaderPreviewProps {
 
 export default function HeaderPreview({ config, previewRef, exporting, onExportPng }: HeaderPreviewProps) {
   const dyn = useDynamicLeftHeader();
-  const dynRight = useDynamicRightHeader();
   return (
     <Card className="border-dashed border-2">
       <CardContent className="p-3">
@@ -65,20 +63,11 @@ export default function HeaderPreview({ config, previewRef, exporting, onExportP
             borderBottom: `${config.margins?.borderWidth ?? 3}px solid ${config.margins?.borderColor ?? "#3b82f6"}`,
             marginBottom: `${(config.margins?.borderBottomMargin ?? 8) * 2}px`,
           }}>
-            {/* Right section — auto-populated dynamic data (Kingdom / Ministry / Dept / School) */}
+            {/* Right section */}
             <div style={{ flex: "1 1 0%" }}>
-              <div style={{ width: "fit-content", maxWidth: "100%", marginLeft: "auto", textAlign: "right", fontSize: `${config.rightSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
-                {buildRightHeaderLines(dynRight).map((row, i) => (
-                  <p key={i} style={{ margin: 0, whiteSpace: "nowrap" }}>
-                    {row.label ? (
-                      <>
-                        <span style={{ fontWeight: 700 }}>{row.label}:</span>{" "}
-                        <span style={{ fontWeight: 500 }}>{row.value}</span>
-                      </>
-                    ) : (
-                      <span style={{ fontWeight: row.bold ? 700 : 600 }}>{row.value}</span>
-                    )}
-                  </p>
+              <div style={{ width: "fit-content", maxWidth: "100%", marginLeft: "auto", textAlign: config.rightSection.align || "right", fontSize: `${config.rightSection.fontSize * 0.7}px`, lineHeight: 1.8, color: config.rightSection.color || "#1e293b" }}>
+                {config.rightSection.lines.map((line, i) => (
+                  <p key={i} style={{ margin: 0, fontWeight: 600, whiteSpace: "nowrap" }}>{line || "\u00A0"}</p>
                 ))}
               </div>
             </div>
