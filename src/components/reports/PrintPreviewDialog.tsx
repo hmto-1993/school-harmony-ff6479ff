@@ -143,12 +143,11 @@ function ReportPrintHeaderInline({
           gap: "12px",
         }}
       >
-        <div style={{ flex: "1 1 0%" }}>
+        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
-              marginLeft: "auto",
               textAlign: "right",
               fontSize: `${config.rightSection?.fontSize || 12}px`,
               lineHeight: 1.8,
@@ -187,12 +186,11 @@ function ReportPrintHeaderInline({
           )}
         </div>
 
-        <div style={{ flex: "1 1 0%" }}>
+        <div style={{ flex: "1 1 0%", display: "flex", justifyContent: "center" }}>
           <div
             style={{
               width: "fit-content",
               maxWidth: "100%",
-              marginRight: "auto",
               textAlign: "left",
               fontSize: `${config.leftSection?.fontSize || 12}px`,
               lineHeight: 1.8,
