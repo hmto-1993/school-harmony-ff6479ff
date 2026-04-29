@@ -2,6 +2,7 @@
  * Helpers for grades-print.ts — config cache, HTML builders, CSS
  */
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
+import { resolveLogoSrc } from "@/lib/default-logos";
 
 /* ──────────────────────────── Config cache ───────────────────── */
 
@@ -55,10 +56,11 @@ export function buildHeaderHTML(config: any): string {
     .join("");
   const images = (config.centerSection?.images || [])
     .map((img: string, i: number) => {
-      if (!img) return "";
+      const src = resolveLogoSrc(i, img);
+      if (!src) return "";
       const height = config.centerSection?.imagesSizes?.[i] || 60;
       const width = config.centerSection?.imagesWidths?.[i] ?? height;
-      return `<img src="${img}" alt="" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
+      return `<img src="${src}" alt="" style="width:${width}px;height:${height}px;object-fit:contain;" />`;
     })
     .join("");
 
