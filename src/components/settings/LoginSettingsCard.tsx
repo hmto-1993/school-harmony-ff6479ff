@@ -70,6 +70,7 @@ export function LoginSettingsCard(props: LoginSettingsCardProps) {
       supabase.from("site_settings").upsert({ id: "school_name", value: props.loginSchoolName }),
       supabase.from("site_settings").upsert({ id: "school_subtitle", value: props.loginSubtitle }),
       supabase.from("site_settings").upsert({ id: "dashboard_title", value: props.dashboardTitle }),
+      supabase.from("site_settings").upsert({ id: "education_department", value: educationDept }),
     ]);
     props.setSavingLogin(false);
     if (results.some((r) => r.error)) {
