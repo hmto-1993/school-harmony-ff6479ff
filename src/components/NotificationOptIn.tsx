@@ -27,12 +27,25 @@ export default function NotificationOptIn() {
 
   const handleEnable = async () => {
     setLoading(true);
-    const granted = await requestNotificationPermission();
-    if (granted) {
-      await subscribeToPush(student?.id, student?.class_id || undefined);
+    try {
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        try {
+          await subscribeToPush(student?.id, student?.class_id || undefined);
+        } catch (err) {
+          console.error("subscribeToPush failed:", err);
+        }
+        localStorage.setItem("notification_opt_in_dismissed", "true");
+      } else {
+        // المستخدم رفض أو أغلق نافذة الإذن — لا نزعجه مرة أخرى
+        localStorage.setItem("notification_opt_in_dismissed", "true");
+      }
+    } catch (err) {
+      console.error("requestNotificationPermission failed:", err);
+    } finally {
+      setLoading(false);
+      setShow(false);
     }
-    setShow(false);
-    setLoading(false);
   };
 
   const handleDismiss = () => {
