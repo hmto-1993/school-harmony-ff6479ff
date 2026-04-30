@@ -255,7 +255,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     try {
       await exportGradesTableAsPDF({ ...getDailyPrintOptions(), fileName: `الإدخال_اليومي_${format(selectedDate, "yyyy-MM-dd")}` });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
-    } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
+    } catch (e: any) {
+      console.error("[DailyGradeEntry] Export PDF failed:", e);
+      toast({ title: "خطأ", description: e?.message || "فشل تصدير PDF", variant: "destructive" });
+    }
   };
 
   const getViolationsPDFOptions = () => {
