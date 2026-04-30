@@ -112,15 +112,25 @@ export default function BehaviorReport({ selectedClass, dateFrom, dateTo, select
     : [{ key: typeFilter, label: "", color: "", students: studentCards }];
 
   const exportPDF = async () => {
-    const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
-    const { savePDFBlob } = await import("@/lib/report-pdf-builders");
-    savePDFBlob(blob, fileName);
+    try {
+      const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
+      const { savePDFBlob } = await import("@/lib/report-pdf-builders");
+      await savePDFBlob(blob, fileName);
+    } catch (err: any) {
+      console.error("[BehaviorReport.exportPDF]", err);
+      toast({ title: "فشل تصدير PDF", description: err?.message || "حدث خطأ غير متوقع", variant: "destructive" });
+    }
   };
 
   const shareBehaviorWhatsApp = async () => {
-    const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
-    const { sharePDFBlob } = await import("@/lib/report-pdf-builders");
-    await sharePDFBlob(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
+    try {
+      const { blob, fileName } = await buildBehaviorPDFBlob(filteredData, typeFilter, dateFrom, dateTo);
+      const { sharePDFBlob } = await import("@/lib/report-pdf-builders");
+      await sharePDFBlob(blob, fileName, `📋 تقرير السلوك — من ${dateFrom} إلى ${dateTo}`);
+    } catch (err: any) {
+      console.error("[BehaviorReport.shareWhatsApp]", err);
+      toast({ title: "فشل المشاركة عبر واتساب", description: err?.message || "حدث خطأ غير متوقع", variant: "destructive" });
+    }
   };
 
   return (

@@ -292,7 +292,9 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
   if (options.returnBlob) {
     return doc.output("blob");
   }
-  doc.save(`${safeName}.pdf`);
+  // PWA-safe download (doc.save fails silently in installed PWA standalone mode)
+  const { safeSavePDF } = await import("@/lib/download-utils");
+  safeSavePDF(doc, `${safeName}.pdf`);
 }
 
 /** Build icon HTML for classwork/daily-entry print */

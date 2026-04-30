@@ -162,8 +162,9 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
         fileName: `violations_report_${isWeekly ? "summary" : dateFrom + "_" + dateTo}`,
       });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
-    } catch {
-      toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" });
+    } catch (err: any) {
+      console.error("[ViolationsReport.exportPDF]", err);
+      toast({ title: "خطأ", description: err?.message || "فشل تصدير PDF", variant: "destructive" });
     }
   };
 
@@ -189,8 +190,9 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
       const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
       const result = await sharePDFViaWhatsApp(blob, `تقرير_المخالفات.pdf`, `📋 تقرير المخالفات — ${label}`);
       toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
-    } catch {
-      toast({ title: "خطأ", description: "فشل المشاركة", variant: "destructive" });
+    } catch (err: any) {
+      console.error("[ViolationsReport.shareWhatsApp]", err);
+      toast({ title: "خطأ", description: err?.message || "فشل المشاركة", variant: "destructive" });
     }
   };
 
