@@ -255,7 +255,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     try {
       await exportGradesTableAsPDF({ ...getDailyPrintOptions(), fileName: `الإدخال_اليومي_${format(selectedDate, "yyyy-MM-dd")}` });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
-    } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
+    } catch (e: any) {
+      console.error("[DailyGradeEntry] Export PDF failed:", e);
+      toast({ title: "خطأ", description: e?.message || "فشل تصدير PDF", variant: "destructive" });
+    }
   };
 
   const getViolationsPDFOptions = () => {
@@ -279,7 +282,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     try {
       await exportGradesTableAsPDF(getViolationsPDFOptions());
       toast({ title: "تم التصدير", description: "تم تصدير ملف المخالفات PDF بنجاح" });
-    } catch { toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" }); }
+    } catch (e: any) {
+      console.error("[DailyGradeEntry] Export violations PDF failed:", e);
+      toast({ title: "خطأ", description: e?.message || "فشل تصدير PDF", variant: "destructive" });
+    }
   };
 
   const handleShareViolationsWhatsApp = async () => {
@@ -293,7 +299,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
       const { sharePDFViaWhatsApp } = await import("@/lib/whatsapp-share");
       const result = await sharePDFViaWhatsApp(blob, `${opts.fileName}.pdf`, `📋 ${opts.title}`);
       toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
-    } catch { toast({ title: "خطأ", description: "فشل المشاركة", variant: "destructive" }); }
+    } catch (e: any) {
+      console.error("[DailyGradeEntry] Share violations WhatsApp failed:", e);
+      toast({ title: "خطأ", description: e?.message || "فشل المشاركة", variant: "destructive" });
+    }
   };
 
   // ── Render ─────────────────────────────────────────────────────
