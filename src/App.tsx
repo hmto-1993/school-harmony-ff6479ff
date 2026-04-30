@@ -11,6 +11,7 @@ import { HonorRollProvider } from "@/contexts/HonorRollContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DashboardLayout from "@/components/DashboardLayout";
 import NotificationOptIn from "@/components/NotificationOptIn";
+import InAppNotificationListener from "@/components/InAppNotificationListener";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { lazy, Suspense } from "react";
 import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
@@ -66,6 +67,7 @@ const App = () => {
             <AuthProvider>
               <HonorRollProvider>
                 <NotificationOptIn />
+                <InAppNotificationListener />
                 <PWAInstallPrompt />
                 <Suspense fallback={<PageLoader />}>
                   <Routes>
