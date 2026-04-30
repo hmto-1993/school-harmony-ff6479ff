@@ -162,8 +162,9 @@ export default function ViolationsReportTab({ selectedClass, dateFrom, dateTo, s
         fileName: `violations_report_${isWeekly ? "summary" : dateFrom + "_" + dateTo}`,
       });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
-    } catch {
-      toast({ title: "خطأ", description: "فشل تصدير PDF", variant: "destructive" });
+    } catch (err: any) {
+      console.error("[ViolationsReport.exportPDF]", err);
+      toast({ title: "خطأ", description: err?.message || "فشل تصدير PDF", variant: "destructive" });
     }
   };
 
