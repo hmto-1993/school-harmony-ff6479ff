@@ -198,16 +198,9 @@ export async function buildDisciplinaryPDF(
 
 // ─── Helper: save or share ───
 export async function savePDFBlob(blob: Blob, fileName: string) {
-  const { safeSavePDF } = await import("@/lib/download-utils");
-  // safeSavePDF expects a jsPDF doc, so we use direct download
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Use PWA-safe download (handles standalone mode on iOS/Android/Desktop PWA)
+  const { safeDownload } = await import("@/lib/download-utils");
+  await safeDownload(blob, fileName);
 }
 
 export async function sharePDFBlob(blob: Blob, fileName: string, caption: string) {
