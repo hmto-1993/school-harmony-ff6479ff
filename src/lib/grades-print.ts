@@ -17,6 +17,8 @@ interface PrintOptions {
   tableHTML: string;
 }
 
+const PAGE_SAFE_GAP_PX = 8;
+
 /* ──────────────────────────── Shared HTML builder ────────────── */
 
 function buildFullHTML(
@@ -84,6 +86,24 @@ function autoScaleTable(doc: Document) {
       }
     }
   } catch { /* skip */ }
+}
+
+function findSafeSliceEnd(root: HTMLElement, srcY: number, maxEnd: number, finalEnd: number) {
+  const rows = Array.from(root.querySelectorAll("tbody tr")) as HTMLElement[];
+  const rootTop = root.getBoundingClientRect().top;
+  let safeEnd = maxEnd;
+
+  for (const row of rows) {
+    const rect = row.getBoundingClientRect();
+    const rowTop = rect.top - rootTop + root.scrollTop;
+    const rowBottom = rowTop + rect.height;
+    if (rowTop > srcY + PAGE_SAFE_GAP_PX && rowTop < maxEnd && rowBottom > maxEnd - PAGE_SAFE_GAP_PX) {
+      safeEnd = Math.max(srcY + 1, rowTop - PAGE_SAFE_GAP_PX);
+      break;
+    }
+  }
+
+  return Math.min(Math.max(safeEnd, srcY + 1), finalEnd);
 }
 
 /** Push footer-spacer so signatures start at ≥50% of page height */
