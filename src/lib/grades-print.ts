@@ -17,6 +17,8 @@ interface PrintOptions {
   tableHTML: string;
 }
 
+const PAGE_SAFE_GAP_PX = 8;
+
 /* ──────────────────────────── Shared HTML builder ────────────── */
 
 function buildFullHTML(
@@ -55,7 +57,8 @@ function buildFullHTML(
 
 async function waitForFontsAndImages(doc: Document) {
   try {
-    if ("fonts" in doc) await (doc as any).fonts.ready;
+    const fontReady = (doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
+    if (fontReady) await fontReady;
   } catch { /* skip */ }
 
   const images = Array.from(doc.images);
@@ -84,6 +87,24 @@ function autoScaleTable(doc: Document) {
       }
     }
   } catch { /* skip */ }
+}
+
+function findSafeSliceEnd(root: HTMLElement, srcY: number, maxEnd: number, finalEnd: number) {
+  const rows = Array.from(root.querySelectorAll("tbody tr")) as HTMLElement[];
+  const rootTop = root.getBoundingClientRect().top;
+  let safeEnd = maxEnd;
+
+  for (const row of rows) {
+    const rect = row.getBoundingClientRect();
+    const rowTop = rect.top - rootTop + root.scrollTop;
+    const rowBottom = rowTop + rect.height;
+    if (rowTop > srcY + PAGE_SAFE_GAP_PX && rowTop < maxEnd && rowBottom > maxEnd - PAGE_SAFE_GAP_PX) {
+      safeEnd = Math.max(srcY + 1, rowTop - PAGE_SAFE_GAP_PX);
+      break;
+    }
+  }
+
+  return Math.min(Math.max(safeEnd, srcY + 1), finalEnd);
 }
 
 /** Push footer-spacer so signatures start at ≥50% of page height */
@@ -250,6 +271,7 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     dataUrl = await toPng(rootEl, {
       backgroundColor: "#ffffff",
       pixelRatio: 2,
+      skipFonts: true,
       width: captureW,
       height: captureH,
       style: { overflow: "visible", height: `${captureH}px` },
@@ -259,8 +281,6 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     container.remove();
     throw new Error("فشل في التقاط صورة الجدول");
   }
-
-  container.remove();
 
   // Create PDF
   const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
@@ -277,6 +297,7 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
   const usableW = pageWmm - margin * 2;
   const totalImgH = usableW / imgAspect;
   const usableH = pageHmm - margin * 2;
+  const imageScaleY = img.height / captureH;
 
   if (totalImgH <= usableH) {
     doc.addImage(dataUrl, "PNG", margin, margin, usableW, totalImgH);
@@ -286,7 +307,11 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     let pageIdx = 0;
 
     while (srcY < img.height - 1) {
-      const sliceHpx = Math.min(usableH * pxPerMmImg, img.height - srcY);
+      const maxSliceHpx = Math.min(usableH * pxPerMmImg, img.height - srcY);
+      const cssSrcY = srcY / imageScaleY;
+      const cssMaxEnd = Math.min((srcY + maxSliceHpx) / imageScaleY, captureH);
+      const cssSafeEnd = findSafeSliceEnd(rootEl, cssSrcY, cssMaxEnd, captureH);
+      const sliceHpx = Math.min(Math.max((cssSafeEnd - cssSrcY) * imageScaleY, 1), img.height - srcY);
       if (sliceHpx <= 1) break;
 
       const sliceCanvas = document.createElement("canvas");
@@ -303,6 +328,8 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
       pageIdx++;
     }
   }
+
+  container.remove();
 
   const safeName = fileName || `${title.replace(/[^\u0600-\u06FFa-zA-Z0-9_\- ]/g, "_")}`;
   if (options.returnBlob) {
