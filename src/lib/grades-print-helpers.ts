@@ -3,6 +3,7 @@
  */
 import { fetchScopedPrintHeader } from "@/lib/print-header-fetch";
 import { resolveLogoSrc } from "@/lib/default-logos";
+import { imageUrlToDataUrl } from "@/lib/pdf-image-utils";
 
 /* ──────────────────────────── Config cache ───────────────────── */
 
@@ -83,6 +84,26 @@ export function buildHeaderHTML(config: any): string {
       </div>
     </div>
   `;
+}
+
+export async function buildHeaderHTMLWithEmbeddedImages(config: any): Promise<string> {
+  if (!config?.centerSection?.images?.length) return buildHeaderHTML(config);
+
+  const images = await Promise.all(
+    config.centerSection.images.map(async (img: string, i: number) => {
+      const src = resolveLogoSrc(i, img);
+      if (!src) return "";
+      return (await imageUrlToDataUrl(src)) || src;
+    })
+  );
+
+  return buildHeaderHTML({
+    ...config,
+    centerSection: {
+      ...config.centerSection,
+      images,
+    },
+  });
 }
 
 export function buildFooterHTML(signatures: any): string {

@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
-import { supabase } from "@/integrations/supabase/client";
 import { safeDownload } from "@/lib/download-utils";
 import { getPrintOrientation } from "@/lib/print-utils";
 import { resolveLogoSrc } from "@/lib/default-logos";
+import { imageUrlToDataUrl } from "@/lib/pdf-image-utils";
 
 const FONT_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Regular.ttf";
 const FONT_BOLD_URL = "https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/amiri/Amiri-Bold.ttf";
@@ -138,6 +138,25 @@ async function imageUrlToBase64(
       if (raster) return raster;
     }
     return { dataUrl: url, width: dims?.width || 1, height: dims?.height || 1 };
+  }
+
+  const resolvedDataUrl = await imageUrlToDataUrl(url);
+  if (resolvedDataUrl) {
+    const isSvg = resolvedDataUrl.includes("image/svg") || url.toLowerCase().includes(".svg");
+    if (isSvg) {
+      const raster = await rasterizeToPng(resolvedDataUrl);
+      if (raster) return raster;
+    }
+    const dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({
+        width: img.naturalWidth || 1,
+        height: img.naturalHeight || 1,
+      });
+      img.onerror = () => resolve(null);
+      img.src = resolvedDataUrl;
+    });
+    if (dims) return { dataUrl: resolvedDataUrl, width: dims.width, height: dims.height };
   }
 
   // Try fetching as blob with CORS
