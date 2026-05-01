@@ -204,8 +204,8 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
 
   const iframe = document.createElement("iframe");
   Object.assign(iframe.style, {
-    width: `${renderW + 40}px`, height: "auto",
-    border: "0", overflow: "hidden",
+    width: `${renderW + 40}px`, height: "2000px",
+    border: "0", overflow: "visible",
   });
   container.appendChild(iframe);
 
@@ -219,27 +219,43 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
 
   await waitForFontsAndImages(iDoc);
   autoScaleTable(iDoc);
-  const pdfPageHpx = Math.round(pageHmm * pxPerMm);
-  positionFooterAtMidPage(iDoc, pdfPageHpx);
+  // Skip footer spacer for PDF export — it adds dead vertical space that confuses page slicing
+  const spacerEl = iDoc.querySelector(".footer-spacer") as HTMLElement | null;
+  if (spacerEl) spacerEl.style.height = "0px";
 
-  // Resize iframe to content height
-  const body = iDoc.body;
-  const contentH = body.scrollHeight;
-  iframe.style.height = `${contentH + 20}px`;
+  // Force any overflow:hidden on print-root to be visible so capture sees full content
+  const rootEl = iDoc.querySelector(".print-root") as HTMLElement;
+  if (rootEl) rootEl.style.overflow = "visible";
+
+  // Measure full content height after layout settles
+  await new Promise(r => setTimeout(r, 100));
+  const fullH = Math.max(
+    iDoc.body.scrollHeight,
+    iDoc.documentElement.scrollHeight,
+    rootEl?.scrollHeight || 0,
+  );
+  iframe.style.height = `${fullH + 40}px`;
 
   await new Promise(r => setTimeout(r, 300));
 
-  // Capture as PNG
-  const root = iDoc.querySelector(".print-root") as HTMLElement;
+  // Capture as PNG — use measured full height
+  const captureH = Math.max(
+    iDoc.body.scrollHeight,
+    iDoc.documentElement.scrollHeight,
+    rootEl.scrollHeight,
+  );
+  const captureW = rootEl.scrollWidth;
   let dataUrl: string;
   try {
-    dataUrl = await toPng(root, {
+    dataUrl = await toPng(rootEl, {
       backgroundColor: "#ffffff",
       pixelRatio: 2,
-      width: root.scrollWidth,
-      height: root.scrollHeight,
+      width: captureW,
+      height: captureH,
+      style: { overflow: "visible", height: `${captureH}px` },
     });
-  } catch {
+  } catch (err) {
+    console.error("[grades-print] toPng failed:", err);
     container.remove();
     throw new Error("فشل في التقاط صورة الجدول");
   }
