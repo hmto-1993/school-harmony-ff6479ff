@@ -209,6 +209,83 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
     };
   };
 
+  const formatDailyPDFCell = (sg: (typeof filteredStudentGrades)[number], catId: string) => {
+    if (sg.starred[catId]) return "كامل";
+    const labels = (sg.slots[catId] || [null]).map(level => {
+      if (level === "excellent") return "ممتاز";
+      if (level === "average") return "متوسط";
+      if (level === "zero") return "صفر";
+      return "—";
+    });
+    return labels.join("\n");
+  };
+
+  const exportDailyInteractionPDF = async () => {
+    const className = classes.find(c => c.id === selectedClass)?.name || "الفصل";
+    const dateStr = format(selectedDate, "yyyy/MM/dd");
+    const fileDate = format(selectedDate, "yyyy-MM-dd");
+    const orientation = visibleCategories.length > 4 ? "landscape" as const : "portrait" as const;
+
+    const [{ createArabicPDF, getArabicTableStyles, finalizePDF }, autoTableImport] = await Promise.all([
+      import("@/lib/arabic-pdf"),
+      import("jspdf-autotable"),
+    ]);
+    const autoTable = autoTableImport.default;
+    const { doc, startY, watermark, advanced } = await createArabicPDF({
+      orientation,
+      reportType: "grades",
+      includeHeader: true,
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFont("Amiri", "bold");
+    doc.setFontSize(13);
+    doc.text(`${className} — إدخال الدرجات اليومية`, pageWidth / 2, startY, { align: "center" });
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(9);
+    doc.text(`${dateStr} — الفترة ${selectedPeriod === 1 ? "الأولى" : "الثانية"}`, pageWidth / 2, startY + 7, { align: "center" });
+
+    const headers = [
+      "#",
+      "الطالب",
+      ...visibleCategories.map(c => `${c.name}\nمن ${Number(c.max_score)}`),
+      ...(!isSingleCategory ? ["المجموع"] : []),
+    ];
+    const rows = filteredStudentGrades.map((sg, i) => [
+      String(i + 1),
+      sg.full_name,
+      ...visibleCategories.map(cat => formatDailyPDFCell(sg, cat.id)),
+      ...(!isSingleCategory ? [String(calcTotal(sg.grades))] : []),
+    ]);
+    const reversedHeaders = [...headers].reverse();
+    const nameColumnIndex = reversedHeaders.indexOf("الطالب");
+    const numberColumnIndex = reversedHeaders.indexOf("#");
+    const tableStyles = getArabicTableStyles(advanced);
+
+    autoTable(doc, {
+      startY: startY + 12,
+      head: [reversedHeaders],
+      body: rows.map(row => [...row].reverse()),
+      ...tableStyles,
+      rowPageBreak: "avoid",
+      showHead: "everyPage",
+      margin: { top: 10, right: 5, bottom: 10, left: 5 },
+      styles: {
+        ...tableStyles.styles,
+        fontSize: visibleCategories.length > 4 ? 7 : 8,
+        cellPadding: 1.4,
+        overflow: "linebreak",
+        minCellHeight: 7,
+      },
+      columnStyles: {
+        ...(nameColumnIndex >= 0 ? { [nameColumnIndex]: { halign: "right" as const, cellWidth: orientation === "landscape" ? 52 : 42 } } : {}),
+        ...(numberColumnIndex >= 0 ? { [numberColumnIndex]: { cellWidth: 8 } } : {}),
+      },
+    });
+
+    finalizePDF(doc, `الإدخال_اليومي_${fileDate}.pdf`, watermark, advanced);
+  };
+
   const studentsWithViolations = React.useMemo(() => filteredStudentGrades.filter(sg =>
     violationCats.some(cat => {
       const score = sg.grades[cat.id];
@@ -253,7 +330,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const handlePrintTable = async () => { await printGradesTable(getDailyPrintOptions()); };
   const handleExportPDF = async () => {
     try {
-      await exportGradesTableAsPDF({ ...getDailyPrintOptions(), fileName: `الإدخال_اليومي_${format(selectedDate, "yyyy-MM-dd")}` });
+      await exportDailyInteractionPDF();
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
     } catch (e: any) {
       console.error("[DailyGradeEntry] Export PDF failed:", e);
