@@ -57,7 +57,8 @@ function buildFullHTML(
 
 async function waitForFontsAndImages(doc: Document) {
   try {
-    if ("fonts" in doc) await (doc as any).fonts.ready;
+    const fontReady = (doc as Document & { fonts?: { ready: Promise<unknown> } }).fonts?.ready;
+    if (fontReady) await fontReady;
   } catch { /* skip */ }
 
   const images = Array.from(doc.images);
