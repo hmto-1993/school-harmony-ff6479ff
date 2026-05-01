@@ -1,5 +1,4 @@
 import jsPDF from "jspdf";
-import { supabase } from "@/integrations/supabase/client";
 import { safeDownload } from "@/lib/download-utils";
 import { getPrintOrientation } from "@/lib/print-utils";
 import { resolveLogoSrc } from "@/lib/default-logos";
