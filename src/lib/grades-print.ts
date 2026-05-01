@@ -270,6 +270,7 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     dataUrl = await toPng(rootEl, {
       backgroundColor: "#ffffff",
       pixelRatio: 2,
+      skipFonts: true,
       width: captureW,
       height: captureH,
       style: { overflow: "visible", height: `${captureH}px` },
@@ -279,8 +280,6 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     container.remove();
     throw new Error("فشل في التقاط صورة الجدول");
   }
-
-  container.remove();
 
   // Create PDF
   const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
@@ -297,6 +296,7 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
   const usableW = pageWmm - margin * 2;
   const totalImgH = usableW / imgAspect;
   const usableH = pageHmm - margin * 2;
+  const imageScaleY = img.height / captureH;
 
   if (totalImgH <= usableH) {
     doc.addImage(dataUrl, "PNG", margin, margin, usableW, totalImgH);
@@ -306,7 +306,11 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     let pageIdx = 0;
 
     while (srcY < img.height - 1) {
-      const sliceHpx = Math.min(usableH * pxPerMmImg, img.height - srcY);
+      const maxSliceHpx = Math.min(usableH * pxPerMmImg, img.height - srcY);
+      const cssSrcY = srcY / imageScaleY;
+      const cssMaxEnd = Math.min((srcY + maxSliceHpx) / imageScaleY, captureH);
+      const cssSafeEnd = findSafeSliceEnd(rootEl, cssSrcY, cssMaxEnd, captureH);
+      const sliceHpx = Math.min(Math.max((cssSafeEnd - cssSrcY) * imageScaleY, 1), img.height - srcY);
       if (sliceHpx <= 1) break;
 
       const sliceCanvas = document.createElement("canvas");
@@ -323,6 +327,8 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
       pageIdx++;
     }
   }
+
+  container.remove();
 
   const safeName = fileName || `${title.replace(/[^\u0600-\u06FFa-zA-Z0-9_\- ]/g, "_")}`;
   if (options.returnBlob) {
