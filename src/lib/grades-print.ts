@@ -5,7 +5,7 @@
  */
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
-import { fetchHeaderConfig, fetchFooterConfig, buildHeaderHTML, buildFooterHTML, buildIframeCSS } from "@/lib/grades-print-helpers";
+import { fetchHeaderConfig, fetchFooterConfig, buildHeaderHTML, buildHeaderHTMLWithEmbeddedImages, buildFooterHTML, buildIframeCSS } from "@/lib/grades-print-helpers";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 
@@ -131,7 +131,7 @@ export async function printGradesTable(options: PrintOptions): Promise<void> {
     fetchFooterConfig(reportType),
   ]);
 
-  const headerHTML = buildHeaderHTML(headerConfig);
+  const headerHTML = await buildHeaderHTMLWithEmbeddedImages(headerConfig);
   const footerHTML = buildFooterHTML(footerConfig);
 
   const contentWidth = orientation === "landscape" ? "287mm" : "200mm";
@@ -198,7 +198,7 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
     fetchFooterConfig(reportType),
   ]);
 
-  const headerHTML = buildHeaderHTML(headerConfig);
+  const headerHTML = await buildHeaderHTMLWithEmbeddedImages(headerConfig);
   const footerHTML = buildFooterHTML(footerConfig);
 
   const isLandscape = orientation === "landscape";
