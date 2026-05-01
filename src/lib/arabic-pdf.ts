@@ -86,41 +86,97 @@ async function fetchPrintHeaderConfig(
   return (await fetchScopedPrintHeader(reportType)) as PrintHeaderConfig | null;
 }
 
+/** Rasterize any image (incl. SVG) to a PNG data URL via canvas */
+async function rasterizeToPng(
+  src: string
+): Promise<{ dataUrl: string; width: number; height: number } | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const w = img.naturalWidth || img.width || 256;
+        const h = img.naturalHeight || img.height || 256;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          const dataUrl = canvas.toDataURL("image/png");
+          resolve({ dataUrl, width: w, height: h });
+        } catch {
+          resolve(null);
+        }
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
 /** Convert an image URL to base64 data URL plus its intrinsic size for PDF embedding */
 async function imageUrlToBase64(
   url: string
 ): Promise<{ dataUrl: string; width: number; height: number } | null> {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    const dataUrl = await new Promise<string | null>((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-
-    if (!dataUrl) return null;
-
-    const dimensions = await new Promise<{ width: number; height: number } | null>((resolve) => {
+  // Already a data URL — use directly
+  if (url.startsWith("data:")) {
+    const dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
       const img = new Image();
       img.onload = () => resolve({
-        width: img.naturalWidth || img.width || 1,
-        height: img.naturalHeight || img.height || 1,
+        width: img.naturalWidth || 1,
+        height: img.naturalHeight || 1,
       });
       img.onerror = () => resolve(null);
-      img.src = dataUrl;
+      img.src = url;
     });
-
-    return {
-      dataUrl,
-      width: dimensions?.width || 1,
-      height: dimensions?.height || 1,
-    };
-  } catch {
-    return null;
+    if (url.includes("image/svg")) {
+      const raster = await rasterizeToPng(url);
+      if (raster) return raster;
+    }
+    return { dataUrl: url, width: dims?.width || 1, height: dims?.height || 1 };
   }
+
+  // Try fetching as blob with CORS
+  try {
+    const response = await fetch(url, { mode: "cors", credentials: "omit" });
+    if (response.ok) {
+      const blob = await response.blob();
+      const isSvg = blob.type.includes("svg") || url.toLowerCase().endsWith(".svg");
+      const dataUrl = await new Promise<string | null>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+      if (dataUrl) {
+        if (isSvg) {
+          const raster = await rasterizeToPng(dataUrl);
+          if (raster) return raster;
+        }
+        const dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve({
+            width: img.naturalWidth || 1,
+            height: img.naturalHeight || 1,
+          });
+          img.onerror = () => resolve(null);
+          img.src = dataUrl;
+        });
+        if (dims) {
+          return { dataUrl, width: dims.width, height: dims.height };
+        }
+      }
+    }
+  } catch {
+    // fall through to canvas fallback
+  }
+
+  // Fallback: load via <img crossOrigin> + canvas (handles CORS-enabled hosts)
+  return rasterizeToPng(url);
 }
 
 /**
