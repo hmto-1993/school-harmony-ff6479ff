@@ -16,7 +16,7 @@ const IMAGE_MIME_BY_EXTENSION: Record<string, string> = {
 
 function inferImageMime(src: string): string {
   try {
-    const pathname = new URL(src, window.location.origin).pathname;
+    const pathname = new URL(src, getBrowserOrigin()).pathname;
     const ext = pathname.split(".").pop()?.toLowerCase() || "png";
     return IMAGE_MIME_BY_EXTENSION[ext] || "image/png";
   } catch {
@@ -24,9 +24,13 @@ function inferImageMime(src: string): string {
   }
 }
 
+function getBrowserOrigin(): string {
+  return typeof window !== "undefined" ? window.location.origin : "http://localhost";
+}
+
 function parseStorageObjectUrl(src: string): StorageObjectRef | null {
   try {
-    const url = new URL(src, window.location.origin);
+    const url = new URL(src, getBrowserOrigin());
     const marker = "/storage/v1/object/";
     const markerIndex = url.pathname.indexOf(marker);
     if (markerIndex === -1) return null;
