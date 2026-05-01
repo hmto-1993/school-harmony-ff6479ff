@@ -5,7 +5,7 @@
  */
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
-import { fetchHeaderConfig, fetchFooterConfig, buildHeaderHTML, buildHeaderHTMLWithEmbeddedImages, buildFooterHTML, buildIframeCSS } from "@/lib/grades-print-helpers";
+import { fetchHeaderConfig, fetchFooterConfig, buildHeaderHTMLWithEmbeddedImages, buildFooterHTML, buildIframeCSS } from "@/lib/grades-print-helpers";
 
 /* ──────────────────────────── Types ──────────────────────────── */
 
