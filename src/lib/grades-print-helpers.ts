@@ -95,7 +95,7 @@ export function buildFooterHTML(signatures: any): string {
     </div>
   `).join("");
   return `
-    <div style="margin-top:24px;padding-top:16px;border-top:1px dashed #cbd5e1;">
+    <div class="print-footer-signatures" style="margin-top:24px;padding-top:16px;border-top:1px dashed #cbd5e1;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;direction:rtl;padding-inline:32px;">
         ${sigs}
       </div>
@@ -132,13 +132,13 @@ export function buildIframeCSS(orientation: string, contentWidth: string, pageWi
       max-width: ${contentWidth};
       margin: 0 auto;
       padding: 3mm 5mm;
-      overflow: hidden;
+      overflow: visible;
     }
     .content-area { }
     .footer-spacer { }
     @media print {
       html, body { width: ${pageWidth}; min-height: ${pageHeight}; }
-      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: hidden; }
+      .print-root { width: ${contentWidth}; max-width: ${contentWidth}; overflow: visible; }
     }
 
     table {
