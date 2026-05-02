@@ -333,8 +333,18 @@ export default function PrintHeaderEditor() {
             <TabsContent value="advanced"><AdvancedTab config={config} setConfig={setConfig} /></TabsContent>
           </Tabs>
 
-          {/* Save button */}
-          <div className="flex justify-end pt-2">
+          {/* Save / Test buttons */}
+          <div className="flex flex-wrap justify-end items-center gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleTestLogoExport}
+              disabled={logoTestRunning}
+              className="gap-2"
+            >
+              <FlaskConical className="h-4 w-4" />
+              {logoTestRunning ? "جارٍ الاختبار..." : "اختبار تصدير الشعار"}
+            </Button>
             <Button onClick={handleSave} disabled={saving} className="gap-2 px-8">
               <Save className="h-4 w-4" />
               {saving ? "جارٍ الحفظ..." : `حفظ ${scope === "owner" ? "ترويستي" : "قالب المشتركين"}`}
@@ -342,6 +352,87 @@ export default function PrintHeaderEditor() {
           </div>
         </>
       )}
+
+      {/* Logo Test Dialog */}
+      <Dialog open={logoTestOpen} onOpenChange={(open) => {
+        setLogoTestOpen(open);
+        if (!open && logoTestPdfUrl) {
+          URL.revokeObjectURL(logoTestPdfUrl);
+          setLogoTestPdfUrl(null);
+        }
+      }}>
+        <DialogContent className="max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FlaskConical className="h-5 w-5 text-primary" />
+              اختبار تضمين الشعار في PDF
+            </DialogTitle>
+            <DialogDescription>
+              نتيجة محاولة تحويل كل شعار إلى Base64 ثم إدراجه داخل PDF تجريبي.
+            </DialogDescription>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-2">
+            <div className="space-y-2">
+              {logoTestEntries.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-6">
+                  {logoTestRunning ? "جارٍ فحص الشعارات..." : "لا توجد نتائج بعد"}
+                </div>
+              )}
+              {logoTestEntries.map((e) => (
+                <div
+                  key={e.index}
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border text-xs",
+                    e.status === "ok" && "bg-emerald-500/5 border-emerald-500/30",
+                    e.status === "fail" && "bg-rose-500/5 border-rose-500/30",
+                    e.status === "empty" && "bg-muted/40 border-muted",
+                  )}
+                >
+                  <div className="shrink-0 mt-0.5">
+                    {e.status === "ok" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+                    {e.status === "fail" && <XCircle className="h-5 w-5 text-rose-600" />}
+                    {e.status === "empty" && <AlertCircle className="h-5 w-5 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <div className="font-bold text-sm">
+                      الشعار {e.index + 1} — {e.status === "ok" ? "نجح" : e.status === "fail" ? "فشل" : "فارغ"}
+                      {e.isDefault && <span className="ms-2 text-emerald-700 dark:text-emerald-400">(افتراضي)</span>}
+                    </div>
+                    {e.src && (
+                      <div className="text-muted-foreground break-all text-[10px]">
+                        المصدر: {e.src.length > 110 ? e.src.slice(0, 110) + "…" : e.src}
+                      </div>
+                    )}
+                    {e.status === "ok" && (
+                      <div className="text-muted-foreground">
+                        النوع: <b>{e.mime}</b> · الحجم: <b>{(e.bytes / 1024).toFixed(1)} KB</b> · الزمن: <b>{e.elapsedMs}ms</b>
+                      </div>
+                    )}
+                    {e.status === "fail" && (
+                      <div className="text-rose-700 dark:text-rose-400">
+                        خطأ: {e.error || "غير معروف"} · الزمن: {e.elapsedMs}ms
+                      </div>
+                    )}
+                  </div>
+                  {e.status === "ok" && e.src && (
+                    <img src={e.src} alt="" className="h-12 w-12 object-contain rounded border bg-white shrink-0" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          {logoTestPdfUrl && (
+            <div className="flex justify-end gap-2 pt-2 border-t">
+              <Button variant="outline" asChild>
+                <a href={logoTestPdfUrl} target="_blank" rel="noreferrer">فتح PDF التجريبي</a>
+              </Button>
+              <Button asChild>
+                <a href={logoTestPdfUrl} download="logo-embed-test.pdf">تنزيل PDF</a>
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
