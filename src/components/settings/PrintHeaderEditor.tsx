@@ -12,7 +12,13 @@ import { toPng } from "html-to-image";
 import {
   Save, Copy, RectangleVertical, RectangleHorizontal,
   FileText, Settings2, Sparkles, Wrench, User, Globe, Lock,
+  FlaskConical, CheckCircle2, XCircle, AlertCircle,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { resolveLogoSrc } from "@/lib/default-logos";
+import { imageUrlToDataUrl } from "@/lib/pdf-image-utils";
+import jsPDF from "jspdf";
 import { getPrintOrientation, setPrintOrientation } from "@/lib/print-utils";
 
 import {
