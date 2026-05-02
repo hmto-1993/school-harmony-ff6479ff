@@ -259,12 +259,28 @@ export async function exportGradesTableAsPDF(options: PrintOptions & { fileName?
 
   await new Promise(r => setTimeout(r, 300));
 
-  // Capture as PNG — use measured full height
-  const captureH = Math.max(
+  // Compute the actual bottom of meaningful content (last row / footer) to avoid blank trailing pages
+  const rootTop = rootEl.getBoundingClientRect().top;
+  const candidateEls: HTMLElement[] = [];
+  const lastRow = iDoc.querySelector("tbody tr:last-child") as HTMLElement | null;
+  const tableEl = iDoc.querySelector("table") as HTMLElement | null;
+  const footerEl = iDoc.querySelector(".print-footer, .footer, footer") as HTMLElement | null;
+  if (lastRow) candidateEls.push(lastRow);
+  if (tableEl) candidateEls.push(tableEl);
+  if (footerEl) candidateEls.push(footerEl);
+  let contentBottom = 0;
+  for (const el of candidateEls) {
+    const r = el.getBoundingClientRect();
+    contentBottom = Math.max(contentBottom, r.bottom - rootTop);
+  }
+  const measuredH = Math.max(
     iDoc.body.scrollHeight,
     iDoc.documentElement.scrollHeight,
     rootEl.scrollHeight,
   );
+  const captureH = contentBottom > 0
+    ? Math.min(measuredH, Math.ceil(contentBottom + 8))
+    : measuredH;
   const captureW = rootEl.scrollWidth;
   let dataUrl: string;
   try {
