@@ -210,6 +210,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const formatDailyPDFCell = (sg: (typeof filteredStudentGrades)[number], catId: string) => {
+    const cat = visibleCategories.find(c => c.id === catId);
+    // For deductions (violations): show numeric deduction (e.g. -2) instead of icons
+    if (cat?.is_deduction) {
+      const score = sg.grades[catId];
+      if (score == null || score === 0) return "—";
+      return `-${Number(score)}`;
+    }
     if (sg.starred[catId]) return "كامل";
     const labels = (sg.slots[catId] || [null]).map(level => {
       if (level === "excellent") return "ممتاز";
