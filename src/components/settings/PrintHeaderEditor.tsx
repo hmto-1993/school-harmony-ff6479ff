@@ -139,6 +139,97 @@ export default function PrintHeaderEditor() {
     setExporting(false);
   };
 
+  type LogoTestEntry = {
+    index: number;
+    src: string;
+    isDefault: boolean;
+    status: "ok" | "fail" | "empty";
+    bytes: number;
+    mime: string;
+    elapsedMs: number;
+    error?: string;
+  };
+  const [logoTestOpen, setLogoTestOpen] = useState(false);
+  const [logoTestRunning, setLogoTestRunning] = useState(false);
+  const [logoTestEntries, setLogoTestEntries] = useState<LogoTestEntry[]>([]);
+  const [logoTestPdfUrl, setLogoTestPdfUrl] = useState<string | null>(null);
+
+  const handleTestLogoExport = async () => {
+    setLogoTestRunning(true);
+    setLogoTestOpen(true);
+    setLogoTestEntries([]);
+    setLogoTestPdfUrl(null);
+    const entries: LogoTestEntry[] = [];
+    const images: string[] = config.centerSection?.images || [];
+    const slots = Math.max(images.length, 3);
+
+    for (let i = 0; i < slots; i++) {
+      const raw = images[i] || "";
+      const src = resolveLogoSrc(i, raw);
+      const isDefault = !raw && !!src;
+      if (!src) {
+        entries.push({ index: i, src: "", isDefault: false, status: "empty", bytes: 0, mime: "-", elapsedMs: 0 });
+        continue;
+      }
+      const t0 = performance.now();
+      try {
+        const dataUrl = await imageUrlToDataUrl(src);
+        const elapsedMs = Math.round(performance.now() - t0);
+        if (!dataUrl) {
+          entries.push({ index: i, src, isDefault, status: "fail", bytes: 0, mime: "-", elapsedMs, error: "imageUrlToDataUrl أعادت null" });
+        } else {
+          const mimeMatch = dataUrl.match(/^data:([^;]+);/);
+          const mime = mimeMatch?.[1] || "unknown";
+          // approx bytes (base64 length * 3/4)
+          const b64 = dataUrl.split(",")[1] || "";
+          const bytes = Math.round((b64.length * 3) / 4);
+          entries.push({ index: i, src, isDefault, status: "ok", bytes, mime, elapsedMs });
+        }
+      } catch (err) {
+        const elapsedMs = Math.round(performance.now() - t0);
+        entries.push({ index: i, src, isDefault, status: "fail", bytes: 0, mime: "-", elapsedMs, error: (err as Error)?.message || String(err) });
+      }
+      setLogoTestEntries([...entries]);
+    }
+
+    // Build a small PDF embedding each successfully-converted logo
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      doc.setFontSize(14);
+      doc.text("Logo Embed Test", 105, 15, { align: "center" });
+      doc.setFontSize(10);
+      doc.text(new Date().toLocaleString("ar"), 105, 22, { align: "center" });
+      let y = 35;
+      for (const e of entries) {
+        doc.setFontSize(11);
+        doc.text(`Slot ${e.index + 1} — ${e.status.toUpperCase()}${e.isDefault ? " (افتراضي)" : ""}`, 15, y);
+        if (e.status === "ok") {
+          try {
+            const fmt = e.mime.includes("jpeg") ? "JPEG" : e.mime.includes("webp") ? "WEBP" : "PNG";
+            const dataUrl = await imageUrlToDataUrl(e.src);
+            if (dataUrl) doc.addImage(dataUrl, fmt, 15, y + 3, 40, 25);
+          } catch {/* ignore embed errors */}
+        } else {
+          doc.setFontSize(9);
+          doc.setTextColor(200, 0, 0);
+          doc.text(e.error || "تعذّر التحويل", 15, y + 8);
+          doc.setTextColor(0, 0, 0);
+        }
+        y += 35;
+        if (y > 260) { doc.addPage(); y = 20; }
+      }
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+      setLogoTestPdfUrl(url);
+    } catch (err) {
+      console.error("[logo-test] PDF build failed:", err);
+      toast({ title: "تعذّر بناء PDF", description: (err as Error)?.message, variant: "destructive" });
+    }
+
+    setLogoTestRunning(false);
+  };
+
+
   const handleOrientationChange = (value: string) => {
     if (value === "portrait" || value === "landscape") {
       setOrientation(value);
