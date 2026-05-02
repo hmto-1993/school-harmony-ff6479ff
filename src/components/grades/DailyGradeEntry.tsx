@@ -330,7 +330,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const handlePrintTable = async () => { await printGradesTable(getDailyPrintOptions()); };
   const handleExportPDF = async () => {
     try {
-      await exportDailyInteractionPDF();
+      const opts = getDailyPrintOptions();
+      const fileDate = format(selectedDate, "yyyy-MM-dd");
+      await exportGradesTableAsPDF({ ...opts, fileName: `الإدخال_اليومي_${fileDate}` });
       toast({ title: "تم التصدير", description: "تم تصدير ملف PDF بنجاح" });
     } catch (e: any) {
       console.error("[DailyGradeEntry] Export PDF failed:", e);
