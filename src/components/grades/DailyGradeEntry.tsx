@@ -183,6 +183,11 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
         `<td>${i + 1}</td>`,
         `<td>${sg.full_name}</td>`,
         ...visibleCategories.map(cat => {
+          if (cat.is_deduction) {
+            const score = sg.grades[cat.id];
+            const display = (score == null || score === 0) ? "—" : `-${Number(score)}`;
+            return `<td><div class="icons-cell" style="color:#dc2626;font-weight:bold;">${display}</div></td>`;
+          }
           const slotsArr = sg.slots[cat.id] || [null];
           const isStarred = sg.starred[cat.id] || false;
           const icons = slotsArr.map(l => getLevelIcon(l)).join(' ');
@@ -210,6 +215,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   };
 
   const formatDailyPDFCell = (sg: (typeof filteredStudentGrades)[number], catId: string) => {
+    const cat = visibleCategories.find(c => c.id === catId);
+    // For deductions (violations): show numeric deduction (e.g. -2) instead of icons
+    if (cat?.is_deduction) {
+      const score = sg.grades[catId];
+      if (score == null || score === 0) return "—";
+      return `-${Number(score)}`;
+    }
     if (sg.starred[catId]) return "كامل";
     const labels = (sg.slots[catId] || [null]).map(level => {
       if (level === "excellent") return "ممتاز";
