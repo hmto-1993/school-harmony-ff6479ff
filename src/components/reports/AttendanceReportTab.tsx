@@ -22,6 +22,7 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
   present: "الحاضرون",
   absent: "الغائبون",
   late: "المتأخرون",
+  absent_late: "الغائبون والمتأخرون",
 };
 
 const STATUS_LABELS: Record<string, string> = {
