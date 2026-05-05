@@ -68,8 +68,8 @@ export default function AlphaLabOwnerCard() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: prof } = await supabase.from("profiles").select("national_id").eq("user_id", u.user.id).maybeSingle();
-      setIsSuperOwner(prof?.national_id === "1098080268");
+      const { data: prof } = await supabase.from("profiles").select("is_super_owner_flag").eq("user_id", u.user.id).maybeSingle();
+      setIsSuperOwner(!!(prof as any)?.is_super_owner_flag);
     })();
   }, []);
 

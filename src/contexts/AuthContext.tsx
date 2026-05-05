@@ -50,12 +50,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
   const [nationalId, setNationalId] = useState<string | null>(null);
+  const [isSuperOwnerFlag, setIsSuperOwnerFlag] = useState(false);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentData | null>(null);
   const [studentRestoring, setStudentRestoring] = useState(() => !!sessionStorage.getItem("student_session"));
 
   const isStudent = !!student && !user;
-  const isSuperOwner = nationalId === "1098080268";
+  const isSuperOwner = isSuperOwnerFlag;
   const subscriptionExpired = !isSuperOwner && !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= Date.now();
 
   const fetchRole = async (userId: string) => {
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       const query = Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
-        supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id, is_super_owner_flag").eq("user_id", userId).maybeSingle(),
       ]);
       const [roleRes, profileRes] = await Promise.race([query, timeout]) as any;
       const rawGlobalRole = roleRes.data?.role as string | undefined;
@@ -80,6 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
       setOrganizationId(((profileRes.data as any)?.organization_id as string) || null);
       setNationalId(((profileRes.data as any)?.national_id as string) || null);
+      setIsSuperOwnerFlag(!!(profileRes.data as any)?.is_super_owner_flag);
     } catch (err) {
       // Never leave the auth context in a perpetual loading state.
       console.error("[AuthContext] fetchRole failed:", err);
@@ -88,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSubscriptionEnd(null);
       setOrganizationId(null);
       setNationalId(null);
+      setIsSuperOwnerFlag(false);
     }
   };
 
