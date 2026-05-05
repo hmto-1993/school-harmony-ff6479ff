@@ -77,6 +77,8 @@ export default function SmartRadar({
   onClose,
 }: SmartRadarProps) {
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [radarTheme, setRadarTheme] = usePersistedState<"dark" | "light">("smart-radar-theme", "dark");
+  const isLightRadar = radarTheme === "light";
   const [spinning, setSpinning] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
