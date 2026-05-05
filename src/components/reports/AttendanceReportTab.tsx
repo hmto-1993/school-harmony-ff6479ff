@@ -270,6 +270,7 @@ export default function AttendanceReportTab({
                 <SelectItem value="present">الحاضرون</SelectItem>
                 <SelectItem value="absent">الغائبون</SelectItem>
                 <SelectItem value="late">المتأخرون</SelectItem>
+                <SelectItem value="absent_late">الغائبون والمتأخرون</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={onPreview} className="gap-1.5">
