@@ -22,6 +22,7 @@ const STATUS_FILTER_LABELS: Record<string, string> = {
   present: "الحاضرون",
   absent: "الغائبون",
   late: "المتأخرون",
+  absent_late: "الغائبون والمتأخرون",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -57,7 +58,7 @@ interface AttendanceReportTabProps {
   className: string;
 }
 
-type StatusFilter = "all" | "present" | "absent" | "late";
+type StatusFilter = "all" | "present" | "absent" | "late" | "absent_late";
 
 export default function AttendanceReportTab({
   attendanceData,
@@ -104,6 +105,7 @@ export default function AttendanceReportTab({
 
   const filterRows = (rows: AttendanceRow[]) => {
     if (statusFilter === "all") return rows;
+    if (statusFilter === "absent_late") return rows.filter((r) => r.status === "absent" || r.status === "late");
     return rows.filter((r) => r.status === statusFilter);
   };
 
@@ -268,6 +270,7 @@ export default function AttendanceReportTab({
                 <SelectItem value="present">الحاضرون</SelectItem>
                 <SelectItem value="absent">الغائبون</SelectItem>
                 <SelectItem value="late">المتأخرون</SelectItem>
+                <SelectItem value="absent_late">الغائبون والمتأخرون</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm" onClick={onPreview} className="gap-1.5">
