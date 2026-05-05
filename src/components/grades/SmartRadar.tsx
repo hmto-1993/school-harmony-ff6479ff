@@ -156,8 +156,8 @@ export default function SmartRadar({
   // Bank question source state
   const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
   const [bankLessons, setBankLessons] = useState<{ id: string; title: string }[]>([]);
-  const [selectedBankChapter, setSelectedBankChapter] = useState<string>("");
-  const [selectedBankLesson, setSelectedBankLesson] = useState<string>("");
+  const [selectedBankChapter, setSelectedBankChapter] = useState<string>(initialState?.bc ?? "");
+  const [selectedBankLesson, setSelectedBankLesson] = useState<string>(initialState?.bl ?? "");
   const bankQuestionsRef = useRef<RadarQuestion[]>([]);
 
   useEffect(() => { setLocalDuration(settings.quizDuration); }, [settings.quizDuration]);
