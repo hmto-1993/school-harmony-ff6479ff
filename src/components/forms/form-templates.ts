@@ -121,6 +121,16 @@ export const formTemplates: FormTemplate[] = [
     icon: "⭐",
     description: "رصد شواهد السلوك المتميز والدرجات المكتسبة (مطابق ص59)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف", fieldId: "class_name" }, { label: "تاريخ التنفيذ", fieldId: "execution_date" }] },
+      { type: "section", title: "تفاصيل رصد السلوك المتميز" },
+      { type: "row", cells: [{ label: "موضوع الممارسة", fieldId: "topic", flex: 2 }, { label: "نوع الممارسة", fieldId: "behavior_type" }] },
+      { type: "block", label: "شواهد السلوك المتميز", fieldId: "evidence", minHeight: 28 },
+      { type: "row", cells: [{ label: "الدرجة المكتسبة", fieldId: "score" }, { label: "اسم راصد السلوك", fieldId: "observer_name", flex: 2 }] },
+      { type: "block", label: "ملاحظات إضافية", fieldId: "teacher_notes", minHeight: 22 },
+    ],
     bodyTemplate:
       "نموذج رصد درجات السلوك المتميز\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}\nالصف: {class_name}\n\n— تفاصيل الرصد —\nموضوع ممارسة السلوك المتميز: {topic}\nنوع ممارسة السلوك المتميز: {behavior_type}\nتاريخ التنفيذ: {execution_date}\nشواهد السلوك المتميز: {evidence}\nالدرجة المكتسبة: {score}\nاسم راصد السلوك: {observer_name}\n\nملاحظات إضافية:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["راصد السلوك", "المرشد الطلابي", "مدير المدرسة"],
