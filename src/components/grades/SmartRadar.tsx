@@ -55,12 +55,23 @@ interface SmartRadarProps {
   settings: RadarSettings;
   muted: boolean;
   participatedStudentIds?: string[];
+  classId?: string;
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onQuizCorrect: (studentId: string, score: number) => void;
   onClose: () => void;
 }
+
+interface LastSessionState {
+  ex: string[]; // excluded student IDs
+  ep: boolean; // excludeParticipated
+  tl: boolean; // targetLowest
+  d: number; // localDuration
+  bc?: string; // bank chapter
+  bl?: string; // bank lesson
+}
+const LAST_SESSION_KEY_PREFIX = "smart-radar-last-session";
 
 const SPEED_MAP = { fast: 60, medium: 100, slow: 160 };
 const SPIN_TICKS = { fast: 20, medium: 28, slow: 35 };
