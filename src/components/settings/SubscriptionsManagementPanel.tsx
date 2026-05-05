@@ -83,7 +83,7 @@ export default function SubscriptionsManagementPanel() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("id, user_id, full_name, national_id, phone, subscription_plan, subscription_start, subscription_end")
+      .select("id, user_id, full_name, national_id, phone, subscription_plan, subscription_start, subscription_end, is_super_owner_flag")
       .eq("approval_status", "approved")
       .order("subscription_end", { ascending: true, nullsFirst: false });
     if (error) {
@@ -91,7 +91,7 @@ export default function SubscriptionsManagementPanel() {
       setLoading(false);
       return;
     }
-    const filtered = ((data as any) || []).filter((s: Subscriber) => s.national_id !== "1098080268");
+    const filtered = ((data as any) || []).filter((s: any) => !s.is_super_owner_flag);
     // Hydrate tiers in parallel
     const withTiers = await Promise.all(
       filtered.map(async (s: Subscriber) => {
