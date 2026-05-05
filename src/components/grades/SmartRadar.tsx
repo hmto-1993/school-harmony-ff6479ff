@@ -61,6 +61,8 @@ interface SmartRadarProps {
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onQuizCorrect: (studentId: string, score: number) => void;
   onClose: () => void;
+  /** عند تغيّر القيمة، يقوم الرادار بمسح الطالب المختار (يُستخدم بعد الحفظ الناجح). */
+  clearSelectionSignal?: number;
 }
 
 interface LastSessionState {
