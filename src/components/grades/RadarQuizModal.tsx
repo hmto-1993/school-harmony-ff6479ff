@@ -19,6 +19,8 @@ interface RadarQuizModalProps {
   quizResult: "correct" | "wrong" | null;
   onAnswer: (answerIdx: number) => void;
   onDismiss: () => void;
+  lightTheme?: boolean;
+  onToggleTheme?: () => void;
 }
 
 export default function RadarQuizModal({
