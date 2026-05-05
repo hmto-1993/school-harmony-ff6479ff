@@ -513,7 +513,7 @@ export async function exportFormPdf(
 
   // ========== PROTOCOL LAYOUT ==========
   if ((form as any).tableLayout) {
-    y = drawTableLayout(doc, (form as any).tableLayout, fieldValues, y, marginX, contentW, pageW, pageH, headerColor);
+    y = drawTableLayout(doc, (form as any).tableLayout, fieldValues, y, marginX, contentW, pageH, headerColor);
   } else if (form.protocolLayout && form.protocolSections) {
     // Separator
     doc.setDrawColor(200, 210, 220);
