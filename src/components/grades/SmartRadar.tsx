@@ -394,8 +394,8 @@ export default function SmartRadar({
 
   const handleGradeAction = () => {
     if (selectedStudent) onSelectForGrade(selectedStudent.student_id);
-    setShowActions(false);
-    setSelectedStudent(null);
+    // ملاحظة: نُبقي selectedStudent و showActions كي يستطيع المعلم
+    // العودة لشاشة اختيار نوع المشاركة عند الضغط على إلغاء/تراجع.
   };
 
   const handleParticipationAction = () => {
