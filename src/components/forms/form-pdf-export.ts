@@ -495,6 +495,26 @@ export async function exportFormPdf(
     doc.line(xCenter - 20, y + 18, xCenter + 20, y + 18);
   });
 
+  // ========== OFFICIAL STAMP PLACEHOLDER ==========
+  if (form.requiresStamp) {
+    const stampX = marginX + 8;
+    const stampY = y + 22;
+    const stampR = 11;
+    doc.setDrawColor(headerColor[0], headerColor[1], headerColor[2]);
+    doc.setLineWidth(0.6);
+    doc.circle(stampX + stampR, stampY + stampR, stampR, "S");
+    doc.setLineWidth(0.3);
+    doc.circle(stampX + stampR, stampY + stampR, stampR - 1.8, "S");
+    doc.setFontSize(8);
+    doc.setFont("Amiri", "bold");
+    doc.setTextColor(headerColor[0], headerColor[1], headerColor[2]);
+    doc.text("الختم", stampX + stampR, stampY + stampR + 1, { align: "center" });
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(120, 120, 120);
+    doc.text("الرسمي", stampX + stampR, stampY + stampR + 5, { align: "center" });
+  }
+
   // ========== BOTTOM QR ==========
   const qrY = pageH - 28;
   drawQrPattern(doc, marginX + 2, qrY - 2, 18, refNumber);
