@@ -109,6 +109,28 @@ export default function AttendanceReportTab({
     return rows.filter((r) => r.status === statusFilter);
   };
 
+  // Per-student totals (absent + late) — shown when filter is absent/late/absent_late
+  const studentTotals = useMemo(() => {
+    const showTotals = statusFilter === "absent" || statusFilter === "late" || statusFilter === "absent_late";
+    if (!showTotals) return [];
+    const map = new Map<string, { name: string; class_name: string; absent: number; late: number }>();
+    attendanceData.forEach((r) => {
+      if (r.status !== "absent" && r.status !== "late") return;
+      const key = `${r.student_name}__${r.class_name || ""}`;
+      const cur = map.get(key) || { name: r.student_name, class_name: r.class_name || "", absent: 0, late: 0 };
+      if (r.status === "absent") cur.absent += 1;
+      else cur.late += 1;
+      map.set(key, cur);
+    });
+    return Array.from(map.values())
+      .filter((s) => {
+        if (statusFilter === "absent") return s.absent > 0;
+        if (statusFilter === "late") return s.late > 0;
+        return s.absent + s.late > 0;
+      })
+      .sort((a, b) => (b.absent + b.late) - (a.absent + a.late));
+  }, [attendanceData, statusFilter]);
+
   const renderTable = (rows: AttendanceRow[], showClassName = false) => {
     const filtered = filterRows(rows);
     if (filtered.length === 0) {
@@ -337,6 +359,68 @@ export default function AttendanceReportTab({
           </div>
 
           <AttendanceChart data={attendanceData} />
+
+          {studentTotals.length > 0 && (
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardContent className="pt-4 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-1 rounded-full bg-gradient-to-b from-destructive to-warning" />
+                    <h3 className="font-bold text-base text-foreground">
+                      إجمالي {statusFilter === "absent" ? "الغياب" : statusFilter === "late" ? "التأخر" : "الغياب والتأخر"} لكل طالب
+                    </h3>
+                    <span className="text-xs text-muted-foreground">({studentTotals.length} طالب)</span>
+                  </div>
+                </div>
+                <div className="max-h-[300px] overflow-auto rounded-xl border border-border/30">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gradient-to-l from-destructive/5 to-warning/5">
+                        <TableHead className="text-right font-semibold w-12">#</TableHead>
+                        <TableHead className="text-right font-semibold">اسم الطالب</TableHead>
+                        {isAllClasses && <TableHead className="text-right font-semibold">الفصل</TableHead>}
+                        {(statusFilter === "absent" || statusFilter === "absent_late") && (
+                          <TableHead className="text-center font-semibold">غياب</TableHead>
+                        )}
+                        {(statusFilter === "late" || statusFilter === "absent_late") && (
+                          <TableHead className="text-center font-semibold">تأخر</TableHead>
+                        )}
+                        {statusFilter === "absent_late" && (
+                          <TableHead className="text-center font-semibold">المجموع</TableHead>
+                        )}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {studentTotals.map((s, i) => (
+                        <TableRow key={`${s.name}-${s.class_name}`} className={i % 2 === 0 ? "bg-muted/20" : ""}>
+                          <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                          <TableCell className="font-medium">{s.name}</TableCell>
+                          {isAllClasses && <TableCell className="text-muted-foreground text-sm">{s.class_name || "—"}</TableCell>}
+                          {(statusFilter === "absent" || statusFilter === "absent_late") && (
+                            <TableCell className="text-center">
+                              {s.absent > 0 ? (
+                                <Badge className="bg-destructive/15 text-destructive hover:bg-destructive/20 border-0">{s.absent}</Badge>
+                              ) : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {(statusFilter === "late" || statusFilter === "absent_late") && (
+                            <TableCell className="text-center">
+                              {s.late > 0 ? (
+                                <Badge className="border-0" style={{ background: "hsl(var(--warning) / 0.15)", color: "hsl(var(--warning))" }}>{s.late}</Badge>
+                              ) : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                          )}
+                          {statusFilter === "absent_late" && (
+                            <TableCell className="text-center font-bold text-foreground">{s.absent + s.late}</TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Grouped by class view */}
           {isAllClasses && groupedByClass ? (
