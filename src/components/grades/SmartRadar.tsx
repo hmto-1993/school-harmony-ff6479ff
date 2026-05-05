@@ -55,12 +55,23 @@ interface SmartRadarProps {
   settings: RadarSettings;
   muted: boolean;
   participatedStudentIds?: string[];
+  classId?: string;
   onToggleMute: () => void;
   onSelectForGrade: (studentId: string) => void;
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onQuizCorrect: (studentId: string, score: number) => void;
   onClose: () => void;
 }
+
+interface LastSessionState {
+  ex: string[]; // excluded student IDs
+  ep: boolean; // excludeParticipated
+  tl: boolean; // targetLowest
+  d: number; // localDuration
+  bc?: string; // bank chapter
+  bl?: string; // bank lesson
+}
+const LAST_SESSION_KEY_PREFIX = "smart-radar-last-session";
 
 const SPEED_MAP = { fast: 60, medium: 100, slow: 160 };
 const SPIN_TICKS = { fast: 20, medium: 28, slow: 35 };
@@ -70,13 +81,27 @@ export default function SmartRadar({
   settings,
   muted,
   participatedStudentIds = [],
+  classId,
   onToggleMute,
   onSelectForGrade,
   onSelectForParticipation,
   onQuizCorrect,
   onClose,
 }: SmartRadarProps) {
-  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const sessionKey = `${LAST_SESSION_KEY_PREFIX}:${classId ?? "default"}`;
+
+  // Hydrate from last session (synchronously on mount)
+  const initialState = (() => {
+    try {
+      const raw = localStorage.getItem(sessionKey);
+      if (!raw) return null;
+      return JSON.parse(raw) as LastSessionState;
+    } catch { return null; }
+  })();
+
+  const [excluded, setExcluded] = useState<Set<string>>(
+    () => new Set(initialState?.ex ?? [])
+  );
   const [radarTheme, setRadarTheme] = usePersistedState<"dark" | "light">("smart-radar-theme", "dark");
   const isLightRadar = radarTheme === "light";
   const [spinning, setSpinning] = useState(false);
@@ -84,11 +109,12 @@ export default function SmartRadar({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
-  const [excludeParticipated, setExcludeParticipated] = useState(true);
-  const [targetLowest, setTargetLowest] = useState(false);
+  const [excludeParticipated, setExcludeParticipated] = useState(initialState?.ep ?? true);
+  const [targetLowest, setTargetLowest] = useState(initialState?.tl ?? false);
+  const [restoredToast, setRestoredToast] = useState(initialState !== null);
 
   // Quick duration override (before spinning)
-  const [localDuration, setLocalDuration] = useState(settings.quizDuration);
+  const [localDuration, setLocalDuration] = useState(initialState?.d ?? settings.quizDuration);
 
   // Quiz state
   const [quizQuestion, setQuizQuestion] = useState<RadarQuestion | null>(null);
@@ -130,8 +156,8 @@ export default function SmartRadar({
   // Bank question source state
   const [bankChapters, setBankChapters] = useState<{ id: string; title: string }[]>([]);
   const [bankLessons, setBankLessons] = useState<{ id: string; title: string }[]>([]);
-  const [selectedBankChapter, setSelectedBankChapter] = useState<string>("");
-  const [selectedBankLesson, setSelectedBankLesson] = useState<string>("");
+  const [selectedBankChapter, setSelectedBankChapter] = useState<string>(initialState?.bc ?? "");
+  const [selectedBankLesson, setSelectedBankLesson] = useState<string>(initialState?.bl ?? "");
   const bankQuestionsRef = useRef<RadarQuestion[]>([]);
 
   useEffect(() => { setLocalDuration(settings.quizDuration); }, [settings.quizDuration]);
@@ -180,6 +206,31 @@ export default function SmartRadar({
       bankQuestionsRef.current = [];
     }
   }, [selectedBankLesson]);
+
+  // Persist last-session state (overwrites single key, debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const payload: LastSessionState = {
+          ex: Array.from(excluded),
+          ep: excludeParticipated,
+          tl: targetLowest,
+          d: localDuration,
+          ...(selectedBankChapter ? { bc: selectedBankChapter } : {}),
+          ...(selectedBankLesson ? { bl: selectedBankLesson } : {}),
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(payload));
+      } catch {}
+    }, 250);
+    return () => clearTimeout(t);
+  }, [sessionKey, excluded, excludeParticipated, targetLowest, localDuration, selectedBankChapter, selectedBankLesson]);
+
+  // Auto-dismiss restore toast after 1.5s
+  useEffect(() => {
+    if (!restoredToast) return;
+    const t = setTimeout(() => setRestoredToast(false), 1500);
+    return () => clearTimeout(t);
+  }, [restoredToast]);
 
   const participatedSet = new Set(participatedStudentIds);
   const baseAvailable = students.filter(
@@ -438,6 +489,13 @@ export default function SmartRadar({
         backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
       }} />
+
+      {/* Restore notification */}
+      {restoredToast && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-emerald-500/90 text-white text-[11px] font-bold shadow-lg shadow-emerald-500/40 animate-fade-in border border-emerald-400/40">
+          تم استعادة خيارات الحصة السابقة بنجاح
+        </div>
+      )}
 
       {/* Header */}
       <div className="relative flex items-center justify-between mb-4">
