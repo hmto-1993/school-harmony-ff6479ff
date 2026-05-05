@@ -569,6 +569,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {radarOpen && gradeTab === "assessment" && (
               <div className="mb-4 no-print">
                 <SmartRadar
+                  classId={selectedClass}
                   students={filteredStudentGrades.map(sg => ({ student_id: sg.student_id, full_name: sg.full_name, totalScore: cumulativeTotals[sg.student_id] ?? 0 }))}
                   settings={radarSettings}
                   muted={radarMuted}
