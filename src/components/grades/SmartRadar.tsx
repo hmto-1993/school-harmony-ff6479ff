@@ -457,6 +457,14 @@ export default function SmartRadar({
         <div className="flex items-center gap-1">
           <button
             type="button"
+            onClick={() => setRadarTheme(isLightRadar ? "dark" : "light")}
+            className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+            title={isLightRadar ? "الوضع الداكن" : "الوضع الفاتح"}
+          >
+            {isLightRadar ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-amber-300" />}
+          </button>
+          <button
+            type="button"
             onClick={() => (audioLocked ? setShowAudioUpgrade(true) : onToggleMute())}
             className="relative h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
             title={audioLocked ? "المؤثرات الصوتية - ميزة بريميوم" : effectiveMuted ? "تشغيل الصوت" : "كتم الصوت"}
