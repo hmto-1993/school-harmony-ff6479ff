@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { HelpCircle, Volume2, VolumeX, X, Check, XCircle, Pause, Play } from "lucide-react";
+import { HelpCircle, Volume2, VolumeX, X, Check, XCircle, Pause, Play, Sun, Moon } from "lucide-react";
 import { type RadarQuestion } from "./radar-quiz-types";
 
 interface RadarQuizModalProps {
