@@ -58,7 +58,7 @@ interface AttendanceReportTabProps {
   className: string;
 }
 
-type StatusFilter = "all" | "present" | "absent" | "late";
+type StatusFilter = "all" | "present" | "absent" | "late" | "absent_late";
 
 export default function AttendanceReportTab({
   attendanceData,
