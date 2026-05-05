@@ -81,6 +81,7 @@ export default function SmartRadar({
   settings,
   muted,
   participatedStudentIds = [],
+  classId,
   onToggleMute,
   onSelectForGrade,
   onSelectForParticipation,
