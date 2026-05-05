@@ -433,7 +433,7 @@ export default function SmartRadar({
 
   // ── Main Radar UI ──────────────────────────────────────────────
   return (
-    <div className="relative rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden" dir="rtl">
+    <div className={cn("relative rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden transition-colors", isLightRadar && "radar-light")} dir="rtl">
       <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
         backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
