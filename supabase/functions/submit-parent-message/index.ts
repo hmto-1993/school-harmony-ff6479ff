@@ -58,21 +58,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify HMAC token
-    const data = `${student_id}:${session_issued_at}`;
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(serviceRoleKey),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
+    // Verify HMAC token (signature + 24h max age)
+    const { verifyStudentSession } = await import("../_shared/student-session.ts");
+    const ok = await verifyStudentSession(
+      session_token,
+      student_id,
+      Number(session_issued_at),
+      serviceRoleKey,
     );
-    const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(data));
-    const expectedToken = btoa(String.fromCharCode(...new Uint8Array(signature)));
-
-    if (session_token !== expectedToken) {
+    if (!ok) {
       return new Response(
-        JSON.stringify({ error: "جلسة غير صالحة" }),
+        JSON.stringify({ error: "جلسة غير صالحة أو منتهية" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

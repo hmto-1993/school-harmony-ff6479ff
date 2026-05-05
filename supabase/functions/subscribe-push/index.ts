@@ -66,15 +66,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // For student subscriptions, verify HMAC token
+    // For student subscriptions, cryptographically verify HMAC session token
     if (resolvedUserType === "student") {
-      if (!student_id || !hmac_token) {
+      const session_issued_at = body.session_issued_at;
+      if (!student_id || !hmac_token || !session_issued_at) {
         return new Response(JSON.stringify({ error: "Missing student credentials" }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      // Verify student exists
+      const { verifyStudentSession } = await import("../_shared/student-session.ts");
+      const ok = await verifyStudentSession(
+        hmac_token,
+        student_id,
+        Number(session_issued_at),
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      if (!ok) {
+        return new Response(JSON.stringify({ error: "Invalid or expired session" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // Verify student still exists
       const { data: student, error: studentError } = await supabaseAdmin
         .from("students")
         .select("id, class_id")

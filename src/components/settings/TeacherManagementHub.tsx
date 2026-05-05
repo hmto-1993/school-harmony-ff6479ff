@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SUPER_OWNER_ID = "1098080268";
+
 
 type Profile = {
   id: string;
@@ -98,14 +98,14 @@ export default function TeacherManagementHub() {
     const [profilesRes, keyRes] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, user_id, full_name, national_id, phone, approval_status, subscription_plan, subscription_start, subscription_end, created_at")
+        .select("id, user_id, full_name, national_id, phone, approval_status, subscription_plan, subscription_start, subscription_end, created_at, is_super_owner_flag")
         .order("created_at", { ascending: false }),
       supabase.rpc("has_owner_activation_key"),
     ]);
     if (profilesRes.error) {
       toast({ title: "تعذر تحميل البيانات", description: profilesRes.error.message, variant: "destructive" });
     } else {
-      const filtered = ((profilesRes.data as any) || []).filter((p: Profile) => p.national_id !== SUPER_OWNER_ID);
+      const filtered = ((profilesRes.data as any) || []).filter((p: any) => !p.is_super_owner_flag);
       setProfiles(filtered);
     }
     if (!keyRes.error) setHasKey(Boolean(keyRes.data));

@@ -57,8 +57,42 @@ async function processFile(f: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Require authenticated admin/owner caller
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const sbUrl = Deno.env.get("SUPABASE_URL")!;
+  const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+  const sbAuth = createClient(sbUrl, anon, { global: { headers: { Authorization: authHeader } } });
+  const { data: u, error: uerr } = await sbAuth.auth.getUser(authHeader.replace("Bearer ", ""));
+  if (uerr || !u?.user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const sbAdmin = createClient(sbUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: roleRow } = await sbAdmin
+    .from("user_roles").select("role").eq("user_id", u.user.id).eq("role", "admin").maybeSingle();
+  const { data: prof } = await sbAdmin
+    .from("profiles").select("role").eq("user_id", u.user.id).maybeSingle();
+  const isAdmin = !!roleRow || prof?.role === "owner";
+  if (!isAdmin) {
+    return new Response(JSON.stringify({ error: "Forbidden" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const body = await req.json().catch(() => ({}));
-  const files: string[] = body.files || ["shared/report_1773552090763.pdf", "shared/report_1773402540754.pdf"];
+  const files: string[] = Array.isArray(body.files) ? body.files.filter((f: unknown) => typeof f === "string") : [];
+  if (files.length === 0) {
+    return new Response(JSON.stringify({ error: "No files provided" }), {
+      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Fire-and-forget background tasks
   // @ts-ignore EdgeRuntime is available in Supabase Edge runtime

@@ -22,7 +22,12 @@ export async function requestNotificationPermission(): Promise<boolean> {
   return permission === 'granted';
 }
 
-export async function subscribeToPush(studentId?: string, classId?: string, hmacToken?: string): Promise<boolean> {
+export async function subscribeToPush(
+  studentId?: string,
+  classId?: string,
+  hmacToken?: string,
+  sessionIssuedAt?: number,
+): Promise<boolean> {
   try {
     const registration = await navigator.serviceWorker.ready;
     
@@ -45,6 +50,7 @@ export async function subscribeToPush(studentId?: string, classId?: string, hmac
         student_id: studentId || null,
         class_id: classId || null,
         hmac_token: hmacToken || null,
+        session_issued_at: sessionIssuedAt || null,
       },
     });
     
