@@ -352,13 +352,16 @@ export function useReportsData() {
   // Export functions
   const exportAttendanceExcel = async () => {
     const XLSX = await import("xlsx");
+    const includeClass = attendanceData.some((r) => !!r.class_name);
     const ws = XLSX.utils.json_to_sheet(
-      attendanceData.map((r) => ({
-        "اسم الطالب": r.student_name,
-        التاريخ: r.date,
-        الحالة: STATUS_LABELS[r.status] || r.status,
-        ملاحظات: r.notes || "",
-      }))
+      attendanceData.map((r) => {
+        const row: Record<string, any> = { "اسم الطالب": r.student_name };
+        if (includeClass) row["الفصل"] = r.class_name || "";
+        row["التاريخ"] = r.date;
+        row["الحالة"] = STATUS_LABELS[r.status] || r.status;
+        row["ملاحظات"] = r.notes || "";
+        return row;
+      })
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");

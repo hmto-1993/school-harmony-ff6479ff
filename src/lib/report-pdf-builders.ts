@@ -10,6 +10,7 @@ interface AttendanceRow {
   date: string;
   status: string;
   notes: string | null;
+  class_name?: string;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -38,23 +39,37 @@ export async function buildAttendancePDF(
   doc.setFont("Amiri", "normal");
   doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
 
-  const tableData = data.map((r, i) => [
-    r.notes || "",
-    STATUS_LABELS[r.status] || r.status,
-    r.date,
-    r.student_name,
-    String(i + 1),
-  ]);
+  const includeClass = data.some((r) => !!r.class_name);
+
+  // RTL column order (visual right-to-left): #, اسم الطالب, [الفصل], التاريخ, الحالة, ملاحظات
+  // jsPDF-autotable arrays are reversed for RTL rendering, so we list in reverse.
+  const head = includeClass
+    ? ["ملاحظات", "الحالة", "التاريخ", "الفصل", "اسم الطالب", "#"]
+    : ["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"];
+
+  const tableData = data.map((r, i) =>
+    includeClass
+      ? [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.class_name || "", r.student_name, String(i + 1)]
+      : [r.notes || "", STATUS_LABELS[r.status] || r.status, r.date, r.student_name, String(i + 1)]
+  );
+
+  const nameIdx = head.length - 2;
+  const numIdx = head.length - 1;
+  const columnStyles: Record<number, any> = {
+    [nameIdx]: { halign: "right" as const, fontStyle: "bold" as const },
+    [numIdx]: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
+  };
+  if (includeClass) {
+    // class column sits one to the left of name in head array (index nameIdx - 1)
+    columnStyles[nameIdx - 1] = { halign: "right" as const };
+  }
 
   autoTable(doc, {
     startY: startY + 12,
-    head: [["ملاحظات", "الحالة", "التاريخ", "اسم الطالب", "#"]],
+    head: [head],
     body: tableData,
     ...tableStyles,
-    columnStyles: {
-      3: { halign: "right" as const, fontStyle: "bold" as const },
-      4: { halign: "center" as const, fontStyle: "bold" as const, cellWidth: 10 },
-    },
+    columnStyles,
   });
 
   const fileName = `تقرير_الحضور_${dateFrom}_${dateTo}.pdf`;

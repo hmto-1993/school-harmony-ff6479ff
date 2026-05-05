@@ -214,14 +214,16 @@ export default function AttendanceReportTab({
       return;
     }
     const XLSX = await import("xlsx");
+    const includeClass = filteredAttendance.some((r) => !!r.class_name);
     const ws = XLSX.utils.json_to_sheet(
-      filteredAttendance.map((r) => ({
-        "اسم الطالب": r.student_name,
-        الفصل: r.class_name || "",
-        التاريخ: r.date,
-        الحالة: STATUS_LABELS_AR[r.status] || r.status,
-        ملاحظات: r.notes || "",
-      }))
+      filteredAttendance.map((r) => {
+        const row: Record<string, any> = { "اسم الطالب": r.student_name };
+        if (includeClass) row["الفصل"] = r.class_name || "";
+        row["التاريخ"] = r.date;
+        row["الحالة"] = STATUS_LABELS_AR[r.status] || r.status;
+        row["ملاحظات"] = r.notes || "";
+        return row;
+      })
     );
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "تقرير الحضور");
@@ -346,7 +348,7 @@ export default function AttendanceReportTab({
           ) : (
             <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
               <CardContent className="pt-4">
-                {renderTable(attendanceData)}
+                {renderTable(attendanceData, isAllClasses)}
               </CardContent>
             </Card>
           )}
