@@ -479,6 +479,24 @@ export const formTemplates: FormTemplate[] = [
     icon: "📕",
     description: "إجراءات تصاعدية مع حسم درجات المواظبة (مطابق ص74)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "تاريخ الغياب الأخير", fieldId: "absence_date_un" }] },
+      { type: "row", cells: [{ label: "هل تم التواصل مع ولي الأمر؟", fieldId: "parent_contacted", flex: 2 }, { label: "التاريخ", fieldId: "date" }] },
+      {
+        type: "escalation",
+        title: "جدول الإجراءات التصاعدية وحسم درجات المواظبة",
+        columns: ["عدد الأيام", "الإجراء المتخذ", "التاريخ", "الدرجات المحسومة"],
+        rows: [
+          { label: "٣ أيام", fieldIds: ["action_3", "action_3_date", "deduct_3"] },
+          { label: "٣ أيام متصلة", fieldIds: ["action_3c", "action_3c_date", "deduct_3c"] },
+          { label: "٥ أيام", fieldIds: ["action_5", "action_5_date", "deduct_5"] },
+          { label: "١٠ أيام", fieldIds: ["action_10", "action_10_date", "deduct_10"] },
+        ],
+      },
+      { type: "block", label: "ملاحظات", fieldId: "teacher_notes", minHeight: 18 },
+    ],
     bodyTemplate:
       "نموذج إجراءات الغياب بدون عذر\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}     الصف/الفصل: {class_name}\n\nتاريخ الغياب الأخير: {absence_date_un}\nهل تم التواصل مع ولي الأمر: {parent_contacted}\n\n— جدول الإجراءات التصاعدية وحسم درجات المواظبة —\n\n• 3 أيام         →  الإجراء: {action_3}     | تاريخ: {action_3_date}     | درجات محسومة: {deduct_3}\n• 3 أيام متصلة  →  الإجراء: {action_3c}    | تاريخ: {action_3c_date}    | درجات محسومة: {deduct_3c}\n• 5 أيام         →  الإجراء: {action_5}     | تاريخ: {action_5_date}     | درجات محسومة: {deduct_5}\n• 10 أيام        →  الإجراء: {action_10}    | تاريخ: {action_10_date}    | درجات محسومة: {deduct_10}\n\nملاحظات:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "وكيل شؤون الطلبة", "ولي الأمر", "مدير المدرسة"],
