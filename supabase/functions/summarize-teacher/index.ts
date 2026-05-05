@@ -11,6 +11,26 @@ serve(async (req) => {
   }
 
   try {
+    // Require authenticated caller (any logged-in staff user)
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const sb = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY') ?? Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: userData, error: userErr } = await sb.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ summary: '' }), {
@@ -19,6 +39,12 @@ serve(async (req) => {
     }
 
     const { teacherName, schoolName, classes, attendanceRate, totalStudents, focus = 'comprehensive' } = await req.json();
+
+    // Sanitize string inputs to mitigate prompt injection (clip length, strip control chars)
+    const clean = (v: unknown, max = 200) =>
+      String(v ?? '').replace(/[\u0000-\u001F\u007F]+/g, ' ').slice(0, max);
+    const safeTeacher = clean(teacherName, 120);
+    const safeSchool = clean(schoolName, 200);
 
     // Build data summary based on focus
     const classDetails = (classes || []).map((c: any) => {
