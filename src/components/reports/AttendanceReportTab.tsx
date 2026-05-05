@@ -105,6 +105,7 @@ export default function AttendanceReportTab({
 
   const filterRows = (rows: AttendanceRow[]) => {
     if (statusFilter === "all") return rows;
+    if (statusFilter === "absent_late") return rows.filter((r) => r.status === "absent" || r.status === "late");
     return rows.filter((r) => r.status === statusFilter);
   };
 
