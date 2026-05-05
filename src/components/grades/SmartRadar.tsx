@@ -395,6 +395,15 @@ export default function SmartRadar({
     };
   }, [clearTimers]);
 
+  // عند تأكيد الحفظ من الخارج، نظّف اختيار الطالب وأعد الرادار للوضع الافتراضي.
+  useEffect(() => {
+    if (clearSelectionSignal === undefined) return;
+    setSelectedStudent(null);
+    setShowActions(false);
+    setShowParticipationPicker(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearSelectionSignal]);
+
   const handleGradeAction = () => {
     if (selectedStudent) onSelectForGrade(selectedStudent.student_id);
     // ملاحظة: نُبقي selectedStudent و showActions كي يستطيع المعلم
