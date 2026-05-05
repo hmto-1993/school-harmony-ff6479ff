@@ -608,6 +608,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     } catch {
                       toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
                     }
+                    setRadarClearSignal(s => s + 1);
                   }}
                   onQuizCorrect={async (studentId, score) => {
                     const numCat = assessmentCats[0];
@@ -624,6 +625,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
+                  clearSelectionSignal={radarClearSignal}
                 />
               </div>
             )}
