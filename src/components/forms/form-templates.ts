@@ -438,6 +438,23 @@ export const formTemplates: FormTemplate[] = [
     icon: "📗",
     description: "إثبات حالة غياب بعذر مع جدول الإجراءات التصاعدي (مطابق ص73)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "تاريخ الغياب الأخير", fieldId: "absence_date" }] },
+      { type: "block", label: "سبب الغياب ونوع العذر", fieldId: "excuse_reason", minHeight: 22 },
+      {
+        type: "escalation",
+        title: "جدول الإجراءات التصاعدية حسب عدد أيام الغياب",
+        columns: ["عدد الأيام", "الإجراء المتخذ", "تاريخ الإجراء"],
+        rows: [
+          { label: "٣ أيام", fieldIds: ["action_3", "action_3_date"] },
+          { label: "٥ أيام", fieldIds: ["action_5", "action_5_date"] },
+          { label: "١٠ أيام", fieldIds: ["action_10", "action_10_date"] },
+        ],
+      },
+      { type: "block", label: "ملاحظات", fieldId: "teacher_notes", minHeight: 18 },
+    ],
     bodyTemplate:
       "نموذج إجراءات الغياب بعذر\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}     الصف/الفصل: {class_name}\n\nتاريخ الغياب الأخير: {absence_date}\nسبب الغياب ونوع العذر: {excuse_reason}\n\n— جدول الإجراءات التصاعدية حسب عدد أيام الغياب —\n\n• ٣ أيام  →  الإجراء: {action_3}\n   تاريخ الإجراء: {action_3_date}\n• ٥ أيام  →  الإجراء: {action_5}\n   تاريخ الإجراء: {action_5_date}\n• ١٠ أيام →  الإجراء: {action_10}\n   تاريخ الإجراء: {action_10_date}\n\nملاحظات:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "وكيل شؤون الطلبة", "ولي الأمر", "مدير المدرسة"],
