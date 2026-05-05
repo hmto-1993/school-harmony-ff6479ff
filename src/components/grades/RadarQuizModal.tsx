@@ -36,6 +36,8 @@ export default function RadarQuizModal({
   quizResult,
   onAnswer,
   onDismiss,
+  lightTheme,
+  onToggleTheme,
 }: RadarQuizModalProps) {
   const timerPercent = timerDuration > 0 ? (timeLeft / timerDuration) * 100 : 0;
   const timerColor = timeLeft <= 5 ? "bg-rose-500" : timeLeft <= 15 ? "bg-amber-500" : "bg-emerald-500";
