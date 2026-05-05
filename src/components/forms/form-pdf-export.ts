@@ -215,6 +215,145 @@ function drawProtocolSection(
   return y;
 }
 
+/* ==================== OFFICIAL TABLE LAYOUT RENDERER ==================== */
+
+function ensureSpace(doc: jsPDF, y: number, needed: number, pageH: number, marginTop = 20): number {
+  if (y + needed > pageH - 45) {
+    doc.addPage();
+    return marginTop;
+  }
+  return y;
+}
+
+function drawSectionBar(doc: jsPDF, title: string, y: number, marginX: number, contentW: number, headerColor: number[]): number {
+  doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+  doc.rect(marginX, y, contentW, 7, "F");
+  doc.setFont("Amiri", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(title, marginX + contentW - 4, y + 5, { align: "right" });
+  doc.setTextColor(30, 41, 59);
+  doc.setFont("Amiri", "normal");
+  return y + 7;
+}
+
+function drawCell(
+  doc: jsPDF,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  label: string,
+  value: string,
+) {
+  doc.setDrawColor(120, 130, 145);
+  doc.setLineWidth(0.25);
+  doc.rect(x, y, w, h, "S");
+  doc.setFillColor(238, 243, 250);
+  doc.rect(x, y, w, 5.5, "F");
+  doc.setFontSize(8);
+  doc.setTextColor(60, 75, 95);
+  doc.setFont("Amiri", "bold");
+  doc.text(label, x + w - 2, y + 4, { align: "right", maxWidth: w - 3 });
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(20, 30, 45);
+  if (value) {
+    const lines = doc.splitTextToSize(value, w - 4);
+    doc.text(lines, x + w - 2, y + 10, { align: "right" });
+  }
+}
+
+function drawTableLayout(
+  doc: jsPDF,
+  layout: any[],
+  fieldValues: Record<string, string>,
+  y: number,
+  marginX: number,
+  contentW: number,
+  pageH: number,
+  headerColor: number[],
+): number {
+  for (const item of layout) {
+    if (item.type === "section") {
+      y = ensureSpace(doc, y, 14, pageH);
+      y = drawSectionBar(doc, item.title, y, marginX, contentW, headerColor);
+      y += 1;
+    } else if (item.type === "row") {
+      const cells = item.cells;
+      const totalFlex = cells.reduce((s: number, c: any) => s + (c.flex || 1), 0);
+      const rowH = Math.max(12, ...cells.map((c: any) => c.minHeight || 0));
+      y = ensureSpace(doc, y, rowH + 2, pageH);
+      let xCursor = marginX + contentW;
+      for (const cell of cells) {
+        const w = (contentW * (cell.flex || 1)) / totalFlex;
+        xCursor -= w;
+        const value = cell.staticValue ?? (cell.fieldId ? fieldValues[cell.fieldId] || "" : "");
+        drawCell(doc, xCursor, y, w, rowH, cell.label, value);
+      }
+      y += rowH + 1;
+    } else if (item.type === "block") {
+      const minH = item.minHeight || 20;
+      const value = fieldValues[item.fieldId] || "";
+      const lines = value ? doc.splitTextToSize(value, contentW - 4) : [];
+      const computedH = Math.max(minH, lines.length * 5 + 8);
+      y = ensureSpace(doc, y, computedH + 2, pageH);
+      drawCell(doc, marginX, y, contentW, computedH, item.label, value);
+      y += computedH + 1;
+    } else if (item.type === "escalation") {
+      y = ensureSpace(doc, y, 24, pageH);
+      doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
+      doc.rect(marginX, y, contentW, 7, "F");
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(255, 255, 255);
+      doc.text(item.title, marginX + contentW / 2, y + 5, { align: "center" });
+      y += 7;
+
+      const cols = item.columns;
+      const colW = contentW / cols.length;
+      doc.setFillColor(225, 232, 245);
+      doc.rect(marginX, y, contentW, 7, "F");
+      doc.setDrawColor(120, 130, 145);
+      doc.setLineWidth(0.3);
+      doc.setFontSize(9);
+      doc.setTextColor(40, 55, 75);
+      let xc = marginX + contentW;
+      for (const colLabel of cols) {
+        xc -= colW;
+        doc.rect(xc, y, colW, 7, "S");
+        doc.text(colLabel, xc + colW / 2, y + 5, { align: "center" });
+      }
+      y += 7;
+
+      doc.setFont("Amiri", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(20, 30, 45);
+      for (const r of item.rows) {
+        const rowH = 11;
+        y = ensureSpace(doc, y, rowH, pageH);
+        let xr = marginX + contentW;
+        xr -= colW;
+        doc.setFillColor(247, 250, 254);
+        doc.rect(xr, y, colW, rowH, "FD");
+        doc.setFont("Amiri", "bold");
+        doc.text(r.label, xr + colW / 2, y + 7, { align: "center" });
+        doc.setFont("Amiri", "normal");
+        for (const fid of r.fieldIds) {
+          xr -= colW;
+          doc.rect(xr, y, colW, rowH, "S");
+          const val = fieldValues[fid] || "";
+          const wrapped = doc.splitTextToSize(val, colW - 3);
+          doc.text(wrapped, xr + colW / 2, y + 7, { align: "center" });
+        }
+        y += rowH;
+      }
+      y += 2;
+    }
+  }
+  return y;
+}
+
 /**
  * Generates an official Saudi‐style A4 PDF for a given form template.
  */
