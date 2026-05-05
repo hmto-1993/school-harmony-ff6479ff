@@ -490,6 +490,13 @@ export default function SmartRadar({
         backgroundSize: "20px 20px",
       }} />
 
+      {/* Restore notification */}
+      {restoredToast && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-emerald-500/90 text-white text-[11px] font-bold shadow-lg shadow-emerald-500/40 animate-fade-in border border-emerald-400/40">
+          تم استعادة خيارات الحصة السابقة بنجاح
+        </div>
+      )}
+
       {/* Header */}
       <div className="relative flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
