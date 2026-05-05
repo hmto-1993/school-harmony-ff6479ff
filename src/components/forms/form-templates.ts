@@ -27,6 +27,8 @@ export interface FormTemplate {
   parentHidden?: boolean;
   /** Add confidential watermark to PDF */
   confidentialWatermark?: boolean;
+  /** Render an official stamp placeholder in the footer */
+  requiresStamp?: boolean;
 }
 
 export interface FormField {
