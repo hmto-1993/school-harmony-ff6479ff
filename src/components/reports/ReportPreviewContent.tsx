@@ -14,6 +14,7 @@ interface AttendancePreviewProps {
 }
 
 export function AttendancePreviewContent({ attendanceData, attendanceSummary }: AttendancePreviewProps) {
+  const includeClass = attendanceData.some((r) => !!r.class_name);
   return (
     <>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
@@ -46,6 +47,7 @@ export function AttendancePreviewContent({ attendanceData, attendanceSummary }: 
         <thead>
           <tr style={{ borderBottom: "2px solid #e2e8f0" }}>
             <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>اسم الطالب</th>
+            {includeClass && <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>الفصل</th>}
             <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>التاريخ</th>
             <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>الحالة</th>
             <th style={{ textAlign: "right", padding: "10px 8px", fontWeight: 600, color: "#334155", backgroundColor: "#f8fafc" }}>ملاحظات</th>
@@ -55,6 +57,7 @@ export function AttendancePreviewContent({ attendanceData, attendanceSummary }: 
           {attendanceData.map((row, i) => (
             <tr key={i} style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: i % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
               <td style={{ padding: "8px", fontWeight: 500, color: "#1e293b" }}>{row.student_name}</td>
+              {includeClass && <td style={{ padding: "8px", color: "#64748b" }}>{row.class_name || "—"}</td>}
               <td style={{ padding: "8px", color: "#64748b" }}>{row.date}</td>
               <td style={{
                 padding: "8px",
