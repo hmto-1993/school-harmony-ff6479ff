@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar, ClipboardList } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar, ClipboardList, ArrowRight } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
