@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar, ClipboardList } from "lucide-react";
+import { Save, CircleCheck, CircleMinus, CircleX, Undo2, Plus, ChevronRight, ChevronLeft, Printer, FileText, AlertTriangle, Clock, Eye, EyeOff, FileWarning, Settings, Minus, MessageCircle, Radar, ClipboardList, ArrowRight } from "lucide-react";
 import ScrollToSaveButton from "@/components/shared/ScrollToSaveButton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -79,6 +79,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [radarMuted, setRadarMuted] = React.useState(false);
   const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false, quizDuration: 20, questionSource: "local" as "local" | "bank" });
   const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
+  const [radarClearSignal, setRadarClearSignal] = React.useState(0);
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
 
   // Load radar settings
@@ -607,6 +608,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     } catch {
                       toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
                     }
+                    setRadarClearSignal(s => s + 1);
                   }}
                   onQuizCorrect={async (studentId, score) => {
                     const numCat = assessmentCats[0];
@@ -623,6 +625,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     }
                   }}
                   onClose={() => setRadarOpen(false)}
+                  clearSelectionSignal={radarClearSignal}
                 />
               </div>
             )}
@@ -631,10 +634,22 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
             {earnedGradeInput.open && (
               <div className="mb-4 no-print animate-fade-in">
                 <div className="rounded-xl border-2 border-primary/30 bg-card p-4 shadow-lg" dir="rtl">
-                  <h4 className="text-sm font-bold mb-3 flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-black">?</span>
-                    ادخل درجة السؤال للطالب: {filteredStudentGrades.find(s => s.student_id === earnedGradeInput.studentId)?.full_name}
-                  </h4>
+                  <div className="flex items-center justify-between mb-3 gap-2">
+                    <h4 className="text-sm font-bold flex items-center gap-2">
+                      <span className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-primary text-xs font-black">?</span>
+                      ادخل درجة السؤال للطالب: {filteredStudentGrades.find(s => s.student_id === earnedGradeInput.studentId)?.full_name}
+                    </h4>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 gap-1 text-muted-foreground hover:text-foreground"
+                      title="رجوع لاختيار نوع المشاركة"
+                      onClick={() => setEarnedGradeInput({ studentId: "", open: false })}
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      <span className="text-xs">رجوع</span>
+                    </Button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -660,6 +675,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               }
                             }
                             setEarnedGradeInput({ studentId: "", open: false });
+                            setRadarClearSignal(s => s + 1);
                           }
                         }
                       }}
@@ -682,8 +698,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               toast({ title: "فشل الحفظ", description: "تم رصد الدرجة محلياً، اضغط حفظ لإعادة المحاولة", variant: "destructive" });
                             }
                           }
+                          setEarnedGradeInput({ studentId: "", open: false });
+                          setRadarClearSignal(s => s + 1);
                         }
-                        setEarnedGradeInput({ studentId: "", open: false });
                       }}
                     >
                       <Save className="h-3.5 w-3.5" />

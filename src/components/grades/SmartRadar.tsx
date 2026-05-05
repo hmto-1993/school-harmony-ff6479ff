@@ -61,6 +61,8 @@ interface SmartRadarProps {
   onSelectForParticipation: (studentId: string, level: "excellent" | "average" | "zero" | "star") => void;
   onQuizCorrect: (studentId: string, score: number) => void;
   onClose: () => void;
+  /** عند تغيّر القيمة، يقوم الرادار بمسح الطالب المختار (يُستخدم بعد الحفظ الناجح). */
+  clearSelectionSignal?: number;
 }
 
 interface LastSessionState {
@@ -87,6 +89,7 @@ export default function SmartRadar({
   onSelectForParticipation,
   onQuizCorrect,
   onClose,
+  clearSelectionSignal,
 }: SmartRadarProps) {
   const sessionKey = `${LAST_SESSION_KEY_PREFIX}:${classId ?? "default"}`;
 
@@ -392,10 +395,19 @@ export default function SmartRadar({
     };
   }, [clearTimers]);
 
+  // عند تأكيد الحفظ من الخارج، نظّف اختيار الطالب وأعد الرادار للوضع الافتراضي.
+  useEffect(() => {
+    if (clearSelectionSignal === undefined) return;
+    setSelectedStudent(null);
+    setShowActions(false);
+    setShowParticipationPicker(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clearSelectionSignal]);
+
   const handleGradeAction = () => {
     if (selectedStudent) onSelectForGrade(selectedStudent.student_id);
-    setShowActions(false);
-    setSelectedStudent(null);
+    // ملاحظة: نُبقي selectedStudent و showActions كي يستطيع المعلم
+    // العودة لشاشة اختيار نوع المشاركة عند الضغط على إلغاء/تراجع.
   };
 
   const handleParticipationAction = () => {
