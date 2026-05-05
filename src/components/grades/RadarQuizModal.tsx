@@ -85,6 +85,13 @@ export default function RadarQuizModal({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {onToggleTheme && (
+            <button type="button" onClick={onToggleTheme}
+              className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+              title={lightTheme ? "الوضع الداكن" : "الوضع الفاتح"}>
+              {lightTheme ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-amber-300" />}
+            </button>
+          )}
           <button type="button" onClick={onToggleMute}
             className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors">
             {muted ? <VolumeX className="h-4 w-4 text-white/50" /> : <Volume2 className="h-4 w-4 text-primary" />}
