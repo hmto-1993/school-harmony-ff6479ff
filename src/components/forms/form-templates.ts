@@ -63,6 +63,7 @@ export const PARENT_HIDDEN_FORM_IDS = [
   "incident_report",
   "violence_report",
   "high_risk_report",
+  "abuse_report",
 ];
 
 export const formTemplates: FormTemplate[] = [
