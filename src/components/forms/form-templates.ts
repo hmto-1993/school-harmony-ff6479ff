@@ -88,6 +88,17 @@ export const formTemplates: FormTemplate[] = [
     icon: "📝",
     description: "إقرار الالتزام بقواعد السلوك والمواظبة (مطابق ص58 من دليل الوزارة)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "خاص بالطالب/الطالبة" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "التاريخ", fieldId: "date" }] },
+      { type: "block", label: "إقرار الطالب", fieldId: "_student_pledge", minHeight: 22 },
+      { type: "section", title: "خاص بولي الأمر" },
+      { type: "row", cells: [{ label: "اسم ولي الأمر", fieldId: "parent_name", flex: 2 }, { label: "صلة القرابة", fieldId: "parent_relation" }] },
+      { type: "row", cells: [{ label: "العمل", fieldId: "parent_job" }, { label: "هاتف العمل", fieldId: "parent_work_phone" }] },
+      { type: "row", cells: [{ label: "الهاتف المنزلي", fieldId: "home_phone" }, { label: "رقم الجوال", fieldId: "mobile_phone" }, { label: "رقم آخر للتواصل", fieldId: "alt_phone" }] },
+      { type: "block", label: "إقرار ولي الأمر", fieldId: "_parent_pledge", minHeight: 22 },
+    ],
     bodyTemplate:
       "نموذج الالتزام المدرسي\n\n— خاص بالطالب/الطالبة —\nالاسم: {student_name}\nالمرحلة: {stage}\nالصف/الفصل: {class_name}\n\nأنا الطالب/الطالبة الموضح اسمي وبياناتي أعلاه، قد اطلعت على محتوى قواعد السلوك والمواظبة، وأتعهد بالالتزام بالأنظمة والتعليمات الخاصة بها.\n\n— خاص بولي الأمر —\nاسم ولي الأمر: {parent_name}\nصلة القرابة: {parent_relation}\nالعمل: {parent_job}\nهاتف العمل: {parent_work_phone}\nالهاتف المنزلي: {home_phone}\nرقم الجوال: {mobile_phone}\nرقم آخر للتواصل: {alt_phone}\n\nأنا ولي أمر الطالب/الطالبة، اطلعت على قواعد السلوك والمواظبة وأتعهد بالتعاون مع إدارة المدرسة لمصلحة ابني/ابنتي وأتحمل مسؤولية صحة أرقام التواصل أعلاه.\n\nالسجل المدني للطالب: {national_id}\nالتاريخ: {date}\n\nملاحظة: يؤخذ التوقيع في بداية العام الدراسي ويُحفظ النموذج لدى وكيل/وكيلة شؤون الطلبة.",
     signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "وكيل شؤون الطلبة"],
