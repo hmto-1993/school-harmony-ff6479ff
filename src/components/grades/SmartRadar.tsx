@@ -89,6 +89,7 @@ export default function SmartRadar({
   onSelectForParticipation,
   onQuizCorrect,
   onClose,
+  clearSelectionSignal,
 }: SmartRadarProps) {
   const sessionKey = `${LAST_SESSION_KEY_PREFIX}:${classId ?? "default"}`;
 
