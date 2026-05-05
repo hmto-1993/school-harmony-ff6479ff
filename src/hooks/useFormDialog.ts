@@ -115,6 +115,9 @@ export function useFormDialog({ form, open, onOpenChange, preSelectedStudentIds,
       class_name: `${s.className} - ${s.grade} (${s.section})`,
       national_id: s.national_id || "",
       date: dateStr,
+      // Smart auto-fill: derive stage from grade so MOE forms (commitment, behavior_grades…)
+      // get pre-populated when the user picks a student
+      stage: prev.stage || s.grade || "",
     }));
   }, [selectedStudentId, students]);
 
