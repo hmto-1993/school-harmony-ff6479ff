@@ -109,6 +109,28 @@ export default function AttendanceReportTab({
     return rows.filter((r) => r.status === statusFilter);
   };
 
+  // Per-student totals (absent + late) — shown when filter is absent/late/absent_late
+  const studentTotals = useMemo(() => {
+    const showTotals = statusFilter === "absent" || statusFilter === "late" || statusFilter === "absent_late";
+    if (!showTotals) return [];
+    const map = new Map<string, { name: string; class_name: string; absent: number; late: number }>();
+    attendanceData.forEach((r) => {
+      if (r.status !== "absent" && r.status !== "late") return;
+      const key = `${r.student_name}__${r.class_name || ""}`;
+      const cur = map.get(key) || { name: r.student_name, class_name: r.class_name || "", absent: 0, late: 0 };
+      if (r.status === "absent") cur.absent += 1;
+      else cur.late += 1;
+      map.set(key, cur);
+    });
+    return Array.from(map.values())
+      .filter((s) => {
+        if (statusFilter === "absent") return s.absent > 0;
+        if (statusFilter === "late") return s.late > 0;
+        return s.absent + s.late > 0;
+      })
+      .sort((a, b) => (b.absent + b.late) - (a.absent + a.late));
+  }, [attendanceData, statusFilter]);
+
   const renderTable = (rows: AttendanceRow[], showClassName = false) => {
     const filtered = filterRows(rows);
     if (filtered.length === 0) {
