@@ -40,14 +40,13 @@ Deno.serve(async (req) => {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
                req.headers.get("cf-connecting-ip") || "unknown";
 
-    // Rate limiting: check recent attempts for this IP
+    // Rate limiting: count ALL recent attempts (success OR failure) for this IP
     const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
     const { count } = await supabase
       .from("student_login_attempts")
       .select("*", { count: "exact", head: true })
       .eq("ip_address", ip)
-      .eq("success", false)
-      .eq("national_id", `staff_lookup:${national_id}`)
+      .like("national_id", "staff_lookup:%")
       .gte("attempted_at", windowStart);
 
     if ((count ?? 0) >= MAX_ATTEMPTS) {
