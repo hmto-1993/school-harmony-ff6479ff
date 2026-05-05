@@ -29,7 +29,21 @@ export interface FormTemplate {
   confidentialWatermark?: boolean;
   /** Render an official stamp placeholder in the footer */
   requiresStamp?: boolean;
+  /** Official table layout (mimics ministry forms). When provided, takes priority over bodyTemplate. */
+  tableLayout?: TableRow[];
 }
+
+/** Official ministry-style table row types */
+export type TableRow =
+  | { type: "section"; title: string }
+  | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
+  | { type: "block"; label: string; fieldId: string; minHeight?: number }
+  | {
+      type: "escalation";
+      title: string;
+      columns: string[]; // header labels
+      rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
+    };
 
 export interface FormField {
   id: string;
