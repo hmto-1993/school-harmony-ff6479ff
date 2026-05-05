@@ -425,6 +425,8 @@ export default function SmartRadar({
         quizResult={quizResult}
         onAnswer={handleQuizAnswer}
         onDismiss={handleQuizDismiss}
+        lightTheme={isLightRadar}
+        onToggleTheme={() => setRadarTheme(isLightRadar ? "dark" : "light")}
       />
     );
   }
