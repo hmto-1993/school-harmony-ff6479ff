@@ -79,6 +79,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const [radarMuted, setRadarMuted] = React.useState(false);
   const [radarSettings, setRadarSettings] = React.useState({ speed: "medium" as const, sessionMemory: true, visualEffect: "radar" as const, quizEnabled: false, surpriseMode: false, quizDuration: 20, questionSource: "local" as "local" | "bank" });
   const [earnedGradeInput, setEarnedGradeInput] = React.useState<{ studentId: string; open: boolean }>({ studentId: "", open: false });
+  const [radarClearSignal, setRadarClearSignal] = React.useState(0);
   const { reasons: violationReasons, saveReasons, DEFAULT_REASONS } = useViolationReasons();
 
   // Load radar settings
