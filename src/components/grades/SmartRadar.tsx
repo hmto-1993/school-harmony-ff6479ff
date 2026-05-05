@@ -114,7 +114,7 @@ export default function SmartRadar({
   const [restoredToast, setRestoredToast] = useState(initialState !== null);
 
   // Quick duration override (before spinning)
-  const [localDuration, setLocalDuration] = useState(settings.quizDuration);
+  const [localDuration, setLocalDuration] = useState(initialState?.d ?? settings.quizDuration);
 
   // Quiz state
   const [quizQuestion, setQuizQuestion] = useState<RadarQuestion | null>(null);
