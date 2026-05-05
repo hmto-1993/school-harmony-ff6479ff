@@ -338,12 +338,20 @@ export default function AttendanceReportTab({
 
           <AttendanceChart data={attendanceData} />
 
-          {/* Single flat table — class column shown when viewing all classes */}
-          <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
-            <CardContent className="pt-4">
-              {renderTable(attendanceData, isAllClasses)}
-            </CardContent>
-          </Card>
+          {/* Grouped by class view */}
+          {isAllClasses && groupedByClass ? (
+            <div className="space-y-4">
+              {Array.from(groupedByClass.entries()).map(([cn, rows]) =>
+                renderClassSection(cn, rows)
+              )}
+            </div>
+          ) : (
+            <Card className="border-0 shadow-lg backdrop-blur-sm bg-card/80">
+              <CardContent className="pt-4">
+                {renderTable(attendanceData, isAllClasses)}
+              </CardContent>
+            </Card>
+          )}
 
           {reportType === "periodic" && !isAllClasses && (
             <AttendanceWeeklyReport
