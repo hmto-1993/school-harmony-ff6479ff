@@ -87,7 +87,20 @@ export default function SmartRadar({
   onQuizCorrect,
   onClose,
 }: SmartRadarProps) {
-  const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const sessionKey = `${LAST_SESSION_KEY_PREFIX}:${classId ?? "default"}`;
+
+  // Hydrate from last session (synchronously on mount)
+  const initialState = (() => {
+    try {
+      const raw = localStorage.getItem(sessionKey);
+      if (!raw) return null;
+      return JSON.parse(raw) as LastSessionState;
+    } catch { return null; }
+  })();
+
+  const [excluded, setExcluded] = useState<Set<string>>(
+    () => new Set(initialState?.ex ?? [])
+  );
   const [radarTheme, setRadarTheme] = usePersistedState<"dark" | "light">("smart-radar-theme", "dark");
   const isLightRadar = radarTheme === "light";
   const [spinning, setSpinning] = useState(false);
@@ -95,8 +108,9 @@ export default function SmartRadar({
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [showActions, setShowActions] = useState(false);
   const [showParticipationPicker, setShowParticipationPicker] = useState(false);
-  const [excludeParticipated, setExcludeParticipated] = useState(true);
-  const [targetLowest, setTargetLowest] = useState(false);
+  const [excludeParticipated, setExcludeParticipated] = useState(initialState?.ep ?? true);
+  const [targetLowest, setTargetLowest] = useState(initialState?.tl ?? false);
+  const [restoredToast, setRestoredToast] = useState(initialState !== null);
 
   // Quick duration override (before spinning)
   const [localDuration, setLocalDuration] = useState(settings.quizDuration);
