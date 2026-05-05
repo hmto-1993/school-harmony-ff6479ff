@@ -207,6 +207,31 @@ export default function SmartRadar({
     }
   }, [selectedBankLesson]);
 
+  // Persist last-session state (overwrites single key, debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const payload: LastSessionState = {
+          ex: Array.from(excluded),
+          ep: excludeParticipated,
+          tl: targetLowest,
+          d: localDuration,
+          ...(selectedBankChapter ? { bc: selectedBankChapter } : {}),
+          ...(selectedBankLesson ? { bl: selectedBankLesson } : {}),
+        };
+        localStorage.setItem(sessionKey, JSON.stringify(payload));
+      } catch {}
+    }, 250);
+    return () => clearTimeout(t);
+  }, [sessionKey, excluded, excludeParticipated, targetLowest, localDuration, selectedBankChapter, selectedBankLesson]);
+
+  // Auto-dismiss restore toast after 1.5s
+  useEffect(() => {
+    if (!restoredToast) return;
+    const t = setTimeout(() => setRestoredToast(false), 1500);
+    return () => clearTimeout(t);
+  }, [restoredToast]);
+
   const participatedSet = new Set(participatedStudentIds);
   const baseAvailable = students.filter(
     (s) => (!settings.sessionMemory || !excluded.has(s.student_id)) &&
