@@ -29,7 +29,21 @@ export interface FormTemplate {
   confidentialWatermark?: boolean;
   /** Render an official stamp placeholder in the footer */
   requiresStamp?: boolean;
+  /** Official table layout (mimics ministry forms). When provided, takes priority over bodyTemplate. */
+  tableLayout?: TableRow[];
 }
+
+/** Official ministry-style table row types */
+export type TableRow =
+  | { type: "section"; title: string }
+  | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
+  | { type: "block"; label: string; fieldId: string; minHeight?: number }
+  | {
+      type: "escalation";
+      title: string;
+      columns: string[]; // header labels
+      rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
+    };
 
 export interface FormField {
   id: string;
@@ -74,6 +88,17 @@ export const formTemplates: FormTemplate[] = [
     icon: "📝",
     description: "إقرار الالتزام بقواعد السلوك والمواظبة (مطابق ص58 من دليل الوزارة)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "خاص بالطالب/الطالبة" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "التاريخ", fieldId: "date" }] },
+      { type: "block", label: "إقرار الطالب", fieldId: "_student_pledge", minHeight: 22 },
+      { type: "section", title: "خاص بولي الأمر" },
+      { type: "row", cells: [{ label: "اسم ولي الأمر", fieldId: "parent_name", flex: 2 }, { label: "صلة القرابة", fieldId: "parent_relation" }] },
+      { type: "row", cells: [{ label: "العمل", fieldId: "parent_job" }, { label: "هاتف العمل", fieldId: "parent_work_phone" }] },
+      { type: "row", cells: [{ label: "الهاتف المنزلي", fieldId: "home_phone" }, { label: "رقم الجوال", fieldId: "mobile_phone" }, { label: "رقم آخر للتواصل", fieldId: "alt_phone" }] },
+      { type: "block", label: "إقرار ولي الأمر", fieldId: "_parent_pledge", minHeight: 22 },
+    ],
     bodyTemplate:
       "نموذج الالتزام المدرسي\n\n— خاص بالطالب/الطالبة —\nالاسم: {student_name}\nالمرحلة: {stage}\nالصف/الفصل: {class_name}\n\nأنا الطالب/الطالبة الموضح اسمي وبياناتي أعلاه، قد اطلعت على محتوى قواعد السلوك والمواظبة، وأتعهد بالالتزام بالأنظمة والتعليمات الخاصة بها.\n\n— خاص بولي الأمر —\nاسم ولي الأمر: {parent_name}\nصلة القرابة: {parent_relation}\nالعمل: {parent_job}\nهاتف العمل: {parent_work_phone}\nالهاتف المنزلي: {home_phone}\nرقم الجوال: {mobile_phone}\nرقم آخر للتواصل: {alt_phone}\n\nأنا ولي أمر الطالب/الطالبة، اطلعت على قواعد السلوك والمواظبة وأتعهد بالتعاون مع إدارة المدرسة لمصلحة ابني/ابنتي وأتحمل مسؤولية صحة أرقام التواصل أعلاه.\n\nالسجل المدني للطالب: {national_id}\nالتاريخ: {date}\n\nملاحظة: يؤخذ التوقيع في بداية العام الدراسي ويُحفظ النموذج لدى وكيل/وكيلة شؤون الطلبة.",
     signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "وكيل شؤون الطلبة"],
@@ -96,6 +121,16 @@ export const formTemplates: FormTemplate[] = [
     icon: "⭐",
     description: "رصد شواهد السلوك المتميز والدرجات المكتسبة (مطابق ص59)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف", fieldId: "class_name" }, { label: "تاريخ التنفيذ", fieldId: "execution_date" }] },
+      { type: "section", title: "تفاصيل رصد السلوك المتميز" },
+      { type: "row", cells: [{ label: "موضوع الممارسة", fieldId: "topic", flex: 2 }, { label: "نوع الممارسة", fieldId: "behavior_type" }] },
+      { type: "block", label: "شواهد السلوك المتميز", fieldId: "evidence", minHeight: 28 },
+      { type: "row", cells: [{ label: "الدرجة المكتسبة", fieldId: "score" }, { label: "اسم راصد السلوك", fieldId: "observer_name", flex: 2 }] },
+      { type: "block", label: "ملاحظات إضافية", fieldId: "teacher_notes", minHeight: 22 },
+    ],
     bodyTemplate:
       "نموذج رصد درجات السلوك المتميز\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}\nالصف: {class_name}\n\n— تفاصيل الرصد —\nموضوع ممارسة السلوك المتميز: {topic}\nنوع ممارسة السلوك المتميز: {behavior_type}\nتاريخ التنفيذ: {execution_date}\nشواهد السلوك المتميز: {evidence}\nالدرجة المكتسبة: {score}\nاسم راصد السلوك: {observer_name}\n\nملاحظات إضافية:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["راصد السلوك", "المرشد الطلابي", "مدير المدرسة"],
@@ -118,6 +153,29 @@ export const formTemplates: FormTemplate[] = [
     icon: "📋",
     description: "خطة شاملة لتعديل السلوك بالمثيرات القبلية والبعدية (مطابق ص60-61)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "أولاً: البيانات الأولية" },
+      { type: "row", cells: [{ label: "اسم الطالب", fieldId: "student_name", flex: 2 }, { label: "الصف/الفصل", fieldId: "class_name" }] },
+      { type: "row", cells: [{ label: "تاريخ الميلاد", fieldId: "birth_date" }, { label: "العمر الزمني", fieldId: "age" }] },
+      { type: "row", cells: [{ label: "تاريخ بداية الخطة", fieldId: "plan_start" }, { label: "تاريخ نهاية الخطة", fieldId: "plan_end" }] },
+      { type: "section", title: "ثانياً: تحديد المشكلة السلوكية" },
+      { type: "row", cells: [{ label: "المشكلة السلوكية", fieldId: "behavior_issue", flex: 2 }, { label: "درجتها", fieldId: "issue_degree" }] },
+      { type: "block", label: "وصف المشكلة", fieldId: "issue_description", minHeight: 22 },
+      { type: "block", label: "المظاهر السلوكية الملحوظة", fieldId: "behavior_signs", minHeight: 22 },
+      { type: "section", title: "ثالثاً: المثيرات والأسباب" },
+      { type: "block", label: "المثيرات القبلية (الأسباب)", fieldId: "antecedents", minHeight: 22 },
+      { type: "block", label: "المثيرات البعدية", fieldId: "consequences", minHeight: 22 },
+      { type: "block", label: "ما يحققه الطالب من السلوك", fieldId: "function_of_behavior", minHeight: 18 },
+      { type: "block", label: "الإجراءات السابقة المستخدمة", fieldId: "previous_actions", minHeight: 18 },
+      { type: "section", title: "رابعاً: تصميم الخطة العلاجية" },
+      { type: "block", label: "السلوك المرغوب إكسابه", fieldId: "target_behavior", minHeight: 18 },
+      { type: "block", label: "الإجراءات والاستراتيجيات", fieldId: "plan", minHeight: 28 },
+      { type: "section", title: "خامساً: تقييم فاعلية الخطة" },
+      { type: "block", label: "رأي وكيل المدرسة", fieldId: "vice_opinion", minHeight: 16 },
+      { type: "block", label: "رأي معلم الفصل", fieldId: "teacher_opinion", minHeight: 16 },
+      { type: "block", label: "رأي ولي الأمر", fieldId: "parent_opinion", minHeight: 16 },
+      { type: "row", cells: [{ label: "تقييم الفاعلية", fieldId: "effectiveness", flex: 2 }, { label: "التاريخ", fieldId: "date" }] },
+    ],
     bodyTemplate:
       "نموذج خطة تعديل السلوك\n\nأولاً: البيانات الأولية\nاسم الطالب: {student_name}\nالصف/الفصل: {class_name}\nتاريخ الميلاد: {birth_date}    العمر الزمني: {age}\nتاريخ بداية الخطة: {plan_start}\nتاريخ نهاية الخطة: {plan_end}\n\nثانياً: تحديد المشكلة السلوكية\nالمشكلة: {behavior_issue}    درجتها: {issue_degree}\nوصف المشكلة:\n{issue_description}\nالمظاهر السلوكية الملحوظة:\n{behavior_signs}\n\nثالثاً: المثيرات والأسباب\n• المثيرات القبلية (الأسباب المسببة للسلوك): {antecedents}\n• المثيرات البعدية (ما يحدث بعد السلوك): {consequences}\n• ما يحققه الطالب من السلوك: {function_of_behavior}\n• الإجراءات السابقة المستخدمة: {previous_actions}\n\nرابعاً: تصميم الخطة العلاجية\nالسلوك المرغوب إكسابه: {target_behavior}\nالإجراءات والاستراتيجيات:\n{plan}\n\nخامساً: تقييم فاعلية الخطة\nرأي وكيل المدرسة: {vice_opinion}\nرأي معلم الفصل: {teacher_opinion}\nرأي ولي الأمر: {parent_opinion}\nتقييم الفاعلية: {effectiveness}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["القائم بتعديل السلوك", "المرشد الطلابي", "ولي الأمر", "مدير المدرسة"],
@@ -256,6 +314,22 @@ export const formTemplates: FormTemplate[] = [
     confidentialWatermark: true,
     requiresStamp: true,
     witnessPickerEnabled: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الواقعة" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "التاريخ", fieldId: "date" }] },
+      { type: "row", cells: [{ label: "المشكلة السلوكية", fieldId: "behavior_issue", flex: 2 }, { label: "درجتها", fieldId: "issue_degree" }] },
+      { type: "row", cells: [{ label: "وقت الواقعة", fieldId: "incident_time" }, { label: "مكان الواقعة", fieldId: "incident_location", flex: 2 }] },
+      { type: "section", title: "المشاهدات والأدلة" },
+      { type: "row", cells: [{ label: "نوع المشاهدة", fieldId: "evidence_types" }] },
+      { type: "block", label: "تفاصيل/روابط المشاهدة", fieldId: "evidence_details", minHeight: 22 },
+      { type: "section", title: "تفاصيل الواقعة" },
+      { type: "block", label: "وصف الواقعة بالتفصيل", fieldId: "incident_desc", minHeight: 30 },
+      { type: "block", label: "الأطراف المشاركة", fieldId: "involved_parties", minHeight: 18 },
+      { type: "block", label: "أقوال الأطراف", fieldId: "party_statements", minHeight: 22 },
+      { type: "block", label: "الشهود", fieldId: "witnesses_names", minHeight: 16 },
+      { type: "block", label: "التوصيات والإجراءات المتخذة", fieldId: "recommendations", minHeight: 22 },
+    ],
     bodyTemplate:
       "محضر ضبط واقعة (سري)\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}     الصف/الفصل: {class_name}\nالمشكلة السلوكية: {behavior_issue}     درجتها: {issue_degree}\n\nنوع المشاهدة المضبوطة:\n{evidence_types}\n\nتفاصيل المشاهدة (روابط/أوصاف):\n{evidence_details}\n\nمكان ضبط الواقعة: {incident_location}\nوقت الواقعة: {incident_time}\n\nوصف الواقعة بالتفصيل:\n{incident_desc}\n\nالأطراف المشاركة:\n{involved_parties}\n\nأقوال الأطراف:\n{party_statements}\n\nالشهود:\n{witnesses_names}\n\nالتوصيات والإجراءات المتخذة:\n{recommendations}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["المعلم المبلّغ", "الموجه الطلابي", "ولي الأمر", "مدير المدرسة"],
@@ -364,6 +438,23 @@ export const formTemplates: FormTemplate[] = [
     icon: "📗",
     description: "إثبات حالة غياب بعذر مع جدول الإجراءات التصاعدي (مطابق ص73)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "تاريخ الغياب الأخير", fieldId: "absence_date" }] },
+      { type: "block", label: "سبب الغياب ونوع العذر", fieldId: "excuse_reason", minHeight: 22 },
+      {
+        type: "escalation",
+        title: "جدول الإجراءات التصاعدية حسب عدد أيام الغياب",
+        columns: ["عدد الأيام", "الإجراء المتخذ", "تاريخ الإجراء"],
+        rows: [
+          { label: "٣ أيام", fieldIds: ["action_3", "action_3_date"] },
+          { label: "٥ أيام", fieldIds: ["action_5", "action_5_date"] },
+          { label: "١٠ أيام", fieldIds: ["action_10", "action_10_date"] },
+        ],
+      },
+      { type: "block", label: "ملاحظات", fieldId: "teacher_notes", minHeight: 18 },
+    ],
     bodyTemplate:
       "نموذج إجراءات الغياب بعذر\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}     الصف/الفصل: {class_name}\n\nتاريخ الغياب الأخير: {absence_date}\nسبب الغياب ونوع العذر: {excuse_reason}\n\n— جدول الإجراءات التصاعدية حسب عدد أيام الغياب —\n\n• ٣ أيام  →  الإجراء: {action_3}\n   تاريخ الإجراء: {action_3_date}\n• ٥ أيام  →  الإجراء: {action_5}\n   تاريخ الإجراء: {action_5_date}\n• ١٠ أيام →  الإجراء: {action_10}\n   تاريخ الإجراء: {action_10_date}\n\nملاحظات:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "وكيل شؤون الطلبة", "ولي الأمر", "مدير المدرسة"],
@@ -388,6 +479,24 @@ export const formTemplates: FormTemplate[] = [
     icon: "📕",
     description: "إجراءات تصاعدية مع حسم درجات المواظبة (مطابق ص74)",
     requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "المرحلة", fieldId: "stage" }, { label: "الصف/الفصل", fieldId: "class_name" }, { label: "تاريخ الغياب الأخير", fieldId: "absence_date_un" }] },
+      { type: "row", cells: [{ label: "هل تم التواصل مع ولي الأمر؟", fieldId: "parent_contacted", flex: 2 }, { label: "التاريخ", fieldId: "date" }] },
+      {
+        type: "escalation",
+        title: "جدول الإجراءات التصاعدية وحسم درجات المواظبة",
+        columns: ["عدد الأيام", "الإجراء المتخذ", "التاريخ", "الدرجات المحسومة"],
+        rows: [
+          { label: "٣ أيام", fieldIds: ["action_3", "action_3_date", "deduct_3"] },
+          { label: "٣ أيام متصلة", fieldIds: ["action_3c", "action_3c_date", "deduct_3c"] },
+          { label: "٥ أيام", fieldIds: ["action_5", "action_5_date", "deduct_5"] },
+          { label: "١٠ أيام", fieldIds: ["action_10", "action_10_date", "deduct_10"] },
+        ],
+      },
+      { type: "block", label: "ملاحظات", fieldId: "teacher_notes", minHeight: 18 },
+    ],
     bodyTemplate:
       "نموذج إجراءات الغياب بدون عذر\n\nاسم الطالب/الطالبة: {student_name}\nالمرحلة: {stage}     الصف/الفصل: {class_name}\n\nتاريخ الغياب الأخير: {absence_date_un}\nهل تم التواصل مع ولي الأمر: {parent_contacted}\n\n— جدول الإجراءات التصاعدية وحسم درجات المواظبة —\n\n• 3 أيام         →  الإجراء: {action_3}     | تاريخ: {action_3_date}     | درجات محسومة: {deduct_3}\n• 3 أيام متصلة  →  الإجراء: {action_3c}    | تاريخ: {action_3c_date}    | درجات محسومة: {deduct_3c}\n• 5 أيام         →  الإجراء: {action_5}     | تاريخ: {action_5_date}     | درجات محسومة: {deduct_5}\n• 10 أيام        →  الإجراء: {action_10}    | تاريخ: {action_10_date}    | درجات محسومة: {deduct_10}\n\nملاحظات:\n{teacher_notes}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
     signatureLabels: ["معلم المادة", "وكيل شؤون الطلبة", "ولي الأمر", "مدير المدرسة"],
