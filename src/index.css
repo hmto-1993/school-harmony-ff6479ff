@@ -655,3 +655,37 @@
   .smart-card-glow-red, .smart-card-glow-green { animation: none !important; box-shadow: none !important; }
   .smart-card-glass { background: transparent !important; backdrop-filter: none !important; }
 }
+
+/* ── Smart Radar — Light theme override ─────────────────────────
+   Scoped to .radar-light so the rest of the page is unaffected.
+   Inverts the dark slate palette used by SmartRadar/RadarQuizModal. */
+.radar-light {
+  background: linear-gradient(to bottom right, hsl(210 40% 98%), hsl(210 40% 96%), hsl(210 40% 98%)) !important;
+  color: hsl(222 47% 11%) !important;
+  border-color: hsl(var(--primary) / 0.4) !important;
+}
+.radar-light .text-white,
+.radar-light .text-white\/90,
+.radar-light .text-white\/80,
+.radar-light .text-white\/70,
+.radar-light .text-white\/60,
+.radar-light .text-white\/50,
+.radar-light .text-white\/40,
+.radar-light .text-white\/30 {
+  color: hsl(222 47% 11% / 0.85) !important;
+}
+.radar-light .text-white\/40,
+.radar-light .text-white\/30 { color: hsl(222 47% 11% / 0.55) !important; }
+.radar-light .bg-black\/40,
+.radar-light .bg-black\/30 {
+  background-color: hsl(210 40% 94%) !important;
+}
+.radar-light .bg-white\/5 { background-color: hsl(210 40% 96%) !important; }
+.radar-light .bg-white\/10 { background-color: hsl(210 40% 92%) !important; }
+.radar-light .border-white\/10,
+.radar-light .border-white\/15,
+.radar-light .border-white\/20 {
+  border-color: hsl(214 32% 80%) !important;
+}
+.radar-light .hover\:bg-white\/10:hover { background-color: hsl(210 40% 90%) !important; }
+

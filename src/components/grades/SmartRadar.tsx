@@ -3,7 +3,8 @@ import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check, Target } from "lucide-react";
+import { Radar, RotateCcw, Volume2, VolumeX, Award, Star, X, HelpCircle, Timer, BookOpen, UserMinus, Check, Target, Sun, Moon } from "lucide-react";
+import { usePersistedState } from "@/hooks/usePersistedState";
 import { playTickSound, playSelectSound, startScanHum, playCorrectSound, playWrongSound } from "./radar-audio";
 import { type RadarQuestion, getRandomQuestion, loadQuestions } from "./radar-quiz-types";
 import { Slider } from "@/components/ui/slider";
@@ -76,6 +77,8 @@ export default function SmartRadar({
   onClose,
 }: SmartRadarProps) {
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
+  const [radarTheme, setRadarTheme] = usePersistedState<"dark" | "light">("smart-radar-theme", "dark");
+  const isLightRadar = radarTheme === "light";
   const [spinning, setSpinning] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -422,13 +425,15 @@ export default function SmartRadar({
         quizResult={quizResult}
         onAnswer={handleQuizAnswer}
         onDismiss={handleQuizDismiss}
+        lightTheme={isLightRadar}
+        onToggleTheme={() => setRadarTheme(isLightRadar ? "dark" : "light")}
       />
     );
   }
 
   // ── Main Radar UI ──────────────────────────────────────────────
   return (
-    <div className="relative rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden" dir="rtl">
+    <div className={cn("relative rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden transition-colors", isLightRadar && "radar-light")} dir="rtl">
       <div className="absolute inset-0 opacity-5 pointer-events-none" style={{
         backgroundImage: "radial-gradient(circle, hsl(var(--primary)) 1px, transparent 1px)",
         backgroundSize: "20px 20px",
@@ -450,6 +455,14 @@ export default function SmartRadar({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setRadarTheme(isLightRadar ? "dark" : "light")}
+            className="h-8 w-8 rounded-lg border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
+            title={isLightRadar ? "الوضع الداكن" : "الوضع الفاتح"}
+          >
+            {isLightRadar ? <Moon className="h-4 w-4 text-primary" /> : <Sun className="h-4 w-4 text-amber-300" />}
+          </button>
           <button
             type="button"
             onClick={() => (audioLocked ? setShowAudioUpgrade(true) : onToggleMute())}
