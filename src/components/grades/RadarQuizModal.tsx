@@ -47,6 +47,7 @@ export default function RadarQuizModal({
   return (
     <div className={cn(
       "relative rounded-2xl border-2 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-5 shadow-2xl text-white overflow-hidden transition-colors",
+      lightTheme && "radar-light",
       quizResult === "wrong" && "border-rose-500/60 animate-radar-shake",
       quizResult === "correct" && "border-emerald-500/60",
       !quizResult && "border-primary/30"
