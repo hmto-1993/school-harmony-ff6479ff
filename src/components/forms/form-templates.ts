@@ -48,7 +48,7 @@ export type TableRow =
 export interface FormField {
   id: string;
   label: string;
-  type: "text" | "textarea" | "date" | "auto" | "combobox";
+  type: "text" | "textarea" | "date" | "auto" | "combobox" | "checkbox-list";
   autoKey?: "student_name" | "class_name" | "national_id" | "date" | "grade" | "section";
   required?: boolean;
   placeholder?: string;
@@ -56,6 +56,8 @@ export interface FormField {
   hidden?: boolean;
   /** Suggestion list for combobox fields */
   suggestions?: string[];
+  /** Options for checkbox-list (stored value = JSON array of selected labels) */
+  options?: string[];
 }
 
 const commonAutoFields: FormField[] = [
