@@ -116,7 +116,10 @@ export default function StudentDashboard() {
     ? dashData.welcomeMessage.replace(/\{name\}/g, student.full_name)
     : dashData.studentWelcomeMessage.replace(/\{name\}/g, student.full_name);
 
-  const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+  const studentEvalBase = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10 };
+  const studentEval = dashData.studentEvalLive
+    ? { showDaily: dashData.studentEvalLive.showDaily, showClasswork: dashData.studentEvalLive.showClasswork, iconsCount: dashData.studentEvalLive.iconsCount }
+    : studentEvalBase;
   const showEvalTab = isParent ? (dashData.parentVis.parentShowDailyGrades || dashData.parentVis.parentShowClassworkIcons) : (studentEval.showDaily || studentEval.showClasswork);
 
   const visibleTabs = [
