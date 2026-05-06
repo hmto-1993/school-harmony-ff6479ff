@@ -613,10 +613,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     setRadarClearSignal(s => s + 1);
                   }}
                   onQuizCorrect={async (studentId, score) => {
-                    const numCat = assessmentCats[0];
+                    const numCat = earnedBucketCat;
                     if (numCat) {
                       const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
-                      const newScore = Math.min((currentScore || 0) + score, Number(numCat.max_score));
+                      const newScore = (currentScore || 0) + score;
                       setNumericGrade(studentId, numCat.id, String(newScore), Number(numCat.max_score));
                       try {
                         await quickSaveGrade(studentId, numCat.id, newScore);
