@@ -1030,6 +1030,7 @@ export type Database = {
           created_at: string
           id: string
           is_deduction: boolean
+          is_earned_bucket: boolean
           max_score: number
           name: string
           sort_order: number
@@ -1041,6 +1042,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_deduction?: boolean
+          is_earned_bucket?: boolean
           max_score?: number
           name: string
           sort_order?: number
@@ -1052,6 +1054,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_deduction?: boolean
+          is_earned_bucket?: boolean
           max_score?: number
           name?: string
           sort_order?: number
