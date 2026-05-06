@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ParentVisibility } from "./constants";
+import { isParticipation, restoreSlotsFromScore } from "@/components/grades/classwork/classwork-helpers";
 
 interface Props {
   student: any;
@@ -9,11 +10,12 @@ interface Props {
   parentVis: ParentVisibility;
   evalSubView: "daily" | "classwork";
   setEvalSubView: (v: "daily" | "classwork") => void;
+  slotSettings?: { globalMaxSlots: number; maxSlotsPerCat: Record<string, number> };
 }
 
 type EvaluationLevel = "excellent" | "average" | "zero" | "star";
 
-const SLOTS = 3;
+const DEFAULT_SLOTS = 3;
 
 const iconToneStyles: Record<EvaluationLevel | "empty", CSSProperties> = {
   excellent: { color: "hsl(var(--success))" },
