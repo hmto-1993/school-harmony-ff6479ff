@@ -71,7 +71,7 @@ export const restoreSlotsFromScore = ({
   return { slots: restoredSlots.length > 0 ? restoredSlots : [null], starred: false };
 };
 
-export const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork";
+export const isAllowedInDaily = (cat: GradeCategory) => cat.category_group === "classwork" && !cat.is_earned_bucket;
 export const isParticipation = (name: string) => name === "المشاركة" || name.includes("المشاركة");
 export const isBookCategory = (name: string) => name === "الكتاب";
 export const DEFAULT_MAX_SLOTS = 3;
