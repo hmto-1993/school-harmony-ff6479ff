@@ -279,6 +279,8 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     schoolName, schoolLogoUrl, parentPdfHeader,
     // Parent visibility
     parentVis,
+    // Live student visibility (overrides login snapshot)
+    studentVis, studentEvalLive,
     // View states
     gradesView, setGradesView, evalSubView, setEvalSubView,
   };
