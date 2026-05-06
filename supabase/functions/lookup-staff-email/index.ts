@@ -102,16 +102,9 @@ Deno.serve(async (req) => {
       success: true,
     });
 
-    // SECURITY: Never return the real email. Trigger password recovery server-side
-    // and return only a uniform message to prevent enumeration / phishing.
-    try {
-      await supabase.auth.admin.generateLink({ type: "recovery", email: user.email });
-    } catch (_e) {
-      // Swallow errors to keep response uniform
-    }
-
+    // Return real email for login — client uses this for signInWithPassword
     return new Response(
-      JSON.stringify({ message: uniformMessage }),
+      JSON.stringify({ email: user.email, message: uniformMessage }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
