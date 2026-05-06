@@ -194,9 +194,11 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       const cat = cats.find(c => c.id === g.category_id);
       if (!cat) return;
 
-      // Accumulate earned total (deductions reduce, others add)
-      const delta = cat.is_deduction ? -score : score;
-      earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
+      // "الدرجات المكتسبة" is an independent bucket — sum only daily entries to it (radar + manual question dialog)
+      if ((cat as any).is_earned_bucket) {
+        earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + score);
+        return;
+      }
 
       // Skip icon rendering for deduction categories — they show as count + negative number
       if (cat.is_deduction) {
@@ -205,7 +207,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         sumMap.set(g.category_id, (sumMap.get(g.category_id) || 0) + score);
         if (!deductionCountsMap.has(g.student_id)) deductionCountsMap.set(g.student_id, new Map());
         const cntMap = deductionCountsMap.get(g.student_id)!;
-        // Count any recorded deduction event (even score=0 was filtered above by null check; >0 = real violation)
         if (score > 0) cntMap.set(g.category_id, (cntMap.get(g.category_id) || 0) + 1);
         return;
       }
@@ -225,6 +226,14 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             studentMap.get(g.category_id)!.push({ level, isFullScore: false });
           }
         });
+      }
+    });
+
+    // Add manual entries on the earned bucket (when user types directly in the "earned grades" column)
+    allManualScores.forEach((m: any) => {
+      const cat = cats.find(c => c.id === m.category_id);
+      if (cat && (cat as any).is_earned_bucket) {
+        earnedTotalsMap.set(m.student_id, (earnedTotalsMap.get(m.student_id) || 0) + Number(m.score));
       }
     });
 
