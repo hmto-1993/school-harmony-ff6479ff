@@ -418,16 +418,9 @@ export async function exportFormPdf(
     doc.text(line, rightStartX - rightLogoOffset, y + i * (fontSize * 0.55), { align: "right" });
   });
 
-  // Left side: school branding + logo
-  let leftLogoOffset = 0;
-  if (schoolLogo) {
-    try {
-      doc.addImage(schoolLogo, "PNG", marginX, y - 2, 12, 12);
-      leftLogoOffset = 14;
-    } catch { /* ignore */ }
-  }
+  // Left side: text only (no logo on top-left per official template)
   identity.headerLeftLines.forEach((line, i) => {
-    doc.text(line, marginX + leftLogoOffset, y + i * (fontSize * 0.55), { align: "left" });
+    doc.text(line, marginX, y + i * (fontSize * 0.55), { align: "left" });
   });
 
   y += Math.max(identity.headerRightLines.length, identity.headerLeftLines.length) * (fontSize * 0.55) + 8;
