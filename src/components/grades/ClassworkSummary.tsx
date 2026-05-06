@@ -147,9 +147,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const cls = classesData || [];
     const students = studentsData || [];
-    const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork' && !c.is_earned_bucket) as CategoryInfo[];
+    const allClassworkCats = (catsData || []).filter((c: any) => c.category_group === 'classwork');
+    const earnedBucket = allClassworkCats.find((c: any) => c.is_earned_bucket && c.class_id === selectedClass);
+    const cats = allClassworkCats.filter((c: any) => !c.is_earned_bucket) as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
     const catIds = cats.map((c) => c.id);
+    const dailyCatIds = earnedBucket ? [...catIds, earnedBucket.id] : catIds;
 
     let allManualScores: any[] = [];
     let allDailyGrades: any[] = [];
@@ -161,12 +164,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
           .in("student_id", studentIds)
           .eq("period", selectedPeriod)
           .limit(5000),
-        catIds.length > 0
+        dailyCatIds.length > 0
           ? supabase
               .from("grades")
               .select("student_id, category_id, score, date")
               .in("student_id", studentIds)
-              .in("category_id", catIds)
+              .in("category_id", dailyCatIds)
               .eq("period", selectedPeriod)
               .order("date")
               .limit(5000)
@@ -175,6 +178,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       allManualScores = (manualRes.data as any[]) || [];
       allDailyGrades = (dailyRes.data as any[]) || [];
     }
+    const earnedBucketCat = earnedBucket; // alias for the lookup below
+    const lookupCats = earnedBucket ? [...cats, earnedBucket as any] : cats;
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
     allManualScores.forEach((m: any) => {
