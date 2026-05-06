@@ -55,6 +55,38 @@ Deno.serve(async (req) => {
       return ok({ error: "غير مصرح - صلاحيات غير كافية" });
     }
 
+    // Resolve caller organization for tenant scoping
+    const { data: callerProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("organization_id")
+      .eq("user_id", callerId)
+      .maybeSingle();
+    const callerOrg: string | null = callerProfile?.organization_id ?? null;
+
+    // Determine if caller is the primary (system) owner
+    const { data: primaryOwnerSetting } = await supabaseAdmin
+      .from("site_settings")
+      .select("value")
+      .eq("id", "admin_primary_id")
+      .maybeSingle();
+    const primaryOwnerId: string = primaryOwnerSetting?.value || "";
+    const isPrimaryOwner = !!primaryOwnerId && primaryOwnerId === callerId;
+
+    // Helper: check that targetUserId belongs to the caller's org (primary owner bypasses)
+    const assertSameOrg = async (targetId: string): Promise<string | null> => {
+      if (isPrimaryOwner) return null;
+      if (!callerOrg) return "غير مصرح - لا توجد مؤسسة للمستخدم";
+      const { data: targetProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("organization_id")
+        .eq("user_id", targetId)
+        .maybeSingle();
+      if (!targetProfile || targetProfile.organization_id !== callerOrg) {
+        return "غير مصرح - المستخدم خارج نطاق مؤسستك";
+      }
+      return null;
+    };
+
     // --- Process actions ---
     const { action, email, password, full_name, role, user_id: targetUserId, national_id } = await req.json();
 
