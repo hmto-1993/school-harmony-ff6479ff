@@ -295,7 +295,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
                 const catGrades = cwGrades
                   .filter((g: any) => g.grade_categories?.name === catName)
                   .sort((a: any, b: any) => (a.date || "").localeCompare(b.date || ""));
-                const allIcons = catGrades.flatMap((g: any) => getIconLevels(g.score, g.grade_categories?.max_score || 100, catName));
+                const allIcons = catGrades.flatMap((g: any) => getIconLevels(g.score, g.grade_categories?.max_score || 100, catName, g.category_id));
                 const displayIcons = allIcons.slice(-effectiveIconsCount);
 
                 return (
