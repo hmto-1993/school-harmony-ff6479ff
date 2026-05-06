@@ -13,6 +13,7 @@ export interface GradeCategory {
   max_score: number;
   category_group: string;
   is_deduction?: boolean;
+  is_earned_bucket?: boolean;
 }
 
 export type GradeLevel = "excellent" | "average" | "zero" | null;
