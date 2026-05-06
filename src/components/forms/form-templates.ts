@@ -145,6 +145,7 @@ export const formTemplates: FormTemplate[] = [
       { id: "evidence", label: "شواهد السلوك المتميز", type: "textarea", placeholder: "اذكر الشواهد والأدلة..." },
       { id: "score", label: "الدرجة المكتسبة", type: "text" },
       { id: "observer_name", label: "اسم راصد السلوك", type: "text" },
+      { id: "observer_signature", label: "توقيع راصد السلوك (اسم/رمز)", type: "text" },
       { id: "teacher_notes", label: "ملاحظات إضافية", type: "textarea" },
     ],
   },
