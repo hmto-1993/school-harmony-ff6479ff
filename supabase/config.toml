@@ -7,5 +7,9 @@ project_id = "aoiqnrhwndtttlcoiiny"
     verify_jwt = false
   [functions.forensic-extract-pdfs]
     verify_jwt = false
+  [functions.staff-login]
+    verify_jwt = false
+  [functions.lookup-staff-email]
+    verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = true
