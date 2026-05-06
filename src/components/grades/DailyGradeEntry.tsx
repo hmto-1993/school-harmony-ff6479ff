@@ -147,6 +147,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const hasViolations = dailyCategories.some(c => c.is_deduction);
   const activeCats = gradeTab === "assessment" ? assessmentCats : violationCats;
   const showTotal = gradeTab === "assessment" && !isSingleCategory && assessmentCats.length > 1;
+  // The dedicated "earned grades" bucket — independent column, fed only by manual input + radar
+  const earnedBucketCat = React.useMemo(() => categories.find((c: any) => c.is_earned_bucket), [categories]);
 
   // Violation history for referral automation
   const deductionCatIds = React.useMemo(() => categories.filter(c => c.is_deduction).map(c => c.id), [categories]);
