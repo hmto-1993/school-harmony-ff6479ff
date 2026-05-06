@@ -196,7 +196,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
-      const cat = cats.find(c => c.id === g.category_id);
+      const cat = lookupCats.find(c => c.id === g.category_id);
       if (!cat) return;
 
       // "الدرجات المكتسبة" is an independent bucket — sum only daily entries to it (radar + manual question dialog)
