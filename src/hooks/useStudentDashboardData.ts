@@ -51,6 +51,10 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     parentShowDeductions: true,
   });
 
+  // Live student visibility (refreshed every dashboard open, overrides login snapshot)
+  const [studentVis, setStudentVis] = useState<Record<string, boolean> | null>(null);
+  const [studentEvalLive, setStudentEvalLive] = useState<{ showDaily: boolean; showClasswork: boolean; iconsCount: number; showDeductions: boolean } | null>(null);
+
   // View states
   const [gradesView, setGradesView] = useState<"table" | "cards">("cards");
   const [evalSubView, setEvalSubView] = useState<"daily" | "classwork">("daily");
