@@ -67,15 +67,13 @@ export default function LoginPage() {
       });
     };
     try {
-      const { data } = await supabase.functions.invoke("lookup-staff-email", {
-        body: { national_id: nationalId.trim() },
+      // Server-side reset: the function sends the email itself and never returns the address.
+      await supabase.functions.invoke("lookup-staff-email", {
+        body: {
+          national_id: nationalId.trim(),
+          redirect_to: `${window.location.origin}/reset-password`,
+        },
       });
-      // Only attempt to send if we got a real email — never reveal which case occurred
-      if (data?.email && !data.email.includes("***") && data.email.includes("@")) {
-        await supabase.auth.resetPasswordForEmail(data.email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-      }
     } catch {
       // Swallow errors — uniform response either way
     }
@@ -89,45 +87,51 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { data, error: lookupError } = await supabase.functions.invoke("lookup-staff-email", {
-        body: { national_id: nationalId },
+      const { data, error: lookupError } = await supabase.functions.invoke("staff-login", {
+        body: { national_id: nationalId, password },
       });
 
-      if (lookupError || data?.error) {
+      if (lookupError) {
         toast({
           title: "خطأ في تسجيل الدخول",
-          description: data?.error || "رقم الهوية غير مسجل",
+          description: "حدث خطأ في الاتصال",
           variant: "destructive",
         });
         setLoading(false);
         return;
       }
 
-      const { error } = await signIn(data.email, password);
-      if (error) {
-        const msg = (error as any)?.message || "";
-        const code = (error as any)?.code || "";
-        const isUnconfirmed = code === "email_not_confirmed" || /not confirmed|confirm/i.test(msg);
+      if (data?.error === "unconfirmed") {
+        toast({
+          title: "البريد الإلكتروني لم يُؤكَّد بعد",
+          description: "أرسلنا لك رابط تأكيد جديد. يرجى فتحه ثم العودة لتسجيل الدخول.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
-        if (isUnconfirmed) {
-          // إعادة إرسال رابط التأكيد تلقائياً
-          await supabase.auth.resend({
-            type: "signup",
-            email: data.email,
-            options: { emailRedirectTo: `${window.location.origin}/` },
-          });
-          toast({
-            title: "البريد الإلكتروني لم يُؤكَّد بعد",
-            description: "أرسلنا لك رابط تأكيد جديد على بريدك. يرجى فتحه ثم العودة لتسجيل الدخول.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "خطأ في تسجيل الدخول",
-            description: "رقم الهوية أو كلمة المرور غير صحيحة",
-            variant: "destructive",
-          });
-        }
+      if (data?.error || !data?.session) {
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: data?.error || "رقم الهوية أو كلمة المرور غير صحيحة",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Apply the server-issued session client-side
+      const { error: setErr } = await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+      if (setErr) {
+        toast({
+          title: "خطأ في تسجيل الدخول",
+          description: "تعذر إنشاء الجلسة، حاول مجدداً",
+          variant: "destructive",
+        });
       }
     } catch {
       toast({
