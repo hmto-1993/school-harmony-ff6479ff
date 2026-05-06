@@ -106,14 +106,18 @@ Deno.serve(async (req) => {
       }
 
       if (newUser?.user) {
+        // Only the primary owner can grant the global "admin" role.
+        const safeRole = role === "admin" && !isPrimaryOwner ? "teacher" : (role || "teacher");
         await supabaseAdmin.from("profiles").insert({
           user_id: newUser.user.id,
           full_name: full_name || email,
           national_id: national_id || null,
+          // Bind the new user to the caller's organization for proper tenant isolation.
+          organization_id: callerOrg,
         });
         await supabaseAdmin.from("user_roles").insert({
           user_id: newUser.user.id,
-          role: role || "teacher",
+          role: safeRole,
         });
       }
 
@@ -140,6 +144,15 @@ Deno.serve(async (req) => {
         userId = targetUser.id;
       }
 
+      // Tenant isolation: target must be in the caller's org (primary owner bypasses).
+      const orgErr = await assertSameOrg(userId);
+      if (orgErr) return ok({ error: orgErr });
+
+      // Block resetting the primary owner's password from any non-primary caller.
+      if (userId === primaryOwnerId && !isPrimaryOwner) {
+        return ok({ error: "لا يمكن تعديل حساب المالك الرئيسي" });
+      }
+
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         userId,
         { password }
@@ -157,6 +170,14 @@ Deno.serve(async (req) => {
         return ok({ error: "معرف المستخدم مطلوب" });
       }
 
+      // Tenant isolation
+      const orgErr = await assertSameOrg(targetUserId);
+      if (orgErr) return ok({ error: orgErr });
+
+      if (targetUserId === primaryOwnerId && !isPrimaryOwner) {
+        return ok({ error: "لا يمكن تعديل حساب المالك الرئيسي" });
+      }
+
       const updates: Record<string, string> = {};
       if (full_name !== undefined) updates.full_name = full_name;
       if (national_id !== undefined) updates.national_id = national_id;
@@ -170,6 +191,10 @@ Deno.serve(async (req) => {
       }
 
       if (role && (role === "admin" || role === "teacher")) {
+        // Only the primary owner can promote anyone to the global admin role.
+        if (role === "admin" && !isPrimaryOwner) {
+          return ok({ error: "فقط المالك الرئيسي يمكنه منح صلاحية المسؤول" });
+        }
         const { error: roleError } = await supabaseAdmin
           .from("user_roles")
           .update({ role })
@@ -185,14 +210,6 @@ Deno.serve(async (req) => {
         return ok({ error: "البريد الإلكتروني مطلوب" });
       }
 
-      // Prevent deleting the primary owner
-      const { data: primarySetting } = await supabaseAdmin
-        .from("site_settings")
-        .select("value")
-        .eq("id", "admin_primary_id")
-        .maybeSingle();
-      const primaryOwnerId = primarySetting?.value || "";
-
       const { data: { users }, error: listError } = await supabaseAdmin.auth.admin.listUsers();
       if (listError) throw listError;
 
@@ -205,9 +222,13 @@ Deno.serve(async (req) => {
         return ok({ error: "لا يمكنك حذف حسابك الخاص" });
       }
 
-      if (targetUser.id === primaryOwnerId && callerId !== primaryOwnerId) {
+      if (targetUser.id === primaryOwnerId && !isPrimaryOwner) {
         return ok({ error: "لا يمكن حذف حساب المالك الرئيسي" });
       }
+
+      // Tenant isolation
+      const orgErr = await assertSameOrg(targetUser.id);
+      if (orgErr) return ok({ error: orgErr });
 
       await supabaseAdmin.from("attendance_records").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
       await supabaseAdmin.from("grades").update({ recorded_by: callerId }).eq("recorded_by", targetUser.id);
@@ -230,14 +251,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_teachers") {
-      // Get the primary owner ID to hide from the list
-      const { data: primarySetting } = await supabaseAdmin
-        .from("site_settings")
-        .select("value")
-        .eq("id", "admin_primary_id")
-        .maybeSingle();
-      const primaryOwnerId = primarySetting?.value || "";
-
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("user_id, role")
@@ -251,13 +264,22 @@ Deno.serve(async (req) => {
       const roleMap: Record<string, string> = {};
       roles.forEach((r: any) => { roleMap[r.user_id] = r.role; });
 
-      const { data: profiles } = await supabaseAdmin
+      // Tenant isolation: limit to the caller's org (primary owner sees all).
+      let profilesQuery = supabaseAdmin
         .from("profiles")
-        .select("user_id, full_name, national_id")
+        .select("user_id, full_name, national_id, organization_id")
         .in("user_id", staffIds);
+      if (!isPrimaryOwner && callerOrg) {
+        profilesQuery = profilesQuery.eq("organization_id", callerOrg);
+      } else if (!isPrimaryOwner && !callerOrg) {
+        return ok({ teachers: [] });
+      }
+      const { data: profiles } = await profilesQuery;
+
+      const allowedIds = new Set((profiles || []).map((p: any) => p.user_id));
 
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-      const staffUsers = users.filter((u: any) => staffIds.includes(u.id));
+      const staffUsers = users.filter((u: any) => allowedIds.has(u.id));
 
       // Hide both the caller and the primary owner from the list
       const teachers = staffUsers
@@ -277,14 +299,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "list_admins") {
-      // Get the primary owner ID to hide from the list
-      const { data: primarySetting } = await supabaseAdmin
-        .from("site_settings")
-        .select("value")
-        .eq("id", "admin_primary_id")
-        .maybeSingle();
-      const primaryOwnerId = primarySetting?.value || "";
-
       const { data: roles } = await supabaseAdmin
         .from("user_roles")
         .select("user_id")
@@ -295,13 +309,22 @@ Deno.serve(async (req) => {
       }
 
       const adminIds = roles.map((r: any) => r.user_id);
-      const { data: profiles } = await supabaseAdmin
+
+      // Tenant isolation
+      let profilesQuery = supabaseAdmin
         .from("profiles")
-        .select("user_id, full_name, national_id")
+        .select("user_id, full_name, national_id, organization_id")
         .in("user_id", adminIds);
+      if (!isPrimaryOwner && callerOrg) {
+        profilesQuery = profilesQuery.eq("organization_id", callerOrg);
+      } else if (!isPrimaryOwner && !callerOrg) {
+        return ok({ admins: [] });
+      }
+      const { data: profiles } = await profilesQuery;
+      const allowedIds = new Set((profiles || []).map((p: any) => p.user_id));
 
       const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
-      const adminUsers = users.filter((u: any) => adminIds.includes(u.id) && u.id !== primaryOwnerId);
+      const adminUsers = users.filter((u: any) => allowedIds.has(u.id) && u.id !== primaryOwnerId);
 
       const admins = adminUsers.map((u: any) => {
         const profile = profiles?.find((p: any) => p.user_id === u.id);
