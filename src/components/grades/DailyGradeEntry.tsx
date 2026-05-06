@@ -147,6 +147,8 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
   const hasViolations = dailyCategories.some(c => c.is_deduction);
   const activeCats = gradeTab === "assessment" ? assessmentCats : violationCats;
   const showTotal = gradeTab === "assessment" && !isSingleCategory && assessmentCats.length > 1;
+  // The dedicated "earned grades" bucket — independent column, fed only by manual input + radar
+  const earnedBucketCat = React.useMemo(() => categories.find((c: any) => c.is_earned_bucket), [categories]);
 
   // Violation history for referral automation
   const deductionCatIds = React.useMemo(() => categories.filter(c => c.is_deduction).map(c => c.id), [categories]);
@@ -611,10 +613,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                     setRadarClearSignal(s => s + 1);
                   }}
                   onQuizCorrect={async (studentId, score) => {
-                    const numCat = assessmentCats[0];
+                    const numCat = earnedBucketCat;
                     if (numCat) {
                       const currentScore = filteredStudentGrades.find(s => s.student_id === studentId)?.grades[numCat.id] || 0;
-                      const newScore = Math.min((currentScore || 0) + score, Number(numCat.max_score));
+                      const newScore = (currentScore || 0) + score;
                       setNumericGrade(studentId, numCat.id, String(newScore), Number(numCat.max_score));
                       try {
                         await quickSaveGrade(studentId, numCat.id, newScore);
@@ -663,7 +665,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         if (e.key === "Enter") {
                           const val = (e.target as HTMLInputElement).value;
                           if (val) {
-                            const numCat = assessmentCats[0];
+                            const numCat = earnedBucketCat;
                             if (numCat) {
                               const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
                               setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
@@ -687,7 +689,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
                         const val = input?.value;
                         if (val) {
-                          const numCat = assessmentCats[0];
+                          const numCat = earnedBucketCat;
                           if (numCat) {
                             const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
                             setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
@@ -991,18 +993,20 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         {showTotal && <td className="p-3 text-center font-bold border-l-2 border-border">{calcTotal(sg.grades)}</td>}
                         {gradeTab === "assessment" && (
                           <td className="p-2 text-center border-l-2 border-border bg-emerald-500/5">
-                            <Input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={sg.grades[assessmentCats[0]?.id] != null && typeof sg.grades[assessmentCats[0]?.id] === "number" ? "" : ""}
-                              placeholder="--"
-                              className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
-                              onChange={(e) => {
-                                const numCat = assessmentCats[0];
-                                if (numCat) setNumericGrade(sg.student_id, numCat.id, e.target.value, Number(numCat.max_score));
-                              }}
-                            />
+                            {earnedBucketCat ? (
+                              <Input
+                                type="number"
+                                min={0}
+                                value={sg.grades[earnedBucketCat.id] ?? ""}
+                                placeholder="--"
+                                className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
+                                onChange={(e) => setNumericGrade(sg.student_id, earnedBucketCat.id, e.target.value, Number(earnedBucketCat.max_score))}
+                                onBlur={async (e) => {
+                                  const v = Number(e.target.value);
+                                  if (!isNaN(v)) { try { await quickSaveGrade(sg.student_id, earnedBucketCat.id, v); } catch {} }
+                                }}
+                              />
+                            ) : <span className="text-[10px] text-muted-foreground">—</span>}
                           </td>
                         )}
                       </tr>

@@ -147,9 +147,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const cls = classesData || [];
     const students = studentsData || [];
-    const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
+    const allClassworkCats = (catsData || []).filter((c: any) => c.category_group === 'classwork');
+    const earnedBucket = allClassworkCats.find((c: any) => c.is_earned_bucket && c.class_id === selectedClass);
+    const cats = allClassworkCats.filter((c: any) => !c.is_earned_bucket) as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
     const catIds = cats.map((c) => c.id);
+    const dailyCatIds = earnedBucket ? [...catIds, earnedBucket.id] : catIds;
 
     let allManualScores: any[] = [];
     let allDailyGrades: any[] = [];
@@ -161,12 +164,12 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
           .in("student_id", studentIds)
           .eq("period", selectedPeriod)
           .limit(5000),
-        catIds.length > 0
+        dailyCatIds.length > 0
           ? supabase
               .from("grades")
               .select("student_id, category_id, score, date")
               .in("student_id", studentIds)
-              .in("category_id", catIds)
+              .in("category_id", dailyCatIds)
               .eq("period", selectedPeriod)
               .order("date")
               .limit(5000)
@@ -175,6 +178,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
       allManualScores = (manualRes.data as any[]) || [];
       allDailyGrades = (dailyRes.data as any[]) || [];
     }
+    const earnedBucketCat = earnedBucket; // alias for the lookup below
+    const lookupCats = earnedBucket ? [...cats, earnedBucket as any] : cats;
 
     const manualMap = new Map<string, Map<string, { score: number; id: string }>>();
     allManualScores.forEach((m: any) => {
@@ -191,12 +196,14 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     allDailyGrades.forEach((g: any) => {
       if (g.score === null || g.score === undefined) return;
       const score = Number(g.score);
-      const cat = cats.find(c => c.id === g.category_id);
+      const cat = lookupCats.find(c => c.id === g.category_id);
       if (!cat) return;
 
-      // Accumulate earned total (deductions reduce, others add)
-      const delta = cat.is_deduction ? -score : score;
-      earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + delta);
+      // "الدرجات المكتسبة" is an independent bucket — sum only daily entries to it (radar + manual question dialog)
+      if ((cat as any).is_earned_bucket) {
+        earnedTotalsMap.set(g.student_id, (earnedTotalsMap.get(g.student_id) || 0) + score);
+        return;
+      }
 
       // Skip icon rendering for deduction categories — they show as count + negative number
       if (cat.is_deduction) {
@@ -205,7 +212,6 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         sumMap.set(g.category_id, (sumMap.get(g.category_id) || 0) + score);
         if (!deductionCountsMap.has(g.student_id)) deductionCountsMap.set(g.student_id, new Map());
         const cntMap = deductionCountsMap.get(g.student_id)!;
-        // Count any recorded deduction event (even score=0 was filtered above by null check; >0 = real violation)
         if (score > 0) cntMap.set(g.category_id, (cntMap.get(g.category_id) || 0) + 1);
         return;
       }
@@ -225,6 +231,13 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
             studentMap.get(g.category_id)!.push({ level, isFullScore: false });
           }
         });
+      }
+    });
+
+    // Add manual entries on the earned bucket (when user types directly in the "earned grades" column)
+    allManualScores.forEach((m: any) => {
+      if (earnedBucketCat && m.category_id === earnedBucketCat.id) {
+        earnedTotalsMap.set(m.student_id, (earnedTotalsMap.get(m.student_id) || 0) + Number(m.score));
       }
     });
 
