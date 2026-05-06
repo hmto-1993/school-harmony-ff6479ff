@@ -147,7 +147,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     const cls = classesData || [];
     const students = studentsData || [];
-    const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork') as CategoryInfo[];
+    const cats = (catsData || []).filter((c: any) => c.category_group === 'classwork' && !c.is_earned_bucket) as CategoryInfo[];
     const studentIds = students.map((s) => s.id);
     const catIds = cats.map((c) => c.id);
 
