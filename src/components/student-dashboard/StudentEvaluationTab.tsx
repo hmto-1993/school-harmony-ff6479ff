@@ -222,7 +222,7 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
                     </td>
                     {dailyCatNames.map((catName) => {
                       const grade = dailyGrades.find((g: any) => g.date === date && g.grade_categories?.name === catName);
-                      const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100, catName) : null;
+                      const level = grade ? getLevel(grade.score, grade.grade_categories?.max_score || 100, catName, grade.category_id) : null;
                       return (
                         <td key={catName} className="p-1.5 text-center border-l border-border/10">
                           <LevelIcon level={level} />
