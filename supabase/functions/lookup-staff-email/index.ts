@@ -8,27 +8,28 @@ const corsHeaders = {
 const MAX_ATTEMPTS = 5;
 const WINDOW_MINUTES = 15;
 
-/**
- * Generate a deterministic but fake email from national_id
- * so the response shape is identical for found/not-found cases.
- */
-function fakePlaceholderEmail(nationalId: string): string {
-  const prefix = nationalId.substring(0, 2);
-  return `${prefix}***@***.com`;
-}
+const uniformMessage =
+  "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني";
 
+/**
+ * SECURITY: This endpoint NEVER returns a real email address.
+ * For password reset flows, it sends the reset email server-side and returns
+ * a uniform success response regardless of whether the national_id exists.
+ * For staff login, use the `staff-login` edge function instead.
+ */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { national_id } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { national_id, redirect_to } = body || {};
 
-    if (!national_id) {
+    if (!national_id || typeof national_id !== "string") {
       return new Response(
         JSON.stringify({ error: "رقم الهوية مطلوب" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -36,11 +37,12 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get client IP for rate limiting
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-               req.headers.get("cf-connecting-ip") || "unknown";
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      "unknown";
 
-    // Rate limiting: count ALL recent attempts (success OR failure) for this IP
+    // Rate limiting
     const windowStart = new Date(Date.now() - WINDOW_MINUTES * 60 * 1000).toISOString();
     const { count } = await supabase
       .from("student_login_attempts")
@@ -51,66 +53,49 @@ Deno.serve(async (req) => {
 
     if ((count ?? 0) >= MAX_ATTEMPTS) {
       return new Response(
-        JSON.stringify({ error: `تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة بعد ${WINDOW_MINUTES} دقيقة` }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({
+          error: `تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة بعد ${WINDOW_MINUTES} دقيقة`,
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const uniformMessage = "إذا كان رقم الهوية مسجلاً، سيتم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني";
-
-    // Look up profile by national_id
-    const { data: profile, error } = await supabase
+    // Look up profile
+    const { data: profile } = await supabase
       .from("profiles")
       .select("user_id")
       .eq("national_id", national_id)
-      .single();
+      .maybeSingle();
 
-    if (error || !profile) {
-      // Log failed attempt for rate limiting
-      await supabase.from("student_login_attempts").insert({
-        national_id: `staff_lookup:${national_id}`,
-        ip_address: ip,
-        success: false,
-      });
+    let success = false;
 
-      return new Response(
-        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (profile?.user_id) {
+      const { data: userRes } = await supabase.auth.admin.getUserById(profile.user_id);
+      const email = userRes?.user?.email;
+      if (email) {
+        // Send reset email server-side; never expose the address to the client.
+        await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: typeof redirect_to === "string" ? redirect_to : undefined,
+        });
+        success = true;
+      }
     }
 
-    // Get user email from auth
-    const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
-
-    if (!user?.email) {
-      await supabase.from("student_login_attempts").insert({
-        national_id: `staff_lookup:${national_id}`,
-        ip_address: ip,
-        success: false,
-      });
-
-      return new Response(
-        JSON.stringify({ email: fakePlaceholderEmail(national_id), message: uniformMessage }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Log successful lookup
     await supabase.from("student_login_attempts").insert({
       national_id: `staff_lookup:${national_id}`,
       ip_address: ip,
-      success: true,
+      success,
     });
 
-    // Return real email for login — client uses this for signInWithPassword
+    // Uniform response — no email, no enumeration signal
     return new Response(
-      JSON.stringify({ email: user.email, message: uniformMessage }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ message: uniformMessage }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-  } catch (err) {
+  } catch (_err) {
     return new Response(
-      JSON.stringify({ error: "حدث خطأ غير متوقع" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ message: uniformMessage }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
