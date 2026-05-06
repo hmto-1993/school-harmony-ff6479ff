@@ -203,7 +203,7 @@ export default function StudentDashboard() {
 
           {showEvalTab && vis.grades && (
             <TabsContent value="evaluation">
-              <StudentEvaluationTab student={student} isParent={isParent} parentVis={dashData.parentVis} evalSubView={dashData.evalSubView} setEvalSubView={dashData.setEvalSubView} />
+              <StudentEvaluationTab student={student} isParent={isParent} parentVis={dashData.parentVis} evalSubView={dashData.evalSubView} setEvalSubView={dashData.setEvalSubView} slotSettings={dashData.slotSettings} />
             </TabsContent>
           )}
 
