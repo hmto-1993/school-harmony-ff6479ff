@@ -51,6 +51,10 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     parentShowDeductions: true,
   });
 
+  // Live student visibility (refreshed every dashboard open, overrides login snapshot)
+  const [studentVis, setStudentVis] = useState<Record<string, boolean> | null>(null);
+  const [studentEvalLive, setStudentEvalLive] = useState<{ showDaily: boolean; showClasswork: boolean; iconsCount: number; showDeductions: boolean } | null>(null);
+
   // View states
   const [gradesView, setGradesView] = useState<"table" | "cards">("cards");
   const [evalSubView, setEvalSubView] = useState<"daily" | "classwork">("daily");
@@ -60,9 +64,41 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
       fetchFolders();
       fetchPopup();
       if (isParent) fetchWelcomeMessage();
-      if (!isParent) fetchStudentWelcome();
+      if (!isParent) { fetchStudentWelcome(); fetchStudentVisibility(); }
     }
   }, [student]);
+
+  const fetchStudentVisibility = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", [
+        "student_show_grades", "student_show_attendance", "student_show_behavior",
+        "student_show_activities", "student_show_library", "student_show_honor_roll",
+        "student_show_absence_warning", "student_show_national_id",
+        "student_show_daily_grades", "student_show_classwork_icons",
+        "student_classwork_icons_count", "student_show_deductions",
+      ]);
+    const vis: Record<string, boolean> = {};
+    let showDaily = true, showClasswork = true, showDeductions = true, iconsCount = 10;
+    (data || []).forEach((s: any) => {
+      const v = s.value !== "false";
+      if (s.id === "student_show_grades") vis.grades = v;
+      if (s.id === "student_show_attendance") vis.attendance = v;
+      if (s.id === "student_show_behavior") vis.behavior = v;
+      if (s.id === "student_show_activities") vis.activities = v;
+      if (s.id === "student_show_library") vis.library = v;
+      if (s.id === "student_show_honor_roll") vis.honorRoll = v;
+      if (s.id === "student_show_absence_warning") vis.absenceWarning = v;
+      if (s.id === "student_show_national_id") vis.nationalId = v;
+      if (s.id === "student_show_daily_grades") showDaily = v;
+      if (s.id === "student_show_classwork_icons") showClasswork = v;
+      if (s.id === "student_show_deductions") showDeductions = v;
+      if (s.id === "student_classwork_icons_count" && s.value) iconsCount = Number(s.value) || 10;
+    });
+    setStudentVis(vis);
+    setStudentEvalLive({ showDaily, showClasswork, iconsCount, showDeductions });
+  };
 
   const fetchStudentWelcome = async () => {
     const { data } = await supabase
@@ -243,6 +279,8 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     schoolName, schoolLogoUrl, parentPdfHeader,
     // Parent visibility
     parentVis,
+    // Live student visibility (overrides login snapshot)
+    studentVis, studentEvalLive,
     // View states
     gradesView, setGradesView, evalSubView, setEvalSubView,
   };
