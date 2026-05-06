@@ -54,6 +54,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
   // Live student visibility (refreshed every dashboard open, overrides login snapshot)
   const [studentVis, setStudentVis] = useState<Record<string, boolean> | null>(null);
   const [studentEvalLive, setStudentEvalLive] = useState<{ showDaily: boolean; showClasswork: boolean; iconsCount: number; showDeductions: boolean } | null>(null);
+  const [slotSettings, setSlotSettings] = useState<{ globalMaxSlots: number; maxSlotsPerCat: Record<string, number> }>({ globalMaxSlots: 3, maxSlotsPerCat: {} });
 
   // View states
   const [gradesView, setGradesView] = useState<"table" | "cards">("cards");
@@ -63,10 +64,28 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     if (student) {
       fetchFolders();
       fetchPopup();
+      fetchSlotSettings();
       if (isParent) fetchWelcomeMessage();
       if (!isParent) { fetchStudentWelcome(); fetchStudentVisibility(); }
     }
   }, [student]);
+
+  const fetchSlotSettings = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("id, value")
+      .in("id", ["daily_max_slots", "daily_max_slots_per_cat"]);
+    let globalMaxSlots = 3;
+    let maxSlotsPerCat: Record<string, number> = {};
+    (data || []).forEach((s: any) => {
+      if (s.id === "daily_max_slots" && s.value) globalMaxSlots = Number(s.value) || 3;
+      if (s.id === "daily_max_slots_per_cat" && s.value) {
+        try { maxSlotsPerCat = JSON.parse(s.value) || {}; } catch {}
+      }
+    });
+    setSlotSettings({ globalMaxSlots, maxSlotsPerCat });
+  };
+
 
   const fetchStudentVisibility = async () => {
     const { data } = await supabase
@@ -280,7 +299,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     // Parent visibility
     parentVis,
     // Live student visibility (overrides login snapshot)
-    studentVis, studentEvalLive,
+    studentVis, studentEvalLive, slotSettings,
     // View states
     gradesView, setGradesView, evalSubView, setEvalSubView,
   };
