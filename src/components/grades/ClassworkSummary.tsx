@@ -236,8 +236,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
 
     // Add manual entries on the earned bucket (when user types directly in the "earned grades" column)
     allManualScores.forEach((m: any) => {
-      const cat = cats.find(c => c.id === m.category_id);
-      if (cat && (cat as any).is_earned_bucket) {
+      if (earnedBucketCat && m.category_id === earnedBucketCat.id) {
         earnedTotalsMap.set(m.student_id, (earnedTotalsMap.get(m.student_id) || 0) + Number(m.score));
       }
     });
