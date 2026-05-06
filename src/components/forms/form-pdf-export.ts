@@ -560,7 +560,29 @@ export async function exportFormPdf(
       doc.setFontSize(12);
       doc.setTextColor(30, 41, 59);
 
-      if (field.type === "textarea" && value) {
+      if (field.type === "checkbox-list" && field.options) {
+        let selected: string[] = [];
+        try {
+          const j = JSON.parse(value || "[]");
+          if (Array.isArray(j)) selected = j.map(String);
+        } catch { /* ignore */ }
+        for (const opt of field.options) {
+          if (y > pageH - 50) { doc.addPage(); y = 20; }
+          const checked = selected.includes(opt);
+          // Box
+          doc.setDrawColor(80, 90, 105);
+          doc.setLineWidth(0.3);
+          doc.rect(pageW - marginX - 5, y - 3.5, 4, 4, "S");
+          if (checked) {
+            doc.setFont("Amiri", "bold");
+            doc.text("✓", pageW - marginX - 3, y, { align: "center" });
+            doc.setFont("Amiri", "normal");
+          }
+          doc.text(opt, pageW - marginX - 11, y, { align: "right" });
+          y += 6;
+        }
+        y += 3;
+      } else if (field.type === "textarea" && value) {
         const lines = doc.splitTextToSize(value, contentW - 12);
         const boxH = Math.max(lines.length * 6.5 + 8, 22);
         doc.setDrawColor(200, 215, 235);
