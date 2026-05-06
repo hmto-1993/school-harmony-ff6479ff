@@ -433,7 +433,22 @@ export const formTemplates: FormTemplate[] = [
       { type: "block", label: "وصف الواقعة بالتفصيل", fieldId: "incident_desc", minHeight: 30 },
       { type: "block", label: "الأطراف المشاركة", fieldId: "involved_parties", minHeight: 18 },
       { type: "block", label: "أقوال الأطراف", fieldId: "party_statements", minHeight: 22 },
-      { type: "block", label: "الشهود", fieldId: "witnesses_names", minHeight: 16 },
+      { type: "section", title: "شهود الواقعة" },
+      {
+        type: "escalation",
+        title: "جدول الشهود (يصل إلى 7 شهود)",
+        columns: ["م", "الاسم", "الوظيفة", "العمل المسند إليه", "التوقيع"],
+        rows: [
+          { label: "1", fieldIds: ["w1_name", "w1_job", "w1_role", "w1_sig"] },
+          { label: "2", fieldIds: ["w2_name", "w2_job", "w2_role", "w2_sig"] },
+          { label: "3", fieldIds: ["w3_name", "w3_job", "w3_role", "w3_sig"] },
+          { label: "4", fieldIds: ["w4_name", "w4_job", "w4_role", "w4_sig"] },
+          { label: "5", fieldIds: ["w5_name", "w5_job", "w5_role", "w5_sig"] },
+          { label: "6", fieldIds: ["w6_name", "w6_job", "w6_role", "w6_sig"] },
+          { label: "7", fieldIds: ["w7_name", "w7_job", "w7_role", "w7_sig"] },
+        ],
+      },
+      { type: "block", label: "ملاحظات إضافية عن الشهود (اختياري)", fieldId: "witnesses_names", minHeight: 12 },
       { type: "block", label: "التوصيات والإجراءات المتخذة", fieldId: "recommendations", minHeight: 22 },
     ],
     bodyTemplate:
