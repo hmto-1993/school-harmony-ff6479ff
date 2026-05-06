@@ -56,10 +56,24 @@ serve(async (req) => {
 
     const { title, body, classIds } = await req.json();
 
-    // Get push subscriptions, optionally filtered by class
+    // Validate classIds: only well-formed UUIDs allowed (prevents PostgREST filter injection)
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let safeIds: string[] = [];
+    if (Array.isArray(classIds) && classIds.length > 0) {
+      if (!classIds.every((id: unknown) => typeof id === "string" && UUID_RE.test(id))) {
+        return new Response(JSON.stringify({ error: "Invalid classIds" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      safeIds = classIds as string[];
+    }
+
+    // Get push subscriptions, optionally filtered by class (parameterized via .in)
     let query = supabase.from("push_subscriptions").select("*");
-    if (classIds && classIds.length > 0) {
-      query = query.or(`class_id.in.(${classIds.join(",")}),class_id.is.null`);
+    if (safeIds.length > 0) {
+      const orFilter = `class_id.is.null,class_id.in.(${safeIds.join(",")})`;
+      query = query.or(orFilter);
     }
 
     const { data: subscriptions, error } = await query;

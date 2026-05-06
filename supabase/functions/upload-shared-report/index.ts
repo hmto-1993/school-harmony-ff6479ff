@@ -22,15 +22,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Enforce file size limit (20 MB) and PDF MIME type
+    const MAX_SIZE = 20 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return new Response(JSON.stringify({ error: 'File too large (max 20MB)' }), {
+        status: 413,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (file.type !== 'application/pdf') {
+      return new Response(JSON.stringify({ error: 'Only PDF files are allowed' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Validate share token
+    // Validate share token (and expiry)
     const { data: share } = await supabase
       .from('shared_views')
-      .select('id, token')
+      .select('id, token, expires_at')
       .eq('token', token)
       .single();
 
@@ -41,9 +56,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (share.expires_at && new Date(share.expires_at) < new Date()) {
+      return new Response(JSON.stringify({ error: 'Share link expired' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Verify PDF magic bytes (%PDF)
+    const arrayBuffer = await file.arrayBuffer();
+    const head = new Uint8Array(arrayBuffer.slice(0, 4));
+    if (!(head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46)) {
+      return new Response(JSON.stringify({ error: 'Invalid PDF content' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Upload file
     const fileName = `shared/report_${Date.now()}.pdf`;
-    const arrayBuffer = await file.arrayBuffer();
 
     const { error: uploadError } = await supabase.storage
       .from('reports')

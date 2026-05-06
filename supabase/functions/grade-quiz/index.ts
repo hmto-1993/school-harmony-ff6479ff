@@ -62,6 +62,34 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Verify the student is enrolled in a class targeted by this activity
+    const { data: studentRow } = await supabase
+      .from("students")
+      .select("class_id")
+      .eq("id", student_id)
+      .maybeSingle();
+
+    if (!studentRow?.class_id) {
+      return new Response(
+        JSON.stringify({ error: "Student not found" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { data: enrollment } = await supabase
+      .from("activity_class_targets")
+      .select("class_id")
+      .eq("activity_id", activity_id)
+      .eq("class_id", studentRow.class_id)
+      .maybeSingle();
+
+    if (!enrollment) {
+      return new Response(
+        JSON.stringify({ error: "Not enrolled in this activity" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Check if already submitted
     const { data: existing } = await supabase
       .from("quiz_submissions")
