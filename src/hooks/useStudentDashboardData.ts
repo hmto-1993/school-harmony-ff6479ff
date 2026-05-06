@@ -54,6 +54,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
   // Live student visibility (refreshed every dashboard open, overrides login snapshot)
   const [studentVis, setStudentVis] = useState<Record<string, boolean> | null>(null);
   const [studentEvalLive, setStudentEvalLive] = useState<{ showDaily: boolean; showClasswork: boolean; iconsCount: number; showDeductions: boolean } | null>(null);
+  const [slotSettings, setSlotSettings] = useState<{ globalMaxSlots: number; maxSlotsPerCat: Record<string, number> }>({ globalMaxSlots: 3, maxSlotsPerCat: {} });
 
   // View states
   const [gradesView, setGradesView] = useState<"table" | "cards">("cards");
