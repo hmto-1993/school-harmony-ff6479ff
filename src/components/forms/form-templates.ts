@@ -470,6 +470,13 @@ export const formTemplates: FormTemplate[] = [
       { id: "involved_parties", label: "الأطراف المشاركة", type: "textarea" },
       { id: "party_statements", label: "أقوال الأطراف", type: "textarea" },
       { id: "recommendations", label: "التوصيات والإجراءات المتخذة", type: "textarea" },
+      // Witness rows (1..7)
+      ...[1,2,3,4,5,6,7].flatMap(n => [
+        { id: `w${n}_name`, label: `شاهد ${n}: الاسم`, type: "text" as const },
+        { id: `w${n}_job`, label: `شاهد ${n}: الوظيفة`, type: "text" as const },
+        { id: `w${n}_role`, label: `شاهد ${n}: العمل المسند إليه`, type: "text" as const },
+        { id: `w${n}_sig`, label: `شاهد ${n}: التوقيع`, type: "text" as const },
+      ]),
     ],
   },
   {
