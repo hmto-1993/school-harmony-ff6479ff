@@ -299,7 +299,7 @@ export function useStudentDashboardData(student: any, isParent: boolean) {
     // Parent visibility
     parentVis,
     // Live student visibility (overrides login snapshot)
-    studentVis, studentEvalLive,
+    studentVis, studentEvalLive, slotSettings,
     // View states
     gradesView, setGradesView, evalSubView, setEvalSubView,
   };
