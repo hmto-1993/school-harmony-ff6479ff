@@ -120,12 +120,16 @@ function LevelIcon({ level, size = 20 }: { level: EvaluationLevel | null; size?:
   );
 }
 
-export default function StudentEvaluationTab({ student, isParent, parentVis, evalSubView, setEvalSubView }: Props) {
+export default function StudentEvaluationTab({ student, isParent, parentVis, evalSubView, setEvalSubView, slotSettings }: Props) {
   const studentEval = student.evalSettings || { showDaily: true, showClasswork: true, iconsCount: 10, showDeductions: true };
   const showDaily = isParent ? parentVis.parentShowDailyGrades : studentEval.showDaily;
   const showClasswork = isParent ? parentVis.parentShowClassworkIcons : studentEval.showClasswork;
   const showDeductions = isParent ? parentVis.parentShowDeductions : (studentEval.showDeductions ?? true);
   const effectiveIconsCount = isParent ? parentVis.parentClassworkIconsCount : studentEval.iconsCount;
+
+  const globalSlots = slotSettings?.globalMaxSlots ?? DEFAULT_SLOTS;
+  const slotsByCat = slotSettings?.maxSlotsPerCat ?? {};
+  const getSlotCount = (catId: string) => slotsByCat[catId] ?? globalSlots;
 
   const studentClassId = student.class_id;
   const isCatHidden = (catId: string) => {
@@ -149,15 +153,14 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
     evalSubView === "daily" && showDaily ? "daily" :
     showDaily ? "daily" : "classwork";
 
-  const isParticFn = (name: string) => name === "المشاركة" || name.includes("المشاركة");
-
-  const getLevel = (score: number | null, maxScore: number, catName: string): EvaluationLevel | null => {
+  // Single-cell daily level (mirrors teacher's "summary level" view)
+  const getLevel = (score: number | null, maxScore: number, catName: string, catId: string): EvaluationLevel | null => {
     if (score === null || score === undefined) return null;
-    const isPartic = isParticFn(catName);
+    const isPartic = isParticipation(catName);
     if (score >= maxScore && isPartic) return "star";
     if (score >= maxScore) return "excellent";
     if (score === 0) return "zero";
-    const slotCount = isPartic ? SLOTS : 1;
+    const slotCount = getSlotCount(catId);
     const perSlot = Math.round(maxScore / slotCount);
     const averageScore = Math.round(perSlot / 2);
     if (score >= perSlot) return "excellent";
@@ -165,33 +168,15 @@ export default function StudentEvaluationTab({ student, isParent, parentVis, eva
     return "zero";
   };
 
-  const getIconLevels = (score: number | null, maxScore: number, catName: string): EvaluationLevel[] => {
+  // Per-icon levels — uses the SAME helper the teacher uses
+  const getIconLevels = (score: number | null, maxScore: number, catName: string, catId: string): EvaluationLevel[] => {
     if (score === null || score === undefined) return ["zero"];
     if (score <= 0) return ["zero"];
-
-    const isPartic = isParticFn(catName);
-    if (score >= maxScore && isPartic) return ["star"];
-    if (score >= maxScore) return ["excellent"];
-
-    const slotCount = isPartic ? SLOTS : 1;
-    const perSlot = Math.round(maxScore / slotCount);
-    const averageScore = Math.round(perSlot / 2);
-    const icons: EvaluationLevel[] = [];
-    let remaining = score;
-
-    while (remaining > 0 && icons.length < slotCount) {
-      if (remaining >= perSlot) {
-        icons.push("excellent");
-        remaining -= perSlot;
-      } else if (remaining >= averageScore) {
-        icons.push("average");
-        remaining -= averageScore;
-      } else {
-        icons.push("average");
-        remaining = 0;
-      }
-    }
-
+    const slotCount = getSlotCount(catId);
+    const isPartic = isParticipation(catName);
+    const restored = restoreSlotsFromScore({ score, maxScore, slotCount, isParticipationCategory: isPartic });
+    if (restored.starred) return [isPartic ? "star" : "excellent"];
+    const icons = restored.slots.filter((l): l is "excellent" | "average" | "zero" => l !== null);
     return icons.length > 0 ? icons : ["zero"];
   };
 
