@@ -73,7 +73,9 @@ export default function StudentDashboard() {
   const handleSignOut = async () => { await signOut(); navigate("/login"); };
 
   const baseVis = (student.visibility || {}) as Record<string, boolean>;
+  const liveVis = dashData.studentVis || {};
   const defaultVis = { grades: true, attendance: true, behavior: true, activities: true, library: true, honorRoll: true, absenceWarning: true, nationalId: true };
+  const pick = (k: string) => liveVis[k] ?? baseVis[k] ?? (defaultVis as any)[k];
   const vis = isParent ? {
     grades: (baseVis.grades ?? true) && dashData.parentVis.parentShowGrades,
     attendance: (baseVis.attendance ?? true) && dashData.parentVis.parentShowAttendance,
@@ -84,14 +86,14 @@ export default function StudentDashboard() {
     absenceWarning: dashData.parentVis.parentShowAbsenceWarning,
     nationalId: dashData.parentVis.parentShowNationalId,
   } : {
-    grades: baseVis.grades ?? defaultVis.grades,
-    attendance: baseVis.attendance ?? defaultVis.attendance,
-    behavior: baseVis.behavior ?? defaultVis.behavior,
-    activities: baseVis.activities ?? defaultVis.activities,
-    library: baseVis.library ?? defaultVis.library,
-    honorRoll: baseVis.honorRoll ?? defaultVis.honorRoll,
-    absenceWarning: baseVis.absenceWarning ?? defaultVis.absenceWarning,
-    nationalId: baseVis.nationalId ?? defaultVis.nationalId,
+    grades: pick("grades"),
+    attendance: pick("attendance"),
+    behavior: pick("behavior"),
+    activities: pick("activities"),
+    library: pick("library"),
+    honorRoll: pick("honorRoll"),
+    absenceWarning: pick("absenceWarning"),
+    nationalId: pick("nationalId"),
   };
 
   const totalWeighted = vis.grades ? student.grades.reduce((sum: number, g: any) => {
