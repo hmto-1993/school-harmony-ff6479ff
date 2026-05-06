@@ -67,15 +67,13 @@ export default function LoginPage() {
       });
     };
     try {
-      const { data } = await supabase.functions.invoke("lookup-staff-email", {
-        body: { national_id: nationalId.trim() },
+      // Server-side reset: the function sends the email itself and never returns the address.
+      await supabase.functions.invoke("lookup-staff-email", {
+        body: {
+          national_id: nationalId.trim(),
+          redirect_to: `${window.location.origin}/reset-password`,
+        },
       });
-      // Only attempt to send if we got a real email — never reveal which case occurred
-      if (data?.email && !data.email.includes("***") && data.email.includes("@")) {
-        await supabase.auth.resetPasswordForEmail(data.email, {
-          redirectTo: `${window.location.origin}/reset-password`,
-        });
-      }
     } catch {
       // Swallow errors — uniform response either way
     }
