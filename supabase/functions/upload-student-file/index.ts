@@ -96,6 +96,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Ensure the supplied class_id matches the student's actual class
+    if (student.class_id !== classId) {
+      return new Response(
+        JSON.stringify({ error: "الطالب لا ينتمي لهذا الفصل" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Verify activity exists and allows uploads for this class
     const { data: target } = await supabase
       .from("activity_class_targets")
