@@ -665,7 +665,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         if (e.key === "Enter") {
                           const val = (e.target as HTMLInputElement).value;
                           if (val) {
-                            const numCat = assessmentCats[0];
+                            const numCat = earnedBucketCat;
                             if (numCat) {
                               const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
                               setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
@@ -689,7 +689,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
                         const val = input?.value;
                         if (val) {
-                          const numCat = assessmentCats[0];
+                          const numCat = earnedBucketCat;
                           if (numCat) {
                             const finalScore = Math.min(Math.max(0, Number(val)), Number(numCat.max_score));
                             setNumericGrade(earnedGradeInput.studentId, numCat.id, String(finalScore), Number(numCat.max_score));
@@ -1001,7 +1001,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               placeholder="--"
                               className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
                               onChange={(e) => {
-                                const numCat = assessmentCats[0];
+                                const numCat = earnedBucketCat;
                                 if (numCat) setNumericGrade(sg.student_id, numCat.id, e.target.value, Number(numCat.max_score));
                               }}
                             />
