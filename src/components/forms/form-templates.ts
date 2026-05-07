@@ -743,10 +743,24 @@ export const formTemplates: FormTemplate[] = [
     title: "تعهد بالمواظبة",
     category: "general",
     icon: "📆",
-    description: "تعهد بالمواظبة والانتظام في حصة الفيزياء",
+    description: "تعهد بالمواظبة والانتظام في حصة الفيزياء (مطابق ص75)",
+    requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "الصف/الفصل", fieldId: "class_name" }, { label: "المرحلة", fieldId: "stage" }, { label: "التاريخ", fieldId: "date" }] },
+      { type: "section", title: "تفاصيل المخالفة السابقة" },
+      { type: "row", cells: [{ label: "عدد أيام الغياب", fieldId: "absence_days" }, { label: "تاريخ آخر غياب", fieldId: "absence_date" }] },
+      { type: "block", label: "نص التعهد", fieldId: "_pledge_text", minHeight: 30, staticValue: "أتعهد أنا الطالب الموقّع أدناه بالمواظبة على الحضور وعدم التأخر عن الحصص الدراسية، وألتزم بأنظمة المدرسة، وفي حال تكرر الغياب أو التأخر أتحمّل كافة الإجراءات النظامية المترتبة على ذلك وفق لائحة السلوك والمواظبة." } as any,
+    ] as any,
     bodyTemplate:
-      "أتعهد أنا الطالب/ {student_name} بالمواظبة على الحضور وعدم التأخر عن حصة الفيزياء، وأدرك أن الغياب والتأخر يؤثر سلباً على مستواي التحصيلي.\n\nالفصل: {class_name}\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+      "نموذج تعهد بالمواظبة\n\nاسم الطالب/الطالبة: {student_name}\nالصف/الفصل: {class_name}     المرحلة: {stage}\nالسجل المدني: {national_id}     التاريخ: {date}\n\nعدد أيام الغياب السابقة: {absence_days}\nتاريخ آخر غياب: {absence_date}\n\nأتعهد أنا الطالب الموقّع أدناه بالمواظبة على الحضور وعدم التأخر عن الحصص الدراسية، وألتزم بأنظمة المدرسة، وفي حال تكرر الغياب أو التأخر أتحمّل كافة الإجراءات النظامية المترتبة على ذلك وفق لائحة السلوك والمواظبة.",
     signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "معلم المادة"],
-    fields: [...commonAutoFields],
+    fields: [
+      ...commonAutoFields,
+      { id: "stage", label: "المرحلة", type: "text" },
+      { id: "absence_days", label: "عدد أيام الغياب السابقة", type: "text" },
+      { id: "absence_date", label: "تاريخ آخر غياب", type: "date" },
+    ],
   },
 ];
