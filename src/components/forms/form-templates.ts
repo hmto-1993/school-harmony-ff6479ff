@@ -37,7 +37,7 @@ export interface FormTemplate {
 export type TableRow =
   | { type: "section"; title: string }
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
-  | { type: "block"; label: string; fieldId: string; minHeight?: number }
+  | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | {
       type: "escalation";
       title: string;
