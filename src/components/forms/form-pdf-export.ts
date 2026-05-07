@@ -294,7 +294,7 @@ function drawTableLayout(
       y += rowH + 1;
     } else if (item.type === "block") {
       const minH = item.minHeight || 20;
-      const value = fieldValues[item.fieldId] || "";
+      const value = (item as any).staticValue ?? (fieldValues[item.fieldId] || "");
       const lines = value ? doc.splitTextToSize(value, contentW - 4) : [];
       const computedH = Math.max(minH, lines.length * 5 + 8);
       y = ensureSpace(doc, y, computedH + 2, pageH);

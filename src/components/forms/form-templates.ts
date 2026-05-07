@@ -37,7 +37,7 @@ export interface FormTemplate {
 export type TableRow =
   | { type: "section"; title: string }
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
-  | { type: "block"; label: string; fieldId: string; minHeight?: number }
+  | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | {
       type: "escalation";
       title: string;
@@ -484,19 +484,56 @@ export const formTemplates: FormTemplate[] = [
     title: "محضر اجتماع لجنة التوجيه الطلابي",
     category: "confidential",
     icon: "🏛️",
-    description: "محضر اجتماع لجنة التوجيه الطلابي لدراسة حالة طالب — سري",
+    description: "محضر اجتماع لجنة التوجيه الطلابي لدراسة حالة طالب — سري (مطابق ص70)",
     parentHidden: false,
     confidentialWatermark: true,
+    requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الاجتماع" },
+      { type: "row", cells: [{ label: "اليوم", fieldId: "meeting_day" }, { label: "التاريخ", fieldId: "date" }, { label: "رقم المحضر", fieldId: "meeting_no" }] },
+      { type: "section", title: "بيانات الحالة" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "الصف/الفصل", fieldId: "class_name" }, { label: "المرحلة", fieldId: "stage" }] },
+      {
+        type: "escalation",
+        title: "أعضاء اللجنة الحاضرون",
+        columns: ["الوظيفة", "الاسم", "التوقيع"],
+        rows: [
+          { label: "قائد المدرسة", fieldIds: ["m1_name", "m1_sig"] },
+          { label: "وكيل شؤون الطلاب", fieldIds: ["m2_name", "m2_sig"] },
+          { label: "المرشد الطلابي", fieldIds: ["m3_name", "m3_sig"] },
+          { label: "معلم المادة", fieldIds: ["m4_name", "m4_sig"] },
+          { label: "رائد الفصل", fieldIds: ["m5_name", "m5_sig"] },
+          { label: "ولي الأمر", fieldIds: ["m6_name", "m6_sig"] },
+        ],
+      },
+      { type: "block", label: "جدول الأعمال", fieldId: "agenda", minHeight: 22 },
+      { type: "block", label: "ملخص المناقشة", fieldId: "discussion_summary", minHeight: 22 },
+      { type: "block", label: "توصيات وقرارات اللجنة", fieldId: "decisions", minHeight: 26 },
+    ],
     bodyTemplate:
-      "محضر اجتماع لجنة التوجيه الطلابي\n\n⚠️ سري للغاية\n\nإنه في يوم/ {meeting_day} الموافق/ {date} عقدت لجنة التوجيه الطلابي اجتماعاً لدراسة حالة الطالب/ {student_name} المقيد في فصل/ {class_name} والمسجلة في منصة منصة المتميز الرقمية.\n\nوبعد الاطلاع على سجل السلوك والبيانات، توصي اللجنة بالآتي:\n\nالحاضرون:\n{attendees}\n\nجدول الأعمال:\n{agenda}\n\nتوصيات وقرارات اللجنة:\n{decisions}\n\nالسجل المدني: {national_id}",
-    signatureLabels: ["معلم المادة", "وكيل المدرسة", "المرشد الطلابي", "قائد المدرسة"],
+      "محضر اجتماع لجنة التوجيه الطلابي\n\n⚠️ سري للغاية\n\nإنه في يوم/ {meeting_day} الموافق/ {date} عقدت لجنة التوجيه الطلابي اجتماعها رقم ({meeting_no}) لدراسة حالة الطالب/ {student_name} المقيد في فصل/ {class_name}.\n\nالحاضرون:\n• قائد المدرسة: {m1_name}\n• وكيل شؤون الطلاب: {m2_name}\n• المرشد الطلابي: {m3_name}\n• معلم المادة: {m4_name}\n• رائد الفصل: {m5_name}\n• ولي الأمر: {m6_name}\n\nجدول الأعمال:\n{agenda}\n\nملخص المناقشة:\n{discussion_summary}\n\nتوصيات وقرارات اللجنة:\n{decisions}\n\nالسجل المدني: {national_id}",
+    signatureLabels: ["المرشد الطلابي", "وكيل شؤون الطلاب", "قائد المدرسة"],
     fields: [
       ...commonAutoFields,
       { id: "meeting_day", label: "يوم الاجتماع", type: "text", placeholder: "مثال: الأحد" },
-      { id: "attendees", label: "الحاضرون", type: "textarea", placeholder: "أسماء أعضاء اللجنة الحاضرين..." },
-      { id: "agenda", label: "جدول الأعمال", type: "textarea", placeholder: "بنود الاجتماع..." },
-      { id: "decisions", label: "توصيات وقرارات اللجنة", type: "textarea", placeholder: "اكتب توصيات اللجنة هنا..." },
-      { id: "teacher_notes", label: "ملاحظات إضافية", type: "textarea", placeholder: "أضف ملاحظاتك الخاصة..." },
+      { id: "meeting_no", label: "رقم المحضر", type: "text" },
+      { id: "stage", label: "المرحلة", type: "text" },
+      { id: "m1_name", label: "اسم قائد المدرسة", type: "text" },
+      { id: "m1_sig", label: "توقيع قائد المدرسة", type: "text" },
+      { id: "m2_name", label: "اسم وكيل شؤون الطلاب", type: "text" },
+      { id: "m2_sig", label: "توقيع وكيل شؤون الطلاب", type: "text" },
+      { id: "m3_name", label: "اسم المرشد الطلابي", type: "text" },
+      { id: "m3_sig", label: "توقيع المرشد الطلابي", type: "text" },
+      { id: "m4_name", label: "اسم معلم المادة", type: "text" },
+      { id: "m4_sig", label: "توقيع معلم المادة", type: "text" },
+      { id: "m5_name", label: "اسم رائد الفصل", type: "text" },
+      { id: "m5_sig", label: "توقيع رائد الفصل", type: "text" },
+      { id: "m6_name", label: "اسم ولي الأمر", type: "text" },
+      { id: "m6_sig", label: "توقيع ولي الأمر", type: "text" },
+      { id: "agenda", label: "جدول الأعمال", type: "textarea" },
+      { id: "discussion_summary", label: "ملخص المناقشة", type: "textarea" },
+      { id: "decisions", label: "توصيات وقرارات اللجنة", type: "textarea" },
     ],
   },
   // ====== CONFIDENTIAL FORM #13 ======
@@ -556,7 +593,21 @@ export const formTemplates: FormTemplate[] = [
       { id: "risk_type", label: "نوع الخطورة", type: "text", placeholder: "مثال: تهديد / إيذاء نفسي / مخدرات" },
       { id: "risk_desc", label: "وصف الخطورة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الحالة..." },
       { id: "risk_evidence", label: "الأدلة والقرائن", type: "textarea", placeholder: "أي أدلة أو قرائن متاحة..." },
-      { id: "risk_action", label: "الإجراءات المتخذة", type: "textarea", placeholder: "الإجراءات الفورية..." },
+      {
+        id: "risk_action_options",
+        label: "الإجراءات المتخذة (اختر ما ينطبق)",
+        type: "checkbox-list",
+        options: [
+          "عزل الطالب فوراً عن البيئة الخطرة",
+          "إبلاغ قائد المدرسة فوراً",
+          "إبلاغ ولي الأمر هاتفياً",
+          "إحالة عاجلة للمرشد الطلابي",
+          "تواصل مع مركز الأمن والسلامة (911)",
+          "رفع البلاغ لمكتب التعليم",
+          "تواصل مع مركز بلاغات حماية الطفل (1919)",
+        ],
+      },
+      { id: "risk_action", label: "تفاصيل الإجراءات الإضافية", type: "textarea", placeholder: "تفاصيل أخرى..." },
     ],
   },
   {
@@ -692,10 +743,24 @@ export const formTemplates: FormTemplate[] = [
     title: "تعهد بالمواظبة",
     category: "general",
     icon: "📆",
-    description: "تعهد بالمواظبة والانتظام في حصة الفيزياء",
+    description: "تعهد بالمواظبة والانتظام في حصة الفيزياء (مطابق ص75)",
+    requiresStamp: true,
+    tableLayout: [
+      { type: "section", title: "بيانات الطالب" },
+      { type: "row", cells: [{ label: "اسم الطالب/الطالبة", fieldId: "student_name", flex: 2 }, { label: "السجل المدني", fieldId: "national_id" }] },
+      { type: "row", cells: [{ label: "الصف/الفصل", fieldId: "class_name" }, { label: "المرحلة", fieldId: "stage" }, { label: "التاريخ", fieldId: "date" }] },
+      { type: "section", title: "تفاصيل المخالفة السابقة" },
+      { type: "row", cells: [{ label: "عدد أيام الغياب", fieldId: "absence_days" }, { label: "تاريخ آخر غياب", fieldId: "absence_date" }] },
+      { type: "block", label: "نص التعهد", fieldId: "_pledge_text", minHeight: 30, staticValue: "أتعهد أنا الطالب الموقّع أدناه بالمواظبة على الحضور وعدم التأخر عن الحصص الدراسية، وألتزم بأنظمة المدرسة، وفي حال تكرر الغياب أو التأخر أتحمّل كافة الإجراءات النظامية المترتبة على ذلك وفق لائحة السلوك والمواظبة." },
+    ],
     bodyTemplate:
-      "أتعهد أنا الطالب/ {student_name} بالمواظبة على الحضور وعدم التأخر عن حصة الفيزياء، وأدرك أن الغياب والتأخر يؤثر سلباً على مستواي التحصيلي.\n\nالفصل: {class_name}\nالسجل المدني: {national_id}\nالتاريخ: {date}",
+      "نموذج تعهد بالمواظبة\n\nاسم الطالب/الطالبة: {student_name}\nالصف/الفصل: {class_name}     المرحلة: {stage}\nالسجل المدني: {national_id}     التاريخ: {date}\n\nعدد أيام الغياب السابقة: {absence_days}\nتاريخ آخر غياب: {absence_date}\n\nأتعهد أنا الطالب الموقّع أدناه بالمواظبة على الحضور وعدم التأخر عن الحصص الدراسية، وألتزم بأنظمة المدرسة، وفي حال تكرر الغياب أو التأخر أتحمّل كافة الإجراءات النظامية المترتبة على ذلك وفق لائحة السلوك والمواظبة.",
     signatureLabels: ["توقيع الطالب", "توقيع ولي الأمر", "معلم المادة"],
-    fields: [...commonAutoFields],
+    fields: [
+      ...commonAutoFields,
+      { id: "stage", label: "المرحلة", type: "text" },
+      { id: "absence_days", label: "عدد أيام الغياب السابقة", type: "text" },
+      { id: "absence_date", label: "تاريخ آخر غياب", type: "date" },
+    ],
   },
 ];
