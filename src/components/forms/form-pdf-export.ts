@@ -217,11 +217,8 @@ function drawProtocolSection(
 
 /* ==================== OFFICIAL TABLE LAYOUT RENDERER ==================== */
 
-function ensureSpace(doc: jsPDF, y: number, needed: number, pageH: number, marginTop = 20): number {
-  if (y + needed > pageH - 45) {
-    doc.addPage();
-    return marginTop;
-  }
+// Single-page policy: never add a new page; just return current y so content stays on one page.
+function ensureSpace(_doc: jsPDF, y: number, _needed: number, _pageH: number, _marginTop = 20): number {
   return y;
 }
 
