@@ -159,10 +159,8 @@ function drawProtocolSection(
   contentW: number,
   pageH: number,
 ): number {
-  if (y > pageH - 50) {
-    doc.addPage();
-    y = 20;
-  }
+  // Single-page: do not paginate
+
 
   const pageW = doc.internal.pageSize.getWidth();
 
