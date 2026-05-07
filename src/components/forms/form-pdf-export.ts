@@ -182,10 +182,8 @@ function drawProtocolSection(
     const lines = doc.splitTextToSize(content, contentW - 12);
     const boxH = Math.max(lines.length * 6 + 10, 25);
 
-    if (y + boxH > pageH - 40) {
-      doc.addPage();
-      y = 20;
-    }
+    // Single-page: no pagination
+
 
     doc.setDrawColor(200, 215, 235);
     doc.setLineWidth(0.4);
