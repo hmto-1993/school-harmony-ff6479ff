@@ -593,7 +593,21 @@ export const formTemplates: FormTemplate[] = [
       { id: "risk_type", label: "نوع الخطورة", type: "text", placeholder: "مثال: تهديد / إيذاء نفسي / مخدرات" },
       { id: "risk_desc", label: "وصف الخطورة بالتفصيل", type: "textarea", placeholder: "اذكر تفاصيل الحالة..." },
       { id: "risk_evidence", label: "الأدلة والقرائن", type: "textarea", placeholder: "أي أدلة أو قرائن متاحة..." },
-      { id: "risk_action", label: "الإجراءات المتخذة", type: "textarea", placeholder: "الإجراءات الفورية..." },
+      {
+        id: "risk_action_options",
+        label: "الإجراءات المتخذة (اختر ما ينطبق)",
+        type: "checkbox-list",
+        options: [
+          "عزل الطالب فوراً عن البيئة الخطرة",
+          "إبلاغ قائد المدرسة فوراً",
+          "إبلاغ ولي الأمر هاتفياً",
+          "إحالة عاجلة للمرشد الطلابي",
+          "تواصل مع مركز الأمن والسلامة (911)",
+          "رفع البلاغ لمكتب التعليم",
+          "تواصل مع مركز بلاغات حماية الطفل (1919)",
+        ],
+      },
+      { id: "risk_action", label: "تفاصيل الإجراءات الإضافية", type: "textarea", placeholder: "تفاصيل أخرى..." },
     ],
   },
   {
