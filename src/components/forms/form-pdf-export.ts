@@ -521,7 +521,7 @@ export async function exportFormPdf(
     const paragraphs = filledBody.split("\n");
     for (const para of paragraphs) {
       if (!para.trim()) { y += 4; continue; }
-      if (y > pageH - 60) { doc.addPage(); y = 20; }
+      /* single-page */
 
       const lines = doc.splitTextToSize(para, contentW - 8);
       for (const line of lines) {
@@ -543,7 +543,7 @@ export async function exportFormPdf(
       if (field.id === "witnesses_names") continue; // Rendered above
       const value = fieldValues[field.id] || "";
 
-      if (y > pageH - 55) { doc.addPage(); y = 20; }
+      /* single-page */
 
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
@@ -560,7 +560,7 @@ export async function exportFormPdf(
           if (Array.isArray(j)) selected = j.map(String);
         } catch { /* ignore */ }
         for (const opt of field.options) {
-          if (y > pageH - 50) { doc.addPage(); y = 20; }
+          /* single-page */
           const checked = selected.includes(opt);
           // Box
           doc.setDrawColor(80, 90, 105);
@@ -593,7 +593,7 @@ export async function exportFormPdf(
   // ========== CONFIDENTIAL REFERRAL QR ==========
   if (form.id === "confidential_referral" && student.id) {
     y += 4;
-    if (y > pageH - 65) { doc.addPage(); y = 20; }
+    /* single-page */
 
     const qrUrl = `${window.location.origin}/student?id=${student.national_id || student.id}`;
     doc.setFontSize(9);
@@ -610,7 +610,7 @@ export async function exportFormPdf(
   // ========== ELECTRONIC SIGNATURE (live canvas OR saved image) ==========
   const sigData = options?.signatureDataUrl || (identity.signatureImageUrl ? savedSigImg : null);
   if (sigData) {
-    if (y > pageH - 70) { doc.addPage(); y = 20; }
+    /* single-page */
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.text("التوقيع الإلكتروني:", pageW - marginX, y, { align: "right" });
