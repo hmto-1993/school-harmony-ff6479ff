@@ -137,43 +137,59 @@ export default function NoorAutoTab({
       </div>
 
       {bookmarkletCode && (
-        <div className="mt-4 space-y-3 animate-fade-in">
-          <div className="rounded-xl border border-border/40 bg-muted/30 p-4 space-y-3">
-            <h4 className="font-bold text-sm flex items-center gap-2 text-primary">
-              <Info className="h-4 w-4" />
-              طريقة الاستخدام
-            </h4>
-            <ol className="text-xs text-muted-foreground space-y-2 list-decimal list-inside">
-              <li>انسخ الكود أدناه</li>
-              <li>افتح <strong className="text-foreground">نظام نور</strong> وادخل صفحة إدخال الدرجات للفصل والمعيار المطلوب</li>
-              <li>افتح <strong className="text-foreground">وحدة التحكم (Console)</strong> في المتصفح بالضغط على <kbd className="px-1.5 py-0.5 rounded bg-muted border text-[10px]">F12</kbd></li>
-              <li>الصق الكود في وحدة التحكم واضغط <kbd className="px-1.5 py-0.5 rounded bg-muted border text-[10px]">Enter</kbd></li>
-              <li>راجع المطابقة ثم اضغط <strong className="text-foreground">تطبيق الدرجات</strong></li>
-              <li className="text-amber-600 dark:text-amber-400 font-medium">⚠️ لا تنسَ الضغط على حفظ في نور بعد الإدخال</li>
+        <div className="mt-4 space-y-4 animate-fade-in">
+          {/* الطريقة المُوصى بها: Bookmarklet */}
+          <div className="rounded-xl border-2 border-primary/40 bg-gradient-to-br from-primary/5 to-primary/10 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">الأسهل ⭐</span>
+              <h4 className="font-bold text-sm text-primary">زر المفضلة (ضغطة واحدة)</h4>
+            </div>
+
+            <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+              <li>أظهر <strong className="text-foreground">شريط المفضلة</strong> في المتصفح (<kbd className="px-1 py-0.5 rounded bg-muted border text-[10px]">Ctrl+Shift+B</kbd>)</li>
+              <li><strong className="text-foreground">اسحب الزر الأزرق</strong> أدناه إلى شريط المفضلة (مرة واحدة فقط)</li>
+              <li>افتح صفحة رصد الدرجات في <strong className="text-foreground">نور</strong></li>
+              <li>اضغط على الزر في شريط المفضلة → ستظهر نافذة المطابقة مباشرة</li>
+              <li className="text-amber-600 dark:text-amber-400 font-medium">⚠️ لا تنسَ حفظ الدرجات في نور بعد الإدخال</li>
             </ol>
+
+            <div className="flex justify-center pt-2">
+              <a
+                href={bookmarkletCode}
+                onClick={(e) => e.preventDefault()}
+                draggable
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 cursor-grab active:cursor-grabbing shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
+              >
+                <Zap className="h-5 w-5" />
+                ⬇ اسحبني إلى شريط المفضلة
+              </a>
+            </div>
           </div>
 
-          <Button
-            onClick={handleCopyBookmarklet}
-            variant="outline"
-            className={cn("w-full gap-2 transition-all", copied && "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 text-emerald-700 dark:text-emerald-400")}
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? "تم النسخ ✓" : "نسخ الكود"}
-          </Button>
-
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground mb-2">أو اسحب هذا الزر إلى شريط المفضلة:</p>
-            <a
-              href={bookmarkletCode}
-              onClick={(e) => e.preventDefault()}
-              draggable
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 cursor-grab active:cursor-grabbing shadow-md"
-            >
-              <Zap className="h-4 w-4" />
-              إدخال درجات نور
-            </a>
-          </div>
+          {/* الطريقة البديلة: Console - مطوية */}
+          <details className="rounded-xl border border-border/40 bg-muted/20 group">
+            <summary className="cursor-pointer p-3 text-xs font-medium text-muted-foreground hover:bg-muted/40 rounded-xl flex items-center gap-2 list-none">
+              <Info className="h-3.5 w-3.5" />
+              <span>طريقة بديلة: نسخ الكود ولصقه في Console (للمستخدمين المتقدمين)</span>
+              <span className="mr-auto group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+            <div className="p-4 pt-2 space-y-3 border-t border-border/40">
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>انسخ الكود من الزر أدناه</li>
+                <li>افتح صفحة الرصد في نور واضغط <kbd className="px-1 py-0.5 rounded bg-muted border text-[10px]">F12</kbd></li>
+                <li>اذهب لتبويب <strong className="text-foreground">Console</strong>، الصق الكود واضغط <kbd className="px-1 py-0.5 rounded bg-muted border text-[10px]">Enter</kbd></li>
+              </ol>
+              <Button
+                onClick={handleCopyBookmarklet}
+                variant="outline"
+                size="sm"
+                className={cn("w-full gap-2 transition-all", copied && "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-300 text-emerald-700 dark:text-emerald-400")}
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? "تم النسخ ✓" : "نسخ الكود"}
+              </Button>
+            </div>
+          </details>
         </div>
       )}
     </div>
