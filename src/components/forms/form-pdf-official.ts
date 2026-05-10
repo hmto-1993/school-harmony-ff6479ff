@@ -536,7 +536,7 @@ export async function exportOfficialFormPdf(
       i++;
     } else if (item.type === "escalation") {
       ensureSpace(item.rows.length * 12 + 22);
-      y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW);
+      y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW, (item as any).columnFlex);
       i++;
     } else if (item.type === "text_line" as any) {
       ensureSpace(10);
