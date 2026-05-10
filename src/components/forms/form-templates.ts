@@ -428,7 +428,7 @@ export const formTemplates: FormTemplate[] = [
     description: "تعهد سلوكي رسمي من الطالب — مطابق لصفحة 66",
     officialPage: 66,
     tableLayout: [
-      { type: "paragraph", text: "تعهد سلوكي", bold: true, align: "center", spacing: 6 },
+      { type: "paragraph", text: "", spacing: 6 },
       { type: "paragraph", text: "أنا الطالب/الطالبة: {student_name}", spacing: 3 },
       { type: "paragraph", text: "بالصف: {class_name}", spacing: 3 },
       { type: "paragraph", text: "أُقرّ بأنني قمت في يوم: {pledge_day}     الموافق: {pledge_date}", spacing: 3 },
