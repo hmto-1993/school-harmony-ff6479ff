@@ -437,7 +437,7 @@ export const formTemplates: FormTemplate[] = [
       {
         type: "escalation",
         title: "",
-        columns: ["الطالب/الطالبة", "ولي الأمر", "مدير/مديرة المدرسة"],
+        columns: ["", "الطالب/الطالبة", "ولي الأمر", "مدير/مديرة المدرسة"],
         rows: [
           { label: "الاسم", fieldIds: ["s_name", "p_name", "d_name"] },
           { label: "التوقيع", fieldIds: ["s_sig", "p_sig", "d_sig"] },
