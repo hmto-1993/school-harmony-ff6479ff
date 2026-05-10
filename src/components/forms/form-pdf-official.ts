@@ -428,6 +428,26 @@ function drawGrid(
     doc.line(left, ry, right, ry);
   }
 
+  // Render static cell content if provided via rows[][]
+  if (rows && rows.length) {
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...COLOR_BLACK);
+    rows.forEach((rowCells, rIdx) => {
+      const ry = y + headerH + rIdx * minRowHeight;
+      let xx = right;
+      for (let i = 0; i < columns.length; i++) {
+        const w = colWidths[i];
+        xx -= w;
+        const cellVal = rowCells[i] || "";
+        if (cellVal) {
+          const wrapped = doc.splitTextToSize(cellVal, w - 2);
+          doc.text(wrapped[0] || "", xx + w / 2, ry + minRowHeight / 2 + 1.5, { align: "center" });
+        }
+      }
+    });
+  }
+
   return cy + 4;
 }
 
