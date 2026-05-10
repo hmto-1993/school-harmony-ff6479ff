@@ -722,9 +722,10 @@ export async function exportOfficialFormPdf(
         y = drawNote(doc, y + 2, pageW, item.lines);
         i++;
       } else if (item.type === "grid") {
-        const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
+        const rowsArr = (item as any).rows as string[][] | undefined;
+        const rowCount = item.rowCount ?? (rowsArr?.length ?? 8);
         ensureSpace(rowCount * (item.minRowHeight || 14) + 16);
-        y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
+        y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight, rowsArr);
         i++;
       } else if (item.type === "escalation") {
         ensureSpace(item.rows.length * 12 + 22);
