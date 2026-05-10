@@ -48,6 +48,7 @@ export type TableRow =
       title: string;
       columns: string[]; // header labels
       rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
+      columnFlex?: number[]; // optional per-column flex weights
     };
 
 export interface FormField {
@@ -177,14 +178,14 @@ export const formTemplates: FormTemplate[] = [
       { type: "section", title: "ثالثاً: قياس شدة أو تكرار السلوك" },
       {
         type: "escalation",
-        title: "جدول قياس تكرار السلوك (5 جلسات ملاحظة)",
+        title: "جدول قياس تكرار السلوك (3 جلسات ملاحظة)",
         columns: ["اليوم", "التاريخ", "فترة الملاحظة", "ت1", "ت2", "ت3", "ت4", "ت5", "المجموع"],
+        // أعمدة اليوم/التاريخ/فترة الملاحظة أعرض، وأعمدة ت1..ت5 ضيقة (إشارة فقط)
+        columnFlex: [2, 2.4, 2.6, 1, 1, 1, 1, 1, 1.4],
         rows: [
           { label: "1", fieldIds: ["m1_date", "m1_period", "m1_t1", "m1_t2", "m1_t3", "m1_t4", "m1_t5", "m1_total"] },
           { label: "2", fieldIds: ["m2_date", "m2_period", "m2_t1", "m2_t2", "m2_t3", "m2_t4", "m2_t5", "m2_total"] },
           { label: "3", fieldIds: ["m3_date", "m3_period", "m3_t1", "m3_t2", "m3_t3", "m3_t4", "m3_t5", "m3_total"] },
-          { label: "4", fieldIds: ["m4_date", "m4_period", "m4_t1", "m4_t2", "m4_t3", "m4_t4", "m4_t5", "m4_total"] },
-          { label: "5", fieldIds: ["m5_date", "m5_period", "m5_t1", "m5_t2", "m5_t3", "m5_t4", "m5_t5", "m5_total"] },
         ],
       },
       { type: "section", title: "رابعاً: المثيرات والأسباب" },
