@@ -413,6 +413,9 @@ export async function exportOfficialFormPdf(
       const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
       y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
       i++;
+    } else if (item.type === "escalation") {
+      y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW);
+      i++;
     } else if (item.type === "text_line" as any) {
       const line = item as any;
       y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
