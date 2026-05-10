@@ -369,9 +369,19 @@ function drawEscalation(
   doc.setDrawColor(...COLOR_BLACK);
   doc.setLineWidth(TABLE_LINE);
   doc.rect(left, y, contentW, totalH, "S");
+  // Header bottom line
   doc.line(left, y + headerH, right, y + headerH);
-  const firstColX = right - colWidths[0];
-  doc.line(firstColX, y, firstColX, y + totalH);
+  // Vertical separators between all columns (RTL)
+  let xSep = right;
+  for (let i = 0; i < columns.length - 1; i++) {
+    xSep -= colWidths[i];
+    doc.line(xSep, y, xSep, y + totalH);
+  }
+  // Horizontal separators between data rows
+  for (let r = 1; r < rows.length; r++) {
+    const ry = y + headerH + r * rowH;
+    doc.line(left, ry, right, ry);
+  }
 
   doc.setFont("Amiri", "normal");
   doc.setFontSize(9);
