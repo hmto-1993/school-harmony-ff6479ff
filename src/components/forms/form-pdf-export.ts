@@ -213,18 +213,20 @@ function drawProtocolSection(
 
 /* ==================== OFFICIAL TABLE LAYOUT RENDERER ==================== */
 
-// Single-page policy: never add a new page; just return current y so content stays on one page.
-function ensureSpace(_doc: jsPDF, y: number, _needed: number, _pageH: number, _marginTop = 20): number {
-  return y;
+function ensureSpace(doc: jsPDF, y: number, needed: number, pageH: number, marginTop = 20): number {
+  if (y + needed <= pageH - 22) return y;
+  doc.addPage();
+  return marginTop;
 }
 
 function drawSectionBar(doc: jsPDF, title: string, y: number, marginX: number, contentW: number, headerColor: number[]): number {
-  doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-  doc.rect(marginX, y, contentW, 7, "F");
+  doc.setDrawColor(35, 35, 35);
+  doc.setFillColor(245, 245, 245);
+  doc.rect(marginX, y, contentW, 7, "FD");
   doc.setFont("Amiri", "bold");
-  doc.setFontSize(10.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text(title, marginX + contentW - 4, y + 5, { align: "right" });
+  doc.setFontSize(10);
+  doc.setTextColor(20, 20, 20);
+  doc.text(title, marginX + contentW / 2, y + 5, { align: "center" });
   doc.setTextColor(30, 41, 59);
   doc.setFont("Amiri", "normal");
   return y + 7;
@@ -239,21 +241,24 @@ function drawCell(
   label: string,
   value: string,
 ) {
-  doc.setDrawColor(120, 130, 145);
-  doc.setLineWidth(0.25);
+  doc.setDrawColor(45, 45, 45);
+  doc.setLineWidth(0.2);
   doc.rect(x, y, w, h, "S");
-  doc.setFillColor(238, 243, 250);
-  doc.rect(x, y, w, 5.5, "F");
-  doc.setFontSize(8);
-  doc.setTextColor(60, 75, 95);
+  doc.setFontSize(8.5);
+  doc.setTextColor(20, 20, 20);
   doc.setFont("Amiri", "bold");
-  doc.text(label, x + w - 2, y + 4, { align: "right", maxWidth: w - 3 });
+  doc.text(label, x + w - 2, y + 5, { align: "right", maxWidth: w - 3 });
   doc.setFont("Amiri", "normal");
-  doc.setFontSize(10);
-  doc.setTextColor(20, 30, 45);
+  doc.setFontSize(9.5);
+  doc.setTextColor(10, 10, 10);
   if (value) {
     const lines = doc.splitTextToSize(value, w - 4);
-    doc.text(lines, x + w - 2, y + 10, { align: "right" });
+    doc.text(lines, x + w - 2, y + 11, { align: "right" });
+  } else {
+    doc.setDrawColor(170, 170, 170);
+    doc.setLineDashPattern([1, 1.6], 0);
+    doc.line(x + 3, y + h - 4, x + w - 3, y + h - 4);
+    doc.setLineDashPattern([], 0);
   }
 }
 
@@ -295,22 +300,20 @@ function drawTableLayout(
       y += computedH + 1;
     } else if (item.type === "escalation") {
       y = ensureSpace(doc, y, 24, pageH);
-      doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-      doc.rect(marginX, y, contentW, 7, "F");
+      doc.setDrawColor(45, 45, 45);
+      doc.rect(marginX, y, contentW, 7, "S");
       doc.setFont("Amiri", "bold");
-      doc.setFontSize(10.5);
-      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setTextColor(20, 20, 20);
       doc.text(item.title, marginX + contentW / 2, y + 5, { align: "center" });
       y += 7;
 
       const cols = item.columns;
       const colW = contentW / cols.length;
-      doc.setFillColor(225, 232, 245);
-      doc.rect(marginX, y, contentW, 7, "F");
-      doc.setDrawColor(120, 130, 145);
-      doc.setLineWidth(0.3);
-      doc.setFontSize(9);
-      doc.setTextColor(40, 55, 75);
+      doc.setDrawColor(45, 45, 45);
+      doc.setLineWidth(0.2);
+      doc.setFontSize(8.5);
+      doc.setTextColor(20, 20, 20);
       let xc = marginX + contentW;
       for (const colLabel of cols) {
         xc -= colW;
@@ -321,14 +324,13 @@ function drawTableLayout(
 
       doc.setFont("Amiri", "normal");
       doc.setFontSize(9.5);
-      doc.setTextColor(20, 30, 45);
+      doc.setTextColor(10, 10, 10);
       for (const r of item.rows) {
         const rowH = 11;
         y = ensureSpace(doc, y, rowH, pageH);
         let xr = marginX + contentW;
         xr -= colW;
-        doc.setFillColor(247, 250, 254);
-        doc.rect(xr, y, colW, rowH, "FD");
+        doc.rect(xr, y, colW, rowH, "S");
         doc.setFont("Amiri", "bold");
         doc.text(r.label, xr + colW / 2, y + 7, { align: "center" });
         doc.setFont("Amiri", "normal");
@@ -342,6 +344,16 @@ function drawTableLayout(
         y += rowH;
       }
       y += 2;
+    } else if (item.type === "note") {
+      y = ensureSpace(doc, y, 16, pageH);
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(20, 20, 20);
+      item.lines.forEach((line: string) => {
+        doc.text(line, marginX + contentW - 2, y + 5, { align: "right" });
+        y += 5;
+      });
+      doc.setFont("Amiri", "normal");
     }
   }
   return y;
