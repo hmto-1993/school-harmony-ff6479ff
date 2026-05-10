@@ -540,7 +540,7 @@ export async function exportOfficialFormPdf(
     if (item.type === "section") {
       const groupRows: TableRow[] = [];
       i++;
-      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation") {
+      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation" && layout[i].type !== "paragraph") {
         groupRows.push(layout[i]);
         i++;
       }
@@ -579,6 +579,11 @@ export async function exportOfficialFormPdf(
       ensureSpace(10);
       const line = item as any;
       y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
+      i++;
+    } else if (item.type === "paragraph" as any) {
+      const p = item as any;
+      ensureSpace(20);
+      y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
       i++;
     } else {
       i++;
