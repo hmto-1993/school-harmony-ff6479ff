@@ -619,7 +619,7 @@ function drawParagraph(
   pageW: number,
   text: string,
   fieldValues: Record<string, string>,
-  opts: { bold?: boolean; align?: "right" | "center"; spacing?: number } = {},
+  opts: { bold?: boolean; align?: "right" | "center"; spacing?: number; fontSize?: number } = {},
 ): number {
   // Replace {fieldId} with value or dotted blank.
   // jsPDF Arabic shaping doesn't run full bidi, so ASCII parens/brackets
