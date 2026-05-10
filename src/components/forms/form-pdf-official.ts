@@ -677,7 +677,20 @@ export async function exportOfficialFormPdf(
     } else if (item.type === "text_line" as any) {
       ensureSpace(10);
       const line = item as any;
-      y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
+      y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""), 10, { noColon: line.noColon });
+      i++;
+    } else if (item.type === "text_pair" as any) {
+      const p = item as any;
+      ensureSpace(10);
+      y = drawTextPair(doc, y, pageW,
+        { label: p.left.label, value: p.left.fieldId ? fieldValues[p.left.fieldId] || "" : "", noColon: p.left.noColon },
+        { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
+      );
+      i++;
+    } else if (item.type === "signature_columns" as any) {
+      const p = item as any;
+      ensureSpace(40);
+      y = drawSignatureColumns(doc, y, pageW, p.columns, fieldValues);
       i++;
     } else if (item.type === "paragraph" as any) {
       const p = item as any;
