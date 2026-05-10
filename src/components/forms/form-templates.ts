@@ -164,6 +164,7 @@ export const formTemplates: FormTemplate[] = [
     icon: "📋",
     description: "خطة شاملة لتعديل السلوك بالمثيرات القبلية والبعدية (مطابق ص60-61)",
     requiresStamp: true,
+    officialPage: 60,
     tableLayout: [
       { type: "section", title: "أولاً: البيانات الأولية" },
       { type: "row", cells: [{ label: "اسم الطالب", fieldId: "student_name", flex: 2 }, { label: "الصف/الفصل", fieldId: "class_name" }] },
