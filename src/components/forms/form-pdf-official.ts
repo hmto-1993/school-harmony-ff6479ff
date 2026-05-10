@@ -117,9 +117,8 @@ function drawFooter(_doc: jsPDF, _pageNum: number, _pageH: number, _pageW: numbe
 
 /* === Cell with label (above) + value (in middle) — matches official thin-bordered cells === */
 function drawLabeledCell(doc: jsPDF, x: number, y: number, w: number, h: number, label: string, value: string) {
-  doc.setDrawColor(...COLOR_BLACK);
-  doc.setLineWidth(TABLE_LINE);
-  doc.rect(x, y, w, h, "S");
+  // No per-cell rectangle (internal divisions removed)
+
   doc.setFont("Amiri", "normal");
   doc.setFontSize(LABEL_FONT);
   doc.setTextColor(...COLOR_BLACK);
