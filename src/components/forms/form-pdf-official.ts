@@ -458,13 +458,15 @@ function drawParagraph(
   fieldValues: Record<string, string>,
   opts: { bold?: boolean; align?: "right" | "center"; spacing?: number } = {},
 ): number {
-  // Replace {fieldId} with value or dotted blank. Wrap values in RLE/PDF
-  // marks so embedded ASCII like "(1)" or hyphens render with correct bidi
-  // ordering inside an Arabic paragraph.
+  // Replace {fieldId} with value or dotted blank.
+  // jsPDF Arabic shaping doesn't run full bidi, so ASCII parens/brackets
+  // appear mirrored inside RTL text. Swap pairs so visual order is correct.
+  const fixBidi = (s: string) =>
+    s.replace(/[()\[\]{}<>]/g, (c) => ({ "(": ")", ")": "(", "[": "]", "]": "[", "{": "}", "}": "{", "<": ">", ">": "<" } as any)[c]);
   const filled = text.replace(/\{(\w+)\}/g, (_m, key) => {
     const v = fieldValues[key];
     if (!v || !v.trim()) return "....................";
-    return `\u202B${v}\u202C`;
+    return fixBidi(v);
   });
   doc.setFont("Amiri", opts.bold ? "bold" : "normal");
   doc.setFontSize(11);
