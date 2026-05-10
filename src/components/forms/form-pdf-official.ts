@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import { registerArabicFont } from "@/lib/arabic-pdf";
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_CENTER_LOGO_2 } from "@/lib/default-logos";
 import type { FormTemplate, TableRow } from "./form-templates";
 
 interface StudentInfo {
@@ -383,7 +384,7 @@ export async function exportOfficialFormPdf(
   doc.setFont("Amiri");
 
   const identity = await loadOfficialIdentity();
-  const ministryLogo = await loadImage(identity.ministryLogoUrl);
+  const ministryLogo = (await loadImage(identity.ministryLogoUrl)) || (await loadImage(DEFAULT_CENTER_LOGO_2));
 
   let y = drawHeader(doc, identity, ministryLogo, pageW);
   y = drawTitle(doc, form.title, y, pageW);
