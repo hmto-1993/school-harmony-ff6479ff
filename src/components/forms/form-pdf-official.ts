@@ -401,7 +401,7 @@ export async function exportOfficialFormPdf(
       // collect group
       const groupRows: TableRow[] = [];
       i++;
-      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid") {
+      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation") {
         groupRows.push(layout[i]);
         i++;
       }
