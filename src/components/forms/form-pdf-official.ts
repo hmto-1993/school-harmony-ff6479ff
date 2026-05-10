@@ -513,13 +513,11 @@ export async function exportOfficialFormPdf(
   if (sigLabels.length > 0) {
     const blockH = sigLabels.length * 31 + 10;
     let sigY = Math.max(y + 10, pageH - 25 - blockH);
-    sigLabels.forEach((label) => {
-      if (sigY + 31 > pageH - 15) {
-        doc.addPage();
-        sigY = drawHeader(doc, identity, ministryLogo, pageW) + 4;
-      }
+    for (const label of sigLabels) {
+      // إذا لم تعد التوقيعات تتسع في الصفحة الحالية، نلغي البقية بدلاً من فتح صفحة جديدة
+      if (sigY + 31 > pageH - 15) break;
       sigY = drawSignatureBlock(doc, sigY, label, pageW) + 4;
-    });
+    }
   }
 
   drawFooter(doc, form.officialPage || 1, pageH, pageW);
