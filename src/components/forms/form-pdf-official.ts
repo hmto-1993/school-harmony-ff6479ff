@@ -823,7 +823,7 @@ export async function exportOfficialFormPdf(
       } else if (item.type === "paragraph" as any) {
         const p = item as any;
         ensureSpace(20);
-        y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
+        y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing, fontSize: p.fontSize });
         i++;
       } else {
         i++;
