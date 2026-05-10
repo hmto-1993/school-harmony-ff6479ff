@@ -48,6 +48,7 @@ export type TableRow =
       title: string;
       columns: string[]; // header labels
       rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
+      columnFlex?: number[]; // optional per-column flex weights
     };
 
 export interface FormField {
