@@ -108,8 +108,11 @@ function drawTitle(doc: jsPDF, title: string, y: number, pageW: number): number 
   doc.setFont("Amiri", "bold");
   doc.setFontSize(TITLE_FONT);
   doc.setTextColor(...COLOR_BLACK);
-  doc.text(title, pageW / 2, y + 8, { align: "center" });
-  return y + 18;
+  const lines = doc.splitTextToSize(title, pageW - PAGE_MARGIN_X * 2 - 10);
+  lines.forEach((ln: string, i: number) => {
+    doc.text(ln, pageW / 2, y + 8 + i * 7, { align: "center" });
+  });
+  return y + 12 + lines.length * 7;
 }
 
 function drawFooter(_doc: jsPDF, _pageNum: number, _pageH: number, _pageW: number) {
@@ -616,7 +619,7 @@ function drawParagraph(
   pageW: number,
   text: string,
   fieldValues: Record<string, string>,
-  opts: { bold?: boolean; align?: "right" | "center"; spacing?: number } = {},
+  opts: { bold?: boolean; align?: "right" | "center"; spacing?: number; fontSize?: number } = {},
 ): number {
   // Replace {fieldId} with value or dotted blank.
   // jsPDF Arabic shaping doesn't run full bidi, so ASCII parens/brackets
@@ -629,7 +632,7 @@ function drawParagraph(
     return fixBidi(v);
   });
   doc.setFont("Amiri", opts.bold ? "bold" : "normal");
-  doc.setFontSize(11);
+  doc.setFontSize(opts.fontSize ?? 11);
   doc.setTextColor(...COLOR_BLACK);
   const contentW = pageW - PAGE_MARGIN_X * 2;
   const align = opts.align || "right";
@@ -820,7 +823,7 @@ export async function exportOfficialFormPdf(
       } else if (item.type === "paragraph" as any) {
         const p = item as any;
         ensureSpace(20);
-        y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
+        y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing, fontSize: p.fontSize });
         i++;
       } else {
         i++;
@@ -846,7 +849,7 @@ export async function exportOfficialFormPdf(
       doc.setFont("Amiri", "bold");
       doc.setFontSize(12);
       doc.setTextColor(...COLOR_BLACK);
-      doc.text("الختم", pageW - PAGE_MARGIN_X - 4, stampY, { align: "right" });
+      doc.text((form as any).stampLabel || "الختم", pageW - PAGE_MARGIN_X - 4, stampY, { align: "right" });
     } else {
       for (const label of sigLabels) {
         if (sigY + 31 > pageH - 15) break;
