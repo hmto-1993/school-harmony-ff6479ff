@@ -511,12 +511,14 @@ export async function exportOfficialFormPdf(
   // Signature block(s) at bottom
   const sigLabels = form.signatureLabels || [];
   if (sigLabels.length > 0) {
-    // Position: leave room at bottom. If close to page bottom, push down; else use current y + spacing.
-    const blockH = sigLabels.length * 30 + 10;
-    const needed = pageH - 25 - blockH;
-    let sigY = Math.max(y + 8, needed);
+    const blockH = sigLabels.length * 31 + 10;
+    let sigY = Math.max(y + 10, pageH - 25 - blockH);
     sigLabels.forEach((label) => {
-      sigY = drawSignatureBlock(doc, sigY, label, "left") + 4;
+      if (sigY + 31 > pageH - 15) {
+        doc.addPage();
+        sigY = drawHeader(doc, identity, ministryLogo, pageW) + 4;
+      }
+      sigY = drawSignatureBlock(doc, sigY, label, pageW) + 4;
     });
   }
 
