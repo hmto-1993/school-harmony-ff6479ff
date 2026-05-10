@@ -442,7 +442,7 @@ export const formTemplates: FormTemplate[] = [
       },
       { type: "text_line", label: "بمشكلة سلوكية من الدرجة", fieldId: "issue_degree", noColon: true },
       { type: "text_line", label: "وهي", fieldId: "issue_desc", noColon: true },
-      { type: "paragraph", text: "وأتعهد بعدم تكرار أي مشكلة سلوكية مستقبلاً وعلى ذلك جرى التوقيع.", spacing: 14 },
+      { type: "paragraph", text: "وأتعهد بعدم تكرار أي مشكلة سلوكية مستقبلاً وعلى ذلك جرى التوقيع", spacing: 28 },
       {
         type: "signature_columns",
         columns: [
