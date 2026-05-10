@@ -297,11 +297,11 @@ function drawGrid(
   doc.setFontSize(9.5);
   doc.setTextColor(...COLOR_BLACK);
 
+  // Render header texts (no per-cell rectangles)
   let xc = pageW - PAGE_MARGIN_X; // RTL: right to left
   columns.forEach((col, i) => {
     const w = colWidths[i];
     xc -= w;
-    doc.rect(xc, y, w, headerH, "S");
     const wrapped = doc.splitTextToSize(col, w - 2);
     const linesCount = wrapped.length;
     const startY = y + headerH / 2 - (linesCount - 1) * 2;
@@ -311,16 +311,21 @@ function drawGrid(
   });
   let cy = y + headerH;
 
-  // Empty rows
+  // Empty rows — no internal cell rectangles
   for (let r = 0; r < rowCount; r++) {
-    let xr = pageW - PAGE_MARGIN_X;
-    columns.forEach((_, i) => {
-      const w = colWidths[i];
-      xr -= w;
-      doc.rect(xr, cy, w, minRowHeight, "S");
-    });
     cy += minRowHeight;
   }
+
+  const totalH = cy - y;
+  // Outer rectangle
+  doc.setDrawColor(...COLOR_BLACK);
+  doc.setLineWidth(TABLE_LINE);
+  doc.rect(pageW - PAGE_MARGIN_X - contentW, y, contentW, totalH, "S");
+  // Header bottom line (separates header row from body)
+  doc.line(pageW - PAGE_MARGIN_X - contentW, y + headerH, pageW - PAGE_MARGIN_X, y + headerH);
+  // First column (rightmost in RTL) vertical separator only
+  const firstColX = pageW - PAGE_MARGIN_X - colWidths[0];
+  doc.line(firstColX, y, firstColX, y + totalH);
 
   return cy + 4;
 }
