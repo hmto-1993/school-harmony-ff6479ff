@@ -35,6 +35,7 @@ export interface FormTemplate {
   officialPage?: number;
   /** Place الختم on the right and the signature block on the left (letter-style) */
   stampOnRight?: boolean;
+  suppressDefaultTitle?: boolean;
 }
 
 /** Official ministry-style table row types */
