@@ -111,26 +111,14 @@ function drawTitle(doc: jsPDF, title: string, y: number, pageW: number): number 
   return y + 18;
 }
 
-function drawFooter(doc: jsPDF, pageNum: number, pageH: number, pageW: number) {
-  // Decorative thin curve approximation: just a faint gray line
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.3);
-  doc.line(PAGE_MARGIN_X + 30, pageH - 10, pageW - PAGE_MARGIN_X - 30, pageH - 10);
-
-  doc.setFont("Amiri", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...COLOR_GRAY);
-  // Page number on left
-  doc.text(String(pageNum), PAGE_MARGIN_X, pageH - 10);
-  // MOE.GOV.SA centered
-  doc.text("WWW.MOE.GOV.SA", pageW / 2, pageH - 5, { align: "center" });
+function drawFooter(_doc: jsPDF, _pageNum: number, _pageH: number, _pageW: number) {
+  // Footer intentionally removed (no website URL, no page number)
 }
 
 /* === Cell with label (above) + value (in middle) — matches official thin-bordered cells === */
 function drawLabeledCell(doc: jsPDF, x: number, y: number, w: number, h: number, label: string, value: string) {
-  doc.setDrawColor(...COLOR_BLACK);
-  doc.setLineWidth(TABLE_LINE);
-  doc.rect(x, y, w, h, "S");
+  // No per-cell rectangle (internal divisions removed)
+
   doc.setFont("Amiri", "normal");
   doc.setFontSize(LABEL_FONT);
   doc.setTextColor(...COLOR_BLACK);
@@ -218,10 +206,7 @@ function drawSectionGroup(
       }
     } else if (r.type === "block") {
       const value = (r as any).staticValue ?? (fieldValues[r.fieldId] || "");
-      // Draw cell border
-      doc.setDrawColor(...COLOR_BLACK);
-      doc.setLineWidth(TABLE_LINE);
-      doc.rect(innerLeft, cy, innerW, c.h, "S");
+      // No internal cell border
       doc.setFont("Amiri", "normal");
       doc.setFontSize(BODY_FONT);
       doc.setTextColor(...COLOR_BLACK);
@@ -258,12 +243,8 @@ function drawSectionGroup(
       doc.text(`${line.label}: ${value}`, innerRight - 3, cy + 5.5, { align: "right" });
     }
     cy += c.h;
-    // Horizontal separator
-    if (cy < y + totalH - 0.1) {
-      doc.setDrawColor(...COLOR_BLACK);
-      doc.setLineWidth(TABLE_LINE);
-      doc.line(innerLeft, cy, innerRight, cy);
-    }
+    // Horizontal separators between rows removed (only first column kept)
+
   }
 
   return y + totalH + 4;
@@ -316,11 +297,11 @@ function drawGrid(
   doc.setFontSize(9.5);
   doc.setTextColor(...COLOR_BLACK);
 
+  // Render header texts (no per-cell rectangles)
   let xc = pageW - PAGE_MARGIN_X; // RTL: right to left
   columns.forEach((col, i) => {
     const w = colWidths[i];
     xc -= w;
-    doc.rect(xc, y, w, headerH, "S");
     const wrapped = doc.splitTextToSize(col, w - 2);
     const linesCount = wrapped.length;
     const startY = y + headerH / 2 - (linesCount - 1) * 2;
@@ -330,16 +311,21 @@ function drawGrid(
   });
   let cy = y + headerH;
 
-  // Empty rows
+  // Empty rows — no internal cell rectangles
   for (let r = 0; r < rowCount; r++) {
-    let xr = pageW - PAGE_MARGIN_X;
-    columns.forEach((_, i) => {
-      const w = colWidths[i];
-      xr -= w;
-      doc.rect(xr, cy, w, minRowHeight, "S");
-    });
     cy += minRowHeight;
   }
+
+  const totalH = cy - y;
+  // Outer rectangle
+  doc.setDrawColor(...COLOR_BLACK);
+  doc.setLineWidth(TABLE_LINE);
+  doc.rect(pageW - PAGE_MARGIN_X - contentW, y, contentW, totalH, "S");
+  // Header bottom line (separates header row from body)
+  doc.line(pageW - PAGE_MARGIN_X - contentW, y + headerH, pageW - PAGE_MARGIN_X, y + headerH);
+  // First column (rightmost in RTL) vertical separator only
+  const firstColX = pageW - PAGE_MARGIN_X - colWidths[0];
+  doc.line(firstColX, y, firstColX, y + totalH);
 
   return cy + 4;
 }
