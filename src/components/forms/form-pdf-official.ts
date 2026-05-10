@@ -625,6 +625,7 @@ export async function exportOfficialFormPdf(
 
   // Render layout
   const layout = (form.tableLayout || []) as TableRow[];
+  const replyLayout = ((form as any).parentReplyLayout || []) as TableRow[];
 
   // Group consecutive rows under preceding "section" into a section_group
   // Pattern: section -> [rows/blocks/text_lines...] -> next section or end
@@ -635,82 +636,85 @@ export async function exportOfficialFormPdf(
     }
   };
 
-  let i = 0;
-  while (i < layout.length) {
-    const item = layout[i];
-    if (item.type === "section") {
-      const groupRows: TableRow[] = [];
-      i++;
-      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation" && layout[i].type !== "paragraph") {
-        groupRows.push(layout[i]);
+  const renderLayout = (items: TableRow[]) => {
+    let i = 0;
+    while (i < items.length) {
+      const item = items[i];
+      if (item.type === "section") {
+        const groupRows: TableRow[] = [];
+        i++;
+        while (i < items.length && items[i].type !== "section" && items[i].type !== "note" && items[i].type !== "grid" && items[i].type !== "escalation" && items[i].type !== "paragraph") {
+          groupRows.push(items[i]);
+          i++;
+        }
+        let estH = 4;
+        for (const r of groupRows) {
+          if (r.type === "row") {
+            estH += Math.max(11, ...((r as any).cells?.map((c: any) => c.minHeight || 0) || [0]));
+          } else if (r.type === "block") {
+            const value = (r as any).staticValue ?? (fieldValues[(r as any).fieldId] || "");
+            const innerW = (pageW - PAGE_MARGIN_X * 2) - 40;
+            const lines = value ? doc.splitTextToSize(value, innerW - 6).length : 0;
+            estH += Math.max((r as any).minHeight || 18, lines * 5 + 7);
+          } else if ((r as any).type === "text_line") {
+            estH += 8;
+          } else {
+            estH += 10;
+          }
+        }
+        ensureSpace(estH + 8);
+        y = drawSectionGroup(doc, y, contentW, item.title, groupRows, fieldValues, pageW);
+      } else if (item.type === "note") {
+        ensureSpace(item.lines.length * 6 + 12);
+        y = drawNote(doc, y + 2, pageW, item.lines);
+        i++;
+      } else if (item.type === "grid") {
+        const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
+        ensureSpace(rowCount * (item.minRowHeight || 14) + 16);
+        y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
+        i++;
+      } else if (item.type === "escalation") {
+        ensureSpace(item.rows.length * 12 + 22);
+        y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW, (item as any).columnFlex);
+        i++;
+      } else if (item.type === "text_line" as any) {
+        ensureSpace(10);
+        const line = item as any;
+        y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""), 10, { noColon: line.noColon });
+        i++;
+      } else if (item.type === "text_pair" as any) {
+        const p = item as any;
+        ensureSpace(10);
+        y = drawTextPair(doc, y, pageW,
+          { label: p.left.label, value: p.left.fieldId ? fieldValues[p.left.fieldId] || "" : "", noColon: p.left.noColon },
+          { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
+        );
+        i++;
+      } else if (item.type === "signature_columns" as any) {
+        const p = item as any;
+        ensureSpace(40);
+        y = drawSignatureColumns(doc, y, pageW, p.columns, fieldValues);
+        i++;
+      } else if (item.type === "paragraph" as any) {
+        const p = item as any;
+        ensureSpace(20);
+        y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
+        i++;
+      } else {
         i++;
       }
-      // تقدير دقيق لارتفاع المجموعة لتفادي تداخل القسم التالي مع الجدول السابق
-      let estH = 4;
-      for (const r of groupRows) {
-        if (r.type === "row") {
-          estH += Math.max(11, ...((r as any).cells?.map((c: any) => c.minHeight || 0) || [0]));
-        } else if (r.type === "block") {
-          const value = (r as any).staticValue ?? (fieldValues[(r as any).fieldId] || "");
-          const innerW = (pageW - PAGE_MARGIN_X * 2) - 40;
-          const lines = value ? doc.splitTextToSize(value, innerW - 6).length : 0;
-          estH += Math.max((r as any).minHeight || 18, lines * 5 + 7);
-        } else if ((r as any).type === "text_line") {
-          estH += 8;
-        } else {
-          estH += 10;
-        }
-      }
-      ensureSpace(estH + 8);
-      y = drawSectionGroup(doc, y, contentW, item.title, groupRows, fieldValues, pageW);
-    } else if (item.type === "note") {
-      ensureSpace(item.lines.length * 6 + 12);
-      y = drawNote(doc, y + 2, pageW, item.lines);
-      i++;
-    } else if (item.type === "grid") {
-      const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
-      ensureSpace(rowCount * (item.minRowHeight || 14) + 16);
-      y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
-      i++;
-    } else if (item.type === "escalation") {
-      ensureSpace(item.rows.length * 12 + 22);
-      y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW, (item as any).columnFlex);
-      i++;
-    } else if (item.type === "text_line" as any) {
-      ensureSpace(10);
-      const line = item as any;
-      y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""), 10, { noColon: line.noColon });
-      i++;
-    } else if (item.type === "text_pair" as any) {
-      const p = item as any;
-      ensureSpace(10);
-      y = drawTextPair(doc, y, pageW,
-        { label: p.left.label, value: p.left.fieldId ? fieldValues[p.left.fieldId] || "" : "", noColon: p.left.noColon },
-        { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
-      );
-      i++;
-    } else if (item.type === "signature_columns" as any) {
-      const p = item as any;
-      ensureSpace(40);
-      y = drawSignatureColumns(doc, y, pageW, p.columns, fieldValues);
-      i++;
-    } else if (item.type === "paragraph" as any) {
-      const p = item as any;
-      ensureSpace(20);
-      y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
-      i++;
-    } else {
-      i++;
     }
-  }
+  };
 
-  // Signature block(s) at bottom
+  renderLayout(layout);
+
+  // Signature block(s)
   const sigLabels = form.signatureLabels || [];
   if (sigLabels.length > 0) {
     const blockH = sigLabels.length * 31 + 10;
-    let sigY = Math.max(y + 10, pageH - 25 - blockH);
+    // If a parent-reply layout follows, place signature inline (don't push to bottom).
+    let sigY = replyLayout.length > 0 ? y + 10 : Math.max(y + 10, pageH - 25 - blockH);
     if ((form as any).stampOnRight) {
-      // Draw الختم on the right (vertically centered with signature block) and signature on the left
       const startY = sigY;
       for (const label of sigLabels) {
         if (sigY + 31 > pageH - 15) break;
@@ -727,6 +731,12 @@ export async function exportOfficialFormPdf(
         sigY = drawSignatureBlock(doc, sigY, label, pageW) + 4;
       }
     }
+    y = sigY;
+  }
+
+  // Render parent reply layout (if any)
+  if (replyLayout.length > 0) {
+    renderLayout(replyLayout);
   }
 
   drawFooter(doc, form.officialPage || 1, pageH, pageW);

@@ -36,6 +36,8 @@ export interface FormTemplate {
   /** Place الختم on the right and the signature block on the left (letter-style) */
   stampOnRight?: boolean;
   suppressDefaultTitle?: boolean;
+  /** Optional layout rendered AFTER the signature block (e.g., parent reply section) */
+  parentReplyLayout?: TableRow[];
 }
 
 /** Official ministry-style table row types */
@@ -520,14 +522,43 @@ export const formTemplates: FormTemplate[] = [
   },
   {
     id: "invitation_letter",
-    title: "خطاب دعوة ولي أمر",
+    title: "خطاب دعوة ولي الأمر",
     category: "general",
     icon: "✉️",
     description: "خطاب دعوة رسمي لولي الأمر مع قسم رد ولي الأمر (مطابق ص68)",
     requiresStamp: true,
-    bodyTemplate:
-      "خطاب دعوة ولي الأمر\n\nالمكرم ولي أمر الطالب/الطالبة: {student_name}\nبالصف: {class_name}\n\nالسلام عليكم ورحمة الله وبركاته،\n\nنأمل منكم الحضور إلى المدرسة في يوم: {visit_day}     الموافق: {visit_date}\nلمقابلة مدير/مديرة المدرسة، وذلك بهدف تحقيق مصلحة الطالب/الطالبة.\n\nشاكرين لكم تعاونكم معنا.\n\n— رد ولي الأمر —\n{parent_reply}\nيوم بديل (إن وُجد): {alt_day}     الموافق: {alt_date}\n\nالسجل المدني: {national_id}\nالتاريخ: {date}",
-    signatureLabels: ["مدير/مديرة المدرسة", "ولي الأمر"],
+    stampOnRight: true,
+    officialPage: 68,
+    tableLayout: [
+      { type: "paragraph", text: " ", spacing: 4 },
+      { type: "text_line", label: "المكرم ولي أمر الطالب/الطالبة", fieldId: "student_name", noColon: true } as any,
+      { type: "paragraph", text: " ", spacing: 1 },
+      { type: "text_line", label: "بالصف", fieldId: "class_name", noColon: true } as any,
+      { type: "paragraph", text: " ", spacing: 3 },
+      { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته", align: "center", spacing: 4 },
+      { type: "text_pair",
+        right: { label: "نأمل منكم الحضور إلى المدرسة في يوم", fieldId: "visit_day", noColon: true },
+        left: { label: "الموافق", fieldId: "visit_date", noColon: true },
+      } as any,
+      { type: "paragraph", text: " ", spacing: 1 },
+      { type: "text_line", label: "لمقابلة مدير/مديرة المدرسة، وذلك بهدف", fieldId: "visit_purpose", noColon: true } as any,
+      { type: "paragraph", text: " ", spacing: 6 },
+      { type: "paragraph", text: ".شاكرين لكم تعاونكم معنا لتحقيق مصلحة الطالب", align: "center", spacing: 6 },
+    ],
+    parentReplyLayout: [
+      { type: "paragraph", text: " ", spacing: 8 },
+      { type: "paragraph", text: ":رد ولي الأمر", bold: true, spacing: 3 },
+      { type: "paragraph", text: ".☐ أقر بالعلم، وسأحضر في الموعد المحدد", spacing: 3 },
+      { type: "text_pair",
+        right: { label: "☐ أقر بالعلم، وأرغب بتغيير الموعد (خلال نفس الأسبوع)، وذلك في يوم", fieldId: "alt_day", noColon: true },
+        left: { label: "الموافق", fieldId: "alt_date", noColon: true },
+      } as any,
+      { type: "paragraph", text: " ", spacing: 4 },
+      { type: "signature_columns", columns: [
+        { title: "", nameFieldId: "parent_name", sigFieldId: "parent_sig", dateFieldId: "parent_date" },
+      ] } as any,
+    ],
+    signatureLabels: ["مدير/مديرة المدرسة"],
     whatsappEnabled: true,
     whatsappTemplate:
       "المكرم ولي أمر الطالب/ {student_name}\n\nالسلام عليكم ورحمة الله وبركاته\n\nنأمل منكم الحضور إلى المدرسة في يوم/ {visit_day} الموافق/ {visit_date} لمقابلة مدير/مديرة المدرسة بهدف تحقيق مصلحة الطالب.\n\nالإدارة المدرسية",
@@ -535,7 +566,7 @@ export const formTemplates: FormTemplate[] = [
       ...commonAutoFields,
       { id: "visit_day", label: "يوم الزيارة", type: "text", placeholder: "مثال: الأحد" },
       { id: "visit_date", label: "تاريخ الزيارة", type: "date" },
-      { id: "parent_reply", label: "رد ولي الأمر", type: "combobox", suggestions: ["☑ أقر بالعلم وسأحضر في الموعد المحدد", "☑ أقر بالعلم وأرغب بتغيير الموعد (خلال نفس الأسبوع)"] },
+      { id: "visit_purpose", label: "هدف الزيارة", type: "text", placeholder: "تحقيق مصلحة الطالب/الطالبة" },
       { id: "alt_day", label: "اليوم البديل (إن طُلب تغيير)", type: "text", placeholder: "مثال: الثلاثاء" },
       { id: "alt_date", label: "التاريخ البديل", type: "date" },
     ],
