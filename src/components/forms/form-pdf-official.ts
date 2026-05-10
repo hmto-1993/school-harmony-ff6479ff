@@ -261,12 +261,12 @@ function drawSectionGroup(
 }
 
 /* === Plain text line outside any table (label: ......value......) === */
-function drawTextLine(doc: jsPDF, y: number, pageW: number, label: string, value: string, fontSize = 10): number {
+function drawTextLine(doc: jsPDF, y: number, pageW: number, label: string, value: string, fontSize = 10, opts: { noColon?: boolean; rightX?: number; leftX?: number } = {}): number {
   doc.setFont("Amiri", "normal");
   doc.setFontSize(fontSize);
   doc.setTextColor(...COLOR_BLACK);
-  const labelText = `${label}: `;
-  const x = pageW - PAGE_MARGIN_X;
+  const labelText = opts.noColon ? `${label} ` : `${label}: `;
+  const x = opts.rightX ?? (pageW - PAGE_MARGIN_X);
   doc.text(labelText, x, y, { align: "right" });
   const labelW = doc.getTextWidth(labelText);
   if (value) {
@@ -274,10 +274,80 @@ function drawTextLine(doc: jsPDF, y: number, pageW: number, label: string, value
   } else {
     doc.setDrawColor(120, 120, 120);
     doc.setLineDashPattern([0.6, 0.8], 0);
-    doc.line(PAGE_MARGIN_X + 5, y + 0.5, x - labelW - 2, y + 0.5);
+    const leftBound = opts.leftX ?? (PAGE_MARGIN_X + 5);
+    doc.line(leftBound, y + 0.5, x - labelW - 2, y + 0.5);
     doc.setLineDashPattern([], 0);
   }
   return y + 7;
+}
+
+/* === Two text lines side by side (left & right halves) === */
+function drawTextPair(
+  doc: jsPDF,
+  y: number,
+  pageW: number,
+  left: { label: string; value: string; noColon?: boolean },
+  right: { label: string; value: string; noColon?: boolean },
+): number {
+  const mid = pageW / 2;
+  drawTextLine(doc, y, pageW, right.label, right.value, 10, {
+    noColon: right.noColon,
+    rightX: pageW - PAGE_MARGIN_X,
+    leftX: mid + 4,
+  });
+  drawTextLine(doc, y, pageW, left.label, left.value, 10, {
+    noColon: left.noColon,
+    rightX: mid - 4,
+    leftX: PAGE_MARGIN_X + 5,
+  });
+  return y + 7;
+}
+
+/* === N signature columns (each: title + الاسم/التوقيع/التاريخ with dotted lines) === */
+function drawSignatureColumns(
+  doc: jsPDF,
+  y: number,
+  pageW: number,
+  columns: Array<{ title: string; nameFieldId?: string; sigFieldId?: string; dateFieldId?: string }>,
+  fieldValues: Record<string, string>,
+): number {
+  const contentW = pageW - PAGE_MARGIN_X * 2;
+  const colW = contentW / columns.length;
+  const startY = y;
+  // Titles
+  doc.setFont("Amiri", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...COLOR_BLACK);
+  columns.forEach((col, i) => {
+    const cx = pageW - PAGE_MARGIN_X - i * colW - colW / 2;
+    doc.text(col.title, cx, startY, { align: "center" });
+  });
+  let cy = startY + 8;
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(10);
+  const fields = ["الاسم", "التوقيع", "التاريخ"] as const;
+  const keys = ["nameFieldId", "sigFieldId", "dateFieldId"] as const;
+  fields.forEach((field, idx) => {
+    columns.forEach((col, i) => {
+      const right = pageW - PAGE_MARGIN_X - i * colW;
+      const left = right - colW + 4;
+      const t = `:${field}`;
+      doc.text(t, right - 2, cy, { align: "right" });
+      const tw = doc.getTextWidth(t);
+      const fid = (col as any)[keys[idx]];
+      const v = fid ? fieldValues[fid] || "" : "";
+      if (v) {
+        doc.text(v, right - tw - 4, cy, { align: "right" });
+      } else {
+        doc.setDrawColor(120, 120, 120);
+        doc.setLineDashPattern([0.6, 0.8], 0);
+        doc.line(left, cy + 0.5, right - tw - 3, cy + 0.5);
+        doc.setLineDashPattern([], 0);
+      }
+    });
+    cy += 8;
+  });
+  return cy + 4;
 }
 
 /* === Empty grid (column headers + N empty rows) === */
@@ -607,7 +677,20 @@ export async function exportOfficialFormPdf(
     } else if (item.type === "text_line" as any) {
       ensureSpace(10);
       const line = item as any;
-      y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
+      y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""), 10, { noColon: line.noColon });
+      i++;
+    } else if (item.type === "text_pair" as any) {
+      const p = item as any;
+      ensureSpace(10);
+      y = drawTextPair(doc, y, pageW,
+        { label: p.left.label, value: p.left.fieldId ? fieldValues[p.left.fieldId] || "" : "", noColon: p.left.noColon },
+        { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
+      );
+      i++;
+    } else if (item.type === "signature_columns" as any) {
+      const p = item as any;
+      ensureSpace(40);
+      y = drawSignatureColumns(doc, y, pageW, p.columns, fieldValues);
       i++;
     } else if (item.type === "paragraph" as any) {
       const p = item as any;

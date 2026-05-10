@@ -43,7 +43,8 @@ export type TableRow =
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
   | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | { type: "note"; lines: string[] }
-  | { type: "text_line"; label: string; fieldId?: string; staticValue?: string }
+  | { type: "text_line"; label: string; fieldId?: string; staticValue?: string; noColon?: boolean }
+  | { type: "text_pair"; left: { label: string; fieldId?: string; noColon?: boolean }; right: { label: string; fieldId?: string; noColon?: boolean } }
   | { type: "paragraph"; text: string; fieldIds?: string[]; bold?: boolean; align?: "right" | "center"; spacing?: number }
   | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
   | {
@@ -52,6 +53,10 @@ export type TableRow =
       columns: string[]; // header labels
       rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
       columnFlex?: number[]; // optional per-column flex weights
+    }
+  | {
+      type: "signature_columns";
+      columns: Array<{ title: string; nameFieldId?: string; sigFieldId?: string; dateFieldId?: string }>;
     };
 
 export interface FormField {
@@ -428,23 +433,23 @@ export const formTemplates: FormTemplate[] = [
     description: "تعهد سلوكي رسمي من الطالب — مطابق لصفحة 66",
     officialPage: 66,
     tableLayout: [
-      { type: "paragraph", text: "", spacing: 6 },
-      { type: "paragraph", text: "أنا الطالب/الطالبة: {student_name}", spacing: 3 },
-      { type: "paragraph", text: "بالصف: {class_name}", spacing: 3 },
-      { type: "paragraph", text: "أُقرّ بأنني قمت في يوم: {pledge_day}     الموافق: {pledge_date}", spacing: 3 },
-      { type: "paragraph", text: "بمشكلة سلوكية من الدرجة: {issue_degree}", spacing: 3 },
-      { type: "paragraph", text: "وهي: {issue_desc}", spacing: 5 },
-      { type: "paragraph", text: "وأتعهد بعدم تكرار أي مشكلة سلوكية مستقبلاً، وعلى ذلك جرى التوقيع.", spacing: 6 },
+      { type: "paragraph", text: "", spacing: 14 },
+      { type: "text_line", label: "أنا الطالب/الطالبة", fieldId: "student_name", noColon: true },
+      { type: "text_line", label: "بالصف", fieldId: "class_name", noColon: true },
+      { type: "text_pair",
+        right: { label: "أني قمت في يوم", fieldId: "pledge_day", noColon: true },
+        left: { label: "الموافق", fieldId: "pledge_date", noColon: true },
+      },
+      { type: "text_line", label: "بمشكلة سلوكية من الدرجة", fieldId: "issue_degree", noColon: true },
+      { type: "text_line", label: "وهي", fieldId: "issue_desc", noColon: true },
+      { type: "paragraph", text: "وأتعهد بعدم تكرار أي مشكلة سلوكية مستقبلاً وعلى ذلك جرى التوقيع.", spacing: 14 },
       {
-        type: "escalation",
-        title: "",
-        columns: ["", "الطالب/الطالبة", "ولي الأمر", "مدير/مديرة المدرسة"],
-        rows: [
-          { label: "الاسم", fieldIds: ["s_name", "p_name", "d_name"] },
-          { label: "التوقيع", fieldIds: ["s_sig", "p_sig", "d_sig"] },
-          { label: "التاريخ", fieldIds: ["s_date", "p_date", "d_date"] },
+        type: "signature_columns",
+        columns: [
+          { title: "الطالب/الطالبة", nameFieldId: "s_name", sigFieldId: "s_sig", dateFieldId: "s_date" },
+          { title: "ولي الأمر", nameFieldId: "p_name", sigFieldId: "p_sig", dateFieldId: "p_date" },
+          { title: "مدير/مديرة المدرسة", nameFieldId: "d_name", sigFieldId: "d_sig", dateFieldId: "d_date" },
         ],
-        columnFlex: [1.5, 2, 2, 2],
       },
     ],
     bodyTemplate:
