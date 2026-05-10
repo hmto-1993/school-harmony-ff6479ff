@@ -265,8 +265,19 @@ function drawTextLine(doc: jsPDF, y: number, pageW: number, label: string, value
   doc.setFont("Amiri", "normal");
   doc.setFontSize(fontSize);
   doc.setTextColor(...COLOR_BLACK);
-  const labelText = opts.noColon ? `${label} ` : `${label}: `;
-  const x = opts.rightX ?? (pageW - PAGE_MARGIN_X);
+  let x = opts.rightX ?? (pageW - PAGE_MARGIN_X);
+  let cleanLabel = label;
+  // If label starts with "[ ]", draw a real checkbox at the visual start (right).
+  const cbMatch = cleanLabel.match(/^\.?\s*\[\s*\]\s*/);
+  if (cbMatch) {
+    const boxSize = 3.5;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.rect(x - boxSize, y - boxSize + 0.5, boxSize, boxSize);
+    x = x - boxSize - 1.5;
+    cleanLabel = cleanLabel.slice(cbMatch[0].length);
+  }
+  const labelText = opts.noColon ? `${cleanLabel} ` : `${cleanLabel}: `;
   doc.text(labelText, x, y, { align: "right" });
   const labelW = doc.getTextWidth(labelText);
   if (value) {
@@ -542,8 +553,29 @@ function drawParagraph(
   doc.setFontSize(11);
   doc.setTextColor(...COLOR_BLACK);
   const contentW = pageW - PAGE_MARGIN_X * 2;
-  const lines = doc.splitTextToSize(filled, contentW - 4);
   const align = opts.align || "right";
+
+  // Detect leading "[ ]" (with optional surrounding period) and render as a real
+  // checkbox at the visual start (right side in RTL), then render the remaining
+  // Arabic text to its left.
+  const checkboxMatch = filled.match(/^\.?\s*\[\s*\]\s*/);
+  if (checkboxMatch && align === "right") {
+    const rest = filled.slice(checkboxMatch[0].length);
+    const xRight = pageW - PAGE_MARGIN_X;
+    const boxSize = 3.5;
+    const boxY = y - boxSize + 0.5;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.rect(xRight - boxSize, boxY, boxSize, boxSize);
+    const textRight = xRight - boxSize - 2;
+    const lines = doc.splitTextToSize(rest, contentW - boxSize - 6);
+    lines.forEach((ln: string, i: number) => {
+      doc.text(ln, i === 0 ? textRight : pageW - PAGE_MARGIN_X, y + i * 6, { align: "right" });
+    });
+    return y + lines.length * 6 + (opts.spacing ?? 2);
+  }
+
+  const lines = doc.splitTextToSize(filled, contentW - 4);
   const x = align === "center" ? pageW / 2 : pageW - PAGE_MARGIN_X;
   lines.forEach((ln: string, i: number) => {
     doc.text(ln, x, y + i * 6, { align });
