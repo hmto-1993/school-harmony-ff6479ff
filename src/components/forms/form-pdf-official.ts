@@ -619,7 +619,9 @@ export async function exportOfficialFormPdf(
   const ministryLogo = (await loadImage(identity.ministryLogoUrl)) || (await loadImage(DEFAULT_CENTER_LOGO_2));
 
   let y = drawHeader(doc, identity, ministryLogo, pageW);
-  y = drawTitle(doc, form.title, y, pageW);
+  if (!(form as any).suppressDefaultTitle) {
+    y = drawTitle(doc, form.title, y, pageW);
+  }
 
   // Render layout
   const layout = (form.tableLayout || []) as TableRow[];
