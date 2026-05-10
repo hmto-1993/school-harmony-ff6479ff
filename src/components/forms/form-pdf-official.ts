@@ -331,6 +331,74 @@ function drawGrid(
   return cy + 4;
 }
 
+/* === Escalation table: optional title + header row + data rows with first-col label === */
+function drawEscalation(
+  doc: jsPDF,
+  y: number,
+  contentW: number,
+  title: string | undefined,
+  columns: string[],
+  rows: Array<{ label: string; fieldIds: string[] }>,
+  fieldValues: Record<string, string>,
+  pageW: number,
+): number {
+  if (title) {
+    doc.setFont("Amiri", "bold");
+    doc.setFontSize(10.5);
+    doc.setTextColor(...COLOR_BLACK);
+    doc.text(title, pageW - PAGE_MARGIN_X, y + 5, { align: "right" });
+    y += 8;
+  }
+
+  const colWidths = columns.map(() => contentW / columns.length);
+  const headerH = 12;
+  const rowH = 12;
+  const totalH = headerH + rows.length * rowH;
+  const left = pageW - PAGE_MARGIN_X - contentW;
+  const right = pageW - PAGE_MARGIN_X;
+
+  doc.setDrawColor(...COLOR_BLACK);
+  doc.setLineWidth(TABLE_LINE);
+  doc.rect(left, y, contentW, totalH, "S");
+  doc.line(left, y + headerH, right, y + headerH);
+  const firstColX = right - colWidths[0];
+  doc.line(firstColX, y, firstColX, y + totalH);
+
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...COLOR_BLACK);
+  let xc = right;
+  columns.forEach((col, i) => {
+    const w = colWidths[i];
+    xc -= w;
+    const wrapped = doc.splitTextToSize(col, w - 2);
+    const linesCount = wrapped.length;
+    const startY = y + headerH / 2 - (linesCount - 1) * 2;
+    wrapped.forEach((line: string, j: number) => {
+      doc.text(line, xc + w / 2, startY + j * 4, { align: "center" });
+    });
+  });
+
+  let cy = y + headerH;
+  doc.setFontSize(9.5);
+  rows.forEach((row) => {
+    doc.text(row.label, right - colWidths[0] / 2, cy + rowH / 2 + 1.5, { align: "center" });
+    let xx = right - colWidths[0];
+    row.fieldIds.forEach((fid, i) => {
+      const w = colWidths[i + 1] || colWidths[colWidths.length - 1];
+      xx -= w;
+      const v = fieldValues[fid] || "";
+      if (v) {
+        const wrapped = doc.splitTextToSize(v, w - 2);
+        doc.text(wrapped[0] || "", xx + w / 2, cy + rowH / 2 + 1.5, { align: "center" });
+      }
+    });
+    cy += rowH;
+  });
+
+  return y + totalH + 4;
+}
+
 /* === Note block (numbered list) === */
 function drawNote(doc: jsPDF, y: number, pageW: number, lines: string[]): number {
   doc.setFont("Amiri", "normal");
