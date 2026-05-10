@@ -33,6 +33,8 @@ export interface FormTemplate {
   tableLayout?: TableRow[];
   /** Ministry guide page number used for official PDF rendering */
   officialPage?: number;
+  /** Place الختم on the right and the signature block on the left (letter-style) */
+  stampOnRight?: boolean;
 }
 
 /** Official ministry-style table row types */
