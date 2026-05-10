@@ -50,6 +50,8 @@ export type TableRow =
   | { type: "text_pair"; left: { label: string; fieldId?: string; noColon?: boolean }; right: { label: string; fieldId?: string; noColon?: boolean } }
   | { type: "paragraph"; text: string; fieldIds?: string[]; bold?: boolean; align?: "right" | "center"; spacing?: number }
   | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
+  | { type: "checkbox_row"; options: string[]; trailingFieldId?: string; trailingLabel?: string }
+  | { type: "text_triple"; cells: Array<{ label: string; fieldId?: string; noColon?: boolean }> }
   | {
       type: "escalation";
       title: string;
