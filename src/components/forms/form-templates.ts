@@ -402,7 +402,7 @@ export const formTemplates: FormTemplate[] = [
       { type: "paragraph", text: "المكرم الموجه الطلابي / الموجهة الطلابية", bold: true, spacing: 4 },
       { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته", align: "center", spacing: 5 },
       { type: "paragraph", text: "نحيل إليكم الطالب/الطالبة: {student_name}", spacing: 3 },
-      { type: "paragraph", text: "بالصف: {class_name}     ذي المشكلة السلوكية من الدرجة: {issue_degree}     وهي: {referral_reason}", spacing: 5 },
+      { type: "paragraph", text: "بالصف {class_name}     ذي المشكلة السلوكية من الدرجة: {issue_degree}     وهي: {referral_reason}", spacing: 5 },
       { type: "paragraph", text: "يرجى منكم متابعة الطالب/الطالبة ودراسة حالته/حالتها، ووضع الحلول التربوية والعلاجية المناسبة.", spacing: 6 },
     ],
     bodyTemplate:
