@@ -414,25 +414,28 @@ function drawNote(doc: jsPDF, y: number, pageW: number, lines: string[]): number
   return y + 4;
 }
 
-/* === Bottom signature block (left-aligned, label + 3 lines) === */
-function drawSignatureBlock(doc: jsPDF, y: number, label: string, side: "left" | "right" = "left"): number {
+/* === Signature block (RTL, label heading + 3 dotted lines) === */
+function drawSignatureBlock(doc: jsPDF, y: number, label: string, pageW: number): number {
+  doc.setFont("Amiri", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...COLOR_BLACK);
+  const xRight = pageW - PAGE_MARGIN_X - 4;
+  doc.text(label, xRight, y, { align: "right" });
+  y += 7;
   doc.setFont("Amiri", "normal");
   doc.setFontSize(10);
-  doc.setTextColor(...COLOR_BLACK);
-  const x = side === "left" ? PAGE_MARGIN_X + 10 : 0;
-  doc.text(label, x, y, { align: "left" });
-  y += 7;
   ["الاسم", "التوقيع", "التاريخ"].forEach((field) => {
-    const t = `${field}: `;
-    doc.text(t, x, y, { align: "left" });
+    const t = `:${field}`;
+    doc.text(t, xRight, y, { align: "right" });
     const tw = doc.getTextWidth(t);
     doc.setDrawColor(120, 120, 120);
     doc.setLineDashPattern([0.6, 0.8], 0);
-    doc.line(x + tw, y + 0.5, x + tw + 65, y + 0.5);
+    // dotted line extending to the left
+    doc.line(PAGE_MARGIN_X + 10, y + 0.5, xRight - tw - 2, y + 0.5);
     doc.setLineDashPattern([], 0);
     y += 7;
   });
-  return y;
+  return y + 3;
 }
 
 /* ======= MAIN EXPORT ======= */
