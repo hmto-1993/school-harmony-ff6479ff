@@ -36,6 +36,8 @@ export interface FormTemplate {
   /** Place الختم on the right and the signature block on the left (letter-style) */
   stampOnRight?: boolean;
   suppressDefaultTitle?: boolean;
+  /** Optional layout rendered AFTER the signature block (e.g., parent reply section) */
+  parentReplyLayout?: TableRow[];
 }
 
 /** Official ministry-style table row types */
