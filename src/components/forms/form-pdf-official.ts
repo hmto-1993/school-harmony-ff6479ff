@@ -350,6 +350,7 @@ function drawEscalation(
   rows: Array<{ label: string; fieldIds: string[] }>,
   fieldValues: Record<string, string>,
   pageW: number,
+  columnFlex?: number[],
 ): number {
   if (title) {
     doc.setFont("Amiri", "bold");
@@ -359,7 +360,12 @@ function drawEscalation(
     y += 8;
   }
 
-  const colWidths = columns.map(() => contentW / columns.length);
+  const totalFlex = columnFlex && columnFlex.length === columns.length
+    ? columnFlex.reduce((a, b) => a + b, 0)
+    : columns.length;
+  const colWidths = columns.map((_, i) =>
+    ((columnFlex ? columnFlex[i] : 1) / totalFlex) * contentW,
+  );
   const headerH = 12;
   const rowH = 12;
   const totalH = headerH + rows.length * rowH;
