@@ -595,10 +595,23 @@ export async function exportOfficialFormPdf(
   if (sigLabels.length > 0) {
     const blockH = sigLabels.length * 31 + 10;
     let sigY = Math.max(y + 10, pageH - 25 - blockH);
-    for (const label of sigLabels) {
-      // إذا لم تعد التوقيعات تتسع في الصفحة الحالية، نلغي البقية بدلاً من فتح صفحة جديدة
-      if (sigY + 31 > pageH - 15) break;
-      sigY = drawSignatureBlock(doc, sigY, label, pageW) + 4;
+    if ((form as any).stampOnRight) {
+      // Draw الختم on the right (vertically centered with signature block) and signature on the left
+      const startY = sigY;
+      for (const label of sigLabels) {
+        if (sigY + 31 > pageH - 15) break;
+        sigY = drawSignatureBlockLeft(doc, sigY, label, pageW) + 4;
+      }
+      const stampY = startY + (sigY - startY) / 2 - 2;
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(...COLOR_BLACK);
+      doc.text("الختم", pageW - PAGE_MARGIN_X - 4, stampY, { align: "right" });
+    } else {
+      for (const label of sigLabels) {
+        if (sigY + 31 > pageH - 15) break;
+        sigY = drawSignatureBlock(doc, sigY, label, pageW) + 4;
+      }
     }
   }
 
