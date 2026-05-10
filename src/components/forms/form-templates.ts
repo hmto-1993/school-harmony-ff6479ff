@@ -35,6 +35,7 @@ export interface FormTemplate {
   officialPage?: number;
   /** Place الختم on the right and the signature block on the left (letter-style) */
   stampOnRight?: boolean;
+  suppressDefaultTitle?: boolean;
 }
 
 /** Official ministry-style table row types */
@@ -483,10 +484,12 @@ export const formTemplates: FormTemplate[] = [
     confidentialWatermark: true,
     officialPage: 67,
     stampOnRight: true,
+    suppressDefaultTitle: true,
     tableLayout: [
-      { type: "paragraph", text: " ", spacing: 6 },
-      { type: "paragraph", text: "سري", bold: true, align: "center", spacing: 8 },
-      { type: "paragraph", text: " ", spacing: 8 },
+      { type: "paragraph", text: " ", spacing: 4 },
+      { type: "paragraph", text: "سري", bold: true, align: "center", spacing: 4 },
+      { type: "paragraph", text: "إشعار ولي أمر الطالب/الطالبة بمشكلة سلوكية", bold: true, align: "center", spacing: 10 },
+      { type: "paragraph", text: " ", spacing: 4 },
       { type: "text_line", label: "المكرم ولي أمر الطالب/الطالبة", fieldId: "student_name", noColon: true } as any,
       { type: "paragraph", text: " ", spacing: 1 },
       { type: "text_line", label: "بالصف", fieldId: "class_name" } as any,
@@ -496,12 +499,12 @@ export const formTemplates: FormTemplate[] = [
       { type: "paragraph", text: " ", spacing: 1 },
       { type: "text_line", label: "وهي", fieldId: "issue_desc", noColon: true } as any,
       { type: "paragraph", text: " ", spacing: 1 },
-      { type: "paragraph", text: "وقد قُررت الإجراءات التالية حياله/حيالها وفق ما ورد في قواعد السلوك والمواظبة:", spacing: 3 },
-      { type: "text_line", label: "1.", fieldId: "action_1", noColon: true } as any,
-      { type: "text_line", label: "2.", fieldId: "action_2", noColon: true } as any,
-      { type: "text_line", label: "3.", fieldId: "action_3", noColon: true } as any,
+      { type: "paragraph", text: ":وقد قُررت الإجراءات التالية حياله/حيالها وفق ما ورد في قواعد السلوك والمواظبة", spacing: 3 },
+      { type: "text_line", label: ".1", fieldId: "action_1", noColon: true } as any,
+      { type: "text_line", label: ".2", fieldId: "action_2", noColon: true } as any,
+      { type: "text_line", label: ".3", fieldId: "action_3", noColon: true } as any,
       { type: "paragraph", text: " ", spacing: 2 },
-      { type: "paragraph", text: "لذا يرجى منكم المتابعة والتعاون مع المدرسة بما يسهم في انضباط سلوك ابنكم/ابنتكم.", spacing: 4 },
+      { type: "paragraph", text: ".لذا يرجى منكم المتابعة والتعاون مع المدرسة بما يسهم في انضباط سلوك ابنكم/ابنتكم", spacing: 4 },
     ],
     bodyTemplate:
       "إشعار ولي أمر الطالب/الطالبة بمشكلة سلوكية\n\nالمكرم ولي أمر الطالب/الطالبة: {student_name}\nبالصف: {class_name}\n\nنُشعركم بأن الطالب/الطالبة قام بمشكلة سلوكية من الدرجة {issue_degree} وهي: {issue_desc}\n\nالإجراءات:\n1. {action_1}\n2. {action_2}\n3. {action_3}",
