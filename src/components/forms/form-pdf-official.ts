@@ -371,6 +371,7 @@ function drawGrid(
   pageW: number,
   columnFlex?: number[],
   minRowHeight = 14,
+  rows?: string[][],
 ): number {
   const totalFlex = (columnFlex && columnFlex.length === columns.length)
     ? columnFlex.reduce((a, b) => a + b, 0)
