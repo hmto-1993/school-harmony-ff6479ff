@@ -849,7 +849,7 @@ export async function exportOfficialFormPdf(
       doc.setFont("Amiri", "bold");
       doc.setFontSize(12);
       doc.setTextColor(...COLOR_BLACK);
-      doc.text("الختم", pageW - PAGE_MARGIN_X - 4, stampY, { align: "right" });
+      doc.text((form as any).stampLabel || "الختم", pageW - PAGE_MARGIN_X - 4, stampY, { align: "right" });
     } else {
       for (const label of sigLabels) {
         if (sigY + 31 > pageH - 15) break;
