@@ -111,19 +111,8 @@ function drawTitle(doc: jsPDF, title: string, y: number, pageW: number): number 
   return y + 18;
 }
 
-function drawFooter(doc: jsPDF, pageNum: number, pageH: number, pageW: number) {
-  // Decorative thin curve approximation: just a faint gray line
-  doc.setDrawColor(180, 180, 180);
-  doc.setLineWidth(0.3);
-  doc.line(PAGE_MARGIN_X + 30, pageH - 10, pageW - PAGE_MARGIN_X - 30, pageH - 10);
-
-  doc.setFont("Amiri", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...COLOR_GRAY);
-  // Page number on left
-  doc.text(String(pageNum), PAGE_MARGIN_X, pageH - 10);
-  // MOE.GOV.SA centered
-  doc.text("WWW.MOE.GOV.SA", pageW / 2, pageH - 5, { align: "center" });
+function drawFooter(_doc: jsPDF, _pageNum: number, _pageH: number, _pageW: number) {
+  // Footer intentionally removed (no website URL, no page number)
 }
 
 /* === Cell with label (above) + value (in middle) — matches official thin-bordered cells === */
