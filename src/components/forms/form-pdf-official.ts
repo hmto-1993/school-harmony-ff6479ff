@@ -482,8 +482,23 @@ export async function exportOfficialFormPdf(
         groupRows.push(layout[i]);
         i++;
       }
-      // rough estimate: 12mm per row
-      ensureSpace(groupRows.length * 14 + 10);
+      // تقدير دقيق لارتفاع المجموعة لتفادي تداخل القسم التالي مع الجدول السابق
+      let estH = 4;
+      for (const r of groupRows) {
+        if (r.type === "row") {
+          estH += Math.max(11, ...((r as any).cells?.map((c: any) => c.minHeight || 0) || [0]));
+        } else if (r.type === "block") {
+          const value = (r as any).staticValue ?? (fieldValues[(r as any).fieldId] || "");
+          const innerW = (pageW - PAGE_MARGIN_X * 2) - 40;
+          const lines = value ? doc.splitTextToSize(value, innerW - 6).length : 0;
+          estH += Math.max((r as any).minHeight || 18, lines * 5 + 7);
+        } else if ((r as any).type === "text_line") {
+          estH += 8;
+        } else {
+          estH += 10;
+        }
+      }
+      ensureSpace(estH + 8);
       y = drawSectionGroup(doc, y, contentW, item.title, groupRows, fieldValues, pageW);
     } else if (item.type === "note") {
       ensureSpace(item.lines.length * 6 + 12);
