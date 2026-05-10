@@ -327,15 +327,25 @@ function drawGrid(
   }
 
   const totalH = cy - y;
+  const left = pageW - PAGE_MARGIN_X - contentW;
+  const right = pageW - PAGE_MARGIN_X;
   // Outer rectangle
   doc.setDrawColor(...COLOR_BLACK);
   doc.setLineWidth(TABLE_LINE);
-  doc.rect(pageW - PAGE_MARGIN_X - contentW, y, contentW, totalH, "S");
-  // Header bottom line (separates header row from body)
-  doc.line(pageW - PAGE_MARGIN_X - contentW, y + headerH, pageW - PAGE_MARGIN_X, y + headerH);
-  // First column (rightmost in RTL) vertical separator only
-  const firstColX = pageW - PAGE_MARGIN_X - colWidths[0];
-  doc.line(firstColX, y, firstColX, y + totalH);
+  doc.rect(left, y, contentW, totalH, "S");
+  // Header bottom line
+  doc.line(left, y + headerH, right, y + headerH);
+  // Vertical separators between all columns (RTL)
+  let xSep = right;
+  for (let i = 0; i < columns.length - 1; i++) {
+    xSep -= colWidths[i];
+    doc.line(xSep, y, xSep, y + totalH);
+  }
+  // Horizontal separators between data rows
+  for (let r = 1; r < rowCount; r++) {
+    const ry = y + headerH + r * minRowHeight;
+    doc.line(left, ry, right, ry);
+  }
 
   return cy + 4;
 }
