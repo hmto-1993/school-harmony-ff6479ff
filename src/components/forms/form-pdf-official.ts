@@ -243,12 +243,8 @@ function drawSectionGroup(
       doc.text(`${line.label}: ${value}`, innerRight - 3, cy + 5.5, { align: "right" });
     }
     cy += c.h;
-    // Horizontal separator
-    if (cy < y + totalH - 0.1) {
-      doc.setDrawColor(...COLOR_BLACK);
-      doc.setLineWidth(TABLE_LINE);
-      doc.line(innerLeft, cy, innerRight, cy);
-    }
+    // Horizontal separators between rows removed (only first column kept)
+
   }
 
   return y + totalH + 4;
