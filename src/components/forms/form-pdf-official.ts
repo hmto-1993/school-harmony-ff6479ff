@@ -150,7 +150,7 @@ function drawSectionGroup(
 ): number {
   const leftMargin = PAGE_MARGIN_X;
   const tableRight = pageW - PAGE_MARGIN_X;
-  const sideColW = 28; // narrow vertical title column on the right
+  const sideColW = 40; // wider side column to keep titles like "خاص بالطالب" on one line
   const innerW = contentW - sideColW;
   const innerLeft = leftMargin;
   const innerRight = tableRight - sideColW;
