@@ -41,6 +41,7 @@ export type TableRow =
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
   | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | { type: "note"; lines: string[] }
+  | { type: "text_line"; label: string; fieldId?: string; staticValue?: string }
   | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
   | {
       type: "escalation";
