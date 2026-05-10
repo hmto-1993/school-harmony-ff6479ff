@@ -500,6 +500,30 @@ function drawSignatureBlock(doc: jsPDF, y: number, label: string, pageW: number)
   return y + 3;
 }
 
+/* === Left-aligned signature block (for letter-style forms with stamp on right) === */
+function drawSignatureBlockLeft(doc: jsPDF, y: number, label: string, pageW: number): number {
+  doc.setFont("Amiri", "bold");
+  doc.setFontSize(10.5);
+  doc.setTextColor(...COLOR_BLACK);
+  // Position signature in left half of page
+  const xLabel = pageW / 2 - 10;
+  doc.text(label, xLabel, y, { align: "right" });
+  y += 7;
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(10);
+  ["الاسم", "التوقيع", "التاريخ"].forEach((field) => {
+    const t = `:${field}`;
+    doc.text(t, xLabel, y, { align: "right" });
+    const tw = doc.getTextWidth(t);
+    doc.setDrawColor(120, 120, 120);
+    doc.setLineDashPattern([0.6, 0.8], 0);
+    doc.line(PAGE_MARGIN_X + 10, y + 0.5, xLabel - tw - 2, y + 0.5);
+    doc.setLineDashPattern([], 0);
+    y += 7;
+  });
+  return y + 3;
+}
+
 /* ======= MAIN EXPORT ======= */
 
 export async function exportOfficialFormPdf(
