@@ -206,10 +206,7 @@ function drawSectionGroup(
       }
     } else if (r.type === "block") {
       const value = (r as any).staticValue ?? (fieldValues[r.fieldId] || "");
-      // Draw cell border
-      doc.setDrawColor(...COLOR_BLACK);
-      doc.setLineWidth(TABLE_LINE);
-      doc.rect(innerLeft, cy, innerW, c.h, "S");
+      // No internal cell border
       doc.setFont("Amiri", "normal");
       doc.setFontSize(BODY_FONT);
       doc.setTextColor(...COLOR_BLACK);
