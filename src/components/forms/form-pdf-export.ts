@@ -300,22 +300,20 @@ function drawTableLayout(
       y += computedH + 1;
     } else if (item.type === "escalation") {
       y = ensureSpace(doc, y, 24, pageH);
-      doc.setFillColor(headerColor[0], headerColor[1], headerColor[2]);
-      doc.rect(marginX, y, contentW, 7, "F");
+      doc.setDrawColor(45, 45, 45);
+      doc.rect(marginX, y, contentW, 7, "S");
       doc.setFont("Amiri", "bold");
-      doc.setFontSize(10.5);
-      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(10);
+      doc.setTextColor(20, 20, 20);
       doc.text(item.title, marginX + contentW / 2, y + 5, { align: "center" });
       y += 7;
 
       const cols = item.columns;
       const colW = contentW / cols.length;
-      doc.setFillColor(225, 232, 245);
-      doc.rect(marginX, y, contentW, 7, "F");
-      doc.setDrawColor(120, 130, 145);
-      doc.setLineWidth(0.3);
-      doc.setFontSize(9);
-      doc.setTextColor(40, 55, 75);
+      doc.setDrawColor(45, 45, 45);
+      doc.setLineWidth(0.2);
+      doc.setFontSize(8.5);
+      doc.setTextColor(20, 20, 20);
       let xc = marginX + contentW;
       for (const colLabel of cols) {
         xc -= colW;
@@ -326,14 +324,13 @@ function drawTableLayout(
 
       doc.setFont("Amiri", "normal");
       doc.setFontSize(9.5);
-      doc.setTextColor(20, 30, 45);
+      doc.setTextColor(10, 10, 10);
       for (const r of item.rows) {
         const rowH = 11;
         y = ensureSpace(doc, y, rowH, pageH);
         let xr = marginX + contentW;
         xr -= colW;
-        doc.setFillColor(247, 250, 254);
-        doc.rect(xr, y, colW, rowH, "FD");
+        doc.rect(xr, y, colW, rowH, "S");
         doc.setFont("Amiri", "bold");
         doc.text(r.label, xr + colW / 2, y + 7, { align: "center" });
         doc.setFont("Amiri", "normal");
@@ -347,6 +344,16 @@ function drawTableLayout(
         y += rowH;
       }
       y += 2;
+    } else if (item.type === "note") {
+      y = ensureSpace(doc, y, 16, pageH);
+      doc.setFont("Amiri", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(20, 20, 20);
+      item.lines.forEach((line: string) => {
+        doc.text(line, marginX + contentW - 2, y + 5, { align: "right" });
+        y += 5;
+      });
+      doc.setFont("Amiri", "normal");
     }
   }
   return y;
