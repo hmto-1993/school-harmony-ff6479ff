@@ -398,7 +398,7 @@ export const formTemplates: FormTemplate[] = [
     stampOnRight: true,
     tableLayout: [
       { type: "paragraph", text: "سري", bold: true, align: "center", spacing: 4 },
-      { type: "paragraph", text: "إحالة طالب/ة", bold: true, align: "center", spacing: 14 },
+      { type: "paragraph", text: "", spacing: 10 },
       { type: "paragraph", text: "المكرم الموجه الطلابي / الموجهة الطلابية", bold: true, spacing: 4 },
       { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته", align: "center", spacing: 5 },
       { type: "paragraph", text: "نحيل إليكم الطالب/الطالبة: {student_name}", spacing: 3 },
