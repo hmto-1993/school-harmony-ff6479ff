@@ -314,6 +314,64 @@ function drawTextPair(
   return y + 7;
 }
 
+/* === Inline checkbox row: draws N checkboxes with labels right-to-left, optional trailing dotted line === */
+function drawCheckboxRow(
+  doc: jsPDF,
+  y: number,
+  pageW: number,
+  options: string[],
+  trailingLabel?: string,
+  trailingValue?: string,
+): number {
+  doc.setFont("Amiri", "normal");
+  doc.setFontSize(10);
+  doc.setTextColor(...COLOR_BLACK);
+  const boxSize = 3.5;
+  let x = pageW - PAGE_MARGIN_X;
+  for (const opt of options) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.rect(x - boxSize, y - boxSize + 0.5, boxSize, boxSize);
+    x -= boxSize + 1.5;
+    doc.text(opt, x, y, { align: "right" });
+    x -= doc.getTextWidth(opt) + 4;
+  }
+  if (trailingLabel) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.rect(x - boxSize, y - boxSize + 0.5, boxSize, boxSize);
+    x -= boxSize + 1.5;
+    doc.text(trailingLabel, x, y, { align: "right" });
+    x -= doc.getTextWidth(trailingLabel) + 2;
+    if (trailingValue) {
+      doc.text(trailingValue, x, y, { align: "right" });
+    } else {
+      doc.setDrawColor(120, 120, 120);
+      doc.setLineDashPattern([0.6, 0.8], 0);
+      doc.line(PAGE_MARGIN_X + 5, y + 0.5, x - 1, y + 0.5);
+      doc.setLineDashPattern([], 0);
+    }
+  }
+  return y + 7;
+}
+
+/* === Three text fields side by side === */
+function drawTextTriple(
+  doc: jsPDF,
+  y: number,
+  pageW: number,
+  cells: Array<{ label: string; value: string; noColon?: boolean }>,
+): number {
+  const contentW = pageW - PAGE_MARGIN_X * 2;
+  const colW = contentW / cells.length;
+  cells.forEach((c, i) => {
+    const right = pageW - PAGE_MARGIN_X - i * colW;
+    const left = right - colW + 4;
+    drawTextLine(doc, y, pageW, c.label, c.value, 10, { noColon: c.noColon, rightX: right, leftX: left });
+  });
+  return y + 7;
+}
+
 /* === N signature columns (each: title + الاسم/التوقيع/التاريخ with dotted lines) === */
 function drawSignatureColumns(
   doc: jsPDF,
@@ -371,6 +429,7 @@ function drawGrid(
   pageW: number,
   columnFlex?: number[],
   minRowHeight = 14,
+  rows?: string[][],
 ): number {
   const totalFlex = (columnFlex && columnFlex.length === columns.length)
     ? columnFlex.reduce((a, b) => a + b, 0)
@@ -426,6 +485,26 @@ function drawGrid(
   for (let r = 1; r < rowCount; r++) {
     const ry = y + headerH + r * minRowHeight;
     doc.line(left, ry, right, ry);
+  }
+
+  // Render static cell content if provided via rows[][]
+  if (rows && rows.length) {
+    doc.setFont("Amiri", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...COLOR_BLACK);
+    rows.forEach((rowCells, rIdx) => {
+      const ry = y + headerH + rIdx * minRowHeight;
+      let xx = right;
+      for (let i = 0; i < columns.length; i++) {
+        const w = colWidths[i];
+        xx -= w;
+        const cellVal = rowCells[i] || "";
+        if (cellVal) {
+          const wrapped = doc.splitTextToSize(cellVal, w - 2);
+          doc.text(wrapped[0] || "", xx + w / 2, ry + minRowHeight / 2 + 1.5, { align: "center" });
+        }
+      }
+    });
   }
 
   return cy + 4;
@@ -701,9 +780,10 @@ export async function exportOfficialFormPdf(
         y = drawNote(doc, y + 2, pageW, item.lines);
         i++;
       } else if (item.type === "grid") {
-        const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
+        const rowsArr = (item as any).rows as string[][] | undefined;
+        const rowCount = item.rowCount ?? (rowsArr?.length ?? 8);
         ensureSpace(rowCount * (item.minRowHeight || 14) + 16);
-        y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
+        y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight, rowsArr);
         i++;
       } else if (item.type === "escalation") {
         ensureSpace(item.rows.length * 12 + 22);
@@ -721,6 +801,16 @@ export async function exportOfficialFormPdf(
           { label: p.left.label, value: p.left.fieldId ? fieldValues[p.left.fieldId] || "" : "", noColon: p.left.noColon },
           { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
         );
+        i++;
+      } else if (item.type === "text_triple" as any) {
+        const p = item as any;
+        ensureSpace(10);
+        y = drawTextTriple(doc, y, pageW, p.cells.map((c: any) => ({ label: c.label, value: c.fieldId ? fieldValues[c.fieldId] || "" : "", noColon: c.noColon })));
+        i++;
+      } else if (item.type === "checkbox_row" as any) {
+        const p = item as any;
+        ensureSpace(10);
+        y = drawCheckboxRow(doc, y, pageW, p.options, p.trailingLabel, p.trailingFieldId ? fieldValues[p.trailingFieldId] || "" : "");
         i++;
       } else if (item.type === "signature_columns" as any) {
         const p = item as any;
