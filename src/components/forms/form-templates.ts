@@ -398,7 +398,7 @@ export const formTemplates: FormTemplate[] = [
     stampOnRight: true,
     tableLayout: [
       { type: "paragraph", text: "سري", bold: true, align: "center", spacing: 4 },
-      { type: "paragraph", text: "إحالة طالب/ة", bold: true, align: "center", spacing: 14 },
+      { type: "paragraph", text: "", spacing: 10 },
       { type: "paragraph", text: "المكرم الموجه الطلابي / الموجهة الطلابية", bold: true, spacing: 4 },
       { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته", align: "center", spacing: 5 },
       { type: "paragraph", text: "نحيل إليكم الطالب/الطالبة: {student_name}", spacing: 3 },
@@ -428,7 +428,7 @@ export const formTemplates: FormTemplate[] = [
     description: "تعهد سلوكي رسمي من الطالب — مطابق لصفحة 66",
     officialPage: 66,
     tableLayout: [
-      { type: "paragraph", text: "تعهد سلوكي", bold: true, align: "center", spacing: 6 },
+      { type: "paragraph", text: "", spacing: 6 },
       { type: "paragraph", text: "أنا الطالب/الطالبة: {student_name}", spacing: 3 },
       { type: "paragraph", text: "بالصف: {class_name}", spacing: 3 },
       { type: "paragraph", text: "أُقرّ بأنني قمت في يوم: {pledge_day}     الموافق: {pledge_date}", spacing: 3 },

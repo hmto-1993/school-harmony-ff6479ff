@@ -458,10 +458,13 @@ function drawParagraph(
   fieldValues: Record<string, string>,
   opts: { bold?: boolean; align?: "right" | "center"; spacing?: number } = {},
 ): number {
-  // Replace {fieldId} with value or dotted blank
+  // Replace {fieldId} with value or dotted blank. Wrap values in RLE/PDF
+  // marks so embedded ASCII like "(1)" or hyphens render with correct bidi
+  // ordering inside an Arabic paragraph.
   const filled = text.replace(/\{(\w+)\}/g, (_m, key) => {
     const v = fieldValues[key];
-    return v && v.trim() ? v : "....................";
+    if (!v || !v.trim()) return "....................";
+    return `\u202B${v}\u202C`;
   });
   doc.setFont("Amiri", opts.bold ? "bold" : "normal");
   doc.setFontSize(11);
