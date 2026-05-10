@@ -449,6 +449,33 @@ function drawNote(doc: jsPDF, y: number, pageW: number, lines: string[]): number
   return y + 4;
 }
 
+/* === Static paragraph with optional inline {placeholders} replaced from fieldValues. Long blanks render as dotted lines. === */
+function drawParagraph(
+  doc: jsPDF,
+  y: number,
+  pageW: number,
+  text: string,
+  fieldValues: Record<string, string>,
+  opts: { bold?: boolean; align?: "right" | "center"; spacing?: number } = {},
+): number {
+  // Replace {fieldId} with value or dotted blank
+  const filled = text.replace(/\{(\w+)\}/g, (_m, key) => {
+    const v = fieldValues[key];
+    return v && v.trim() ? v : "....................";
+  });
+  doc.setFont("Amiri", opts.bold ? "bold" : "normal");
+  doc.setFontSize(11);
+  doc.setTextColor(...COLOR_BLACK);
+  const contentW = pageW - PAGE_MARGIN_X * 2;
+  const lines = doc.splitTextToSize(filled, contentW - 4);
+  const align = opts.align || "right";
+  const x = align === "center" ? pageW / 2 : pageW - PAGE_MARGIN_X;
+  lines.forEach((ln: string, i: number) => {
+    doc.text(ln, x, y + i * 6, { align });
+  });
+  return y + lines.length * 6 + (opts.spacing ?? 2);
+}
+
 /* === Signature block (RTL, label heading + 3 dotted lines) === */
 function drawSignatureBlock(doc: jsPDF, y: number, label: string, pageW: number): number {
   doc.setFont("Amiri", "bold");
@@ -513,7 +540,7 @@ export async function exportOfficialFormPdf(
     if (item.type === "section") {
       const groupRows: TableRow[] = [];
       i++;
-      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation") {
+      while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation" && layout[i].type !== "paragraph") {
         groupRows.push(layout[i]);
         i++;
       }
@@ -552,6 +579,11 @@ export async function exportOfficialFormPdf(
       ensureSpace(10);
       const line = item as any;
       y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
+      i++;
+    } else if (item.type === "paragraph" as any) {
+      const p = item as any;
+      ensureSpace(20);
+      y = drawParagraph(doc, y, pageW, p.text, fieldValues, { bold: p.bold, align: p.align, spacing: p.spacing });
       i++;
     } else {
       i++;
