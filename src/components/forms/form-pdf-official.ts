@@ -156,6 +156,15 @@ function drawSectionGroup(
   const innerLeft = leftMargin;
   const innerRight = tableRight - sideColW;
 
+  // إذا لم تكن للمجموعة صفوف، ارسم العنوان كرأس قسم مستقل (لتفادي تداخل العمود الجانبي مع الجدول التالي)
+  if (!rows || rows.length === 0) {
+    doc.setFont("Amiri", "bold");
+    doc.setFontSize(11.5);
+    doc.setTextColor(...COLOR_BLACK);
+    doc.text(title, pageW - PAGE_MARGIN_X, y + 6, { align: "right" });
+    return y + 10;
+  }
+
   // First pass: compute row heights
   type Computed = { h: number; row: TableRow };
   const computed: Computed[] = rows.map((r) => {
