@@ -43,7 +43,8 @@ export type TableRow =
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
   | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | { type: "note"; lines: string[] }
-  | { type: "text_line"; label: string; fieldId?: string; staticValue?: string }
+  | { type: "text_line"; label: string; fieldId?: string; staticValue?: string; noColon?: boolean }
+  | { type: "text_pair"; left: { label: string; fieldId?: string; noColon?: boolean }; right: { label: string; fieldId?: string; noColon?: boolean } }
   | { type: "paragraph"; text: string; fieldIds?: string[]; bold?: boolean; align?: "right" | "center"; spacing?: number }
   | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
   | {
@@ -52,6 +53,10 @@ export type TableRow =
       columns: string[]; // header labels
       rows: Array<{ label: string; fieldIds: string[] }>; // first col = label, rest = fieldIds
       columnFlex?: number[]; // optional per-column flex weights
+    }
+  | {
+      type: "signature_columns";
+      columns: Array<{ title: string; nameFieldId?: string; sigFieldId?: string; dateFieldId?: string }>;
     };
 
 export interface FormField {
