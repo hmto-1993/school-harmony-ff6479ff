@@ -632,7 +632,7 @@ function drawParagraph(
     return fixBidi(v);
   });
   doc.setFont("Amiri", opts.bold ? "bold" : "normal");
-  doc.setFontSize(11);
+  doc.setFontSize(opts.fontSize ?? 11);
   doc.setTextColor(...COLOR_BLACK);
   const contentW = pageW - PAGE_MARGIN_X * 2;
   const align = opts.align || "right";
