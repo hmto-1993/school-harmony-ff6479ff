@@ -33,6 +33,8 @@ export interface FormTemplate {
   tableLayout?: TableRow[];
   /** Ministry guide page number used for official PDF rendering */
   officialPage?: number;
+  /** Place الختم on the right and the signature block on the left (letter-style) */
+  stampOnRight?: boolean;
 }
 
 /** Official ministry-style table row types */
@@ -393,16 +395,15 @@ export const formTemplates: FormTemplate[] = [
     confidentialWatermark: true,
     requiresStamp: true,
     officialPage: 65,
+    stampOnRight: true,
     tableLayout: [
       { type: "paragraph", text: "سري", bold: true, align: "center", spacing: 4 },
-      { type: "paragraph", text: "المكرم الموجه الطلابي / الموجهة الطلابية", bold: true, spacing: 3 },
-      { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته،", spacing: 4 },
-      { type: "paragraph", text: "نحيل إليكم الطالب/الطالبة: {student_name}", spacing: 2 },
-      { type: "paragraph", text: "بالصف: {class_name}     ذي المشكلة السلوكية من الدرجة: {issue_degree}", spacing: 2 },
-      { type: "paragraph", text: "وهي: {referral_reason}", spacing: 4 },
-      { type: "paragraph", text: "يرجى منكم متابعة الطالب/الطالبة ودراسة حالته/حالتها، ووضع الحلول التربوية والعلاجية المناسبة.", spacing: 3 },
-      { type: "paragraph", text: "تفاصيل إضافية: {referral_details}", spacing: 3 },
-      { type: "paragraph", text: "التوصيات: {recommendations}", spacing: 4 },
+      { type: "paragraph", text: "إحالة طالب/ة", bold: true, align: "center", spacing: 14 },
+      { type: "paragraph", text: "المكرم الموجه الطلابي / الموجهة الطلابية", bold: true, spacing: 4 },
+      { type: "paragraph", text: "السلام عليكم ورحمة الله وبركاته", align: "center", spacing: 5 },
+      { type: "paragraph", text: "نحيل إليكم الطالب/الطالبة: {student_name}", spacing: 3 },
+      { type: "paragraph", text: "بالصف: {class_name}     ذي المشكلة السلوكية من الدرجة: {issue_degree}     وهي: {referral_reason}", spacing: 5 },
+      { type: "paragraph", text: "يرجى منكم متابعة الطالب/الطالبة ودراسة حالته/حالتها، ووضع الحلول التربوية والعلاجية المناسبة.", spacing: 6 },
     ],
     bodyTemplate:
       "إحالة طالب/ة (سري)\n\nالمكرم الموجه الطلابي / الموجهة الطلابية\nالسلام عليكم ورحمة الله وبركاته\n\nنحيل إليكم الطالب/الطالبة: {student_name}\nبالصف: {class_name} ذي المشكلة السلوكية من الدرجة: {issue_degree}\nوهي: {referral_reason}\n\nيرجى متابعة الطالب/الطالبة ودراسة حالته/حالتها ووضع الحلول التربوية المناسبة.\n\nالتفاصيل: {referral_details}\nالتوصيات: {recommendations}",
