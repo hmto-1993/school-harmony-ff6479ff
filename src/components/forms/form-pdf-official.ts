@@ -802,6 +802,16 @@ export async function exportOfficialFormPdf(
           { label: p.right.label, value: p.right.fieldId ? fieldValues[p.right.fieldId] || "" : "", noColon: p.right.noColon },
         );
         i++;
+      } else if (item.type === "text_triple" as any) {
+        const p = item as any;
+        ensureSpace(10);
+        y = drawTextTriple(doc, y, pageW, p.cells.map((c: any) => ({ label: c.label, value: c.fieldId ? fieldValues[c.fieldId] || "" : "", noColon: c.noColon })));
+        i++;
+      } else if (item.type === "checkbox_row" as any) {
+        const p = item as any;
+        ensureSpace(10);
+        y = drawCheckboxRow(doc, y, pageW, p.options, p.trailingLabel, p.trailingFieldId ? fieldValues[p.trailingFieldId] || "" : "");
+        i++;
       } else if (item.type === "signature_columns" as any) {
         const p = item as any;
         ensureSpace(40);
