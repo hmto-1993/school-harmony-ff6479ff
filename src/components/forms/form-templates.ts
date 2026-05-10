@@ -31,6 +31,8 @@ export interface FormTemplate {
   requiresStamp?: boolean;
   /** Official table layout (mimics ministry forms). When provided, takes priority over bodyTemplate. */
   tableLayout?: TableRow[];
+  /** Ministry guide page number used for official PDF rendering */
+  officialPage?: number;
 }
 
 /** Official ministry-style table row types */
@@ -38,6 +40,8 @@ export type TableRow =
   | { type: "section"; title: string }
   | { type: "row"; cells: Array<{ label: string; fieldId?: string; flex?: number; minHeight?: number; staticValue?: string }> }
   | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
+  | { type: "note"; lines: string[] }
+  | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
   | {
       type: "escalation";
       title: string;
