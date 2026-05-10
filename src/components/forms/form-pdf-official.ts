@@ -462,34 +462,45 @@ export async function exportOfficialFormPdf(
 
   // Group consecutive rows under preceding "section" into a section_group
   // Pattern: section -> [rows/blocks/text_lines...] -> next section or end
+  const ensureSpace = (needed: number) => {
+    if (y + needed > pageH - 20) {
+      doc.addPage();
+      y = drawHeader(doc, identity, ministryLogo, pageW);
+    }
+  };
+
   let i = 0;
   while (i < layout.length) {
     const item = layout[i];
     if (item.type === "section") {
-      // collect group
       const groupRows: TableRow[] = [];
       i++;
       while (i < layout.length && layout[i].type !== "section" && layout[i].type !== "note" && layout[i].type !== "grid" && layout[i].type !== "escalation") {
         groupRows.push(layout[i]);
         i++;
       }
+      // rough estimate: 12mm per row
+      ensureSpace(groupRows.length * 14 + 10);
       y = drawSectionGroup(doc, y, contentW, item.title, groupRows, fieldValues, pageW);
     } else if (item.type === "note") {
+      ensureSpace(item.lines.length * 6 + 12);
       y = drawNote(doc, y + 2, pageW, item.lines);
       i++;
     } else if (item.type === "grid") {
       const rowCount = item.rowCount ?? (item.rows?.length ?? 8);
+      ensureSpace(rowCount * (item.minRowHeight || 14) + 16);
       y = drawGrid(doc, y, contentW, item.columns, rowCount, pageW, item.columnFlex, item.minRowHeight);
       i++;
     } else if (item.type === "escalation") {
+      ensureSpace(item.rows.length * 12 + 22);
       y = drawEscalation(doc, y, contentW, item.title, item.columns, item.rows, fieldValues, pageW);
       i++;
     } else if (item.type === "text_line" as any) {
+      ensureSpace(10);
       const line = item as any;
       y = drawTextLine(doc, y, pageW, line.label, line.staticValue ?? (line.fieldId ? fieldValues[line.fieldId] || "" : ""));
       i++;
     } else {
-      // Unknown / unhandled — skip
       i++;
     }
   }
