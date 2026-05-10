@@ -42,6 +42,7 @@ export type TableRow =
   | { type: "block"; label: string; fieldId: string; minHeight?: number; staticValue?: string }
   | { type: "note"; lines: string[] }
   | { type: "text_line"; label: string; fieldId?: string; staticValue?: string }
+  | { type: "paragraph"; text: string; fieldIds?: string[]; bold?: boolean; align?: "right" | "center"; spacing?: number }
   | { type: "grid"; title?: string; columns: string[]; rows?: string[][]; rowCount?: number; columnFlex?: number[]; minRowHeight?: number }
   | {
       type: "escalation";
