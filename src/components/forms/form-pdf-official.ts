@@ -265,8 +265,19 @@ function drawTextLine(doc: jsPDF, y: number, pageW: number, label: string, value
   doc.setFont("Amiri", "normal");
   doc.setFontSize(fontSize);
   doc.setTextColor(...COLOR_BLACK);
-  const labelText = opts.noColon ? `${label} ` : `${label}: `;
-  const x = opts.rightX ?? (pageW - PAGE_MARGIN_X);
+  let x = opts.rightX ?? (pageW - PAGE_MARGIN_X);
+  let cleanLabel = label;
+  // If label starts with "[ ]", draw a real checkbox at the visual start (right).
+  const cbMatch = cleanLabel.match(/^\.?\s*\[\s*\]\s*/);
+  if (cbMatch) {
+    const boxSize = 3.5;
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    doc.rect(x - boxSize, y - boxSize + 0.5, boxSize, boxSize);
+    x = x - boxSize - 1.5;
+    cleanLabel = cleanLabel.slice(cbMatch[0].length);
+  }
+  const labelText = opts.noColon ? `${cleanLabel} ` : `${cleanLabel}: `;
   doc.text(labelText, x, y, { align: "right" });
   const labelW = doc.getTextWidth(labelText);
   if (value) {
