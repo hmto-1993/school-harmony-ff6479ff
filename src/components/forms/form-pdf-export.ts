@@ -368,6 +368,12 @@ export async function exportFormPdf(
   student: StudentInfo,
   options?: { returnBlob?: boolean; signatureDataUrl?: string | null; customBodyText?: string | null },
 ): Promise<{ blob: Blob | null; fileName: string }> {
+  // Route to clean ministry-style renderer when the form is marked as official.
+  if ((form as any).officialPage) {
+    const { exportOfficialFormPdf } = await import("./form-pdf-official");
+    return exportOfficialFormPdf(form, fieldValues, student, { returnBlob: options?.returnBlob });
+  }
+
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
