@@ -108,8 +108,11 @@ function drawTitle(doc: jsPDF, title: string, y: number, pageW: number): number 
   doc.setFont("Amiri", "bold");
   doc.setFontSize(TITLE_FONT);
   doc.setTextColor(...COLOR_BLACK);
-  doc.text(title, pageW / 2, y + 8, { align: "center" });
-  return y + 18;
+  const lines = doc.splitTextToSize(title, pageW - PAGE_MARGIN_X * 2 - 10);
+  lines.forEach((ln: string, i: number) => {
+    doc.text(ln, pageW / 2, y + 8 + i * 7, { align: "center" });
+  });
+  return y + 12 + lines.length * 7;
 }
 
 function drawFooter(_doc: jsPDF, _pageNum: number, _pageH: number, _pageW: number) {
