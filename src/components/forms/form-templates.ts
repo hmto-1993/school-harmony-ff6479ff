@@ -550,7 +550,7 @@ export const formTemplates: FormTemplate[] = [
       { type: "paragraph", text: ":رد ولي الأمر", bold: true, spacing: 2 },
       { type: "paragraph", text: ".[ ] أقر بالعلم، وسأحضر في الموعد المحدد", spacing: 2 },
       { type: "text_pair",
-        right: { label: "[ ] أقر بالعلم، وأرغب بتغيير الموعد (خلال نفس الأسبوع)، وذلك في يوم", fieldId: "alt_day", noColon: true },
+        right: { label: "[ ] أقر بالعلم، وأرغب بتغيير الموعد )خلال نفس الأسبوع(، وذلك في يوم", fieldId: "alt_day", noColon: true },
         left: { label: "الموافق", fieldId: "alt_date", noColon: true },
       } as any,
       { type: "paragraph", text: " ", spacing: 2 },
