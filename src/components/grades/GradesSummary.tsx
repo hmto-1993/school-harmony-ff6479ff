@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
 import { calcSubtotal, getSummaryPrintOptions } from "./grades-table-builders";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; is_deduction?: boolean; }
