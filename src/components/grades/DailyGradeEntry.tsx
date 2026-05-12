@@ -662,6 +662,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
+                      onInput={normalizeInputDigits}
                       onKeyDown={async (e) => {
                         if (e.key === "Enter") {
                           const val = (e.target as HTMLInputElement).value;
