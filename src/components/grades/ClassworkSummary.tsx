@@ -422,7 +422,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           type="number" min={0}
                           placeholder="الدرجة"
                           value={fillAllValue}
-                          onChange={(e) => setFillAllValue(e.target.value)}
+                          onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
+                          onInput={normalizeInputDigits}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           dir="ltr"
                         />
