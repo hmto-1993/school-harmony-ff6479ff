@@ -24,6 +24,7 @@ import FormDialog from "@/components/forms/FormDialog";
 import SmartRadar from "./SmartRadar";
 import ClassAlphaDashboard from "./classwork/ClassAlphaDashboard";
 import { supabase } from "@/integrations/supabase/client";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
