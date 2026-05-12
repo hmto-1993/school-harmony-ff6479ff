@@ -450,7 +450,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                         {/* Percentage */}
                         <td className="p-2 text-center border-l border-border/10">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-bold text-sm">{pct}%</span>
+                            <span className="font-bold text-sm">{toEnglishDigits(pct)}%</span>
                           </div>
                           <Progress value={pct} className="h-1.5 w-16 mx-auto mt-1" />
                         </td>
