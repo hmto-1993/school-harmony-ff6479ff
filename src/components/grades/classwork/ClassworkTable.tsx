@@ -186,10 +186,10 @@ export default function ClassworkTable({
                   })}
 
                   <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "")}>
-                    {sub.score} / {sub.max}
+                    {toEnglishDigits(sub.score)} / {toEnglishDigits(sub.max)}
                   </td>
                   <td className={cn("p-2 text-center font-bold border-l border-border/10 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400", isLast && "last:rounded-bl-xl")}>
-                    {sg.earnedTotal}
+                    {toEnglishDigits(sg.earnedTotal)}
                   </td>
                 </tr>
               );
