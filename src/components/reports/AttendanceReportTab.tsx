@@ -430,9 +430,19 @@ export default function AttendanceReportTab({
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-1 rounded-full bg-gradient-to-b from-destructive to-warning" />
                     <h3 className="font-bold text-base text-foreground">
-                      إجمالي {statusFilter === "absent" ? "الغياب" : statusFilter === "late" ? "التأخر" : "الغياب والتأخر"} لكل طالب
+                      إجمالي {totalsTitle} لكل طالب
                     </h3>
                     <span className="text-xs text-muted-foreground">({studentTotals.length} طالب)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 print:hidden">
+                    <Button size="sm" variant="outline" onClick={exportTotalsExcel} className="gap-1.5 h-8">
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      Excel
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={exportTotalsPDF} className="gap-1.5 h-8">
+                      <FileText className="h-3.5 w-3.5" />
+                      PDF
+                    </Button>
                   </div>
                 </div>
                 <div className="max-h-[300px] overflow-auto rounded-xl border border-border/30">
