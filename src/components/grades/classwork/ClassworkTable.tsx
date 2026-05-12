@@ -83,7 +83,7 @@ export default function ClassworkTable({
                   "border-b border-border/40 group",
                   "hover:[&>td]:!bg-primary/15 dark:hover:[&>td]:!bg-primary/25 transition-colors",
                 )}>
-                  <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                  <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{toEnglishDigits(i + 1)}</td>
                   <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">
                     <button
                       type="button"
