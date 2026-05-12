@@ -256,7 +256,8 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
   };
 
   const setNumericGrade = (studentId: string, categoryId: string, value: string, maxScore: number) => {
-    const num = value === "" ? null : Math.min(Math.max(0, Number(value)), maxScore);
+    const normalized = toEnglishDigits(value);
+    const num = normalized === "" ? null : Math.min(Math.max(0, Number(normalized)), maxScore);
     setStudentGrades((prev) => prev.map((sg) =>
       sg.student_id === studentId ? { ...sg, grades: { ...sg.grades, [categoryId]: num } } : sg
     ));
