@@ -1000,12 +1000,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               <Input
                                 type="number"
                                 min={0}
-                                value={sg.grades[earnedBucketCat.id] ?? ""}
+                                value={toEnglishDigits(sg.grades[earnedBucketCat.id] ?? "")}
                                 placeholder="--"
                                 className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
                                 onChange={(e) => setNumericGrade(sg.student_id, earnedBucketCat.id, e.target.value, Number(earnedBucketCat.max_score))}
+                                onInput={normalizeInputDigits}
                                 onBlur={async (e) => {
-                                  const v = Number(e.target.value);
+                                  const v = Number(toEnglishDigits(e.target.value));
                                   if (!isNaN(v)) { try { await quickSaveGrade(sg.student_id, earnedBucketCat.id, v); } catch {} }
                                 }}
                               />
