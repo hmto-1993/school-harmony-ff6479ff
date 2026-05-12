@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
 import { calcSubtotal, getSummaryPrintOptions } from "./grades-table-builders";
-import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
+import { toEnglishDigits, normalizeInputDigits, preventWheelChange, preventArrowKeyChange } from "@/lib/number-utils";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; is_deduction?: boolean; }
@@ -300,7 +300,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                         </Select>
                         <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue}
                           onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
-                          onInput={normalizeInputDigits}
+                          onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr" />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
@@ -391,7 +391,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       return (
                                         <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
                                           onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
-                                          onInput={normalizeInputDigits}
+                                          onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                                           className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
                                           dir="ltr" disabled={!!locked} />
                                       );
@@ -413,7 +413,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       return (
                                         <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
                                           onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
-                                          onInput={normalizeInputDigits}
+                                          onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                                           className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
                                           dir="ltr" disabled={!!locked} />
                                       );

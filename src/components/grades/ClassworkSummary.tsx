@@ -13,7 +13,7 @@ import { printGradesTable, getPrintIconSpan, exportGradesTableAsPDF } from "@/li
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
-import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
+import { toEnglishDigits, normalizeInputDigits, preventWheelChange, preventArrowKeyChange } from "@/lib/number-utils";
 
 import type { ClassInfo, CategoryInfo, SummaryRow, ClassworkSummaryProps } from "./classwork/classwork-types";
 import { isParticipation, DEFAULT_MAX_SLOTS, getMaxDisplayIcons, restoreSlotsFromScore, calcManualSubtotal } from "./classwork/classwork-helpers";
@@ -423,7 +423,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           placeholder="الدرجة"
                           value={fillAllValue}
                           onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
-                          onInput={normalizeInputDigits}
+                          onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           dir="ltr"
                         />

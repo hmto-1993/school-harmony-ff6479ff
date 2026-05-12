@@ -24,7 +24,7 @@ import FormDialog from "@/components/forms/FormDialog";
 import SmartRadar from "./SmartRadar";
 import ClassAlphaDashboard from "./classwork/ClassAlphaDashboard";
 import { supabase } from "@/integrations/supabase/client";
-import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
+import { toEnglishDigits, normalizeInputDigits, preventWheelChange, preventArrowKeyChange } from "@/lib/number-utils";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
@@ -662,7 +662,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
-                      onInput={normalizeInputDigits}
+                      onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                       onKeyDown={async (e) => {
                         if (e.key === "Enter") {
                           const val = toEnglishDigits((e.target as HTMLInputElement).value);
@@ -941,7 +941,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                       max={maxScore}
                                       value={currentScore === 0 ? "0" : toEnglishDigits(currentScore || "")}
                                       onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
-                                      onInput={normalizeInputDigits}
+                                      onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                                       className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
                                       placeholder="0"
                                     />
@@ -1004,7 +1004,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                 placeholder="--"
                                 className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
                                 onChange={(e) => setNumericGrade(sg.student_id, earnedBucketCat.id, e.target.value, Number(earnedBucketCat.max_score))}
-                                onInput={normalizeInputDigits}
+                                onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                                 onBlur={async (e) => {
                                   const v = Number(toEnglishDigits(e.target.value));
                                   if (!isNaN(v)) { try { await quickSaveGrade(sg.student_id, earnedBucketCat.id, v); } catch {} }
