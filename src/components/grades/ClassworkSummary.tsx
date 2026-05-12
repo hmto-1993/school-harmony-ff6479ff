@@ -307,7 +307,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         if (!row) continue;
         const cat = allCategories.find(c => c.id === categoryId);
         if (!cat) continue;
-        const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+        const normalized = toEnglishDigits(val);
+        const numVal = normalized === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(normalized)));
         const existingId = row.manualScoreIds[categoryId];
         if (existingId) {
           upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
