@@ -665,7 +665,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       onInput={normalizeInputDigits}
                       onKeyDown={async (e) => {
                         if (e.key === "Enter") {
-                          const val = (e.target as HTMLInputElement).value;
+                          const val = toEnglishDigits((e.target as HTMLInputElement).value);
                           if (val) {
                             const numCat = earnedBucketCat;
                             if (numCat) {
