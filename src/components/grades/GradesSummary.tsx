@@ -427,7 +427,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                           {hasOther && otherCats.map(cat => (
                             <td key={cat.id} className="p-2 text-center border-l border-border/10">{renderScore(sg.manualScores[cat.id] ?? null)}</td>
                           ))}
-                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{allSub.score} / {allSub.max}</td>
+                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{toEnglishDigits(allSub.score)} / {toEnglishDigits(allSub.max)}</td>
                         </tr>
                       );
                     })}
