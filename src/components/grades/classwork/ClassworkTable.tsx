@@ -133,7 +133,7 @@ export default function ClassworkTable({
                               dir="ltr"
                               title={deductionCount > 0 ? "عرض سجل المخالفات" : ""}
                             >
-                              {deductionCount}
+                              {toEnglishDigits(deductionCount)}
                             </button>
                           ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
