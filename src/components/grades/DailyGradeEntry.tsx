@@ -689,7 +689,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="gap-1.5"
                       onClick={async () => {
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
-                        const val = input?.value;
+                        const val = toEnglishDigits(input?.value || "");
                         if (val) {
                           const numCat = earnedBucketCat;
                           if (numCat) {
