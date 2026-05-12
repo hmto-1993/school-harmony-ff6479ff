@@ -27,8 +27,8 @@ export function buildSummaryTableHTML(
   selectedPeriod: number,
 ) {
   const classworkCats = categories.filter(c => c.category_group === 'classwork');
-  const examCats = categories.filter(c => c.category_group === 'exams');
-  const otherCats = categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
+  const examCats = categories.filter(c => c.category_group === 'exam');
+  const otherCats = categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exam');
   const hasClasswork = classworkCats.length > 0;
   const hasExams = examCats.length > 0;
 

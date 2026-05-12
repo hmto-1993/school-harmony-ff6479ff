@@ -216,8 +216,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
             fileName="التقييم_النهائي"
             groups={groupedByClass.map((group) => {
               const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
-              const examCats = group.categories.filter(c => c.category_group === 'exams');
-              const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
+              const examCats = group.categories.filter(c => c.category_group === 'exam');
+              const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exam');
               const groupHeaders: { label: string; colSpan: number }[] = [
                 { label: "#", colSpan: 1 }, { label: "الطالب", colSpan: 1 },
               ];
@@ -258,8 +258,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         <p className="text-center py-12 text-muted-foreground">لا توجد بيانات درجات بعد</p>
       ) : groupedByClass.map((group) => {
         const classworkCats = group.categories.filter(c => c.category_group === 'classwork');
-        const examCats = group.categories.filter(c => c.category_group === 'exams');
-        const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exams');
+        const examCats = group.categories.filter(c => c.category_group === 'exam');
+        const otherCats = group.categories.filter(c => c.category_group !== 'classwork' && c.category_group !== 'exam');
         const hasClasswork = classworkCats.length > 0;
         const hasExams = examCats.length > 0;
         const hasOther = otherCats.length > 0;

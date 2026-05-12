@@ -83,7 +83,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
     const result: SemesterRow[] = students.filter(s => s.class_id).map(s => {
       const classCats = cats.filter(c => c.class_id === s.class_id);
       const classworkCats = classCats.filter(c => c.category_group === 'classwork');
-      const examCats = classCats.filter(c => c.category_group === 'exams');
+      const examCats = classCats.filter(c => c.category_group === 'exam');
       const studentPeriods = gradesMap.get(s.id) || new Map();
       const p1Map = studentPeriods.get(1) || new Map();
       const p2Map = studentPeriods.get(2) || new Map();
