@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { usePerClassState } from "@/hooks/usePerClassState";
 import { format, subDays, addDays, isToday } from "date-fns";
+import { toEnglishDigits } from "@/lib/number-utils";
 
 // ── Types ──────────────────────────────────────────────────────────
 export interface GradeCategory {
