@@ -842,7 +842,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         isCriticalViolator && "smart-card-glow-red",
                         isTopPerformer && "smart-card-glow-green",
                       )}>
-                        <td className="p-3 text-muted-foreground font-medium border-l-2 border-border transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                        <td className="p-3 text-muted-foreground font-medium border-l-2 border-border transition-colors duration-200 group-hover:text-primary">{toEnglishDigits(i + 1)}</td>
                         <td className="p-3 font-semibold border-l-2 border-border whitespace-nowrap text-sm transition-all duration-200 group-hover:text-primary group-hover:bg-sky-100/40 dark:group-hover:bg-sky-900/20">
                           <span className="flex items-center gap-1.5">
                             {sg.full_name}
