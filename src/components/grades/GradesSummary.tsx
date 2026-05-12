@@ -412,11 +412,12 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                                       return (
                                         <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
-                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
+                                          onInput={normalizeInputDigits}
                                           className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
                                           dir="ltr" disabled={!!locked} />
                                       );
-                                    })() : <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>}
+                                    })() : <span className="text-xs font-semibold">{toEnglishDigits(sg.manualScores[cat.id] ?? 0)}</span>}
                                   </td>
                                 );
                               })}
