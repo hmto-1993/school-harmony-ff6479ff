@@ -422,10 +422,10 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
 
                         {/* Period 1 */}
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.classworkTotal1} / {sg.classworkMax}
+                          {toEnglishDigits(sg.classworkTotal1)} / {toEnglishDigits(sg.classworkMax)}
                         </td>
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.examTotal1} / {sg.examMax}
+                          {toEnglishDigits(sg.examTotal1)} / {toEnglishDigits(sg.examMax)}
                         </td>
 
                         {/* Period 2 */}
