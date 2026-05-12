@@ -298,7 +298,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             {[...classworkCats, ...examCats].map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                        <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue} onChange={(e) => setFillAllValue(e.target.value)}
+                        <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue}
+                          onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
+                          onInput={normalizeInputDigits}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr" />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
