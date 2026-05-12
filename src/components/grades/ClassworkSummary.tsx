@@ -285,7 +285,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     students.forEach(s => {
       editableCats.forEach(cat => {
         if (cat.is_deduction) return; // deductions are managed via daily violations entry
-        edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0);
+        edits[`${s.student_id}__${cat.id}`] = toEnglishDigits(s.manualScores[cat.id] ?? 0);
       });
     });
     setTempEdits(edits);
