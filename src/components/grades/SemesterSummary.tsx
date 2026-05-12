@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
+import { toEnglishDigits } from "@/lib/number-utils";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; max_score: number; class_id: string; category_group: string; }
