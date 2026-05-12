@@ -196,7 +196,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   const renderScore = (score: number | null) => {
     if (score == null) return <span className="text-muted-foreground opacity-40">—</span>;
-    return <span className="text-xs font-semibold">{score}</span>;
+    return <span className="text-xs font-semibold">{toEnglishDigits(score)}</span>;
   };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
