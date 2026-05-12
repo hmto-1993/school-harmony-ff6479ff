@@ -316,7 +316,7 @@ export function useDailyGradeData({ selectedClass, selectedPeriod }: UseDailyGra
       maxTotal += Number(cat.max_score);
       if (score !== null && score !== undefined) total += score;
     });
-    return maxTotal > 0 ? `${total} / ${maxTotal}` : "—";
+    return maxTotal > 0 ? `${toEnglishDigits(total)} / ${toEnglishDigits(maxTotal)}` : "—";
   };
 
   // Save
