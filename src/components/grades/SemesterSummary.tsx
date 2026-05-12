@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
+import { toEnglishDigits } from "@/lib/number-utils";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; max_score: number; class_id: string; category_group: string; }
@@ -416,30 +417,30 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                         isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20",
                         !isLast && "border-b border-border/20"
                       )}>
-                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                        <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{toEnglishDigits(i + 1)}</td>
                         <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
 
                         {/* Period 1 */}
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.classworkTotal1} / {sg.classworkMax}
+                          {toEnglishDigits(sg.classworkTotal1)} / {toEnglishDigits(sg.classworkMax)}
                         </td>
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.examTotal1} / {sg.examMax}
+                          {toEnglishDigits(sg.examTotal1)} / {toEnglishDigits(sg.examMax)}
                         </td>
 
                         {/* Period 2 */}
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.classworkTotal2} / {sg.classworkMax}
+                          {toEnglishDigits(sg.classworkTotal2)} / {toEnglishDigits(sg.classworkMax)}
                         </td>
                         <td className="p-2 text-center font-bold border-l border-border/10 text-primary">
-                          {sg.examTotal2} / {sg.examMax}
+                          {toEnglishDigits(sg.examTotal2)} / {toEnglishDigits(sg.examMax)}
                         </td>
 
                         {/* Grand total */}
                         <td className="p-2 text-center border-l border-border/10">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-bold">{sg.grandTotal}</span>
-                            <span className="text-muted-foreground text-xs">/ {sg.grandMax}</span>
+                            <span className="font-bold">{toEnglishDigits(sg.grandTotal)}</span>
+                            <span className="text-muted-foreground text-xs">/ {toEnglishDigits(sg.grandMax)}</span>
                             {trend === "up" && <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />}
                             {trend === "down" && <TrendingDown className="h-3.5 w-3.5 text-rose-500" />}
                             {trend === "same" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
@@ -449,7 +450,7 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                         {/* Percentage */}
                         <td className="p-2 text-center border-l border-border/10">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-bold text-sm">{pct}%</span>
+                            <span className="font-bold text-sm">{toEnglishDigits(pct)}%</span>
                           </div>
                           <Progress value={pct} className="h-1.5 w-16 mx-auto mt-1" />
                         </td>

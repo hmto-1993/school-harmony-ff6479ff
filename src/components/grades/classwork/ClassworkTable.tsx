@@ -5,6 +5,7 @@ import { DailyIconComponent } from "./DailyIconComponent";
 import { getMaxDisplayIcons, calcManualSubtotal, isParticipation } from "./classwork-helpers";
 import type { CategoryInfo, SummaryRow } from "./classwork-types";
 import ViolationHistoryDialog from "./ViolationHistoryDialog";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 interface Props {
   students: SummaryRow[];
@@ -82,7 +83,7 @@ export default function ClassworkTable({
                   "border-b border-border/40 group",
                   "hover:[&>td]:!bg-primary/15 dark:hover:[&>td]:!bg-primary/25 transition-colors",
                 )}>
-                  <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                  <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{toEnglishDigits(i + 1)}</td>
                   <td className="p-3 font-semibold border-l border-border/10 whitespace-nowrap bg-primary/5">
                     <button
                       type="button"
@@ -132,7 +133,7 @@ export default function ClassworkTable({
                               dir="ltr"
                               title={deductionCount > 0 ? "عرض سجل المخالفات" : ""}
                             >
-                              {deductionCount}
+                              {toEnglishDigits(deductionCount)}
                             </button>
                           ) : icons.length > 0 && (
                             <div className="flex flex-wrap justify-center gap-0.5">
@@ -156,7 +157,8 @@ export default function ClassworkTable({
                               <Input
                                 type="number" min={0} max={Number(cat.max_score)}
                                 value={tempEdits[cellKey] ?? ""}
-                                onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
+                                onInput={normalizeInputDigits}
                                 className={cn(
                                   "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                                   locked && "opacity-40 pointer-events-none"
@@ -175,7 +177,7 @@ export default function ClassworkTable({
                                   : "text-muted-foreground"
                               )}
                             >
-                              {cat.is_deduction && manualScore > 0 ? `−${manualScore}` : manualScore}
+                              {cat.is_deduction && manualScore > 0 ? `−${toEnglishDigits(manualScore)}` : toEnglishDigits(manualScore)}
                             </span>
                           )}
                         </td>
@@ -184,10 +186,10 @@ export default function ClassworkTable({
                   })}
 
                   <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "")}>
-                    {sub.score} / {sub.max}
+                    {toEnglishDigits(sub.score)} / {toEnglishDigits(sub.max)}
                   </td>
                   <td className={cn("p-2 text-center font-bold border-l border-border/10 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400", isLast && "last:rounded-bl-xl")}>
-                    {sg.earnedTotal}
+                    {toEnglishDigits(sg.earnedTotal)}
                   </td>
                 </tr>
               );

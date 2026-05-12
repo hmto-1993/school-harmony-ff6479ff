@@ -13,6 +13,7 @@ import { printGradesTable, getPrintIconSpan, exportGradesTableAsPDF } from "@/li
 import { format } from "date-fns";
 import { toast as sonnerToast } from "sonner";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 import type { ClassInfo, CategoryInfo, SummaryRow, ClassworkSummaryProps } from "./classwork/classwork-types";
 import { isParticipation, DEFAULT_MAX_SLOTS, getMaxDisplayIcons, restoreSlotsFromScore, calcManualSubtotal } from "./classwork/classwork-helpers";
@@ -284,7 +285,7 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
     students.forEach(s => {
       editableCats.forEach(cat => {
         if (cat.is_deduction) return; // deductions are managed via daily violations entry
-        edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0);
+        edits[`${s.student_id}__${cat.id}`] = toEnglishDigits(s.manualScores[cat.id] ?? 0);
       });
     });
     setTempEdits(edits);
@@ -306,7 +307,8 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
         if (!row) continue;
         const cat = allCategories.find(c => c.id === categoryId);
         if (!cat) continue;
-        const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+        const normalized = toEnglishDigits(val);
+        const numVal = normalized === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(normalized)));
         const existingId = row.manualScoreIds[categoryId];
         if (existingId) {
           upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
@@ -420,24 +422,26 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                           type="number" min={0}
                           placeholder="الدرجة"
                           value={fillAllValue}
-                          onChange={(e) => setFillAllValue(e.target.value)}
+                          onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
+                          onInput={normalizeInputDigits}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           dir="ltr"
                         />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
+                          const normalizedFill = toEnglishDigits(fillAllValue);
                           const newEdits = { ...tempEdits };
                           if (fillAllCatId === "__all__") {
                             group.students.forEach(s => {
                               classworkCats.forEach(cat => {
-                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(normalizedFill)));
                                 newEdits[`${s.student_id}__${cat.id}`] = String(val);
                               });
                             });
                           } else {
                             const cat = classworkCats.find(c => c.id === fillAllCatId);
                             if (!cat) return;
-                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(normalizedFill)));
                             group.students.forEach(s => {
                               newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
                             });

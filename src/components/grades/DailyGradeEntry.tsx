@@ -24,6 +24,7 @@ import FormDialog from "@/components/forms/FormDialog";
 import SmartRadar from "./SmartRadar";
 import ClassAlphaDashboard from "./classwork/ClassAlphaDashboard";
 import { supabase } from "@/integrations/supabase/client";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 // ── LevelIcon ──────────────────────────────────────────────────────
 const LevelIcon = React.forwardRef<HTMLDivElement, { level: GradeLevel; size?: string }>(
@@ -661,9 +662,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
+                      onInput={normalizeInputDigits}
                       onKeyDown={async (e) => {
                         if (e.key === "Enter") {
-                          const val = (e.target as HTMLInputElement).value;
+                          const val = toEnglishDigits((e.target as HTMLInputElement).value);
                           if (val) {
                             const numCat = earnedBucketCat;
                             if (numCat) {
@@ -687,7 +689,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="gap-1.5"
                       onClick={async () => {
                         const input = document.getElementById("earned-grade-input") as HTMLInputElement;
-                        const val = input?.value;
+                        const val = toEnglishDigits(input?.value || "");
                         if (val) {
                           const numCat = earnedBucketCat;
                           if (numCat) {
@@ -841,7 +843,7 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                         isCriticalViolator && "smart-card-glow-red",
                         isTopPerformer && "smart-card-glow-green",
                       )}>
-                        <td className="p-3 text-muted-foreground font-medium border-l-2 border-border transition-colors duration-200 group-hover:text-primary">{i + 1}</td>
+                        <td className="p-3 text-muted-foreground font-medium border-l-2 border-border transition-colors duration-200 group-hover:text-primary">{toEnglishDigits(i + 1)}</td>
                         <td className="p-3 font-semibold border-l-2 border-border whitespace-nowrap text-sm transition-all duration-200 group-hover:text-primary group-hover:bg-sky-100/40 dark:group-hover:bg-sky-900/20">
                           <span className="flex items-center gap-1.5">
                             {sg.full_name}
@@ -937,8 +939,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                       type="number"
                                       min={0}
                                       max={maxScore}
-                                      value={currentScore === 0 ? "0" : (currentScore || "")}
+                                      value={currentScore === 0 ? "0" : toEnglishDigits(currentScore || "")}
                                       onChange={(e) => setNumericGrade(sg.student_id, cat.id, e.target.value, maxScore)}
+                                      onInput={normalizeInputDigits}
                                       className="w-12 h-6 text-center text-xs border-destructive/40 focus:border-destructive px-1"
                                       placeholder="0"
                                     />
@@ -997,12 +1000,13 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                               <Input
                                 type="number"
                                 min={0}
-                                value={sg.grades[earnedBucketCat.id] ?? ""}
+                                value={toEnglishDigits(sg.grades[earnedBucketCat.id] ?? "")}
                                 placeholder="--"
                                 className="w-14 h-7 text-center text-xs mx-auto border-emerald-300 dark:border-emerald-600 focus:border-emerald-500"
                                 onChange={(e) => setNumericGrade(sg.student_id, earnedBucketCat.id, e.target.value, Number(earnedBucketCat.max_score))}
+                                onInput={normalizeInputDigits}
                                 onBlur={async (e) => {
-                                  const v = Number(e.target.value);
+                                  const v = Number(toEnglishDigits(e.target.value));
                                   if (!isNaN(v)) { try { await quickSaveGrade(sg.student_id, earnedBucketCat.id, v); } catch {} }
                                 }}
                               />

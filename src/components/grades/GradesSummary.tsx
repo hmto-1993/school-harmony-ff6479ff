@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { printGradesTable, exportGradesTableAsPDF } from "@/lib/grades-print";
 import { format } from "date-fns";
 import { calcSubtotal, getSummaryPrintOptions } from "./grades-table-builders";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 interface ClassInfo { id: string; name: string; }
 interface CategoryInfo { id: string; name: string; weight: number; max_score: number; class_id: string; category_group: string; is_deduction?: boolean; }
@@ -127,7 +128,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   const startEdit = (classId: string, students: SummaryRow[], editableCats: CategoryInfo[]) => {
     const edits: Record<string, string> = {};
-    students.forEach(s => { editableCats.forEach(cat => { edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0); }); });
+    students.forEach(s => { editableCats.forEach(cat => { edits[`${s.student_id}__${cat.id}`] = toEnglishDigits(s.manualScores[cat.id] ?? 0); }); });
     setTempEdits(edits);
     setEditingClassId(classId);
     setFillAllValue("");
@@ -147,7 +148,8 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
         if (!row) continue;
         const cat = allCategories.find(c => c.id === categoryId);
         if (!cat) continue;
-        const numVal = val === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(val)));
+        const normalized = toEnglishDigits(val);
+        const numVal = normalized === "" ? 0 : Math.min(Number(cat.max_score), Math.max(0, Number(normalized)));
         const existingId = row.manualScoreIds[categoryId];
         if (existingId) {
           upserts.push(supabase.from("manual_category_scores" as any).update({ score: numVal, updated_at: new Date().toISOString() }).eq("id", existingId).then(res => { if (res.error) throw res.error; }));
@@ -195,7 +197,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   const renderScore = (score: number | null) => {
     if (score == null) return <span className="text-muted-foreground opacity-40">—</span>;
-    return <span className="text-xs font-semibold">{score}</span>;
+    return <span className="text-xs font-semibold">{toEnglishDigits(score)}</span>;
   };
 
   if (loading) return <p className="text-center py-12 text-muted-foreground">جارٍ تحميل الخلاصة...</p>;
@@ -296,7 +298,9 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                             {[...classworkCats, ...examCats].map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                        <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue} onChange={(e) => setFillAllValue(e.target.value)}
+                        <Input type="number" min={0} placeholder="الدرجة" value={fillAllValue}
+                          onChange={(e) => setFillAllValue(toEnglishDigits(e.target.value))}
+                          onInput={normalizeInputDigits}
                           className="w-14 h-7 text-xs text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" dir="ltr" />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
@@ -374,7 +378,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
                       return (
                         <tr key={sg.student_id} className={cn(isEven ? "bg-card" : "bg-muted/30 dark:bg-muted/20", !isLast && "border-b border-border/20")}>
-                          <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{i + 1}</td>
+                          <td className={cn("p-3 text-muted-foreground font-medium border-l border-border/10", isLast && "first:rounded-br-xl")}>{toEnglishDigits(i + 1)}</td>
                           <td className="p-3 font-semibold border-l border-border/10">{sg.full_name}</td>
                           {hasClasswork && (
                             <>
@@ -386,15 +390,16 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                                       return (
                                         <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
-                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
+                                          onInput={normalizeInputDigits}
                                           className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
                                           dir="ltr" disabled={!!locked} />
                                       );
-                                    })() : <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>}
+                                    })() : <span className="text-xs font-semibold">{toEnglishDigits(sg.manualScores[cat.id] ?? 0)}</span>}
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">{classworkSub.score} / {classworkSub.max}</td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">{toEnglishDigits(classworkSub.score)} / {toEnglishDigits(classworkSub.max)}</td>
                             </>
                           )}
                           {hasExams && (
@@ -407,21 +412,22 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                       const locked = fillAllCatId && fillAllCatId !== "__all__" && fillAllCatId !== cat.id;
                                       return (
                                         <Input type="number" min={0} max={Number(cat.max_score)} value={tempEdits[cellKey] ?? ""}
-                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: e.target.value }))}
+                                          onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
+                                          onInput={normalizeInputDigits}
                                           className={cn("w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", locked && "opacity-40 pointer-events-none")}
                                           dir="ltr" disabled={!!locked} />
                                       );
-                                    })() : <span className="text-xs font-semibold">{sg.manualScores[cat.id] ?? 0}</span>}
+                                    })() : <span className="text-xs font-semibold">{toEnglishDigits(sg.manualScores[cat.id] ?? 0)}</span>}
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">{examSub.score} / {examSub.max}</td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">{toEnglishDigits(examSub.score)} / {toEnglishDigits(examSub.max)}</td>
                             </>
                           )}
                           {hasOther && otherCats.map(cat => (
                             <td key={cat.id} className="p-2 text-center border-l border-border/10">{renderScore(sg.manualScores[cat.id] ?? null)}</td>
                           ))}
-                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{allSub.score} / {allSub.max}</td>
+                          <td className={cn("p-2 text-center font-bold border-l border-border/10", isLast && "last:rounded-bl-xl")}>{toEnglishDigits(allSub.score)} / {toEnglishDigits(allSub.max)}</td>
                         </tr>
                       );
                     })}
