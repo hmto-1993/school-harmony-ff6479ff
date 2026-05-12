@@ -399,7 +399,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">{classworkSub.score} / {classworkSub.max}</td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-primary/10 text-primary">{toEnglishDigits(classworkSub.score)} / {toEnglishDigits(classworkSub.max)}</td>
                             </>
                           )}
                           {hasExams && (
