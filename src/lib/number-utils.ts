@@ -22,6 +22,19 @@ export function withEnglishDigits(
   };
 }
 
+/** Prevent number input from changing on mouse wheel scroll */
+export function preventWheelChange(e: React.WheelEvent<HTMLInputElement>): void {
+  // Blur to prevent the wheel from incrementing/decrementing the value
+  (e.currentTarget as HTMLInputElement).blur();
+}
+
+/** Prevent arrow keys (Up/Down) from incrementing number inputs */
+export function preventArrowKeyChange(e: React.KeyboardEvent<HTMLInputElement>): void {
+  if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+    e.preventDefault();
+  }
+}
+
 /** Input event handler for inline normalization (mutates input.value) */
 export function normalizeInputDigits(e: React.FormEvent<HTMLInputElement>): void {
   const input = e.currentTarget;

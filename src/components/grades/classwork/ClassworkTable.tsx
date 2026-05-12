@@ -5,7 +5,7 @@ import { DailyIconComponent } from "./DailyIconComponent";
 import { getMaxDisplayIcons, calcManualSubtotal, isParticipation } from "./classwork-helpers";
 import type { CategoryInfo, SummaryRow } from "./classwork-types";
 import ViolationHistoryDialog from "./ViolationHistoryDialog";
-import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
+import { toEnglishDigits, normalizeInputDigits, preventWheelChange, preventArrowKeyChange } from "@/lib/number-utils";
 
 interface Props {
   students: SummaryRow[];
@@ -158,7 +158,7 @@ export default function ClassworkTable({
                                 type="number" min={0} max={Number(cat.max_score)}
                                 value={tempEdits[cellKey] ?? ""}
                                 onChange={(e) => setTempEdits(prev => ({ ...prev, [cellKey]: toEnglishDigits(e.target.value) }))}
-                                onInput={normalizeInputDigits}
+                                onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
                                 className={cn(
                                   "w-14 mx-auto text-center h-7 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none",
                                   locked && "opacity-40 pointer-events-none"
