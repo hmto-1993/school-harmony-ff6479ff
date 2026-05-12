@@ -421,7 +421,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
                                   </td>
                                 );
                               })}
-                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">{examSub.score} / {examSub.max}</td>
+                              <td className="p-2 text-center font-bold border-l border-border/10 bg-accent/5 text-primary">{toEnglishDigits(examSub.score)} / {toEnglishDigits(examSub.max)}</td>
                             </>
                           )}
                           {hasOther && otherCats.map(cat => (
