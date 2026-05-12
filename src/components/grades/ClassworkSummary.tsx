@@ -429,18 +429,19 @@ export default function ClassworkSummary({ selectedClass, onClassChange, selecte
                         />
                         <Button size="sm" variant="secondary" className="h-7 text-xs px-2 gap-1" onClick={() => {
                           if (!fillAllCatId || fillAllValue === "") return;
+                          const normalizedFill = toEnglishDigits(fillAllValue);
                           const newEdits = { ...tempEdits };
                           if (fillAllCatId === "__all__") {
                             group.students.forEach(s => {
                               classworkCats.forEach(cat => {
-                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                                const val = Math.min(Number(cat.max_score), Math.max(0, Number(normalizedFill)));
                                 newEdits[`${s.student_id}__${cat.id}`] = String(val);
                               });
                             });
                           } else {
                             const cat = classworkCats.find(c => c.id === fillAllCatId);
                             if (!cat) return;
-                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(fillAllValue)));
+                            const val = Math.min(Number(cat.max_score), Math.max(0, Number(normalizedFill)));
                             group.students.forEach(s => {
                               newEdits[`${s.student_id}__${fillAllCatId}`] = String(val);
                             });
