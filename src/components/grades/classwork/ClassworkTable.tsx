@@ -5,6 +5,7 @@ import { DailyIconComponent } from "./DailyIconComponent";
 import { getMaxDisplayIcons, calcManualSubtotal, isParticipation } from "./classwork-helpers";
 import type { CategoryInfo, SummaryRow } from "./classwork-types";
 import ViolationHistoryDialog from "./ViolationHistoryDialog";
+import { toEnglishDigits, normalizeInputDigits } from "@/lib/number-utils";
 
 interface Props {
   students: SummaryRow[];
