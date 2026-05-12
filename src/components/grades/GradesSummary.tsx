@@ -128,7 +128,7 @@ export default function GradesSummary({ selectedClass, onClassChange, selectedPe
 
   const startEdit = (classId: string, students: SummaryRow[], editableCats: CategoryInfo[]) => {
     const edits: Record<string, string> = {};
-    students.forEach(s => { editableCats.forEach(cat => { edits[`${s.student_id}__${cat.id}`] = String(s.manualScores[cat.id] ?? 0); }); });
+    students.forEach(s => { editableCats.forEach(cat => { edits[`${s.student_id}__${cat.id}`] = toEnglishDigits(s.manualScores[cat.id] ?? 0); }); });
     setTempEdits(edits);
     setEditingClassId(classId);
     setFillAllValue("");
