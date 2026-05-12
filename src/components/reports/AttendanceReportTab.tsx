@@ -8,7 +8,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, ClipboardCheck, Calendar, Users, UserCircle, Eye } from "lucide-react";
+import { BarChart3, ClipboardCheck, Calendar, Users, UserCircle, Eye, FileSpreadsheet, FileText } from "lucide-react";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
