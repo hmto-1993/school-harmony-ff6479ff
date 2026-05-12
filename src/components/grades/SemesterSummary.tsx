@@ -439,8 +439,8 @@ export default function SemesterSummary({ selectedClass, onClassChange }: Semest
                         {/* Grand total */}
                         <td className="p-2 text-center border-l border-border/10">
                           <div className="flex items-center justify-center gap-1">
-                            <span className="font-bold">{sg.grandTotal}</span>
-                            <span className="text-muted-foreground text-xs">/ {sg.grandMax}</span>
+                            <span className="font-bold">{toEnglishDigits(sg.grandTotal)}</span>
+                            <span className="text-muted-foreground text-xs">/ {toEnglishDigits(sg.grandMax)}</span>
                             {trend === "up" && <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />}
                             {trend === "down" && <TrendingDown className="h-3.5 w-3.5 text-rose-500" />}
                             {trend === "same" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
