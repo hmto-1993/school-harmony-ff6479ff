@@ -8,7 +8,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, ClipboardCheck, Calendar, Users, UserCircle, Eye } from "lucide-react";
+import { BarChart3, ClipboardCheck, Calendar, Users, UserCircle, Eye, FileSpreadsheet, FileText } from "lucide-react";
 import AttendanceChart from "@/components/reports/AttendanceChart";
 import AttendanceWeeklyReport from "@/components/reports/AttendanceWeeklyReport";
 import ReportPrintHeader from "@/components/reports/ReportPrintHeader";
@@ -275,6 +275,69 @@ export default function AttendanceReportTab({
     toast({ title: result === "shared" ? "تم المشاركة" : "تم تصدير PDF", description: result === "shared" ? "تم مشاركة ملف PDF بنجاح" : "تم تحميل الملف، يمكنك إرفاقه في واتساب" });
   };
 
+  const totalsTitle = statusFilter === "absent" ? "الغياب" : statusFilter === "late" ? "التأخر" : "الغياب والتأخر";
+
+  const exportTotalsExcel = async () => {
+    if (studentTotals.length === 0) return;
+    const XLSX = await import("xlsx");
+    const showAbsent = statusFilter === "absent" || statusFilter === "absent_late";
+    const showLate = statusFilter === "late" || statusFilter === "absent_late";
+    const ws = XLSX.utils.json_to_sheet(
+      studentTotals.map((s, i) => {
+        const row: Record<string, any> = { "#": i + 1, "اسم الطالب": s.name };
+        if (isAllClasses) row["الفصل"] = s.class_name || "";
+        if (showAbsent) row["غياب"] = s.absent;
+        if (showLate) row["تأخر"] = s.late;
+        if (statusFilter === "absent_late") row["المجموع"] = s.absent + s.late;
+        return row;
+      })
+    );
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "إجمالي لكل طالب");
+    safeWriteXLSX(wb, `إجمالي_${totalsTitle}_لكل_طالب_${dateFrom}_${dateTo}.xlsx`);
+  };
+
+  const exportTotalsPDF = async () => {
+    if (studentTotals.length === 0) return;
+    const { createArabicPDF, getArabicTableStyles, finalizePDFAsBlob } = await import("@/lib/arabic-pdf");
+    const { savePDFBlob } = await import("@/lib/report-pdf-builders");
+    const autoTable = (await import("jspdf-autotable")).default;
+    const { doc, startY, watermark, advanced } = await createArabicPDF({ orientation: "portrait", reportType: "attendance", includeHeader: true });
+    const tableStyles = getArabicTableStyles(advanced);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.setFontSize(14);
+    doc.setFont("Amiri", "bold");
+    doc.text(`إجمالي ${totalsTitle} لكل طالب`, pageWidth / 2, startY, { align: "center" });
+    doc.setFontSize(9);
+    doc.setFont("Amiri", "normal");
+    doc.text(`من: ${dateFrom}  إلى: ${dateTo}`, pageWidth / 2, startY + 6, { align: "center" });
+
+    const showAbsent = statusFilter === "absent" || statusFilter === "absent_late";
+    const showLate = statusFilter === "late" || statusFilter === "absent_late";
+    const showSum = statusFilter === "absent_late";
+    // RTL: reverse
+    const head: string[] = [];
+    if (showSum) head.push("المجموع");
+    if (showLate) head.push("تأخر");
+    if (showAbsent) head.push("غياب");
+    if (isAllClasses) head.push("الفصل");
+    head.push("اسم الطالب", "#");
+
+    const body = studentTotals.map((s, i) => {
+      const row: string[] = [];
+      if (showSum) row.push(String(s.absent + s.late));
+      if (showLate) row.push(String(s.late));
+      if (showAbsent) row.push(String(s.absent));
+      if (isAllClasses) row.push(s.class_name || "—");
+      row.push(s.name, String(i + 1));
+      return row;
+    });
+
+    autoTable(doc, { startY: startY + 12, head: [head], body, ...tableStyles });
+    const blob = finalizePDFAsBlob(doc, watermark, advanced);
+    savePDFBlob(blob, `إجمالي_${totalsTitle}_لكل_طالب_${dateFrom}_${dateTo}.pdf`);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 flex-wrap print:hidden">
@@ -367,9 +430,19 @@ export default function AttendanceReportTab({
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-1 rounded-full bg-gradient-to-b from-destructive to-warning" />
                     <h3 className="font-bold text-base text-foreground">
-                      إجمالي {statusFilter === "absent" ? "الغياب" : statusFilter === "late" ? "التأخر" : "الغياب والتأخر"} لكل طالب
+                      إجمالي {totalsTitle} لكل طالب
                     </h3>
                     <span className="text-xs text-muted-foreground">({studentTotals.length} طالب)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 print:hidden">
+                    <Button size="sm" variant="outline" onClick={exportTotalsExcel} className="gap-1.5 h-8">
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      Excel
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={exportTotalsPDF} className="gap-1.5 h-8">
+                      <FileText className="h-3.5 w-3.5" />
+                      PDF
+                    </Button>
                   </div>
                 </div>
                 <div className="max-h-[300px] overflow-auto rounded-xl border border-border/30">
