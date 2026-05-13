@@ -897,23 +897,35 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                             return (
                               <td key={cat.id} className="p-2 text-center border-l-2 border-border">
                                 <div className="flex flex-col items-center gap-1.5">
-                                  {/* Quick Chips */}
-                                  <div className="flex flex-wrap gap-1 justify-center">
-                                    {violationReasons.map((reason) => {
-                                      const isActive = deductionNote === reason.label;
-                                      return (
-                                        <button
-                                          key={reason.label}
-                                          type="button"
-                                          onClick={() => {
-                                            if (isActive) {
-                                              setDeductionNote(sg.student_id, cat.id, "");
-                                              setNumericGrade(sg.student_id, cat.id, "0", maxScore);
-                                            } else {
-                                              setDeductionNote(sg.student_id, cat.id, reason.label);
-                                              setNumericGrade(sg.student_id, cat.id, String(reason.defaultScore), maxScore);
-                                            }
-                                          }}
+                                   {/* Quick Chips (multi-select) */}
+                                   <div className="flex flex-wrap gap-1 justify-center">
+                                     {(() => {
+                                       const SEP = " + ";
+                                       const activeLabels = (deductionNote || "")
+                                         .split(SEP)
+                                         .map((s) => s.trim())
+                                         .filter(Boolean);
+                                       return violationReasons.map((reason) => {
+                                       const isActive = activeLabels.includes(reason.label);
+                                       return (
+                                         <button
+                                           key={reason.label}
+                                           type="button"
+                                           onClick={() => {
+                                             let nextLabels: string[];
+                                             if (isActive) {
+                                               nextLabels = activeLabels.filter((l) => l !== reason.label);
+                                             } else {
+                                               nextLabels = [...activeLabels, reason.label];
+                                             }
+                                             // Sum default scores for all active labels
+                                             const nextScore = nextLabels.reduce((sum, l) => {
+                                               const r = violationReasons.find((vr) => vr.label === l);
+                                               return sum + (r?.defaultScore ?? 0);
+                                             }, 0);
+                                             setDeductionNote(sg.student_id, cat.id, nextLabels.join(SEP));
+                                             setNumericGrade(sg.student_id, cat.id, String(nextScore), maxScore);
+                                           }}
                                           className={cn(
                                             "px-2 py-1 rounded-md text-[10px] font-bold border transition-all min-w-[40px] min-h-[28px] touch-manipulation",
                                             isActive
