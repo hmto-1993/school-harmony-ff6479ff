@@ -935,9 +935,10 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                                         >
                                           {reason.label}
                                         </button>
-                                      );
-                                    })}
-                                  </div>
+                                       );
+                                     });
+                                     })()}
+                                   </div>
                                   {/* Score with +/- */}
                                   <div className="flex items-center gap-0.5">
                                     <button
