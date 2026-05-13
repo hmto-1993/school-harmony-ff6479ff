@@ -662,8 +662,9 @@ export default function DailyGradeEntry({ selectedClass, onClassChange, selected
                       className="w-24 h-9"
                       id="earned-grade-input"
                       autoFocus
-                      onInput={normalizeInputDigits} onWheel={preventWheelChange} onKeyDown={preventArrowKeyChange}
+                      onInput={normalizeInputDigits} onWheel={preventWheelChange}
                       onKeyDown={async (e) => {
+                        preventArrowKeyChange(e);
                         if (e.key === "Enter") {
                           const val = toEnglishDigits((e.target as HTMLInputElement).value);
                           if (val) {
