@@ -79,11 +79,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     for (let i = 0; i < 3; i++) {
       try {
         const [roleRes, profileRes] = await attempt(i === 0 ? 8000 : 12000);
+
+        if (roleRes.error) throw roleRes.error;
+        if (profileRes.error) throw profileRes.error;
+        if (!profileRes.data) throw new Error("profile not found");
+
         const rawGlobalRole = roleRes.data?.role as string | undefined;
         const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
         const orgRole = (profileRes.data as any)?.role as string | undefined;
         const effectiveRole: AppRole | null = globalRole || (orgRole === "owner" ? "admin" : (orgRole === "teacher" ? "teacher" : null));
-        const approval = ((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending";
+        const approval = ((profileRes.data as any)?.approval_status as ApprovalStatus) || null;
+        if (!approval) throw new Error("approval status missing");
         const subEnd = ((profileRes.data as any)?.subscription_end as string) || null;
         const orgId = ((profileRes.data as any)?.organization_id as string) || null;
         const natId = ((profileRes.data as any)?.national_id as string) || null;

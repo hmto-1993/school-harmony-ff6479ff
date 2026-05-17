@@ -12,7 +12,7 @@ export default function PendingApprovalPage() {
     document.title = "حسابك قيد المراجعة | منصة المتميز الرقمية";
   }, []);
 
-  if (loading) {
+  if (loading || approvalStatus === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
