@@ -59,39 +59,82 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperOwner = isSuperOwnerFlag;
   const subscriptionExpired = !isSuperOwner && !!subscriptionEnd && new Date(subscriptionEnd).getTime() <= Date.now();
 
+  const PROFILE_CACHE_KEY = (uid: string) => `auth_profile_cache_v1:${uid}`;
+
   const fetchRole = async (userId: string) => {
-    try {
-      // Race against a 8s timeout so a flaky mobile network never blocks the UI forever.
+    // Helper: one attempt with a hard timeout
+    const attempt = async (timeoutMs: number) => {
       const timeout = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("fetchRole timeout")), 8000)
+        setTimeout(() => reject(new Error("fetchRole timeout")), timeoutMs)
       );
       const query = Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("approval_status, subscription_end, national_id, role, organization_id, is_super_owner_flag").eq("user_id", userId).maybeSingle(),
       ]);
-      const [roleRes, profileRes] = await Promise.race([query, timeout]) as any;
-      const rawGlobalRole = roleRes.data?.role as string | undefined;
-      const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
-      const orgRole = (profileRes.data as any)?.role as string | undefined;
-      // Independent subscribers (org owners) act as admins of their own isolated workspace.
-      // RLS still enforces tenant isolation via organization_id — this only unlocks the UI.
-      const effectiveRole: AppRole | null = globalRole || (orgRole === "owner" ? "admin" : (orgRole === "teacher" ? "teacher" : null));
-      setRole(effectiveRole);
-      setApprovalStatus(((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending");
-      setSubscriptionEnd(((profileRes.data as any)?.subscription_end as string) || null);
-      setOrganizationId(((profileRes.data as any)?.organization_id as string) || null);
-      setNationalId(((profileRes.data as any)?.national_id as string) || null);
-      setIsSuperOwnerFlag(!!(profileRes.data as any)?.is_super_owner_flag);
-    } catch (err) {
-      // Never leave the auth context in a perpetual loading state.
-      console.error("[AuthContext] fetchRole failed:", err);
-      setRole(null);
-      setApprovalStatus("pending");
-      setSubscriptionEnd(null);
-      setOrganizationId(null);
-      setNationalId(null);
-      setIsSuperOwnerFlag(false);
+      return (await Promise.race([query, timeout])) as any;
+    };
+
+    // Retry up to 3 times with increasing timeouts to survive flaky mobile networks
+    let lastErr: unknown = null;
+    for (let i = 0; i < 3; i++) {
+      try {
+        const [roleRes, profileRes] = await attempt(i === 0 ? 8000 : 12000);
+        const rawGlobalRole = roleRes.data?.role as string | undefined;
+        const globalRole: AppRole | null = rawGlobalRole === "admin" || rawGlobalRole === "teacher" ? rawGlobalRole : null;
+        const orgRole = (profileRes.data as any)?.role as string | undefined;
+        const effectiveRole: AppRole | null = globalRole || (orgRole === "owner" ? "admin" : (orgRole === "teacher" ? "teacher" : null));
+        const approval = ((profileRes.data as any)?.approval_status as ApprovalStatus) || "pending";
+        const subEnd = ((profileRes.data as any)?.subscription_end as string) || null;
+        const orgId = ((profileRes.data as any)?.organization_id as string) || null;
+        const natId = ((profileRes.data as any)?.national_id as string) || null;
+        const superFlag = !!(profileRes.data as any)?.is_super_owner_flag;
+
+        setRole(effectiveRole);
+        setApprovalStatus(approval);
+        setSubscriptionEnd(subEnd);
+        setOrganizationId(orgId);
+        setNationalId(natId);
+        setIsSuperOwnerFlag(superFlag);
+
+        // Cache the last good profile so transient failures don't kick the user to /pending
+        try {
+          localStorage.setItem(PROFILE_CACHE_KEY(userId), JSON.stringify({
+            role: effectiveRole, approval, subEnd, orgId, natId, superFlag, at: Date.now(),
+          }));
+        } catch { /* ignore quota */ }
+        return;
+      } catch (err) {
+        lastErr = err;
+        // Small backoff before retrying
+        await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+      }
     }
+
+    console.error("[AuthContext] fetchRole failed after retries:", lastErr);
+    // CRITICAL: do NOT default to "pending" on network failure — that wrongly
+    // redirects already-approved users (incl. owners) to the pending-approval page.
+    // Fall back to last-known cached profile if available; otherwise keep approvalStatus
+    // null so ProtectedRoute keeps showing the loader instead of misrouting.
+    try {
+      const raw = localStorage.getItem(PROFILE_CACHE_KEY(userId));
+      if (raw) {
+        const c = JSON.parse(raw);
+        setRole(c.role ?? null);
+        setApprovalStatus(c.approval ?? null);
+        setSubscriptionEnd(c.subEnd ?? null);
+        setOrganizationId(c.orgId ?? null);
+        setNationalId(c.natId ?? null);
+        setIsSuperOwnerFlag(!!c.superFlag);
+        return;
+      }
+    } catch { /* ignore */ }
+    // No cache — leave approvalStatus null (loader stays) rather than misclassifying as pending.
+    setRole(null);
+    setApprovalStatus(null);
+    setSubscriptionEnd(null);
+    setOrganizationId(null);
+    setNationalId(null);
+    setIsSuperOwnerFlag(false);
   };
 
   // Restore student session using HMAC token (no PII in storage)
